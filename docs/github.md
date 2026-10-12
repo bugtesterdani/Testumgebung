@@ -35,11 +35,11 @@ Der Workflow **MSIX-Build und Release** läuft bei jedem Push nach `main`, bei V
 
 | Auslöser | Ergebnis |
 | --- | --- |
-| Push nach `main` | Entwicklungsbuild `1.0.13.<Workflow-Laufnummer>` als Actions-Artefakt |
+| Push nach `main` | Entwicklungsbuild `1.0.12.<Workflow-Laufnummer>` als Actions-Artefakt |
 | Tag `v1.0.13.0` | Bundle `1.0.13.0` und GitHub Release mit MSIX, Zertifikat, Prüfsummen, Installationsanleitung und PDF |
 | Manueller Start | Angegebene vierteilige Version, sonst automatische Entwicklungsbuild-Version; als Actions-Artefakt |
 
-Die Laufnummer ist kein offizieller Release-Zähler. Bei größer werdenden Versionen die automatische Versionsbasis im Workflow anpassen. MSIX-Versionsteile dürfen höchstens 65535 sein. Für eine Installation über einen Entwicklungsbuild muss ein offizielles Release eine höhere Version tragen. Die Art der Versionsvergabe deshalb vor produktiver Nutzung festlegen.
+Die Laufnummer ist kein offizieller Release-Zähler. Die aktuelle Entwicklungsbasis `1.0.12` liegt unter dem nächsten offiziellen Release `1.0.13.0`. Bei größer werdenden Versionen die automatische Versionsbasis im Workflow anpassen und für das nächste offizielle Release eine höhere dritte Zahl verwenden. MSIX-Versionsteile dürfen höchstens 65535 sein. Für eine Installation über einen Entwicklungsbuild muss ein offizielles Release eine höhere Version tragen.
 
 Neues offizielles Release erstellen:
 

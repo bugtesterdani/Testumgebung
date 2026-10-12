@@ -38,7 +38,7 @@ jobs:
         run: |
           $version = $env:REQUESTED_VERSION
           if ($env:GITHUB_REF_TYPE -eq 'tag') { $version=$env:GITHUB_REF_NAME.TrimStart('v') }
-          if (-not $version) { $version="1.0.13.$env:GITHUB_RUN_NUMBER" }
+          if (-not $version) { $version="1.0.12.$env:GITHUB_RUN_NUMBER" }
           if ($version -notmatch '^\d+\.\d+\.\d+\.\d+$') { throw 'Version muss vier Zahlen enthalten.' }
           $v=[version]$version
           if (@($v.Major,$v.Minor,$v.Build,$v.Revision | Where-Object { $_ -gt 65535 }).Count) { throw 'MSIX-Version überschreitet 65535.' }
