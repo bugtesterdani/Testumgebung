@@ -87,6 +87,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      actions: read
     steps:
       - name: Build-Artefakt herunterladen und Release erstellen
         shell: pwsh
