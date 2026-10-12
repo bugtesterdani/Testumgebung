@@ -1,0 +1,403 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
+    <!-- Einstellungen (Etappe 6): Ergebnisdateien | Datenbank und Outbox | MQTT-Meldeweg -->
+    <DockPanel Margin="16" DataContext="{Binding SettingsPage}">
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="14,10">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding RevertCommand}" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE7A7;" FontSize="14" Margin="0,0,8,0" />
+                            <TextBlock Text="Verwerfen" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE74E;" FontSize="14" Foreground="White" Margin="0,0,8,0" />
+                            <TextBlock Text="Speichern und übernehmen" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SaveStatus}" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource Caption}">
+                        <Run Text="Datei: " /><Run Text="{Binding SettingsPath, Mode=OneWay}" /><Run Text=" · Verbindungsstring und Passwort werden für den angemeldeten Windows-Benutzer verschlüsselt (DPAPI)." />
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Warnings}" Margin="0,0,0,10">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource ErrorBox}" Margin="0,0,0,4">
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ============================== Ergebnisdateien + Datenbank -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Werkeransicht" />
+                            <CheckBox Content="Zwei Prüfplätze gemeinsam anzeigen" IsChecked="{Binding ShowPairedStations}" Margin="0,0,0,8" />
+                            <TextBlock Text="Prüfplatz auf Seite 1" Style="{StaticResource Label}" />
+                            <ComboBox ItemsSource="{Binding StationNames}" SelectedItem="{Binding FirstPairedStation}" Margin="0,0,0,8" />
+                            <TextBlock Text="Prüfplatz auf Seite 2" Style="{StaticResource Label}" />
+                            <ComboBox ItemsSource="{Binding StationNames}" SelectedItem="{Binding SecondPairedStation}" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,8,0,0" Text="Mit Speichern und übernehmen aktivieren. Werker können weder die Anzeige noch die Seitenzuordnung ändern. Änderungen sind erst nach Ende aller Prüfungen möglich." />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Ergebnisdateien" />
+                            <TextBlock Text="Ordner" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding ResultFolder, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="{Binding ResultFolderHint}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Datenbank" />
+                            <TextBlock Text="System" Style="{StaticResource Label}" />
+                            <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}" DisplayMemberPath="Text" />
+                            <StackPanel Visibility="{Binding IsSqlProvider, Converter={StaticResource BoolVis}}" Margin="0,8,0,0">
+                                <TextBlock Text="Verbindungsstring" Style="{StaticResource Label}" />
+                                <TextBox Text="{Binding ConnectionString, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding ConnectionExample}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsSqlProvider, Converter={StaticResource BoolVis}}">
+                                <Button Style="{StaticResource OutlineButton}" Command="{Binding TestDatabaseCommand}" Margin="0,0,10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE703;" FontSize="14" Margin="0,0,8,0" />
+                                        <TextBlock Text="Verbindung testen" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource OutlineButton}" Command="{Binding ContractCheckCommand}"
+                                        ToolTip="Schreibt zwei Test-Runs (VERTRAG-…), prüft Idempotenz, Antwortverlust und Kurven und löscht sie wieder.">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE9D5;" FontSize="14" Margin="0,0,8,0" />
+                                        <TextBlock Text="Vertragsprüfung" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="{Binding DatabaseStatus}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,8,0,4"
+                                       Visibility="{Binding DatabaseStatus, Converter={StaticResource NullVis}}" />
+                            <ItemsControl ItemsSource="{Binding ContractResult}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                                            <TextBlock Style="{StaticResource Icon}" FontSize="14" Margin="0,0,8,0" Text="&#xE73E;"
+                                                       Foreground="{Binding Passed, Converter={StaticResource ErrorBrush}, ConverterParameter=invert}" />
+                                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}" Width="200" />
+                                            <TextBlock Text="{Binding Detail}" TextWrapping="Wrap" MaxWidth="420" Style="{StaticResource Caption}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Outbox – Wiederholung im Hintergrund" Margin="0,16,0,6" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Erster Abstand [s]" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding RetryIntervalSeconds}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Backoff-Faktor" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding BackoffFactor}" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Margin="0,6,0,0">
+                                    <TextBlock Text="Höchstabstand [min]" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding MaxRetryMinutes}" />
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,6,0,0">
+                                    <TextBlock Text="Zeitlimit je Versuch [s]" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding AttemptTimeoutSeconds}" />
+                                </StackPanel>
+                            </Grid>
+                            <Border Style="{StaticResource InfoBox}" Margin="0,10,0,0">
+                                <TextBlock TextWrapping="Wrap" FontSize="12"
+                                           Text="Scheitert die Speicherung am Testende, erscheint 10 s eine große Warnung. Hintergrundversuche warnen den Werker nie; Ergebnisse je Versuch stehen unter Ergebnisse → Meldungen und gehen an MQTT." />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Zugang: Entra-App und Rechte je Konto (zugang.json, nur Administratoren) -->
+                    <Border Style="{StaticResource Card}" Margin="0,12,0,0"
+                            DataContext="{Binding DataContext.AccessPage, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Zugang und Rechte (dieser Prüfplatz)" />
+                            <TextBlock Text="{Binding ModeText}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,6" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Entra Client-ID (Anwendungs-ID)" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Mandanten-ID (Tenant)" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding TenantId, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,8"
+                                       Text="Leer = simulierte Anmeldung. Registrierung der App: docs/entra-registrierung.md." />
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Automatisch abmelden nach Inaktivität [min] (0 = aus)" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBox Text="{Binding InactivityMinutes}" Width="60" HorizontalAlignment="Left" />
+                            </DockPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Rechtequelle" Style="{StaticResource Label}" />
+                                    <ComboBox ItemsSource="{Binding RightsSources}" SelectedItem="{Binding RightsSource}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="App-Rolle „Entwickeln“" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding DevelopRole, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="App-Rolle „Freigeben“" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding ReleaseRole, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                       Text="Lokal = Liste unten je Prüfplatz; AppRollen = zentral über die App-Rollen der Entra-App (Claim „roles“); Beide = Vereinigung." />
+                            <TextBlock Text="Rechte je Konto" FontWeight="SemiBold" Margin="0,4,0,4" />
+                            <DataGrid ItemsSource="{Binding Users}" AutoGenerateColumns="False" CanUserAddRows="False" HeadersVisibility="Column" RowHeight="30" MaxHeight="220">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Anmeldename (UPN)" Binding="{Binding Upn, UpdateSourceTrigger=PropertyChanged}" Width="2*" />
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                    <DataGridCheckBoxColumn Header="Entwickeln" Binding="{Binding Develop, UpdateSourceTrigger=PropertyChanged}" Width="85" />
+                                    <DataGridCheckBoxColumn Header="Freigeben" Binding="{Binding Release, UpdateSourceTrigger=PropertyChanged}" Width="85" />
+                                    <DataGridTemplateColumn Width="40">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource ToolButton}" Padding="4"
+                                                        Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE74D;" FontSize="13" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding AddCommand}" Margin="0,0,10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" FontSize="13" Margin="0,0,8,0" />
+                                        <TextBlock Text="Konto hinzufügen" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding ReloadCommand}" Margin="0,0,10,0" Content="Neu laden" />
+                                <Button Style="{StaticResource OutlineButton}" Command="{Binding SaveCommand}" Content="Zugang speichern" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"
+                                       Visibility="{Binding Status, Converter={StaticResource NullVis}}" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,6,0,0">
+                                <Run Text="Datei: " /><Run Text="{Binding Path, Mode=OneWay}" />
+                                <Run Text=" – gilt für alle Windows-Benutzer dieses Rechners; Schreibrecht nur für Administratoren vorsehen." />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============================== MQTT -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <StackPanel>
+                        <DockPanel>
+                            <CheckBox DockPanel.Dock="Right" Content="aktiv" IsChecked="{Binding MqttEnabled}" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="MQTT-Meldeweg" />
+                        </DockPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Broker" Style="{StaticResource Label}" />
+                                <TextBox Text="{Binding MqttHost, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Port" Style="{StaticResource Label}" />
+                                <TextBox Text="{Binding MqttPort}" />
+                            </StackPanel>
+                        </Grid>
+                        <CheckBox Content="TLS (verschlüsselt)" IsChecked="{Binding MqttUseTls}" Margin="0,8,0,0" />
+                        <TextBlock Text="Firmen-CA (PEM/CRT, optional)" Style="{StaticResource Label}" Margin="0,8,0,0" />
+                        <TextBox Text="{Binding MqttCaCertificatePath, UpdateSourceTrigger=PropertyChanged}" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Benutzer" Style="{StaticResource Label}" />
+                                <TextBox Text="{Binding MqttUsername, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Passwort" Style="{StaticResource Label}" />
+                                <PasswordBox x:Name="MqttPasswordBox" PasswordChanged="MqttPasswordChanged" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="Client-ID" Style="{StaticResource Label}" Margin="0,8,0,0" />
+                        <TextBox Text="{Binding MqttClientId, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Topic" Style="{StaticResource Label}" Margin="0,8,0,0" />
+                        <TextBox Text="{Binding MqttTopic, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                   Text="Platzhalter: {station}, {event}, {runId}, {dutId}. Nachricht (JSON): runId, dutId, event, time, attempt, error, station." />
+                        <DockPanel Margin="0,8,0,0">
+                            <TextBlock Text="Zeitlimit [s]" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Text="{Binding MqttTimeoutSeconds}" Width="60" HorizontalAlignment="Left" />
+                        </DockPanel>
+                        <Button Style="{StaticResource OutlineButton}" Command="{Binding TestMqttCommand}" HorizontalAlignment="Left" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE724;" FontSize="14" Margin="0,0,8,0" />
+                                <TextBlock Text="Testmeldung senden" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding MqttStatus}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"
+                                   Visibility="{Binding MqttStatus, Converter={StaticResource NullVis}}" />
+                        <Border Style="{StaticResource InfoBox}" Margin="0,10,0,0">
+                            <TextBlock TextWrapping="Wrap" FontSize="12"
+                                       Text="Best effort: QoS 0, nicht retained, ein Sendeversuch je Meldung, keine Zwischenspeicherung. Meldelücken sind möglich und beeinflussen den Test nie." />
+                        </Border>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Gesendete Meldungen" Margin="0,14,0,6" />
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding MqttLog}" BorderThickness="0" MaxHeight="180">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,2">
+                                    <TextBlock>
+                                        <Run Text="{Binding Time, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" />
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource Caption}" TextWrapping="Wrap" MaxWidth="460"
+                                               Foreground="{Binding Passed, Converter={StaticResource ErrorBrush}, ConverterParameter=invert}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- ============================== HTTP -->
+                    <DockPanel Margin="0,18,0,0">
+                        <CheckBox DockPanel.Dock="Right" Content="aktiv" IsChecked="{Binding HttpEnabled}" VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="HTTP-Meldeweg (Webhook)" />
+                    </DockPanel>
+                    <TextBlock Text="URL" Style="{StaticResource Label}" />
+                    <TextBox Text="{Binding HttpUrl, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                               Text="POST mit derselben JSON-Nachricht wie MQTT; Platzhalter {station}, {event}, {runId}, {dutId}. Erfolg = Status 2xx." />
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Kopfzeile (optional)" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding HttpHeaderName, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Wert (geschützt gespeichert)" Style="{StaticResource Label}" />
+                            <PasswordBox x:Name="HttpHeaderBox" PasswordChanged="HttpHeaderChanged" />
+                        </StackPanel>
+                    </Grid>
+                    <DockPanel Margin="0,8,0,0">
+                        <TextBlock Text="Zeitlimit [s]" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding HttpTimeoutSeconds}" Width="60" HorizontalAlignment="Left" />
+                    </DockPanel>
+                    <Button Style="{StaticResource OutlineButton}" Command="{Binding TestHttpCommand}" Content="Testmeldung senden" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding HttpStatus}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"
+                               Visibility="{Binding HttpStatus, Converter={StaticResource NullVis}}" />
+
+                    <!-- ============================== OPC UA -->
+                    <DockPanel Margin="0,18,0,0">
+                        <CheckBox DockPanel.Dock="Right" Content="aktiv" IsChecked="{Binding OpcUaEnabled}" VerticalAlignment="Center"
+                                  IsEnabled="{Binding OpcUaAvailable}" />
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="OPC-UA-Meldeweg" />
+                    </DockPanel>
+                    <TextBlock Text="Endpunkt" Style="{StaticResource Label}" />
+                    <TextBox Text="{Binding OpcUaEndpoint, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                    <TextBlock Text="Knotenpräfix" Style="{StaticResource Label}" Margin="0,8,0,0" />
+                    <TextBox Text="{Binding OpcUaNodePrefix, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Text="{Binding OpcUaNodesHint}" />
+                    <CheckBox Content="Verschlüsselt (Sign &amp; Encrypt, Serverzertifikat wird beim ersten Mal vertraut)" IsChecked="{Binding OpcUaUseSecurity}" Margin="0,8,0,0" />
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Benutzer (leer = anonym)" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding OpcUaUsername, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Passwort" Style="{StaticResource Label}" />
+                            <PasswordBox x:Name="OpcUaPasswordBox" PasswordChanged="OpcUaPasswordChanged" />
+                        </StackPanel>
+                    </Grid>
+                    <DockPanel Margin="0,8,0,0">
+                        <TextBlock Text="Zeitlimit [s]" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding OpcUaTimeoutSeconds}" Width="60" HorizontalAlignment="Left" />
+                    </DockPanel>
+                    <Button Style="{StaticResource OutlineButton}" Command="{Binding TestOpcUaCommand}" Content="Testmeldung schreiben" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding OpcUaStatus}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"
+                               Visibility="{Binding OpcUaStatus, Converter={StaticResource NullVis}}" />
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Gesendete Meldungen (HTTP, OPC UA)" Margin="0,14,0,6" />
+                    <ListBox ItemsSource="{Binding NotifyLog}" BorderThickness="0" MaxHeight="180">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,2">
+                                    <TextBlock>
+                                        <Run Text="{Binding Time, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" />
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource Caption}" TextWrapping="Wrap" MaxWidth="460"
+                                               Foreground="{Binding Passed, Converter={StaticResource ErrorBrush}, ConverterParameter=invert}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

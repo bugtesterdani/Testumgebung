@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Hardware</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Contracts\Testumgebung.Contracts.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Persistence</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Engine\Testumgebung.Engine.csproj" />
+    <ProjectReference Include="..\Testumgebung.Instruments\Testumgebung.Instruments.csproj" />
+  </ItemGroup>
+</Project>

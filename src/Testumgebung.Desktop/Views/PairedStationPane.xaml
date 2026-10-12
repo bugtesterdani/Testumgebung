@@ -1,0 +1,56 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.PairedStationPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Testumgebung.Desktop.Views">
+    <Border Style="{StaticResource Card}" Margin="6" Padding="12">
+        <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="150"/><RowDefinition Height="*"/><RowDefinition Height="130"/></Grid.RowDefinitions>
+            <StackPanel>
+                <TextBlock Text="{Binding Name}" Style="{StaticResource SectionTitle}"/>
+                <WrapPanel><TextBlock Text="Auftrag: "/><TextBlock Text="{Binding CurrentOrder}" FontWeight="Bold" Margin="0,0,18,0"/>
+                    <TextBlock Text="Seriennummer: "/><TextBlock Text="{Binding CurrentDutId}" FontWeight="Bold"/></WrapPanel>
+                <TextBlock Text="{Binding Hint}" TextWrapping="Wrap" Style="{StaticResource Caption}" Margin="0,4"/>
+                <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding StorageError}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
+                <ProgressBar Value="{Binding DutProgress, Mode=OneWay}" Maximum="100" Height="5" Margin="0,4,0,8"/>
+            </StackPanel>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Measurements}" IsReadOnly="True" Margin="0,0,0,10">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Prüfschritt" Binding="{Binding Name}" Width="2*"/>
+                    <DataGridTextColumn Header="Wert" Binding="{Binding Value}" Width="*"/>
+                    <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="60"/>
+                    <DataGridTextColumn Header="Ergebnis" Binding="{Binding Rating}" Width="90"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Contents}">
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                        <Border Style="{StaticResource InfoBox}" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="16" Margin="0,4,0,8"/>
+                                <Image Source="{Binding ImagePath}" MaxHeight="160" Visibility="{Binding HasImage, Converter={StaticResource BoolVis}}"/>
+                                <StackPanel Visibility="{Binding IsInput, Converter={StaticResource BoolVis}}">
+                                    <TextBox Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}" FontSize="22" IsEnabled="{Binding IsAwaiting}">
+                                        <TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding ConfirmCommand}"/></TextBox.InputBindings>
+                                    </TextBox>
+                                    <TextBlock Text="{Binding RangeText}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Unit}"/>
+                                </StackPanel>
+                                <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}" IsEnabled="{Binding IsAwaiting}"
+                                    Visibility="{Binding IsChoice, Converter={StaticResource BoolVis}}"/>
+                                <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
+                                <Button Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" Style="{StaticResource PrimaryButton}"
+                                    Margin="0,8,0,0" HorizontalAlignment="Left" Visibility="{Binding IsAwaiting, Converter={StaticResource BoolVis}}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <DockPanel Grid.Row="3" Margin="0,10,0,0">
+                <TextBlock Text="Protokoll" DockPanel.Dock="Top" Style="{StaticResource SectionTitle}"/>
+                <views:ProtocolGrid/>
+            </DockPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,0 +1,145 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Zwei Prüfplätze",
+  "version": "1.0",
+  "description": "Gemeinsamer Fertigungsauftrag, eigene Seriennummern, wechselnde Freigabe nach Entnahmebestätigung. Nur simulierte Bewertung.",
+  "variables": [
+    {
+      "name": "Auftrag",
+      "type": "String"
+    },
+    {
+      "name": "Pruefseite",
+      "type": "Int"
+    }
+  ],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "schritt",
+        "id": "start-info",
+        "block": "werker",
+        "name": "Start",
+        "parameters": {
+          "Text": "Prüfsitzung gestartet",
+          "Warten": "false",
+          "Art": "Anweisung"
+        }
+      }
+    ],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "a-dut",
+        "name": "Prüfling",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "id": "serial",
+            "block": "werker",
+            "name": "Seriennummer erfassen",
+            "parameters": {
+              "Ziel": "Kennung",
+              "Pflicht": "true",
+              "Datentyp": "Text",
+              "Text": "Eigene Seriennummer scannen",
+              "Art": "Eingabe"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "wait",
+            "block": "pruefplatz.freigabe.warten",
+            "name": "Freigabe abwarten",
+            "parameters": {
+              "Kanal": "Pruefung",
+              "ErsteSeite": "1"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "check",
+            "block": "bewertung",
+            "name": "Simulierte Prüfung",
+            "parameters": {
+              "Wert": "Kennung",
+              "Bedingung": "true"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "remove",
+            "block": "werker",
+            "name": "Entnahme bestätigen",
+            "parameters": {
+              "Text": "Prüfling entnommen",
+              "Warten": "true",
+              "Art": "Anweisung"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "release",
+            "block": "pruefplatz.freigabe.erteilen",
+            "name": "Andere Seite freigeben",
+            "parameters": {
+              "Kanal": "Pruefung"
+            }
+          }
+        ]
+      }
+    ],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "schritt",
+        "id": "end-info",
+        "block": "werker",
+        "name": "End",
+        "parameters": {
+          "Text": "Prüfsitzung beendet",
+          "Warten": "false",
+          "Art": "Anweisung"
+        }
+      }
+    ],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": []
+}

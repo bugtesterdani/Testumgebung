@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Testumgebung.Desktop</RootNamespace>
+    <AssemblyTitle>Testumgebung</AssemblyTitle>
+    <ApplicationIcon>Assets\Testumgebung.ico</ApplicationIcon>
+    <!-- Generierter WPF-Code soll den Build nicht an Warnungen scheitern lassen -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Testumgebung.ico" />
+    <Resource Include="Assets\AppIcon.png" />
+    <ProjectReference Include="..\Testumgebung.Presentation\Testumgebung.Presentation.csproj" />
+    <ProjectReference Include="..\Testumgebung.Workers\Testumgebung.Workers.csproj" />
+  </ItemGroup>
+  <!-- Datenbanktreiber (Etappe 6). Der Adapter selbst nutzt nur ADO.NET; hier werden die Provider eingebunden. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <!-- Entra-Anmeldung über MSAL und den Windows-Kontomanager (WAM) -->
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.65.0" />
+    <PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.65.0" />
+    <!-- OPC-UA-Meldeweg (OPC Foundation .NET Standard Stack) -->
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.5.374.126" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Configuration" Version="1.5.374.126" />
+    <!-- DPAPI für Verbindungsstrings und Passwörter in der Einstellungsdatei -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+  </ItemGroup>
+  <!-- C#- und Python-Worker nach bin\...\workers\ kopieren -->
+  <Import Project="..\..\build\CodeWorkers.targets" />
+  <ItemGroup>
+    <Content Include="..\..\docs\beispiele\*.tproj.json" Link="docs\beispiele\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,64 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Auswahl mit Auftragsdatei",
+  "version": "1.0",
+  "description": "Liest die Fertigungsaufträge aus einer lokalen JSON-Datei. Pfad im C#-Block anpassen.",
+  "variables": [
+    {
+      "name": "Kennung",
+      "type": "String"
+    },
+    {
+      "name": "Auftrag",
+      "type": "String"
+    },
+    {
+      "name": "Artikel",
+      "type": "String"
+    }
+  ],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "schritt",
+        "block": "code",
+        "parameters": {
+          "Sprache": "C#",
+          "Quelltext": "// Datenquelle: Pfad bei Bedarf anpassen. Unbekannte Aufträge/Dateifehler verhindern den Start.\nstring path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), \"Testumgebung\", \"fertigungsauftraege.json\");\nusing var data = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(path));\nstring order = (Auftrag ?? \"\").Trim();\nif (!data.RootElement.TryGetProperty(order, out var entry))\n    return Error(\"Fertigungsauftrag nicht gefunden: \" + order);\nstring program = entry.GetProperty(\"Testprogramm\").GetString();\nif (string.IsNullOrWhiteSpace(program)) return Error(\"Testprogramm fehlt: \" + order);\nstring article = entry.GetProperty(\"Artikel\").GetString();\nSelectTest(program, null, order, \"Artikel=\" + article);\nreturn Pass(program);",
+          "Timeout": "30"
+        },
+        "id": "auswahl-code",
+        "name": "Programm anhand Auftrag waehlen"
+      }
+    ],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": []
+}

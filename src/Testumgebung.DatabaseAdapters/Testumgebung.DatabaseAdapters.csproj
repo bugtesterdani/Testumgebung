@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Nur ADO.NET (System.Data.Common). Die Treiber (SqlClient, Npgsql, MySqlConnector, Sqlite) bindet die Anwendung ein. -->
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.DatabaseAdapters</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Persistence\Testumgebung.Persistence.csproj" />
+  </ItemGroup>
+</Project>

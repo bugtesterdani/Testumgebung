@@ -1,0 +1,151 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.SystemView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Pilot: Systemprüfung des Prüfrechners | Konfiguration sichern und wiederherstellen -->
+    <Grid Margin="16" DataContext="{Binding SystemPage}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="460" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,10">
+            <TextBlock Style="{StaticResource PageTitle}" Text="System &amp; Sicherung" />
+            <TextBlock Text="Prüfrechner vor dem Pilotbetrieb prüfen; Rechnerkonfiguration sichern und wiederherstellen." FontSize="14" Foreground="{StaticResource MutedBrush}" />
+        </StackPanel>
+
+        <!-- ============================== Systemprüfung -->
+        <Border Grid.Row="1" Style="{StaticResource Card}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <CheckBox Content="Reale Geräte ansprechen (*IDN?)" IsChecked="{Binding ProbeDevices}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding RunCheckCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE9D5;" FontSize="14" Foreground="White" Margin="0,0,8,0" />
+                                <TextBlock Text="Systemprüfung starten" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Systemprüfung" VerticalAlignment="Center" Margin="0" />
+                </DockPanel>
+                <Border DockPanel.Dock="Top" Style="{StaticResource InfoBox}" Margin="0,0,0,8" Visibility="{Binding CheckSummary, Converter={StaticResource NullVis}}">
+                    <TextBlock Text="{Binding CheckSummary}" TextWrapping="Wrap" FontSize="13" />
+                </Border>
+                <DataGrid ItemsSource="{Binding Checks}" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="Column" BorderThickness="0">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Ergebnis" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock x:Name="Level" Text="{Binding LevelText}" FontWeight="SemiBold" Foreground="{StaticResource PassBrush}" />
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Level}" Value="Info">
+                                            <Setter TargetName="Level" Property="Foreground" Value="{StaticResource MutedBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                            <Setter TargetName="Level" Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}" Value="Error">
+                                            <Setter TargetName="Level" Property="Foreground" Value="{StaticResource FailBrush}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Bereich" Binding="{Binding Area}" Width="130" />
+                        <DataGridTextColumn Header="Prüfpunkt" Binding="{Binding Name}" Width="200" />
+                        <DataGridTemplateColumn Header="Details" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Detail}" TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================== Sicherung -->
+        <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12" DataContext="{Binding Python}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Python-Umgebung und Konsole" />
+                        <TextBlock Text="Mitgeliefertes Python in einen beschreibbaren temporären Ordner kopieren und dort Pakete mit pip installieren." TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding CreateCommand}" Content="Python-Kopie erstellen und Konsole öffnen" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding EnvironmentPath}" TextWrapping="Wrap" Style="{StaticResource Caption}" Margin="0,0,0,8" />
+                        <WrapPanel>
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding OpenConsoleCommand}" Content="Konsole öffnen" Margin="0,0,8,8" />
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding UseEnvironmentCommand}" Content="Diese Umgebung verwenden" Margin="0,0,0,8" />
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding UseBundledCommand}" Content="Mitgeliefertes Python verwenden" Margin="0,0,0,8" />
+                        </WrapPanel>
+                        <TextBlock Text="Allgemeine Python-Vorgabe" FontWeight="SemiBold" />
+                        <TextBlock Text="Auswahlprogramm und die Variable PythonVenv haben Vorrang." TextWrapping="Wrap" Style="{StaticResource Caption}" />
+                        <TextBlock Text="{Binding ActiveInterpreter}" TextWrapping="Wrap" Style="{StaticResource Caption}" Margin="0,0,0,8" />
+                        <TextBlock Text="Vorbereitete Befehle (PAKETNAME ersetzen)" FontWeight="SemiBold" />
+                        <TextBox Text="{Binding Commands, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,6,0,8" />
+                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Konfiguration sichern" />
+                        <ItemsControl ItemsSource="{Binding Sources}" Margin="0,0,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,3">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Description}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Path}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   Text="Kennwörter und Verbindungsstring bleiben DPAPI-geschützt: auf einem anderen Rechner oder Konto nach dem Wiederherstellen neu eingeben. Projekte und Release-Pakete werden separat (Datenbank bzw. Release-Ordner) gesichert." />
+                        <Button Style="{StaticResource OutlineButton}" Command="{Binding BackupCommand}" Content="Sicherung erstellen …" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Wiederherstellen" />
+                        <Button Style="{StaticResource OutlineButton}" Command="{Binding OpenBackupCommand}" Content="Sicherung öffnen und prüfen …" HorizontalAlignment="Left" />
+                        <TextBlock Text="{Binding RestorePath}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Visibility="{Binding RestorePath, Converter={StaticResource NullVis}}" />
+                        <TextBlock Text="{Binding InspectionText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,6"
+                                   Visibility="{Binding InspectionText, Converter={StaticResource NullVis}}" />
+                        <ItemsControl ItemsSource="{Binding BackupFiles}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,3">
+                                        <CheckBox IsChecked="{Binding Selected}" IsEnabled="{Binding CanRestore}" Content="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding TargetText, StringFormat=→ {0}}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="22,0,0,0" />
+                                        <TextBlock Text="{Binding SecretsText}" Style="{StaticResource Caption}" Foreground="{StaticResource WarnBrush}" Margin="22,0,0,0"
+                                                   Visibility="{Binding SecretsText, Converter={StaticResource NullVis}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl ItemsSource="{Binding BackupMessages}" Margin="0,6,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Margin="0,2" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Style="{StaticResource DangerButton}" Command="{Binding RestoreCommand}" Content="Ausgewählte Dateien wiederherstellen" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource InfoBox}" Visibility="{Binding BackupStatus, Converter={StaticResource NullVis}}">
+                    <TextBlock Text="{Binding BackupStatus}" TextWrapping="Wrap" FontSize="12" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

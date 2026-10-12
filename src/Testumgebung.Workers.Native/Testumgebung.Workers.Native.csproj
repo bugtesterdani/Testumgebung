@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Isolierter Native-Worker: baut C++-CodeBlocks mit der erkannten Toolchain zu einer Bibliothek
+       mit stabiler C-Schnittstelle (tu_invoke) und ruft sie auf. Ein Absturz im nativen Code beendet nur diesen Prozess. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Testumgebung.Workers.Native</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+</Project>

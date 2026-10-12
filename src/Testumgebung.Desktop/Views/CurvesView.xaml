@@ -1,0 +1,405 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.CurvesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:Testumgebung.Desktop.Views">
+    <!-- Kurven (Abschnitt 8): Bibliothek | drei Wege (Editor, Datei, Messkurve) mit Vorschau und Bearbeitung | Version, Geräteeignung, Testausgabe -->
+    <UserControl.Resources>
+        <Style x:Key="TabRadio" TargetType="RadioButton">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Padding="14,7" CornerRadius="5" Background="Transparent" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectionBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="FormLabel" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+            <Setter Property="Margin" Value="0,0,8,6" />
+        </Style>
+        <Style x:Key="FormBox" TargetType="TextBox">
+            <Setter Property="Margin" Value="0,0,14,6" />
+            <Setter Property="MinWidth" Value="80" />
+            <Setter Property="Padding" Value="4,2" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16" DataContext="{Binding CurvesPage}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="290" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="370" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ============================== Bibliothek -->
+        <Border Style="{StaticResource Card}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Kurvenversionen" />
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                           Text="Gespeicherte Versionen sind unveränderlich und Teil des Release-Pakets." />
+                <Button DockPanel.Dock="Bottom" Style="{StaticResource OutlineButton}" Command="{Binding NewFromSelectedCommand}" Margin="0,8,0,0"
+                        Content="Als Grundlage für neue Version" />
+                <ListBox ItemsSource="{Binding Curves}" SelectedItem="{Binding SelectedCurve}" BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="2,4">
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding Info}" Style="{StaticResource Caption}" TextWrapping="Wrap" MaxWidth="240" />
+                                <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" MaxWidth="240"
+                                           Visibility="{Binding Usage, Converter={StaticResource NullVis}}">
+                                    <Run Text="Verwendet: " /><Run Text="{Binding Usage, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================== Arbeitsbereich -->
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PageTitle}" Text="Kurven" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,10">
+                        <RadioButton Style="{StaticResource TabRadio}" GroupName="CurveTab" Content="Bibliothek"
+                                     IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter=Library, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource TabRadio}" GroupName="CurveTab" Content="Editor (Sinus, Rampe, Sprung, Formel)"
+                                     IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter=Generator, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource TabRadio}" GroupName="CurveTab" Content="Dateiimport"
+                                     IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter=File, Mode=TwoWay}" />
+                        <RadioButton Style="{StaticResource TabRadio}" GroupName="CurveTab" Content="Messkurve übernehmen"
+                                     IsChecked="{Binding Tab, Converter={StaticResource EnumEquals}, ConverterParameter=Measurement, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <Border Style="{StaticResource ErrorBox}" Margin="0,0,0,8" Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" />
+                    </Border>
+                    <Border Style="{StaticResource InfoBox}" Margin="0,0,0,8" Visibility="{Binding Status, Converter={StaticResource NullVis}}">
+                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" />
+                    </Border>
+
+                    <!-- Bibliothek: Details der gewählten Version -->
+                    <StackPanel Visibility="{Binding Tab, Converter={StaticResource PageVis}, ConverterParameter=Library}" Margin="0,0,0,8">
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6"
+                                   Text="Version links wählen. Neue Kurven entstehen über Editor, Dateiimport oder eine aufgenommene Messkurve." />
+                        <ItemsControl ItemsSource="{Binding SelectedDetails}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Margin="0,1" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Weg 3: Editor -->
+                    <StackPanel Visibility="{Binding Tab, Converter={StaticResource PageVis}, ConverterParameter=Generator}" Margin="0,0,0,8">
+                        <WrapPanel>
+                            <StackPanel Margin="0,0,14,6">
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Art" />
+                                <ComboBox ItemsSource="{Binding GeneratorKinds}" SelectedValuePath="Value" DisplayMemberPath="Text"
+                                          SelectedValue="{Binding GenKind}" MinWidth="160" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Kanäle (;)" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenChannels, UpdateSourceTrigger=PropertyChanged}" MinWidth="120" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Einheit" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenUnit, UpdateSourceTrigger=PropertyChanged}" MinWidth="50" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Abtastrate [Hz]" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenRate, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Dauer [ms]" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenDurationMs, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </WrapPanel>
+                        <WrapPanel Visibility="{Binding IsSine, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Amplitude (Scheitel)" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenAmplitude, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Frequenz [Hz]" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenFrequency, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Phasen [°] (;)" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenPhases, UpdateSourceTrigger=PropertyChanged}" MinWidth="110" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Offset" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenOffset, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </WrapPanel>
+                        <WrapPanel Visibility="{Binding IsRamp, Converter={StaticResource BoolVis}}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Startwert" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenRampStart, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource FormLabel}" Text="Endwert" />
+                                <TextBox Style="{StaticResource FormBox}" Text="{Binding GenRampEnd, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </WrapPanel>
+                        <StackPanel Visibility="{Binding IsStep, Converter={StaticResource BoolVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Text="Stufen „Wert:Dauer[s]“ durch ; getrennt (Gesamtdauer ergibt sich aus den Stufen)" />
+                            <TextBox Style="{StaticResource FormBox}" Text="{Binding GenSteps, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding IsFormula, Converter={StaticResource BoolVis}}">
+                            <TextBlock Style="{StaticResource FormLabel}" Text="Formel f(t) je Kanal, eine Zeile je Kanal (t in s; sin, cos, sqrt, exp, step, min, max, clamp, pi …)" />
+                            <TextBox Style="{StaticResource CodeBox}" Text="{Binding GenFormulas, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True" MinHeight="64" Margin="0,0,0,6" />
+                        </StackPanel>
+                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding GenerateCommand}" HorizontalAlignment="Left" Content="Kurve erzeugen" />
+                    </StackPanel>
+
+                    <!-- Weg 1: Datei -->
+                    <StackPanel Visibility="{Binding Tab, Converter={StaticResource PageVis}, ConverterParameter=File}" Margin="0,0,0,8">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Style="{StaticResource PrimaryButton}" Command="{Binding OpenFileCommand}" Margin="0,0,10,0"
+                                    Content="Datei wählen …" />
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding HasSheets, Converter={StaticResource BoolVis}}">
+                                <TextBlock Style="{StaticResource Label}" Text="Tabellenblatt" />
+                                <ComboBox ItemsSource="{Binding Sheets}" SelectedItem="{Binding SelectedSheet}" MinWidth="120" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding ImportPath}" Style="{StaticResource Caption}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                   Text="CSV/Text (Trennzeichen und Dezimalkomma automatisch), COMTRADE (.cfg + .dat, ASCII/BINARY/BINARY32/FLOAT32), Excel (.xlsx), Ergebnisdatei (.tres)" />
+                    </StackPanel>
+
+                    <!-- Weg 2: Messkurve -->
+                    <StackPanel Visibility="{Binding Tab, Converter={StaticResource PageVis}, ConverterParameter=Measurement}" Margin="0,0,0,8">
+                        <DockPanel Margin="0,0,0,6">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Command="{Binding OpenResultFileCommand}" Content="Andere Datei …" />
+                            <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Command="{Binding RefreshResultFilesCommand}" Content="Aktualisieren" />
+                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Text="Ergebnisdatei" />
+                            <ComboBox ItemsSource="{Binding ResultFiles}" SelectedItem="{Binding SelectedResultFile}" DisplayMemberPath="FileName" Margin="0,0,8,0" />
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Text="Aufnahme" />
+                            <ComboBox ItemsSource="{Binding ResultSources}" SelectedItem="{Binding SelectedSource}" DisplayMemberPath="Title" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0" TextWrapping="Wrap"
+                                   Text="Die aufgenommene Kurve wird als neue Ausgabekurve übernommen; die Ergebnisdatei bleibt unverändert, Herkunft (Prüfling, Run, Schritt) wird mitgeführt." />
+                    </StackPanel>
+
+                    <!-- Datenvorschau und Zuordnung (Datei und Messkurve) -->
+                    <StackPanel Visibility="{Binding IsImportTab, Converter={StaticResource BoolVis}}" Margin="0,0,0,8">
+                        <StackPanel Visibility="{Binding HasTable, Converter={StaticResource BoolVis}}">
+                            <TextBlock Text="{Binding TableInfo}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <ItemsControl ItemsSource="{Binding ImportWarnings}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='⚠ {0}'}" Foreground="{StaticResource WarnBrush}" FontSize="12" TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Datenvorschau" Margin="0,8,0,4" />
+                            <DataGrid ItemsSource="{Binding Preview}" IsReadOnly="True" AutoGenerateColumns="True" Height="150" HeadersVisibility="Column" />
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Kanalzuordnung" Margin="0,10,0,4" />
+                            <DataGrid ItemsSource="{Binding Mapping}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                      HeadersVisibility="Column" MaxHeight="220">
+                                <DataGrid.Columns>
+                                    <DataGridCheckBoxColumn Header="Übernehmen" Binding="{Binding Include, UpdateSourceTrigger=PropertyChanged}" Width="90" />
+                                    <DataGridTextColumn Header="Quellspalte" Binding="{Binding Source, Mode=OneWay}" IsReadOnly="True" Width="1.4*" />
+                                    <DataGridTextColumn Header="Wertebereich" Binding="{Binding Range, Mode=OneWay}" IsReadOnly="True" Width="1.2*" />
+                                    <DataGridTextColumn Header="Zielkanal" Binding="{Binding Target, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                                    <DataGridTextColumn Header="Einheit" Binding="{Binding Unit, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Zeitbasis" Margin="0,10,0,4" />
+                            <WrapPanel>
+                                <StackPanel Margin="0,0,14,6">
+                                    <TextBlock Style="{StaticResource FormLabel}" Text="Modus" />
+                                    <ComboBox ItemsSource="{Binding TimeModes}" SelectedValuePath="Value" DisplayMemberPath="Text" SelectedValue="{Binding TimeMode}" MinWidth="220" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,14,6" Visibility="{Binding IsExplicitTime, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Style="{StaticResource FormLabel}" Text="Zeitspalte" />
+                                    <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding TimeColumn}" MinWidth="140" />
+                                </StackPanel>
+                                <StackPanel Visibility="{Binding IsExplicitTime, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Style="{StaticResource FormLabel}" Text="Faktor → s (ms: 0,001)" />
+                                    <TextBox Style="{StaticResource FormBox}" Text="{Binding TimeFactor, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Visibility="{Binding IsExplicitTime, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
+                                    <TextBlock Style="{StaticResource FormLabel}" Text="Abtastrate [Hz]" />
+                                    <TextBox Style="{StaticResource FormBox}" Text="{Binding ImportRate, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,14,6">
+                                    <TextBlock Style="{StaticResource FormLabel}" Text="Qualitätsspalte" />
+                                    <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding QualityColumn}" MinWidth="140" />
+                                </StackPanel>
+                            </WrapPanel>
+                            <ItemsControl ItemsSource="{Binding ImportSummary}" Margin="0,4,0,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock FontSize="12">
+                                            <Run Text="{Binding Channel, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" [" /><Run Text="{Binding Unit, Mode=OneWay}" /><Run Text="]  " />
+                                            <Run Text="{Binding Min, Mode=OneWay, StringFormat={}{0:0.###}}" /><Run Text=" … " /><Run Text="{Binding Max, Mode=OneWay, StringFormat={}{0:0.###}}" />
+                                            <Run Text="  " /><Run Text="{Binding Quality, Mode=OneWay}" Foreground="{StaticResource MutedBrush}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding ApplyImportCommand}" HorizontalAlignment="Left" Content="Als Kurve übernehmen" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Vorschau -->
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Vorschau" Margin="0,8,0,4" />
+                    <views:WaveformPlot DataContext="{Binding Plot}" Height="340" />
+
+                    <!-- Bearbeitung -->
+                    <StackPanel Visibility="{Binding IsEditing, Converter={StaticResource BoolVis}}" Margin="0,10,0,0">
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Bearbeiten (ausdrücklich, mit Historie)" />
+                        <WrapPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,18,8">
+                                <TextBlock Style="{StaticResource Label}" Text="Zuschnitt [ms]" />
+                                <TextBox Text="{Binding TrimFromMs, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,4,0" />
+                                <TextBlock Style="{StaticResource Label}" Text="bis" />
+                                <TextBox Text="{Binding TrimToMs, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,6,0" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding TrimCommand}" Content="Zuschneiden" />
+                            </StackPanel>
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding TrimToViewCommand}" Content="{Binding TrimToViewText}" Margin="0,0,18,8" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,18,8">
+                                <TextBlock Style="{StaticResource Label}" Text="Skalieren ×" />
+                                <TextBox Text="{Binding ScaleFactor, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,4,0" />
+                                <ComboBox ItemsSource="{Binding ChannelChoices}" SelectedItem="{Binding ScaleChannel}" MinWidth="110" Margin="0,0,6,0" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding ScaleCommand}" Content="Skalieren" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,18,8">
+                                <TextBlock Style="{StaticResource Label}" Text="Zeitverschiebung [ms]" />
+                                <TextBox Text="{Binding ShiftMs, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,6,0" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding ShiftCommand}" Content="Verschieben" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,18,8">
+                                <TextBlock Style="{StaticResource Label}" Text="Abtastrate [Hz]" />
+                                <TextBox Text="{Binding ResampleHz, UpdateSourceTrigger=PropertyChanged}" Width="70" Margin="0,0,6,0" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding ResampleCommand}" Content="Ausdrücklich ändern" />
+                            </StackPanel>
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding UndoCommand}" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7A7;" FontSize="14" Margin="0,0,6,0" />
+                                    <TextBlock Text="Rückgängig" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ============================== Version, Eignung, Ausgabe -->
+        <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Neue Version" />
+                        <TextBlock Text="{Binding WorkingTitle}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Style="{StaticResource FormLabel}" Text="Kennung" />
+                            <TextBox Grid.Column="1" Style="{StaticResource FormBox}" Margin="0,0,0,6" Text="{Binding CurveId, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="1" Style="{StaticResource FormLabel}" Text="Name" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource FormBox}" Margin="0,0,0,6" Text="{Binding CurveName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="2" Style="{StaticResource FormLabel}" Text="Version" />
+                            <TextBox Grid.Row="2" Grid.Column="1" Style="{StaticResource FormBox}" Margin="0,0,0,6" Text="{Binding CurveVersion, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="3" Style="{StaticResource FormLabel}" Text="Beschreibung" />
+                            <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource FormBox}" Margin="0,0,0,6" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                     TextWrapping="Wrap" AcceptsReturn="True" MinHeight="44" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding WorkingDetails}" Margin="0,4,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Style="{StaticResource PrimaryButton}" Command="{Binding SaveVersionCommand}" Content="Version speichern" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Geräteeignung" />
+                        <ComboBox ItemsSource="{Binding Outputs}" SelectedItem="{Binding SelectedOutput}" Margin="0,0,0,6" />
+                        <TextBlock Text="{Binding CapabilitiesText}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                        <ItemsControl ItemsSource="{Binding Suitability}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,2">
+                                        <TextBlock DockPanel.Dock="Left" Style="{StaticResource Icon}" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Top"
+                                                   Text="&#xE73E;" Foreground="{StaticResource PassBrush}" x:Name="Glyph" />
+                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="12" />
+                                    </DockPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsError}" Value="True">
+                                            <Setter TargetName="Glyph" Property="Text" Value="&#xE783;" />
+                                            <Setter TargetName="Glyph" Property="Foreground" Value="{StaticResource FailBrush}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Text="Keine automatische Skalierung, Einheitenumrechnung oder Abtastratenänderung – Anpassungen nur ausdrücklich im Editor." />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Testausgabe (Simulation)" />
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                   Text="Im Ablauf über die Bausteine „Kurve laden / übertragen / starten / stoppen“. Hier zum Ausprobieren gegen die Simulation." />
+                        <WrapPanel Margin="0,0,0,6">
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding LoadCommand}" Content="1 Laden" Margin="0,0,6,6" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding TransferCommand}" Content="2 Übertragen" Margin="0,0,6,6" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding StartCommand}" Content="3 Starten" Margin="0,0,6,6" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding StopCommand}" Content="4 Stoppen" Margin="0,0,6,6" />
+                        </WrapPanel>
+                        <TextBlock FontWeight="SemiBold" TextWrapping="Wrap">
+                            <Run Text="Zustand: " /><Run Text="{Binding OutputStateText, Mode=OneWay}" />
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding OutputLog}" Margin="0,6,0,0" MaxHeight="160">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontFamily="{StaticResource CodeFont}" FontSize="11.5" TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

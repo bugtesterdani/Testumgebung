@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- ViewModels ohne WPF-Abhängigkeit: plattformunabhängig testbar -->
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Presentation</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Persistence\Testumgebung.Persistence.csproj" />
+    <ProjectReference Include="..\Testumgebung.Workers\Testumgebung.Workers.csproj" />
+    <ProjectReference Include="..\Testumgebung.DatabaseAdapters\Testumgebung.DatabaseAdapters.csproj" />
+    <ProjectReference Include="..\Testumgebung.Notifications\Testumgebung.Notifications.csproj" />
+    <ProjectReference Include="..\Testumgebung.Identity\Testumgebung.Identity.csproj" />
+  </ItemGroup>
+</Project>

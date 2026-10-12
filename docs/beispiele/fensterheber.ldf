@@ -1,0 +1,37 @@
+LIN_description_file;
+LIN_protocol_version = "2.1";
+LIN_language_version = "2.1";
+LIN_speed = 19.2 kbps;
+/* Fensterheber-Beispiel */
+Nodes {
+  Master: BCM, 5 ms, 0.1 ms;
+  Slaves: Fensterheber;
+}
+Signals {
+  Position: 8, 0, Fensterheber, BCM;
+  Status: 2, 0, Fensterheber, BCM;
+  Daten: 16, {0, 0}, Fensterheber, BCM;
+  Befehl: 2, 0, BCM, Fensterheber;
+  Geschwindigkeit: 8, 128, BCM, Fensterheber;
+}
+Frames {
+  FH_Status: 0x21, Fensterheber, 4 {
+    Position, 0;
+    Status, 8;
+    Daten, 16;
+  }
+  FH_Befehl: 0x10, BCM, 2 {
+    Befehl, 0;
+    Geschwindigkeit, 8;
+  }
+}
+Signal_encoding_types {
+  PosEnc { physical_value, 0, 200, 0.5, 0, "%"; }
+  StatusEnc { logical_value, 0, "Ruhe"; logical_value, 1, "Auf"; logical_value, 2, "Ab"; }
+  BefehlEnc { logical_value, 0, "Stopp"; logical_value, 1, "Auf"; logical_value, 2, "Ab"; }
+}
+Signal_representation {
+  PosEnc: Position;
+  StatusEnc: Status;
+  BefehlEnc: Befehl;
+}

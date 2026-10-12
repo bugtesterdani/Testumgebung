@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Testumgebung.Engine.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Standard: xUnit über NuGet -->
+  <ItemGroup Condition="'$(XunitShimProject)' == ''">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="coverlet.collector" Version="10.1.0" PrivateAssets="all" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1" />
+    <!-- Datenbanktreiber für die Provider-Tests (laufen nur mit gesetztem Verbindungsstring) -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(XunitShimProject)' == ''">
+    <DefineConstants>$(DefineConstants);DB_PROVIDERS</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Nur für Offline-Builds ohne NuGet-Zugang: minimaler xUnit-kompatibler Ersatz -->
+  <ItemGroup Condition="'$(XunitShimProject)' != ''">
+    <ProjectReference Include="$(XunitShimProject)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <ProjectReference Include="..\..\src\Testumgebung.Engine\Testumgebung.Engine.csproj" />
+    <ProjectReference Include="..\..\src\Testumgebung.Persistence\Testumgebung.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Testumgebung.DatabaseAdapters\Testumgebung.DatabaseAdapters.csproj" />
+    <ProjectReference Include="..\..\src\Testumgebung.Notifications\Testumgebung.Notifications.csproj" />
+    <ProjectReference Include="..\..\src\Testumgebung.Presentation\Testumgebung.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\Testumgebung.Workers\Testumgebung.Workers.csproj" />
+    <ProjectReference Include="..\Fixtures\OrderLibrary\OrderLibrary.csproj" />
+    <ProjectReference Include="..\Fixtures\FakeGdb\FakeGdb.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Fixtures\FakeCompiler\FakeCompiler.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <!-- Echte Worker-Prozesse für die CodeBlock-Tests (workers/csharp, workers/python) -->
+  <Import Project="..\..\build\CodeWorkers.targets" />
+  <Target Name="CopyFakeGdb" AfterTargets="Build">
+    <ItemGroup>
+      <FakeGdbFiles Include="..\Fixtures\FakeGdb\bin\$(Configuration)\net10.0\FakeGdb.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FakeGdbFiles)" DestinationFolder="$(OutDir)fixtures\gdb" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyFakeCompiler" AfterTargets="Build">
+    <ItemGroup><FakeCompilerFiles Include="..\Fixtures\FakeCompiler\bin\$(Configuration)\net10.0\FakeCompiler.*" /></ItemGroup>
+    <Copy SourceFiles="@(FakeCompilerFiles)" DestinationFolder="$(OutDir)fixtures\compiler" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

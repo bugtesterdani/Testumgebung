@@ -1,0 +1,42 @@
+VERSION "1.0"
+
+NS_ :
+    NS_DESC_
+    CM_
+
+BS_:
+
+BU_: Tester Motor
+
+BO_ 256 Motor_1: 8 Motor
+ SG_ Drehzahl : 0|16@1+ (0.25,0) [0|16383.75] "1/min" Tester
+ SG_ Temperatur : 16|8@1- (1,-40) [-40|215] "°C" Tester
+ SG_ Modus : 24|2@1+ (1,0) [0|3] "" Tester
+ SG_ Spannung : 39|16@0+ (0.01,0) [0|655.35] "V" Tester
+
+BO_ 512 Diagnose_Mux: 8 Motor
+ SG_ Seite M : 0|8@1+ (1,0) [0|255] "" Tester
+ SG_ Strom m1 : 8|16@1+ (0.1,0) [0|6553.5] "A" Tester
+ SG_ Fehler m2 : 8|8@1+ (1,0) [0|255] "" Tester
+
+BO_ 2364539904 EEC1: 8 Motor
+ SG_ EngineSpeed : 24|16@1+ (0.125,0) [0|8031.875] "rpm" Tester
+
+BO_ 768 Sollwerte: 8 Tester
+ SG_ SollDrehzahl : 0|16@1+ (1,0) [0|8000] "1/min" Motor
+ SG_ Freigabe : 16|1@1+ (1,0) [0|1] "" Motor
+ SG_ Leistung : 32|32@1- (1,0) [0|0] "W" Motor
+
+BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ Unbenutzt : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+CM_ BO_ 256 "Motordaten";
+CM_ SG_ 256 Drehzahl "Ist-Drehzahl
+über zwei Zeilen";
+BA_DEF_ BO_ "GenMsgCycleTime" INT 0 10000;
+BA_DEF_DEF_ "GenMsgCycleTime" 0;
+BA_ "ProtocolType" "J1939";
+BA_ "GenMsgCycleTime" BO_ 256 100;
+BA_ "GenSigStartValue" SG_ 768 Freigabe 1;
+VAL_ 256 Modus 0 "Aus" 1 "Standby" 2 "Aktiv" 3 "Fehler" ;
+SIG_VALTYPE_ 768 Leistung : 1;

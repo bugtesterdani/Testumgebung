@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Instruments</RootNamespace>
+    <!-- P/Invoke auf visa64.dll / nicaiu.dll: werden erst zur Laufzeit geladen (Windows mit Keysight IO Libraries bzw. NI-VISA / NI-DAQmx). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SSH.NET" Version="2026.0.0" />
+    <ProjectReference Include="..\Testumgebung.Contracts\Testumgebung.Contracts.csproj" />
+  </ItemGroup>
+</Project>

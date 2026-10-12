@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Isolierter .NET-Worker: kompiliert C#-CodeBlocks mit Roslyn und führt sie aus -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Testumgebung.Workers.CSharp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RoslynFromSdk)' == ''">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+  </ItemGroup>
+
+  <!-- Nur für Offline-Builds ohne NuGet-Zugang: Roslyn aus dem installierten SDK -->
+  <ItemGroup Condition="'$(RoslynFromSdk)' != ''">
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>$(RoslynFromSdk)/Microsoft.CodeAnalysis.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>$(RoslynFromSdk)/Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

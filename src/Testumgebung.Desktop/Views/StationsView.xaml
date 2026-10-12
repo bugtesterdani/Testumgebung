@@ -1,0 +1,432 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.StationsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Prüfplatzkonfiguration (Abbildung „Prüfplatz: Hardware und Ressourcen“): Geräte und Signale | Ressourcen-Details,
+         Reservierungen je Gruppe mit Wartestatus | Konfigurationsprüfung, Zugriffsprotokoll gemeinsamer Geräte -->
+    <UserControl.Resources>
+        <Style x:Key="StationTab" TargetType="ListBoxItem">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Padding="22,8" Margin="0,0,4,0" CornerRadius="5,5,0,0" BorderThickness="1,1,1,2"
+                                BorderBrush="{StaticResource BorderBrush}" Background="{StaticResource SurfaceBrush}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectionBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16" DataContext="{Binding StationsPage}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Kopf -->
+        <DockPanel Grid.ColumnSpan="3" Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Style="{StaticResource OutlineButton}" Command="{Binding CheckCommand}" Margin="0,0,8,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" FontSize="14" Margin="0,0,8,0" />
+                        <TextBlock Text="Simulation prüfen" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource OutlineButton}" Command="{Binding DiscardCommand}" Margin="0,0,8,0" Content="Verwerfen" />
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE74E;" FontSize="14" Foreground="White" Margin="0,0,8,0" />
+                        <TextBlock Text="Zuordnung speichern" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Style="{StaticResource PageTitle}" Text="Prüfplatzkonfiguration" />
+                <TextBlock Text="Hardware und Ressourcen zuordnen und verwalten." FontSize="14" Foreground="{StaticResource MutedBrush}" />
+                <TextBlock Text="{Binding SourceText}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Prüfplätze -->
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding AddStationCommand}" Content="+ Prüfplatz" />
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveStationCommand}" Content="Prüfplatz entfernen" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding StationNames}" SelectedItem="{Binding SelectedStation}" ItemContainerStyle="{StaticResource StationTab}"
+                         BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+            <Border Style="{StaticResource ErrorBox}" Margin="0,8,0,0" Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" />
+            </Border>
+            <Border Style="{StaticResource InfoBox}" Margin="0,8,0,0" Visibility="{Binding Status, Converter={StaticResource NullVis}}">
+                <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" />
+            </Border>
+        </StackPanel>
+
+        <!-- ============================== links: Geräte und Signale, Reservierungen, Zugriffsprotokoll -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,8">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding AddMissingCommand}" Content="Fehlende aus Projekt übernehmen" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveResourceCommand}" Content="Entfernen" />
+                                <Button Style="{StaticResource OutlineButton}" Command="{Binding AddResourceCommand}" Content="+ Ressource hinzufügen" Margin="0" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Geräte und Signale" VerticalAlignment="Center" Margin="0" />
+                        </DockPanel>
+                        <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" AutoGenerateColumns="False" CanUserAddRows="False"
+                                  CanUserDeleteRows="False" HeadersVisibility="Column" RowHeight="34" MaxHeight="340">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="1.4*" />
+                                <DataGridTextColumn Header="Adapter" Binding="{Binding Adapter, Mode=OneWay}" IsReadOnly="True" Width="0.9*" />
+                                <DataGridTemplateColumn Header="Gerät" Width="1.6*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding DataContext.Devices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                      SelectedItem="{Binding Device, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Text" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Kanal" Width="1.1*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox ItemsSource="{Binding ChannelChoices}" Text="{Binding Channel, UpdateSourceTrigger=LostFocus}" IsEditable="True" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Einheit" Binding="{Binding Unit, Mode=OneWay}" IsReadOnly="True" Width="0.6*" />
+                                <DataGridCheckBoxColumn Header="Sperre" Binding="{Binding RequiresLock, UpdateSourceTrigger=PropertyChanged}" Width="0.6*" />
+                                <DataGridTemplateColumn Header="Status" Width="1.6*" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Ellipse Width="10" Height="10" Margin="0,0,6,0" Fill="{Binding StatusKind, Converter={StaticResource StatusBrush}}" />
+                                                <TextBlock Text="{Binding Status}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Status}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Eigene Geräteprofile im Projekt" />
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Text="Kanäle und Textbefehle für RS-232, TCP oder VISA definieren. Zahlen werden mit Dezimalpunkt übertragen; Antworten müssen Zahlen oder ON/OFF sein." Margin="0,0,0,8" />
+                        <WrapPanel>
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding AddProfileCommand}" Content="+ Geräteprofil" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveProfileCommand}" Content="Profil entfernen" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding ImportProfileCommand}" Content="Importieren" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding ExportProfileCommand}" Content="Exportieren" />
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding ApplyProfilesCommand}" Content="Profile ins Projekt übernehmen" />
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding AddProfileDeviceCommand}" Content="Als Gerät hinzufügen" />
+                        </WrapPanel>
+                        <ComboBox ItemsSource="{Binding DeviceProfiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name" Margin="0,8,0,8" />
+                        <StackPanel Visibility="{Binding HasSelectedProfile, Converter={StaticResource BoolVis}}">
+                            <Grid DataContext="{Binding SelectedProfile}">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="160" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <TextBlock Text="Name" Style="{StaticResource Label}" />
+                                <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
+                                <TextBlock Grid.Row="1" Text="Beschreibung" Style="{StaticResource Label}" />
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Description, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
+                                <TextBlock Grid.Row="2" Text="Lesende Prüfabfrage" Style="{StaticResource Label}" />
+                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ProbeQuery, UpdateSourceTrigger=LostFocus}" ToolTip="Optional, z. B. *IDN?. Beim Gerätetest wird ausschließlich diese Abfrage gesendet." Margin="0,0,0,6" />
+                                <TextBlock Grid.Row="3" Text="Sicherer Zustand" Style="{StaticResource Label}" />
+                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SafeCommands, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" MinHeight="48" ToolTip="Ein Befehl je Zeile, z. B. OUTP OFF. Wird bei der bestehenden Geräteabschaltung verwendet." />
+                            </Grid>
+                            <DataGrid ItemsSource="{Binding ProfileChannels}" SelectedItem="{Binding SelectedProfileChannel}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MaxHeight="240" Margin="0,8,0,4">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Kanal" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="*" />
+                                    <DataGridTextColumn Header="Einheit" Binding="{Binding Unit, UpdateSourceTrigger=LostFocus}" Width="60" />
+                                    <DataGridTextColumn Header="Minimum" Binding="{Binding Min, UpdateSourceTrigger=LostFocus}" Width="85" />
+                                    <DataGridTextColumn Header="Maximum" Binding="{Binding Max, UpdateSourceTrigger=LostFocus}" Width="85" />
+                                    <DataGridTextColumn Header="Leseabfrage" Binding="{Binding ReadQuery, UpdateSourceTrigger=LostFocus}" Width="1.3*" />
+                                    <DataGridTextColumn Header="Schreibbefehl mit {value}" Binding="{Binding WriteCommand, UpdateSourceTrigger=LostFocus}" Width="1.5*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <WrapPanel>
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding AddProfileChannelCommand}" Content="+ Kanal" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveProfileChannelCommand}" Content="Kanal entfernen" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,8">
+                            <TextBlock DockPanel.Dock="Right" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                                       Text="Reservieren beim Eintritt · halten über Wiederholungen und Exit · Freigabe beim Verlassen." />
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Ressourcenreservierungen" Margin="0" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Caption}" Text="Keine Gruppe reserviert Ressourcen." Visibility="{Binding HasGroups, Converter={StaticResource BoolVis}, ConverterParameter=invert}" />
+                        <Grid Visibility="{Binding HasGroups, Converter={StaticResource BoolVis}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="270" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,4">
+                                    <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Text="Gruppe" />
+                                    <ComboBox ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}" DisplayMemberPath="Name" />
+                                </DockPanel>
+                                <TextBlock Text="{Binding GroupPath}" Style="{StaticResource Caption}" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" />
+                                <DataGrid ItemsSource="{Binding Reservations}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" RowHeight="30">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Benötigte Ressource" Binding="{Binding Name}" Width="1.3*" />
+                                        <DataGridTextColumn Header="Gerät" Binding="{Binding Device}" Width="1.3*" />
+                                        <DataGridTextColumn Header="Kanal" Binding="{Binding Channel}" Width="0.8*" />
+                                        <DataGridTemplateColumn Header="Status" Width="1.5*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Ellipse Width="10" Height="10" Margin="0,0,6,0" Fill="{Binding StatusKind, Converter={StaticResource StatusBrush}}" />
+                                                        <TextBlock Text="{Binding Status}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <CheckBox IsChecked="{Binding TimeoutEnabled}" Content="Timeout bei Wartezeit" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBox Text="{Binding TimeoutSeconds, UpdateSourceTrigger=LostFocus}" Width="54" IsEnabled="{Binding TimeoutEnabled}" />
+                                    <TextBlock Text=" s" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Style="{StaticResource Label}" Text="Ressourcen erhalten" />
+                                    <Ellipse Width="10" Height="10" Margin="0,0,6,0" Fill="{StaticResource PassBrush}" Visibility="{Binding Acquired, Converter={StaticResource BoolVis}}" />
+                                    <Ellipse Width="10" Height="10" Margin="0,0,6,0" Fill="{StaticResource IdleBrush}" Visibility="{Binding Acquired, Converter={StaticResource BoolVis}, ConverterParameter=invert}" />
+                                    <TextBlock Text="{Binding AcquiredText}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="Wartestatus" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <ItemsControl ItemsSource="{Binding WaitStatus}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,4">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding State}" FontSize="12" x:Name="StateText" />
+                                                    <TextBlock Text="{Binding Station}" FontSize="12" />
+                                                </DockPanel>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding IsOwner}" Value="True">
+                                                    <Setter TargetName="StateText" Property="Foreground" Value="{StaticResource PrimaryBrush}" />
+                                                    <Setter TargetName="StateText" Property="FontWeight" Value="SemiBold" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsWaiting}" Value="True">
+                                                    <Setter TargetName="StateText" Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Style="{StaticResource Caption}" Margin="0,6,0,0" TextWrapping="Wrap">
+                                    <Run Text="Gültigkeitsbereich: " /><Run Text="{Binding ScopeText, Mode=OneWay}" Foreground="{StaticResource TextBrush}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,6">
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding AccessSummary}" FontSize="12" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource PassBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasConflicts}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource FailBrush}" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Zugriffsprotokoll" Margin="0" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6"
+                                   Text="Jeder Gerätezugriff aller Prüfplätze mit Sperrschlüssel. Widersprüchlich = gleichzeitig mit einem anderen Prüfplatz oder ohne eigene Reservierung." />
+                        <DataGrid ItemsSource="{Binding Accesses}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" RowHeight="26" MaxHeight="240">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Zeit" Binding="{Binding Time}" Width="95" />
+                                <DataGridTextColumn Header="Prüfplatz" Binding="{Binding Station}" Width="*" />
+                                <DataGridTextColumn Header="Ressource" Binding="{Binding Resource}" Width="*" />
+                                <DataGridTextColumn Header="Zugriff" Binding="{Binding Operation}" Width="0.8*" />
+                                <DataGridTextColumn Header="Gerät/Kanal" Binding="{Binding Key}" Width="1.3*" />
+                                <DataGridTextColumn Header="Befund" Binding="{Binding Conflict}" Width="1.3*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============================== rechts: Details, Geräte, Konfigurationsprüfung -->
+        <ScrollViewer Grid.Row="2" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding DetailsTitle}" />
+                        <ItemsControl ItemsSource="{Binding Details}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Label}" Foreground="{StaticResource MutedBrush}" FontSize="13" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="13" TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,6">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding AddDeviceCommand}" Content="+ Gerät" />
+                                <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveDeviceCommand}" Content="Entfernen" Margin="0" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Geräte" Margin="0" />
+                        </DockPanel>
+                        <ListBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" MaxHeight="160" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2">
+                                        <TextBlock Text="{Binding Text}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Adapter}" Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- Gewähltes Gerät bearbeiten -->
+                        <StackPanel DataContext="{Binding SelectedDevice}" Margin="0,8,0,0"
+                                    Visibility="{Binding DataContext.HasSelectedDevice, RelativeSource={RelativeSource AncestorType=ScrollViewer}, Converter={StaticResource BoolVis}}">
+                            <TextBlock Style="{StaticResource Label}" Text="Name" Margin="0,0,0,2" />
+                            <TextBox Text="{Binding Name, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
+                            <TextBlock Style="{StaticResource Label}" Text="Adapter" Margin="0,0,0,2" />
+                            <ComboBox ItemsSource="{Binding DataContext.AdapterChoices, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                      SelectedItem="{Binding Adapter}" Margin="0,0,0,6" />
+                            <StackPanel Visibility="{Binding IsReal, Converter={StaticResource BoolVis}}">
+                                <TextBlock Style="{StaticResource Label}" Text="Modell" Margin="0,0,0,2" />
+                                <ComboBox ItemsSource="{Binding Models}" Text="{Binding Model, UpdateSourceTrigger=LostFocus}" IsEditable="True" Margin="0,0,0,6" />
+                                <TextBlock Style="{StaticResource Label}" Text="Ressource (VISA, TCPIP::…::5025::SOCKET oder DAQmx-Gerät)" Margin="0,0,0,2" />
+                                <TextBox Text="{Binding Resource, UpdateSourceTrigger=LostFocus}" FontFamily="{StaticResource CodeFont}" Margin="0,0,0,6" />
+                                <DockPanel Margin="0,0,0,6">
+                                    <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Text="Zeitlimit [ms]" />
+                                    <TextBox Text="{Binding TimeoutText, UpdateSourceTrigger=LostFocus}" Width="70" HorizontalAlignment="Left" />
+                                </DockPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="Optionen (je Zeile Schlüssel=Wert)" Margin="0,0,0,2" />
+                                <TextBox Text="{Binding OptionsText, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" MinHeight="48" FontFamily="{StaticResource CodeFont}" Margin="0,0,0,6" />
+                                <CheckBox IsChecked="{Binding LockPerChannel}" Content="Sperre je Kanal (unabhängige Ausgänge)" Margin="0,0,0,6" />
+                            </StackPanel>
+                            <CheckBox IsChecked="{Binding Shared}" Content="gemeinsam (alle Prüfplätze, Zugriff nur mit Sperre)" Margin="0,0,0,6" />
+                            <TextBlock Text="{Binding Notes}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding ProbeCommand}" HorizontalAlignment="Left" Content="Gerät testen" />
+                            <TextBlock Text="{Binding ProbeText}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" FontFamily="{StaticResource CodeFont}" />
+                        </StackPanel>
+
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding DiscoverCommand}" Content="Geräte suchen" Margin="0,0,6,6" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding StartLabCommand}" Content="Laborsimulatoren starten" Margin="0,0,6,6" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding RestoreSuggestionCommand}" Content="Vorschlag aus Projekt" Margin="0,0,6,6" />
+                        </WrapPanel>
+                        <ItemsControl ItemsSource="{Binding Discovered}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" BorderThickness="0" FontSize="12" FontFamily="{StaticResource CodeFont}" TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Konfigurationsprüfung" />
+                        <TextBlock Text="{Binding CheckSummary}" FontWeight="SemiBold" Margin="0,0,0,8">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource PassBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasConfigErrors}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource FailBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ItemsControl ItemsSource="{Binding Issues}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,3">
+                                        <TextBlock DockPanel.Dock="Left" Style="{StaticResource Icon}" FontSize="14" Margin="0,1,8,0" VerticalAlignment="Top"
+                                                   Text="&#xE946;" Foreground="{StaticResource PrimaryBrush}" x:Name="Glyph" />
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="12" />
+                                            <TextBlock Text="{Binding Suggestion}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}"
+                                                       Visibility="{Binding Suggestion, Converter={StaticResource NullVis}}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Severity}" Value="Error">
+                                            <Setter TargetName="Glyph" Property="Text" Value="&#xE783;" />
+                                            <Setter TargetName="Glyph" Property="Foreground" Value="{StaticResource FailBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Severity}" Value="Warning">
+                                            <Setter TargetName="Glyph" Property="Text" Value="&#xE7BA;" />
+                                            <Setter TargetName="Glyph" Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

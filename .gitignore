@@ -1,0 +1,19 @@
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+artifacts/
+toolchains/
+tmp/
+output/
+.venv/
+__pycache__/
+# Private keys and local credentials must never enter repository history.
+*.pfx
+*.p12
+*.key
+*.pem
+.env
+.env.*
+*.secrets.json

@@ -1,0 +1,245 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.ResultsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
+    <!-- Ergebnisse (Etappe 5): Ergebnisdateien | Reader mit Kurven | Outbox und Meldungen -->
+    <Grid Margin="16" DataContext="{Binding Results}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="380" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ============================== Ergebnisdateien -->
+        <Border Style="{StaticResource Card}" Padding="10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Ergebnisdateien" Margin="4,0,0,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{Binding ResultFolder}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="4,0,0,8" />
+                <!-- Unvollständige Prüfläufe nach Absturz/Stromausfall: Mensch entscheidet, keine automatische Weiterprüfung -->
+                <Border DockPanel.Dock="Top" Style="{StaticResource ErrorBox}" Margin="0,0,0,10" Visibility="{Binding HasIncomplete, Converter={StaticResource BoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Unvollständige Prüfläufe" FontWeight="SemiBold" Foreground="{StaticResource FailBrush}" />
+                        <TextBlock Text="{Binding IncompleteSummary}" TextWrapping="Wrap" FontSize="12" Margin="0,2,0,6" />
+                        <ListBox ItemsSource="{Binding Incomplete}" SelectedItem="{Binding SelectedIncomplete}" MaxHeight="160" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="2,4">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="240" />
+                                        <TextBlock Text="{Binding Summary}" Style="{StaticResource Caption}" TextWrapping="Wrap" MaxWidth="240" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Style="{StaticResource DangerButton}" Command="{Binding RecoverCommand}" Content="Als abgebrochen speichern" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource ToolButton}" Command="{Binding DiscardIncompleteCommand}" Content="Verwerfen" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <!-- Ergebnisdateien im Wiederherstellungsordner (Ergebnisordner war beim Speichern nicht erreichbar) -->
+                <Border DockPanel.Dock="Top" Style="{StaticResource ErrorBox}" Margin="0,0,0,10"
+                        Visibility="{Binding RecoveryFolderSummary, Converter={StaticResource NullVis}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding RecoveryFolderSummary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,6" />
+                        <Button Style="{StaticResource ToolButton}" Command="{Binding RestoreRecoveryCommand}" Content="In den Ergebnisordner zurückkopieren" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Border>
+                <TextBlock DockPanel.Dock="Top" Text="{Binding RecoveryStatus}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="4,0,0,8"
+                           Visibility="{Binding RecoveryStatus, Converter={StaticResource NullVis}}" />
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Style="{StaticResource OutlineButton}" Command="{Binding RefreshCommand}" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" FontSize="14" Margin="0,0,8,0" />
+                            <TextBlock Text="Aktualisieren" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ToolButton}" Command="{Binding OpenFolderCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE838;" FontSize="14" Margin="0,0,8,0" />
+                            <TextBlock Text="Ordner" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding ResultFiles}" SelectedItem="{Binding SelectedFile}" BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="2,5">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE9F9;" Margin="0,0,10,0" />
+                                <StackPanel>
+                                    <TextBlock Text="{Binding FileName}" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="220" />
+                                    <TextBlock Style="{StaticResource Caption}">
+                                        <Run Text="{Binding Modified, Mode=OneWay, StringFormat=dd.MM.yyyy HH:mm:ss}" /><Run Text=" · " /><Run Text="{Binding Size, Mode=OneWay}" /><Run Text=" Bytes" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================== Reader -->
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+            <Grid>
+                <TextBlock Text="Ergebnisdatei links auswählen. Dateien sind ohne die zugehörige Testversion lesbar."
+                           Style="{StaticResource Caption}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Visibility="{Binding Document, Converter={StaticResource NullVis}, ConverterParameter=invert}" />
+                <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" VerticalAlignment="Top" TextWrapping="Wrap"
+                           Visibility="{Binding Error, Converter={StaticResource NullVis}}" />
+                <DockPanel DataContext="{Binding Document}" Visibility="{Binding Converter={StaticResource NullVis}}">
+                    <StackPanel DockPanel.Dock="Top">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" CornerRadius="4" Padding="10,4" Background="{Binding Rating, Converter={StaticResource RatingBrush}}">
+                                <TextBlock Text="{Binding Rating, Converter={StaticResource RatingText}}" Foreground="White" FontWeight="SemiBold" />
+                            </Border>
+                            <TextBlock Text="{Binding FileName}" Style="{StaticResource PageTitle}" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Header}" Margin="0,8,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,22,8" MinWidth="120">
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource Caption}" />
+                                        <TextBlock Text="{Binding Value}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <DockPanel Margin="0,0,0,4">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource OutlineButton}" Content="Prüfbericht (PDF) …" Margin="0,0,8,0"
+                                        Command="{Binding DataContext.Results.ReportPdfCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <Button Style="{StaticResource ToolButton}" Content="CSV …"
+                                        Command="{Binding DataContext.Results.ReportCsvCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding IntegrityText}" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <Border Style="{StaticResource ErrorBox}" Margin="0,0,0,8" Visibility="{Binding Problems, Converter={StaticResource NullVis}}">
+                            <ItemsControl ItemsSource="{Binding Problems}" />
+                        </Border>
+
+                        <!-- Kurven -->
+                        <StackPanel Visibility="{Binding HasWaveforms, Converter={StaticResource BoolVis}}" Margin="0,4,0,8">
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="Kurven" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding PlotRange}" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                                <ComboBox ItemsSource="{Binding WaveformGroups}" SelectedItem="{Binding SelectedGroup}" DisplayMemberPath="Title" MaxWidth="460" HorizontalAlignment="Left" />
+                            </DockPanel>
+                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Height="230" Background="#FBFCFE">
+                                <Viewbox Stretch="Fill" Margin="6">
+                                    <Grid Width="1000" Height="260">
+                                        <Line X1="0" X2="1000" Y1="130" Y2="130" Stroke="{StaticResource BorderBrush}" StrokeThickness="1" />
+                                        <ItemsControl ItemsSource="{Binding Plot}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Grid />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Polyline Points="{Binding Points, Converter={StaticResource PlotPoints}}"
+                                                              Stroke="{Binding ColorIndex, Converter={StaticResource SeriesBrush}}" StrokeThickness="2" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </Viewbox>
+                            </Border>
+                            <ItemsControl ItemsSource="{Binding Plot}" Margin="0,6,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,18,0">
+                                            <Rectangle Width="18" Height="4" Fill="{Binding ColorIndex, Converter={StaticResource SeriesBrush}}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                            <TextBlock Text="{Binding Info}" FontSize="12" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Ereignisse" Margin="0,4,0,6" />
+                    </StackPanel>
+
+                    <DataGrid ItemsSource="{Binding Events}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" RowHeight="28">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Zeit" Binding="{Binding Time}" Width="100" />
+                            <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="110" />
+                            <DataGridTextColumn Header="Ablaufpfad" Binding="{Binding Path}" Width="2*" />
+                            <DataGridTextColumn Header="Iter." Binding="{Binding Iteration}" Width="45" />
+                            <DataGridTextColumn Header="Wert" Binding="{Binding Value}" Width="*" />
+                            <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="60" />
+                            <DataGridTextColumn Header="Grenzen" Binding="{Binding Limits}" Width="90" />
+                            <DataGridTemplateColumn Header="Bewertung" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RatingText}" FontWeight="SemiBold" Foreground="{Binding Rating, Converter={StaticResource RatingBrush}}" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" Width="2*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================== Outbox -->
+        <Border Grid.Column="4" Style="{StaticResource Card}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Datenbank und Outbox" />
+                    <TextBlock Text="{Binding DatabaseName}" TextWrapping="Wrap" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding OutboxSummary}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,2,0,8" />
+                    <CheckBox Content="Datenbank simuliert offline (P02/P03 vorführen)" IsChecked="{Binding DatabaseOffline}" Margin="0,0,0,8"
+                              Visibility="{Binding CanSimulateOutage, Converter={StaticResource BoolVis}}" />
+                    <Button Style="{StaticResource OutlineButton}" Command="{Binding RetryNowCommand}" HorizontalAlignment="Left" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE898;" FontSize="14" Margin="0,0,8,0" />
+                            <TextBlock Text="Jetzt übertragen" />
+                        </StackPanel>
+                    </Button>
+                    <ItemsControl ItemsSource="{Binding Pending}" Margin="0,0,0,10">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource InfoBox}" Margin="0,0,0,6">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold">
+                                            <Run Text="{Binding DutId, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding RunId, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap">
+                                            <Run Text="Versuche: " /><Run Text="{Binding Attempts, Mode=OneWay}" /><Run Text=" · nächster: " /><Run Text="{Binding NextAttempt, Mode=OneWay, StringFormat=HH:mm:ss}" />
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding LastError}" Style="{StaticResource Caption}" TextWrapping="Wrap" Foreground="{StaticResource FailBrush}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Meldungen je Run" Margin="0,4,0,6" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Notifications}" BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,3">
+                                <TextBlock TextWrapping="Wrap" MaxWidth="330" Foreground="{Binding IsError, Converter={StaticResource ErrorBrush}}" Text="{Binding Text}" />
+                                <TextBlock Style="{StaticResource Caption}">
+                                    <Run Text="{Binding Time, Mode=OneWay, StringFormat=HH:mm:ss}" /><Run Text=" · " /><Run Text="{Binding DutId, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding RunId, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

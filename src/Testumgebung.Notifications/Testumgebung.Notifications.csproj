@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Meldeadapter (Abschnitt 9.3). MQTT 3.1.1 ohne externe Bibliothek: nur QoS 0, keine Puffer, keine Wiederholung. -->
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Notifications</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Persistence\Testumgebung.Persistence.csproj" />
+  </ItemGroup>
+</Project>

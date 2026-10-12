@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Anmeldung und Rechte (Abschnitt 6.1). Die Entra-Anmeldung über MSAL/WAM liegt in der Desktop-Anwendung. -->
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Identity</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Contracts\Testumgebung.Contracts.csproj" />
+  </ItemGroup>
+</Project>

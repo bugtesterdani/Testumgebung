@@ -1,0 +1,64 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Auswahl mit Auftrag",
+  "version": "1.0",
+  "description": "A/B/C/D: Fertigungsauftrag bestimmt das Beispielprogramm.",
+  "variables": [
+    {
+      "name": "Kennung",
+      "type": "String"
+    },
+    {
+      "name": "Auftrag",
+      "type": "String"
+    },
+    {
+      "name": "Artikel",
+      "type": "String"
+    }
+  ],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "schritt",
+        "block": "code",
+        "parameters": {
+          "Sprache": "C#",
+          "Quelltext": "// Einmal nach dem Scan des Fertigungsauftrags, vor dem Test-Start.\n// Demo-Zuordnung; die reale Datenquelle wird hier abgefragt.\nstring auftrag = (Auftrag ?? \"\").Trim();\nstring programm, artikel;\nif (auftrag.StartsWith(\"A\", StringComparison.OrdinalIgnoreCase))\n{ programm = \"Programm A\"; artikel = \"11111\"; }\nelse if (auftrag.StartsWith(\"B\", StringComparison.OrdinalIgnoreCase))\n{ programm = \"Programm B\"; artikel = \"22222\"; }\nelse if (auftrag.StartsWith(\"C\", StringComparison.OrdinalIgnoreCase))\n{ programm = \"Programm C\"; artikel = \"33333\"; }\nelse if (auftrag.StartsWith(\"D\", StringComparison.OrdinalIgnoreCase))\n{ programm = \"Programm D\"; artikel = \"44444\"; }\nelse return Error(\"Unbekannter Fertigungsauftrag: \" + auftrag);\nSelectTest(programm, null, auftrag, \"Artikel=\" + artikel);\nreturn Pass(programm);",
+          "Timeout": "30"
+        },
+        "id": "auswahl-code",
+        "name": "Programm anhand Auftrag waehlen"
+      }
+    ],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": []
+}

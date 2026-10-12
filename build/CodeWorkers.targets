@@ -1,0 +1,57 @@
+<Project>
+  <!-- Baut den isolierten C#-Worker mit und legt beide Worker unter $(OutDir)workers\ ab. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers.CSharp\Testumgebung.Workers.CSharp.csproj"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers.Native\Testumgebung.Workers.Native.csproj"
+                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
+  <Target Name="CopyCodeWorkers" AfterTargets="Build">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers.CSharp\Testumgebung.Workers.CSharp.csproj"
+             Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" ItemName="_CsWorkerTarget" />
+    </MSBuild>
+    <PropertyGroup>
+      <_CsWorkerDir>@(_CsWorkerTarget->'%(RootDir)%(Directory)')</_CsWorkerDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_CsWorkerFiles Include="$(_CsWorkerDir)**\*" />
+      <_PyWorkerFiles Include="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers\python\*.py" />
+      <_PythonRuntimeFiles Include="$(MSBuildThisFileDirectory)..\toolchains\python\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_CsWorkerFiles)"
+          DestinationFiles="@(_CsWorkerFiles->'$(OutDir)workers\csharp\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PyWorkerFiles)" DestinationFolder="$(OutDir)workers\python" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_PythonRuntimeFiles)"
+          DestinationFiles="@(_PythonRuntimeFiles->'$(OutDir)workers\python\runtime\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers.Native\Testumgebung.Workers.Native.csproj"
+             Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" ItemName="_NativeWorkerTarget" />
+    </MSBuild>
+    <PropertyGroup>
+      <_NativeWorkerDir>@(_NativeWorkerTarget->'%(RootDir)%(Directory)')</_NativeWorkerDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_NativeWorkerFiles Include="$(_NativeWorkerDir)**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_NativeWorkerFiles)"
+          DestinationFiles="@(_NativeWorkerFiles->'$(OutDir)workers\native\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- dotnet publish: Worker aus dem Build-Ausgabeordner in den Veröffentlichungsordner übernehmen. -->
+  <Target Name="PublishCodeWorkers" AfterTargets="Publish">
+    <ItemGroup>
+      <_WorkerOutput Include="$(OutDir)workers\**\*" />
+      <_BundledToolchain Include="$(MSBuildThisFileDirectory)..\toolchains\w64devkit\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_WorkerOutput)" DestinationFiles="@(_WorkerOutput->'$(PublishDir)workers\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_BundledToolchain)" DestinationFiles="@(_BundledToolchain->'$(PublishDir)toolchains\w64devkit\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>

@@ -1,0 +1,116 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Programm D",
+  "version": "1.0",
+  "description": "Beispiel-Testprogramm B (Stromprüfung).",
+  "variables": [
+    {
+      "name": "Auftrag",
+      "type": "String"
+    },
+    {
+      "name": "Artikel",
+      "type": "String"
+    }
+  ],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "schritt",
+        "block": "code",
+        "parameters": {
+          "Sprache": "C#",
+          "Quelltext": "Log(\"Programm D startet – Auftrag \" + Auftrag + \", Artikel \" + Artikel);\nreturn Pass();",
+          "Timeout": "30"
+        },
+        "id": "d-info",
+        "name": "Start D"
+      }
+    ],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "d-dut",
+        "name": "Prüfling",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "id": "d-scan",
+            "name": "Seriennummer erfassen",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Seriennummer scannen",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Ziel": "Kennung"
+            }
+          },
+          {
+            "art": "schritt",
+            "block": "code",
+            "parameters": {
+              "Sprache": "C#",
+              "Quelltext": "Log(\"Messe Strom ...\");\nreturn Measured(12, 11, 13, \"A\");",
+              "Timeout": "30"
+            },
+            "id": "d-mess",
+            "name": "Strom prüfen"
+          }
+        ]
+      }
+    ],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "schritt",
+        "block": "code",
+        "id": "d-end",
+        "name": "End D",
+        "parameters": {
+          "Sprache": "C#",
+          "Quelltext": "Log(\"Prüfsitzung beendet: \" + Auftrag); return Pass();",
+          "Timeout": "30"
+        }
+      }
+    ],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": []
+}

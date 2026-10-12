@@ -1,0 +1,74 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Auswahl (CodeBlock)",
+  "version": "1.0",
+  "description": "Eigener Auswahlablauf mit einem einzigen CodeBlock (SelectTest).",
+  "variables": [],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Auftrag",
+            "type": "String"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "code",
+            "parameters": {
+              "Sprache": "C#",
+              "Quelltext": "// Eigener Auswahlablauf – EIN CodeBlock bestimmt Testprogramm + Artikelnummer.\n// Eingang:  Kennung  = Seriennummer/Artikelnummer des Prüflings (wird vorbelegt)\n//           Auftrag  = Auftragsnummer (optional vorbelegt)\n// Entscheide frei (if / Regex / Nachschlagen) und rufe am Ende GENAU EINMAL SelectTest(...) auf.\n// SelectTest(Testkennung, Version, Auftrag, Pruefparameter):\n//   - Version = null  -> aktuell freigegebene Version\n//   - eine Artikelnummer gibt es NICHT als eigenes Feld -> über Auftrag und/oder Prüfparameter (\"Name=Wert;...\") führen\nif (Kennung != null && Kennung.StartsWith(\"AB\", System.StringComparison.OrdinalIgnoreCase))\n{\n    SelectTest(\"Testprogramm X\", \"1.0\", Auftrag + \" / Art 12345\", \"Artikel=12345\");\n}\nelse\n{\n    SelectTest(\"Standardprüfung\", null, Auftrag, null);\n}\nreturn NResult();",
+              "Timeout": "30"
+            },
+            "id": "auswahl-code",
+            "name": "Auswahl per Code"
+          }
+        ],
+        "id": "auswahl",
+        "name": "Auswahl"
+      }
+    ],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": []
+}

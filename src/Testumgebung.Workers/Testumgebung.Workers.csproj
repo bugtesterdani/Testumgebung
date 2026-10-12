@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Host-Seite der Code-Worker: Prozessverwaltung, Protokoll, Pool.
+       Anwendungen, die Worker starten, importieren build/CodeWorkers.targets (kopiert die Worker nach workers/). -->
+  <PropertyGroup>
+    <RootNamespace>Testumgebung.Workers</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Domain\Testumgebung.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="python\worker.py" />
+  </ItemGroup>
+</Project>
