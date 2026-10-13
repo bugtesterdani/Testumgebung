@@ -143,11 +143,28 @@ public sealed class CodeExecutionException(string message, string? details = nul
 /// </summary>
 public interface ICodeHost
 {
+    /// <summary>Liest eine Variable aus dem für diesen Aufruf sichtbaren Scope.</summary>
+    /// <param name="path">Variablenpfad, gegebenenfalls relativ zum aufrufenden Scope.</param>
+    /// <returns>Aktueller Wert der aufgelösten Variable.</returns>
     object Get(string path);
+    /// <summary>Schreibt in eine sichtbare Variable; die Typprüfung erfolgt im Host.</summary>
+    /// <param name="path">Pfad der Zielvariable.</param>
+    /// <param name="value">Zu übernehmender Wert.</param>
     void Set(string path, object? value);
+    /// <summary>Liest einen numerischen Gerätewert über die zentrale Ressourcenvermittlung.</summary>
+    /// <param name="resource">Abstrakter Ressourcenname aus der Prüfplatzzuordnung.</param>
+    /// <returns>Messwert in der Einheit des zugeordneten Kanals.</returns>
     Task<double> ReadAsync(string resource);
+    /// <summary>Schreibt einen numerischen Gerätewert über die zentrale Ressourcenvermittlung.</summary>
+    /// <param name="resource">Abstrakter Ressourcenname aus der Prüfplatzzuordnung.</param>
+    /// <param name="value">Sollwert in der Einheit des zugeordneten Kanals.</param>
     Task WriteAsync(string resource, double value);
+    /// <summary>Zeigt eine Werkeraufforderung und wartet entsprechend ihrem Eingabe- und Anzeigemodus.</summary>
+    /// <param name="prompt">Aufforderung einschließlich Typ, Grenzwerten und Eingaberegeln.</param>
+    /// <returns>Antwortwert; Aufforderungen ohne Eingabewert können null liefern.</returns>
     Task<object?> AskAsync(OperatorPrompt prompt);
+    /// <summary>Fügt eine Diagnosemeldung zum Protokoll des aktuellen Codeaufrufs hinzu.</summary>
+    /// <param name="message">Anzuzeigender Text.</param>
     void Log(string message);
 
     /// <summary>
@@ -155,6 +172,10 @@ public interface ICodeHost
     /// über die zentrale Hardwarevermittlung – Reservierungen und Zugriffsprotokoll gelten wie bei den Bausteinen.
     /// Ergebnis: null, bool, long, double, string oder ein Wörterbuch (z. B. CAN-Rahmen).
     /// </summary>
+    /// <param name="operation">Operationskennung des Kommunikationsprotokolls.</param>
+    /// <param name="arguments">Benannte Argumente, einschließlich des abstrakten Ressourcennamens.</param>
+    /// <returns>Sprachübergreifend serialisierbares Operationsergebnis.</returns>
+    /// <exception cref="NotSupportedException">Die Standardimplementierung stellt keine Gerätekommunikation bereit.</exception>
     Task<object?> DeviceAsync(string operation, IReadOnlyDictionary<string, object?> arguments)
         => throw new NotSupportedException("Kommunikationsgeräte sind in diesem Kontext nicht verfügbar.");
 
@@ -162,6 +183,8 @@ public interface ICodeHost
     /// Zeilen-Debugging: Der Worker meldet eine erreichte Nutzercode-Zeile; der Host entscheidet (Haltepunkt/Einzelschritt)
     /// und liefert die Steuerung zurück. Standard: fortsetzen (kein Debugging in diesem Kontext).
     /// </summary>
+    /// <param name="debugEvent">Erreichte Zeile und für den Debugger sichtbare Variablen.</param>
+    /// <returns>Entscheidung zum Fortsetzen, Halten oder Einzelschritt.</returns>
     Task<CodeDebugStop> DebugAsync(CodeDebugEvent debugEvent)
         => Task.FromResult(CodeDebugStop.Continue);
 
@@ -169,9 +192,21 @@ public interface ICodeHost
     /// Eigener Auswahlablauf: Aus dem CodeBlock heraus das Testprogramm bestimmen (Testkennung, optional Version/Auftrag/
     /// Prüfparameter „Name=Wert;…“). Ein einzelner CodeBlock kann damit die komplette Auswahl definieren.
     /// </summary>
+    /// <param name="test">Kennung des auszuwählenden Testprogramms.</param>
+    /// <param name="version">Gewünschte Version oder null für die Auswahl ohne Versionsvorgabe.</param>
+    /// <param name="order">Zugeordneter Fertigungsauftrag.</param>
+    /// <param name="parameters">Prüfparameter im Format Name=Wert;….</param>
+    /// <param name="pythonVenv">Optionaler programmspezifischer Python-Umgebungsordner.</param>
+    /// <remarks>Die Standardimplementierung delegiert an die Überladung ohne Python-Umgebung.</remarks>
     void SelectTest(string test, string? version, string? order, string? parameters, string? pythonVenv)
         => SelectTest(test, version, order, parameters);
 
+    /// <summary>Wählt im Auswahlablauf ein Testprogramm ohne programmspezifische Python-Umgebung.</summary>
+    /// <param name="test">Kennung des Testprogramms.</param>
+    /// <param name="version">Optionale Versionsvorgabe.</param>
+    /// <param name="order">Fertigungsauftrag.</param>
+    /// <param name="parameters">Prüfparameter im Format Name=Wert;….</param>
+    /// <exception cref="NotSupportedException">Der Host unterstützt keinen eigenen Auswahlablauf.</exception>
     void SelectTest(string test, string? version, string? order, string? parameters)
         => throw new NotSupportedException("SelectTest ist nur im eigenen Auswahlablauf (CodeBlock) verfügbar.");
 }
@@ -197,6 +232,10 @@ public interface ICodeRuntime
     /// <summary>Beschreibung der Umgebung, z. B. „Python 3.12.3“.</summary>
     Task<string> GetRuntimeInfoAsync(CodeLanguage language, CancellationToken cancellationToken);
 
+    /// <summary>Prüft den Code und seine Schnittstelle in der zur Sprache gehörenden Laufzeit.</summary>
+    /// <param name="request">Quelltext, Ports, Bibliotheken und sprachabhängige Optionen.</param>
+    /// <param name="cancellationToken">Abbruchsignal für die Build-Prüfung.</param>
+    /// <returns>Build-Ergebnis einschließlich Compilerdiagnosen.</returns>
     Task<CompileResult> CompileAsync(CodeRequest request, CancellationToken cancellationToken);
 
     /// <summary>

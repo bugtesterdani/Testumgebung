@@ -77,6 +77,19 @@ jobs:
           if ($LASTEXITCODE) { throw 'PDF-Abhängigkeit fehlt.' }
           python build/create-complete-manual.py
           if ($LASTEXITCODE) { throw 'PDF-Erstellung fehlgeschlagen.' }
+      - name: API-Dokumentation und Dokumentationsstatus erstellen
+        shell: pwsh
+        run: |
+          python -m unittest discover -s build/tests -p test_documentation_summary.py
+          if ($LASTEXITCODE) { throw 'Dokumentationsauswertung: Tests fehlgeschlagen.' }
+          ./build/doxygen.ps1 -OutputDirectory artifacts/doxygen/ci
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: API-Dokumentation-${{ steps.version.outputs.version }}
+          path: artifacts/doxygen/ci/**
+          if-no-files-found: warn
+          retention-days: 14
       - name: Testabdeckung und CRAP-Grenze prüfen
         shell: pwsh
         run: |

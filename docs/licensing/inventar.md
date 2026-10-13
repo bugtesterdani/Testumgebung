@@ -229,3 +229,8 @@ Numerische Versionen werden nur genannt, wenn sie im Paket, im Quellarchiv, in e
 Manche EXEs sind Alias-Launcher ohne eigene Versionsressource. Bei GNU-Utilities, Headern und statischen Bibliotheken beruht die Komponentenzuordnung auf dem unveränderten Kit und seinen Quellen; solche Zuordnungen sind in `attribution_evidence` als abgeleitet markiert. Die genaue Unterlizenz wird durch die Originaltexte und Quellkopfzeilen bestimmt, nicht durch den allgemeinen Kit-Namen.
 
 Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für den oben genannten inventarisierten MSIX-Stand. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.
+
+
+## Ergänzung: Doxygen für die Code-Dokumentation
+
+Doxygen 1.18.0, GNU GPL Version 2 mit ausdrücklicher Ausnahme der erzeugten Dokumente: `build/doxygen.ps1`, lokal und GitHub Actions; Cache `artifacts/tools/doxygen/1.18.0`. Kein Bestandteil des MSIX. [Lizenz und Herkunft](../../licenses/third-party/doxygen/1.18.0/NOTICE.md). Die Ergänzung ändert nicht den oben genannten historischen Binärprüfstand.

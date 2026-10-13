@@ -53,3 +53,4 @@ actions/checkout,v4 / 11d5960a326750d5838078e36cf38b85af677262,MIT,GitHub runner
 actions/setup-dotnet,v4 / 67a3573c9a986a3f9c594539f4ab511d57bb3ce9,MIT,GitHub runner action,MSIX workflow; not redistributed
 actions/setup-python,v5 / a26af69be951a213d495a4c3e4e4022e16d87065,MIT,GitHub runner action,Both GitHub workflows; not redistributed
 actions/upload-artifact,v4 / ea165f8d65b6e75b540449e92b4886f43607fa02,MIT,GitHub runner action,Both GitHub workflows; not redistributed
+Doxygen,1.18.0,GPL-2.0; generated documents exempt per upstream,artifacts/tools/doxygen/1.18.0,build/doxygen.ps1; development/CI only; not bundled

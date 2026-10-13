@@ -60,6 +60,7 @@ TOOLS=[
 ('MSVC runtime','14.51.36247.0','Microsoft redistributable terms, not MIT','workers/python/runtime/vcruntime140.dll; vcruntime140_1.dll','Bundled by official Python ZIP; PE version verified'),
 ('pip','26.2.1','MIT plus vendor licenses','workers/python/runtime/pip-bootstrap/pip.whl','build/acquire-pip.ps1; PythonEnvironments.cs'),
 ('ReportGenerator','5.5.11','Apache-2.0','artifacts/tools/reportgenerator','build/coverage.ps1; development only'),
+('Doxygen','1.18.0','GPL-2.0; generated documents exempt per upstream','artifacts/tools/doxygen/1.18.0','build/doxygen.ps1; development/CI only; not bundled'),
 ('ReportLab','4.4.9','BSD-3-Clause','Documentation workflow Python environment','build/create-complete-manual.py; documentation only'),
 ('Pillow (CI documentation)','12.3.0 in audited Actions run','HPND/Pillow license plus codec notices','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
 ('charset-normalizer (CI documentation)','3.5.2 in audited Actions run','MIT','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
@@ -235,6 +236,9 @@ def write_notices(data):
       'Bei jeder Weitergabe müssen diese Quellen und Hinweise erhalten bleiben. GNU-Bibliotheken mit LGPL können weitere Bedingungen für Modifikationen beziehungsweise Relinking haben; die Komponentenzuordnung ist im Prüfbericht erläutert.','',
       '## Extern installierte Treiber','',
       'NI-DAQmx/VISA, PEAK, Kvaser, Vector und benutzerdefinierte DLLs sind nicht Bestandteil des geprüften MSIX. Ihre Installation und Nutzung unterliegen den jeweiligen Hersteller-/Projektlizenzen.','']
+    lines += ['## Entwicklungswerkzeug Doxygen 1.18.0', '',
+              'Doxygen wird ausschließlich zur Quellcode-Dokumentation verwendet, nicht im MSIX gebündelt. Werkzeuglizenz: GNU GPL Version 2. Der Hersteller nimmt die erzeugten Dokumente ausdrücklich von der Werkzeuglizenz aus; eigener Code bleibt MIT.', '',
+              '[Lizenztext](licenses/third-party/doxygen/1.18.0/LICENSE), [Herkunft und Verwendung](licenses/third-party/doxygen/1.18.0/NOTICE.md). Hinweise der erzeugten HTML-Assets bleiben erhalten.', '']
     (ROOT/'THIRD-PARTY-NOTICES.md').write_text('\n'.join(lines),encoding='utf-8')
 
 def write_inventory(data):
