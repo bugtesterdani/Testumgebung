@@ -209,11 +209,29 @@ public static class Program
         }
         var invoke = (delegate* unmanaged[Cdecl]<HostTable*, int>)NativeLibrary.GetExport(handle, "tu_invoke");
 
+        InvokeLibrary(id, msg, debugEnabled, instrumented, invoke);
+    }
+
+    private static unsafe void InvokeLibrary(string id, JsonObject msg, bool debugEnabled, bool instrumented,
+        delegate* unmanaged[Cdecl]<HostTable*, int> invoke)
+    {
         var values = (msg["values"] as JsonObject ?? []).ToDictionary(kv => kv.Key, kv => kv.Value?.DeepClone());
         var state = new Invocation(id, values);
         Running[id] = state;
         var gc = GCHandle.Alloc(state);
         var table = (HostTable*)NativeMemory.AllocZeroed((nuint)sizeof(HostTable));
+        void EmitExitDebug()
+        {
+            // Austritt nur im reduzierten Modus (nicht instrumentiert, z. B. LabVIEW); instrumentierter C++-Code steppt über Zeilen.
+            if (debugEnabled && !instrumented)
+            {
+                var exitVars = new JsonObject();
+                foreach (var kv in values) exitVars[kv.Key] = kv.Value?.DeepClone();
+                foreach (var kv in state.Outputs) exitVars[kv.Key] = kv.Value?.DeepClone();
+                DebugEmit(id, 0, "exit", exitVars);
+            }
+        }
+
         try
         {
             // Eintritt (alle Debug-Läufe): erlaubt „bei Eintritt halten“ und einen ersten Halt vor dem Code.
@@ -233,14 +251,7 @@ public static class Program
                 SendError(id, (string?)outcome["message"] ?? "Fehler im nativen Code", null);
                 return;
             }
-            // Austritt nur im reduzierten Modus (nicht instrumentiert, z. B. LabVIEW); instrumentierter C++-Code steppt über Zeilen.
-            if (debugEnabled && !instrumented)
-            {
-                var exitVars = new JsonObject();
-                foreach (var kv in values) exitVars[kv.Key] = kv.Value?.DeepClone();
-                foreach (var kv in state.Outputs) exitVars[kv.Key] = kv.Value?.DeepClone();
-                DebugEmit(id, 0, "exit", exitVars);
-            }
+            EmitExitDebug();
             Send(CompletionMessage(id, outcome, state));
         }
         finally

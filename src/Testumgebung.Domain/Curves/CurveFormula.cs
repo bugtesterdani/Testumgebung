@@ -94,14 +94,19 @@ public static class CurveFormula
         {
             var start = _pos;
             while (_pos < src.Length && (char.IsDigit(src[_pos]) || src[_pos] == '.')) _pos++;
-            if (_pos < src.Length && (src[_pos] is 'e' or 'E') && _pos + 1 < src.Length && (char.IsDigit(src[_pos + 1]) || src[_pos + 1] is '-' or '+'))
-            {
-                _pos += 2;
-                while (_pos < src.Length && char.IsDigit(src[_pos])) _pos++;
-            }
+            ParseExponent();
             var text = src[start.._pos];
             if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var v)) throw Error($"Zahl '{text}' ungültig");
             return _ => v;
+        }
+
+        private void ParseExponent()
+        {
+            if (_pos + 1 >= src.Length || src[_pos] is not ('e' or 'E')) return;
+            var next = src[_pos + 1];
+            if (!char.IsDigit(next) && next is not ('-' or '+')) return;
+            _pos += 2;
+            while (_pos < src.Length && char.IsDigit(src[_pos])) _pos++;
         }
 
         private Func<double, double> ParseNamedValue()
@@ -149,28 +154,31 @@ public static class CurveFormula
             }
             Args(1);
             var x = a[0];
-            Func<double, double> f = name switch
-            {
-                "sin" => Math.Sin,
-                "cos" => Math.Cos,
-                "tan" => Math.Tan,
-                "asin" => Math.Asin,
-                "acos" => Math.Acos,
-                "atan" => Math.Atan,
-                "sqrt" => Math.Sqrt,
-                "abs" => Math.Abs,
-                "exp" => Math.Exp,
-                "ln" => Math.Log,
-                "log10" => Math.Log10,
-                "floor" => Math.Floor,
-                "ceil" => Math.Ceiling,
-                "round" => v => Math.Round(v, MidpointRounding.AwayFromZero),
-                "sign" => v => Math.Sign(v),
-                "step" => v => v < 0 ? 0 : 1,
-                _ => throw Error($"Unbekannte Funktion '{name}'"),
-            };
+            if (!UnaryFunctions.TryGetValue(name, out var f))
+                throw Error($"Unbekannte Funktion '{name}'");
             return t => f(x(t));
         }
+
+        private static readonly IReadOnlyDictionary<string, Func<double, double>> UnaryFunctions =
+            new Dictionary<string, Func<double, double>>(StringComparer.Ordinal)
+            {
+                ["sin"] = Math.Sin,
+                ["cos"] = Math.Cos,
+                ["tan"] = Math.Tan,
+                ["asin"] = Math.Asin,
+                ["acos"] = Math.Acos,
+                ["atan"] = Math.Atan,
+                ["sqrt"] = Math.Sqrt,
+                ["abs"] = Math.Abs,
+                ["exp"] = Math.Exp,
+                ["ln"] = Math.Log,
+                ["log10"] = Math.Log10,
+                ["floor"] = Math.Floor,
+                ["ceil"] = Math.Ceiling,
+                ["round"] = v => Math.Round(v, MidpointRounding.AwayFromZero),
+                ["sign"] = v => Math.Sign(v),
+                ["step"] = v => v < 0 ? 0 : 1,
+            };
 
         public void ExpectEnd()
         {

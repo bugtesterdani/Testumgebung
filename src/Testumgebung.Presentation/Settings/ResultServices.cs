@@ -105,30 +105,9 @@ public sealed class ResultServices : IAsyncDisposable
             _mqtt.Delivered += d => MqttDelivered?.Invoke(d);
         }
         var oldHttp = _http;
-        _http = null;
-        if (settings.Http.Enabled && !string.IsNullOrWhiteSpace(settings.Http.Url))
-        {
-            var options = HttpOptionsOf(settings.Http);
-            if (options.Validate() is { } error) ApplyWarning = Join(ApplyWarning, "HTTP: " + error);
-            else
-            {
-                _http = new HttpNotifier(options);
-                _http.Delivered += d => NotifyDelivered?.Invoke(d);
-            }
-        }
+        ConfigureHttp(settings.Http);
         var oldOpc = _opcUa;
-        _opcUa = null;
-        if (settings.OpcUa.Enabled && !string.IsNullOrWhiteSpace(settings.OpcUa.EndpointUrl))
-        {
-            var options = OpcUaOptionsOf(settings.OpcUa);
-            if (options.Validate() is { } error) ApplyWarning = Join(ApplyWarning, "OPC UA: " + error);
-            else if (OpcUaFactory is null) ApplyWarning = Join(ApplyWarning, "OPC UA ist in dieser Ausgabe nicht verfügbar.");
-            else
-            {
-                _opcUa = OpcUaFactory(options);
-                _opcUa.Delivered += d => NotifyDelivered?.Invoke(d);
-            }
-        }
+        ConfigureOpcUa(settings.OpcUa);
         var targets = new List<IRunNotifier>();
         if (_mqtt is not null) targets.Add(_mqtt);
         if (_http is not null) targets.Add(_http);
@@ -138,6 +117,37 @@ public sealed class ResultServices : IAsyncDisposable
         if (oldHttp is not null) _ = oldHttp.DisposeAsync().AsTask();
         if (oldOpc is not null) _ = oldOpc.DisposeAsync().AsTask();
         Applied?.Invoke();
+    }
+
+    private void ConfigureOpcUa(OpcUaSettings settings)
+    {
+        _opcUa = null;
+        if (settings.Enabled && !string.IsNullOrWhiteSpace(settings.EndpointUrl))
+        {
+            var options = OpcUaOptionsOf(settings);
+            if (options.Validate() is { } error) ApplyWarning = Join(ApplyWarning, "OPC UA: " + error);
+            else if (OpcUaFactory is null) ApplyWarning = Join(ApplyWarning, "OPC UA ist in dieser Ausgabe nicht verfügbar.");
+            else
+            {
+                _opcUa = OpcUaFactory(options);
+                _opcUa.Delivered += d => NotifyDelivered?.Invoke(d);
+            }
+        }
+    }
+
+    private void ConfigureHttp(HttpNotifySettings settings)
+    {
+        _http = null;
+        if (settings.Enabled && !string.IsNullOrWhiteSpace(settings.Url))
+        {
+            var options = HttpOptionsOf(settings);
+            if (options.Validate() is { } error) ApplyWarning = Join(ApplyWarning, "HTTP: " + error);
+            else
+            {
+                _http = new HttpNotifier(options);
+                _http.Delivered += d => NotifyDelivered?.Invoke(d);
+            }
+        }
     }
 
     public IRunDatabase? CreateDatabase(DatabaseSettings db, out string? warning)

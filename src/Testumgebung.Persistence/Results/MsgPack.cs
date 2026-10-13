@@ -183,6 +183,11 @@ public ref struct MsgPackReader
         if ((t & 0xf0) == 0x80) return ReadMap(t & 0x0f);
         if ((t & 0xf0) == 0x90) return ReadArray(t & 0x0f);
         if ((t & 0xe0) == 0xa0) return ReadStr(t & 0x1f);
+        return ReadTypedValue(t);
+    }
+
+    private object? ReadTypedValue(byte t)
+    {
         return t switch
         {
             0xc0 => null,
@@ -193,24 +198,36 @@ public ref struct MsgPackReader
             0xc6 => Take(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))).ToArray(),
             0xca => (double)BinaryPrimitives.ReadSingleBigEndian(Take(4)),
             0xcb => BinaryPrimitives.ReadDoubleBigEndian(Take(8)),
-            0xcc => (long)Byte(),
-            0xcd => (long)BinaryPrimitives.ReadUInt16BigEndian(Take(2)),
-            0xce => (long)BinaryPrimitives.ReadUInt32BigEndian(Take(4)),
-            0xcf => checked((long)BinaryPrimitives.ReadUInt64BigEndian(Take(8))),
-            0xd0 => (long)(sbyte)Byte(),
-            0xd1 => (long)BinaryPrimitives.ReadInt16BigEndian(Take(2)),
-            0xd2 => (long)BinaryPrimitives.ReadInt32BigEndian(Take(4)),
-            0xd3 => BinaryPrimitives.ReadInt64BigEndian(Take(8)),
-            0xd9 => ReadStr(Byte()),
-            0xda => ReadStr(BinaryPrimitives.ReadUInt16BigEndian(Take(2))),
-            0xdb => ReadStr(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))),
-            0xdc => ReadArray(BinaryPrimitives.ReadUInt16BigEndian(Take(2))),
-            0xdd => ReadArray(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))),
-            0xde => ReadMap(BinaryPrimitives.ReadUInt16BigEndian(Take(2))),
-            0xdf => ReadMap(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))),
+            >= 0xd9 and <= 0xdf => ReadCollection(t),
+            >= 0xcc and <= 0xd3 => ReadInteger(t),
             _ => throw new FormatException($"MessagePack-Typ 0x{t:x2} wird nicht unterstützt."),
         };
     }
+
+    private object ReadCollection(byte t) => t switch
+    {
+        0xd9 => ReadStr(Byte()),
+        0xda => ReadStr(BinaryPrimitives.ReadUInt16BigEndian(Take(2))),
+        0xdb => ReadStr(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))),
+        0xdc => ReadArray(BinaryPrimitives.ReadUInt16BigEndian(Take(2))),
+        0xdd => ReadArray(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))),
+        0xde => ReadMap(BinaryPrimitives.ReadUInt16BigEndian(Take(2))),
+        0xdf => ReadMap(checked((int)BinaryPrimitives.ReadUInt32BigEndian(Take(4)))),
+        _ => throw new FormatException($"MessagePack-Sammlungstyp 0x{t:x2} wird nicht unterstützt."),
+    };
+
+    private long ReadInteger(byte t) => t switch
+    {
+        0xcc => (long)Byte(),
+        0xcd => (long)BinaryPrimitives.ReadUInt16BigEndian(Take(2)),
+        0xce => (long)BinaryPrimitives.ReadUInt32BigEndian(Take(4)),
+        0xcf => checked((long)BinaryPrimitives.ReadUInt64BigEndian(Take(8))),
+        0xd0 => (long)(sbyte)Byte(),
+        0xd1 => (long)BinaryPrimitives.ReadInt16BigEndian(Take(2)),
+        0xd2 => (long)BinaryPrimitives.ReadInt32BigEndian(Take(4)),
+        0xd3 => BinaryPrimitives.ReadInt64BigEndian(Take(8)),
+        _ => throw new FormatException($"MessagePack-Ganzzahltyp 0x{t:x2} wird nicht unterstützt."),
+    };
 
     private byte Byte()
     {

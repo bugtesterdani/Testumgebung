@@ -15,22 +15,7 @@ public static class ExternalRuntimeInventory
     public static async Task<IReadOnlyList<RuntimeComponent>> CaptureAsync(CancellationToken ct, string? configurationPath = null)
     {
         var files = new List<ExternalRuntimeFile>();
-        if (OperatingSystem.IsWindows())
-        {
-            foreach (var name in new[] { "nicaiu.dll", "visa64.dll", "canlib32.dll", "vxlapi64.dll" })
-            {
-                var path = Path.Combine(Environment.SystemDirectory, name);
-                if (File.Exists(path)) files.Add(new("Treiber/" + name, path));
-            }
-            foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) }.Distinct())
-            {
-                var directory = Path.Combine(root, "National Instruments", "Shared", "LabVIEW Run-Time");
-                if (!Directory.Exists(directory)) continue;
-                foreach (var file in Directory.EnumerateFiles(directory, "lvrt.dll", SearchOption.AllDirectories))
-                    files.Add(new("LabVIEW/" + (root.EndsWith("(x86)", StringComparison.Ordinal) ? "x86/" : "x64/")
-                        + Path.GetRelativePath(directory, file).Replace('\\', '/'), file));
-            }
-        }
+        AddKnownRuntimeFiles(files);
         var config = configurationPath ?? ConfigurationPath;
         if (File.Exists(config))
         {
@@ -55,4 +40,24 @@ public static class ExternalRuntimeInventory
         }
         return result;
     }
+    private static void AddKnownRuntimeFiles(List<ExternalRuntimeFile> files)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            foreach (var name in new[] { "nicaiu.dll", "visa64.dll", "canlib32.dll", "vxlapi64.dll" })
+            {
+                var path = Path.Combine(Environment.SystemDirectory, name);
+                if (File.Exists(path)) files.Add(new("Treiber/" + name, path));
+            }
+            foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) }.Distinct())
+            {
+                var directory = Path.Combine(root, "National Instruments", "Shared", "LabVIEW Run-Time");
+                if (!Directory.Exists(directory)) continue;
+                foreach (var file in Directory.EnumerateFiles(directory, "lvrt.dll", SearchOption.AllDirectories))
+                    files.Add(new("LabVIEW/" + (root.EndsWith("(x86)", StringComparison.Ordinal) ? "x86/" : "x64/")
+                        + Path.GetRelativePath(directory, file).Replace('\\', '/'), file));
+            }
+        }
+    }
+
 }

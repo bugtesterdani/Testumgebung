@@ -55,6 +55,18 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
         }
 
         var w = new Writer(connection, tx, cancellationToken);
+        await StoreRunHeaderAsync(w, run).ConfigureAwait(false);
+
+        await StoreEventsAsync(w, run).ConfigureAwait(false);
+
+        await StoreWaveformsAsync(w, run).ConfigureAwait(false);
+
+        await tx.CommitAsync(cancellationToken).ConfigureAwait(false);
+        AfterCommit?.Invoke(run.RunId);
+    }
+
+    private static async Task StoreRunHeaderAsync(Writer w, ResultRun run)
+    {
         var definitionId = DefinitionId(run);
         if (await w.ScalarAsync("SELECT COUNT(*) FROM tu_definitions WHERE definition_id = @id", ("id", definitionId)).ConfigureAwait(false) == 0)
         {
@@ -75,7 +87,10 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
             ("name", run.TestName), ("version", run.TestVersion), ("started", run.Started.UtcTicks), ("startedText", Iso(run.Started)),
             ("ended", run.Ended.UtcTicks), ("endedText", Iso(run.Ended)), ("rating", RatingText(run.Rating)), ("werror", run.OperatorAbort ? 1L : 0L),
             ("dev", run.IsDevelopmentRun ? 1L : 0L), ("app", run.Application), ("stored", DateTimeOffset.UtcNow.UtcTicks)).ConfigureAwait(false);
+    }
 
+    private static async Task StoreEventsAsync(Writer w, ResultRun run)
+    {
         var prompts = new Dictionary<string, string?>(StringComparer.Ordinal);
         foreach (var e in run.Events)
         {
@@ -119,7 +134,10 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
                     ("unit", e.Unit), ("low", Dbl(e.LowLimit)), ("high", Dbl(e.HighLimit)), ("rating", e.Rating is { } r2 ? RatingText(r2) : null)).ConfigureAwait(false);
             }
         }
+    }
 
+    private static async Task StoreWaveformsAsync(Writer w, ResultRun run)
+    {
         var no = 0L;
         foreach (var rw in run.Waveforms)
         {
@@ -144,8 +162,6 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
             }
         }
 
-        await tx.CommitAsync(cancellationToken).ConfigureAwait(false);
-        AfterCommit?.Invoke(run.RunId);
     }
 
     /// <summary>Verbindung öffnen und Schema migrieren (Bedienknopf „Verbindung testen“).</summary>
@@ -297,25 +313,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
             {
                 if (order.Count >= query.Limit) break;
                 var events = new List<ResultEvent>();
-                var run = new ResultRun
-                {
-                    RunId = Str(reader, 0)!,
-                    StationRunId = Str(reader, 1) ?? "",
-                    Station = Str(reader, 2) ?? "",
-                    DutId = Str(reader, 3) ?? "",
-                    Order = Str(reader, 15) ?? "",
-                    TestName = Str(reader, 4) ?? "",
-                    TestVersion = Str(reader, 5) ?? "",
-                    Started = Time(Long(reader, 6), Str(reader, 7)),
-                    Ended = Time(Long(reader, 8), Str(reader, 9)),
-                    Rating = Rating(Str(reader, 10)) ?? ResultRating.NResult,
-                    OperatorAbort = Long(reader, 11) != 0,
-                    IsDevelopmentRun = Long(reader, 12) != 0,
-                    Application = Str(reader, 13) ?? "Testumgebung",
-                    FilteredFor = "Datenbank",
-                    Structure = Structure(Str(reader, 14)),
-                    Events = events,
-                };
+                var run = ReadRun(reader, events);
                 runs[run.RunId] = (run, events);
                 order.Add(run.RunId);
             }
@@ -354,14 +352,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
                 if (!runs.TryGetValue(Str(reader, 0)!, out var entry)) continue;
                 var type = Str(reader, 3);
                 var text = Str(reader, 4);
-                object? value = type switch
-                {
-                    "double" => double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : text,
-                    "int" => long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l) ? l : text,
-                    "bool" => text == "true",
-                    "none" => null,
-                    _ => text,
-                };
+                var value = OperatorValue(type, text);
                 entry.Events.Add(new ResultEvent(Long(reader, 1), ResultEventKind.OperatorAnswer, Str(reader, 2), "", 0,
                     new DateTimeOffset(Long(reader, 5), TimeSpan.Zero), Value: value));
             }
@@ -369,6 +360,41 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
 
         foreach (var (_, events) in runs.Values) events.Sort((a, b) => a.Sequence.CompareTo(b.Sequence));
         return order.Select(id => runs[id].Run).ToList();
+    }
+
+    private static object? OperatorValue(string? type, string? text)
+    {
+        return type switch
+        {
+            "double" => double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : text,
+            "int" => long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l) ? l : text,
+            "bool" => text == "true",
+            "none" => null,
+            _ => text,
+        };
+    }
+
+    private static ResultRun ReadRun(DbDataReader reader, List<ResultEvent> events)
+    {
+        return new ResultRun
+        {
+            RunId = Str(reader, 0)!,
+            StationRunId = Str(reader, 1) ?? "",
+            Station = Str(reader, 2) ?? "",
+            DutId = Str(reader, 3) ?? "",
+            Order = Str(reader, 15) ?? "",
+            TestName = Str(reader, 4) ?? "",
+            TestVersion = Str(reader, 5) ?? "",
+            Started = Time(Long(reader, 6), Str(reader, 7)),
+            Ended = Time(Long(reader, 8), Str(reader, 9)),
+            Rating = Rating(Str(reader, 10)) ?? ResultRating.NResult,
+            OperatorAbort = Long(reader, 11) != 0,
+            IsDevelopmentRun = Long(reader, 12) != 0,
+            Application = Str(reader, 13) ?? "Testumgebung",
+            FilteredFor = "Datenbank",
+            Structure = Structure(Str(reader, 14)),
+            Events = events,
+        };
     }
 
     /// <summary>Einen Lauf vollständig lesen – mit Kurven (Chunks zu <see cref="ResultWaveform"/> zusammengesetzt).</summary>

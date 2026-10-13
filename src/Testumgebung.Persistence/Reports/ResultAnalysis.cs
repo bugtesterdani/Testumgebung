@@ -211,18 +211,24 @@ public static class ResultAnalysis
             var (name, unit, values, low, high, _) = kv.Value;
             var mean = values.Average();
             var sd = values.Count > 1 ? Math.Sqrt(values.Sum(v => (v - mean) * (v - mean)) / (values.Count - 1)) : 0;
-            double? cp = null, cpk = null;
-            if (values.Count >= 2 && sd > 0)
-            {
-                if (low is { } l && high is { } h) cp = (h - l) / (6 * sd);
-                var parts = new List<double>();
-                if (high is { } h2) parts.Add((h2 - mean) / (3 * sd));
-                if (low is { } l2) parts.Add((mean - l2) / (3 * sd));
-                if (parts.Count > 0) cpk = parts.Min();
-            }
+            var (cp, cpk) = Capability(values.Count, mean, sd, low, high);
             var outside = values.Count(v => (low is { } l3 && v < l3) || (high is { } h3 && v > h3));
             return new MeasurementStatistics(kv.Key, name, unit, values.Count, values.Min(), values.Max(), mean, sd, low, high, outside, cp, cpk, values);
         }).ToList();
+    }
+
+    private static (double? Cp, double? Cpk) Capability(int count, double mean, double sd, double? low, double? high)
+    {
+        double? cp = null, cpk = null;
+        if (count >= 2 && sd > 0)
+        {
+            if (low is { } l && high is { } h) cp = (h - l) / (6 * sd);
+            var parts = new List<double>();
+            if (high is { } h2) parts.Add((h2 - mean) / (3 * sd));
+            if (low is { } l2) parts.Add((mean - l2) / (3 * sd));
+            if (parts.Count > 0) cpk = parts.Min();
+        }
+        return (cp, cpk);
     }
 
     private static IReadOnlyList<FailureItem> FailuresOf(IReadOnlyList<ResultRun> runs)

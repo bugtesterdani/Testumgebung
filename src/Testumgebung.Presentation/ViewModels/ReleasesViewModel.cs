@@ -282,7 +282,8 @@ public sealed partial class ReleasesViewModel : ObservableObject
         {
             var ports = CodeBlockConverter.VisibleVariables(d, s.Id).Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
             requests.Add(($"CodeBlock {s.Name}", new CodeRequest(BlockCatalog.ParseLanguage(s.Parameters.GetValueOrDefault("Sprache") ?? "C#"),
-                s.Parameters.GetValueOrDefault("Quelltext") ?? "", ports) { Assemblies = d.Assemblies }));
+                s.Parameters.GetValueOrDefault("Quelltext") ?? "", ports)
+            { Assemblies = d.Assemblies }));
         }
         if (requests.Count == 0) return [new ReviewCheck("Codeartefakte", true, "Keine Codeartefakte im Paket.")];
         if (_editor.CodeRuntime is not { } runtime) return [new ReviewCheck("Codeartefakte bauen", false, "Keine Ausführungsumgebung für Code konfiguriert.")];
@@ -355,6 +356,15 @@ public sealed partial class ReleasesViewModel : ObservableObject
 
     private void Rebuild()
     {
+        RebuildPrograms();
+        RebuildReleaseSelection();
+        OnPropertiesChanged(nameof(Programs), nameof(SelectedProgramName), nameof(ProgramStatus));
+        OnPropertiesChanged(nameof(StoreError), nameof(StoreName), nameof(ProjectName), nameof(CompareTargets));
+        RebuildStations();
+    }
+
+    private void RebuildPrograms()
+    {
         var names = _hub.All.Select(r => r.ProjectName)
             .Concat(_stations.SelectMany(s => s.Coordinator?.Setup.ExampleProjects ?? []).Select(p => p.Definition.Name))
             .Append(_editor.Project.Definition.Name).Distinct().OrderBy(n => n).ToList();
@@ -365,6 +375,10 @@ public sealed partial class ReleasesViewModel : ObservableObject
             var released = _hub.CurrentInfo(name);
             Programs.Add(new(name, released is not null ? $"Freigegeben v{released.Version}" : latest is not null ? latest.StateText : "Entwurf · kein Release vorhanden"));
         }
+    }
+
+    private void RebuildReleaseSelection()
+    {
         var selectedId = _selected?.ReleaseId;
         Releases.Clear();
         foreach (var r in _hub.All.Where(r => r.ProjectName == ProjectName).OrderByDescending(r => r.CreatedAt)) Releases.Add(r);
@@ -372,9 +386,6 @@ public sealed partial class ReleasesViewModel : ObservableObject
         if (match is not null && !ReferenceEquals(match, _selected)) Selected = match;
         if (_selected is null && Releases.Count > 0) Selected = Releases[0];
         if (_selected is not null && Releases.All(r => r.ReleaseId != _selected.ReleaseId)) Selected = null;
-        OnPropertiesChanged(nameof(Programs), nameof(SelectedProgramName), nameof(ProgramStatus));
-        OnPropertiesChanged(nameof(StoreError), nameof(StoreName), nameof(ProjectName), nameof(CompareTargets));
-        RebuildStations();
     }
 
     private void RebuildStations()

@@ -37,7 +37,7 @@ public static class LockOrderAnalysis
         Visit(definition.Root, new Dictionary<string, string>(StringComparer.Ordinal), definition.Root.Name, []);
         return edges;
 
-        void Visit(GroupDefinition group, Dictionary<string, string> held, string path, HashSet<string> blockStack)
+        Dictionary<string, string> AddResourceEdges(GroupDefinition group, Dictionary<string, string> held, string path)
         {
             var added = new Dictionary<string, string>(held, StringComparer.Ordinal);
             foreach (var name in group.Resources)
@@ -51,6 +51,12 @@ public static class LockOrderAnalysis
                     if (seen.Add($"{hk}\u0001{key}\u0001{path}")) edges.Add(edge);
                 }
             }
+            return added;
+        }
+
+        void Visit(GroupDefinition group, Dictionary<string, string> held, string path, HashSet<string> blockStack)
+        {
+            var added = AddResourceEdges(group, held, path);
             foreach (var child in group.Children)
             {
                 switch (child)

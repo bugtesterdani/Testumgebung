@@ -53,28 +53,41 @@ internal sealed partial class Toolchain
         var configured = Environment.GetEnvironmentVariable("TESTUMGEBUNG_CXX");
         if (!string.IsNullOrWhiteSpace(configured))
         {
-            var name = Path.GetFileNameWithoutExtension(configured).ToLowerInvariant();
-            if (name == "cl")
-                return new Toolchain(ToolchainKind.Msvc, configured, Probe(configured, "") ?? "", null);
-            var kind = name.Contains("clang") ? ToolchainKind.Clang : ToolchainKind.Gcc;
-            var version = Probe(configured, "--version");
-            if (version is null)
-            {
-                error = $"Compiler '{configured}' (TESTUMGEBUNG_CXX) konnte nicht gestartet werden.";
-                return null;
-            }
-            return new Toolchain(kind, configured, version, null);
+            return DetectConfigured(configured, out error);
         }
 
-        if (OperatingSystem.IsWindows() && FindVcVars() is { } vcvars)
+        var windows = OperatingSystem.IsWindows();
+        return DetectInstalled(windows, windows ? FindVcVars() : null, cmd => Probe(cmd, "--version"), out error);
+    }
+
+    private static Toolchain? DetectInstalled(bool windows, string? vcvars, Func<string, string?> probe, out string? error)
+    {
+        error = null;
+        if (windows && vcvars is not null)
             return new Toolchain(ToolchainKind.Msvc, "cl", MsvcVersion(vcvars), vcvars);
 
         foreach (var (cmd, kind) in new[] { ("clang++", ToolchainKind.Clang), ("g++", ToolchainKind.Gcc) })
         {
-            if (Probe(cmd, "--version") is { } version) return new Toolchain(kind, cmd, version, null);
+            if (probe(cmd) is { } version) return new Toolchain(kind, cmd, version, null);
         }
         error = "Keine C++-Toolchain gefunden (MSVC Build Tools, clang++ oder g++). Pfad über TESTUMGEBUNG_CXX angeben.";
         return null;
+    }
+
+    private static Toolchain? DetectConfigured(string configured, out string? error)
+    {
+        error = null;
+        var name = Path.GetFileNameWithoutExtension(configured).ToLowerInvariant();
+        if (name == "cl")
+            return new Toolchain(ToolchainKind.Msvc, configured, Probe(configured, "") ?? "", null);
+        var kind = name.Contains("clang") ? ToolchainKind.Clang : ToolchainKind.Gcc;
+        var version = Probe(configured, "--version");
+        if (version is null)
+        {
+            error = $"Compiler '{configured}' (TESTUMGEBUNG_CXX) konnte nicht gestartet werden.";
+            return null;
+        }
+        return new Toolchain(kind, configured, version, null);
     }
 
     /// <summary>Erste Zeile der Versionsausgabe oder null, wenn der Befehl nicht startet.</summary>
@@ -97,6 +110,11 @@ internal sealed partial class Toolchain
     {
         var pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
         var vswhere = Path.Combine(pf86, "Microsoft Visual Studio", "Installer", "vswhere.exe");
+        return FindVcVars(vswhere);
+    }
+
+    private static string? FindVcVars(string vswhere)
+    {
         if (!File.Exists(vswhere)) return null;
         try
         {

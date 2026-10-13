@@ -44,6 +44,20 @@ public static class GdbInspector
             }
             throw new IOException("GDB-Verbindung beendet.");
         }
+        async Task<List<string>> NativeFramesAsync()
+        {
+            var frames = new List<string>();
+            for (var i = 0; i < 12; i++)
+            {
+                var frameData = await Command("-stack-info-frame", timeout.Token);
+                if (frameData["frame"] is not JsonObject f) break;
+                frames.Add($"#{i} {f["func"]} ({f["file"]}:{f["line"]})");
+                try { await Command("-interpreter-exec console \"up-silently\"", timeout.Token); }
+                catch (InvalidOperationException) { break; }
+            }
+            return frames;
+        }
+
         async Task<NativeDebugSnapshot?> CaptureNativeFrameAsync(JsonObject threads)
         {
             if (ulong.TryParse(nativeFrame, System.Globalization.NumberStyles.HexNumber, null, out var fp) && fp > 0
@@ -63,15 +77,7 @@ public static class GdbInspector
                     foreach (var v in (data["variables"] as JsonArray ?? []).OfType<JsonObject>())
                         if ((string?)v["name"] is { } name && !name.StartsWith("__", StringComparison.Ordinal))
                             variables.TryAdd(name, (string?)v["value"] ?? "<nicht verfügbar>");
-                    var frames = new List<string>();
-                    for (var i = 0; i < 12; i++)
-                    {
-                        var frameData = await Command("-stack-info-frame", timeout.Token);
-                        if (frameData["frame"] is not JsonObject f) break;
-                        frames.Add($"#{i} {f["func"]} ({f["file"]}:{f["line"]})");
-                        try { await Command("-interpreter-exec console \"up-silently\"", timeout.Token); }
-                        catch (InvalidOperationException) { break; }
-                    }
+                    var frames = await NativeFramesAsync();
                     return new(variables, frames);
                 }
             }
@@ -175,19 +181,25 @@ public static class GdbInspector
                 {
                     if (_position >= text.Length) break;
                     c = text[_position++];
-                    if (c is >= '0' and <= '7')
-                    {
-                        var number = c - '0';
-                        for (var i = 0; i < 2 && _position < text.Length && text[_position] is >= '0' and <= '7'; i++)
-                            number = number * 8 + text[_position++] - '0';
-                        c = (char)number;
-                    }
-                    else c = c switch { 'n' => '\n', 'r' => '\r', 't' => '\t', _ => c };
+                    c = Escape(c);
                 }
                 value.Append(c);
             }
             throw new FormatException("GDB/MI-Zeichenkette unvollständig.");
         }
+        private char Escape(char c)
+        {
+            if (c is >= '0' and <= '7')
+            {
+                var number = c - '0';
+                for (var i = 0; i < 2 && _position < text.Length && text[_position] is >= '0' and <= '7'; i++)
+                    number = number * 8 + text[_position++] - '0';
+                c = (char)number;
+            }
+            else c = c switch { 'n' => '\n', 'r' => '\r', 't' => '\t', _ => c };
+            return c;
+        }
+
         private JsonNode ListValue()
         {
             var list = new JsonArray();

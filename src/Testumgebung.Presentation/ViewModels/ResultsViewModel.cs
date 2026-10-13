@@ -134,7 +134,18 @@ public sealed class ResultDocumentViewModel : ObservableObject
 
     private static ResultEventRow ToRow(ResultEvent e)
     {
-        var kind = e.Kind switch
+        var kind = EventKindText(e);
+        var value = e.WaveformIds is { Count: > 0 } ids ? $"{ids.Count} Kurve(n)" : FormatValue(e.Value);
+        var limits = e.LowLimit is null && e.HighLimit is null ? "—" : $"{Format.Number(e.LowLimit)} – {Format.Number(e.HighLimit)}";
+        var message = e.Cancelled ? "Abgebrochen" + (e.Message is null ? "" : ": " + e.Message) : e.Message ?? "";
+        if (e.AttachmentId is not null) message = (message + " [Bild eingebettet]").Trim();
+        return new ResultEventRow(e.Time.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture), kind, e.Path == "" ? "—" : e.Path, value,
+            e.Unit ?? "", limits, e.Rating, message, e.Iteration > 1 ? e.Iteration.ToString(CultureInfo.InvariantCulture) : "");
+    }
+
+    private static string EventKindText(ResultEvent e)
+    {
+        return e.Kind switch
         {
             ResultEventKind.Step => e.LowLimit is not null || e.HighLimit is not null ? "Messung" : "Schritt",
             ResultEventKind.Group => "Gruppe",
@@ -146,12 +157,6 @@ public sealed class ResultDocumentViewModel : ObservableObject
             ResultEventKind.Abort => "Werkerabbruch",
             _ => e.Kind.ToString(),
         };
-        var value = e.WaveformIds is { Count: > 0 } ids ? $"{ids.Count} Kurve(n)" : FormatValue(e.Value);
-        var limits = e.LowLimit is null && e.HighLimit is null ? "—" : $"{Format.Number(e.LowLimit)} – {Format.Number(e.HighLimit)}";
-        var message = e.Cancelled ? "Abgebrochen" + (e.Message is null ? "" : ": " + e.Message) : e.Message ?? "";
-        if (e.AttachmentId is not null) message = (message + " [Bild eingebettet]").Trim();
-        return new ResultEventRow(e.Time.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture), kind, e.Path == "" ? "—" : e.Path, value,
-            e.Unit ?? "", limits, e.Rating, message, e.Iteration > 1 ? e.Iteration.ToString(CultureInfo.InvariantCulture) : "");
     }
 
     private static string FormatValue(object? v) => v switch

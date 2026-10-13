@@ -4,10 +4,12 @@ $workspace = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $directory = Join-Path ([IO.Path]::GetTempPath()) ('coverage-goals-' + [guid]::NewGuid())
 try {
     foreach ($scenario in @(
-        @{ Name='valid'; Complexity=7; Points=100; Covered=1; CrapPassed=$true; ComplexityPassed=$true },
+        @{ Name='valid'; Complexity=5; Points=100; Covered=1; CrapPassed=$true; ComplexityPassed=$true },
+        @{ Name='crap-exact'; Complexity=30; Points=1; Covered=1; CrapPassed=$false; ComplexityPassed=$true },
         @{ Name='crap-over'; Complexity=7; Points=100; Covered=0; CrapPassed=$false; ComplexityPassed=$true },
-        @{ Name='rounded-crap'; Complexity=7; Points=147; Covered=1; CrapPassed=$false; ComplexityPassed=$true },
-        @{ Name='complexity-over'; Complexity=51; Points=1; Covered=1; CrapPassed=$true; ComplexityPassed=$false }
+        @{ Name='rounded-crap'; Complexity=29; Points=10000; Covered=8930; CrapPassed=$false; ComplexityPassed=$true },
+        @{ Name='rounded-below'; Complexity=29; Points=10000; Covered=8950; CrapPassed=$true; ComplexityPassed=$true },
+        @{ Name='complexity-over'; Complexity=51; Points=1; Covered=1; CrapPassed=$false; ComplexityPassed=$false }
     )) {
         $run = Join-Path $directory $scenario.Name
         New-Item -ItemType Directory -Path "$run/report", "$run/raw/fixture" -Force | Out-Null
@@ -23,13 +25,18 @@ try {
         try { & "$workspace/build/coverage-summary.ps1" -RunDirectory $run -EnforceTargets }
         catch { $failure = $_.Exception.Message }
         $result = Get-Content "$run/report/Qualitaetsziele.json" -Raw | ConvertFrom-Json
+        if ($result.CRAPMaximum -ne 30 -or -not $result.CRAPMaximumExclusive) { throw 'CRAP must be strictly below 30.' }
+        $html = [Net.WebUtility]::HtmlDecode((Get-Content "$run/report/Funktionen.html" -Raw))
+        if (-not $html.Contains('r.cells[5].textContent==="ab 30"')) { throw 'The filter must match the current exact CRAP status.' }
+        $status = if ($scenario.CrapPassed) { 'erfüllt' } else { 'ab 30' }
+        if (-not $html.Contains("<td>$status</td>")) { throw "Wrong function status: $($scenario.Name)" }
         if (-not $result.LinePassed -or -not $result.BranchPassed -or $result.CRAPPassed -ne $scenario.CrapPassed -or $result.ComplexityPassed -ne $scenario.ComplexityPassed) { throw "Wrong threshold result: $($scenario.Name)" }
         $shouldPass = $scenario.CrapPassed -and $scenario.ComplexityPassed
         if ($shouldPass -ne ($null -eq $failure)) { throw "Wrong enforcement result: $($scenario.Name)" }
         if ($scenario.Name -eq 'rounded-crap') {
-            if ($result.CRAPActualMaximum -le 55 -or $result.CRAPActualMaximum -ge 55.05) { throw 'Fixture must round to 55.0 while exceeding the limit.' }
+            if ($result.CRAPActualMaximum -lt 30 -or $result.CRAPActualMaximum -ge 30.05) { throw 'Fixture must round to 30.0 while exceeding the limit.' }
             $html = [Net.WebUtility]::HtmlDecode((Get-Content "$run/report/Funktionen.html" -Raw))
-            if (-not $html.Contains('<td>über 55</td>')) { throw 'Function filter must use the exact CRAP status.' }
+            if (-not $html.Contains('<td>ab 30</td>')) { throw 'Function filter must use the exact CRAP status.' }
         }
     }
     Write-Host 'Coverage goal checks passed: valid goals, CRAP failure, rounding boundary, complexity failure.'

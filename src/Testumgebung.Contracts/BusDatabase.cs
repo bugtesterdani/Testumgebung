@@ -154,13 +154,7 @@ public sealed class BusMessage
         var data = new byte[length ?? Length];
         var given = values.ToDictionary(kv => RequireSignal(kv.Key), kv => kv.Value);
         var mux = Multiplexer;
-        long? muxValue = mux is not null && given.TryGetValue(mux, out var mv) ? (long)Math.Round((mv - mux.Coding.Offset) / mux.Coding.Factor) : null;
-        foreach (var s in given.Keys.Where(s => s.MuxValue is not null))
-        {
-            if (muxValue is { } m && m != s.MuxValue)
-                throw new BusDatabaseException($"Signal „{s.Name}“ gilt nur bei Multiplexer {s.MuxValue}, angegeben ist {m}.");
-            muxValue = s.MuxValue;
-        }
+        var muxValue = ResolveMultiplexer(given, mux);
         foreach (var s in Signals)
         {
             if (s.MuxValue is { } own && own != (muxValue ?? (long)(mux?.InitialRaw ?? 0))) continue;
@@ -173,6 +167,18 @@ public sealed class BusMessage
             s.Coding.Write(data, v);
         }
         return data;
+    }
+
+    private static long? ResolveMultiplexer(Dictionary<BusSignal, double> given, BusSignal? mux)
+    {
+        long? muxValue = mux is not null && given.TryGetValue(mux, out var mv) ? (long)Math.Round((mv - mux.Coding.Offset) / mux.Coding.Factor) : null;
+        foreach (var s in given.Keys.Where(s => s.MuxValue is not null))
+        {
+            if (muxValue is { } m && m != s.MuxValue)
+                throw new BusDatabaseException($"Signal „{s.Name}“ gilt nur bei Multiplexer {s.MuxValue}, angegeben ist {m}.");
+            muxValue = s.MuxValue;
+        }
+        return muxValue;
     }
 
     public override string ToString() => $"{Name} (0x{Id:X}{(Extended ? " 29 Bit" : "")}, {Length} Bytes)";
@@ -404,6 +410,16 @@ public sealed class BusDatabase
                 case "Baudrate" or "BusSpeed" when parts.Length >= 1 && !parts[0].EndsWith('_'):
                     if (double.TryParse(Value(0), NumberStyles.Float, CultureInfo.InvariantCulture, out var rate)) db.Bitrate = (int)(rate < 10_000 ? rate * 1000 : rate);
                     break;
+                default:
+                    ReadSignalAndFrameAttribute(attribute, parts);
+                    break;
+            }
+        }
+
+        void ReadSignalAndFrameAttribute(string attribute, string[] parts)
+        {
+            switch (attribute)
+            {
                 case "GenMsgCycleTime" when parts.Length >= 3 && parts[0] == "BO_":
                     if (byId.TryGetValue(uint.Parse(parts[1], CultureInfo.InvariantCulture), out var cm)) cm.CycleMs = (int)Num(parts[2]);
                     break;
@@ -423,7 +439,7 @@ public sealed class BusDatabase
                 db.Bitrate = (int)(bs < 10_000 ? bs * 1000 : bs);
         }
 
-        void FinishDbc()
+        void ApplyFloatTypes()
         {
             foreach (var (raw, name, type) in floatTypes)
             {
@@ -435,6 +451,11 @@ public sealed class BusDatabase
                 }
                 s.Coding = s.Coding with { IsFloat = true, Signed = false };
             }
+        }
+
+        void FinishDbc()
+        {
+            ApplyFloatTypes();
             foreach (var (raw, name, value) in startValues)
                 if (byId.TryGetValue(raw, out var m) && m.Signal(name) is { } s && !s.Coding.IsFloat)
                     s.InitialRaw = unchecked((ulong)(long)value);
@@ -521,13 +542,7 @@ public sealed class BusDatabase
         {
             var c = text[i];
             if (char.IsWhiteSpace(c)) { i++; continue; }
-            if (c == '/' && i + 1 < text.Length && text[i + 1] == '/') { while (i < text.Length && text[i] != '\n') i++; continue; }
-            if (c == '/' && i + 1 < text.Length && text[i + 1] == '*')
-            {
-                var end = text.IndexOf("*/", i + 2, StringComparison.Ordinal);
-                i = end < 0 ? text.Length : end + 2;
-                continue;
-            }
+            if (SkipLdfComment(text, ref i)) continue;
             if (c == '"')
             {
                 var end = text.IndexOf('"', i + 1);
@@ -542,6 +557,20 @@ public sealed class BusDatabase
             tokens.Add(text[start..i]);
         }
         return tokens;
+    }
+
+    private static bool SkipLdfComment(string text, ref int i)
+    {
+        if (text[i] != '/' || i + 1 >= text.Length) return false;
+        if (text[i + 1] == '/')
+        {
+            while (i < text.Length && text[i] != '\n') i++;
+            return true;
+        }
+        if (text[i + 1] != '*') return false;
+        var end = text.IndexOf("*/", i + 2, StringComparison.Ordinal);
+        i = end < 0 ? text.Length : end + 2;
+        return true;
     }
 
     private static List<LdfItem> LdfParse(List<string> tokens, ref int pos, bool nested)
@@ -560,16 +589,7 @@ public sealed class BusDatabase
                 case "{" when head.Count > 0 && head[^1] is "," or "=":
                     {
                         // Feldwert wie {0x00, 0xFF}: als ein Token übernehmen
-                        var sb = new StringBuilder("{");
-                        var depth = 1;
-                        while (pos < tokens.Count && depth > 0)
-                        {
-                            var x = tokens[pos++];
-                            if (x == "{") depth++;
-                            else if (x == "}") depth--;
-                            sb.Append(depth == 0 ? "}" : x);
-                        }
-                        head.Add(sb.ToString());
+                        head.Add(LdfArrayValue(tokens, ref pos));
                         break;
                     }
                 case "{":
@@ -589,6 +609,20 @@ public sealed class BusDatabase
         if (nested) throw new BusDatabaseException("LDF: Block nicht geschlossen („}“ fehlt).");
         if (head.Count > 0) items.Add(new LdfItem(head, null));
         return items;
+    }
+
+    private static string LdfArrayValue(List<string> tokens, ref int pos)
+    {
+        var sb = new StringBuilder("{");
+        var depth = 1;
+        while (pos < tokens.Count && depth > 0)
+        {
+            var x = tokens[pos++];
+            if (x == "{") depth++;
+            else if (x == "}") depth--;
+            sb.Append(depth == 0 ? "}" : x);
+        }
+        return sb.ToString();
     }
 
     private static List<string> Values(IEnumerable<string> head) => head.Where(t => t is not ("," or ":" or "=")).ToList();

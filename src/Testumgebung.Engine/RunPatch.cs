@@ -107,6 +107,11 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                     grpBlock.Name = change.Value!.Trim();
                     return;
                 }
+                ApplyNodeChange(change);
+            }
+
+            void ApplyNodeChange(PatchChange change)
+            {
                 var node = run.Definition.Find(change.NodeId)!;
                 switch (node, change.Property)
                 {
@@ -168,6 +173,11 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                     diagnostics.Add($"„{node.Name}“ ist gerade aktiv – aktive Scopes werden nicht geändert.");
                     return;
                 }
+                ValidateNodeChange(node, change);
+            }
+
+            void ValidateNodeChange(NodeDefinition node, PatchChange change)
+            {
                 switch (node, change.Property)
                 {
                     case (_, "name") when string.IsNullOrWhiteSpace(change.Value):

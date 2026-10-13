@@ -8,6 +8,15 @@ namespace Testumgebung.Engine.Tests;
 public sealed class NodeCardBoundaryTests
 {
     [Theory]
+    [InlineData(null)]
+    [InlineData("future")]
+    public void PaletteUsesTheDocumentFallbackForMissingAndUnknownTypes(string? type)
+    {
+        var method = typeof(EditorViewModel).GetMethod("IconFor", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!;
+        Assert.Equal(NodeIcon.Doc, method.Invoke(null, [type]));
+    }
+
+    [Theory]
     [InlineData(BlockCatalog.Measure, NodeIcon.Measure)]
     [InlineData(BlockCatalog.Output, NodeIcon.Arrow)]
     [InlineData(BlockCatalog.SetValue, NodeIcon.Arrow)]

@@ -114,14 +114,7 @@ public static class ReleasePackage
         var problems = new List<string>();
         var actual = ComputeEntries(projectJson, project).ToList();
         if (environmentJson is not null) actual.Add(new("Laufzeitumgebung", "runtime.json", "1", Sha256(environmentJson)));
-        foreach (var expected in manifest.Entries)
-        {
-            var found = actual.FirstOrDefault(a => a.Area == expected.Area && a.Name == expected.Name && a.Version == expected.Version);
-            if (found is null) problems.Add($"{expected.Area} '{expected.Name}' fehlt im Paket.");
-            else if (found.Sha256 != expected.Sha256) problems.Add($"{expected.Area} '{expected.Name}': Hash stimmt nicht.");
-        }
-        foreach (var extra in actual.Where(a => manifest.Entries.All(e => e.Area != a.Area || e.Name != a.Name || e.Version != a.Version)))
-            problems.Add($"{extra.Area} '{extra.Name}' ist nicht im Manifest.");
+        ValidateEntries(manifest, actual, problems);
         if (project.Definition.Version != manifest.Version) problems.Add("Version im Ablauf weicht vom Manifest ab.");
         RuntimeSnapshot? environment = null;
         if (environmentJson is not null)
@@ -131,6 +124,18 @@ public static class ReleasePackage
             if (environment is null || environment.Components is null) problems.Add("Laufzeitumgebung fehlt oder ist ungültig.");
         }
         return new OpenedPackage(manifest, project, projectJson, problems) { Environment = environment };
+    }
+
+    private static void ValidateEntries(ReleaseManifest manifest, List<ManifestEntry> actual, List<string> problems)
+    {
+        foreach (var expected in manifest.Entries)
+        {
+            var found = actual.FirstOrDefault(a => a.Area == expected.Area && a.Name == expected.Name && a.Version == expected.Version);
+            if (found is null) problems.Add($"{expected.Area} '{expected.Name}' fehlt im Paket.");
+            else if (found.Sha256 != expected.Sha256) problems.Add($"{expected.Area} '{expected.Name}': Hash stimmt nicht.");
+        }
+        foreach (var extra in actual.Where(a => manifest.Entries.All(e => e.Area != a.Area || e.Name != a.Name || e.Version != a.Version)))
+            problems.Add($"{extra.Area} '{extra.Name}' ist nicht im Manifest.");
     }
 
     private static string Read(ZipArchive zip, string name)
@@ -156,12 +161,8 @@ public static class ReleasePackage
         flow.Remove("curves");
         list.Add(new ManifestEntry("Ablauf", d.Name, d.Version, Sha256(flow.ToJsonString())));
 
-        if (root["library"] is JsonArray lib)
-            foreach (var b in lib)
-                list.Add(new ManifestEntry("Bausteine", (string?)b!["name"] ?? (string)b["id"]!, (string?)b["version"] ?? "", Sha256(b.ToJsonString())));
-        if (root["groupLibrary"] is JsonArray groups)
-            foreach (var b in groups)
-                list.Add(new ManifestEntry("Bausteine", (string?)b!["name"] ?? (string)b["id"]!, (string?)b["version"] ?? "", Sha256(b.ToJsonString())));
+        AddBlockEntries(root["library"] as JsonArray, list);
+        AddBlockEntries(root["groupLibrary"] as JsonArray, list);
 
         foreach (var a in d.Assemblies.OrderBy(a => a.Name, StringComparer.Ordinal))
             list.Add(new ManifestEntry("Codeartefakte", "DLL/" + a.Name, "", Sha256(a.Data)));
@@ -180,6 +181,13 @@ public static class ReleasePackage
         list.Add(new ManifestEntry("Definitionen", "Hardwareprofil (Simulation)", d.Version,
             Sha256((root["simulation"]?.ToJsonString() ?? "[]") + (root["simulationOutputs"]?.ToJsonString() ?? ""))));
         return list;
+    }
+
+    private static void AddBlockEntries(JsonArray? blocks, List<ManifestEntry> list)
+    {
+        if (blocks is null) return;
+        foreach (var b in blocks)
+            list.Add(new ManifestEntry("Bausteine", (string?)b!["name"] ?? (string)b["id"]!, (string?)b["version"] ?? "", Sha256(b.ToJsonString())));
     }
 
     /// <summary>Quelltexte aller Bibliotheksbausteine und CodeBlocks im Ablauf.</summary>
@@ -240,11 +248,7 @@ public static class DefinitionCompatibility
             reason = "Prüflingsgruppe geändert";
             return false;
         }
-        if (a["variables"]?.ToJsonString() != b["variables"]?.ToJsonString()) { reason = "Hauptablauf-Variablen geändert"; return false; }
-        if (a["assemblies"]?.ToJsonString() != b["assemblies"]?.ToJsonString()) { reason = ".NET-DLLs geändert; neue Prüfsitzung erforderlich"; return false; }
-        if (a["init"]?.ToJsonString() != b["init"]?.ToJsonString()) { reason = "Init geändert"; return false; }
-        if (a["finalization"]?.ToJsonString() != b["finalization"]?.ToJsonString()) { reason = "Finalization geändert"; return false; }
-        if (a["loop"]?.ToJsonString() != b["loop"]?.ToJsonString()) { reason = "Loop außerhalb des Prüflings geändert"; return false; }
+        if (!SameOuterFlow(a, b, out reason)) return false;
         foreach (var id in curvesA.Union(curvesB))
         {
             if (Curve(a, id) != Curve(b, id))
@@ -261,6 +265,22 @@ public static class DefinitionCompatibility
                 return false;
             }
         }
+        reason = "";
+        return true;
+    }
+
+    private static bool SameOuterFlow(JsonObject a, JsonObject b, out string reason)
+    {
+        (string Key, string Reason)[] properties =
+        [
+            ("variables", "Hauptablauf-Variablen geändert"),
+            ("assemblies", ".NET-DLLs geändert; neue Prüfsitzung erforderlich"),
+            ("init", "Init geändert"),
+            ("finalization", "Finalization geändert"),
+            ("loop", "Loop außerhalb des Prüflings geändert"),
+        ];
+        foreach (var (key, message) in properties)
+            if (a[key]?.ToJsonString() != b[key]?.ToJsonString()) { reason = message; return false; }
         reason = "";
         return true;
     }
@@ -296,11 +316,16 @@ public static class DefinitionCompatibility
                 foreach (var key in o.Select(kv => kv.Key).Where(k => k is not ("id" or "art")).ToList()) o.Remove(key);
                 return;
             }
-            if (o["parameters"] is JsonObject p && (string?)p["Baustein"] is { Length: > 0 } b) used.Add(b);
-            if (o["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
+            CollectReferences(o);
             if (o["children"] is JsonArray children) foreach (var c in children) Walk(c);
             Walk(o["exit"]);
         }
+        void CollectReferences(JsonObject o)
+        {
+            if (o["parameters"] is JsonObject p && (string?)p["Baustein"] is { Length: > 0 } b) used.Add(b);
+            if (o["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
+        }
+
         Walk(root["init"]);
         Walk(root["loop"]);
         Walk(root["finalization"]);

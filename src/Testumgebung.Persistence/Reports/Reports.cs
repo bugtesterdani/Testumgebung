@@ -114,31 +114,37 @@ public static class Reports
 
         WriteGroups();
 
-        foreach (var group in run.Waveforms.GroupBy(w => w.EventSequence))
+        WriteWaveforms();
+
+        void WriteWaveforms()
         {
-            var ev = run.Events.FirstOrDefault(e => e.Sequence == group.Key);
-            var title = ev is null ? "Kurven" : $"Kurven: {ResultAnalysis.NameOf(run, ev)}";
-            var series = group.Select(w =>
+            foreach (var group in run.Waveforms.GroupBy(w => w.EventSequence))
             {
-                var wave = w.Data;
-                var indices = new List<int>();
-                // Pro PDF-Spalte Minimum/Maximum erhalten; keine Vollkopie großer Aufnahmen.
-                var width = Math.Max(1, (wave.Count + 599) / 600);
-                for (var a = 0; a < wave.Count; a += width)
+                var ev = run.Events.FirstOrDefault(e => e.Sequence == group.Key);
+                var title = ev is null ? "Kurven" : $"Kurven: {ResultAnalysis.NameOf(run, ev)}";
+                var series = group.Select(w =>
                 {
-                    int min = a, max = a;
-                    for (var i = a; i < Math.Min(wave.Count, a + width); i++)
+                    var wave = w.Data;
+                    var indices = new List<int>();
+                    // Pro PDF-Spalte Minimum/Maximum erhalten; keine Vollkopie großer Aufnahmen.
+                    var width = Math.Max(1, (wave.Count + 599) / 600);
+                    for (var a = 0; a < wave.Count; a += width)
                     {
-                        if (wave.Values[i] < wave.Values[min]) min = i;
-                        if (wave.Values[i] > wave.Values[max]) max = i;
+                        int min = a, max = a;
+                        for (var i = a; i < Math.Min(wave.Count, a + width); i++)
+                        {
+                            if (wave.Values[i] < wave.Values[min]) min = i;
+                            if (wave.Values[i] > wave.Values[max]) max = i;
+                        }
+                        indices.Add(Math.Min(min, max));
+                        if (min != max) indices.Add(Math.Max(min, max));
                     }
-                    indices.Add(Math.Min(min, max));
-                    if (min != max) indices.Add(Math.Max(min, max));
-                }
-                return (wave.Channel, indices.Select(i => wave.TimeOf(i) * 1000).ToArray(), indices.Select(i => wave.Values[i]).ToArray());
-            }).ToList();
-            writer.Plot(title, series, "ms", group.First().Data.Unit);
-            writer.Paragraph(string.Join(" · ", group.Select(w => $"{w.Data.Channel}: Effektivwert {w.Data.Rms().ToString("0.###", De)} {w.Data.Unit}, {w.Data.Count} Samples")), 8, PdfColor.Gray);
+                    return (wave.Channel, indices.Select(i => wave.TimeOf(i) * 1000).ToArray(), indices.Select(i => wave.Values[i]).ToArray());
+                }).ToList();
+                writer.Plot(title, series, "ms", group.First().Data.Unit);
+                writer.Paragraph(string.Join(" · ", group.Select(w => $"{w.Data.Channel}: Effektivwert {w.Data.Rms().ToString("0.###", De)} {w.Data.Unit}, {w.Data.Count} Samples")), 8, PdfColor.Gray);
+            }
+
         }
 
         var steps = run.Events.Where(e => e.Kind == ResultEventKind.Step).ToList();
@@ -184,29 +190,35 @@ public static class Reports
             ("Mittlere Prüfdauer", s.MeanDuration is { } d ? $"{d.TotalSeconds.ToString("0.0", De)} s" : "–", null),
         ]);
 
-        if (s.Failures.Count > 0)
-        {
-            writer.Heading("Fehlerhäufigkeit je Schritt (Pareto)");
-            writer.Table([("Schritt", 3), ("Läufe", 0.8), ("FAIL", 0.7), ("ERROR", 0.7), ("Anteil", 0.9), ("häufigste Meldung", 4)],
-                s.Failures.Take(25).Select(f => (IReadOnlyList<(string, PdfColor?)>)
-                [
-                    (f.Name, null), (f.Runs.ToString(De), null), (f.Fail.ToString(De), f.Fail > 0 ? PdfColor.Fail : null),
-                    (f.Error.ToString(De), f.Error > 0 ? PdfColor.Warn : null), (P(s.Runs == 0 ? null : (double)f.Runs / s.Runs), null), (f.TypicalMessage ?? "", null),
-                ]));
-        }
+        WriteFailureAndMeasurementStatistics();
 
-        if (s.Measurements.Count > 0)
+        void WriteFailureAndMeasurementStatistics()
         {
-            writer.Heading("Messwerte und Prozessfähigkeit");
-            writer.Table([("Messwert", 2.6), ("n", 0.6), ("Min", 1), ("Max", 1), ("Mittel", 1), ("σ", 0.9), ("Grenzen", 1.6), ("außerh.", 0.8), ("Cpk", 0.8), ("Bewertung", 1.4)],
-                s.Measurements.Select(m => (IReadOnlyList<(string, PdfColor?)>)
-                [
-                    ($"{m.Name}{(m.Unit.Length > 0 ? $" [{m.Unit}]" : "")}", null), (m.Count.ToString(De), null), (Num(m.Min), null), (Num(m.Max), null),
-                    (Num(m.Mean), null), (Num(m.StdDev), null), (Limits(m.Low, m.High), null), (m.OutOfLimits.ToString(De), m.OutOfLimits > 0 ? PdfColor.Fail : null),
-                    (m.Cpk is { } c ? c.ToString("0.00", De) : "–", null),
-                    (m.Capability, m.Cpk switch { null => null, >= 1.33 => PdfColor.Pass, >= 1.0 => PdfColor.Warn, _ => PdfColor.Fail }),
-                ]), 8);
-            writer.Paragraph("Cpk = min(OG − μ, μ − UG) / 3σ über alle Werte des Zeitraums; ≥ 1,33 fähig, ≥ 1,0 bedingt fähig. Bei wenigen Werten nur als Hinweis verwenden.", 7.5, PdfColor.Gray);
+            if (s.Failures.Count > 0)
+            {
+                writer.Heading("Fehlerhäufigkeit je Schritt (Pareto)");
+                writer.Table([("Schritt", 3), ("Läufe", 0.8), ("FAIL", 0.7), ("ERROR", 0.7), ("Anteil", 0.9), ("häufigste Meldung", 4)],
+                    s.Failures.Take(25).Select(f => (IReadOnlyList<(string, PdfColor?)>)
+                    [
+                        (f.Name, null), (f.Runs.ToString(De), null), (f.Fail.ToString(De), f.Fail > 0 ? PdfColor.Fail : null),
+                        (f.Error.ToString(De), f.Error > 0 ? PdfColor.Warn : null), (P(s.Runs == 0 ? null : (double)f.Runs / s.Runs), null), (f.TypicalMessage ?? "", null),
+                    ]));
+            }
+
+            if (s.Measurements.Count > 0)
+            {
+                writer.Heading("Messwerte und Prozessfähigkeit");
+                writer.Table([("Messwert", 2.6), ("n", 0.6), ("Min", 1), ("Max", 1), ("Mittel", 1), ("σ", 0.9), ("Grenzen", 1.6), ("außerh.", 0.8), ("Cpk", 0.8), ("Bewertung", 1.4)],
+                    s.Measurements.Select(m => (IReadOnlyList<(string, PdfColor?)>)
+                    [
+                        ($"{m.Name}{(m.Unit.Length > 0 ? $" [{m.Unit}]" : "")}", null), (m.Count.ToString(De), null), (Num(m.Min), null), (Num(m.Max), null),
+                        (Num(m.Mean), null), (Num(m.StdDev), null), (Limits(m.Low, m.High), null), (m.OutOfLimits.ToString(De), m.OutOfLimits > 0 ? PdfColor.Fail : null),
+                        (m.Cpk is { } c ? c.ToString("0.00", De) : "–", null),
+                        (m.Capability, m.Cpk switch { null => null, >= 1.33 => PdfColor.Pass, >= 1.0 => PdfColor.Warn, _ => PdfColor.Fail }),
+                    ]), 8);
+                writer.Paragraph("Cpk = min(OG − μ, μ − UG) / 3σ über alle Werte des Zeitraums; ≥ 1,33 fähig, ≥ 1,0 bedingt fähig. Bei wenigen Werten nur als Hinweis verwenden.", 7.5, PdfColor.Gray);
+            }
+
         }
 
         if (s.Daily.Count > 0)

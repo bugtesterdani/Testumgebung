@@ -363,16 +363,19 @@ internal sealed class StreamAction(string resource, SendSpec? send, ReceiveSpec?
             extracted = m.Groups.Count > 1 && m.Groups[1].Success ? m.Groups[1].Value : m.Value;
         }
         if (spec.Low is not null || spec.High is not null)
-        {
-            if (CommunicationBlocks.ParseNumber(extracted) is not { } number)
-                return new StepOutcome(ResultRating.Fail, extracted, Message: $"Kein Zahlenwert in der Antwort · {info}");
-            if (spec.Target is not null) CommunicationBlocks.SetTarget(ctx, spec.Target, number);
-            return CommunicationBlocks.Rate(ctx, number, spec.Low, spec.High, spec.Unit, info);
-        }
+            return EvaluateNumber(ctx, extracted, spec, info);
         if (spec.Target is not null) CommunicationBlocks.SetTarget(ctx, spec.Target, extracted);
         object value = CommunicationBlocks.ParseNumber(extracted) is { } n && !string.IsNullOrWhiteSpace(spec.Unit) ? n : extracted;
         return new StepOutcome(matched ? ResultRating.Pass : ResultRating.NResult, value, string.IsNullOrWhiteSpace(spec.Unit) ? null : spec.Unit, Message: info);
     }
+    private static StepOutcome EvaluateNumber(IStepContext ctx, string extracted, ReceiveSpec spec, string info)
+    {
+        if (CommunicationBlocks.ParseNumber(extracted) is not { } number)
+            return new StepOutcome(ResultRating.Fail, extracted, Message: $"Kein Zahlenwert in der Antwort · {info}");
+        if (spec.Target is not null) CommunicationBlocks.SetTarget(ctx, spec.Target, number);
+        return CommunicationBlocks.Rate(ctx, number, spec.Low, spec.High, spec.Unit, info);
+    }
+
 }
 
 // ---------------------------------------------------------------------- Modbus
@@ -441,17 +444,22 @@ internal sealed class ModbusReadAction : IStepAction
         var unit = string.IsNullOrWhiteSpace(_unit) ? null : _unit;
         if (_expected is not null)
         {
-            var expected = _expected.Evaluate(new ContextResolver(context));
-            var ok = value is double or long && expected is double or long
-                ? Math.Abs(Convert.ToDouble(value, CultureInfo.InvariantCulture) - Convert.ToDouble(expected, CultureInfo.InvariantCulture)) < 1e-9
-                : string.Equals(CommunicationBlocks.Text(value), CommunicationBlocks.Text(expected), StringComparison.Ordinal);
-            return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, value, unit,
-                Message: ok ? $"{_label} = {CommunicationBlocks.Text(value)}" : $"{_label} = {CommunicationBlocks.Text(value)}, erwartet {CommunicationBlocks.Text(expected)}");
+            return RateExpected(context, value, unit);
         }
         if (value is long or double && (_low is not null || _high is not null))
             return CommunicationBlocks.Rate(context, Convert.ToDouble(value, CultureInfo.InvariantCulture), _low, _high, _unit, _label);
         return new StepOutcome(ResultRating.NResult, value, unit, Message: _label);
     }
+    private StepOutcome RateExpected(IStepContext context, object value, string? unit)
+    {
+        var expected = _expected!.Evaluate(new ContextResolver(context));
+        var ok = value is double or long && expected is double or long
+            ? Math.Abs(Convert.ToDouble(value, CultureInfo.InvariantCulture) - Convert.ToDouble(expected, CultureInfo.InvariantCulture)) < 1e-9
+            : string.Equals(CommunicationBlocks.Text(value), CommunicationBlocks.Text(expected), StringComparison.Ordinal);
+        return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, value, unit,
+            Message: ok ? $"{_label} = {CommunicationBlocks.Text(value)}" : $"{_label} = {CommunicationBlocks.Text(value)}, erwartet {CommunicationBlocks.Text(expected)}");
+    }
+
 }
 
 internal sealed class ModbusWriteAction : IStepAction

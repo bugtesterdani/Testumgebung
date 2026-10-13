@@ -605,21 +605,27 @@ public sealed partial class StationsViewModel : ObservableObject
         Details.Add(new("Adapter", device is null ? "—" : $"{device.Adapter}"));
         Details.Add(new("Gerät", device?.Name ?? $"unbekannt ({a.Device})"));
         Details.Add(new("Kanal", a.Channel));
-        if (sim is not null)
+        AddCapabilities();
+
+        void AddCapabilities()
         {
-            var range = sim.Min > -1e8 || sim.Max < 1e8
-                ? string.Create(CultureInfo.InvariantCulture, $"{sim.Unit}: {sim.Min:0.##} – {sim.Max:0.##}")
-                : $"{sim.Unit}: unbegrenzt";
-            Details.Add(new("Unterstützte Bereiche", range + (sim.Frequency > 0 ? string.Create(CultureInfo.InvariantCulture, $", {sim.Frequency:0.##} Hz") : "")));
+            if (sim is not null)
+            {
+                var range = sim.Min > -1e8 || sim.Max < 1e8
+                    ? string.Create(CultureInfo.InvariantCulture, $"{sim.Unit}: {sim.Min:0.##} – {sim.Max:0.##}")
+                    : $"{sim.Unit}: unbegrenzt";
+                Details.Add(new("Unterstützte Bereiche", range + (sim.Frequency > 0 ? string.Create(CultureInfo.InvariantCulture, $", {sim.Frequency:0.##} Hz") : "")));
+            }
+            if (output is not null)
+                Details.Add(new("Unterstützte Bereiche", string.Create(CultureInfo.InvariantCulture, $"{output.Unit}: {output.Min:0.##} – {output.Max:0.##}, Abtastraten {output.SampleRates} Hz")));
+            Details.Add(new("Synchrone Zeitbasis", sim is { Frequency: > 0 } || output is not null ? "Unterstützt" : "—"));
+            Details.Add(new("Waveform-Speicher", output is not null ? $"Verfügbar (Kanäle {output.Channels})" : "—"));
+            var actions = new List<string> { "Lesen", "Schreiben" };
+            if (sim is { Frequency: > 0 }) actions.Add("Kurve aufnehmen");
+            if (output is not null) actions.AddRange(["Laden", "Übertragen", "Starten", "Stoppen"]);
+            Details.Add(new("Unterstützte Aktionen", string.Join(", ", actions)));
         }
-        if (output is not null)
-            Details.Add(new("Unterstützte Bereiche", string.Create(CultureInfo.InvariantCulture, $"{output.Unit}: {output.Min:0.##} – {output.Max:0.##}, Abtastraten {output.SampleRates} Hz")));
-        Details.Add(new("Synchrone Zeitbasis", sim is { Frequency: > 0 } || output is not null ? "Unterstützt" : "—"));
-        Details.Add(new("Waveform-Speicher", output is not null ? $"Verfügbar (Kanäle {output.Channels})" : "—"));
-        var actions = new List<string> { "Lesen", "Schreiben" };
-        if (sim is { Frequency: > 0 }) actions.Add("Kurve aufnehmen");
-        if (output is not null) actions.AddRange(["Laden", "Übertragen", "Starten", "Stoppen"]);
-        Details.Add(new("Unterstützte Aktionen", string.Join(", ", actions)));
+
         Details.Add(new("Sperre", a.RequiresLock ? "erforderlich (Reservierung an einer Gruppe)" : "keine"));
         Details.Add(new("Sperrschlüssel", _draft.LockKey(_selectedStation, a)));
         if (device is { Shared: true })
@@ -762,6 +768,16 @@ public sealed partial class StationsViewModel : ObservableObject
         ScopeText = "—";
         if (_selectedGroup is { } g && station is not null)
         {
+            var keys = AddReservations(g, station);
+            Acquired = keys.Count > 0 && keys.All(k => _snapshot.Any(x => x.Resource == k && x.OwnerName == station));
+            RefreshWaitStatus(g);
+            var owner = _snapshot.FirstOrDefault(x => keys.Contains(x.Resource) && x.OwnerRunId is not null);
+            if (owner is not null)
+                ScopeText = $"{owner.OwnerRunId} / {owner.ScopeName ?? "Gruppe"}" +
+                            (owner.Since is { } since ? $" seit {since.ToLocalTime():HH:mm:ss}" : "");
+        }
+        List<string> AddReservations(GroupDefinition g, string station)
+        {
             var keyOf = _draft.KeyOf(station);
             var keys = new List<string>();
             foreach (var name in g.Resources)
@@ -779,13 +795,9 @@ public sealed partial class StationsViewModel : ObservableObject
                 };
                 Reservations.Add(new ReservationRow(name, a is null ? "—" : _draft.Device(a.Device)?.Name ?? a.Device, a?.Channel ?? "—", key, text, kind));
             }
-            Acquired = keys.Count > 0 && keys.All(k => _snapshot.Any(x => x.Resource == k && x.OwnerName == station));
-            RefreshWaitStatus(g);
-            var owner = _snapshot.FirstOrDefault(x => keys.Contains(x.Resource) && x.OwnerRunId is not null);
-            if (owner is not null)
-                ScopeText = $"{owner.OwnerRunId} / {owner.ScopeName ?? "Gruppe"}" +
-                            (owner.Since is { } since ? $" seit {since.ToLocalTime():HH:mm:ss}" : "");
+            return keys;
         }
+
         void RefreshWaitStatus(GroupDefinition g)
         {
             foreach (var st in _draft.Stations)

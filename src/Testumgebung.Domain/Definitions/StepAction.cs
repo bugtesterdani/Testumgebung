@@ -80,12 +80,7 @@ public sealed record OperatorPrompt(
         if (answer is null || (answer is string s0 && string.IsNullOrWhiteSpace(s0)))
             return Required ? (null, "Eingabe ist erforderlich") : (DefaultValue, null);
 
-        if (Kind == OperatorPromptKind.Choice)
-        {
-            var text = answer.ToString()!;
-            if (AllowedValues is { Count: > 0 } && !AllowedValues.Contains(text)) return (null, "Wert ist nicht erlaubt");
-            return (text, null);
-        }
+        if (Kind == OperatorPromptKind.Choice) return ValidateChoice(answer);
 
         var type = InputType ?? VarType.String;
         object value;
@@ -98,6 +93,11 @@ public sealed record OperatorPrompt(
             return (null, ex.Message);
         }
 
+        return ValidateInputValue(value);
+    }
+
+    private (object? Value, string? Error) ValidateInputValue(object value)
+    {
         if (value is long or double)
         {
             var d = Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture);
@@ -108,6 +108,14 @@ public sealed record OperatorPrompt(
             return (null, "Wert ist nicht erlaubt");
         return (value, null);
     }
+
+    private (object? Value, string? Error) ValidateChoice(object answer)
+    {
+        var text = answer.ToString()!;
+        if (AllowedValues is { Count: > 0 } && !AllowedValues.Contains(text)) return (null, "Wert ist nicht erlaubt");
+        return (text, null);
+    }
+
 }
 
 /// <summary>

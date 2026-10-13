@@ -155,22 +155,28 @@ public sealed record LabViewSettings(string? ViPath, string? DllPath, string? Fu
         sb.AppendLine($"        fn({string.Join(", ", args)});");
 
         sb.AppendLine("        int rating = 0; std::string error;");
-        i = 0;
-        foreach (var p in ports)
+        WriteOutputs();
+
+        void WriteOutputs()
         {
-            var v = $"p{i++}";
-            if (!p.IsOutput) continue;
-            var name = Literal(p.Name);
-            sb.AppendLine(p.Type switch
+            i = 0;
+            foreach (var p in ports)
             {
-                VarType.String => $"        {v}.back() = 0; host->set_string(host->ctx, {name}, {v}.data());",
-                VarType.Double => $"        host->set_double(host->ctx, {name}, {v});",
-                VarType.Int => $"        host->set_int(host->ctx, {name}, (long long){v});",
-                _ => $"        host->set_bool(host->ctx, {name}, {v} != 0);",
-            });
-            if (p.Name == "Bewertung" && p.Type == VarType.Int) sb.AppendLine($"        rating = ({v} >= 0 && {v} <= 3) ? (int){v} : 3;");
-            if (p.Name == "Fehler" && p.Type == VarType.String) sb.AppendLine($"        error = {v}.data();");
+                var v = $"p{i++}";
+                if (!p.IsOutput) continue;
+                var name = Literal(p.Name);
+                sb.AppendLine(p.Type switch
+                {
+                    VarType.String => $"        {v}.back() = 0; host->set_string(host->ctx, {name}, {v}.data());",
+                    VarType.Double => $"        host->set_double(host->ctx, {name}, {v});",
+                    VarType.Int => $"        host->set_int(host->ctx, {name}, (long long){v});",
+                    _ => $"        host->set_bool(host->ctx, {name}, {v} != 0);",
+                });
+                if (p.Name == "Bewertung" && p.Type == VarType.Int) sb.AppendLine($"        rating = ({v} >= 0 && {v} <= 3) ? (int){v} : 3;");
+                if (p.Name == "Fehler" && p.Type == VarType.String) sb.AppendLine($"        error = {v}.data();");
+            }
         }
+
         sb.AppendLine("        if (!error.empty()) rating = 3;");
         sb.AppendLine("        host->set_outcome(host->ctx, rating, 0, 0, error.c_str(), \"\", 0, 0, 0, 0);");
         sb.AppendLine("        return 0;");

@@ -100,26 +100,7 @@ public static class CurveImport
     {
         if (s.Channels.Count == 0) throw new CurveImportException("Mindestens einen Kanal zuordnen.");
         if (s.Channels.Select(c => c.TargetChannel).Distinct().Count() != s.Channels.Count) throw new CurveImportException("Zielkanäle müssen eindeutig sein.");
-        var rows = Enumerable.Range(0, t.Rows).ToList();
-        double[]? times = null;
-        double rate;
-        if (s.Mode == TimeBaseMode.ExplicitTimes)
-        {
-            if (s.TimeColumn is null) throw new CurveImportException("Zeitspalte wählen oder feste Abtastrate angeben.");
-            var tc = t.Column(s.TimeColumn);
-            rows = rows.Where(r => double.IsFinite(tc[r])).ToList();
-            times = rows.Select(r => tc[r] * s.TimeFactor).ToArray();
-            for (var i = 1; i < times.Length; i++)
-                if (times[i] <= times[i - 1]) throw new CurveImportException($"Zeitspalte nicht streng steigend (Datenzeile {rows[i] + 1}).");
-            var t0 = times.Length > 0 ? times[0] : 0;
-            times = times.Select(x => x - t0).ToArray();
-            rate = times.Length > 1 ? (times.Length - 1) / times[^1] : 0;
-        }
-        else
-        {
-            rate = s.SampleRate ?? t.SampleRate ?? throw new CurveImportException("Feste Abtastrate angeben.");
-            if (rate <= 0) throw new CurveImportException("Abtastrate muss > 0 sein.");
-        }
+        var (rows, times, rate) = ResolveTimeBase(t, s);
 
         var channels = new List<CurveChannel>();
         foreach (var m in s.Channels)
@@ -163,6 +144,32 @@ public static class CurveImport
         return curve;
     }
 
+    private static (List<int> Rows, double[]? Times, double Rate) ResolveTimeBase(ImportTable t, ImportSettings s)
+    {
+        var rows = Enumerable.Range(0, t.Rows).ToList();
+        double[]? times = null;
+        double rate;
+        if (s.Mode == TimeBaseMode.ExplicitTimes)
+        {
+            if (s.TimeColumn is null) throw new CurveImportException("Zeitspalte wählen oder feste Abtastrate angeben.");
+            var tc = t.Column(s.TimeColumn);
+            rows = rows.Where(r => double.IsFinite(tc[r])).ToList();
+            times = rows.Select(r => tc[r] * s.TimeFactor).ToArray();
+            for (var i = 1; i < times.Length; i++)
+                if (times[i] <= times[i - 1]) throw new CurveImportException($"Zeitspalte nicht streng steigend (Datenzeile {rows[i] + 1}).");
+            var t0 = times.Length > 0 ? times[0] : 0;
+            times = times.Select(x => x - t0).ToArray();
+            rate = times.Length > 1 ? (times.Length - 1) / times[^1] : 0;
+        }
+        else
+        {
+            rate = s.SampleRate ?? t.SampleRate ?? throw new CurveImportException("Feste Abtastrate angeben.");
+            if (rate <= 0) throw new CurveImportException("Abtastrate muss > 0 sein.");
+        }
+
+        return (rows, times, rate);
+    }
+
     public static IReadOnlyList<ChannelSummary> Summarize(ImportTable t, ImportSettings s)
     {
         double[]? q = s.QualityColumn is { } qc ? t.Column(qc) : null;
@@ -184,35 +191,8 @@ public static class CurveImport
     {
         grid = grid.Where(r => r.Any(c => c.Trim().Length > 0)).ToList();
         if (grid.Count == 0) throw new CurveImportException("Datei enthält keine Daten.");
-        bool IsNum(string s) => double.TryParse(s.Trim(), NumberStyles.Float, culture, out _);
         var width = grid.Max(r => r.Length);
-        string[] header;
-        string?[] units = new string?[width];
-        var first = 0;
-        if (!grid[0].Where(c => c.Trim().Length > 0).All(IsNum))
-        {
-            header = Enumerable.Range(0, width).Select(i => i < grid[0].Length && grid[0][i].Trim().Length > 0 ? grid[0][i].Trim() : $"Spalte {i + 1}").ToArray();
-            first = 1;
-            if (grid.Count > 1 && grid[1].Where(c => c.Trim().Length > 0).Any() && !grid[1].Where(c => c.Trim().Length > 0).Any(IsNum))
-            {
-                for (var i = 0; i < width; i++) units[i] = i < grid[1].Length ? grid[1][i].Trim().Trim('[', ']', '(', ')') : null;
-                first = 2;
-            }
-        }
-        else header = Enumerable.Range(1, width).Select(i => $"Spalte {i}").ToArray();
-
-        // Einheit im Namen: „U_L1 [V]“, „U_L1 (V)“, „Zeit_s“, „t_ms“
-        for (var i = 0; i < width; i++)
-        {
-            var m = Regex.Match(header[i], @"^(.*?)\s*[\[(]([^\])]+)[\])]\s*$");
-            if (m.Success)
-            {
-                units[i] ??= m.Groups[2].Value.Trim();
-                header[i] = m.Groups[1].Value.Trim().Length > 0 ? m.Groups[1].Value.Trim() : header[i];
-            }
-        }
-        if (header.Distinct().Count() != header.Length)
-            header = header.Select((h, i) => header.Take(i).Contains(h) ? $"{h}_{i + 1}" : h).ToArray();
+        var (header, units, first) = ReadGridHeader(grid, width, culture);
 
         var rows = grid.Count - first;
         var data = Enumerable.Range(0, width).Select(_ => new double[rows]).ToList();
@@ -246,6 +226,40 @@ public static class CurveImport
             QualityColumn = qualityCol,
         };
     }
+    private static (string[] Header, string?[] Units, int FirstDataRow) ReadGridHeader(List<string[]> grid, int width, CultureInfo culture)
+    {
+        bool IsNum(string s) => double.TryParse(s.Trim(), NumberStyles.Float, culture, out _);
+        string[] header;
+        string?[] units = new string?[width];
+        var first = 0;
+        if (!grid[0].Where(c => c.Trim().Length > 0).All(IsNum))
+        {
+            header = Enumerable.Range(0, width).Select(i => i < grid[0].Length && grid[0][i].Trim().Length > 0 ? grid[0][i].Trim() : $"Spalte {i + 1}").ToArray();
+            first = 1;
+            if (grid.Count > 1 && grid[1].Where(c => c.Trim().Length > 0).Any() && !grid[1].Where(c => c.Trim().Length > 0).Any(IsNum))
+            {
+                for (var i = 0; i < width; i++) units[i] = i < grid[1].Length ? grid[1][i].Trim().Trim('[', ']', '(', ')') : null;
+                first = 2;
+            }
+        }
+        else header = Enumerable.Range(1, width).Select(i => $"Spalte {i}").ToArray();
+
+        // Einheit im Namen: „U_L1 [V]“, „U_L1 (V)“, „Zeit_s“, „t_ms“
+        for (var i = 0; i < width; i++)
+        {
+            var m = Regex.Match(header[i], @"^(.*?)\s*[\[(]([^\])]+)[\])]\s*$");
+            if (m.Success)
+            {
+                units[i] ??= m.Groups[2].Value.Trim();
+                header[i] = m.Groups[1].Value.Trim().Length > 0 ? m.Groups[1].Value.Trim() : header[i];
+            }
+        }
+        if (header.Distinct().Count() != header.Length)
+            header = header.Select((h, i) => header.Take(i).Contains(h) ? $"{h}_{i + 1}" : h).ToArray();
+
+        return (header, units, first);
+    }
+
     private static (string? Column, double Factor) DetectTimeColumn(List<ImportColumn> columns)
     {
         // Zeitspalte und Einheit erkennen
@@ -255,16 +269,28 @@ public static class CurveImport
         {
             var n = c.Name.ToLowerInvariant();
             var u = (c.Unit ?? "").ToLowerInvariant();
-            if (n is "t" or "time" or "zeit" || n.StartsWith("zeit", StringComparison.Ordinal) || n.StartsWith("time", StringComparison.Ordinal) || n.StartsWith("t_", StringComparison.Ordinal))
+            if (IsTimeColumn(n))
             {
                 timeCol = c.Name;
-                var unit = u.Length > 0 ? u : n.Contains("_ms") ? "ms" : n.Contains("_us") || n.Contains("_µs") ? "us" : "s";
+                var unit = TimeUnit(u, n);
                 factor = unit switch { "ms" => 1e-3, "us" or "µs" => 1e-6, "ns" => 1e-9, "min" => 60, _ => 1 };
                 if (c.Unit is null) columns[c.Index] = c with { Unit = unit == "us" ? "µs" : unit };
                 break;
             }
         }
         return (timeCol, factor);
+    }
+
+    private static bool IsTimeColumn(string name)
+        => name is "t" or "time" or "zeit" || name.StartsWith("zeit", StringComparison.Ordinal)
+            || name.StartsWith("time", StringComparison.Ordinal) || name.StartsWith("t_", StringComparison.Ordinal);
+
+    private static string TimeUnit(string unit, string name)
+    {
+        if (unit.Length > 0) return unit;
+        if (name.Contains("_ms")) return "ms";
+        if (name.Contains("_us") || name.Contains("_µs")) return "us";
+        return "s";
     }
 
 }

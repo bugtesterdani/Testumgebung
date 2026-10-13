@@ -80,15 +80,20 @@ public sealed class AccessSettingsViewModel : ObservableObject
     public void Load()
     {
         var c = _identity.Store?.Load();
-        ClientId = c?.ClientId ?? "";
-        TenantId = c?.TenantId ?? "";
-        InactivityMinutes = c?.InactivityMinutes ?? 0;
+        LoadIdentitySettings(c);
         RightsSource = c?.RightsSource ?? "Lokal";
         DevelopRole = c?.DevelopRole ?? "Testumgebung.Entwickeln";
         ReleaseRole = c?.ReleaseRole ?? "Testumgebung.Freigeben";
         Users.Clear();
         foreach (var u in c?.Users ?? []) Users.Add(new RightsEditRow { Upn = u.Upn, Name = u.Name ?? "", Develop = u.Develop, Release = u.Release });
         OnPropertyChanged(nameof(ModeText));
+    }
+
+    private void LoadIdentitySettings(AccessConfig? c)
+    {
+        ClientId = c?.ClientId ?? "";
+        TenantId = c?.TenantId ?? "";
+        InactivityMinutes = c?.InactivityMinutes ?? 0;
     }
 
     public bool Save()

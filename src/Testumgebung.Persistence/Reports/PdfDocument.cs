@@ -125,6 +125,20 @@ public static class PdfText
     }
 
     /// <summary>Zeichen außerhalb von WinAnsi ersetzen (±, µ, °, Umlaute bleiben erhalten).</summary>
+    private static readonly IReadOnlyDictionary<char, string> FallbackGlyphs = new Dictionary<char, string>
+    {
+        ['→'] = "->",
+        ['←'] = "<-",
+        ['≤'] = "<=",
+        ['≥'] = ">=",
+        ['×'] = "x",
+        ['σ'] = "s",
+        ['μ'] = "\u00B5",
+        ['−'] = "-",
+        ['Ω'] = "Ohm",
+        ['…'] = "...",
+    };
+
     public static string Normalize(string text)
     {
         var sb = new StringBuilder(text.Length);
@@ -133,7 +147,7 @@ public static class PdfText
             if (c is '\r' or '\n' or '\t') sb.Append(' ');
             else if (c <= 0xFF && c is not (>= (char)0x80 and <= (char)0x9F)) sb.Append(c);
             else if (WinAnsi.ContainsKey(c)) sb.Append(c);
-            else sb.Append(c switch { '→' => "->", '←' => "<-", '≤' => "<=", '≥' => ">=", '×' => "x", 'σ' => "s", 'μ' => "\u00B5", '−' => "-", 'Ω' => "Ohm", '…' => "...", _ => "?" });
+            else sb.Append(FallbackGlyphs.GetValueOrDefault(c, "?"));
         }
         return sb.ToString();
     }

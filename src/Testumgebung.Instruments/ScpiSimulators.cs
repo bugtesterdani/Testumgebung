@@ -146,20 +146,25 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
         try
         {
             var reply = Handle(c, upper, block);
-            return reply switch
-            {
-                null => null,
-                byte[] b => b,
-                string s => Encoding.ASCII.GetBytes(s + "\n"),
-                double d => Encoding.ASCII.GetBytes(d.ToString("+0.000000000E+00;-0.000000000E+00", CultureInfo.InvariantCulture) + "\n"),
-                _ => Encoding.ASCII.GetBytes(reply + "\n"),
-            };
+            return EncodeReply(reply);
         }
         catch (FormatException)
         {
             Error(-104, "Data type error");
             return upper.Contains('?') ? "0\n"u8.ToArray() : null;
         }
+    }
+
+    private static byte[]? EncodeReply(object? reply)
+    {
+        return reply switch
+        {
+            null => null,
+            byte[] b => b,
+            string s => Encoding.ASCII.GetBytes(s + "\n"),
+            double d => Encoding.ASCII.GetBytes(d.ToString("+0.000000000E+00;-0.000000000E+00", CultureInfo.InvariantCulture) + "\n"),
+            _ => Encoding.ASCII.GetBytes(reply + "\n"),
+        };
     }
 
     protected virtual void Reset()
@@ -217,6 +222,9 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
 
 public sealed class DmmSimulator(string model, SimulatedBench bench) : ScpiDeviceSimulator(model, bench)
 {
+    private static readonly HashSet<string> MeasurementFunctions = new(StringComparer.Ordinal)
+        { "VOLT:DC", "VOLT:AC", "CURR:DC", "CURR:AC", "RES", "FRES", "FREQ" };
+
     private string _function = "VOLT:DC";
 
     protected override void Reset() => _function = "VOLT:DC";
@@ -240,7 +248,7 @@ public sealed class DmmSimulator(string model, SimulatedBench bench) : ScpiDevic
         if (upper.StartsWith("CONF:", StringComparison.Ordinal) || upper.StartsWith("CONFIGURE:", StringComparison.Ordinal))
         {
             _function = Func(upper[(upper.IndexOf(':') + 1)..]);
-            if (_function is not ("VOLT:DC" or "VOLT:AC" or "CURR:DC" or "CURR:AC" or "RES" or "FRES" or "FREQ")) return Unknown(upper);
+            if (!MeasurementFunctions.Contains(_function)) return Unknown(upper);
             if (_function == "FRES" && Model == "34460A") return Unknown(upper);
             return null;
         }
@@ -448,16 +456,7 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
 
     protected override object? Handle(string command, string upper, byte[]? block)
     {
-        if (upper is "FORM:BORD SWAP" or "FORM:BORD NORM")
-        {
-            _swap = upper.EndsWith("SWAP", StringComparison.Ordinal);
-            return null;
-        }
-        if (upper == "FUNC:ARB:SYNC")
-        {
-            Bench.Sync(Bench.Now);
-            return null;
-        }
+        if (HandleFormattingAndSync(upper)) return null;
         var (ch, rest) = Source(upper);
         if (ch is < 0 or > 1) return Unknown(upper);
         var g = Bench.Generator[ch];
@@ -482,23 +481,20 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
                 case Command.FreqQuery: return g.Freq;
                 case Command.Volt:
                     {
-                        var a = Num(parts[1]);
-                        if (Check(g, a, g.Offset)) g.Amplitude = a;
+                        SetAmplitude(g, parts[1]);
                         return null;
                     }
                 case Command.VoltQuery: return g.Amplitude;
                 case Command.VoltOffs:
                     {
-                        var o = Num(parts[1]);
-                        if (Check(g, g.Function == "DC" ? 0 : g.Amplitude, o)) g.Offset = o;
+                        SetOffset(g, parts[1]);
                         return null;
                     }
                 case Command.VoltOffsQuery: return g.Offset;
                 case Command.Func: g.Function = parts[1].Trim(); return null;
                 case Command.FuncQuery: return g.Function;
                 case Command.FuncArb:
-                    if (!g.ArbData.ContainsKey(parts[1].Trim())) { Error(-224, "Illegal parameter value; arb not loaded"); return null; }
-                    g.Arb = parts[1].Trim();
+                    SelectArbitraryWaveform(g, parts[1]);
                     return null;
                 case Command.FuncArbSrat: g.ArbRate = Num(parts[1]); return null;
                 case Command.DataVolCle: g.ArbData.Clear(); g.Arb = null; return null;
@@ -506,13 +502,58 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
                     {
                         return StoreArbitraryWaveform();
                     }
-                case Command.Outp: g.On = Num(parts[1]) >= 0.5; return null;
-                case Command.OutpQuery: return g.On ? "1" : "0";
-                case Command.OutpLoad: g.HighZ = parts[1].Trim() == "INF"; return null;
+                case Command.Outp:
+                case Command.OutpQuery:
+                case Command.OutpLoad:
+                    return HandleOutput(Commands.GetValueOrDefault(parts[0], Command.Unknown), parts, g);
             }
         }
         return Unknown(upper);
     }
+    private bool HandleFormattingAndSync(string upper)
+    {
+        if (upper is "FORM:BORD SWAP" or "FORM:BORD NORM")
+        {
+            _swap = upper.EndsWith("SWAP", StringComparison.Ordinal);
+            return true;
+        }
+        if (upper == "FUNC:ARB:SYNC")
+        {
+            Bench.Sync(Bench.Now);
+            return true;
+        }
+        return false;
+    }
+
+    private void SelectArbitraryWaveform(SimulatedBench.GeneratorChannel g, string text)
+    {
+        if (!g.ArbData.ContainsKey(text.Trim())) { Error(-224, "Illegal parameter value; arb not loaded"); return; }
+        g.Arb = text.Trim();
+    }
+
+    private void SetAmplitude(SimulatedBench.GeneratorChannel g, string text)
+    {
+        var a = Num(text);
+        if (Check(g, a, g.Offset)) g.Amplitude = a;
+    }
+
+    private void SetOffset(SimulatedBench.GeneratorChannel g, string text)
+    {
+        var o = Num(text);
+        if (Check(g, g.Function == "DC" ? 0 : g.Amplitude, o)) g.Offset = o;
+    }
+
+    private static object? HandleOutput(Command command, string[] parts, SimulatedBench.GeneratorChannel g)
+    {
+        switch (command)
+        {
+            case Command.Outp: g.On = Num(parts[1]) >= 0.5; return null;
+            case Command.OutpQuery: return g.On ? "1" : "0";
+            case Command.OutpLoad: g.HighZ = parts[1].Trim() == "INF"; return null;
+            default: throw new ArgumentOutOfRangeException(nameof(command));
+        }
+    }
+
 }
 
 public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDeviceSimulator(model, bench)
@@ -580,21 +621,7 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
             case Command.WavPoin: _points = (int)Num(parts[1]); return null;
             case Command.Dig:
                 {
-                    var sources = parts[1].Split(',', StringSplitOptions.TrimEntries);
-                    var span = _timebase * 10;
-                    var n = Math.Min(MaxPoints, Math.Max(_points, 62500));
-                    _capturedXinc = span / n;
-                    var t0 = Bench.Now;
-                    _captured.Clear();
-                    foreach (var s in sources)
-                    {
-                        var ch = Ch(s);
-                        if (ch < 0 || ch > 3) { Error(-224, "Illegal parameter value"); continue; }
-                        var data = new double[n];
-                        for (var i = 0; i < n; i++) data[i] = Signal(ch, t0 + i * _capturedXinc);
-                        _captured[s] = data;
-                    }
-                    if (span > 0.05) Thread.Sleep(TimeSpan.FromSeconds(Math.Min(span, 2))); // Erfassungsdauer
+                    Capture(parts[1]);
                     return null;
                 }
             case Command.WavPreQuery:
@@ -632,6 +659,11 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
             case Command.MeasFreqQuery:
                 return Ch(parts[1].Trim()) == 0 && Bench.AcRms > 0 ? Bench.AcFreq : Ch(parts[1].Trim()) is 1 or 2 ? Bench.Generator[Ch(parts[1].Trim()) - 1].Freq : 9.9e37;
         }
+        return HandleChannel(u, upper);
+    }
+
+    private object? HandleChannel(string u, string upper)
+    {
         if (u.StartsWith("CHAN", StringComparison.Ordinal) && u.Length > 5)
         {
             var ch = u[4] - '1';
@@ -645,6 +677,25 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
             }
         }
         return Unknown(upper);
+    }
+
+    private void Capture(string sourceList)
+    {
+        var sources = sourceList.Split(',', StringSplitOptions.TrimEntries);
+        var span = _timebase * 10;
+        var n = Math.Min(MaxPoints, Math.Max(_points, 62500));
+        _capturedXinc = span / n;
+        var t0 = Bench.Now;
+        _captured.Clear();
+        foreach (var s in sources)
+        {
+            var ch = Ch(s);
+            if (ch < 0 || ch > 3) { Error(-224, "Illegal parameter value"); continue; }
+            var data = new double[n];
+            for (var i = 0; i < n; i++) data[i] = Signal(ch, t0 + i * _capturedXinc);
+            _captured[s] = data;
+        }
+        if (span > 0.05) Thread.Sleep(TimeSpan.FromSeconds(Math.Min(span, 2))); // Erfassungsdauer
     }
 
     private double _yinc = 1;

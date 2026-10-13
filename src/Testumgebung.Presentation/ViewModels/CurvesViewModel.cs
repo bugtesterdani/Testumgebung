@@ -530,10 +530,8 @@ public sealed class CurvesViewModel : ObservableObject
 
     public RelayCommand ApplyImportCommand { get; }
 
-    private void SetTable(ImportTable table)
+    private void BuildMappingRows(ImportTable table, ImportSettings suggested)
     {
-        _table = table;
-        var suggested = CurveImport.SuggestSettings(table);
         Mapping.Clear();
         foreach (var col in table.Columns)
         {
@@ -542,6 +540,13 @@ public sealed class CurvesViewModel : ObservableObject
             if (isMeta) continue;
             Mapping.Add(new MappingRow(col, m is not null, m?.TargetChannel ?? col.Name, m?.Unit ?? col.Unit ?? ""));
         }
+    }
+
+    private void SetTable(ImportTable table)
+    {
+        _table = table;
+        var suggested = CurveImport.SuggestSettings(table);
+        BuildMappingRows(table, suggested);
         ColumnChoices.Clear();
         ColumnChoices.Add(NoColumn);
         foreach (var c in table.Columns) ColumnChoices.Add(c.Name);

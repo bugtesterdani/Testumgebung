@@ -6,8 +6,8 @@ Jeder Lauf erzeugt `artifacts/coverage/<Datum_Uhrzeit>/report/`:
 
 - `index.html`: echter ReportGenerator-Bericht mit Modulen, Klassen, Zeilen, Zweigen, Quellcode und Risikostellen.
 - `Wartbarkeit.html`: Modulübersicht mit Wartbarkeitsbewertung.
-- `Funktionen.html`: durchsuchbare Übersicht jeder gemessenen Funktion mit Komplexität, Sequenzpunktabdeckung und CRAP; Filter für Komplexität über 50 und CRAP über 55.
-- `Qualitaetsziele.html`, `Qualitaetsziele.json`: tatsächliche Werte und Prüfung gegen 90 % Zeilen, 85 % Zweige sowie maximal 50 Komplexität und maximal 55 CRAP pro Funktion.
+- `Funktionen.html`: durchsuchbare Übersicht jeder gemessenen Funktion mit Komplexität, Sequenzpunktabdeckung und CRAP; Filter für Komplexität über 50 und CRAP ab 30.
+- `Qualitaetsziele.html`, `Qualitaetsziele.json`: tatsächliche Werte und Prüfung gegen 90 % Zeilen, 85 % Zweige sowie maximal 50 Komplexität und strikt weniger als 30 CRAP pro Funktion.
 - `Wartbarkeit.md`: Erläuterung, Grenzen und wichtigste Methoden.
 - `Module-Wartbarkeit.csv`, `Methoden-Wartbarkeit.csv`: Kennzahlen zum Weiterverarbeiten.
 - `Summary.json`, `Summary.csv`, `Summary.md`: ReportGenerator-Ausgaben.
@@ -39,5 +39,15 @@ Erste Messung: 10.10.2026, 341 bestanden, 5 übersprungen, 0 fehlgeschlagen; 82,
 Werkzeugdokumentation: [Coverlet](https://github.com/coverlet-coverage/coverlet) und [ReportGenerator](https://github.com/danielpalme/ReportGenerator).
 
 
-Abschließende Messung am 11.10.2026 (`artifacts/coverage/2026-10-11_145443/report/`): 93,659833 % Zeilen, 85,064974 % Zweige, höchste Funktionskomplexität 50 und höchster CRAP 51,380917. Alle 14 Produktionsmodule sind erfasst; 5.829 Tests bestanden, vier externe Datenbankprüfungen übersprungen, keine Fehler. Der Lauf mit `-EnforceTargets` besteht alle vier Prüfschranken.
+Historische Messung am 11.10.2026 (`artifacts/coverage/2026-10-11_145443/report/`): 93,659833 % Zeilen, 85,064974 % Zweige, höchste Funktionskomplexität 50 und höchster CRAP 51,380917. Alle 14 Produktionsmodule sind erfasst; 5.829 Tests bestanden, vier externe Datenbankprüfungen übersprungen, keine Fehler. Der damalige Lauf bestand die damals geltende CRAP-Grenze von maximal 55; seit Issue #3 gilt die strengere Grenze CRAP < 30.
 
+
+Die aktuelle CRAP-Grenze ist exklusiv: 30,0 gilt als verfehlt. Auch Werte unmittelbar unter oder über 30 werden vor dem Runden geprüft. `Methoden-Wartbarkeit.csv` enthält dazu `CRAPExact`; der Filter in `Funktionen.html` verwendet den daraus berechneten Status. Grenzfälle werden mit `build/tests/verify-coverage-goals.ps1` geprüft, einschließlich Werten, die in der Anzeige beide auf 30,0 gerundet werden.
+
+Der GitHub-Build prüft die Ziele für Pull Requests, main und Releases vor der Paketierung. Der vollständige Bericht einschließlich Rohdaten und Testprotokollen liegt als Actions-Artefakt `Qualitaetsbericht-<Version>` bereit. Verfehlte Ziele verhindern den erfolgreichen Build und damit den Merge über die bestehende main-Schutzregel. Die bereits geprüften TRX-Protokolle werden auch dem MSIX-Artefakt beigefügt.
+
+Abschlussmessung zu Issue #3 am 13.10.2026 (artifacts/coverage/2026-10-13_214037/report/): 94,020993 % Zeilenabdeckung, 85,656709 % Zweigabdeckung und höchster CRAP-Wert 29. Alle 14 Produktionsmodule sind gemessen; keine Funktion erreicht CRAP 30 und keine überschreitet Komplexität 50. 6.001 Tests bestanden, fünf Prüfungen mit nicht konfigurierten externen Gegenstellen wurden übersprungen, keine Fehler. Der vollständige Lauf mit -EnforceTargets hat alle Ziele bestanden. Es wurden keine zusätzlichen Ausschlüsse zur Erfüllung der Ziele eingeführt.
+
+Weitere Lesbarkeitsverbesserung am 13.10.2026 (artifacts/coverage/2026-10-13_221136/report/): SQL-Transaktion, Kopfdaten und Ereignisse, ISO-TP-Nachrichtentypen sowie Textlesen und Escape-Auswertung sind fachlich getrennt. Höchster CRAP 28,867932; Zeilenabdeckung 94,020818 %, Zweigabdeckung 85,650782 %. Alle 14 Module erfasst, 6.001 Tests bestanden, fünf externe Prüfungen übersprungen. Die verbindliche Grenze bleibt CRAP <30; weitere Aufteilungen werden anhand der Lesbarkeit und nicht allein der Kennzahl entschieden.
+
+Die weitergehende Durchsicht aller gemessenen Funktionen und die begründeten Quellcodeentscheidungen sind in [Komplexitätsdurchsicht](komplexitaetsdurchsicht.md) beschrieben. Abschlusslauf vom 13.10.2026 (`artifacts/coverage/2026-10-13_223004/report/`): 94,024916 % Zeilen, 85,655009 % Zweige, maximale Komplexität 28 und maximaler CRAP 28,867932; 6.001 Tests bestanden, fünf externe Prüfungen übersprungen. Zusätzliche lokale Auswertung: `Komplexitaetspruefung.html` und `.csv` mit Kennzeichnung automatischer Priorisierung und konkreter Quellcodebewertungen.

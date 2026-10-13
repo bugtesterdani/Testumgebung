@@ -289,14 +289,14 @@ public sealed class Expression
 
             if (op is "<" or "<=" or ">" or ">=")
             {
-                int cmp;
-                if (IsNumber(a) && IsNumber(b)) cmp = ToDouble(a).CompareTo(ToDouble(b));
-                else if (a is string sa && b is string sb) cmp = string.CompareOrdinal(sa, sb);
-                else if (a is DateTime da && b is DateTime db) cmp = da.CompareTo(db);
-                else throw new ExpressionException($"Vergleich '{op}' zwischen {Describe(a)} und {Describe(b)} nicht erlaubt.");
-                return op switch { "<" => cmp < 0, "<=" => cmp <= 0, ">" => cmp > 0, _ => cmp >= 0 };
+                return EvaluateComparison(op, a, b);
             }
 
+            return EvaluateArithmetic(op, a, b);
+        }
+
+        private static object EvaluateArithmetic(string op, object a, object b)
+        {
             if (op == "+" && a is string s1 && b is string s2) return s1 + s2;
 
             if (!IsNumber(a) || !IsNumber(b))
@@ -308,6 +308,16 @@ public sealed class Expression
             }
 
             return EvaluateFloatingPoint(op, ToDouble(a), ToDouble(b));
+        }
+
+        private static bool EvaluateComparison(string op, object a, object b)
+        {
+            int cmp;
+            if (IsNumber(a) && IsNumber(b)) cmp = ToDouble(a).CompareTo(ToDouble(b));
+            else if (a is string sa && b is string sb) cmp = string.CompareOrdinal(sa, sb);
+            else if (a is DateTime da && b is DateTime db) cmp = da.CompareTo(db);
+            else throw new ExpressionException($"Vergleich '{op}' zwischen {Describe(a)} und {Describe(b)} nicht erlaubt.");
+            return op switch { "<" => cmp < 0, "<=" => cmp <= 0, ">" => cmp > 0, _ => cmp >= 0 };
         }
 
         private static bool EvaluateEquality(string op, object a, object b)

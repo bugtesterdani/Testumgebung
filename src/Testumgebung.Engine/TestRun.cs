@@ -401,15 +401,31 @@ public sealed class TestRun
         return ReferenceEquals(Definition.Find(group.Id), group) ? group : Definition.Find(group.Id) as GroupDefinition ?? group;
     }
 
-    private async Task<NodeResult?> ExecuteGroupAsync(
-        GroupDefinition group, Scope? parentScope, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
+    private bool CanEnterGroup(GroupDefinition group, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
-        if (phase.IsCancelled && !forceEnter) return null;
+        if (phase.IsCancelled && !forceEnter) return false;
         if (group.IsDutRun && !isExit && Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
         {
             Emit(new GroupNotEntered($"Prüflingsanzahl {limit} erreicht") { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = Combine(parentPath, group.Name), Iteration = parentIteration });
-            return null;
+            return false;
         }
+        return true;
+    }
+
+    private string? OrderOf(Scope scope)
+        => Options.SessionPresets?.GetValueOrDefault("Auftrag") as string
+            ?? (scope.TryLookup("Auftrag", out var order, out _) ? order.Value as string : null);
+
+    private void ApplyDutPresets(GroupDefinition group, Scope scope, bool isExit)
+    {
+        if (group.IsDutRun && !isExit && Options.Presets is { Count: > 0 } presets) ApplyPresets(group, scope, presets);
+
+    }
+
+    private async Task<NodeResult?> ExecuteGroupAsync(
+        GroupDefinition group, Scope? parentScope, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
+    {
+        if (!CanEnterGroup(group, phase, parentPath, parentIteration, forceEnter, isExit)) return null;
         if (group.IsDutRun && !isExit) group = ActivateVersionAtDutStart(group);
         var path = group == Definition.Root ? group.Name : Combine(parentPath, group.Name);
         var childPath = group == Definition.Root ? "" : path;
@@ -468,7 +484,7 @@ public sealed class TestRun
             return (true, null);
         }
 
-        if (group.IsDutRun && !isExit && Options.Presets is { Count: > 0 } presets) ApplyPresets(group, scope, presets);
+        ApplyDutPresets(group, scope, isExit);
 
         PushFrame(new ExecutionFrame(group.Id, group.Name, path, parentIteration, isExit, true, scope.Id));
         Emit(new GroupEntered(scope.Id, isExit) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
@@ -478,7 +494,7 @@ public sealed class TestRun
         var dutStarted = Clock.Now;
         var abortsAtEntry = _abort.AbortCount;
         if (dutRunId is not null)
-            Emit(new DutRunStarted(dutRunId) { Order = Options.SessionPresets?.GetValueOrDefault("Auftrag") as string ?? (scope.TryLookup("Auftrag", out var orderAtStart, out _) ? orderAtStart.Value as string : null), Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
+            Emit(new DutRunStarted(dutRunId) { Order = OrderOf(scope), Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
 
         IResourceLease? lease = null;
         var iterations = 0;
@@ -578,7 +594,7 @@ public sealed class TestRun
                 NodeId = group.Id,
                 Path = path,
                 Iteration = parentIteration,
-                Order = Options.SessionPresets?.GetValueOrDefault("Auftrag") as string ?? (scope.TryLookup("Auftrag", out var orderAtEnd, out _) ? orderAtEnd.Value as string : null),
+                Order = OrderOf(scope),
             });
         }
 
@@ -618,9 +634,9 @@ public sealed class TestRun
 
         }
 
-        while (!phase.IsCancelled)
+        bool CanRepeat()
         {
-            if (iteration > 0 && Options.DutLimit is { } dutLimit && Volatile.Read(ref _dutsCompleted) >= dutLimit) break;
+            if (iteration > 0 && Options.DutLimit is { } dutLimit && Volatile.Read(ref _dutsCompleted) >= dutLimit) return false;
             if (iteration > 0)
             {
                 var more = repetition.Mode switch
@@ -630,8 +646,15 @@ public sealed class TestRun
                     RepeatMode.Duration => Clock.Now - start < repetition.Duration,
                     _ => true,
                 };
-                if (!more) break;
+                if (!more) return false;
             }
+
+            return true;
+        }
+
+        while (!phase.IsCancelled)
+        {
+            if (!CanRepeat()) break;
 
             if (repetition.Mode == RepeatMode.While)
             {

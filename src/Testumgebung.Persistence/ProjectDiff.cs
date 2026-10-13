@@ -128,19 +128,24 @@ public static class ProjectDiff
                 }
                 break;
             case (GroupDefinition ga, GroupDefinition gb):
-                if (ga.EntryCondition != gb.EntryCondition) list.Add(new(DiffKind.Changed, area, item, $"Bedingung: {ga.EntryCondition ?? "immer"} → {gb.EntryCondition ?? "immer"}"));
-                if (ga.Repetition != gb.Repetition) list.Add(new(DiffKind.Changed, area, item, $"Wiederholung: {Rep(ga.Repetition)} → {Rep(gb.Repetition)}"));
-                if (ga.ResultBeforeRepeat != gb.ResultBeforeRepeat) list.Add(new(DiffKind.Changed, area, item, $"Ergebnis bei Wiederholung: {ga.ResultBeforeRepeat} → {gb.ResultBeforeRepeat}"));
-                if (!ga.Resources.SequenceEqual(gb.Resources)) list.Add(new(DiffKind.Changed, area, item, $"Reservierung: {string.Join(", ", ga.Resources)} → {string.Join(", ", gb.Resources)}"));
-                if (ga.ResourceTimeout != gb.ResourceTimeout) list.Add(new(DiffKind.Changed, area, item, $"Wartezeit: {ga.ResourceTimeout} → {gb.ResourceTimeout}"));
-                if (ga.IsDutRun != gb.IsDutRun) list.Add(new(DiffKind.Changed, area, item, gb.IsDutRun ? "jetzt Prüflingslauf" : "kein Prüflingslauf mehr"));
-                if ((ga.ExitGroup is null) != (gb.ExitGroup is null)) list.Add(new(DiffKind.Changed, area, item, gb.ExitGroup is null ? "Exit-Gruppe entfernt" : "Exit-Gruppe hinzugefügt"));
-                CompareVariables(list, item, ga, gb);
+                CompareGroupContent(list, ga, gb, area, item);
                 break;
             default:
                 list.Add(new(DiffKind.Changed, area, item, "Art geändert (Schritt ↔ Gruppe)"));
                 break;
         }
+    }
+
+    private static void CompareGroupContent(List<DiffEntry> list, GroupDefinition ga, GroupDefinition gb, string area, string item)
+    {
+        if (ga.EntryCondition != gb.EntryCondition) list.Add(new(DiffKind.Changed, area, item, $"Bedingung: {ga.EntryCondition ?? "immer"} → {gb.EntryCondition ?? "immer"}"));
+        if (ga.Repetition != gb.Repetition) list.Add(new(DiffKind.Changed, area, item, $"Wiederholung: {Rep(ga.Repetition)} → {Rep(gb.Repetition)}"));
+        if (ga.ResultBeforeRepeat != gb.ResultBeforeRepeat) list.Add(new(DiffKind.Changed, area, item, $"Ergebnis bei Wiederholung: {ga.ResultBeforeRepeat} → {gb.ResultBeforeRepeat}"));
+        if (!ga.Resources.SequenceEqual(gb.Resources)) list.Add(new(DiffKind.Changed, area, item, $"Reservierung: {string.Join(", ", ga.Resources)} → {string.Join(", ", gb.Resources)}"));
+        if (ga.ResourceTimeout != gb.ResourceTimeout) list.Add(new(DiffKind.Changed, area, item, $"Wartezeit: {ga.ResourceTimeout} → {gb.ResourceTimeout}"));
+        if (ga.IsDutRun != gb.IsDutRun) list.Add(new(DiffKind.Changed, area, item, gb.IsDutRun ? "jetzt Prüflingslauf" : "kein Prüflingslauf mehr"));
+        if ((ga.ExitGroup is null) != (gb.ExitGroup is null)) list.Add(new(DiffKind.Changed, area, item, gb.ExitGroup is null ? "Exit-Gruppe entfernt" : "Exit-Gruppe hinzugefügt"));
+        CompareVariables(list, item, ga, gb);
     }
 
     private static string Rep(Repetition r) => r.Mode switch
@@ -169,6 +174,12 @@ public static class ProjectDiff
 
     private static void CompareLibrary(List<DiffEntry> list, TestDefinition a, TestDefinition b)
     {
+        CompareCodeLibrary(list, a, b);
+        CompareGroupLibrary(list, a, b);
+    }
+
+    private static void CompareCodeLibrary(List<DiffEntry> list, TestDefinition a, TestDefinition b)
+    {
         foreach (var block in b.Library)
         {
             var old = a.Library.FirstOrDefault(x => x.Id == block.Id);
@@ -184,6 +195,10 @@ public static class ProjectDiff
         }
         foreach (var old in a.Library.Where(x => b.Library.All(y => y.Id != x.Id)))
             list.Add(new(DiffKind.Removed, "CodeBlock", old.Name, $"v{old.Version}"));
+    }
+
+    private static void CompareGroupLibrary(List<DiffEntry> list, TestDefinition a, TestDefinition b)
+    {
         foreach (var block in b.GroupLibrary)
         {
             var old = a.GroupLibrary.FirstOrDefault(x => x.Id == block.Id);

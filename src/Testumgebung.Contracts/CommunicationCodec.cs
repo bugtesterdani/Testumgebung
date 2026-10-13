@@ -25,22 +25,28 @@ public static class CommText
                 sb.Append(c);
                 continue;
             }
-            var n = text[++i];
-            switch (n)
-            {
-                case 'r': sb.Append('\r'); break;
-                case 'n': sb.Append('\n'); break;
-                case 't': sb.Append('\t'); break;
-                case '0': sb.Append('\0'); break;
-                case '\\': sb.Append('\\'); break;
-                case 'x' when i + 2 < text.Length && byte.TryParse(text.AsSpan(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b):
-                    sb.Append((char)b);
-                    i += 2;
-                    break;
-                default: sb.Append('\\').Append(n); break;
-            }
+            AppendEscape(sb, text, ref i);
         }
         return Latin1.GetBytes(sb.ToString());
+    }
+
+    // Consumes one escape; unknown or incomplete escapes remain literal.
+    private static void AppendEscape(StringBuilder sb, string text, ref int i)
+    {
+        var n = text[++i];
+        switch (n)
+        {
+            case 'r': sb.Append('\r'); break;
+            case 'n': sb.Append('\n'); break;
+            case 't': sb.Append('\t'); break;
+            case '0': sb.Append('\0'); break;
+            case '\\': sb.Append('\\'); break;
+            case 'x' when i + 2 < text.Length && byte.TryParse(text.AsSpan(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b):
+                sb.Append((char)b);
+                i += 2;
+                break;
+            default: sb.Append('\\').Append(n); break;
+        }
     }
 
     public static byte[] ParseHex(string text)
@@ -234,6 +240,11 @@ public static class ModbusCodec
         if (!int.TryParse(t.StartsWith("0X", StringComparison.Ordinal) ? t[2..] : t, t.StartsWith("0X", StringComparison.Ordinal) ? NumberStyles.HexNumber : NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) || n < 0)
             throw new FormatException($"Modbus-Adresse „{text}“ ungültig (z. B. HR100, IR5, C3, DI2 oder 40101).");
         if (defaultArea is { } d) return (d, n);
+        return ParseConventionalAddress(n, text);
+    }
+
+    private static (ModbusArea Area, int Address) ParseConventionalAddress(int n, string text)
+    {
         return n switch
         {
             >= 400001 and <= 465536 => (ModbusArea.HoldingRegister, n - 400001),
@@ -271,25 +282,30 @@ public sealed record CanSignal(int StartBit, int Length, bool Motorola = false, 
     {
         if (Length is < 1 or > 64) throw new ArgumentException("Signallänge 1–64 Bit.");
         if (IsFloat && Length is not (32 or 64)) throw new ArgumentException("Gleitkommasignal: Länge 32 oder 64 Bit.");
+        return Motorola ? MotorolaBits(data) : IntelBits(data);
+    }
+
+    private ulong IntelBits(ReadOnlySpan<byte> data)
+    {
         ulong raw = 0;
-        if (!Motorola)
+        for (var i = 0; i < Length; i++)
         {
-            for (var i = 0; i < Length; i++)
-            {
-                var bit = StartBit + i;
-                if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
-                if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << i;
-            }
+            var bit = StartBit + i;
+            if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
+            if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << i;
         }
-        else
+        return raw;
+    }
+
+    private ulong MotorolaBits(ReadOnlySpan<byte> data)
+    {
+        ulong raw = 0;
+        var bit = StartBit;
+        for (var i = Length - 1; i >= 0; i--)
         {
-            var bit = StartBit;
-            for (var i = Length - 1; i >= 0; i--)
-            {
-                if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
-                if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << i;
-                bit = bit % 8 == 0 ? bit + 15 : bit - 1;
-            }
+            if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
+            if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << i;
+            bit = bit % 8 == 0 ? bit + 15 : bit - 1;
         }
         return raw;
     }

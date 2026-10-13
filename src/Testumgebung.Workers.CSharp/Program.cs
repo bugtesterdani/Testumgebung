@@ -292,24 +292,10 @@ public static class Program
 
             var type = block.Assembly.GetType("__UserBlock")!;
             var instance = Activator.CreateInstance(type)!;
-            var values = msg["values"] as JsonObject ?? [];
-            foreach (var (name, variable) in block.Fields)
-            {
-                if (!values.TryGetPropertyValue(name, out var node) || node is null) continue;
-                type.GetField(name)!.SetValue(instance, FromJson(node, variable.Type));
-            }
+            PopulateFields(type, instance, block, msg);
             var setup = type.GetMethod("__Setup", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)!;
             setup.Invoke(instance, [new Func<string, string, JsonObject, JsonNode?>(Call), id, token]);
-            if (debugEnabled)
-            {
-                var bps = (debug!["breakpoints"] as JsonArray ?? []).Select(n => n!.GetValue<int>()).ToArray();
-                var entry = debug["entry"] != null && debug["entry"]!.GetValue<bool>();
-                var step = debug["step"] != null && debug["step"]!.GetValue<bool>();
-                type.GetMethod("__DbgSetup", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)!
-                    .Invoke(instance, [true, bps, entry, step]);
-                type.GetMethod("__DbgEntry", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)!
-                    .Invoke(instance, null);
-            }
+            if (debugEnabled) SetupDebugger(type, instance, debug!);
 
             object outcome;
             try
@@ -328,24 +314,50 @@ public static class Program
                 return;
             }
 
-            var result = new JsonObject { ["t"] = "done", ["id"] = id };
-            var outcomeType = outcome.GetType();
-            result["rating"] = outcomeType.GetProperty("Rating")!.GetValue(outcome)!.ToString();
-            result["message"] = (string?)outcomeType.GetProperty("Message")!.GetValue(outcome);
-            result["value"] = ToJson(outcomeType.GetProperty("Value")!.GetValue(outcome));
-            result["unit"] = (string?)outcomeType.GetProperty("Unit")!.GetValue(outcome);
-            result["low"] = ToJson(outcomeType.GetProperty("Low")!.GetValue(outcome));
-            result["high"] = ToJson(outcomeType.GetProperty("High")!.GetValue(outcome));
-            var outValues = new JsonObject();
-            foreach (var name in block.Fields.Keys) outValues[name] = ToJson(type.GetField(name)!.GetValue(instance));
-            result["values"] = outValues;
-            result["cancelled"] = token.IsCancellationRequested;
-            Send(result);
+            SendOutcome(id, outcome, block, type, instance, token);
         }
         catch (Exception ex)
         {
             SendError(id, $"{ex.GetType().Name}: {ex.Message}", ex.ToString());
         }
+    }
+
+    private static void PopulateFields(Type type, object instance, CompiledBlock block, JsonObject msg)
+    {
+        var values = msg["values"] as JsonObject ?? [];
+        foreach (var (name, variable) in block.Fields)
+        {
+            if (!values.TryGetPropertyValue(name, out var node) || node is null) continue;
+            type.GetField(name)!.SetValue(instance, FromJson(node, variable.Type));
+        }
+    }
+
+    private static void SendOutcome(string id, object outcome, CompiledBlock block, Type type, object instance, CancellationToken token)
+    {
+        var result = new JsonObject { ["t"] = "done", ["id"] = id };
+        var outcomeType = outcome.GetType();
+        result["rating"] = outcomeType.GetProperty("Rating")!.GetValue(outcome)!.ToString();
+        result["message"] = (string?)outcomeType.GetProperty("Message")!.GetValue(outcome);
+        result["value"] = ToJson(outcomeType.GetProperty("Value")!.GetValue(outcome));
+        result["unit"] = (string?)outcomeType.GetProperty("Unit")!.GetValue(outcome);
+        result["low"] = ToJson(outcomeType.GetProperty("Low")!.GetValue(outcome));
+        result["high"] = ToJson(outcomeType.GetProperty("High")!.GetValue(outcome));
+        var outValues = new JsonObject();
+        foreach (var name in block.Fields.Keys) outValues[name] = ToJson(type.GetField(name)!.GetValue(instance));
+        result["values"] = outValues;
+        result["cancelled"] = token.IsCancellationRequested;
+        Send(result);
+    }
+
+    private static void SetupDebugger(Type type, object instance, JsonObject debug)
+    {
+        var bps = (debug["breakpoints"] as JsonArray ?? []).Select(n => n!.GetValue<int>()).ToArray();
+        var entry = debug["entry"] != null && debug["entry"]!.GetValue<bool>();
+        var step = debug["step"] != null && debug["step"]!.GetValue<bool>();
+        type.GetMethod("__DbgSetup", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)!
+            .Invoke(instance, [true, bps, entry, step]);
+        type.GetMethod("__DbgEntry", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)!
+            .Invoke(instance, null);
     }
 
     private static string FormatDiagnostic(Diagnostic d)

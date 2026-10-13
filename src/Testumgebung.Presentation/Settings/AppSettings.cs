@@ -188,6 +188,11 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         s.Mqtt ??= new MqttSettings();
         s.Http ??= new HttpNotifySettings();
         s.OpcUa ??= new OpcUaSettings();
+        RestoreSecrets(s);
+        return s;
+    }
+    private void RestoreSecrets(AppSettings s)
+    {
         if (s.Http.ProtectedHeaderValue is { Length: > 0 } hv)
         {
             s.Http.HeaderValue = protector.Unprotect(hv);
@@ -208,6 +213,6 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
             s.Mqtt.Password = protector.Unprotect(pw);
             if (s.Mqtt.Password is null) Warnings.Add("MQTT-Passwort nicht entschlüsselbar – bitte neu eingeben.");
         }
-        return s;
     }
+
 }

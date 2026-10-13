@@ -72,48 +72,8 @@ public static class Comtrade
         var n = cfg.Analog.Count;
         var times = new List<double>();
         var values = Enumerable.Range(0, n).Select(_ => new List<double>()).ToList();
-        if (cfg.FileType == "ASCII")
-        {
-            foreach (var line in Encoding.Latin1.GetString(datBytes).Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0))
-            {
-                var p = line.Split(',');
-                if (p.Length < 2 + n) throw new CurveImportException($"COMTRADE-Daten: Zeile '{line}' unvollständig.");
-                times.Add(double.TryParse(p[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var ts) ? ts : double.NaN);
-                for (var i = 0; i < n; i++)
-                {
-                    var raw = p[2 + i].Trim();
-                    values[i].Add(raw.Length == 0 || raw == "99999" ? double.NaN
-                        : cfg.Analog[i].A * double.Parse(raw, NumberStyles.Float, CultureInfo.InvariantCulture) + cfg.Analog[i].B);
-                }
-            }
-        }
-        else
-        {
-            var width = cfg.FileType switch
-            {
-                "BINARY" => 2,
-                "BINARY32" or "FLOAT32" => 4,
-                _ => throw new CurveImportException($"COMTRADE-Dateityp '{cfg.FileType}' wird nicht unterstützt."),
-            };
-            var record = 8 + n * width + 2 * ((cfg.Digital + 15) / 16);
-            if (datBytes.Length % record != 0) throw new CurveImportException("COMTRADE-Binärdaten passen nicht zur Konfiguration.");
-            for (var off = 0; off < datBytes.Length; off += record)
-            {
-                var ts = BinaryPrimitives.ReadUInt32LittleEndian(datBytes.AsSpan(off + 4));
-                times.Add(ts == 0xFFFFFFFF ? double.NaN : ts);
-                for (var i = 0; i < n; i++)
-                {
-                    var at = off + 8 + i * width;
-                    double raw = cfg.FileType switch
-                    {
-                        "BINARY" => BinaryPrimitives.ReadInt16LittleEndian(datBytes.AsSpan(at)) is var s16 && s16 == short.MinValue ? double.NaN : s16,
-                        "BINARY32" => BinaryPrimitives.ReadInt32LittleEndian(datBytes.AsSpan(at)) is var s32 && s32 == int.MinValue ? double.NaN : s32,
-                        _ => BinaryPrimitives.ReadSingleLittleEndian(datBytes.AsSpan(at)),
-                    };
-                    values[i].Add(double.IsNaN(raw) ? double.NaN : cfg.Analog[i].A * raw + cfg.Analog[i].B);
-                }
-            }
-        }
+        if (cfg.FileType == "ASCII") ReadAscii(cfg, datBytes, times, values);
+        else ReadBinary(cfg, datBytes, times, values);
 
         // Zeitbasis: genau eine Abtastrate > 0 → fest; sonst Zeitstempel (µs × timemult)
         double? rate = cfg.Rates.Count == 1 && cfg.Rates[0].Rate > 0 ? cfg.Rates[0].Rate : null;
@@ -146,4 +106,50 @@ public static class Comtrade
         if (cfg.Digital > 0) table.Warnings.Add($"{cfg.Digital} Digitalkanäle nicht übernommen.");
         return table;
     }
+    private static void ReadAscii(Config cfg, byte[] datBytes, List<double> times, List<List<double>> values)
+    {
+        var n = cfg.Analog.Count;
+        foreach (var line in Encoding.Latin1.GetString(datBytes).Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0))
+        {
+            var p = line.Split(',');
+            if (p.Length < 2 + n) throw new CurveImportException($"COMTRADE-Daten: Zeile '{line}' unvollständig.");
+            times.Add(double.TryParse(p[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var ts) ? ts : double.NaN);
+            for (var i = 0; i < n; i++)
+            {
+                var raw = p[2 + i].Trim();
+                values[i].Add(raw.Length == 0 || raw == "99999" ? double.NaN
+                    : cfg.Analog[i].A * double.Parse(raw, NumberStyles.Float, CultureInfo.InvariantCulture) + cfg.Analog[i].B);
+            }
+        }
+    }
+
+    private static void ReadBinary(Config cfg, byte[] datBytes, List<double> times, List<List<double>> values)
+    {
+        var n = cfg.Analog.Count;
+        var width = cfg.FileType switch
+        {
+            "BINARY" => 2,
+            "BINARY32" or "FLOAT32" => 4,
+            _ => throw new CurveImportException($"COMTRADE-Dateityp '{cfg.FileType}' wird nicht unterstützt."),
+        };
+        var record = 8 + n * width + 2 * ((cfg.Digital + 15) / 16);
+        if (datBytes.Length % record != 0) throw new CurveImportException("COMTRADE-Binärdaten passen nicht zur Konfiguration.");
+        for (var off = 0; off < datBytes.Length; off += record)
+        {
+            var ts = BinaryPrimitives.ReadUInt32LittleEndian(datBytes.AsSpan(off + 4));
+            times.Add(ts == 0xFFFFFFFF ? double.NaN : ts);
+            for (var i = 0; i < n; i++)
+            {
+                var at = off + 8 + i * width;
+                double raw = cfg.FileType switch
+                {
+                    "BINARY" => BinaryPrimitives.ReadInt16LittleEndian(datBytes.AsSpan(at)) is var s16 && s16 == short.MinValue ? double.NaN : s16,
+                    "BINARY32" => BinaryPrimitives.ReadInt32LittleEndian(datBytes.AsSpan(at)) is var s32 && s32 == int.MinValue ? double.NaN : s32,
+                    _ => BinaryPrimitives.ReadSingleLittleEndian(datBytes.AsSpan(at)),
+                };
+                values[i].Add(double.IsNaN(raw) ? double.NaN : cfg.Analog[i].A * raw + cfg.Analog[i].B);
+            }
+        }
+    }
+
 }

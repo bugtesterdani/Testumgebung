@@ -47,21 +47,29 @@ public static class TypedValue
     /// </summary>
     public static object Coerce(object? value, VarType target)
     {
+        if (target == VarType.Double) return CoerceDouble(value);
         switch (target)
         {
             case VarType.Bool when value is bool b: return b;
             case VarType.Int when value is long l: return l;
             case VarType.Int when value is int i: return (long)i;
-            case VarType.Double when value is double d: return d;
-            case VarType.Double when value is float f: return (double)f;
-            case VarType.Double when value is long l: return (double)l;
-            case VarType.Double when value is int i: return (double)i;
-            case VarType.String when value is string s: return s;
-            case VarType.DateTime when value is DateTime dt: return dt;
+            case VarType.String when value is string text: return text;
+            case VarType.DateTime when value is DateTime date: return date;
         }
-        throw new TypeMismatchException(
-            $"Wert '{Format(value)}' ({TypeOf(value)?.ToString() ?? value?.GetType().Name ?? "null"}) passt nicht zu Typ {target}.");
+        throw CoercionError(value, target);
     }
+
+    private static object CoerceDouble(object? value) => value switch
+    {
+        double d => d,
+        float f => (double)f,
+        long l => (double)l,
+        int i => (double)i,
+        _ => throw CoercionError(value, VarType.Double),
+    };
+
+    private static TypeMismatchException CoercionError(object? value, VarType target)
+        => new($"Wert '{Format(value)}' ({TypeOf(value)?.ToString() ?? value?.GetType().Name ?? "null"}) passt nicht zu Typ {target}.");
 
     /// <summary>Text aus einem Eingabefeld (z. B. Debug-Variablenansicht) typgeprüft parsen.</summary>
     public static object Parse(string text, VarType target)

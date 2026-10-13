@@ -289,36 +289,14 @@ public sealed class StationSelectionViewModel : ObservableObject
         try
         {
             var tests = _station.AvailableTests();
-            TestSelectionValue? custom = null;
-            string? customError = null;
-            if (config.UseCustom && id.Length > 0)
-            {
-                if (string.IsNullOrWhiteSpace(config.CustomProject) || !File.Exists(config.CustomProject))
-                {
-                    customError = $"Projekt „{config.CustomProject}“ nicht gefunden.";
-                }
-                else
-                {
-                    try
-                    {
-                        var project = new ProjectSerializer().Load(config.CustomProject);
-                        (custom, customError) = await TestSelector.RunCustomAsync(project, id, _auftrag, _station.SelectionRunOptions(project), cancellation.Token).ConfigureAwait(true);
-                    }
-                    catch (Exception ex) when (ex is ProjectFormatException or IOException or StationSetupException)
-                    {
-                        customError = ex.Message;
-                    }
-                }
-            }
+            var (custom, customError) = await RunCustomSelectionAsync(config, id, cancellation.Token).ConfigureAwait(true);
             if (cancellation.IsCancellationRequested || !_isActive) return;
             var outcome = TestSelector.Select(config, id, _auftrag.Trim().Length > 0 ? _auftrag.Trim() : null, tests, custom, customError);
             if (OrderSession && config.UseCustom && !outcome.CanStart) outcome = outcome with { ManualAllowed = false };
             if (outcome.Order is { Length: > 0 } order && order != _auftrag) _auftrag = order;
             SetOutcome(outcome);
             OnPropertiesChanged(nameof(Auftrag), nameof(ScanText));
-            _station.LogSelection(outcome.CanStart ? "Auswahl · Kennung zugeordnet" : "Auswahl · keine eindeutige Zuordnung",
-                outcome.CanStart ? $"{id} → {outcome.Test!.Title}" : id, outcome.CanStart ? ResultRating.NResult : ResultRating.Error,
-                outcome.CanStart ? "OK" : "Kein Start");
+            LogOutcome(outcome, id);
         }
         finally
         {
@@ -329,6 +307,39 @@ public sealed class StationSelectionViewModel : ObservableObject
             _station.RaiseStartState();
             completion.TrySetResult();
         }
+    }
+
+    private void LogOutcome(SelectionOutcome outcome, string id)
+    {
+        _station.LogSelection(outcome.CanStart ? "Auswahl · Kennung zugeordnet" : "Auswahl · keine eindeutige Zuordnung",
+            outcome.CanStart ? $"{id} → {outcome.Test!.Title}" : id, outcome.CanStart ? ResultRating.NResult : ResultRating.Error,
+            outcome.CanStart ? "OK" : "Kein Start");
+    }
+
+    private async Task<(TestSelectionValue? Value, string? Error)> RunCustomSelectionAsync(SelectionConfig config, string id, CancellationToken token)
+    {
+        TestSelectionValue? custom = null;
+        string? customError = null;
+        if (config.UseCustom && id.Length > 0)
+        {
+            if (string.IsNullOrWhiteSpace(config.CustomProject) || !File.Exists(config.CustomProject))
+            {
+                customError = $"Projekt „{config.CustomProject}“ nicht gefunden.";
+            }
+            else
+            {
+                try
+                {
+                    var project = new ProjectSerializer().Load(config.CustomProject);
+                    (custom, customError) = await TestSelector.RunCustomAsync(project, id, _auftrag, _station.SelectionRunOptions(project), token).ConfigureAwait(true);
+                }
+                catch (Exception ex) when (ex is ProjectFormatException or IOException or StationSetupException)
+                {
+                    customError = ex.Message;
+                }
+            }
+        }
+        return (custom, customError);
     }
 
     internal void AdoptSharedOrder(SelectionOutcome outcome)
@@ -346,6 +357,48 @@ public sealed class StationSelectionViewModel : ObservableObject
         var completion = _startCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try { await StartSelectedCoreAsync().ConfigureAwait(true); }
         finally { completion.TrySetResult(); }
+    }
+
+    private bool ValidateOrderProgram(TestProject project)
+    {
+        var duts = project.Definition.Loop.Descendants().OfType<GroupDefinition>().Where(g => g.IsDutRun).ToList();
+        if (duts.Count == 0 || duts.Any(dut => !dut.Variables.Any(v => v.Name == dut.DutIdVariable && v.Type == VarType.String)))
+        {
+            _station.ShowError("Der Auftragsmodus benötigt einen Prüflingstest im Loop mit einer eigenen String-Variable für die Seriennummer (standardmäßig Kennung). Diese wird je Prüfling neu erfasst.");
+            return false;
+        }
+        if (duts.Any(dut => dut.Children.FirstOrDefault() is not StepDefinition scan
+            || scan.BlockType != BlockCatalog.Operator
+            || scan.Parameters.GetValueOrDefault("Ziel") != dut.DutIdVariable
+            || scan.Parameters.GetValueOrDefault("Art") != "Eingabe"
+            || !bool.TryParse(scan.Parameters.GetValueOrDefault("Pflicht"), out var required) || !required))
+        {
+            _station.ShowError("Jeder Prüflingstest muss mit einer verpflichtenden Werkereingabe seiner Seriennummer beginnen. Bitte als ersten Schritt eine Eingabe mit Ziel Kennung (bzw. DutIdVariable) und Pflicht=true anlegen.");
+            return false;
+        }
+        if (!project.Definition.Root.Variables.Any(v => v.Name == "Auftrag" && v.Type == VarType.String))
+        {
+            _station.ShowError("Der gewählte Test benötigt im Hauptablauf die String-Variable Auftrag, damit Start, Loop und End auf den Fertigungsauftrag zugreifen können.");
+            return false;
+        }
+        return true;
+    }
+
+    private Dictionary<string, object?> SelectionPresets(TestProject project, bool session)
+    {
+        var presets = new Dictionary<string, object?>(StringComparer.Ordinal);
+        if (_station.PairContext is { } paired) presets["Pruefseite"] = (long)paired.Side;
+        foreach (var (k, v) in _outcome!.Parameters) presets[k] = v;
+        if (session)
+        {
+            // Seriennummern dürfen weder vom Auftrag noch von Auswahlparametern vorbelegt werden.
+            presets.Remove("Kennung");
+            foreach (var dut in project.Definition.AllNodes().OfType<GroupDefinition>().Where(g => g.IsDutRun))
+                presets.Remove(dut.DutIdVariable);
+        }
+        else presets["Kennung"] = _kennung.Trim();
+        if (_outcome.Order is { Length: > 0 } order) presets["Auftrag"] = order;
+        return presets;
     }
 
     private async Task StartSelectedCoreAsync()
@@ -368,38 +421,8 @@ public sealed class StationSelectionViewModel : ObservableObject
         finally { _starting = false; RaiseRunning(); }
         if (!_isActive || !ReferenceEquals(_outcome, selectedOutcome)) return;
         var session = OrderSession;
-        var presets = new Dictionary<string, object?>(StringComparer.Ordinal);
-        if (_station.PairContext is { } paired) presets["Pruefseite"] = (long)paired.Side;
-        foreach (var (k, v) in _outcome.Parameters) presets[k] = v;
-        if (session)
-        {
-            // Seriennummern dürfen weder vom Auftrag noch von Auswahlparametern vorbelegt werden.
-            presets.Remove("Kennung");
-            foreach (var dut in loaded.Project.Definition.AllNodes().OfType<GroupDefinition>().Where(g => g.IsDutRun))
-                presets.Remove(dut.DutIdVariable);
-            var duts = loaded.Project.Definition.Loop.Descendants().OfType<GroupDefinition>().Where(g => g.IsDutRun).ToList();
-            if (duts.Count == 0 || duts.Any(dut => !dut.Variables.Any(v => v.Name == dut.DutIdVariable && v.Type == VarType.String)))
-            {
-                _station.ShowError("Der Auftragsmodus benötigt einen Prüflingstest im Loop mit einer eigenen String-Variable für die Seriennummer (standardmäßig Kennung). Diese wird je Prüfling neu erfasst.");
-                return;
-            }
-            if (duts.Any(dut => dut.Children.FirstOrDefault() is not StepDefinition scan
-                || scan.BlockType != BlockCatalog.Operator
-                || scan.Parameters.GetValueOrDefault("Ziel") != dut.DutIdVariable
-                || scan.Parameters.GetValueOrDefault("Art") != "Eingabe"
-                || !bool.TryParse(scan.Parameters.GetValueOrDefault("Pflicht"), out var required) || !required))
-            {
-                _station.ShowError("Jeder Prüflingstest muss mit einer verpflichtenden Werkereingabe seiner Seriennummer beginnen. Bitte als ersten Schritt eine Eingabe mit Ziel Kennung (bzw. DutIdVariable) und Pflicht=true anlegen.");
-                return;
-            }
-            if (!loaded.Project.Definition.Root.Variables.Any(v => v.Name == "Auftrag" && v.Type == VarType.String))
-            {
-                _station.ShowError("Der gewählte Test benötigt im Hauptablauf die String-Variable Auftrag, damit Start, Loop und End auf den Fertigungsauftrag zugreifen können.");
-                return;
-            }
-        }
-        else presets["Kennung"] = _kennung.Trim();
-        if (_outcome.Order is { Length: > 0 } order) presets["Auftrag"] = order;
+        var presets = SelectionPresets(loaded.Project, session);
+        if (session && !ValidateOrderProgram(loaded.Project)) return;
         var id = ScanText.Trim();
         OnPropertyChanged(nameof(ShowPanel));
         _orderRunActive = session;

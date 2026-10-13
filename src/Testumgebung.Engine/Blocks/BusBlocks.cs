@@ -92,56 +92,7 @@ public static class BusBlocks
             p => new MessageSendAction(p.Text("Ressource"), p.Text("Datenbank"), p.Text("Botschaft"), SignalValues.Parse(p.Optional("Werte")),
                 Math.Max(1, (int)(p.Number("Anzahl") ?? 1)), p.Number("Abstand"), ParseAddress(p.Optional("Quelladresse"), "Quelladresse"))));
 
-        c.Register(new(UdsRequest, "UDS-Diagnose", cat, "measure",
-            "Sendet eine Diagnoseanfrage über ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet "
-            + "und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder prüft eine erwartete negative Antwort.",
-            [
-                Res("Pruefling_Diagnose"),
-                .. DiagParameters(),
-                new("Anfrage", "Anfrage (Hex)", ParameterKind.Text, "22 F1 90", Required: true, Hint: "z. B. 10 03, 22 F1 90; LIN: ohne NAD/PCI (automatisch); {Ausdruck} fügt ein Byte ein"),
-                new("Zeitlimit", "P2 [ms]", ParameterKind.Number, "1000", Required: true),
-                new("ZeitlimitLang", "P2* nach „Antwort folgt“ [ms]", ParameterKind.Number, "5000"),
-                new("ErwarteteNrc", "Erwartete negative Antwort (NRC)", ParameterKind.Text, Hint: "z. B. 0x33 – dann ist genau diese Ablehnung PASS"),
-                new("AbByte", "Daten ab Byte", ParameterKind.Number, Hint: "1 = Dienstkennung; leer: 22/2E → 4, 31 → 5, 19 → 3, sonst 2"),
-                new("Laenge", "Länge [Bytes]", ParameterKind.Number, Hint: "leer = bis zum Ende"),
-                new("Darstellung", "Darstellung", ParameterKind.Choice, "Hex", Choices: UdsFormats),
-                new("Faktor", "Faktor (Zahl)", ParameterKind.Number, "1"),
-                new("Offset", "Offset (Zahl)", ParameterKind.Number, "0"),
-                .. Evaluation(),
-            ],
-            p =>
-            {
-                CommunicationBlocks.CheckHex(p.Text("Anfrage"), "Anfrage");
-                return new UdsAction(p.Text("Ressource"), DiagSpec.From(p), p.Text("Anfrage"), TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
-                    TimeSpan.FromMilliseconds(p.Number("ZeitlimitLang") ?? 5000), ParseAddress(p.Optional("ErwarteteNrc"), "Erwartete NRC"),
-                    (int?)p.Number("AbByte"), (int?)p.Number("Laenge"), Array.IndexOf(UdsFormats, p.Choice("Darstellung")), p.Number("Faktor") ?? 1, p.Number("Offset") ?? 0,
-                    SignalCheck.From(p, withBytes: true));
-            }));
-
-        c.Register(new(UdsSecurity, "UDS-Sicherheitszugang", cat, "arrow",
-            "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schlüssel und sendet ihn (Stufe+1). Schlüsselverfahren "
-            + "wählbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder „Ausdruck je Byte“ (s = Seedbyte, i = Index). Seed aus lauter Nullen "
-            + "= bereits freigeschaltet. Negative Antwort (z. B. falscher Schlüssel) = FAIL.",
-            [
-                Res("Pruefling_Diagnose"),
-                .. DiagParameters(),
-                new("Stufe", "Seed-Stufe", ParameterKind.Text, "0x01", Required: true, Hint: "ungerade: 0x01, 0x03, …; Schlüssel geht an Stufe+1"),
-                new("Verfahren", "Schlüsselverfahren", ParameterKind.Choice, SecurityMethods[0], Choices: SecurityMethods),
-                new("Konstante", "Konstante (Hex)", ParameterKind.Text, "5A", Hint: "für XOR/Addition/Add-Rotate-XOR; byteweise wiederholt"),
-                new("Ausdruck", "Ausdruck je Byte", ParameterKind.Expression, Hint: "nur bei „Ausdruck je Byte“: Funktion von s (Seedbyte 0–255) und i (Index), z. B. (s + 7) * 3"),
-                new("Zeitlimit", "P2 [ms]", ParameterKind.Number, "1000", Required: true),
-                new("ZeitlimitLang", "P2* [ms]", ParameterKind.Number, "5000"),
-                new("Ziel", "Schlüssel in Variable", ParameterKind.Variable),
-            ],
-            p =>
-            {
-                var method = Array.IndexOf(SecurityMethods, p.Choice("Verfahren"));
-                Expression? expr = method == 4 ? p.Expr("Ausdruck") : null;
-                if (method == 4 && expr is null) throw new BlockConfigurationException("„Ausdruck je Byte“: Ausdruck angeben.");
-                var constant = method is 0 or 1 or 3 ? CheckHexBytes(p.Optional("Konstante"), "Konstante") : [];
-                return new UdsSecurityAction(p.Text("Ressource"), DiagSpec.From(p), ParseByte(p.Text("Stufe"), "Seed-Stufe"), method, constant, expr,
-                    TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000), TimeSpan.FromMilliseconds(p.Number("ZeitlimitLang") ?? 5000), p.Optional("Ziel"));
-            }));
+        RegisterDiagnosticBlocks(c, cat);
 
         c.Register(new(J1939Receive, "J1939 empfangen", cat, "measure",
             "Empfängt eine Parametergruppe (PGN) – einzeln, als BAM oder per RTS/CTS – optional nach einer Anforderung (PGN 59904). "
@@ -290,6 +241,61 @@ public static class BusBlocks
 
     // ------------------------------------------------------------------ Hilfen
 
+    private static void RegisterDiagnosticBlocks(BlockCatalog c, string cat)
+    {
+        c.Register(new(UdsRequest, "UDS-Diagnose", cat, "measure",
+            "Sendet eine Diagnoseanfrage über ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet "
+            + "und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder prüft eine erwartete negative Antwort.",
+            [
+                Res("Pruefling_Diagnose"),
+                .. DiagParameters(),
+                new("Anfrage", "Anfrage (Hex)", ParameterKind.Text, "22 F1 90", Required: true, Hint: "z. B. 10 03, 22 F1 90; LIN: ohne NAD/PCI (automatisch); {Ausdruck} fügt ein Byte ein"),
+                new("Zeitlimit", "P2 [ms]", ParameterKind.Number, "1000", Required: true),
+                new("ZeitlimitLang", "P2* nach „Antwort folgt“ [ms]", ParameterKind.Number, "5000"),
+                new("ErwarteteNrc", "Erwartete negative Antwort (NRC)", ParameterKind.Text, Hint: "z. B. 0x33 – dann ist genau diese Ablehnung PASS"),
+                new("AbByte", "Daten ab Byte", ParameterKind.Number, Hint: "1 = Dienstkennung; leer: 22/2E → 4, 31 → 5, 19 → 3, sonst 2"),
+                new("Laenge", "Länge [Bytes]", ParameterKind.Number, Hint: "leer = bis zum Ende"),
+                new("Darstellung", "Darstellung", ParameterKind.Choice, "Hex", Choices: UdsFormats),
+                new("Faktor", "Faktor (Zahl)", ParameterKind.Number, "1"),
+                new("Offset", "Offset (Zahl)", ParameterKind.Number, "0"),
+                .. Evaluation(),
+            ],
+            p =>
+            {
+                CommunicationBlocks.CheckHex(p.Text("Anfrage"), "Anfrage");
+                return new UdsAction(p.Text("Ressource"), DiagSpec.From(p), p.Text("Anfrage"), TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
+                    TimeSpan.FromMilliseconds(p.Number("ZeitlimitLang") ?? 5000), ParseAddress(p.Optional("ErwarteteNrc"), "Erwartete NRC"),
+                    (int?)p.Number("AbByte"), (int?)p.Number("Laenge"), Array.IndexOf(UdsFormats, p.Choice("Darstellung")), p.Number("Faktor") ?? 1, p.Number("Offset") ?? 0,
+                    SignalCheck.From(p, withBytes: true));
+            }));
+
+        c.Register(new(UdsSecurity, "UDS-Sicherheitszugang", cat, "arrow",
+            "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schlüssel und sendet ihn (Stufe+1). Schlüsselverfahren "
+            + "wählbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder „Ausdruck je Byte“ (s = Seedbyte, i = Index). Seed aus lauter Nullen "
+            + "= bereits freigeschaltet. Negative Antwort (z. B. falscher Schlüssel) = FAIL.",
+            [
+                Res("Pruefling_Diagnose"),
+                .. DiagParameters(),
+                new("Stufe", "Seed-Stufe", ParameterKind.Text, "0x01", Required: true, Hint: "ungerade: 0x01, 0x03, …; Schlüssel geht an Stufe+1"),
+                new("Verfahren", "Schlüsselverfahren", ParameterKind.Choice, SecurityMethods[0], Choices: SecurityMethods),
+                new("Konstante", "Konstante (Hex)", ParameterKind.Text, "5A", Hint: "für XOR/Addition/Add-Rotate-XOR; byteweise wiederholt"),
+                new("Ausdruck", "Ausdruck je Byte", ParameterKind.Expression, Hint: "nur bei „Ausdruck je Byte“: Funktion von s (Seedbyte 0–255) und i (Index), z. B. (s + 7) * 3"),
+                new("Zeitlimit", "P2 [ms]", ParameterKind.Number, "1000", Required: true),
+                new("ZeitlimitLang", "P2* [ms]", ParameterKind.Number, "5000"),
+                new("Ziel", "Schlüssel in Variable", ParameterKind.Variable),
+            ],
+            p =>
+            {
+                var method = Array.IndexOf(SecurityMethods, p.Choice("Verfahren"));
+                Expression? expr = method == 4 ? p.Expr("Ausdruck") : null;
+                if (method == 4 && expr is null) throw new BlockConfigurationException("„Ausdruck je Byte“: Ausdruck angeben.");
+                var constant = method is 0 or 1 or 3 ? CheckHexBytes(p.Optional("Konstante"), "Konstante") : [];
+                return new UdsSecurityAction(p.Text("Ressource"), DiagSpec.From(p), ParseByte(p.Text("Stufe"), "Seed-Stufe"), method, constant, expr,
+                    TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000), TimeSpan.FromMilliseconds(p.Number("ZeitlimitLang") ?? 5000), p.Optional("Ziel"));
+            }));
+
+    }
+
     private static IEnumerable<ParameterDescriptor> DiagParameters() =>
     [
         new("Transport", "Transport", ParameterKind.Choice, DiagTransports[0], Choices: DiagTransports,
@@ -395,13 +401,7 @@ public static class BusBlocks
             var db = def.Parsed;
             var expected = step.BlockType is LinRead or LinSend ? BusDatabaseFormat.Ldf : BusDatabaseFormat.Dbc;
             if (db.Format != expected) return [$"„{def.Name}“ ist eine {db.Format.ToString().ToUpperInvariant()}-Datei; erwartet {expected.ToString().ToUpperInvariant()}."];
-            if (step.Parameters.GetValueOrDefault("Signal") is { Length: > 0 } signal && !signal.Contains('{')) _ = db.FindSignal(signal.Trim());
-            var message = step.Parameters.GetValueOrDefault("Botschaft") ?? (step.BlockType is LinRead or LinSend ? step.Parameters.GetValueOrDefault("Frame") : null);
-            if (message is { Length: > 0 } && !(step.BlockType is LinRead or LinSend && byte.TryParse(message.Trim().Replace("0x", "", StringComparison.OrdinalIgnoreCase), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _)))
-            {
-                var m = db.RequireMessage(message.Trim());
-                foreach (var (signalName, _) in SignalValues.Parse(step.Parameters.GetValueOrDefault("Werte")).Items) _ = m.RequireSignal(signalName);
-            }
+            CheckMessageReferences(step, db);
             return [];
         }
         catch (BusDatabaseException ex)
@@ -411,6 +411,17 @@ public static class BusBlocks
         catch (BlockConfigurationException ex)
         {
             return [ex.Message];
+        }
+    }
+
+    private static void CheckMessageReferences(StepDefinition step, BusDatabase db)
+    {
+        if (step.Parameters.GetValueOrDefault("Signal") is { Length: > 0 } signal && !signal.Contains('{')) _ = db.FindSignal(signal.Trim());
+        var message = step.Parameters.GetValueOrDefault("Botschaft") ?? (step.BlockType is LinRead or LinSend ? step.Parameters.GetValueOrDefault("Frame") : null);
+        if (message is { Length: > 0 } && !(step.BlockType is LinRead or LinSend && byte.TryParse(message.Trim().Replace("0x", "", StringComparison.OrdinalIgnoreCase), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _)))
+        {
+            var m = db.RequireMessage(message.Trim());
+            foreach (var (signalName, _) in SignalValues.Parse(step.Parameters.GetValueOrDefault("Werte")).Items) _ = m.RequireSignal(signalName);
         }
     }
 
@@ -514,19 +525,7 @@ internal sealed record SignalCheck(ExpectedBytes? Bytes, Expression? Expected, s
         if (Target is not null) CommunicationBlocks.SetTarget(ctx, Target, text is not null && TargetIsText(ctx) ? text : value);
         var shown = $"{value.ToString("0.######", CultureInfo.InvariantCulture)}{(unit.Length > 0 ? " " + unit : "")}{(text is null ? "" : $" ({text})")}";
         if (Expected is not null)
-        {
-            var expected = Expected.Evaluate(new ContextResolver(ctx));
-            bool ok;
-            if (expected is string s && !double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
-                ok = text is not null && string.Equals(text, s, StringComparison.OrdinalIgnoreCase);
-            else
-            {
-                var e = expected is string es ? double.Parse(es, NumberStyles.Float, CultureInfo.InvariantCulture) : Convert.ToDouble(expected, CultureInfo.InvariantCulture);
-                ok = Math.Abs(value - e) <= Math.Max(Math.Abs(resolution) / 2, 1e-9);
-            }
-            return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, (object?)text ?? value, unit.Length > 0 ? unit : null,
-                Message: ok ? $"{what} = {shown}" : $"{what} = {shown}, erwartet {CommunicationBlocks.Text(expected)}");
-        }
+            return RateExpected(ctx, value, text, unit, resolution, what, shown);
         var rated = CommunicationBlocks.Rate(ctx, value, Low, High, unit, $"{what} = {shown}");
         return Bytes is not null && rated.Rating == ResultRating.NResult ? rated with { Rating = ResultRating.Pass } : rated;
     }
@@ -539,6 +538,21 @@ internal sealed record SignalCheck(ExpectedBytes? Bytes, Expression? Expected, s
     }
 
     public StepOutcome Timeout(CommunicationTimeoutException ex) => CommunicationBlocks.Timeout(ex, TimeoutAsFail, hex: true);
+    private StepOutcome RateExpected(IStepContext ctx, double value, string? text, string unit, double resolution, string what, string shown)
+    {
+        var expected = Expected!.Evaluate(new ContextResolver(ctx));
+        bool ok;
+        if (expected is string s && !double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            ok = text is not null && string.Equals(text, s, StringComparison.OrdinalIgnoreCase);
+        else
+        {
+            var e = expected is string es ? double.Parse(es, NumberStyles.Float, CultureInfo.InvariantCulture) : Convert.ToDouble(expected, CultureInfo.InvariantCulture);
+            ok = Math.Abs(value - e) <= Math.Max(Math.Abs(resolution) / 2, 1e-9);
+        }
+        return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, (object?)text ?? value, unit.Length > 0 ? unit : null,
+            Message: ok ? $"{what} = {shown}" : $"{what} = {shown}, erwartet {CommunicationBlocks.Text(expected)}");
+    }
+
 }
 
 // ---------------------------------------------------------------------- CAN mit DBC
@@ -695,6 +709,11 @@ internal sealed class UdsAction(string resource, DiagSpec settings, string reque
         {
             return check.Timeout(ex);
         }
+        return EvaluateResponse(context, bytes, response, label);
+    }
+
+    private StepOutcome EvaluateResponse(IStepContext context, byte[] bytes, byte[] response, string label)
+    {
         var shown = $"{label} → {BusBlocks.Hex(response)}";
         if (expectedNrc is { } nrc) return new StepOutcome(ResultRating.Fail, BusBlocks.Hex(response), Message: $"{shown}: positive Antwort, erwartet NRC 0x{nrc:X2}");
         if (response.Length == 0) return new StepOutcome(ResultRating.Pass, Message: $"{label}: positive Antwort unterdrückt, keine Ablehnung");
@@ -710,21 +729,26 @@ internal sealed class UdsAction(string resource, DiagSpec settings, string reque
         switch (format)
         {
             case 2 or 3:
-            {
-                if (data.Length is 0 or > 8) return StepOutcome.Error($"{shown}: Zahl braucht 1–8 Bytes (erhalten {data.Length}).");
-                ulong raw = 0;
-                foreach (var b in data) raw = raw << 8 | b;
-                double number = format == 3 && data.Length < 8 && (data[0] & 0x80) != 0 ? (long)(raw | ulong.MaxValue << data.Length * 8) : format == 3 ? (long)raw : raw;
-                return check.Rate(context, number * factor + offset, null, null, factor, label);
-            }
+                {
+                    return RateNumber(context, data, shown, label);
+                }
             case 1:
-            {
-                var text = Encoding.Latin1.GetString(data).TrimEnd('\0', '\xFF', ' ');
-                return RateText(context, text, shown);
-            }
+                {
+                    var text = Encoding.Latin1.GetString(data).TrimEnd('\0', '\xFF', ' ');
+                    return RateText(context, text, shown);
+                }
             default:
                 return RateText(context, BusBlocks.Hex(data), shown, isHex: true);
         }
+    }
+
+    private StepOutcome RateNumber(IStepContext context, byte[] data, string shown, string label)
+    {
+        if (data.Length is 0 or > 8) return StepOutcome.Error($"{shown}: Zahl braucht 1–8 Bytes (erhalten {data.Length}).");
+        ulong raw = 0;
+        foreach (var b in data) raw = raw << 8 | b;
+        double number = format == 3 && data.Length < 8 && (data[0] & 0x80) != 0 ? (long)(raw | ulong.MaxValue << data.Length * 8) : format == 3 ? (long)raw : raw;
+        return check.Rate(context, number * factor + offset, null, null, factor, label);
     }
 
     /// <summary>Für „Erwartete Daten“: Vergleich mit dem Antwortbeginn (Länge des Musters).</summary>
@@ -797,6 +821,11 @@ internal sealed class J1939ReceiveAction(string resource, uint? pgn, byte? sourc
         {
             return check.Timeout(ex);
         }
+        return RateReceived(context, received, sig, message, p);
+    }
+
+    private StepOutcome RateReceived(IStepContext context, J1939Message received, BusSignal? sig, BusMessage? message, uint p)
+    {
         var shown = received.ToString();
         if (check.CheckBytes(received.Data, shown) is { } mismatch) return mismatch;
         var coding = sig?.Coding ?? raw;
@@ -804,12 +833,8 @@ internal sealed class J1939ReceiveAction(string resource, uint? pgn, byte? sourc
         double value;
         try
         {
-            if (!coding.IsFloat && !coding.Signed && coding.Length >= 2)
-            {
-                var all = coding.Length == 64 ? ulong.MaxValue : (1UL << coding.Length) - 1;
-                if (((ulong)coding.Raw(received.Data) & all) == all)
-                    return new StepOutcome(ResultRating.Fail, BusBlocks.Hex(received.Data), Message: $"{sig?.Name ?? "Signal"}: nicht verfügbar (alle Bits 1) · {shown}");
-            }
+            if (Unavailable(coding, received.Data))
+                return new StepOutcome(ResultRating.Fail, BusBlocks.Hex(received.Data), Message: $"{sig?.Name ?? "Signal"}: nicht verfügbar (alle Bits 1) · {shown}");
             value = coding.Value(received.Data);
         }
         catch (ArgumentException ex)
@@ -818,6 +843,14 @@ internal sealed class J1939ReceiveAction(string resource, uint? pgn, byte? sourc
         }
         return check.Rate(context, value, sig?.Describe(received.Data), sig?.Unit, coding.Factor, sig is null ? $"PGN 0x{p:X4}" : $"{message!.Name}.{sig.Name}");
     }
+
+    private static bool Unavailable(CanSignal coding, byte[] data)
+    {
+        if (coding.IsFloat || coding.Signed || coding.Length < 2) return false;
+        var all = coding.Length == 64 ? ulong.MaxValue : (1UL << coding.Length) - 1;
+        return ((ulong)coding.Raw(data) & all) == all;
+    }
+
 }
 
 internal sealed class J1939SendAction(string resource, uint? pgn, int priority, byte source, byte destination, string data, string? database, string? messageName,
@@ -829,18 +862,7 @@ internal sealed class J1939SendAction(string resource, uint? pgn, int priority, 
         uint group;
         try
         {
-            if (messageName is not null)
-            {
-                if (database is null) return StepOutcome.Error("Botschaft aus der Datenbank: Busdatenbank angeben.");
-                var message = BusBlocks.Database(context, database).RequireMessage(messageName);
-                bytes = string.IsNullOrWhiteSpace(data) ? message.Encode(values.Evaluate(message, context)) : BusBlocks.Bytes(data, context);
-                group = pgn ?? message.Pgn;
-            }
-            else
-            {
-                bytes = BusBlocks.Bytes(data, context);
-                group = pgn ?? throw new BusDatabaseException("PGN angeben.");
-            }
+            (bytes, group) = PrepareSend(context);
         }
         catch (Exception ex) when (ex is BusDatabaseException or FormatException or InvalidCastException or OverflowException)
         {
@@ -854,6 +876,25 @@ internal sealed class J1939SendAction(string resource, uint? pgn, int priority, 
         var transport = bytes.Length <= 8 ? "" : destination == J1939.Global ? " (BAM)" : " (RTS/CTS)";
         return StepOutcome.Unrated(BusBlocks.Hex(bytes), $"PGN 0x{group:X4} von 0x{source:X2}{(J1939.IsPdu1(group) ? $" an 0x{destination:X2}" : "")}{transport}: {BusBlocks.Hex(bytes)}");
     }
+    private (byte[] Bytes, uint Group) PrepareSend(IStepContext context)
+    {
+        byte[] bytes;
+        uint group;
+        if (messageName is not null)
+        {
+            if (database is null) throw new BusDatabaseException("Botschaft aus der Datenbank: Busdatenbank angeben.");
+            var message = BusBlocks.Database(context, database).RequireMessage(messageName);
+            bytes = string.IsNullOrWhiteSpace(data) ? message.Encode(values.Evaluate(message, context)) : BusBlocks.Bytes(data, context);
+            group = pgn ?? message.Pgn;
+        }
+        else
+        {
+            bytes = BusBlocks.Bytes(data, context);
+            group = pgn ?? throw new BusDatabaseException("PGN angeben.");
+        }
+        return (bytes, group);
+    }
+
 }
 
 // ---------------------------------------------------------------------- LIN
@@ -907,6 +948,11 @@ internal sealed class LinReadAction(string resource, string frame, string? datab
         {
             return check.Timeout(ex);
         }
+        return RateReceived(context, data, message, sig, id);
+    }
+
+    private StepOutcome RateReceived(IStepContext context, byte[] data, BusMessage? message, BusSignal? sig, byte id)
+    {
         var name = message?.Name ?? $"0x{id:X2}";
         var shown = $"LIN {name}: {BusBlocks.Hex(data)}";
         if (check.CheckBytes(data, shown) is { } mismatch) return mismatch;
@@ -921,6 +967,7 @@ internal sealed class LinReadAction(string resource, string frame, string? datab
             return new StepOutcome(ResultRating.Fail, BusBlocks.Hex(data), Message: $"{shown}: {ex.Message}");
         }
     }
+
 }
 
 internal sealed class LinSendAction(string resource, string frame, string? database, string data, SignalValues values, LinChecksum checksum) : IStepAction
@@ -1039,43 +1086,55 @@ internal sealed class LinScheduleAction(string resource, string? database, strin
         return StepOutcome.Unrated(count, $"{count} Frames in {runs} Durchlauf/Durchläufen");
     }
 
+    private static (string Frame, byte[]? Send, int Gap, int? Length) ParseLine(string raw)
+    {
+        var line = raw;
+        byte[]? send = null;
+        var eq = line.IndexOf('=');
+        string frame;
+        var gap = 10;
+        int? length = null;
+        if (eq > 0)
+        {
+            frame = line[..eq].Trim();
+            var rest = line[(eq + 1)..].Trim();
+            var sp = rest.LastIndexOf(' ');
+            if (sp > 0 && int.TryParse(rest[(sp + 1)..], out var g)) { gap = g; rest = rest[..sp].Trim(); }
+            send = CommText.ParseHex(rest);
+        }
+        else
+        {
+            var parts = line.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+            frame = parts[0];
+            if (parts.Length > 1 && int.TryParse(parts[1], out var g)) gap = g;
+        }
+        var colon = frame.LastIndexOf(':');
+        if (colon > 0 && int.TryParse(frame[(colon + 1)..], out var len)) { length = len; frame = frame[..colon]; }
+        return (frame, send, gap, length);
+    }
+
+    private static bool ExpandFrameGroup(BusDatabase? db, string frame, byte[]? send, int gap, List<Entry> list)
+    {
+        if (send is null && db?.FrameGroup(frame) is { } group)
+        {
+            foreach (var member in group.Members)
+            {
+                var (mid, mmsg) = LinFrames.Resolve(member, db);
+                list.Add(new Entry(mid, $"{group.Name}:{mmsg?.Name ?? member}", null, mmsg?.Length, gap));
+            }
+            return true;
+        }
+        return false;
+    }
+
     private List<Entry> Parse(BusDatabase? db, IStepContext ctx)
     {
         var list = new List<Entry>();
         foreach (var raw in table.Split(['\n', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
-            var line = raw;
-            byte[]? send = null;
-            var eq = line.IndexOf('=');
-            string frame;
-            var gap = 10;
-            int? length = null;
-            if (eq > 0)
-            {
-                frame = line[..eq].Trim();
-                var rest = line[(eq + 1)..].Trim();
-                var sp = rest.LastIndexOf(' ');
-                if (sp > 0 && int.TryParse(rest[(sp + 1)..], out var g)) { gap = g; rest = rest[..sp].Trim(); }
-                send = CommText.ParseHex(rest);
-            }
-            else
-            {
-                var parts = line.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
-                frame = parts[0];
-                if (parts.Length > 1 && int.TryParse(parts[1], out var g)) gap = g;
-            }
-            var colon = frame.LastIndexOf(':');
-            if (colon > 0 && int.TryParse(frame[(colon + 1)..], out var len)) { length = len; frame = frame[..colon]; }
+            var (frame, send, gap, length) = ParseLine(raw);
             // Ereignisgesteuerte/sporadische Frames aus der LDF in ihre Einzelframes auflösen
-            if (send is null && db?.FrameGroup(frame) is { } group)
-            {
-                foreach (var member in group.Members)
-                {
-                    var (mid, mmsg) = LinFrames.Resolve(member, db);
-                    list.Add(new Entry(mid, $"{group.Name}:{mmsg?.Name ?? member}", null, mmsg?.Length, gap));
-                }
-                continue;
-            }
+            if (ExpandFrameGroup(db, frame, send, gap, list)) continue;
             var (id, message) = LinFrames.Resolve(frame, db);
             if (send is null) length ??= message?.Length;
             if (Lin.Validate(id, send?.Length ?? length ?? 8) is { } error) throw new BusDatabaseException($"LIN-Fahrplan „{frame}“: {error}");
@@ -1195,18 +1254,7 @@ internal sealed class OpcUaAction(string resource, int action, string? node, Exp
                         return Evaluate(context, outputs.Count == 1 ? outputs[0] : joined, $"{method} → {joined}");
                     case 3: // Abonnieren
                         if (node is null) return StepOutcome.Error("OPC UA: Knoten angeben.");
-                        await using (var sub = await opc.SubscribeAsync(node, 100, token).ConfigureAwait(false))
-                        {
-                            try
-                            {
-                                var changed = await sub.WaitForChangeAsync(timeout, token).ConfigureAwait(false);
-                                return Evaluate(context, changed, $"{node} geändert auf {CommunicationBlocks.Text(changed)}");
-                            }
-                            catch (CommunicationTimeoutException ex)
-                            {
-                                return StepOutcome.Error(ex.Message);
-                            }
-                        }
+                        return await WaitForSubscriptionAsync(opc, context, token).ConfigureAwait(false);
                     default: // Lesen
                         if (node is null) return StepOutcome.Error("OPC UA: Knoten angeben.");
                         var read = await opc.ReadAsync(node, token).ConfigureAwait(false);
@@ -1217,6 +1265,22 @@ internal sealed class OpcUaAction(string resource, int action, string? node, Exp
         catch (OpcUaException ex)
         {
             return StepOutcome.Error(ex.Message);
+        }
+    }
+
+    private async Task<StepOutcome> WaitForSubscriptionAsync(IOpcUaClient opc, IStepContext context, CancellationToken token)
+    {
+        await using (var sub = await opc.SubscribeAsync(node!, 100, token).ConfigureAwait(false))
+        {
+            try
+            {
+                var changed = await sub.WaitForChangeAsync(timeout, token).ConfigureAwait(false);
+                return Evaluate(context, changed, $"{node} geändert auf {CommunicationBlocks.Text(changed)}");
+            }
+            catch (CommunicationTimeoutException ex)
+            {
+                return StepOutcome.Error(ex.Message);
+            }
         }
     }
 
@@ -1237,15 +1301,20 @@ internal sealed class OpcUaAction(string resource, int action, string? node, Exp
         if (target is not null) CommunicationBlocks.SetTarget(ctx, target, read is string s ? s : read);
         if (expected is not null)
         {
-            var exp = expected.Evaluate(new ContextResolver(ctx));
-            var ok = read is double or long && exp is double or long
-                ? Math.Abs(Convert.ToDouble(read, CultureInfo.InvariantCulture) - Convert.ToDouble(exp, CultureInfo.InvariantCulture)) < 1e-9
-                : string.Equals(CommunicationBlocks.Text(read), CommunicationBlocks.Text(exp), StringComparison.Ordinal);
-            return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, read, string.IsNullOrWhiteSpace(unit) ? null : unit,
-                Message: ok ? label : $"{label}, erwartet {CommunicationBlocks.Text(exp)}");
+            return EvaluateExpected(ctx, read, label);
         }
         if ((low is not null || high is not null) && read is double or long)
             return CommunicationBlocks.Rate(ctx, Convert.ToDouble(read, CultureInfo.InvariantCulture), low, high, unit, label);
         return new StepOutcome(ResultRating.NResult, read, string.IsNullOrWhiteSpace(unit) ? null : unit, Message: label);
     }
+    private StepOutcome EvaluateExpected(IStepContext ctx, object? read, string label)
+    {
+        var exp = expected!.Evaluate(new ContextResolver(ctx));
+        var ok = read is double or long && exp is double or long
+            ? Math.Abs(Convert.ToDouble(read, CultureInfo.InvariantCulture) - Convert.ToDouble(exp, CultureInfo.InvariantCulture)) < 1e-9
+            : string.Equals(CommunicationBlocks.Text(read), CommunicationBlocks.Text(exp), StringComparison.Ordinal);
+        return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, read, string.IsNullOrWhiteSpace(unit) ? null : unit,
+            Message: ok ? label : $"{label}, erwartet {CommunicationBlocks.Text(exp)}");
+    }
+
 }

@@ -121,14 +121,20 @@ public sealed record SerialSettings(string Port, int Baud = 9600, int DataBits =
     /// <summary>Optionen: Baud, Datenbits, Parität (N/E/O/M/S), Stoppbits (1/1.5/2), Handshake (Kein/RTS-CTS/XON-XOFF), RS485 (RTS-Umschaltung).</summary>
     public static SerialSettings From(string port, InstrumentOptions o)
     {
-        var parity = (o.Text("Parität") ?? o.Text("Paritaet") ?? "N").ToUpperInvariant()[0];
-        parity = parity switch { 'K' => 'N', 'G' => 'E', 'U' => 'O', _ => parity };
-        if (!"NEOMS".Contains(parity)) throw new InstrumentException($"Parität „{parity}“: N, E, O, M oder S.");
+        var parity = ParseParity(o);
         var settings = new SerialSettings(port.Trim().ToUpperInvariant(), (int)(o.Number("Baud") ?? 9600), (int)(o.Number("Datenbits") ?? 8), parity,
             o.Number("Stoppbits") ?? 1, o.Text("Handshake") ?? "Kein", o.Flag("RS485"));
         if (settings.DataBits is < 5 or > 8) throw new InstrumentException("Datenbits 5–8.");
         if (settings.StopBits is not (1 or 1.5 or 2)) throw new InstrumentException("Stoppbits 1, 1.5 oder 2.");
         return settings;
+    }
+
+    private static char ParseParity(InstrumentOptions o)
+    {
+        var parity = (o.Text("Parität") ?? o.Text("Paritaet") ?? "N").ToUpperInvariant()[0];
+        parity = parity switch { 'K' => 'N', 'G' => 'E', 'U' => 'O', _ => parity };
+        if (!"NEOMS".Contains(parity)) throw new InstrumentException($"Parität „{parity}“: N, E, O, M oder S.");
+        return parity;
     }
 
     public override string ToString()
@@ -169,16 +175,7 @@ public sealed class SerialTransport(SerialSettings settings) : IStreamTransport
             dcb.ByteSize = (byte)settings.DataBits;
             dcb.Parity = settings.Parity switch { 'O' => 1, 'E' => 2, 'M' => 3, 'S' => 4, _ => 0 };
             dcb.StopBits = settings.StopBits switch { 1.5 => 1, 2 => 2, _ => 0 };
-            uint flags = 1; // fBinary
-            if (settings.Parity != 'N') flags |= 1 << 1;
-            var handshake = settings.Handshake.ToUpperInvariant();
-            uint rts = 1; // RTS_CONTROL_ENABLE
-            if (handshake.Contains("RTS", StringComparison.Ordinal)) { flags |= 1 << 2; rts = 2; } // CTS-Fluss, RTS_CONTROL_HANDSHAKE
-            if (settings.Rs485Rts) rts = 3;                                                          // RTS_CONTROL_TOGGLE
-            if (handshake.Contains("XON", StringComparison.Ordinal)) { flags |= (1 << 8) | (1 << 9); dcb.XonChar = 0x11; dcb.XoffChar = 0x13; dcb.XonLim = 2048; dcb.XoffLim = 512; }
-            flags |= 1u << 4;           // DTR_CONTROL_ENABLE
-            flags |= rts << 12;
-            dcb.Flags = flags;
+            ConfigureHandshake(ref dcb);
             if (!_api.SetCommState(handle, ref dcb)) throw Win32($"SetCommState ({settings})");
             if (!_api.PurgeComm(handle, Native.PurgeRxClear | Native.PurgeTxClear)) throw Win32("PurgeComm");
         }
@@ -189,6 +186,20 @@ public sealed class SerialTransport(SerialSettings settings) : IStreamTransport
         }
         _handle = handle;
         return Task.CompletedTask;
+    }
+
+    private void ConfigureHandshake(ref Native.Dcb dcb)
+    {
+        uint flags = 1; // fBinary
+        if (settings.Parity != 'N') flags |= 1 << 1;
+        var handshake = settings.Handshake.ToUpperInvariant();
+        uint rts = 1; // RTS_CONTROL_ENABLE
+        if (handshake.Contains("RTS", StringComparison.Ordinal)) { flags |= 1 << 2; rts = 2; } // CTS-Fluss, RTS_CONTROL_HANDSHAKE
+        if (settings.Rs485Rts) rts = 3;                                                          // RTS_CONTROL_TOGGLE
+        if (handshake.Contains("XON", StringComparison.Ordinal)) { flags |= (1 << 8) | (1 << 9); dcb.XonChar = 0x11; dcb.XoffChar = 0x13; dcb.XonLim = 2048; dcb.XoffLim = 512; }
+        flags |= 1u << 4;           // DTR_CONTROL_ENABLE
+        flags |= rts << 12;
+        dcb.Flags = flags;
     }
 
     private static CommunicationException Win32(string what) => new($"{what}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}");
