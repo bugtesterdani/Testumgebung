@@ -55,6 +55,18 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
         }
 
         var w = new Writer(connection, tx, cancellationToken);
+        await StoreRunHeaderAsync(w, run).ConfigureAwait(false);
+
+        await StoreEventsAsync(w, run).ConfigureAwait(false);
+
+        await StoreWaveformsAsync(w, run).ConfigureAwait(false);
+
+        await tx.CommitAsync(cancellationToken).ConfigureAwait(false);
+        AfterCommit?.Invoke(run.RunId);
+    }
+
+    private static async Task StoreRunHeaderAsync(Writer w, ResultRun run)
+    {
         var definitionId = DefinitionId(run);
         if (await w.ScalarAsync("SELECT COUNT(*) FROM tu_definitions WHERE definition_id = @id", ("id", definitionId)).ConfigureAwait(false) == 0)
         {
@@ -75,7 +87,10 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
             ("name", run.TestName), ("version", run.TestVersion), ("started", run.Started.UtcTicks), ("startedText", Iso(run.Started)),
             ("ended", run.Ended.UtcTicks), ("endedText", Iso(run.Ended)), ("rating", RatingText(run.Rating)), ("werror", run.OperatorAbort ? 1L : 0L),
             ("dev", run.IsDevelopmentRun ? 1L : 0L), ("app", run.Application), ("stored", DateTimeOffset.UtcNow.UtcTicks)).ConfigureAwait(false);
+    }
 
+    private static async Task StoreEventsAsync(Writer w, ResultRun run)
+    {
         var prompts = new Dictionary<string, string?>(StringComparer.Ordinal);
         foreach (var e in run.Events)
         {
@@ -119,11 +134,6 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
                     ("unit", e.Unit), ("low", Dbl(e.LowLimit)), ("high", Dbl(e.HighLimit)), ("rating", e.Rating is { } r2 ? RatingText(r2) : null)).ConfigureAwait(false);
             }
         }
-
-        await StoreWaveformsAsync(w, run).ConfigureAwait(false);
-
-        await tx.CommitAsync(cancellationToken).ConfigureAwait(false);
-        AfterCommit?.Invoke(run.RunId);
     }
 
     private static async Task StoreWaveformsAsync(Writer w, ResultRun run)

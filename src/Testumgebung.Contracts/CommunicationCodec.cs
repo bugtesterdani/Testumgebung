@@ -25,22 +25,28 @@ public static class CommText
                 sb.Append(c);
                 continue;
             }
-            var n = text[++i];
-            switch (n)
-            {
-                case 'r': sb.Append('\r'); break;
-                case 'n': sb.Append('\n'); break;
-                case 't': sb.Append('\t'); break;
-                case '0': sb.Append('\0'); break;
-                case '\\': sb.Append('\\'); break;
-                case 'x' when i + 2 < text.Length && byte.TryParse(text.AsSpan(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b):
-                    sb.Append((char)b);
-                    i += 2;
-                    break;
-                default: sb.Append('\\').Append(n); break;
-            }
+            AppendEscape(sb, text, ref i);
         }
         return Latin1.GetBytes(sb.ToString());
+    }
+
+    // Consumes one escape; unknown or incomplete escapes remain literal.
+    private static void AppendEscape(StringBuilder sb, string text, ref int i)
+    {
+        var n = text[++i];
+        switch (n)
+        {
+            case 'r': sb.Append('\r'); break;
+            case 'n': sb.Append('\n'); break;
+            case 't': sb.Append('\t'); break;
+            case '0': sb.Append('\0'); break;
+            case '\\': sb.Append('\\'); break;
+            case 'x' when i + 2 < text.Length && byte.TryParse(text.AsSpan(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b):
+                sb.Append((char)b);
+                i += 2;
+                break;
+            default: sb.Append('\\').Append(n); break;
+        }
     }
 
     public static byte[] ParseHex(string text)

@@ -596,31 +596,49 @@ public sealed class SimulatedCanDut : ICanAdapter
         switch (d[0] >> 4)
         {
             case 0:
-                {
-                    var length = d[0] & 0x0F;
-                    var start = 1;
-                    if (length == 0 && d.Length > 8) { length = d[1]; start = 2; }
-                    if (length > 0 && start + length <= d.Length) Process(e, d.AsSpan(start, length).ToArray());
-                    break;
-                }
+                ProcessSingleFrame(e, d);
+                break;
             case 1:
-                e.IncomingLength = (d[0] & 0x0F) << 8 | d[1];
-                e.Incoming = [.. d.Skip(2).Take(e.IncomingLength)];
-                Reply(e, [0x30, 0x00, 0x00]);
+                BeginIncomingMessage(e, d);
                 break;
             case 2 when e.Incoming is not null:
-                e.Incoming.AddRange(d.Skip(1).Take(e.IncomingLength - e.Incoming.Count));
-                if (e.Incoming.Count >= e.IncomingLength)
-                {
-                    var request = e.Incoming.ToArray();
-                    e.Incoming = null;
-                    Process(e, request);
-                }
+                ContinueIncomingMessage(e, d);
                 break;
             case 3 when (d[0] & 0x0F) == 0:
                 while (e.PendingConsecutive.TryDequeue(out var cf)) Reply(e, [.. cf]);
                 break;
         }
+    }
+
+    private void ProcessSingleFrame(UdsEndpoint endpoint, byte[] data)
+    {
+        var length = data[0] & 0x0F;
+        var start = 1;
+        if (length == 0 && data.Length > 8)
+        {
+            length = data[1];
+            start = 2;
+        }
+        if (length > 0 && start + length <= data.Length)
+            Process(endpoint, data.AsSpan(start, length).ToArray());
+    }
+
+    private void BeginIncomingMessage(UdsEndpoint endpoint, byte[] data)
+    {
+        endpoint.IncomingLength = (data[0] & 0x0F) << 8 | data[1];
+        endpoint.Incoming = [.. data.Skip(2).Take(endpoint.IncomingLength)];
+        Reply(endpoint, [0x30, 0x00, 0x00]);
+    }
+
+    private void ContinueIncomingMessage(UdsEndpoint endpoint, byte[] data)
+    {
+        var incoming = endpoint.Incoming!;
+        incoming.AddRange(data.Skip(1).Take(endpoint.IncomingLength - incoming.Count));
+        if (incoming.Count < endpoint.IncomingLength) return;
+
+        var request = incoming.ToArray();
+        endpoint.Incoming = null;
+        Process(endpoint, request);
     }
 
     private void Process(UdsEndpoint e, byte[] request)
