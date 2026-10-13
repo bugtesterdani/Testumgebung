@@ -1,0 +1,5 @@
+Microsoft.Extensions.Options 9.0.4
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/dotnet/runtime

@@ -1,0 +1,5 @@
+xunit.analyzers 1.18.0
+Copyright (C) .NET Foundation
+Authors: jnewkirk,bradwilson,marcind
+Declared license: Apache-2.0
+Repository: https://github.com/xunit/xunit.analyzers

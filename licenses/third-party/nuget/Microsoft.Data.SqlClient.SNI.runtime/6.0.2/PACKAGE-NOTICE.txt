@@ -1,0 +1,5 @@
+Microsoft.Data.SqlClient.SNI.runtime 6.0.2
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: Microsoft proprietary redistributable terms (LICENSE.txt)
+Repository: 

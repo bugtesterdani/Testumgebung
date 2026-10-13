@@ -65,6 +65,16 @@ Copy-Item (Join-Path $root "docs\*.md") $docs
 Copy-Item (Join-Path $root "docs\handbuch") $docs -Recurse -Force
 Copy-Item (Join-Path $root "docs\pilot") $docs -Recurse -Force
 Copy-Item (Join-Path $root "docs\sql") $docs -Recurse -Force
+if (Test-Path (Join-Path $root 'docs/licensing')) {
+    Copy-Item (Join-Path $root 'docs/licensing') $docs -Recurse -Force
+}
+# Original third-party texts must accompany redistributed dependencies.
+if (Test-Path (Join-Path $root 'licenses')) {
+    Copy-Item (Join-Path $root 'licenses') $publish -Recurse -Force
+}
+foreach ($notice in @('THIRD-PARTY-NOTICES.md','LICENSE-STATUS.md','LICENSE','LICENSE.md','LICENSE.txt')) {
+    if (Test-Path (Join-Path $root $notice)) { Copy-Item (Join-Path $root $notice) $publish -Force }
+}
 if (Test-Path (Join-Path $root 'output/pdf/Testumgebung-Gesamthandbuch.pdf')) {
     Copy-Item (Join-Path $root 'output/pdf/Testumgebung-Gesamthandbuch.pdf') $docs -Force
 }

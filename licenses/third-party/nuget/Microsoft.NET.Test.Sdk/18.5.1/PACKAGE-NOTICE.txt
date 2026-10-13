@@ -1,0 +1,5 @@
+Microsoft.NET.Test.Sdk 18.5.1
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/microsoft/vstest

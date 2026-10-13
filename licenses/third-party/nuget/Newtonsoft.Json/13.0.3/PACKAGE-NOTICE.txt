@@ -1,0 +1,5 @@
+Newtonsoft.Json 13.0.3
+Copyright © James Newton-King 2008
+Authors: James Newton-King
+Declared license: MIT
+Repository: https://github.com/JamesNK/Newtonsoft.Json

@@ -2,6 +2,8 @@
 
 GitHub-Einrichtung, automatische Wiki-Dokumentation und signierte MSIX-Releases: [GitHub-Anleitung](docs/github.md). Die Dokumentation wird aus `docs/` erzeugt; das Repository bleibt zunächst privat.
 
+Lizenz- und Veröffentlichungsprüfung: [Prüfbericht](docs/licensing/pruefbericht.md), [vollständiges Abhängigkeitsinventar](docs/licensing/inventar.md), [Drittanbieterhinweise](THIRD-PARTY-NOTICES.md) und [Status der eigenen Lizenz](LICENSE-STATUS.md). Die öffentliche Freigabe ist noch nicht rechtlich geklärt.
+
 Codeabdeckung und Wartbarkeit je Modul: `Report-Coverage.cmd` erstellt einen datierten HTML-Bericht. Anleitung und Messgrenzen: [Testabdeckung und Wartbarkeit](docs/testabdeckung-und-wartbarkeit.md).
 
 Aktueller Betriebsmodus: standardmäßig Produktivbetrieb; lokale simulierte Entwicklung ausdrücklich mit `--development` starten. Details zu Zugang, Fehlerprotokollen und externen Laufzeitdateien: [Betriebsmodus](docs/betriebsmodus-und-laufzeit.md). Der mitgelieferte C++-Compiler und die native GDB-Inspektion sind unter [Portable C++-Toolchain](docs/portable-cpp-toolchain.md) beschrieben.

@@ -1,0 +1,2 @@
+# Preserve original upstream license bytes and their recorded SHA256 on Windows.
+/licenses/** -text

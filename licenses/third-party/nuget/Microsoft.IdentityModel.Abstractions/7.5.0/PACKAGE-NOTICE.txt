@@ -1,0 +1,5 @@
+Microsoft.IdentityModel.Abstractions 7.5.0
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet

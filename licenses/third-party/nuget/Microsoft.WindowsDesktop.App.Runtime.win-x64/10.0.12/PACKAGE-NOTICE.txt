@@ -1,0 +1,5 @@
+runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 10.0.12
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/dotnet/dotnet

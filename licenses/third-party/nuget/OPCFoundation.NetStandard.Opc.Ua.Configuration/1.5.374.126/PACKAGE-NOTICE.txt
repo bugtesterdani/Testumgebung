@@ -1,0 +1,5 @@
+OPCFoundation.NetStandard.Opc.Ua.Configuration 1.5.374.126
+Copyright © 2004-2024 OPC Foundation, Inc
+Authors: OPC Foundation
+Declared license: MIT
+Repository: https://github.com/OPCFoundation/UA-.NETStandard

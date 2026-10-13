@@ -1,0 +1,5 @@
+Microsoft.SqlServer.Server 1.0.0
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/dotnet/sqlclient

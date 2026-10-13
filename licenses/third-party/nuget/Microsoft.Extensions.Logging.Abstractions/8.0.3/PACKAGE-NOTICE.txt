@@ -1,0 +1,5 @@
+Microsoft.Extensions.Logging.Abstractions 8.0.3
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/dotnet/runtime

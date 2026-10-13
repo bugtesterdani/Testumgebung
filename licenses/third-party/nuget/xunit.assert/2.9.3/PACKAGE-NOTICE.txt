@@ -1,0 +1,5 @@
+xunit.assert 2.9.3
+Copyright (C) .NET Foundation
+Authors: jnewkirk,bradwilson
+Declared license: Apache-2.0
+Repository: https://github.com/xunit/xunit

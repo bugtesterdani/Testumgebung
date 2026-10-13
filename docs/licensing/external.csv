@@ -1,0 +1,10 @@
+﻿name,file,version,used_in,license
+NI-DAQmx,nicaiu.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Daqmx.cs,NI license; driver independently installed
+VISA,visa64.dll / nivisa64 / ktvisa64,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Io.cs,NI/Keysight implementation-specific license
+PEAK PCAN,PCANBasic.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Can.cs,PEAK SDK/driver license
+Kvaser CAN,canlib32.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Can.cs,Kvaser CANlib license
+Vector CAN,vxlapi64.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Can.cs,Vector XL Driver Library license
+PEAK LIN,PLinApi.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Lin.cs,PEAK PLIN API license
+LabVIEW VI DLL,User-selected .dll,Externally installed; not pinned and not bundled,src/Testumgebung.Workers/LabViewGlue.cs,User/vendor DLL and required LabVIEW runtime license
+User .NET DLLs,User-imported .dll,Externally installed; not pinned and not bundled,src/Testumgebung.Workers.CSharp/Program.cs,License checked by project owner for each imported DLL
+System Win32,kernel32.dll and OS libraries,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Transports.cs,Windows OS component; not separately redistributed

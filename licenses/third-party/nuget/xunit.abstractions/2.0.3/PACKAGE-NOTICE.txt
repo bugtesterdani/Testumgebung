@@ -1,0 +1,5 @@
+xunit.abstractions 2.0.3
+Copyright not specified in nuspec; see authors and upstream
+Authors: James Newkirk,Brad Wilson
+Declared license: UNRESOLVED historical license URL; current xUnit Apache-2.0 is not version-specific proof
+Repository: 

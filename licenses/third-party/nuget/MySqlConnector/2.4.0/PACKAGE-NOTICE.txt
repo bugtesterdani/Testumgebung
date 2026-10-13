@@ -1,0 +1,5 @@
+MySqlConnector 2.4.0
+Copyright 2016–2024 Bradley Grainger
+Authors: Bradley Grainger
+Declared license: MIT
+Repository: https://github.com/mysql-net/MySqlConnector.git

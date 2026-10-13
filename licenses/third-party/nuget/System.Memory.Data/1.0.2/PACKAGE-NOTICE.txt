@@ -1,0 +1,5 @@
+System.Memory.Data 1.0.2
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/Azure/azure-sdk-for-net

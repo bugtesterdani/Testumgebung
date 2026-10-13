@@ -1,0 +1,5 @@
+Azure.Identity 1.11.4
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/Azure/azure-sdk-for-net

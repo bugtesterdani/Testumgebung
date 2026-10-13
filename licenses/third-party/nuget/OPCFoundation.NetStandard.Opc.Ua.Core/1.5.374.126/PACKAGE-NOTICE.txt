@@ -1,0 +1,5 @@
+OPCFoundation.NetStandard.Opc.Ua.Core 1.5.374.126
+Copyright © 2004-2024 OPC Foundation, Inc
+Authors: OPC Foundation
+Declared license: GPL-2.0-only for nonmembers / RCL for corporate members; mixed source headers
+Repository: https://github.com/OPCFoundation/UA-.NETStandard
