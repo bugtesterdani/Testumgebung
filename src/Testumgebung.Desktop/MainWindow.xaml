@@ -24,6 +24,7 @@
                 <TextBlock Text="{Binding ViewTitle}" Foreground="White" FontSize="20" VerticalAlignment="Center" />
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,20,0" VerticalAlignment="Center">
+                <Button Content="Lizenzen &amp; Quellen" Click="ShowLicenses" Background="Transparent" Foreground="White" Padding="8,4" Margin="0,0,12,0" />
                 <ToggleButton x:Name="UserToggle" Background="Transparent" BorderThickness="0" Cursor="Hand" Foreground="White">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource Icon}" Text="&#xE77B;" Foreground="White" Margin="0,0,8,0" />

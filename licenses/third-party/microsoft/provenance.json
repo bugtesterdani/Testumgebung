@@ -1,0 +1,28 @@
+[
+  {
+    "url": "https://dotnet.microsoft.com/en-us/dotnet_library_license.htm",
+    "retrieved": "2026-10-13",
+    "encoding": "cp1252",
+    "original": "dotnet-library.html",
+    "original_sha256": "0f69be2c8ac44c3980047664c3347ff22cba5842dc9d8b0a88a4f0914645a780",
+    "readable": "dotnet-library.txt",
+    "readable_sha256": "412203c598ba1df3b0a82bb49dacc0f7c989a5011b7ced146cbf03467f9a9222",
+    "transformation": "HTML text extraction; original HTML retained"
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/legal/windows-sdk/license",
+    "retrieved": "2026-10-13",
+    "encoding": "utf-8",
+    "original": "windows-sdk.html",
+    "original_sha256": "2dc27de28d82f4d0d2f471899c818a5e9787de21061774390204170d4207d77d",
+    "readable": "windows-sdk.txt",
+    "readable_sha256": "574a1547d1a3954a24a25abbc5a585fc8fc214b905a67bd4dd214c2e328c5152",
+    "transformation": "HTML text extraction; original HTML retained"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/dotnet/core/main/license-information-windows.md",
+    "retrieved": "2026-10-13",
+    "original": "dotnet-windows-mapping.md",
+    "original_sha256": "3bdf7142d570f11780d1a5fcb6cbe47f5cf4a15bc634acf8db93fe3be8837119"
+  }
+]

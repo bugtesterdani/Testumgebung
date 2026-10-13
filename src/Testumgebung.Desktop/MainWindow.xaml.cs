@@ -121,6 +121,8 @@ public partial class MainWindow : Window
     private void UpdateClock()
         => ClockText.Text = DateTime.Now.ToString("ddd, dd.MM.yyyy   HH:mm", CultureInfo.GetCultureInfo("de-DE"));
 
+    private void ShowLicenses(object sender, RoutedEventArgs e) => LicenseInformation.Show(this);
+
     private void ClosePopup(object sender, RoutedEventArgs e) => UserToggle.IsChecked = false;
 
     private bool _closeReady;

@@ -39,3 +39,11 @@ Der Publisher wird aus dem Zertifikat übernommen. Der Wechsel vom Test-Publishe
 
 Referenzen: [Microsoft: MSIX-Signierung](https://learn.microsoft.com/en-us/windows/msix/package/signing-package-overview), [Paketmanifest für Desktopanwendungen](https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-manual-conversion).
 
+# Lizenzunterlagen bei Weitergabe
+
+Der Build erzeugt neben dem Bundle ein gleichversioniertes `Licenses-and-Sources.zip`
+und `PUBLICATION.md`. Beide gehören mit den Lizenztexten, Prüfnachweisen und
+Prüfsummen zum Download. In der Anwendung öffnet **Lizenzen & Quellen** jederzeit
+die Hinweise und den Ordner mit Originaltexten und passenden Toolchain-Quellen.
+Details: [Öffentliche Veröffentlichung](oeffentliche-veroeffentlichung.md).
+

@@ -124,7 +124,8 @@ try {
 [IO.File]::WriteAllBytes((Join-Path $out 'Testumgebung-Signer.cer'),$cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert))
 $cert.Dispose()
 Copy-Item (Join-Path $root 'docs\msix-release.md') (Join-Path $out 'INSTALLATION.md')
-Get-ChildItem $out -File | Where-Object Extension -in '.msixbundle','.cer' | ForEach-Object {
+& (Join-Path $PSScriptRoot 'create-release-materials.ps1') -Layout $layout -Output $out -Version $Version
+Get-ChildItem $out -File | Where-Object Extension -in '.msixbundle','.cer','.zip' | ForEach-Object {
     "$( (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)"
 } | Set-Content (Join-Path $out 'SHA256SUMS.txt') -Encoding utf8
 Write-Host "Fertig: $bundle"

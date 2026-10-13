@@ -3,6 +3,12 @@ licenses/third-party/build-tools/actions-checkout/LICENSE,1097,3e855ffa704114a51
 licenses/third-party/build-tools/actions-setup-dotnet/LICENSE,1096,7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32
 licenses/third-party/build-tools/actions-setup-python/LICENSE,1096,7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32
 licenses/third-party/build-tools/actions-upload-artifact/LICENSE,1097,3e855ffa704114a51628ef8f0bf3aeb41728adf9d9070e263bf58aa5640b0eb5
+licenses/third-party/microsoft/dotnet-library.html,31602,0f69be2c8ac44c3980047664c3347ff22cba5842dc9d8b0a88a4f0914645a780
+licenses/third-party/microsoft/dotnet-library.txt,9564,412203c598ba1df3b0a82bb49dacc0f7c989a5011b7ced146cbf03467f9a9222
+licenses/third-party/microsoft/dotnet-windows-mapping.md,1500,3bdf7142d570f11780d1a5fcb6cbe47f5cf4a15bc634acf8db93fe3be8837119
+licenses/third-party/microsoft/provenance.json,1205,8c802508cf38fea4e704521cd1816d4ac44a9081f1313cebf6d1add132400a00
+licenses/third-party/microsoft/windows-sdk.html,49044,2dc27de28d82f4d0d2f471899c818a5e9787de21061774390204170d4207d77d
+licenses/third-party/microsoft/windows-sdk.txt,27597,574a1547d1a3954a24a25abbc5a585fc8fc214b905a67bd4dd214c2e328c5152
 licenses/third-party/nuget/Azure.Core/1.38.0/PACKAGE-NOTICE.txt,161,2cad49236bf6efa3a0e7c53184badf5640a73728d541268d75726b1775fc7f7a
 licenses/third-party/nuget/Azure.Core/1.38.0/SPDX-MIT.txt,1078,b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5
 licenses/third-party/nuget/Azure.Identity/1.11.4/PACKAGE-NOTICE.txt,165,dcb52570b0908d399960f0d677d1aed0ad9b00f7a9a8234625866fb3d8ded5bc
@@ -122,7 +128,7 @@ licenses/third-party/nuget/Microsoft.IdentityModel.Tokens/7.5.0/SPDX-MIT.txt,107
 licenses/third-party/nuget/Microsoft.NET.Test.Sdk/18.5.1/PACKAGE-NOTICE.txt,166,0c34d7c4de72a8bb0cbffd24f2263f64c17e0a1106cdc26a8d43592c13486ca9
 licenses/third-party/nuget/Microsoft.NET.Test.Sdk/18.5.1/SPDX-MIT.txt,1078,b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5
 licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/LICENSE.TXT,1139,d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b
-licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt,191,2162ab5b83be99d7128c7cc76308e17a0a108863d306404f88f556d59a52832a
+licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt,265,54f3e02572e56be265d8e275f856ace40ca587d078f5b8e085b605ba2b956276
 licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/SPDX-MIT.txt,1078,b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5
 licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/THIRD-PARTY-NOTICES.TXT,78041,6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21
 licenses/third-party/nuget/Microsoft.SqlServer.Server/1.0.0/PACKAGE-NOTICE.txt,169,ca62502e1a75b3bbd62ea112342eac0589c84d2522859731527305bcfa1332af
@@ -133,7 +139,7 @@ licenses/third-party/nuget/Microsoft.TestPlatform.TestHost/18.5.1/PACKAGE-NOTICE
 licenses/third-party/nuget/Microsoft.TestPlatform.TestHost/18.5.1/SPDX-MIT.txt,1078,b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5
 licenses/third-party/nuget/Microsoft.TestPlatform.TestHost/18.5.1/ThirdPartyNotices.txt,4054,e2ce7628e0f67d0d724eea9d9286a6938bf1eedd253fc84b23d72ae54778a5f7
 licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/LICENSE,1137,a89886665765362eb77e0f8e26602c924520041d1711b2eedc136434fe4d01ab
-licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt,198,61526794641da8e2c8d2d7dc915bf014a12d4dfff6e0921c48c7e45dd8de92bf
+licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt,272,915e4e4b4066a78e1124666f9ad8b68398b777819f6201dd17da2046d9c02ed6
 licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/SPDX-MIT.txt,1078,b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5
 licenses/third-party/nuget/MySqlConnector/2.4.0/PACKAGE-NOTICE.txt,168,d9ad5a02bb637d425efd20a3da809ee90317a9156cc22b949fb470d8406573ad
 licenses/third-party/nuget/MySqlConnector/2.4.0/SPDX-MIT.txt,1078,b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5

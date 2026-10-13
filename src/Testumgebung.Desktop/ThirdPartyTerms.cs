@@ -10,15 +10,23 @@ internal static class ThirdPartyTerms
     internal static bool Accept()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-TERMS.md");
-        // Development outputs contain no redistributed Python runtime.
-        if (!File.Exists(path)) return !File.Exists(Path.Combine(AppContext.BaseDirectory, "workers", "python", "runtime", "python.exe"));
-        var bytes = File.ReadAllBytes(path);
+        var bundledRuntime = File.Exists(Path.Combine(AppContext.BaseDirectory, "coreclr.dll"))
+            || File.Exists(Path.Combine(AppContext.BaseDirectory, "workers", "python", "runtime", "python.exe"));
+        if (!File.Exists(path)) return !bundledRuntime;
+        byte[] bytes;
+        try { bytes = System.Text.Encoding.UTF8.GetBytes(ReadConsentText(AppContext.BaseDirectory)); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MessageBox.Show("Laufzeitbedingungen fehlen oder sind nicht lesbar.\n" + ex.Message, "Laufzeitbedingungen");
+            return false;
+        }
         var hash = Convert.ToHexString(SHA256.HashData(bytes));
         var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "licenses");
-        var receipt = Path.Combine(folder, "microsoft-python-terms.sha256");
-        if (IsCurrentReceipt(receipt, hash)) return true;
+        var receipt = Path.Combine(folder, "microsoft-runtime-terms.sha256");
+        try { if (IsCurrentReceipt(receipt, hash)) return true; }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* Ask again if the previous receipt cannot be read. */ }
         var text = System.Text.Encoding.UTF8.GetString(bytes);
-        var window = new Window { Title = "Bedingungen der Windows-Python-Laufzeit", Width = 780, Height = 600,
+        var window = new Window { Title = "Microsoft-Laufzeitbedingungen (Python, .NET und WPF)", Width = 780, Height = 600,
             MinWidth = 500, MinHeight = 350, WindowStartupLocation = WindowStartupLocation.CenterScreen };
         var panel = new DockPanel { Margin = new Thickness(20) };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
@@ -45,5 +53,16 @@ internal static class ThirdPartyTerms
     }
     internal static bool IsCurrentReceipt(string path, string hash)
         => File.Exists(path) && File.ReadAllText(path).Trim() == hash;
+
+    internal static string ReadConsentText(string folder)
+    {
+        var paths = new[] { "THIRD-PARTY-TERMS.md", "licenses/third-party/microsoft/dotnet-library.txt",
+            "licenses/third-party/microsoft/windows-sdk.txt" };
+        var texts = paths.Select(p => File.ReadAllText(Path.Combine(folder, p))).ToList();
+        var python = Path.Combine(folder, "workers", "python", "runtime", "LICENSE.txt");
+        if (File.Exists(Path.Combine(folder, "workers", "python", "runtime", "python.exe")))
+            texts.Add(File.ReadAllText(python));
+        return string.Join("\n\n--------------------\n\n", texts);
+    }
 
 }

@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '10.0.401'
@@ -43,6 +44,11 @@ jobs:
           $v=[version]$version
           if (@($v.Major,$v.Minor,$v.Build,$v.Revision | Where-Object { $_ -gt 65535 }).Count) { throw 'MSIX-Version überschreitet 65535.' }
           "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Git-Historie auf ausgewählte Geheimnismuster prüfen
+        shell: pwsh
+        run: |
+          python build/check-publication.py
+          if ($LASTEXITCODE) { throw 'Veröffentlichungsprüfung meldet möglicherweise geheime Dateien oder Tokens.' }
       - name: Toolchains und PDF bereitstellen
         shell: pwsh
         run: |
@@ -83,9 +89,11 @@ jobs:
         with:
           name: MSIX-${{ steps.version.outputs.version }}
           path: |
+            artifacts/msix/${{ steps.version.outputs.version }}/LICENSE
             artifacts/msix/${{ steps.version.outputs.version }}/*.msixbundle
             artifacts/msix/${{ steps.version.outputs.version }}/*.cer
             artifacts/msix/${{ steps.version.outputs.version }}/*.txt
+            artifacts/msix/${{ steps.version.outputs.version }}/*.zip
             artifacts/msix/${{ steps.version.outputs.version }}/*.json
             artifacts/msix/${{ steps.version.outputs.version }}/*.md
             artifacts/msix/${{ steps.version.outputs.version }}/tests/**
@@ -109,7 +117,7 @@ jobs:
         run: |
           gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "MSIX-$env:RELEASE_VERSION" --dir release
           if ($LASTEXITCODE) { throw 'Release-Artefakt konnte nicht heruntergeladen werden.' }
-          $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md' }
+          $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
           if (-not ($assets | Where-Object Extension -EQ '.msixbundle')) { throw 'MSIX-Bundle fehlt.' }
-          gh release create $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --verify-tag --title "Testumgebung $env:RELEASE_VERSION" --generate-notes @($assets.FullName)
+          gh release create $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "Testumgebung $env:RELEASE_VERSION" --generate-notes @($assets.FullName)
           if ($LASTEXITCODE) { throw 'Release-Erstellung fehlgeschlagen.' }

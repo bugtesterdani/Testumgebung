@@ -3,6 +3,13 @@
 Stand: 13.10.2026. Ausgangspunkt: [historischer Prüfbericht](pruefbericht.md).
 Der Rechteinhaber hat MIT für seinen eigenen Code ausdrücklich gewählt.
 
+**Ergänzende Microsoft-Prüfung:** Die [Vertriebsauswertung](microsoft-vertrieb.md)
+benennt konkrete zusätzliche .NET-/SDK-Verträge und eine Lücke im bisher nur
+auf Python begrenzten Zustimmungsumfang. Der bisherige technische Prüferfolg
+ist deshalb keine vollständige Microsoft-Vertriebsfreigabe. Originaltexte, Zuordnung und erweiterte
+Zustimmung sind nun im Projekt ergänzt. Vertragliche Pflichten bleiben;
+siehe [aktueller Vorbereitungsstand](../github-veroeffentlichung.md).
+
 | Befund | Maßnahme | Status |
 | --- | --- | --- |
 | Eigene Lizenz fehlt | Root-LICENSE mit MIT und Rechteinhaber Daniel (bugtesterdani); Drittanbieter getrennt | umgesetzt |

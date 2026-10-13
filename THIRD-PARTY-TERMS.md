@@ -1,11 +1,21 @@
 # Nutzungs- und Weitergabebedingungen der Microsoft-Binäranteile
 
-Stand: 13.10.2026. Diese Bedingungen betreffen ausschließlich die Microsoft
-Distributable Code-Anteile der mitgelieferten Windows-Python-Binärdistribution.
+Stand: 13.10.2026. Diese Bedingungen betreffen ausschließlich die proprietären
+Microsoft-Anteile der mitgelieferten Windows-Python- und .NET-/WPF-Laufzeiten.
 Sie ändern die MIT-Lizenz des eigenen Codes und die Rechte an Python,
 GNU-/LGPL-Werkzeugen und anderen Open-Source-Komponenten nicht.
 
-Mit der Nutzung dieser Binäranteile stimmst du folgenden Bedingungen zu:
+Mit deiner Zustimmung akzeptierst du für diese Anteile die jeweils zugehörigen
+Microsoft-Originalbedingungen. Die vollständigen Texte werden im selben Dialog
+angezeigt. Diese Zusammenfassung ersetzt sie nicht. Die Zuordnung lautet:
+
+- coreclr.dll (auch in den Workern), PresentationNative_cor3.dll,
+  wpfgfx_cor3.dll und vcruntime140_cor3.dll: .NET Library License.
+- D3DCompiler_47_cor3.dll: Windows SDK License.
+- Microsoft-Anteile in Python: zusätzliche Windows-Bedingungen im Python-LICENSE.
+- Andere Open-Source-Komponenten behalten ihre gesonderten Lizenzen.
+
+Für die betroffenen Binäranteile gelten insbesondere folgende Schutzbedingungen:
 
 - Copyright-, Marken-, Patent- und sonstige Rechtehinweise von Microsoft und
   seinen Lieferanten bleiben erhalten und dürfen nicht entfernt oder verändert werden.
@@ -31,6 +41,19 @@ Originaltext `licenses/third-party/python/LICENSE.txt`, Abschnitt
 „Additional Conditions for this Windows binary build“. Er wird unverändert mitgeliefert.
 Die übrigen Originaltexte sind in `licenses/third-party/` abgelegt und in
 `THIRD-PARTY-NOTICES.md` zugeordnet. Die native SQL-SNI-Bibliothek wird nicht mitgeliefert.
+
+Die vollständigen .NET-/SDK-Verträge stehen unter `licenses/third-party/microsoft/`
+als Original-HTML und als lesbare Textextraktion; Herkunft und Prüfsummen sind
+in `provenance.json` dokumentiert. Die Originalverträge sind maßgeblich.
+
+Für Weiterverteiler: Die Originalverträge enthalten zusätzlich Vertriebsauflagen,
+darunter Freistellungs-/Verteidigungspflichten gegenüber Microsoft, Exportregeln,
+gegebenenfalls Datenschutzpflichten und Beschränkungen für ausgeschlossene
+Lizenzen. Bei der .NET Library License ist die Freistellung für Ansprüche allein
+wegen unverändertem Distributable Code ausgenommen. Diese Verpflichtungen werden
+nicht durch die MIT-Lizenz des eigenen Codes aufgehoben. Wer das Paket weitergibt,
+muss die einschlägigen Original-Vertriebsbedingungen selbst erfüllen und auch
+nachfolgenden Verteilern und externen Nutzern geeignete Bedingungen vorlegen.
 
 Diese Datei ist eine technische Umsetzung der genannten Weitergabepflicht;
 sie ersetzt keine verbindliche rechtliche Prüfung ihrer Durchsetzbarkeit.

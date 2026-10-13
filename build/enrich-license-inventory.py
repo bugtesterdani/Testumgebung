@@ -95,6 +95,9 @@ EXTERNAL=[
 def normalize_license(row):
     name=row['name'];value=row['metadata'].get('license','UNRESOLVED')
     expected=None
+    if name in ('runtimepack.Microsoft.NETCore.App.Runtime.win-x64','runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64'):
+        if row['version']!='10.0.12':raise ValueError('Windows runtime version needs a new license review: '+row['version'])
+        return 'MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution'
     if name.startswith('OPCFoundation.NetStandard.Opc.Ua.') and row['version']=='1.5.378.182':
         expected='3927c73bc0abbd9327364bcfdcbb7d8a7be50c05c2948fcfb49a45b165bda737'
     elif name=='BitFaster.Caching' and row['version']=='2.6.0':
@@ -213,6 +216,7 @@ def pip_vendors():
 def write_notices(data):
     lines=['# Drittanbieterhinweise - Testumgebung','','Stand: 13.10.2026. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.','',
       'Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden nicht rückwirkend bereinigt. Zusätzliche Bedingungen stehen in THIRD-PARTY-TERMS.md.','',
+      'Microsoft-Windows-Ausnahmen: coreclr.dll, PresentationNative_cor3.dll, wpfgfx_cor3.dll und vcruntime140_cor3.dll unterliegen der .NET Library License; D3DCompiler_47_cor3.dll der Windows SDK License. Originalverträge und lesbare Texte: `licenses/third-party/microsoft/`. Die MIT-Paketdeklaration ersetzt diese Zuordnung nicht.','',
       '## NuGet und .NET-Laufzeiten','']
     for row in sorted(data['packages'].values(),key=lambda r:r['name'].lower()):
         if not row['bundled_manifests']:continue
@@ -257,7 +261,7 @@ def write_inventory(data):
     lines+=['','## Genauigkeit und Grenzen','',
       'Numerische Versionen werden nur genannt, wenn sie im Paket, im Quellarchiv, in einer PE-Versionsressource oder im versionsgenauen Buildskript belegt sind. `UNRESOLVED` bedeutet, dass kein belastbarer Versionsnachweis vorliegt. Für extern installierte Software lässt sich keine Version aus dem Projekt erzwingen.','',
       'Manche EXEs sind Alias-Launcher ohne eigene Versionsressource. Bei GNU-Utilities, Headern und statischen Bibliotheken beruht die Komponentenzuordnung auf dem unveränderten Kit und seinen Quellen; solche Zuordnungen sind in `attribution_evidence` als abgeleitet markiert. Die genaue Unterlizenz wird durch die Originaltexte und Quellkopfzeilen bestimmt, nicht durch den allgemeinen Kit-Namen.','',
-      'Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für das aktuelle GitHub-MSIX 1.0.12.3. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.']
+      'Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für den oben genannten inventarisierten MSIX-Stand. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.']
     (REPORT/'inventar.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
 
 def main():
@@ -266,6 +270,16 @@ def main():
     if not match:raise ValueError('Release version cannot be established from selected bundle')
     data['release_version']=match.group(1)
     attach_usage(data);map_manifests(data)
+    for row in data['binaries']:
+        if row['component'].startswith('runtimepack.'):
+            row['license']='MIT'  # Microsoft's Windows mapping specifies all remaining files as MIT.
+            name=Path(row['path']).name
+            if name in ('coreclr.dll','PresentationNative_cor3.dll','wpfgfx_cor3.dll','vcruntime140_cor3.dll'):
+                row['license']='Microsoft .NET Library License'
+                row['attribution_evidence']+='; licenses/third-party/microsoft/dotnet-windows-mapping.md'
+            elif name=='D3DCompiler_47_cor3.dll':
+                row['license']='Microsoft Windows SDK License'
+                row['attribution_evidence']+='; licenses/third-party/microsoft/dotnet-windows-mapping.md'
     for row in data['packages'].values():
         if row['name']=='xunit.abstractions':
             folder=LICENSES/'nuget'/'xunit.abstractions'/row['version']

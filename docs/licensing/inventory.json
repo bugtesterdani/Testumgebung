@@ -4533,7 +4533,7 @@
           },
           {
             "path": "licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt",
-            "sha256": "2162ab5b83be99d7128c7cc76308e17a0a108863d306404f88f556d59a52832a"
+            "sha256": "54f3e02572e56be265d8e275f856ace40ca587d078f5b8e085b605ba2b956276"
           }
         ]
       },
@@ -4544,7 +4544,7 @@
         "workers/csharp/Testumgebung.Workers.CSharp.deps.json",
         "workers/native/Testumgebung.Workers.Native.deps.json"
       ],
-      "license_effective": "MIT",
+      "license_effective": "MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution",
       "code_references": []
     },
     "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12": {
@@ -4581,14 +4581,14 @@
           },
           {
             "path": "licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt",
-            "sha256": "61526794641da8e2c8d2d7dc915bf014a12d4dfff6e0921c48c7e45dd8de92bf"
+            "sha256": "915e4e4b4066a78e1124666f9ad8b68398b777819f6201dd17da2046d9c02ed6"
           }
         ]
       },
       "bundled_manifests": [
         "Testumgebung.Desktop.deps.json"
       ],
-      "license_effective": "MIT",
+      "license_effective": "MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution",
       "code_references": []
     }
   },
@@ -7703,8 +7703,8 @@
       "size": 4614992,
       "sha256": "128aee8c62a673d64739e585e3876b61133571cec83a46240a62581d5465639b",
       "component": "runtimepack.Microsoft.NETCore.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "Testumgebung.Workers.Native.deps.json :: native :: coreclr.dll",
+      "license": "Microsoft .NET Library License",
+      "attribution_evidence": "Testumgebung.Workers.Native.deps.json :: native :: coreclr.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {
@@ -7898,8 +7898,8 @@
       "size": 4741488,
       "sha256": "a05f99734f7c4822fefc12b367af21fd0976ed6608752fb1e1e80b6ece7ecbbb",
       "component": "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: D3DCompiler_47_cor3.dll",
+      "license": "Microsoft Windows SDK License",
+      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: D3DCompiler_47_cor3.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {
@@ -9952,8 +9952,8 @@
       "size": 1235240,
       "sha256": "42e2e543c17e1b37499baf00d956433b8afb655348ec0fae89c926fb7d149b6e",
       "component": "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: PresentationNative_cor3.dll",
+      "license": "Microsoft .NET Library License",
+      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: PresentationNative_cor3.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {
@@ -28880,8 +28880,8 @@
       "size": 124544,
       "sha256": "d5e4d9a3e835fa679450145d6a7d94e36573a509317111904d9b3712c30d9066",
       "component": "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: vcruntime140_cor3.dll",
+      "license": "Microsoft .NET Library License",
+      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: vcruntime140_cor3.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {
@@ -28958,8 +28958,8 @@
       "size": 4614992,
       "sha256": "128aee8c62a673d64739e585e3876b61133571cec83a46240a62581d5465639b",
       "component": "runtimepack.Microsoft.NETCore.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "workers/csharp/Testumgebung.Workers.CSharp.deps.json :: native :: coreclr.dll",
+      "license": "Microsoft .NET Library License",
+      "attribution_evidence": "workers/csharp/Testumgebung.Workers.CSharp.deps.json :: native :: coreclr.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {
@@ -31779,8 +31779,8 @@
       "size": 4614992,
       "sha256": "128aee8c62a673d64739e585e3876b61133571cec83a46240a62581d5465639b",
       "component": "runtimepack.Microsoft.NETCore.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "workers/native/Testumgebung.Workers.Native.deps.json :: native :: coreclr.dll",
+      "license": "Microsoft .NET Library License",
+      "attribution_evidence": "workers/native/Testumgebung.Workers.Native.deps.json :: native :: coreclr.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {
@@ -34613,8 +34613,8 @@
       "size": 1956136,
       "sha256": "501a1cd67d51bb1663870b12af0f8c0ba29b3d37b8b509be896d2aaf32db214a",
       "component": "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12",
-      "license": "MIT",
-      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: wpfgfx_cor3.dll",
+      "license": "Microsoft .NET Library License",
+      "attribution_evidence": "Testumgebung.Desktop.deps.json :: native :: wpfgfx_cor3.dll; licenses/third-party/microsoft/dotnet-windows-mapping.md",
       "component_version": "10.0.12"
     },
     {

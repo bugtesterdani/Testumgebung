@@ -100,8 +100,8 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | OPCFoundation.NetStandard.Opc.Ua.Core | 1.5.378.182 | MIT | . |
 | OPCFoundation.NetStandard.Opc.Ua.Security.Certificates | 1.5.378.182 | MIT | . |
 | OPCFoundation.NetStandard.Opc.Ua.Types | 1.5.378.182 | MIT | . |
-| runtimepack.Microsoft.NETCore.App.Runtime.win-x64 | 10.0.12 | MIT | ., ., ., workers/csharp, workers/native |
-| runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 | 10.0.12 | MIT | . |
+| runtimepack.Microsoft.NETCore.App.Runtime.win-x64 | 10.0.12 | MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution | ., ., ., workers/csharp, workers/native |
+| runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 | 10.0.12 | MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution | . |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.12 | Apache-2.0 | . |
 | SQLitePCLRaw.core | 2.1.12 | Apache-2.0 | . |
 | SQLitePCLRaw.lib.e_sqlite3 | 2.1.12 | Apache-2.0 | . |
@@ -228,4 +228,4 @@ Numerische Versionen werden nur genannt, wenn sie im Paket, im Quellarchiv, in e
 
 Manche EXEs sind Alias-Launcher ohne eigene Versionsressource. Bei GNU-Utilities, Headern und statischen Bibliotheken beruht die Komponentenzuordnung auf dem unveränderten Kit und seinen Quellen; solche Zuordnungen sind in `attribution_evidence` als abgeleitet markiert. Die genaue Unterlizenz wird durch die Originaltexte und Quellkopfzeilen bestimmt, nicht durch den allgemeinen Kit-Namen.
 
-Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für das aktuelle GitHub-MSIX 1.0.12.3. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.
+Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für den oben genannten inventarisierten MSIX-Stand. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.

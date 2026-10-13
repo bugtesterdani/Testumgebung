@@ -17,6 +17,10 @@
   </ItemGroup>
   <!-- Datenbanktreiber (Etappe 6). Der Adapter selbst nutzt nur ADO.NET; hier werden die Provider eingebunden. -->
   <ItemGroup>
+    <None Include="../../licenses/third-party/microsoft/*" Link="licenses/third-party/microsoft/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../../docs/oeffentliche-veroeffentlichung.md" Link="docs/oeffentliche-veroeffentlichung.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../../docs/datenschutz.md" Link="docs/datenschutz.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="../../THIRD-PARTY-TERMS.md" Link="THIRD-PARTY-TERMS.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

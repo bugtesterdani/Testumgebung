@@ -4,6 +4,8 @@ Stand: 13.10.2026. Diese Datei vergibt keine Lizenz für den eigenen Projektcode
 
 Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden nicht rückwirkend bereinigt. Zusätzliche Bedingungen stehen in THIRD-PARTY-TERMS.md.
 
+Microsoft-Windows-Ausnahmen: coreclr.dll, PresentationNative_cor3.dll, wpfgfx_cor3.dll und vcruntime140_cor3.dll unterliegen der .NET Library License; D3DCompiler_47_cor3.dll der Windows SDK License. Originalverträge und lesbare Texte: `licenses/third-party/microsoft/`. Die MIT-Paketdeklaration ersetzt diese Zuordnung nicht.
+
 ## NuGet und .NET-Laufzeiten
 
 ### Azure.Core 1.38.0
@@ -368,7 +370,7 @@ Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden
 
 ### runtimepack.Microsoft.NETCore.App.Runtime.win-x64 10.0.12
 
-- Lizenz: MIT
+- Lizenz: MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
 - Upstream: https://github.com/dotnet/dotnet
@@ -379,7 +381,7 @@ Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden
 
 ### runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 10.0.12
 
-- Lizenz: MIT
+- Lizenz: MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
 - Upstream: https://github.com/dotnet/dotnet

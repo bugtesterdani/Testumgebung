@@ -1,5 +1,5 @@
 runtimepack.Microsoft.NETCore.App.Runtime.win-x64 10.0.12
 © Microsoft Corporation. All rights reserved.
 Authors: Microsoft
-Declared license: MIT
+Declared license: MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution
 Repository: https://github.com/dotnet/dotnet
