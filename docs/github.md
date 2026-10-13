@@ -32,24 +32,15 @@ Das Entwicklungszertifikat wird dadurch nicht zu einem öffentlich vertrauenswü
 
 ## 3. Automatische MSIX-Erstellung
 
-Der Workflow **MSIX-Build und Release** läuft bei jedem Push nach `main`, bei Versionstags und über **Actions → Run workflow**. Er verwendet einen GitHub-Windows-Runner, installiert .NET 10, lädt die fest versionierten Python-/C++-Toolchains mit Prüfsummenprüfung, erzeugt das PDF, führt die Release-Tests aus und erstellt das signierte Bundle.
+Der Workflow **MSIX-Build und Release** läuft für Änderungen an main, Pull Requests und manuelle Entwicklungsbuilds. Das Release-Issue liefert die gemeinsame Basisversion; vollständiger Ablauf: [Releases über Issues](release-ablauf.md).
 
 | Auslöser | Ergebnis |
 | --- | --- |
-| Push nach `main` | Entwicklungsbuild `1.0.13.<Workflow-Laufnummer>` als Actions-Artefakt |
-| Tag `v1.0.14.0` | Bundle `1.0.14.0` und GitHub Release mit MSIX, Zertifikat, Prüfsummen, Installationsanleitung und PDF |
-| Manueller Start | Angegebene vierteilige Version, sonst automatische Entwicklungsbuild-Version; als Actions-Artefakt |
+| Normaler PR oder Merge nach main | Entwicklungsbuild `X.Y.Z.<Laufnummer>`; kein Release |
+| Merge des abschließenden PRs mit `Closes #<Release-Issue>` | Automatischer Tag `vX.Y.Z`, Bundle `X.Y.Z.65535` und Release-Entwurf |
+| Manueller Start | Dreiteilige Basisversion oder aktuelle Issue-Version, mit Buildnummer; kein offizielles Release |
 
-Die Laufnummer ist kein offizieller Release-Zähler. Die aktuelle Entwicklungsbasis `1.0.13` liegt unter dem nächsten offiziellen Release `1.0.14.0`. Bei größer werdenden Versionen die automatische Versionsbasis im Workflow anpassen und für das nächste offizielle Release eine höhere dritte Zahl verwenden. MSIX-Versionsteile dürfen höchstens 65535 sein. Für eine Installation über einen Entwicklungsbuild muss ein offizielles Release eine höhere Version tragen.
-
-Neues offizielles Release erstellen:
-
-```powershell
-git tag v1.0.14.0
-git push origin v1.0.14.0
-```
-
-Eine Version nur einmal verwenden. Die Dateien erscheinen nach erfolgreichem Build unter **Releases**. Entwicklungsartefakte werden 14 Tage gespeichert; Releases bleiben bis zur Löschung erhalten. Laufzeit, Speicher und Downloads können bei privaten Repositories das Actions-Kontingent verbrauchen.
+Die Notes stehen direkt in GitHub und nennen die enthaltenen Issues und PRs. Vertraulich gekennzeichnete Einträge enthalten nur IDs. Mehrere normale Merges sind vor einem Release möglich. Eine neue offizielle Version benötigt ein neues Release-Issue und einen gleichnamigen Milestone. Entwicklungsartefakte bleiben 14 Tage verfügbar; Releases bis zu ihrer Löschung. Der letzte Einrichtungspush ist die Ausnahme; anschließend ist main durch den erforderlichen PR- und Build-Ablauf geschützt.
 
 ## 4. Wiki einrichten
 
@@ -82,7 +73,7 @@ Ausgaben: `output/pdf/Testumgebung-Gesamthandbuch.pdf` und `artifacts/wiki/`. De
 
 Unter **Settings → General → Danger Zone → Change repository visibility** kann der Eigentümer das Repository später öffentlich machen. Dadurch werden Quellcode, Git-Historie, Wiki und Releases öffentlich zugänglich. Vorher Projektbeispiele, Dokumentation, Lizenzentscheidung und verbleibende interne Angaben prüfen. Eine Open-Source-Lizenz wird nicht automatisch gewählt.
 
-Die Signier-Secrets bleiben als Secrets gespeichert. Die Workflows werden durch externe Pull Requests nicht zur Signierung gestartet; der Signierbuild läuft nur bei `main`, Tags oder manueller Ausführung. Schreibrechte zum Repository nur vertrauenswürdigen Personen geben, da Workflow-Änderungen Zugang zu Signier-Secrets ermöglichen können.
+Die Signier-Secrets bleiben als Secrets gespeichert. PR-Builds erhalten den produktiven Signierschlüssel nicht und verwenden ein separates Entwicklungszertifikat. Die produktive Signierung läuft auf main, bei manuellen Main-Builds oder beim Release des bereits gemergten Main-Commits. Schreibrechte zum Repository nur vertrauenswürdigen Personen geben, da Workflow-Änderungen Zugang zu Signier-Secrets ermöglichen können.
 
 ## Quellen
 

@@ -45,9 +45,11 @@ Siehe [GitHub-Anleitung](https://docs.github.com/en/code-security/how-tos/report
 ## Konkreter Veröffentlichungsablauf
 
 1. Einen erfolgreich geprüften Commit und eine neue vierteilige Version wählen.
-2. Tag `v<Version>` erstellen: Actions erzeugt den signierten Bundle-Stand und
-   einen Release-Entwurf mit allen nötigen Anlagen. Keine alten unbereinigten
-   Bundles erneut freigeben.
+2. Ein Release-Issue mit Titel `Release X.Y.Z`, Label `release` und dem
+   Versions-Milestone anlegen. Mehrere Änderungen über PRs sammeln; erst der
+   Merge eines abschließenden PRs mit `Closes #<Release-Issue>` erzeugt Tag und
+   Release-Entwurf. Siehe [Release-Ablauf](release-ablauf.md). Keine alten
+   unbereinigten Bundles erneut freigeben.
 3. Installer, Originaltexte, passende Quellen, Verifikationsbericht und
    Prüfsummen des Entwurfs kontrollieren; auf einem Zielsystem installieren.
 4. Den bisherigen Entwicklungssignierer bewusst berücksichtigen: Er ist kein

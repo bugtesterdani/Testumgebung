@@ -2,6 +2,10 @@
 
 GitHub-Einrichtung, automatische Wiki-Dokumentation und signierte MSIX-Releases: [GitHub-Anleitung](docs/github.md). Die Dokumentation wird aus `docs/` erzeugt; das Repository bleibt zunächst privat.
 
+Versionen, Release Notes direkt auf GitHub und der Abschluss über ein Release-Issue:
+[Release-Ablauf](docs/release-ablauf.md). Änderungen an `main` erfolgen nach der
+Einrichtung ausschließlich über Pull Requests.
+
 Lizenz- und Veröffentlichungsprüfung: [Prüfbericht](docs/licensing/pruefbericht.md), [vollständiges Abhängigkeitsinventar](docs/licensing/inventar.md), [Drittanbieterhinweise](THIRD-PARTY-NOTICES.md) und [Status der eigenen Lizenz](LICENSE-STATUS.md). [Vorbereitung der öffentlichen GitHub-Freigabe](docs/github-veroeffentlichung.md) beschreibt die technischen Maßnahmen und verbleibenden Vertragsfragen. [Datenschutz](docs/datenschutz.md), [Sicherheitsmeldungen](SECURITY.md) und [Beiträge](CONTRIBUTING.md) sind gesondert dokumentiert.
 
 Codeabdeckung und Wartbarkeit je Modul: `Report-Coverage.cmd` erstellt einen datierten HTML-Bericht. Anleitung und Messgrenzen: [Testabdeckung und Wartbarkeit](docs/testabdeckung-und-wartbarkeit.md).

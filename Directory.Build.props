@@ -9,6 +9,10 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <!-- Stable CLR assembly identity; MSIX/FileVersion retains the build revision,
+         including official .65535, which CLR AssemblyVersion cannot represent. -->
+    <AssemblyVersion Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(Version)', '^\d+\.\d+\.\d+(\.\d+)?$'))">$([System.Text.RegularExpressions.Regex]::Replace('$(Version)', '^(\d+\.\d+\.\d+)(\.\d+)?$', '$1.0'))</AssemblyVersion>
+    <FileVersion Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(Version)', '^\d+\.\d+\.\d+(\.\d+)?$'))">$(Version)</FileVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!-- Sicherheitshinweise zu NuGet-Abhängigkeiten (z. B. transitive Pakete der DB-Treiber) sichtbar lassen, aber den Build nicht abbrechen -->

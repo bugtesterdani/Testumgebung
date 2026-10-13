@@ -2,17 +2,32 @@ name: MSIX-Build und Release
 on:
   push:
     branches: [main]
-    tags: ['v*']
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        default: ''
+      base_version:
+        type: string
+        default: ''
+      target_sha:
+        type: string
+        default: ''
   workflow_dispatch:
     inputs:
       version:
-        description: 'MSIX-Version (vier Zahlen, z.B. 1.0.13.0; leer = automatischer Entwicklungsstand)'
+        description: 'Basisversion X.Y.Z (leer = aktuelle Version aus dem Release-Issue)'
         required: false
         type: string
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 concurrency:
-  group: msix-${{ github.ref }}
+  group: msix-${{ inputs.release_tag || github.ref }}
   cancel-in-progress: false
 jobs:
   build:
@@ -25,6 +40,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          ref: ${{ inputs.target_sha || github.sha }}
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '10.0.401'
@@ -35,15 +51,18 @@ jobs:
         id: version
         shell: pwsh
         env:
-          REQUESTED_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_VERSION: ${{ inputs.base_version || inputs.version }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          FALLBACK_VERSION: ${{ vars.RELEASE_VERSION || '1.0.14' }}
         run: |
-          $version = $env:REQUESTED_VERSION
-          if ($env:GITHUB_REF_TYPE -eq 'tag') { $version=$env:GITHUB_REF_NAME.TrimStart('v') }
-          if (-not $version) { $version="1.0.13.$env:GITHUB_RUN_NUMBER" }
-          if ($version -notmatch '^\d+\.\d+\.\d+\.\d+$') { throw 'Version muss vier Zahlen enthalten.' }
-          $v=[version]$version
-          if (@($v.Major,$v.Minor,$v.Build,$v.Revision | Where-Object { $_ -gt 65535 }).Count) { throw 'MSIX-Version überschreitet 65535.' }
-          "version=$version" >> $env:GITHUB_OUTPUT
+          python build/github-release.py plan --base "$env:REQUESTED_VERSION" --tag "$env:RELEASE_TAG" --fallback "$env:FALLBACK_VERSION"
+          if ($LASTEXITCODE) { throw 'Version konnte nicht bestimmt werden.' }
+      - name: Release-Automation prüfen
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests/ReleaseAutomation -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Release-Automation fehlerhaft.' }
       - name: Git-Historie auf ausgewählte Geheimnismuster prüfen
         shell: pwsh
         run: |
@@ -61,15 +80,20 @@ jobs:
       - name: Signiertes MSIX-Bundle bauen und testen
         shell: pwsh
         env:
-          SIGNING_PFX_BASE64: ${{ secrets.SIGNING_PFX_BASE64 }}
-          TESTUMGEBUNG_SIGN_PASSWORD: ${{ secrets.SIGNING_PFX_PASSWORD }}
+          SIGNING_PFX_BASE64: ${{ (github.event_name != 'pull_request' || inputs.release_tag != '') && secrets.SIGNING_PFX_BASE64 || '' }}
+          TESTUMGEBUNG_SIGN_PASSWORD: ${{ (github.event_name != 'pull_request' || inputs.release_tag != '') && secrets.SIGNING_PFX_PASSWORD || '' }}
           BUILD_VERSION: ${{ steps.version.outputs.version }}
+          PR_BUILD: ${{ github.event_name == 'pull_request' && inputs.release_tag == '' }}
         run: |
-          if (-not $env:SIGNING_PFX_BASE64) { throw 'SIGNING_PFX_BASE64 fehlt. Kein neues Zufallszertifikat für CI verwenden; siehe docs/github.md.' }
+          if ($env:PR_BUILD -ne 'true' -and -not $env:SIGNING_PFX_BASE64) { throw 'SIGNING_PFX_BASE64 fehlt. Kein neues Zufallszertifikat für CI verwenden; siehe docs/github.md.' }
           $pfx=Join-Path $env:RUNNER_TEMP ('signing-'+[guid]::NewGuid().ToString('N')+'.pfx')
           try {
-            [IO.File]::WriteAllBytes($pfx,[Convert]::FromBase64String($env:SIGNING_PFX_BASE64))
-            ./build/msix.ps1 -Version $env:BUILD_VERSION -CertificatePath $pfx -PrepareOnly
+            $signOptions=@{}
+            if ($env:PR_BUILD -ne 'true') {
+              [IO.File]::WriteAllBytes($pfx,[Convert]::FromBase64String($env:SIGNING_PFX_BASE64))
+              $signOptions.CertificatePath=$pfx
+            }
+            ./build/msix.ps1 -Version $env:BUILD_VERSION @signOptions -PrepareOnly
             $bundle="artifacts/msix/$env:BUILD_VERSION/Testumgebung_$($env:BUILD_VERSION)_x64.msixbundle"
             python build/audit-dependencies.py --layout artifacts/publish/Testumgebung --bundle $bundle
             if ($LASTEXITCODE) { throw 'Lizenzinventar fehlgeschlagen.' }
@@ -78,7 +102,7 @@ jobs:
             python build/create-complete-manual.py
             if ($LASTEXITCODE) { throw 'Aktualisiertes Handbuch fehlgeschlagen.' }
             ./build/update-license-layout.ps1
-            ./build/msix.ps1 -Version $env:BUILD_VERSION -CertificatePath $pfx -UsePreparedLayout
+            ./build/msix.ps1 -Version $env:BUILD_VERSION @signOptions -UsePreparedLayout
             python build/verify-release-inventory.py --bundle $bundle
             if ($LASTEXITCODE) { throw 'Nachprüfung des signierten Pakets fehlgeschlagen.' }
           } finally {
@@ -102,22 +126,42 @@ jobs:
           compression-level: 0
           retention-days: 14
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: inputs.release_tag != ''
     needs: build
     runs-on: windows-latest
     permissions:
       contents: write
       actions: read
+      issues: read
+      pull-requests: read
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ inputs.target_sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
       - name: Build-Artefakt herunterladen und Release erstellen
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "MSIX-$env:RELEASE_VERSION" --dir release
           if ($LASTEXITCODE) { throw 'Release-Artefakt konnte nicht heruntergeladen werden.' }
           $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
           if (-not ($assets | Where-Object Extension -EQ '.msixbundle')) { throw 'MSIX-Bundle fehlt.' }
-          gh release create $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "Testumgebung $env:RELEASE_VERSION" --generate-notes @($assets.FullName)
+          $existingJson=gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$env:RELEASE_TAG" 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            $existing=$existingJson | ConvertFrom-Json
+            if (-not $existing.draft) { throw 'Ein veröffentlichtes Release darf nicht überschrieben werden.' }
+            gh release upload $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --clobber @($assets.FullName)
+          } else {
+            gh release create $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "Testumgebung $env:RELEASE_VERSION" @($assets.FullName)
+          }
           if ($LASTEXITCODE) { throw 'Release-Erstellung fehlgeschlagen.' }
+          python build/github-release.py publish --tag $env:RELEASE_TAG
+          if ($LASTEXITCODE) { throw 'Release Notes konnten nicht vollständig erstellt werden. Release bleibt Entwurf.' }
