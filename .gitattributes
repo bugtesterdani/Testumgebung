@@ -1,2 +1,7 @@
-# Preserve original upstream license bytes and their recorded SHA256 on Windows.
-/licenses/** -text
+# Normalize only the audit's own text; preserve original license bytes.
+/docs/licensing/** text eol=lf
+/build/audit-dependencies.py text eol=lf
+/build/enrich-license-inventory.py text eol=lf
+/THIRD-PARTY-NOTICES.md text eol=lf
+/LICENSE-STATUS.md text eol=lf
+/licenses/** -text -whitespace
