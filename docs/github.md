@@ -24,6 +24,7 @@ Unter **Settings → Secrets and variables → Actions** müssen diese Repositor
 | `SIGNING_PFX_BASE64` | Base64 der PFX-Datei einschließlich privatem Schlüssel |
 | `SIGNING_PFX_PASSWORD` | Kennwort für diese PFX-Datei |
 | `WIKI_TOKEN` | Separater Zugang mit Schreibrechten zum Wiki; nur für die Wiki-Synchronisierung |
+| `WIKI_SSH_KEY` | Alternative: privater Repository-Deploy-Schlüssel zur Wiki-Synchronisierung |
 
 `setup-github.ps1` exportiert das bestehende Entwicklungszertifikat mit einem zufälligen Kennwort im Arbeitsspeicher und übergibt beide Signier-Secrets direkt an `gh secret set`. Das Zertifikat und der private Schlüssel bleiben identisch. Der Workflow schreibt die PFX-Datei ausschließlich in den temporären Runner-Ordner und löscht sie nach dem Signieren. Sie wird nicht als Artefakt hochgeladen. Die öffentliche `.cer`-Datei darf dem Release beiliegen.
 
@@ -61,7 +62,9 @@ GitHub Free unterstützt Wikis in öffentlichen Repositories. Für ein zunächst
 
 Die Synchronisierung überträgt alle Markdown-Anleitungen als einzelne Wiki-Seiten und erstellt Startseite, Seitenleiste sowie interne Verweise. Abbildungen verweisen auf den dazugehörigen Commit im Hauptrepository. Bei Änderungen an `docs/` auf `main` erfolgt die Aktualisierung automatisch. Änderungen direkt im Wiki werden beim nächsten Lauf für die automatisch erzeugten Seiten überschrieben; deshalb Anleitungen im Hauptrepository bearbeiten. Andere manuell angelegte Wiki-Seiten werden nicht gelöscht. Bei umbenannten oder entfernten Quelldateien bleiben alte Wiki-Seiten bestehen und können manuell entfernt werden.
 
-Fehlt `WIKI_TOKEN`, erzeugt der Workflow dennoch PDF und Wiki-Dateien und weist auf die fehlende Synchronisierung hin. Ist ein Token vorhanden, aber das Wiki oder seine Berechtigung ungültig, schlägt die Synchronisierung sichtbar fehl. Das Standard-Workflow-Token wird nicht als allgemeiner Ersatz für einen Wiki-Zugang vorausgesetzt.
+Fehlen beide Wiki-Zugänge, erzeugt der Workflow dennoch PDF und Wiki-Dateien und weist auf die fehlende Synchronisierung hin. Ist ein Zugang vorhanden, aber das Wiki oder seine Berechtigung ungültig, schlägt die Synchronisierung sichtbar fehl. Das Standard-Workflow-Token wird nicht als allgemeiner Ersatz für einen Wiki-Zugang vorausgesetzt.
+
+Die automatische Aktualisierung ist seit 13.10.2026 mit `WIKI_SSH_KEY` eingerichtet. Der öffentliche Deploy-Schlüssel **Wiki documentation automation** hat Schreibrecht ausschließlich für dieses Repository, einschließlich seines Wikis. Er ist nicht auf einzelne Wiki-Seiten beschränkt. Der private Teil liegt nur im verschlüsselten Actions-Secret. Der Workflow erstellt kurzzeitig eine Runner-Temp-Datei mit eingeschränkten Zugriffsrechten, überprüft die GitHub-Hostschlüssel anhand der HTTPS-Metadaten und entfernt die temporären Dateien danach. Die lokale Einrichtungskopie wurde gelöscht. Deploy-Schlüssel haben kein automatisches Ablaufdatum und lassen sich unter **Settings → Deploy keys** widerrufen.
 
 ## 5. Dokumentation lokal neu erstellen
 

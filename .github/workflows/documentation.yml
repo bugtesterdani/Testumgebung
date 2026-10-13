@@ -2,7 +2,7 @@ name: Dokumentation und Wiki
 on:
   push:
     branches: [main]
-    paths: ['docs/**', 'build/create-*.py', '.github/workflows/documentation.yml']
+    paths: ['docs/**', 'build/create-*.py', 'build/sync-wiki.ps1', '.github/workflows/documentation.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,4 +40,5 @@ jobs:
         shell: pwsh
         env:
           WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+          WIKI_SSH_KEY: ${{ secrets.WIKI_SSH_KEY }}
         run: ./build/sync-wiki.ps1
