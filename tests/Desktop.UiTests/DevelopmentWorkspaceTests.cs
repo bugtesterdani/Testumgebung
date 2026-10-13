@@ -18,7 +18,7 @@ public sealed partial class DevelopmentWorkspaceTests
     {
         Sta.Run(dispatcher =>
         {
-            var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+            var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown, LicenseTermsConsent = () => true };
             app.InitializeComponent();
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();

@@ -36,17 +36,17 @@ Der Workflow **MSIX-Build und Release** läuft bei jedem Push nach `main`, bei V
 
 | Auslöser | Ergebnis |
 | --- | --- |
-| Push nach `main` | Entwicklungsbuild `1.0.12.<Workflow-Laufnummer>` als Actions-Artefakt |
-| Tag `v1.0.13.0` | Bundle `1.0.13.0` und GitHub Release mit MSIX, Zertifikat, Prüfsummen, Installationsanleitung und PDF |
+| Push nach `main` | Entwicklungsbuild `1.0.13.<Workflow-Laufnummer>` als Actions-Artefakt |
+| Tag `v1.0.14.0` | Bundle `1.0.14.0` und GitHub Release mit MSIX, Zertifikat, Prüfsummen, Installationsanleitung und PDF |
 | Manueller Start | Angegebene vierteilige Version, sonst automatische Entwicklungsbuild-Version; als Actions-Artefakt |
 
-Die Laufnummer ist kein offizieller Release-Zähler. Die aktuelle Entwicklungsbasis `1.0.12` liegt unter dem nächsten offiziellen Release `1.0.13.0`. Bei größer werdenden Versionen die automatische Versionsbasis im Workflow anpassen und für das nächste offizielle Release eine höhere dritte Zahl verwenden. MSIX-Versionsteile dürfen höchstens 65535 sein. Für eine Installation über einen Entwicklungsbuild muss ein offizielles Release eine höhere Version tragen.
+Die Laufnummer ist kein offizieller Release-Zähler. Die aktuelle Entwicklungsbasis `1.0.13` liegt unter dem nächsten offiziellen Release `1.0.14.0`. Bei größer werdenden Versionen die automatische Versionsbasis im Workflow anpassen und für das nächste offizielle Release eine höhere dritte Zahl verwenden. MSIX-Versionsteile dürfen höchstens 65535 sein. Für eine Installation über einen Entwicklungsbuild muss ein offizielles Release eine höhere Version tragen.
 
 Neues offizielles Release erstellen:
 
 ```powershell
-git tag v1.0.13.0
-git push origin v1.0.13.0
+git tag v1.0.14.0
+git push origin v1.0.14.0
 ```
 
 Eine Version nur einmal verwenden. Die Dateien erscheinen nach erfolgreichem Build unter **Releases**. Entwicklungsartefakte werden 14 Tage gespeichert; Releases bleiben bis zur Löschung erhalten. Laufzeit, Speicher und Downloads können bei privaten Repositories das Actions-Kontingent verbrauchen.

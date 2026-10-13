@@ -1,0 +1,5 @@
+BitFaster.Caching 2.6.0
+Copyright © Alex Peck 2026
+Authors: Alex Peck
+Declared license: MIT
+Repository: https://github.com/bitfaster/BitFaster.Caching

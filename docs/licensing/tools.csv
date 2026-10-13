@@ -27,7 +27,6 @@ SQLite (Python),3.50.4,Public domain,workers/python/runtime/sqlite3.dll,Python s
 libffi,3.4.4,MIT,workers/python/runtime/libffi-8.dll,Python ctypes; version from CPython v3.14.8 build specification
 Expat (Python),2.8.5,MIT,workers/python/runtime/pyexpat.pyd,Version reported by bundled pyexpat.EXPAT_VERSION
 libmpdec,4.0.0,BSD-2-Clause,workers/python/runtime/_decimal.pyd,Version reported by bundled _decimal.__libmpdec_version__
-libtommath,UNRESOLVED,Upstream is Unlicense; exact build/source association unconfirmed,workers/python/runtime/libtommath.dll,Present in official Python ZIP; exact version/use requires supplier evidence
 bzip2,1.0.8,bzip2 license,workers/python/runtime/_bz2.pyd,CPython build specification; notices in Python LICENSE.txt
 XZ/liblzma,5.2.5,Public-domain core plus component GPL/LGPL notices,workers/python/runtime/_lzma.pyd,CPython build specification; determine linked portions before assuming every source-license applies
 zlib-ng,2.2.4,Zlib,workers/python/runtime/python314.dll,CPython build specification
@@ -40,7 +39,7 @@ Pillow (CI documentation),12.3.0 in audited Actions run,HPND/Pillow license plus
 charset-normalizer (CI documentation),3.5.2 in audited Actions run,MIT,GitHub runner Python environment,ReportLab dependency; version from run 38297143493
 Python (CI documentation),3.12.x,PSF,GitHub runner,actions/setup-python; exact patch depends on runner
 .NET SDK (local),10.0.401,MIT and third-party/MS build tool terms,External installed SDK,dotnet build/test/publish; not itself shipped
-.NET SDK (CI),10.0.x,MIT and third-party/MS build tool terms,GitHub runner,actions/setup-dotnet; patch not pinned
+.NET SDK (CI),10.0.401,MIT and third-party/MS build tool terms,GitHub runner,actions/setup-dotnet; SDK pinned via global.json and workflow
 Windows SDK MakeAppx/SignTool,Externally installed; chosen SDK directory,Microsoft SDK terms,Windows Kits/10/bin/<SDK>/x64,build/msix.ps1; build only
 PowerShell,7.x for builds; Windows PowerShell external for console,MIT for PowerShell 7; OS terms for Windows PowerShell,External installed runtime,build scripts; PythonEnvironments.cs
 Inno Setup,"6.x, exact version not pinned",Inno Setup license,External ISCC.exe,build/publish.ps1 -Installer; not used by MSIX workflow

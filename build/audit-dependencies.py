@@ -3,6 +3,7 @@ from pathlib import Path
 from collections import defaultdict
 import argparse, csv, hashlib, io, json, re, shutil, sys, tarfile, urllib.request, zipfile
 import xml.etree.ElementTree as ET
+from urllib.parse import unquote
 
 ROOT=Path(__file__).resolve().parents[1]
 REPORT=ROOT/'docs/licensing'
@@ -107,11 +108,10 @@ def release_inventory(bundle):
     with zipfile.ZipFile(bundle) as z:
         package=next(n for n in z.namelist() if n.endswith('.msix'))
         cached=CACHE/Path(package).name
-        if not cached.exists():
-            with z.open(package) as src,cached.open('wb') as target:shutil.copyfileobj(src,target)
+        with z.open(package) as src,cached.open('wb') as target:shutil.copyfileobj(src,target)
     with zipfile.ZipFile(cached) as z:
         for item in z.infolist():
-            name=item.filename
+            name=unquote(item.filename)
             if name.endswith('.deps.json'):
                 data=json.loads(z.read(item));deps[name]=data
             if re.search(r'(license|copying|third.party|notice)',Path(name).name,re.I):texts.append(name)
@@ -143,10 +143,23 @@ def toolchain_sources():
             rows.append(row)
     return rows
 
+def layout_inventory(layout):
+    rows=[];deps={};texts=[]
+    for path in sorted(Path(layout).rglob('*')):
+        if not path.is_file():continue
+        name=path.relative_to(layout).as_posix()
+        if name.endswith('.deps.json'):deps[name]=json.loads(path.read_text(encoding='utf-8-sig'))
+        if re.search(r'(license|copying|third.party|notice)',path.name,re.I):texts.append(name)
+        if path.suffix.lower() in {'.exe','.dll','.pyd','.whl','.a'}:
+            raw=path.read_bytes();version,product_version,product_name=pe_version(raw) if path.suffix.lower() in {'.exe','.dll','.pyd'} else ('','','')
+            rows.append({'release':'','path':name,'file_version':version,'product_version':product_version,'product_name':product_name,'size':len(raw),'sha256':sha(raw),'component':'','license':''})
+    return rows,deps,texts
+
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--bundle',required=True);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--bundle',required=True);parser.add_argument('--layout');args=parser.parse_args()
     projects,packages,edges=projects_and_packages()
-    binaries,deps,release_licenses=release_inventory(args.bundle)
+    binaries,deps,release_licenses=layout_inventory(args.layout) if args.layout else release_inventory(args.bundle)
+    for row in binaries:row['release']=Path(args.bundle).name
     source_archives=toolchain_sources()
     used=defaultdict(list)
     for location,data in deps.items():
@@ -176,6 +189,6 @@ def main():
     csv_write('projects.csv',projects)
     csv_write('nuget.csv',[{'name':r['name'],'version':r['version'],'license':r['metadata'].get('license','UNRESOLVED'),'license_type':r['metadata'].get('license_type',''),'direct_in':r['direct_in'],'resolved_in':r['projects'],'bundled_manifests':r['bundled_manifests'],'authors':r['metadata'].get('authors',''),'copyright':r['metadata'].get('copyright',''),'repository':r['metadata'].get('repository',{}).get('url',''),'license_files':[x['path'] for x in r['metadata'].get('license_files',[])]} for r in sorted(packages.values(),key=lambda r:(r['name'].lower(),r['version']))])
     csv_write('dependency-edges.csv',edges);csv_write('binaries.csv',binaries)
-    (CACHE/'summary.json').write_text(json.dumps({'projects':len(projects),'nuget_versions':len(packages),'binaries':len(binaries),'toolchain_source_archives':len(source_archives),'unresolved':missing,'licenses':len(list(LICENSES.rglob('*.*')))},indent=2),encoding='utf-8')
+    (CACHE/'summary.json').write_text(json.dumps({'projects':len(projects),'nuget_versions':len(packages),'binaries':len(binaries),'toolchain_source_archives':len(source_archives),'unresolved':missing,'licenses':sum(p.is_file() for p in LICENSES.rglob('*'))},indent=2),encoding='utf-8')
     print((CACHE/'summary.json').read_text())
 if __name__=='__main__':main()

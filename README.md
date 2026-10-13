@@ -346,3 +346,12 @@ Dynamische COM-Ports und Netzwerkverbindungen: [Anleitung mit Variablen, SSH, SF
 
 Noch offen: Abnahme an der Pilotstation mit realer Hardware (`docs/pilot/abnahmeprotokoll.md`).
 
+
+## Lizenz
+
+Der eigene Code steht unter [MIT](LICENSE). Fremdkomponenten behalten ihre eigenen
+Lizenzen. Siehe [Maßnahmen zur Lizenzprüfung](docs/licensing/massnahmen.md),
+[Inventar](docs/licensing/inventar.md) und [Weitergabebedingungen](THIRD-PARTY-TERMS.md).
+Für neue Veröffentlichungen werden NuGet-Lockdateien verwendet; CI bricht bei
+ungeplanten Abhängigkeitsänderungen ab. Historische MSIX-Versionen bis 1.0.12.x
+sind nicht durch die Nachprüfung der Version 1.0.13.3 freigegeben.

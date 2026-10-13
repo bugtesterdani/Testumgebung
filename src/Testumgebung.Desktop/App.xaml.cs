@@ -5,8 +5,13 @@ namespace Testumgebung.Desktop;
 
 public partial class App : Application
 {
+    // The UI fixture supplies consent without touching a real user receipt.
+    internal Func<bool> LicenseTermsConsent { get; set; } = ThirdPartyTerms.Accept;
+
     protected override void OnStartup(StartupEventArgs e)
     {
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        if (!LicenseTermsConsent()) { Shutdown(); return; }
         base.OnStartup(e);
         DispatcherUnhandledException += OnUnhandled;
         // OPC-UA-Meldeweg über den OPC-Foundation-Stack (nur in der Windows-Anwendung verfügbar)
@@ -16,6 +21,7 @@ public partial class App : Application
         var window = new MainWindow();
         MainWindow = window;
         window.Show();
+        ShutdownMode = ShutdownMode.OnLastWindowClose;
     }
 
     private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)

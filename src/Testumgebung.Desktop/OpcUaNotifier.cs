@@ -72,7 +72,7 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
         var endpoint = new ConfiguredEndpoint(null, description, EndpointConfiguration.Create(config));
         IUserIdentity identity = options.Username is null
             ? new UserIdentity(new AnonymousIdentityToken())
-            : new UserIdentity(options.Username, options.Password ?? "");
+            : new UserIdentity(options.Username, System.Text.Encoding.UTF8.GetBytes(options.Password ?? ""));
         _session = await _sessionFactory.CreateAsync(config, endpoint, "Testumgebung " + options.Station, identity).ConfigureAwait(false);
         return _session;
     }

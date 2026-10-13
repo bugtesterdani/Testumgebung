@@ -2,7 +2,7 @@
 
 Stand: 13.10.2026. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.
 
-Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprüfte MSIX 1.0.12.3 enthält sie noch nicht. Eine Sammlung von Lizenztexten beseitigt keine Lizenzinkompatibilität und ersetzt keine erforderliche Endnutzervereinbarung.
+Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden nicht rückwirkend bereinigt. Zusätzliche Bedingungen stehen in THIRD-PARTY-TERMS.md.
 
 ## NuGet und .NET-Laufzeiten
 
@@ -23,6 +23,15 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 - Upstream: https://github.com/Azure/azure-sdk-for-net
 - Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Azure.Identity/1.11.4/SPDX-MIT.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Azure.Identity/1.11.4/PACKAGE-NOTICE.txt)
+
+### BitFaster.Caching 2.6.0
+
+- Lizenz: MIT
+- Copyright laut Paket: Copyright © Alex Peck 2026
+- Autoren laut Paket: Alex Peck
+- Upstream: https://github.com/bitfaster/BitFaster.Caching
+- Lizenztext: [LICENSE](licenses/third-party/nuget/BitFaster.Caching/2.6.0/LICENSE)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/BitFaster.Caching/2.6.0/PACKAGE-NOTICE.txt)
 
 ### BouncyCastle.Cryptography 2.7.0
 
@@ -85,32 +94,23 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 - Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.SqlClient/6.0.2/SPDX-MIT.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.SqlClient/6.0.2/PACKAGE-NOTICE.txt)
 
-### Microsoft.Data.SqlClient.SNI.runtime 6.0.2
-
-- Lizenz: Microsoft proprietary redistributable terms (LICENSE.txt)
-- Copyright laut Paket: © Microsoft Corporation. All rights reserved.
-- Autoren laut Paket: Microsoft
-- Upstream: https://aka.ms/sqlclientproject
-- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/Microsoft.Data.SqlClient.SNI.runtime/6.0.2/LICENSE.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.SqlClient.SNI.runtime/6.0.2/PACKAGE-NOTICE.txt)
-
-### Microsoft.Data.Sqlite 9.0.0
+### Microsoft.Data.Sqlite 10.0.12
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
-- Upstream: https://github.com/dotnet/efcore
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/9.0.0/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/9.0.0/PACKAGE-NOTICE.txt)
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/10.0.12/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/10.0.12/PACKAGE-NOTICE.txt)
 
-### Microsoft.Data.Sqlite.Core 9.0.0
+### Microsoft.Data.Sqlite.Core 10.0.12
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
-- Upstream: https://github.com/dotnet/efcore
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/9.0.0/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/9.0.0/PACKAGE-NOTICE.txt)
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/10.0.12/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/10.0.12/PACKAGE-NOTICE.txt)
 
 ### Microsoft.Extensions.Caching.Abstractions 9.0.4
 
@@ -134,49 +134,65 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 - Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Caching.Memory/9.0.4/SPDX-MIT.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Caching.Memory/9.0.4/PACKAGE-NOTICE.txt)
 
-### Microsoft.Extensions.DependencyInjection.Abstractions 9.0.4
+### Microsoft.Extensions.DependencyInjection 10.0.8
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
-- Upstream: https://github.com/dotnet/runtime
-- Lizenztext: [LICENSE.TXT](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/9.0.4/LICENSE.TXT)
-- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/9.0.4/THIRD-PARTY-NOTICES.TXT)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/9.0.4/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/9.0.4/PACKAGE-NOTICE.txt)
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection/10.0.8/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection/10.0.8/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection/10.0.8/PACKAGE-NOTICE.txt)
 
-### Microsoft.Extensions.Logging.Abstractions 9.0.4
-
-- Lizenz: MIT
-- Copyright laut Paket: © Microsoft Corporation. All rights reserved.
-- Autoren laut Paket: Microsoft
-- Upstream: https://github.com/dotnet/runtime
-- Lizenztext: [LICENSE.TXT](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/9.0.4/LICENSE.TXT)
-- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/9.0.4/THIRD-PARTY-NOTICES.TXT)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/9.0.4/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/9.0.4/PACKAGE-NOTICE.txt)
-
-### Microsoft.Extensions.Options 9.0.4
+### Microsoft.Extensions.DependencyInjection.Abstractions 10.0.8
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
-- Upstream: https://github.com/dotnet/runtime
-- Lizenztext: [LICENSE.TXT](licenses/third-party/nuget/Microsoft.Extensions.Options/9.0.4/LICENSE.TXT)
-- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Options/9.0.4/THIRD-PARTY-NOTICES.TXT)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Options/9.0.4/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Options/9.0.4/PACKAGE-NOTICE.txt)
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/10.0.8/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/10.0.8/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.DependencyInjection.Abstractions/10.0.8/PACKAGE-NOTICE.txt)
 
-### Microsoft.Extensions.Primitives 9.0.4
+### Microsoft.Extensions.Logging 10.0.8
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
-- Upstream: https://github.com/dotnet/runtime
-- Lizenztext: [LICENSE.TXT](licenses/third-party/nuget/Microsoft.Extensions.Primitives/9.0.4/LICENSE.TXT)
-- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Primitives/9.0.4/THIRD-PARTY-NOTICES.TXT)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Primitives/9.0.4/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Primitives/9.0.4/PACKAGE-NOTICE.txt)
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Logging/10.0.8/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Logging/10.0.8/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Logging/10.0.8/PACKAGE-NOTICE.txt)
+
+### Microsoft.Extensions.Logging.Abstractions 10.0.8
+
+- Lizenz: MIT
+- Copyright laut Paket: © Microsoft Corporation. All rights reserved.
+- Autoren laut Paket: Microsoft
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/10.0.8/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/10.0.8/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Logging.Abstractions/10.0.8/PACKAGE-NOTICE.txt)
+
+### Microsoft.Extensions.Options 10.0.8
+
+- Lizenz: MIT
+- Copyright laut Paket: © Microsoft Corporation. All rights reserved.
+- Autoren laut Paket: Microsoft
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Options/10.0.8/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Options/10.0.8/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Options/10.0.8/PACKAGE-NOTICE.txt)
+
+### Microsoft.Extensions.Primitives 10.0.8
+
+- Lizenz: MIT
+- Copyright laut Paket: © Microsoft Corporation. All rights reserved.
+- Autoren laut Paket: Microsoft
+- Upstream: https://github.com/dotnet/dotnet
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.Extensions.Primitives/10.0.8/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Extensions.Primitives/10.0.8/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Extensions.Primitives/10.0.8/PACKAGE-NOTICE.txt)
 
 ### Microsoft.Identity.Client 4.65.0
 
@@ -286,15 +302,15 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 - Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/MySqlConnector/2.4.0/SPDX-MIT.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/MySqlConnector/2.4.0/PACKAGE-NOTICE.txt)
 
-### Newtonsoft.Json 13.0.3
+### Newtonsoft.Json 13.0.4
 
 - Lizenz: MIT
 - Copyright laut Paket: Copyright © James Newton-King 2008
 - Autoren laut Paket: James Newton-King
 - Upstream: https://github.com/JamesNK/Newtonsoft.Json
-- Lizenztext: [LICENSE.md](licenses/third-party/nuget/Newtonsoft.Json/13.0.3/LICENSE.md)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Newtonsoft.Json/13.0.3/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Newtonsoft.Json/13.0.3/PACKAGE-NOTICE.txt)
+- Lizenztext: [LICENSE.md](licenses/third-party/nuget/Newtonsoft.Json/13.0.4/LICENSE.md)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Newtonsoft.Json/13.0.4/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Newtonsoft.Json/13.0.4/PACKAGE-NOTICE.txt)
 
 ### Npgsql 9.0.3
 
@@ -305,41 +321,50 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 - Lizenztext: [SPDX-PostgreSQL.txt](licenses/third-party/nuget/Npgsql/9.0.3/SPDX-PostgreSQL.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Npgsql/9.0.3/PACKAGE-NOTICE.txt)
 
-### OPCFoundation.NetStandard.Opc.Ua.Client 1.5.374.126
+### OPCFoundation.NetStandard.Opc.Ua.Client 1.5.378.182
 
 - Lizenz: MIT
-- Copyright laut Paket: Copyright © 2004-2024 OPC Foundation, Inc
+- Copyright laut Paket: Copyright © 2004-2025 OPC Foundation, Inc
 - Autoren laut Paket: OPC Foundation
 - Upstream: https://github.com/OPCFoundation/UA-.NETStandard
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Client/1.5.374.126/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Client/1.5.374.126/PACKAGE-NOTICE.txt)
+- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Client/1.5.378.182/LICENSE.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Client/1.5.378.182/PACKAGE-NOTICE.txt)
 
-### OPCFoundation.NetStandard.Opc.Ua.Configuration 1.5.374.126
+### OPCFoundation.NetStandard.Opc.Ua.Configuration 1.5.378.182
 
 - Lizenz: MIT
-- Copyright laut Paket: Copyright © 2004-2024 OPC Foundation, Inc
+- Copyright laut Paket: Copyright © 2004-2025 OPC Foundation, Inc
 - Autoren laut Paket: OPC Foundation
 - Upstream: https://github.com/OPCFoundation/UA-.NETStandard
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Configuration/1.5.374.126/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Configuration/1.5.374.126/PACKAGE-NOTICE.txt)
+- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Configuration/1.5.378.182/LICENSE.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Configuration/1.5.378.182/PACKAGE-NOTICE.txt)
 
-### OPCFoundation.NetStandard.Opc.Ua.Core 1.5.374.126
-
-- Lizenz: GPL-2.0-only for nonmembers / RCL for corporate members; mixed source headers
-- Copyright laut Paket: Copyright © 2004-2024 OPC Foundation, Inc
-- Autoren laut Paket: OPC Foundation
-- Upstream: https://github.com/OPCFoundation/UA-.NETStandard
-- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Core/1.5.374.126/licenses/LICENSE.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Core/1.5.374.126/PACKAGE-NOTICE.txt)
-
-### OPCFoundation.NetStandard.Opc.Ua.Security.Certificates 1.5.374.126
+### OPCFoundation.NetStandard.Opc.Ua.Core 1.5.378.182
 
 - Lizenz: MIT
-- Copyright laut Paket: Copyright © 2004-2024 OPC Foundation, Inc
+- Copyright laut Paket: Copyright © 2004-2025 OPC Foundation, Inc
 - Autoren laut Paket: OPC Foundation
 - Upstream: https://github.com/OPCFoundation/UA-.NETStandard
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Security.Certificates/1.5.374.126/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Security.Certificates/1.5.374.126/PACKAGE-NOTICE.txt)
+- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Core/1.5.378.182/LICENSE.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Core/1.5.378.182/PACKAGE-NOTICE.txt)
+
+### OPCFoundation.NetStandard.Opc.Ua.Security.Certificates 1.5.378.182
+
+- Lizenz: MIT
+- Copyright laut Paket: Copyright © 2004-2025 OPC Foundation, Inc
+- Autoren laut Paket: OPC Foundation
+- Upstream: https://github.com/OPCFoundation/UA-.NETStandard
+- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Security.Certificates/1.5.378.182/LICENSE.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Security.Certificates/1.5.378.182/PACKAGE-NOTICE.txt)
+
+### OPCFoundation.NetStandard.Opc.Ua.Types 1.5.378.182
+
+- Lizenz: MIT
+- Copyright laut Paket: Copyright © 2004-2025 OPC Foundation, Inc
+- Autoren laut Paket: OPC Foundation
+- Upstream: https://github.com/OPCFoundation/UA-.NETStandard
+- Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Types/1.5.378.182/LICENSE.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Types/1.5.378.182/PACKAGE-NOTICE.txt)
 
 ### runtimepack.Microsoft.NETCore.App.Runtime.win-x64 10.0.12
 
@@ -362,41 +387,41 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 - Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/SPDX-MIT.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt)
 
-### SQLitePCLRaw.bundle_e_sqlite3 2.1.10
+### SQLitePCLRaw.bundle_e_sqlite3 2.1.12
 
 - Lizenz: Apache-2.0
 - Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
 - Autoren laut Paket: Eric Sink
 - Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.10/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.10/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.12/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.12/PACKAGE-NOTICE.txt)
 
-### SQLitePCLRaw.core 2.1.10
-
-- Lizenz: Apache-2.0
-- Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
-- Autoren laut Paket: Eric Sink
-- Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.10/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.10/PACKAGE-NOTICE.txt)
-
-### SQLitePCLRaw.lib.e_sqlite3 2.1.10
+### SQLitePCLRaw.core 2.1.12
 
 - Lizenz: Apache-2.0
 - Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
 - Autoren laut Paket: Eric Sink
 - Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.10/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.10/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.12/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.12/PACKAGE-NOTICE.txt)
 
-### SQLitePCLRaw.provider.e_sqlite3 2.1.10
+### SQLitePCLRaw.lib.e_sqlite3 2.1.12
 
 - Lizenz: Apache-2.0
 - Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
 - Autoren laut Paket: Eric Sink
 - Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.10/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.10/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.12/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.12/PACKAGE-NOTICE.txt)
+
+### SQLitePCLRaw.provider.e_sqlite3 2.1.12
+
+- Lizenz: Apache-2.0
+- Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
+- Autoren laut Paket: Eric Sink
+- Upstream: https://github.com/ericsink/SQLitePCL.raw
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.12/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.12/PACKAGE-NOTICE.txt)
 
 ### SSH.NET 2026.0.0
 
@@ -438,7 +463,7 @@ Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprü
 
 CPython 3.14.8: [Originaltext](licenses/third-party/python/LICENSE.txt). Die pip-Vendor-Lizenzen liegen vollständig unter `licenses/third-party/pip-26.2.1/`. Die zusätzlichen nativen Texte liegen unter `licenses/third-party/python-native/`. Native Microsoft-Laufzeiten behalten ihre eigenen Weitergabebedingungen.
 
-libtommath: Die Datei ist im offiziellen Python-Archiv enthalten; ihre genaue Version und die Zuordnung zum ursprünglichen Lizenztext sind noch ungeklärt. Ein gespeicherter aktueller Upstream-Lizenztext ist hierfür kein ausreichender Nachweis.
+libtommath.dll wird seit dem bereinigten Build nicht mehr mitgeliefert; das Originalarchiv bleibt als historische Nachweisquelle erhalten.
 
 ## GNU-/w64devkit-Werkzeuge
 

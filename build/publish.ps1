@@ -72,7 +72,7 @@ if (Test-Path (Join-Path $root 'docs/licensing')) {
 if (Test-Path (Join-Path $root 'licenses')) {
     Copy-Item (Join-Path $root 'licenses') $publish -Recurse -Force
 }
-foreach ($notice in @('THIRD-PARTY-NOTICES.md','LICENSE-STATUS.md','LICENSE','LICENSE.md','LICENSE.txt')) {
+foreach ($notice in @('THIRD-PARTY-NOTICES.md','LICENSE-STATUS.md','THIRD-PARTY-TERMS.md','LICENSE','LICENSE.md','LICENSE.txt')) {
     if (Test-Path (Join-Path $root $notice)) { Copy-Item (Join-Path $root $notice) $publish -Force }
 }
 if (Test-Path (Join-Path $root 'output/pdf/Testumgebung-Gesamthandbuch.pdf')) {

@@ -8,6 +8,8 @@
   </ItemGroup>
 
   <Target Name="CopyCodeWorkers" AfterTargets="Build">
+    <!-- Also remove an obsolete file from incremental output trees. -->
+    <Delete Files="$(OutDir)workers\python\runtime\libtommath.dll" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers.CSharp\Testumgebung.Workers.CSharp.csproj"
              Targets="GetTargetPath">
       <Output TaskParameter="TargetOutputs" ItemName="_CsWorkerTarget" />
@@ -18,7 +20,7 @@
     <ItemGroup>
       <_CsWorkerFiles Include="$(_CsWorkerDir)**\*" />
       <_PyWorkerFiles Include="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers\python\*.py" />
-      <_PythonRuntimeFiles Include="$(MSBuildThisFileDirectory)..\toolchains\python\**\*" />
+      <_PythonRuntimeFiles Include="$(MSBuildThisFileDirectory)..\toolchains\python\**\*" Exclude="$(MSBuildThisFileDirectory)..\toolchains\python\libtommath.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_CsWorkerFiles)"
           DestinationFiles="@(_CsWorkerFiles->'$(OutDir)workers\csharp\%(RecursiveDir)%(Filename)%(Extension)')"

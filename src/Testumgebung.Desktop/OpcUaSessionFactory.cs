@@ -9,7 +9,7 @@ internal class OpcUaSessionFactory
 {
     internal virtual Task CheckCertificateAsync(ApplicationConfiguration configuration)
         => new ApplicationInstance { ApplicationName = "Testumgebung", ApplicationType = ApplicationType.Client, ApplicationConfiguration = configuration }
-            .CheckApplicationInstanceCertificate(true, 2048);
+            .CheckApplicationInstanceCertificatesAsync(true, 2048).AsTask();
 
     internal virtual EndpointDescription SelectEndpoint(ApplicationConfiguration configuration, string url, bool security, int timeout)
         => CoreClientUtils.SelectEndpoint(configuration, url, security, timeout);

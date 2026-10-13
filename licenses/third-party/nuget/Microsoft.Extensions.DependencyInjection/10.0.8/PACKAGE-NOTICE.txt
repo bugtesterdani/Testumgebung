@@ -1,0 +1,5 @@
+Microsoft.Extensions.DependencyInjection 10.0.8
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/dotnet/dotnet

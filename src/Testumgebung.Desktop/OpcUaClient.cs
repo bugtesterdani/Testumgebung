@@ -85,7 +85,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
             var endpoint = new ConfiguredEndpoint(null, description, EndpointConfiguration.Create(config));
             IUserIdentity identity = _user is null
                 ? new UserIdentity(new AnonymousIdentityToken())
-                : new UserIdentity(_user, _password ?? "");
+                : new UserIdentity(_user, System.Text.Encoding.UTF8.GetBytes(_password ?? ""));
             _session = await _sessionFactory.CreateAsync(config, endpoint, "Testumgebung OPC UA", identity).ConfigureAwait(false);
             return _session;
         }

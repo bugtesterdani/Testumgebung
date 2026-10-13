@@ -9,6 +9,11 @@ namespace Testumgebung.Desktop;
 /// <summary>ADO.NET-Treiber der vier Datenbanksysteme (NuGet-Pakete der Anwendung).</summary>
 internal sealed class DatabaseProviderRegistry : IDatabaseProviderRegistry
 {
+    static DatabaseProviderRegistry()
+    {
+        AppContext.SetSwitch("Switch.Microsoft.Data.SqlClient.UseManagedNetworkingOnWindows", true);
+    }
+
     public DbProviderFactory? Factory(DatabaseProvider provider) => provider switch
     {
         DatabaseProvider.SqlServer => Microsoft.Data.SqlClient.SqlClientFactory.Instance,

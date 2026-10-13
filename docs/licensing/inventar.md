@@ -1,6 +1,6 @@
 # Vollständiges Abhängigkeitsinventar
 
-Prüfstand: 13.10.2026. Binärstand: GitHub-MSIX 1.0.12.3; Quellstand `dcf2a33`. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.
+Prüfstand: 13.10.2026. Binärstand: MSIX 1.0.13.3. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.
 
 ## Dateien für die genaue Auswertung
 
@@ -14,26 +14,26 @@ Prüfstand: 13.10.2026. Binärstand: GitHub-MSIX 1.0.12.3; Quellstand `dcf2a33`.
 - [Externe Treiber und DLLs](external.csv)
 - [Vollständige Rohdaten und Release-Manifeste](inventory.json)
 
-Die CSV-Dateien verwenden UTF-8 mit BOM und lassen sich in Excel importieren. `binaries.csv` enthält auch 945 statische `.a`-Bibliotheken; die 2.104 Zeilen sind keine 2.104 unabhängigen Produkte. Mehrfach kopierte .NET-Worker-Dateien und Kit-Aliasprogramme sind absichtlich enthalten.
+Die CSV-Dateien verwenden UTF-8 mit BOM und lassen sich in Excel importieren. `binaries.csv` enthält auch 945 statische `.a`-Bibliotheken; die 2106 Zeilen sind keine 2.104 unabhängigen Produkte. Mehrfach kopierte .NET-Worker-Dateien und Kit-Aliasprogramme sind absichtlich enthalten.
 
 ## Eigene Projekte
 
 | Projekt | Framework | Version im Prüfstand | Aufgabe |
 | --- | --- | --- | --- |
-| src/Testumgebung.Contracts/Testumgebung.Contracts.csproj | net10.0 | 1.0.12.3 in audited MSIX | Gemeinsame Verträge und Grundtypen |
-| src/Testumgebung.DatabaseAdapters/Testumgebung.DatabaseAdapters.csproj | net10.0 | 1.0.12.3 in audited MSIX | Datenbank-Verbindungen |
-| src/Testumgebung.Desktop/Testumgebung.Desktop.csproj | net10.0-windows | 1.0.12.3 in audited MSIX | WPF-Oberfläche, Entra/MSAL, Datenbankprovider und OPC UA |
-| src/Testumgebung.Domain/Testumgebung.Domain.csproj | net10.0 | 1.0.12.3 in audited MSIX | Prüfprojekt-, Variablen- und Ergebnismodell |
-| src/Testumgebung.Engine/Testumgebung.Engine.csproj | net10.0 | 1.0.12.3 in audited MSIX | Ablaufausführung, Bausteine und Ressourcen-Sperren |
-| src/Testumgebung.Hardware/Testumgebung.Hardware.csproj | net10.0 | 1.0.12.3 in audited MSIX | Hardware-Abstraktionen und Simulation |
-| src/Testumgebung.Identity/Testumgebung.Identity.csproj | net10.0 | 1.0.12.3 in audited MSIX | Anmeldung und Berechtigungsverträge |
-| src/Testumgebung.Instruments/Testumgebung.Instruments.csproj | net10.0 | 1.0.12.3 in audited MSIX | Gerätetreiber, SSH/SFTP, Busse und Netzwerk |
-| src/Testumgebung.Notifications/Testumgebung.Notifications.csproj | net10.0 | 1.0.12.3 in audited MSIX | Meldewege und Benachrichtigungen |
-| src/Testumgebung.Persistence/Testumgebung.Persistence.csproj | net10.0 | 1.0.12.3 in audited MSIX | Projekt-, Ergebnis-, Einstellungs- und Release-Speicherung |
-| src/Testumgebung.Presentation/Testumgebung.Presentation.csproj | net10.0 | 1.0.12.3 in audited MSIX | Ansichtsmodelle, Editor und Werkersteuerung |
-| src/Testumgebung.Workers/Testumgebung.Workers.csproj | net10.0 | 1.0.12.3 in audited MSIX | C#/Python/C++-Prozesssteuerung, Laufzeitwahl und GDB |
-| src/Testumgebung.Workers.CSharp/Testumgebung.Workers.CSharp.csproj | net10.0 | 1.0.12.3 in audited MSIX | Isolierter Roslyn-C#-Compiler/Worker |
-| src/Testumgebung.Workers.Native/Testumgebung.Workers.Native.csproj | net10.0 | 1.0.12.3 in audited MSIX | C++-Compileraufruf und native Ausführung |
+| src/Testumgebung.Contracts/Testumgebung.Contracts.csproj | net10.0 | 1.0.13.3 in audited MSIX | Gemeinsame Verträge und Grundtypen |
+| src/Testumgebung.DatabaseAdapters/Testumgebung.DatabaseAdapters.csproj | net10.0 | 1.0.13.3 in audited MSIX | Datenbank-Verbindungen |
+| src/Testumgebung.Desktop/Testumgebung.Desktop.csproj | net10.0-windows | 1.0.13.3 in audited MSIX | WPF-Oberfläche, Entra/MSAL, Datenbankprovider und OPC UA |
+| src/Testumgebung.Domain/Testumgebung.Domain.csproj | net10.0 | 1.0.13.3 in audited MSIX | Prüfprojekt-, Variablen- und Ergebnismodell |
+| src/Testumgebung.Engine/Testumgebung.Engine.csproj | net10.0 | 1.0.13.3 in audited MSIX | Ablaufausführung, Bausteine und Ressourcen-Sperren |
+| src/Testumgebung.Hardware/Testumgebung.Hardware.csproj | net10.0 | 1.0.13.3 in audited MSIX | Hardware-Abstraktionen und Simulation |
+| src/Testumgebung.Identity/Testumgebung.Identity.csproj | net10.0 | 1.0.13.3 in audited MSIX | Anmeldung und Berechtigungsverträge |
+| src/Testumgebung.Instruments/Testumgebung.Instruments.csproj | net10.0 | 1.0.13.3 in audited MSIX | Gerätetreiber, SSH/SFTP, Busse und Netzwerk |
+| src/Testumgebung.Notifications/Testumgebung.Notifications.csproj | net10.0 | 1.0.13.3 in audited MSIX | Meldewege und Benachrichtigungen |
+| src/Testumgebung.Persistence/Testumgebung.Persistence.csproj | net10.0 | 1.0.13.3 in audited MSIX | Projekt-, Ergebnis-, Einstellungs- und Release-Speicherung |
+| src/Testumgebung.Presentation/Testumgebung.Presentation.csproj | net10.0 | 1.0.13.3 in audited MSIX | Ansichtsmodelle, Editor und Werkersteuerung |
+| src/Testumgebung.Workers/Testumgebung.Workers.csproj | net10.0 | 1.0.13.3 in audited MSIX | C#/Python/C++-Prozesssteuerung, Laufzeitwahl und GDB |
+| src/Testumgebung.Workers.CSharp/Testumgebung.Workers.CSharp.csproj | net10.0 | 1.0.13.3 in audited MSIX | Isolierter Roslyn-C#-Compiler/Worker |
+| src/Testumgebung.Workers.Native/Testumgebung.Workers.Native.csproj | net10.0 | 1.0.13.3 in audited MSIX | C++-Compileraufruf und native Ausführung |
 | tests/Desktop.UiTests/Desktop.UiTests.csproj | net10.0-windows | Default assembly 1.0.0; not shipped | Automated tests |
 | tests/Engine.Tests/Engine.Tests.csproj | net10.0 | Default assembly 1.0.0; not shipped | Automated tests |
 | tests/Fixtures/FakeCompiler/FakeCompiler.csproj | net10.0 | Default assembly 1.0.0; not shipped | Test-only fixture |
@@ -49,26 +49,33 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | --- | --- | --- | --- |
 | Azure.Core | 1.38.0 | MIT | . |
 | Azure.Identity | 1.11.4 | MIT | . |
+| BitFaster.Caching | 2.6.0 | MIT | . |
 | BouncyCastle.Cryptography | 2.7.0 | MIT | . |
 | coverlet.collector | 10.1.0 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | Microsoft.Bcl.AsyncInterfaces | 1.1.1 | MIT | . |
 | Microsoft.Bcl.Cryptography | 9.0.4 | MIT | . |
 | Microsoft.CodeAnalysis.Analyzers | 3.11.0 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
-| Microsoft.CodeAnalysis.Common | 4.14.0 | MIT | workers/csharp, . |
-| Microsoft.CodeAnalysis.CSharp | 4.14.0 | MIT | workers/csharp, . |
+| Microsoft.CodeAnalysis.Common | 4.14.0 | MIT | ., workers/csharp |
+| Microsoft.CodeAnalysis.CSharp | 4.14.0 | MIT | ., workers/csharp |
 | Microsoft.CodeCoverage | 18.5.1 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | Microsoft.Data.SqlClient | 6.0.2 | MIT | . |
-| Microsoft.Data.SqlClient.SNI.runtime | 6.0.2 | Microsoft proprietary redistributable terms (LICENSE.txt) | . |
-| Microsoft.Data.Sqlite | 9.0.0 | MIT | . |
-| Microsoft.Data.Sqlite.Core | 9.0.0 | MIT | . |
+| Microsoft.Data.SqlClient.SNI.runtime | 6.0.2 | Microsoft proprietary redistributable terms (LICENSE.txt) | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| Microsoft.Data.Sqlite | 10.0.12 | MIT | . |
+| Microsoft.Data.Sqlite.Core | 10.0.12 | MIT | . |
 | Microsoft.Extensions.Caching.Abstractions | 9.0.4 | MIT | . |
 | Microsoft.Extensions.Caching.Memory | 9.0.4 | MIT | . |
+| Microsoft.Extensions.DependencyInjection | 10.0.8 | MIT | . |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 10.0.8 | MIT | . |
 | Microsoft.Extensions.DependencyInjection.Abstractions | 8.0.2 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
-| Microsoft.Extensions.DependencyInjection.Abstractions | 9.0.4 | MIT | . |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| Microsoft.Extensions.Logging | 10.0.8 | MIT | . |
+| Microsoft.Extensions.Logging.Abstractions | 10.0.8 | MIT | . |
 | Microsoft.Extensions.Logging.Abstractions | 8.0.3 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
-| Microsoft.Extensions.Logging.Abstractions | 9.0.4 | MIT | . |
-| Microsoft.Extensions.Options | 9.0.4 | MIT | . |
-| Microsoft.Extensions.Primitives | 9.0.4 | MIT | . |
+| Microsoft.Extensions.Logging.Abstractions | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| Microsoft.Extensions.Options | 10.0.8 | MIT | . |
+| Microsoft.Extensions.Options | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| Microsoft.Extensions.Primitives | 10.0.8 | MIT | . |
+| Microsoft.Extensions.Primitives | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | Microsoft.Identity.Client | 4.61.3 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | Microsoft.Identity.Client | 4.65.0 | MIT | . |
 | Microsoft.Identity.Client.Broker | 4.65.0 | MIT | . |
@@ -85,18 +92,20 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | Microsoft.TestPlatform.ObjectModel | 18.5.1 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | Microsoft.TestPlatform.TestHost | 18.5.1 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | MySqlConnector | 2.4.0 | MIT | . |
-| Newtonsoft.Json | 13.0.3 | MIT | . |
+| Newtonsoft.Json | 13.0.3 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| Newtonsoft.Json | 13.0.4 | MIT | . |
 | Npgsql | 9.0.3 | PostgreSQL | . |
-| OPCFoundation.NetStandard.Opc.Ua.Client | 1.5.374.126 | MIT | . |
-| OPCFoundation.NetStandard.Opc.Ua.Configuration | 1.5.374.126 | MIT | . |
-| OPCFoundation.NetStandard.Opc.Ua.Core | 1.5.374.126 | GPL-2.0-only for nonmembers / RCL for corporate members; mixed source headers | . |
-| OPCFoundation.NetStandard.Opc.Ua.Security.Certificates | 1.5.374.126 | MIT | . |
-| runtimepack.Microsoft.NETCore.App.Runtime.win-x64 | 10.0.12 | MIT | workers/csharp, ., ., workers/native, . |
+| OPCFoundation.NetStandard.Opc.Ua.Client | 1.5.378.182 | MIT | . |
+| OPCFoundation.NetStandard.Opc.Ua.Configuration | 1.5.378.182 | MIT | . |
+| OPCFoundation.NetStandard.Opc.Ua.Core | 1.5.378.182 | MIT | . |
+| OPCFoundation.NetStandard.Opc.Ua.Security.Certificates | 1.5.378.182 | MIT | . |
+| OPCFoundation.NetStandard.Opc.Ua.Types | 1.5.378.182 | MIT | . |
+| runtimepack.Microsoft.NETCore.App.Runtime.win-x64 | 10.0.12 | MIT | ., ., ., workers/csharp, workers/native |
 | runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 | 10.0.12 | MIT | . |
-| SQLitePCLRaw.bundle_e_sqlite3 | 2.1.10 | Apache-2.0 | . |
-| SQLitePCLRaw.core | 2.1.10 | Apache-2.0 | . |
-| SQLitePCLRaw.lib.e_sqlite3 | 2.1.10 | Apache-2.0 | . |
-| SQLitePCLRaw.provider.e_sqlite3 | 2.1.10 | Apache-2.0 | . |
+| SQLitePCLRaw.bundle_e_sqlite3 | 2.1.12 | Apache-2.0 | . |
+| SQLitePCLRaw.core | 2.1.12 | Apache-2.0 | . |
+| SQLitePCLRaw.lib.e_sqlite3 | 2.1.12 | Apache-2.0 | . |
+| SQLitePCLRaw.provider.e_sqlite3 | 2.1.12 | Apache-2.0 | . |
 | SSH.NET | 2026.0.0 | MIT | . |
 | System.ClientModel | 1.0.0 | MIT | . |
 | System.Configuration.ConfigurationManager | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
@@ -107,7 +116,7 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | System.Security.Cryptography.ProtectedData | 9.0.0 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | System.Security.Cryptography.ProtectedData | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | xunit | 2.9.3 | Apache-2.0 | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
-| xunit.abstractions | 2.0.3 | UNRESOLVED historical license URL; current xUnit Apache-2.0 is not version-specific proof | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| xunit.abstractions | 2.0.3 | Apache-2.0 (explicit frozen-abstractions upstream declaration; see UPSTREAM-LICENSE-DECLARATION.md) | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | xunit.analyzers | 1.18.0 | Apache-2.0 | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | xunit.assert | 2.9.3 | Apache-2.0 | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | xunit.core | 2.9.3 | Apache-2.0 | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
@@ -149,7 +158,6 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | libffi | 3.4.4 | MIT | Python ctypes; version from CPython v3.14.8 build specification |
 | Expat (Python) | 2.8.5 | MIT | Version reported by bundled pyexpat.EXPAT_VERSION |
 | libmpdec | 4.0.0 | BSD-2-Clause | Version reported by bundled _decimal.__libmpdec_version__ |
-| libtommath | UNRESOLVED | Upstream is Unlicense; exact build/source association unconfirmed | Present in official Python ZIP; exact version/use requires supplier evidence |
 | bzip2 | 1.0.8 | bzip2 license | CPython build specification; notices in Python LICENSE.txt |
 | XZ/liblzma | 5.2.5 | Public-domain core plus component GPL/LGPL notices | CPython build specification; determine linked portions before assuming every source-license applies |
 | zlib-ng | 2.2.4 | Zlib | CPython build specification |
@@ -162,7 +170,7 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | charset-normalizer (CI documentation) | 3.5.2 in audited Actions run | MIT | ReportLab dependency; version from run 38297143493 |
 | Python (CI documentation) | 3.12.x | PSF | actions/setup-python; exact patch depends on runner |
 | .NET SDK (local) | 10.0.401 | MIT and third-party/MS build tool terms | dotnet build/test/publish; not itself shipped |
-| .NET SDK (CI) | 10.0.x | MIT and third-party/MS build tool terms | actions/setup-dotnet; patch not pinned |
+| .NET SDK (CI) | 10.0.401 | MIT and third-party/MS build tool terms | actions/setup-dotnet; SDK pinned via global.json and workflow |
 | Windows SDK MakeAppx/SignTool | Externally installed; chosen SDK directory | Microsoft SDK terms | build/msix.ps1; build only |
 | PowerShell | 7.x for builds; Windows PowerShell external for console | MIT for PowerShell 7; OS terms for Windows PowerShell | build scripts; PythonEnvironments.cs |
 | Inno Setup | 6.x, exact version not pinned | Inno Setup license | build/publish.ps1 -Installer; not used by MSIX workflow |

@@ -52,7 +52,7 @@ TOOLS=[
 ('libffi','3.4.4','MIT','workers/python/runtime/libffi-8.dll','Python ctypes; version from CPython v3.14.8 build specification'),
 ('Expat (Python)','2.8.5','MIT','workers/python/runtime/pyexpat.pyd','Version reported by bundled pyexpat.EXPAT_VERSION'),
 ('libmpdec','4.0.0','BSD-2-Clause','workers/python/runtime/_decimal.pyd','Version reported by bundled _decimal.__libmpdec_version__'),
-('libtommath','UNRESOLVED','Upstream is Unlicense; exact build/source association unconfirmed','workers/python/runtime/libtommath.dll','Present in official Python ZIP; exact version/use requires supplier evidence'),
+
 ('bzip2','1.0.8','bzip2 license','workers/python/runtime/_bz2.pyd','CPython build specification; notices in Python LICENSE.txt'),
 ('XZ/liblzma','5.2.5','Public-domain core plus component GPL/LGPL notices','workers/python/runtime/_lzma.pyd','CPython build specification; determine linked portions before assuming every source-license applies'),
 ('zlib-ng','2.2.4','Zlib','workers/python/runtime/python314.dll','CPython build specification'),
@@ -65,7 +65,7 @@ TOOLS=[
 ('charset-normalizer (CI documentation)','3.5.2 in audited Actions run','MIT','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
 ('Python (CI documentation)','3.12.x','PSF','GitHub runner','actions/setup-python; exact patch depends on runner'),
 ('.NET SDK (local)','10.0.401','MIT and third-party/MS build tool terms','External installed SDK','dotnet build/test/publish; not itself shipped'),
-('.NET SDK (CI)','10.0.x','MIT and third-party/MS build tool terms','GitHub runner','actions/setup-dotnet; patch not pinned'),
+('.NET SDK (CI)','10.0.401','MIT and third-party/MS build tool terms','GitHub runner','actions/setup-dotnet; SDK pinned via global.json and workflow'),
 ('Windows SDK MakeAppx/SignTool','Externally installed; chosen SDK directory','Microsoft SDK terms','Windows Kits/10/bin/<SDK>/x64','build/msix.ps1; build only'),
 ('PowerShell','7.x for builds; Windows PowerShell external for console','MIT for PowerShell 7; OS terms for Windows PowerShell','External installed runtime','build scripts; PythonEnvironments.cs'),
 ('Inno Setup','6.x, exact version not pinned','Inno Setup license','External ISCC.exe','build/publish.ps1 -Installer; not used by MSIX workflow'),
@@ -94,9 +94,19 @@ EXTERNAL=[
 
 def normalize_license(row):
     name=row['name'];value=row['metadata'].get('license','UNRESOLVED')
-    if name=='OPCFoundation.NetStandard.Opc.Ua.Core':return 'GPL-2.0-only for nonmembers / RCL for corporate members; mixed source headers'
+    expected=None
+    if name.startswith('OPCFoundation.NetStandard.Opc.Ua.') and row['version']=='1.5.378.182':
+        expected='3927c73bc0abbd9327364bcfdcbb7d8a7be50c05c2948fcfb49a45b165bda737'
+    elif name=='BitFaster.Caching' and row['version']=='2.6.0':
+        expected='f3bf474c62109fbe7b81345419eff56bfd6e5b539accc877a9b840e2e7a5176b'
+    if expected:
+        if not any(record['sha256']==expected and hashlib.sha256((ROOT/record['path']).read_bytes()).hexdigest()==expected
+                   for record in row['metadata'].get('license_files',[])):
+            raise ValueError('Reviewed MIT license text changed: '+name)
+        return 'MIT'
+    if name=='OPCFoundation.NetStandard.Opc.Ua.Core' and row['version']=='1.5.374.126':return 'GPL-2.0-only for nonmembers / RCL for corporate members; mixed source headers'
     if name=='Microsoft.Data.SqlClient.SNI.runtime':return 'Microsoft proprietary redistributable terms (LICENSE.txt)'
-    if name=='xunit.abstractions':return 'UNRESOLVED historical license URL; current xUnit Apache-2.0 is not version-specific proof'
+    if name=='xunit.abstractions':return 'Apache-2.0 (explicit frozen-abstractions upstream declaration; see UPSTREAM-LICENSE-DECLARATION.md)'
     return value or 'UNRESOLVED (license URL only)'
 
 def attach_usage(data):
@@ -149,7 +159,7 @@ def map_manifests(data):
             elif name=='pip.whl':component='pip/26.2.1 and vendored packages';license='MIT plus vendor notices'
             row['component']=component;row['license']=license;row['attribution_evidence']='Official CPython 3.14.8 ZIP + PE versions + CPython build specification'
         elif name.startswith('Testumgebung.'):
-            row['component']=name.split('.exe')[0].split('.dll')[0]+'/'+data['release_version'];row['license']='Project license pending';row['attribution_evidence']='Own project + MSIX PE version'
+            row['component']=name.split('.exe')[0].split('.dll')[0]+'/'+data['release_version'];row['license']='MIT (own project; LICENSE)';row['attribution_evidence']='Own project + MSIX PE version'
         row.setdefault('attribution_evidence','UNRESOLVED')
         row['component_version']=row['component'].split('/',1)[-1] if '/' in row['component'] else 'See component metadata'
     # Runtime-pack satellite resources can be absent from .deps.json. Match their
@@ -202,7 +212,7 @@ def pip_vendors():
 
 def write_notices(data):
     lines=['# Drittanbieterhinweise - Testumgebung','','Stand: 13.10.2026. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.','',
-      'Die folgende Sammlung ergänzt künftige Veröffentlichungen. Das bereits geprüfte MSIX 1.0.12.3 enthält sie noch nicht. Eine Sammlung von Lizenztexten beseitigt keine Lizenzinkompatibilität und ersetzt keine erforderliche Endnutzervereinbarung.','',
+      'Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden nicht rückwirkend bereinigt. Zusätzliche Bedingungen stehen in THIRD-PARTY-TERMS.md.','',
       '## NuGet und .NET-Laufzeiten','']
     for row in sorted(data['packages'].values(),key=lambda r:r['name'].lower()):
         if not row['bundled_manifests']:continue
@@ -214,7 +224,7 @@ def write_notices(data):
         lines.append('')
     lines+=['## Python, pip und native Komponenten','',
       'CPython 3.14.8: [Originaltext](licenses/third-party/python/LICENSE.txt). Die pip-Vendor-Lizenzen liegen vollständig unter `licenses/third-party/pip-26.2.1/`. Die zusätzlichen nativen Texte liegen unter `licenses/third-party/python-native/`. Native Microsoft-Laufzeiten behalten ihre eigenen Weitergabebedingungen.','',
-      'libtommath: Die Datei ist im offiziellen Python-Archiv enthalten; ihre genaue Version und die Zuordnung zum ursprünglichen Lizenztext sind noch ungeklärt. Ein gespeicherter aktueller Upstream-Lizenztext ist hierfür kein ausreichender Nachweis.','',
+      'libtommath.dll wird seit dem bereinigten Build nicht mehr mitgeliefert; das Originalarchiv bleibt als historische Nachweisquelle erhalten.','',
       '## GNU-/w64devkit-Werkzeuge','',
       'Die gesamte Toolchain wird weitergegeben, nicht nur GCC und GDB. Das Gesamtpaket hat unterschiedliche Lizenzen. Volltexte und Copyright-Hinweise wurden aus den passenden Source-Archiven übernommen: `licenses/third-party/w64devkit/`.','',
       'Die zum Binärpaket 2.8.0 passenden Archive, Anpassungen und Buildskripte befinden sich im MSIX unter `toolchains/w64devkit/source/source.tar`, `toolchains/w64devkit/src/` und `toolchains/w64devkit/Dockerfile`. Der Quellen-SHA256 ist `5f76bc3b87ccfe4c3eb3d6045614cc983419a955f78f65f8921c10bb1f90e654`.','',
@@ -224,12 +234,12 @@ def write_notices(data):
     (ROOT/'THIRD-PARTY-NOTICES.md').write_text('\n'.join(lines),encoding='utf-8')
 
 def write_inventory(data):
-    lines=['# Vollständiges Abhängigkeitsinventar','','Prüfstand: 13.10.2026. Binärstand: GitHub-MSIX 1.0.12.3; Quellstand `dcf2a33`. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.','',
+    lines=['# Vollständiges Abhängigkeitsinventar','','Prüfstand: 13.10.2026. Binärstand: MSIX '+data['release_version']+'. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.','',
       '## Dateien für die genaue Auswertung','',
       '- [Alle eigenen Projekte](projects.csv)','- [NuGet-Versionen, Lizenzen und Verwendungsorte](nuget.csv)','- [Jede ausgelieferte Binär-/Bibliotheksdatei](binaries.csv)','- [Prüfsummen aller Lizenz- und Hinweisdateien](license-files.csv)',
       '- [Aufgelöste NuGet-Abhängigkeitskanten je Projekt/Framework](dependency-edges.csv)','- [Werkzeuge, Laufzeiten und native Bestandteile](tools.csv)',
       '- [In pip eingebettete Pakete](pip-vendors.csv)','- [Externe Treiber und DLLs](external.csv)','- [Vollständige Rohdaten und Release-Manifeste](inventory.json)','',
-      'Die CSV-Dateien verwenden UTF-8 mit BOM und lassen sich in Excel importieren. `binaries.csv` enthält auch 945 statische `.a`-Bibliotheken; die 2.104 Zeilen sind keine 2.104 unabhängigen Produkte. Mehrfach kopierte .NET-Worker-Dateien und Kit-Aliasprogramme sind absichtlich enthalten.','',
+      'Die CSV-Dateien verwenden UTF-8 mit BOM und lassen sich in Excel importieren. `binaries.csv` enthält auch 945 statische `.a`-Bibliotheken; die '+str(data['summary']['binary_files'])+' Zeilen sind keine 2.104 unabhängigen Produkte. Mehrfach kopierte .NET-Worker-Dateien und Kit-Aliasprogramme sind absichtlich enthalten.','',
       '## Eigene Projekte','', '| Projekt | Framework | Version im Prüfstand | Aufgabe |','| --- | --- | --- | --- |']
     for project in data['projects']:lines.append('| '+ ' | '.join([project['project'],project['framework'],project['version'],project['purpose']])+' |')
     lines+=['','Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `projects.csv`; importierte Worker-Buildreferenzen sind dort ausdrücklich markiert.','',
@@ -256,6 +266,13 @@ def main():
     if not match:raise ValueError('Release version cannot be established from selected bundle')
     data['release_version']=match.group(1)
     attach_usage(data);map_manifests(data)
+    for row in data['packages'].values():
+        if row['name']=='xunit.abstractions':
+            folder=LICENSES/'nuget'/'xunit.abstractions'/row['version']
+            for name in ['LICENSE.txt','UPSTREAM-LICENSE-DECLARATION.md']:
+                path=folder/name
+                record={'path':path.relative_to(ROOT).as_posix(),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+                row['metadata']['license_files']=[r for r in row['metadata'].get('license_files',[]) if r['path']!=record['path']]+[record]
     data['tools']=[dict(zip(['name','version','license','location','used_by'],t)) for t in TOOLS]
     data['external']=[{'name':name,'file':file,'version':'Externally installed; not pinned and not bundled','used_in':used,'license':license} for name,file,used,license in EXTERNAL]
     data['pip_vendors']=pip_vendors()
@@ -265,7 +282,7 @@ def main():
         target=LICENSES/'nuget'/meta.get('id',row['name'])/row['version']/'PACKAGE-NOTICE.txt'
         target.parent.mkdir(parents=True,exist_ok=True)
         text=row['name']+' '+row['version']+'\n'+copyright+'\nAuthors: '+meta.get('authors','')+'\nDeclared license: '+row['license_effective']+'\nRepository: '+meta.get('repository',{}).get('url','')+'\n'
-        target.write_text(text,encoding='utf-8')
+        target.write_bytes(text.encode('utf-8'))
         record={'path':target.relative_to(ROOT).as_posix(),'sha256':hashlib.sha256(text.encode()).hexdigest()}
         meta['license_files']=[f for f in meta.get('license_files',[]) if f['path']!=record['path']]+[record]
     (REPORT/'inventory.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')

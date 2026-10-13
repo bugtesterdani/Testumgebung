@@ -1,3 +1,5 @@
+> **Historischer Ausgangsbericht (MSIX 1.0.12.3).** Die Bearbeitung und der aktuelle Status stehen in [Maßnahmen und Nachprüfung](massnahmen.md). Die ursprünglichen Befunde bleiben als Nachweis erhalten.
+
 # Lizenz-, Urheberrechts- und Veröffentlichungsprüfung
 
 Stand: **13.10.2026**. Geprüfter Quellstand: `dcf2a33` und die danach lokal erstellten Audit-Dateien. Geprüfter Binärstand: **GitHub-MSIX 1.0.12.3**, Actions-Lauf `38297143352`. Der Rechteinhaber hat bestätigt: private Entwicklung, eigene Rechte, **keine OPC-Foundation-Corporate-Mitgliedschaft**.

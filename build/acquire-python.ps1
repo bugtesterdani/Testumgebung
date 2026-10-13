@@ -6,12 +6,20 @@ $version = '3.14.8'
 $expected = 'a93abe456ab01bd96d7a085b3cdb6566b3063f4241360d114142fbdb07f0a310'
 $toolRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../toolchains'))
 $destination = Join-Path $toolRoot 'python'
+# Not used by the supported embedded standard library (no Tcl/Tk distribution).
+# Keep the original downloaded ZIP intact; omit the unverified optional DLL.
+function Remove-UnverifiedPythonExtra([string]$runtime) {
+    $extra = Join-Path $runtime 'libtommath.dll'
+    if (Test-Path -LiteralPath $extra) { Remove-Item -LiteralPath $extra -Force }
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../THIRD-PARTY-TERMS.md') -Destination (Join-Path $runtime 'THIRD-PARTY-TERMS.md') -Force
+}
 if (Test-Path (Join-Path $destination 'runtime.json')) {
     $metadata = Get-Content (Join-Path $destination 'runtime.json') -Raw | ConvertFrom-Json
     if ($metadata.version -ne $version -or $metadata.archiveSha256 -ne $expected) { throw 'Vorhandene Python-Version stimmt nicht mit der Build-Vorgabe überein.' }
     foreach ($file in @('python.exe','python314.dll','python314.zip','python314._pth','LICENSE.txt')) {
         if (-not (Test-Path (Join-Path $destination $file))) { throw "Python-Laufzeit unvollständig: $file" }
     }
+    Remove-UnverifiedPythonExtra $destination
     Write-Host "Portable Python-Laufzeit $version bereits vorhanden."
     & (Join-Path $PSScriptRoot 'acquire-pip.ps1')
     return
@@ -26,6 +34,7 @@ Invoke-WebRequest -Uri $url -OutFile $archive
 if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'Python-Archiv-Prüfsumme falsch.' }
 $extracted = Join-Path $stage 'runtime'
 Expand-Archive -LiteralPath $archive -DestinationPath $extracted
+Remove-UnverifiedPythonExtra $extracted
 # Isoliert von globalem PYTHONPATH und Benutzerpaketen; optionale Pakete neben der Laufzeit.
 @('python314.zip', '.', 'Lib/site-packages', '..') | Set-Content (Join-Path $extracted 'python314._pth') -Encoding ascii
 New-Item -ItemType Directory -Path (Join-Path $extracted 'Lib/site-packages') -Force | Out-Null

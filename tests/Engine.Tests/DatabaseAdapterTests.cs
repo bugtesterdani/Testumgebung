@@ -206,7 +206,11 @@ public sealed class DatabaseAdapterTests : IDisposable
 
 #if DB_PROVIDERS
     [EnvironmentFact("TESTUMGEBUNG_TEST_MSSQL")]
-    public Task SqlServer_Vertragspruefung() => RunProvider("TESTUMGEBUNG_TEST_MSSQL", Microsoft.Data.SqlClient.SqlClientFactory.Instance, new SqlServerDialect());
+    public Task SqlServer_Vertragspruefung()
+    {
+        AppContext.SetSwitch("Switch.Microsoft.Data.SqlClient.UseManagedNetworkingOnWindows", true);
+        return RunProvider("TESTUMGEBUNG_TEST_MSSQL", Microsoft.Data.SqlClient.SqlClientFactory.Instance, new SqlServerDialect());
+    }
 
     [EnvironmentFact("TESTUMGEBUNG_TEST_POSTGRES")]
     public Task PostgreSql_Vertragspruefung() => RunProvider("TESTUMGEBUNG_TEST_POSTGRES", Npgsql.NpgsqlFactory.Instance, new PostgreSqlDialect());

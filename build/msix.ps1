@@ -8,12 +8,15 @@ pwsh -File build/msix.ps1 -Version 1.0.1.0
 param(
     [string]$Version = '1.0.0.0',
     [switch]$SkipTests,
+    [switch]$PrepareOnly,
+    [switch]$UsePreparedLayout,
     [string]$CertificatePath,
     [string]$CertificatePassword = $env:TESTUMGEBUNG_SIGN_PASSWORD,
     [string]$TimestampUrl,
     [string]$SdkBin
 )
 $ErrorActionPreference = 'Stop'
+if ($PrepareOnly -and $UsePreparedLayout) { throw 'PrepareOnly und UsePreparedLayout schließen sich aus.' }
 $root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot 'acquire-python.ps1')
 if ($Version -notmatch '^\d+\.\d+\.\d+\.\d+$') { throw 'Version muss vier Zahlen enthalten, z.B. 1.0.1.0.' }
@@ -62,11 +65,12 @@ $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
     [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet)
 if (-not $cert.HasPrivateKey -or $cert.NotAfter -le [DateTime]::Now) { throw 'Signierzertifikat benötigt einen gültigen privaten Schlüssel.' }
 
-if (-not $SkipTests) {
+if (-not $SkipTests -and -not $UsePreparedLayout) {
     & dotnet test (Join-Path $root 'Testumgebung.sln') -c Release -m:1 -nr:false --nologo --verbosity quiet `
         --logger 'trx;LogFilePrefix=release' --results-directory (Join-Path $out 'tests')
     if ($LASTEXITCODE) { throw 'Release-Tests fehlgeschlagen.' }
 }
+if (-not $UsePreparedLayout) {
 & (Join-Path $PSScriptRoot 'publish.ps1') -Version $Version -Configuration Release -SelfContained -SkipTests -SkipChecksums
 $layout = Join-Path $root 'artifacts\publish\Testumgebung'
 # Jeder .NET-Worker bekommt seine eigene Laufzeit, unabhängig von installierten Frameworks.
@@ -76,12 +80,19 @@ foreach ($worker in @(@('CSharp','csharp'), @('Native','native'))) {
         -p:Version=$Version -p:FileVersion=$Version -p:InformationalVersion=$Version -m:1 -nr:false --nologo
     if ($LASTEXITCODE) { throw "Worker-Publish fehlgeschlagen: $($worker[0])" }
 }
+} else {
+    $layout = Join-Path $root 'artifacts/publish/Testumgebung'
+    $info = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $layout 'Testumgebung.Desktop.dll'))
+    if ($info.FileVersion -ne $Version) { throw 'Vorbereiteter Publish-Stand hat eine andere Version.' }
+}
+& (Join-Path $PSScriptRoot 'check-release-licenses.ps1') -Layout $layout
 $assets = Join-Path $layout 'Assets'
 New-Item -ItemType Directory -Force $assets | Out-Null
 Copy-Item (Join-Path $root 'src\Testumgebung.Desktop\Assets\Msix\*.png') $assets -Force
 $manifest = Get-Content (Join-Path $root 'installer\msix\AppxManifest.xml') -Raw
 $manifest.Replace('__VERSION__',$Version).Replace('__PUBLISHER__',[Security.SecurityElement]::Escape($cert.Subject)) |
     Set-Content (Join-Path $layout 'AppxManifest.xml') -Encoding utf8
+if ($PrepareOnly) { $cert.Dispose(); Write-Host "Publish-Stand zur Lizenzinventarisierung vorbereitet: $layout"; return }
 $packages = Join-Path $out 'packages'
 New-Item -ItemType Directory -Force $packages | Out-Null
 Write-Host 'MSIX-Paket erstellen (Protokoll: makeappx-pack.log)'

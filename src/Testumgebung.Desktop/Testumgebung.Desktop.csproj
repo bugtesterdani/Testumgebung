@@ -17,16 +17,22 @@
   </ItemGroup>
   <!-- Datenbanktreiber (Etappe 6). Der Adapter selbst nutzt nur ADO.NET; hier werden die Provider eingebunden. -->
   <ItemGroup>
+    <None Include="../../THIRD-PARTY-TERMS.md" Link="THIRD-PARTY-TERMS.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <!-- Managed networking only: native SNI has separate redistribution terms. -->
+    <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="6.0.2" ExcludeAssets="all" PrivateAssets="all" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
     <!-- Entra-Anmeldung über MSAL und den Windows-Kontomanager (WAM) -->
     <PackageReference Include="Microsoft.Identity.Client" Version="4.65.0" />
     <PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.65.0" />
     <!-- OPC-UA-Meldeweg (OPC Foundation .NET Standard Stack) -->
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.5.374.126" />
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Configuration" Version="1.5.374.126" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Client" Version="1.5.378.182" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Configuration" Version="1.5.378.182" />
     <!-- DPAPI für Verbindungsstrings und Passwörter in der Einstellungsdatei -->
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
   </ItemGroup>
