@@ -173,6 +173,8 @@ Das sind Sicherheitsbefunde, keine Lizenzkategorien. Ein getesteter OPC-Wechsel 
 
 SDK-/Runner- und manche Python-Dokumentationsversionen sind im Workflow nur teilweise festgelegt. Paketversionen mit gleichen IDs variieren außerdem zwischen einzelnen Restore-Graphen. Die CSV nennt deshalb den **tatsächlich beobachteten** Stand. Für längerfristig reproduzierbare Releases wären Lockdateien beziehungsweise eine klar dokumentierte Versionierungsstrategie und ein neuer Audit bei Abhängigkeitsänderungen sinnvoll. Die jetzt gespeicherte Liste darf nicht ungeprüft als Nachweis für beliebige spätere Versionen verwendet werden.
 
+Zusätzlicher GitHub-Befund: Der automatisch bereitgestellte Workflow „Automatic Dependency Submission (NuGet)“, Lauf `38348459234`, schlägt beim Restore auf Linux mit `NETSDK1100` fehl, weil Desktop und UI-Tests Windows/WPF anfordern. Das ist keine Lizenzverletzung und betrifft nicht den Windows-MSIX-Build. Das hier erstellte Inventar beruht auf den tatsächlich vorhandenen Windows-Restore- und Release-Daten und ist davon unabhängig. Für diesen zusätzlichen Workflow müsste Windows-Targeting beim reinen Restore aktiviert oder ein geeigneter Windows-basierter Dependency-Submission-Ablauf verwendet werden. Die Anwendung wurde in diesem Audit nicht auf Linux umgestellt.
+
 ## 13. Schritte vor einer öffentlichen Veröffentlichung
 
 1. Die gesamte verwendete OPC-Paketfamilie auf einen versionsgenau belegten, passenden Lizenzstand bringen; Funktion und Sicherheit testen. Die beobachtete MIT-Ausgabe ist ein Ausgangspunkt, kein bereits getestetes Upgrade.
