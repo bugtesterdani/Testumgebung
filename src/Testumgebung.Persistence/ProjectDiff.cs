@@ -174,6 +174,12 @@ public static class ProjectDiff
 
     private static void CompareLibrary(List<DiffEntry> list, TestDefinition a, TestDefinition b)
     {
+        CompareCodeLibrary(list, a, b);
+        CompareGroupLibrary(list, a, b);
+    }
+
+    private static void CompareCodeLibrary(List<DiffEntry> list, TestDefinition a, TestDefinition b)
+    {
         foreach (var block in b.Library)
         {
             var old = a.Library.FirstOrDefault(x => x.Id == block.Id);
@@ -189,6 +195,10 @@ public static class ProjectDiff
         }
         foreach (var old in a.Library.Where(x => b.Library.All(y => y.Id != x.Id)))
             list.Add(new(DiffKind.Removed, "CodeBlock", old.Name, $"v{old.Version}"));
+    }
+
+    private static void CompareGroupLibrary(List<DiffEntry> list, TestDefinition a, TestDefinition b)
+    {
         foreach (var block in b.GroupLibrary)
         {
             var old = a.GroupLibrary.FirstOrDefault(x => x.Id == block.Id);

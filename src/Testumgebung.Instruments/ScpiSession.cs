@@ -307,28 +307,23 @@ public sealed class ScpiSession : IDisposable
 
     private static bool CompleteBlock(List<byte> data, bool end)
     {
-        if (data.Count < 2)
-        {
-            if (end) throw new InstrumentException("IEEE-Blockkopf abgeschnitten.");
-            return false;
-        }
+        if (!HasBlockBytes(data, 2, end, "IEEE-Blockkopf abgeschnitten.")) return false;
         var digits = data[1] - '0';
         if (digits is < 0 or > 9) throw new InstrumentException("Ungültiger IEEE-Blockkopf.");
         if (digits == 0) return end || data[^1] == '\n'; // indefinite block: bis zum Ende
-        if (data.Count < 2 + digits)
-        {
-            if (end) throw new InstrumentException("IEEE-Blockkopf abgeschnitten.");
-            return false;
-        }
+        if (!HasBlockBytes(data, 2 + digits, end, "IEEE-Blockkopf abgeschnitten.")) return false;
         if (!int.TryParse(Encoding.ASCII.GetString([.. data.GetRange(2, digits)]), NumberStyles.None, CultureInfo.InvariantCulture, out var length))
             throw new InstrumentException("Ungültige IEEE-Blocklänge.");
         var total = 2 + digits + length;
-        if (data.Count < total)
-        {
-            if (end) throw new InstrumentException("IEEE-Block abgeschnitten.");
-            return false;
-        }
+        if (!HasBlockBytes(data, total, end, "IEEE-Block abgeschnitten.")) return false;
         return end || data.Count > total && data[total] == '\n';
+    }
+
+    private static bool HasBlockBytes(List<byte> data, int required, bool end, string error)
+    {
+        if (data.Count >= required) return true;
+        if (end) throw new InstrumentException(error);
+        return false;
     }
 
     internal static (int Offset, int Length)? BlockBounds(byte[] reply)

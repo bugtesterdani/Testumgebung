@@ -121,14 +121,20 @@ public sealed record SerialSettings(string Port, int Baud = 9600, int DataBits =
     /// <summary>Optionen: Baud, Datenbits, Parität (N/E/O/M/S), Stoppbits (1/1.5/2), Handshake (Kein/RTS-CTS/XON-XOFF), RS485 (RTS-Umschaltung).</summary>
     public static SerialSettings From(string port, InstrumentOptions o)
     {
-        var parity = (o.Text("Parität") ?? o.Text("Paritaet") ?? "N").ToUpperInvariant()[0];
-        parity = parity switch { 'K' => 'N', 'G' => 'E', 'U' => 'O', _ => parity };
-        if (!"NEOMS".Contains(parity)) throw new InstrumentException($"Parität „{parity}“: N, E, O, M oder S.");
+        var parity = ParseParity(o);
         var settings = new SerialSettings(port.Trim().ToUpperInvariant(), (int)(o.Number("Baud") ?? 9600), (int)(o.Number("Datenbits") ?? 8), parity,
             o.Number("Stoppbits") ?? 1, o.Text("Handshake") ?? "Kein", o.Flag("RS485"));
         if (settings.DataBits is < 5 or > 8) throw new InstrumentException("Datenbits 5–8.");
         if (settings.StopBits is not (1 or 1.5 or 2)) throw new InstrumentException("Stoppbits 1, 1.5 oder 2.");
         return settings;
+    }
+
+    private static char ParseParity(InstrumentOptions o)
+    {
+        var parity = (o.Text("Parität") ?? o.Text("Paritaet") ?? "N").ToUpperInvariant()[0];
+        parity = parity switch { 'K' => 'N', 'G' => 'E', 'U' => 'O', _ => parity };
+        if (!"NEOMS".Contains(parity)) throw new InstrumentException($"Parität „{parity}“: N, E, O, M oder S.");
+        return parity;
     }
 
     public override string ToString()

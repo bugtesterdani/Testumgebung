@@ -157,16 +157,8 @@ public static class OutputSuitability
     public static IReadOnlyList<SuitabilityIssue> Check(OutputCapabilities caps, OutputCurve curve)
     {
         var list = new List<SuitabilityIssue>();
-        foreach (var ch in curve.Channels)
-        {
-            if (!caps.Channels.Contains(ch.Id)) list.Add(new(true, $"Kanal {ch.Id} gibt es am Gerät {caps.Device} nicht (vorhanden: {string.Join(", ", caps.Channels)})."));
-            if (!string.Equals(ch.Unit, caps.Unit, StringComparison.Ordinal))
-                list.Add(new(true, $"Kanal {ch.Id}: Einheit {ch.Unit} statt {caps.Unit} – keine automatische Umrechnung."));
-            var min = ch.Samples.Length == 0 ? 0 : ch.Samples.Min();
-            var max = ch.Samples.Length == 0 ? 0 : ch.Samples.Max();
-            if (min < caps.Min || max > caps.Max)
-                list.Add(new(true, $"Kanal {ch.Id}: Werte {min:0.###} … {max:0.###} {ch.Unit} außerhalb {caps.Min:0.###} … {caps.Max:0.###} – keine automatische Skalierung."));
-        }
+        foreach (var channel in curve.Channels)
+            CheckChannel(caps, channel, list);
         if (curve.Times is not null)
         {
             if (!caps.ExplicitTimes) list.Add(new(true, "Gerät unterstützt keine expliziten Zeitpunkte – Abtastrate ausdrücklich festlegen (Resampling im Editor)."));
@@ -179,5 +171,16 @@ public static class OutputSuitability
         if (curve.Count == 0) list.Add(new(true, "Kurve ist leer."));
         if (list.Count == 0) list.Add(new(false, $"Geräteeignung geprüft: {caps.Unit}, {(curve.Times is null ? $"{curve.SampleRate:0.###} Hz" : "explizite Zeitpunkte")}, {curve.Channels.Count} Kanal/Kanäle."));
         return list;
+    }
+
+    private static void CheckChannel(OutputCapabilities caps, OutputChannelData ch, List<SuitabilityIssue> list)
+    {
+        if (!caps.Channels.Contains(ch.Id)) list.Add(new(true, $"Kanal {ch.Id} gibt es am Gerät {caps.Device} nicht (vorhanden: {string.Join(", ", caps.Channels)})."));
+        if (!string.Equals(ch.Unit, caps.Unit, StringComparison.Ordinal))
+            list.Add(new(true, $"Kanal {ch.Id}: Einheit {ch.Unit} statt {caps.Unit} – keine automatische Umrechnung."));
+        var min = ch.Samples.Length == 0 ? 0 : ch.Samples.Min();
+        var max = ch.Samples.Length == 0 ? 0 : ch.Samples.Max();
+        if (min < caps.Min || max > caps.Max)
+            list.Add(new(true, $"Kanal {ch.Id}: Werte {min:0.###} … {max:0.###} {ch.Unit} außerhalb {caps.Min:0.###} … {caps.Max:0.###} – keine automatische Skalierung."));
     }
 }

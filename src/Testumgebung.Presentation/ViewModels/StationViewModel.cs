@@ -671,12 +671,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         var registry = BuildRunRegistry(project);
         if (registry is null) return;
 
-        Error = null;
-        _storage = new StorageResolver(project.Definition);
-        ApplyLayout(project.Definition.Layout);
-        ResetDisplay(project.Definition);
-        if (orderSession && presets?.GetValueOrDefault("Auftrag") is string order) CurrentOrder = order;
-        if (selectionNote is not null) LogSelection("Auswahl · Kennung zugeordnet", selectionNote, ResultRating.NResult, "OK");
+        PrepareRunDisplay(project, presets, orderSession, selectionNote);
         _run = new TestRun(project.Definition, RunOptions(registry, presets, dutLimit, orderSession, pythonVenv), runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
         if (_results is not null)
         {
@@ -710,22 +705,36 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         }
         _coordinator?.EndRun(Name);
         var safeProblems = await SafeStateAsync().ConfigureAwait(false);
-        _ui.Post(() =>
-        {
-            foreach (var p in safeProblems)
-                AddProtocol(new ProtocolEntry(DateTimeOffset.Now, ProtocolKind.Error, "Sicherer Zustand", "—", "", "", ResultRating.Error, p));
-            if (safeProblems.Count > 0) Error = "Sicherer Zustand nicht für alle Geräte bestätigt – Geräte prüfen: " + string.Join(" ", safeProblems);
-            LastStatus = status;
-            State = EngineState.Completed;
-            StatusText = "Bereit";
-            StatusKind = StationStatusKind.Idle;
-            Hint = $"Ablauf beendet: {status}. Neuer Start möglich.";
-            foreach (var c in Contents) c.Cancel();
-            Contents.Clear();
-            _contentById.Clear();
-            OnPropertyChanged(nameof(ActiveContent));
-            RaiseRunState();
-        });
+        _ui.Post(() => CompleteRunDisplay(status, safeProblems));
+    }
+
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_storage))]
+    private void PrepareRunDisplay(TestProject project, IReadOnlyDictionary<string, object?>? presets,
+        bool orderSession, string? selectionNote)
+    {
+        Error = null;
+        _storage = new StorageResolver(project.Definition);
+        ApplyLayout(project.Definition.Layout);
+        ResetDisplay(project.Definition);
+        if (orderSession && presets?.GetValueOrDefault("Auftrag") is string order) CurrentOrder = order;
+        if (selectionNote is not null) LogSelection("Auswahl · Kennung zugeordnet", selectionNote, ResultRating.NResult, "OK");
+    }
+
+    private void CompleteRunDisplay(RunStatus status, IReadOnlyList<string> safeProblems)
+    {
+        foreach (var p in safeProblems)
+            AddProtocol(new ProtocolEntry(DateTimeOffset.Now, ProtocolKind.Error, "Sicherer Zustand", "—", "", "", ResultRating.Error, p));
+        if (safeProblems.Count > 0) Error = "Sicherer Zustand nicht für alle Geräte bestätigt – Geräte prüfen: " + string.Join(" ", safeProblems);
+        LastStatus = status;
+        State = EngineState.Completed;
+        StatusText = "Bereit";
+        StatusKind = StationStatusKind.Idle;
+        Hint = $"Ablauf beendet: {status}. Neuer Start möglich.";
+        foreach (var c in Contents) c.Cancel();
+        Contents.Clear();
+        _contentById.Clear();
+        OnPropertyChanged(nameof(ActiveContent));
+        RaiseRunState();
     }
 
     /// <summary>Lauf für gezielte Ausführung im Debugkontext (eigene Projektkopie, Simulation dieses Prüfplatzes).</summary>
@@ -1080,11 +1089,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void OnStepCompleted(StepCompleted sc)
     {
-        if (sc.Value is WaveformSet { Channels.Count: > 0 } waves)
-        {
-            LiveWaveform.SetData(waves);
-            LiveWaveformTitle = $"{Last(sc.Path)} · {sc.Time.ToLocalTime():HH:mm:ss} · {waves}";
-        }
+        UpdateLiveWaveform(sc);
         if (_overviewByNode.TryGetValue(sc.NodeId, out var item))
         {
             item.Rating = item.Rating.Merge(sc.Rating);
@@ -1093,8 +1098,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         DutRating = DutRating.Merge(sc.Rating);
 
         var value = FormatValue(sc.Value);
-        if (_dutIdWriters.Contains(sc.NodeId) && sc.Value is string id && id.Length > 0) CurrentDutId = id;
-        if (_orderWriters.Contains(sc.NodeId) && sc.Value is string order && order.Length > 0) CurrentOrder = order;
+        UpdateRunIdentifiers(sc);
 
         if (_storage is not null && !_storage.IsEnabled(sc.NodeId, StorageTarget.Display))
         {
@@ -1104,6 +1108,21 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         }
 
         DisplayStepResult(sc, value);
+    }
+
+    private void UpdateLiveWaveform(StepCompleted sc)
+    {
+        if (sc.Value is WaveformSet { Channels.Count: > 0 } waves)
+        {
+            LiveWaveform.SetData(waves);
+            LiveWaveformTitle = $"{Last(sc.Path)} · {sc.Time.ToLocalTime():HH:mm:ss} · {waves}";
+        }
+    }
+
+    private void UpdateRunIdentifiers(StepCompleted sc)
+    {
+        if (_dutIdWriters.Contains(sc.NodeId) && sc.Value is string id && id.Length > 0) CurrentDutId = id;
+        if (_orderWriters.Contains(sc.NodeId) && sc.Value is string order && order.Length > 0) CurrentOrder = order;
     }
 
     private void DisplayStepResult(StepCompleted sc, string value)
