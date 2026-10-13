@@ -59,16 +59,17 @@ public sealed class ShellViewModel : ObservableObject
         IdentityServices? identity = null, ReleaseHub? releases = null,
         StationCoordinator? stations = null, StationSetupStore? stationStore = null)
     {
-        results ??= services?.Pipeline;
-        _identity = identity ?? IdentityServices.Simulated(() => LoginName);
+        var dependencies = ResolveDependencies(ui, identity, results, services, stations, clock);
+        results = dependencies.Results;
+        _identity = dependencies.Identity;
         Releases = releases;
-        _ui = ui ?? SynchronizationContextDispatcher.FromCurrent();
+        _ui = dependencies.Ui;
         var catalog = BlockCatalog.Default;
         var serializer = new ProjectSerializer(catalog);
         Editor = CreateEditor();
         Editor.CodeRuntime = codeRuntime;
         Library = CreateLibrary();
-        IResourceManager resources = stations?.Resources ?? new ResourceManager(clock ?? SystemClock.Instance);
+        IResourceManager resources = dependencies.Resources;
         Resources = resources;
 
         _clockForStations = clock;
@@ -76,8 +77,7 @@ public sealed class ShellViewModel : ObservableObject
         _results = results;
         _serializer = serializer;
         Coordinator = stations ?? new StationCoordinator(StationSetup.Default(Editor.Project), resources, clock) { IsSuggestion = true };
-        foreach (var config in Coordinator.Setup.Stations) AddStation(config.Name);
-        if (Stations.Count == 0) AddStation(StationSetup.StationName(1));
+        InitializeStations();
         _selectedStation = Stations[0];
         PairedStations = new PairedStationsViewModel(Stations);
         Results = CreateResults();
@@ -90,7 +90,6 @@ public sealed class ShellViewModel : ObservableObject
         AccessPage = new AccessSettingsViewModel(_identity);
         ConnectProjectEvents();
         StationsPage = new StationsViewModel(Coordinator, Editor, stationStore, _ui, () => Stations.Any(st => st.IsRunning));
-        var settingsPath = settingsStore?.Path ?? Settings.SettingsStore.DefaultPath;
         var accessStore = _identity.Store;
         SystemPage = CreateSystemPage();
         SelectionPage = CreateSelectionPage();
@@ -222,6 +221,7 @@ public sealed class ShellViewModel : ObservableObject
 
         SystemPageViewModel CreateSystemPage()
         {
+            var settingsPath = settingsStore?.Path ?? Settings.SettingsStore.DefaultPath;
             return new SystemPageViewModel(
                 () => new Pilot.SystemCheckContext
                 {
@@ -259,6 +259,12 @@ public sealed class ShellViewModel : ObservableObject
         };
     }
 
+    private (IUiDispatcher Ui, IdentityServices Identity, Testumgebung.Persistence.Results.ResultPipeline? Results, IResourceManager Resources)
+        ResolveDependencies(IUiDispatcher? ui, IdentityServices? identity, Testumgebung.Persistence.Results.ResultPipeline? results,
+            Settings.ResultServices? services, StationCoordinator? stations, IClock? clock)
+        => (ui ?? SynchronizationContextDispatcher.FromCurrent(), identity ?? IdentityServices.Simulated(() => LoginName),
+            results ?? services?.Pipeline, stations?.Resources ?? new ResourceManager(clock ?? SystemClock.Instance));
+
     private readonly IClock? _clockForStations;
     private readonly Testumgebung.Domain.Code.ICodeRuntime? _codeRuntime;
     private readonly Testumgebung.Persistence.Results.ResultPipeline? _results;
@@ -266,6 +272,12 @@ public sealed class ShellViewModel : ObservableObject
 
     /// <summary>Gemeinsamer Zustand aller Prüfplätze (Etappe 9).</summary>
     public StationCoordinator Coordinator { get; }
+
+    private void InitializeStations()
+    {
+        foreach (var config in Coordinator.Setup.Stations) AddStation(config.Name);
+        if (Stations.Count == 0) AddStation(StationSetup.StationName(1));
+    }
 
     private StationViewModel AddStation(string name)
     {
@@ -276,6 +288,13 @@ public sealed class ShellViewModel : ObservableObject
         {
             if (ReferenceEquals(station, SelectedStation) && Editor.FindNode(id) is { } n) n.RunMarker = marker;
         };
+        ConnectStationEvents(station);
+        Stations.Add(station);
+        return station;
+    }
+
+    private void ConnectStationEvents(StationViewModel station)
+    {
         station.PropertyChanged += (_, e) =>
         {
             if (ReferenceEquals(station, SelectedStation) && e.PropertyName == nameof(StationViewModel.IsRunning))
@@ -288,6 +307,11 @@ public sealed class ShellViewModel : ObservableObject
                 OnPropertyChanged(nameof(ActiveSoftwareText));
         };
         station.StorageReports.CollectionChanged += (_, _) => Results?.Refresh();
+        ConnectStationDebugger(station);
+    }
+
+    private void ConnectStationDebugger(StationViewModel station)
+    {
         station.Debug.PropertyChanged += (_, e) =>
         {
             if (ReferenceEquals(station, SelectedStation) &&
@@ -295,8 +319,6 @@ public sealed class ShellViewModel : ObservableObject
                 || (e.PropertyName == nameof(DebugViewModel.IsCodePaused) && station.Debug.IsCodePaused)))
                 WorkspaceToolTab = 2;
         };
-        Stations.Add(station);
-        return station;
     }
 
     /// <summary>Prüfplätze an die (neu gespeicherte) Konfiguration angleichen; laufende Prüfplätze bleiben.</summary>

@@ -1,9 +1,10 @@
-param([string]$PythonForSsh = '', [switch]$EnforceTargets)
+param([string]$PythonForSsh = '', [switch]$EnforceTargets, [string]$RunDirectory = '')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Push-Location $root
 try {
-    $run = Join-Path $root ('artifacts/coverage/' + (Get-Date -Format 'yyyy-MM-dd_HHmmss'))
+    $run = if ($RunDirectory) { [IO.Path]::GetFullPath($RunDirectory, $root) }
+        else { Join-Path $root ('artifacts/coverage/' + (Get-Date -Format 'yyyy-MM-dd_HHmmss')) }
     $toolDir = Join-Path $root 'artifacts/tools/reportgenerator'
     $tool = Join-Path $toolDir 'reportgenerator.exe'
     if (-not (Test-Path $tool)) {

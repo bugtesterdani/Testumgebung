@@ -41,6 +41,16 @@ public static class Xlsx
         var shared = zip.GetEntry("xl/sharedStrings.xml") is null ? [] :
             Load(zip, "xl/sharedStrings.xml").Root!.Elements(S + "si").Select(si => string.Concat(si.Descendants(S + "t").Select(t => t.Value))).ToList();
 
+        var rows = ReadRows(zip, sheetPath, shared);
+        if (rows.Count == 0) throw new CurveImportException("Tabellenblatt ist leer.");
+        var width = rows.Values.Where(r => r.Count > 0).Select(r => r.Keys.Max() + 1).DefaultIfEmpty(0).Max();
+        var grid = rows.Values.Select(r => Enumerable.Range(0, width).Select(i => r.TryGetValue(i, out var s) ? s : "").ToArray()).ToList();
+        var table = CurveImport.FromGrid("Excel (.xlsx)", name + (sheetName is null ? "" : $" [{sheetName}]"), CurveImport.Hash(bytes), grid, CultureInfo.InvariantCulture);
+        return table;
+    }
+
+    private static SortedDictionary<int, Dictionary<int, string>> ReadRows(ZipArchive zip, string sheetPath, List<string> shared)
+    {
         var rows = new SortedDictionary<int, Dictionary<int, string>>();
         foreach (var row in Load(zip, sheetPath).Descendants(S + "row"))
         {
@@ -51,23 +61,24 @@ public static class Xlsx
             {
                 var col = (string?)c.Attribute("r") is { } r ? ColumnIndex(r) : next;
                 next = col + 1;
-                var type = (string?)c.Attribute("t");
-                var v = c.Element(S + "v")?.Value;
-                cells[col] = type switch
-                {
-                    "s" => v is not null && int.TryParse(v, out var si) && si >= 0 && si < shared.Count ? shared[si] : "",
-                    "inlineStr" => string.Concat(c.Descendants(S + "t").Select(t => t.Value)),
-                    "b" => v == "1" ? "1" : "0",
-                    _ => v ?? "",
-                };
+                cells[col] = CellText(c, shared);
             }
             rows[rowIndex] = cells;
         }
-        if (rows.Count == 0) throw new CurveImportException("Tabellenblatt ist leer.");
-        var width = rows.Values.Where(r => r.Count > 0).Select(r => r.Keys.Max() + 1).DefaultIfEmpty(0).Max();
-        var grid = rows.Values.Select(r => Enumerable.Range(0, width).Select(i => r.TryGetValue(i, out var s) ? s : "").ToArray()).ToList();
-        var table = CurveImport.FromGrid("Excel (.xlsx)", name + (sheetName is null ? "" : $" [{sheetName}]"), CurveImport.Hash(bytes), grid, CultureInfo.InvariantCulture);
-        return table;
+        return rows;
+    }
+
+    private static string CellText(XElement c, List<string> shared)
+    {
+        var type = (string?)c.Attribute("t");
+        var v = c.Element(S + "v")?.Value;
+        return type switch
+        {
+            "s" => v is not null && int.TryParse(v, out var si) && si >= 0 && si < shared.Count ? shared[si] : "",
+            "inlineStr" => string.Concat(c.Descendants(S + "t").Select(t => t.Value)),
+            "b" => v == "1" ? "1" : "0",
+            _ => v ?? "",
+        };
     }
 
     private static ZipArchive Open(byte[] bytes)

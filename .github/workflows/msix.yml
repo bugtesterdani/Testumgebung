@@ -77,7 +77,19 @@ jobs:
           if ($LASTEXITCODE) { throw 'PDF-Abhängigkeit fehlt.' }
           python build/create-complete-manual.py
           if ($LASTEXITCODE) { throw 'PDF-Erstellung fehlgeschlagen.' }
-      - name: Signiertes MSIX-Bundle bauen und testen
+      - name: Testabdeckung und CRAP-Grenze prüfen
+        shell: pwsh
+        run: |
+          ./build/tests/verify-coverage-goals.ps1
+          ./build/coverage.ps1 -EnforceTargets -RunDirectory artifacts/coverage/ci
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: Qualitaetsbericht-${{ steps.version.outputs.version }}
+          path: artifacts/coverage/ci/**
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Signiertes MSIX-Bundle bauen
         shell: pwsh
         env:
           SIGNING_PFX_BASE64: ${{ (github.event_name != 'pull_request' || inputs.release_tag != '') && secrets.SIGNING_PFX_BASE64 || '' }}
@@ -93,7 +105,10 @@ jobs:
               [IO.File]::WriteAllBytes($pfx,[Convert]::FromBase64String($env:SIGNING_PFX_BASE64))
               $signOptions.CertificatePath=$pfx
             }
-            ./build/msix.ps1 -Version $env:BUILD_VERSION @signOptions -PrepareOnly
+            ./build/msix.ps1 -Version $env:BUILD_VERSION @signOptions -PrepareOnly -SkipTests
+            $testResults="artifacts/msix/$env:BUILD_VERSION/tests"
+            New-Item -ItemType Directory -Path $testResults -Force | Out-Null
+            Get-ChildItem artifacts/coverage/ci/raw -Filter '*.trx' -Recurse | Copy-Item -Destination $testResults
             $bundle="artifacts/msix/$env:BUILD_VERSION/Testumgebung_$($env:BUILD_VERSION)_x64.msixbundle"
             python build/audit-dependencies.py --layout artifacts/publish/Testumgebung --bundle $bundle
             if ($LASTEXITCODE) { throw 'Lizenzinventar fehlgeschlagen.' }

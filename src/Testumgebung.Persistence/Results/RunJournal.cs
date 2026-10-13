@@ -124,6 +124,16 @@ public sealed class RunJournal(string folder)
     }
 
     /// <summary>Journal lesen; eine abgeschnittene letzte Zeile (Stromausfall) wird übersprungen.</summary>
+    private static void ResolveDutId(JournalHeader header, List<ResultEvent> events)
+    {
+        if (string.IsNullOrEmpty(header.DutId))
+        {
+            var writers = header.DutIdWriters.ToHashSet(StringComparer.Ordinal);
+            header.DutId = events.LastOrDefault(e => e.Kind == ResultEventKind.Step && e.NodeId is not null && writers.Contains(e.NodeId)
+                                                     && e.Value is string { Length: > 0 })?.Value as string;
+        }
+    }
+
     public static IncompleteRun? Read(string path)
     {
         string[] lines;
@@ -165,12 +175,7 @@ public sealed class RunJournal(string folder)
             }
         }
         if (header is null) return null;
-        if (string.IsNullOrEmpty(header.DutId))
-        {
-            var writers = header.DutIdWriters.ToHashSet(StringComparer.Ordinal);
-            header.DutId = events.LastOrDefault(e => e.Kind == ResultEventKind.Step && e.NodeId is not null && writers.Contains(e.NodeId)
-                                                     && e.Value is string { Length: > 0 })?.Value as string;
-        }
+        ResolveDutId(header, events);
         var last = events.Count > 0 ? events.Max(e => e.Time) : header.Started;
         return new IncompleteRun(path, header, events, last, damaged);
     }
@@ -294,8 +299,21 @@ internal sealed class JournalEvent
         };
         return new JournalEvent
         {
-            S = e.Sequence, K = e.Kind, N = e.NodeId, P = e.Path, I = e.Iteration, T = e.Time, R = e.Rating, Vt = vt, V = v,
-            U = e.Unit, Lo = e.LowLimit, Hi = e.HighLimit, M = e.Message, C = e.Cancelled, W = e.WaveformIds?.Count,
+            S = e.Sequence,
+            K = e.Kind,
+            N = e.NodeId,
+            P = e.Path,
+            I = e.Iteration,
+            T = e.Time,
+            R = e.Rating,
+            Vt = vt,
+            V = v,
+            U = e.Unit,
+            Lo = e.LowLimit,
+            Hi = e.HighLimit,
+            M = e.Message,
+            C = e.Cancelled,
+            W = e.WaveformIds?.Count,
         };
     }
 

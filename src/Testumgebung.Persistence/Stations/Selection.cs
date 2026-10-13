@@ -139,11 +139,14 @@ public static class TestSelector
                 if (resolved is null)
                     return Fail(SelectionState.None, $"Eigener Auswahlablauf liefert „{custom.Test}“{(string.IsNullOrEmpty(custom.Version) ? "" : " v" + custom.Version)} – nicht freigegeben.");
                 return new SelectionOutcome(SelectionState.Unique, resolved, string.IsNullOrWhiteSpace(custom.Order) ? order : custom.Order,
-                    ParseParameters(custom.Parameters), "Eigener Auswahlablauf", $"Zuordnung eindeutig: {id} → {resolved.Title}", [resolved], config.UseManual) { PythonVenv = custom.PythonVenv };
+                    ParseParameters(custom.Parameters), "Eigener Auswahlablauf", $"Zuordnung eindeutig: {id} → {resolved.Title}", [resolved], config.UseManual)
+                { PythonVenv = custom.PythonVenv };
             }
         }
 
-        if (config.UseRules)
+        if (config.UseRules && SelectByRules() is { } selected) return selected;
+
+        SelectionOutcome? SelectByRules()
         {
             var hits = config.Rules.Where(r => r.Matches(id)).OrderBy(r => r.Priority).ToList();
             if (hits.Count > 0)
@@ -160,6 +163,7 @@ public static class TestSelector
                 return new SelectionOutcome(SelectionState.Unique, test, order, ParseParameters(rule.Parameters),
                     $"Kennungsregel {rule.Pattern} (Priorität {rule.Priority})", $"Zuordnung eindeutig: {id} → {test.Title}", [test], config.UseManual);
             }
+            return null;
         }
 
         return config.UseManual

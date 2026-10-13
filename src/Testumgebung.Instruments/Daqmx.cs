@@ -474,11 +474,7 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
         var chans = channels.Select(Channel).ToList();
         if (chans.Count == 0 || chans.Any(c => !c.Access.HasFlag(ChannelAccess.Waveform)))
             throw new InstrumentException("NI-DAQmx: Kurvenaufnahme nur auf Analogeingängen.");
-        var involved = Info().Where(i => chans.Any(c => c.Name.StartsWith(i.Name + "/", StringComparison.OrdinalIgnoreCase))).ToList();
-        var maxRate = involved.Select(i => i.AiMaxRate).Where(r => r > 0).DefaultIfEmpty(double.MaxValue).Min();
-        var simultaneous = involved.Count > 0 && involved.All(i => i.SimultaneousSampling);
-        if (sampleRate * (simultaneous ? 1 : chans.Count) > maxRate)
-            throw new InstrumentException(string.Create(CultureInfo.InvariantCulture, $"NI-DAQmx: {sampleRate:0.###} Hz × {chans.Count} Kanäle übersteigt die Gerätegrenze {maxRate:0.###} S/s."));
+        var (involved, simultaneous) = ValidateCaptureRate(chans, sampleRate);
         var start = DateTimeOffset.Now;
         var data = chans.Select(_ => new SampleBufferWriter(samples)).ToList();
         try
@@ -530,6 +526,16 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
         }
         finally { foreach (var writer in data) writer.Dispose(); }
     }, CancellationToken.None);
+
+    private (List<DaqDeviceInfo> Involved, bool Simultaneous) ValidateCaptureRate(List<InstrumentChannel> chans, double sampleRate)
+    {
+        var involved = Info().Where(i => chans.Any(c => c.Name.StartsWith(i.Name + "/", StringComparison.OrdinalIgnoreCase))).ToList();
+        var maxRate = involved.Select(i => i.AiMaxRate).Where(r => r > 0).DefaultIfEmpty(double.MaxValue).Min();
+        var simultaneous = involved.Count > 0 && involved.All(i => i.SimultaneousSampling);
+        if (sampleRate * (simultaneous ? 1 : chans.Count) > maxRate)
+            throw new InstrumentException(string.Create(CultureInfo.InvariantCulture, $"NI-DAQmx: {sampleRate:0.###} Hz × {chans.Count} Kanäle übersteigt die Gerätegrenze {maxRate:0.###} S/s."));
+        return (involved, simultaneous);
+    }
 
     // ------------------------------------------------------------------ Kurvenausgabe (AO)
 

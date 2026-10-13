@@ -268,12 +268,7 @@ public sealed partial class EditorViewModel
             var where = new List<string>();
             if (Has(n.Name)) where.Add("Name");
             if (Has(n.Definition.Description)) where.Add("Beschreibung");
-            if (n.Step is { } s)
-            {
-                if (s.BlockType is { } t && (Has(t) || (Catalog.TryGet(t, out var d) && Has(d.DisplayName)))) where.Add("Baustein");
-                foreach (var (key, value) in s.Parameters)
-                    if (Has(value)) where.Add(key == "Code" ? "Code" : $"{key} = {value}");
-            }
+            if (n.Step is { } s) SearchStep(s, where);
             if (n.Group is { } g)
             {
                 foreach (var v in g.Variables.Where(v => Has(v.Name))) where.Add("Variable " + v.Name);
@@ -283,6 +278,14 @@ public sealed partial class EditorViewModel
             if (where.Count > 0) SearchHits.Add(new SearchHit(n, string.Join(", ", where.Distinct())));
         }
         SearchStatus = SearchHits.Count == 0 ? "Keine Treffer" : $"{SearchHits.Count} Treffer";
+    }
+
+    private void SearchStep(StepDefinition s, List<string> where)
+    {
+        bool Has(string? value) => value is not null && value.Contains(_searchText.Trim(), StringComparison.OrdinalIgnoreCase);
+        if (s.BlockType is { } t && (Has(t) || (Catalog.TryGet(t, out var d) && Has(d.DisplayName)))) where.Add("Baustein");
+        foreach (var (key, value) in s.Parameters)
+            if (Has(value)) where.Add(key == "Code" ? "Code" : $"{key} = {value}");
     }
 
     /// <summary>Nächsten/vorherigen Treffer wählen und Gruppen bis dorthin aufklappen.</summary>

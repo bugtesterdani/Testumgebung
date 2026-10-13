@@ -5,6 +5,31 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class ScpiStreamingBoundaryTests
 {
+    [Theory]
+    [InlineData("#13abc\n", "abc")]
+    [InlineData("#10\n", "")]
+    [InlineData("#0abc\n", "abc")]
+    public async Task BufferedBinaryQueryReturnsOnlyThePayload(string response, string expected)
+    {
+        var io = new Io();
+        io.Chunks.Enqueue(new IoChunk(Encoding.ASCII.GetBytes(response), true));
+        using var session = new ScpiSession(() => io);
+        Assert.Equal(Encoding.ASCII.GetBytes(expected), await session.QueryBlockAsync("DATA?"));
+        io.Chunks.Enqueue(new IoChunk("ready\n"u8.ToArray(), true));
+        Assert.Equal("ready", await session.QueryAsync("STATE?"));
+    }
+
+    [Fact]
+    public async Task BufferedBinaryQueryRejectsAPlainTextReplyAndReleasesTheGate()
+    {
+        var io = new Io();
+        io.Chunks.Enqueue(new IoChunk("text\n"u8.ToArray(), true));
+        using var session = new ScpiSession(() => io);
+        Assert.Contains("kein IEEE-Block", (await Assert.ThrowsAsync<InstrumentException>(() => session.QueryBlockAsync("DATA?"))).Message);
+        io.Chunks.Enqueue(new IoChunk("ready\n"u8.ToArray(), true));
+        Assert.Equal("ready", await session.QueryAsync("STATE?"));
+    }
+
     private sealed class Io : IInstrumentIo
     {
         public Queue<IoChunk> Chunks { get; } = new();

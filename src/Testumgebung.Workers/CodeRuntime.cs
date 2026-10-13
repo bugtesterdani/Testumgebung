@@ -66,7 +66,8 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             {
                 python = new CodeRuntime(new CodeRuntimeOptions
                 {
-                    PythonExecutable = executable, WorkerDirectory = _options.WorkerDirectory,
+                    PythonExecutable = executable,
+                    WorkerDirectory = _options.WorkerDirectory,
                     MaxIdleWorkers = _options.MaxIdleWorkers,
                 });
                 _pythonEnvironments.Add(executable, python);
@@ -162,22 +163,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
                 }
             case CodeLanguage.Cpp or CodeLanguage.LabView:
                 {
-                    var dir = Path.Combine(_options.WorkerDirectory, "native");
-                    var dll = Path.Combine(dir, "Testumgebung.Workers.Native.dll");
-                    var exe = Path.Combine(dir, OperatingSystem.IsWindows() ? "Testumgebung.Workers.Native.exe" : "Testumgebung.Workers.Native");
-                    if (!File.Exists(dll)) throw new CodeExecutionException($"C++-Worker nicht gefunden: {dll}");
-                    var env = new Dictionary<string, string>();
-                    var compiler = _options.CppCompiler ?? BundledToolchain.Compiler;
-                    if (compiler is { Length: > 0 } cxx)
-                    {
-                        env["TESTUMGEBUNG_CXX"] = cxx;
-                        // DLL-Abhängigkeiten der portablen Toolchain nur für diesen Worker auflösen.
-                        env["PATH"] = Path.GetDirectoryName(cxx) + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH");
-                    }
-                    if (BundledToolchain.Debugger is { } gdb) env["TESTUMGEBUNG_GDB"] = gdb;
-                    if (_options.CppCacheDirectory is { Length: > 0 } cache) env["TESTUMGEBUNG_CPP_CACHE"] = cache;
-                    if (File.Exists(exe) && OperatingSystem.IsWindows()) return WorkerProcess.Start(exe, [], env);
-                    return WorkerProcess.Start(DotnetHost(), ["exec", dll], env);
+                    return StartNativeWorker();
                 }
             case CodeLanguage.CSharp:
                 {
@@ -191,6 +177,26 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             default:
                 throw new CodeExecutionException($"Sprache {language} wird nicht unterstützt.");
         }
+    }
+
+    private WorkerProcess StartNativeWorker()
+    {
+        var dir = Path.Combine(_options.WorkerDirectory, "native");
+        var dll = Path.Combine(dir, "Testumgebung.Workers.Native.dll");
+        var exe = Path.Combine(dir, OperatingSystem.IsWindows() ? "Testumgebung.Workers.Native.exe" : "Testumgebung.Workers.Native");
+        if (!File.Exists(dll)) throw new CodeExecutionException($"C++-Worker nicht gefunden: {dll}");
+        var env = new Dictionary<string, string>();
+        var compiler = _options.CppCompiler ?? BundledToolchain.Compiler;
+        if (compiler is { Length: > 0 } cxx)
+        {
+            env["TESTUMGEBUNG_CXX"] = cxx;
+            // DLL-Abhängigkeiten der portablen Toolchain nur für diesen Worker auflösen.
+            env["PATH"] = Path.GetDirectoryName(cxx) + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH");
+        }
+        if (BundledToolchain.Debugger is { } gdb) env["TESTUMGEBUNG_GDB"] = gdb;
+        if (_options.CppCacheDirectory is { Length: > 0 } cache) env["TESTUMGEBUNG_CPP_CACHE"] = cache;
+        if (File.Exists(exe) && OperatingSystem.IsWindows()) return WorkerProcess.Start(exe, [], env);
+        return WorkerProcess.Start(DotnetHost(), ["exec", dll], env);
     }
 
     private string DotnetHost()
@@ -407,7 +413,26 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             reply["value"] = ToJson(await host.AskAsync(prompt).ConfigureAwait(false));
         }
 
-        try
+        async Task HandleDebugAsync()
+        {
+            var vars = new Dictionary<string, object?>(StringComparer.Ordinal);
+            if (args["vars"] is JsonObject vobj)
+                foreach (var (key, node) in vobj)
+                    if (!key.StartsWith("__gdb_", StringComparison.Ordinal)) vars[key] = FromJson(node);
+            var decision = await host.DebugAsync(new CodeDebugEvent(
+                (int?)args["line"] ?? 0, (string?)args["kind"] ?? "line", vars)
+            {
+                InspectNativeAsync = language == CodeLanguage.Cpp && BundledToolchain.Debugger is { } debugger
+                    ? ct => GdbInspector.CaptureAsync(debugger, worker.ProcessId, ct,
+                        (string?)args["vars"]?["__gdb_frame"], (string?)args["vars"]?["__gdb_pc"],
+                        (string?)args["vars"]?["__gdb_thread"]) : null,
+            }).ConfigureAwait(false);
+            var bps = new JsonArray();
+            foreach (var line in decision.Breakpoints) bps.Add(line);
+            reply["value"] = new JsonObject { ["cmd"] = decision.Command, ["breakpoints"] = bps, ["step"] = decision.Step };
+        }
+
+        void HandleVariableCall()
         {
             switch ((string?)msg["op"])
             {
@@ -417,45 +442,68 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
                 case "set":
                     host.Set((string)args["path"]!, FromJson(args["value"]));
                     break;
+            }
+        }
+
+        async Task HandleHardwareAsync(string op)
+        {
+            switch (op)
+            {
                 case "read":
                     reply["value"] = await host.ReadAsync((string)args["resource"]!).ConfigureAwait(false);
                     break;
                 case "write":
                     await host.WriteAsync((string)args["resource"]!, args["value"]!.GetValue<double>()).ConfigureAwait(false);
                     break;
+            }
+        }
+
+        async Task HandleDeviceAsync(string op)
+        {
+            var arguments = new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (var (key, node) in args) arguments[key] = FromJson(node);
+            reply["value"] = ToJsonDeep(await host.DeviceAsync(op, arguments).ConfigureAwait(false));
+        }
+
+        void HandleSelection()
+        {
+            host.SelectTest((string?)args["test"] ?? "", (string?)args["version"], (string?)args["order"], (string?)args["parameters"], (string?)args["pythonVenv"]);
+        }
+
+        void HandleLogMessage()
+        {
+            host.Log((string?)args["message"] ?? "");
+        }
+
+        try
+        {
+            switch ((string?)msg["op"])
+            {
+                case "get":
+                case "set":
+                    HandleVariableCall();
+                    break;
+                case "read":
+                case "write":
+                    await HandleHardwareAsync((string)msg["op"]!);
+                    break;
                 case "log":
-                    host.Log((string?)args["message"] ?? "");
+                    HandleLogMessage();
                     break;
                 case "ask":
                     await HandleOperatorPromptAsync();
                     break;
                 case "select.test":
-                    host.SelectTest((string?)args["test"] ?? "", (string?)args["version"], (string?)args["order"], (string?)args["parameters"], (string?)args["pythonVenv"]);
+                    HandleSelection();
                     break;
                 case "debug.at":
                     {
-                        var vars = new Dictionary<string, object?>(StringComparer.Ordinal);
-                        if (args["vars"] is JsonObject vobj)
-                            foreach (var (key, node) in vobj)
-                                if (!key.StartsWith("__gdb_", StringComparison.Ordinal)) vars[key] = FromJson(node);
-                        var decision = await host.DebugAsync(new CodeDebugEvent(
-                            (int?)args["line"] ?? 0, (string?)args["kind"] ?? "line", vars)
-                        {
-                            InspectNativeAsync = language == CodeLanguage.Cpp && BundledToolchain.Debugger is { } debugger
-                                ? ct => GdbInspector.CaptureAsync(debugger, worker.ProcessId, ct,
-                                    (string?)args["vars"]?["__gdb_frame"], (string?)args["vars"]?["__gdb_pc"],
-                                    (string?)args["vars"]?["__gdb_thread"]) : null,
-                        }).ConfigureAwait(false);
-                        var bps = new JsonArray();
-                        foreach (var line in decision.Breakpoints) bps.Add(line);
-                        reply["value"] = new JsonObject { ["cmd"] = decision.Command, ["breakpoints"] = bps, ["step"] = decision.Step };
+                        await HandleDebugAsync();
                         break;
                     }
                 case var op when op is not null && IsDeviceOperation(op):
                     {
-                        var arguments = new Dictionary<string, object?>(StringComparer.Ordinal);
-                        foreach (var (key, node) in args) arguments[key] = FromJson(node);
-                        reply["value"] = ToJsonDeep(await host.DeviceAsync(op, arguments).ConfigureAwait(false));
+                        await HandleDeviceAsync(op);
                         break;
                     }
                 default:

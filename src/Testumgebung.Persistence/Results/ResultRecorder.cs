@@ -163,29 +163,8 @@ public sealed class ResultRecorder
             switch (e)
             {
                 case StepCompleted sc:
-                {
-                    var seq = ++_seq;
-                    List<string>? ids = null;
-                    var waves = sc.Value switch
-                    {
-                        WaveformSet set => set.Channels,
-                        Waveform w => [w],
-                        _ => null,
-                    };
-                    if (waves is not null)
-                    {
-                        ids = [];
-                        foreach (var w in waves)
-                        {
-                            var id = $"{sc.NodeId}#{seq}/{w.Channel}";
-                            ids.Add(id);
-                            _waveforms.Add(new ResultWaveform(id, seq, sc.NodeId, w));
-                        }
-                    }
-                    _events.Add(new ResultEvent(seq, ResultEventKind.Step, sc.NodeId, sc.Path, sc.Iteration, sc.Time, sc.Rating,
-                        StorableValue(sc.Value), sc.Unit, sc.LowLimit, sc.HighLimit, sc.Message, sc.Cancelled, ids));
+                    AddStep(sc);
                     break;
-                }
                 case GroupCompleted gc:
                     _events.Add(new ResultEvent(++_seq, ResultEventKind.Group, gc.NodeId, gc.Path, gc.Iteration, gc.Time, gc.Rating,
                         (long)gc.Iterations, Message: gc.IsExit ? "Exit" : null));
@@ -216,6 +195,30 @@ public sealed class ResultRecorder
                         Message: $"{dev.Kind}: {dev.Details}", Value: dev.User));
                     break;
             }
+        }
+
+        private void AddStep(StepCompleted sc)
+        {
+            var seq = ++_seq;
+            List<string>? ids = null;
+            var waves = sc.Value switch
+            {
+                WaveformSet set => set.Channels,
+                Waveform w => [w],
+                _ => null,
+            };
+            if (waves is not null)
+            {
+                ids = [];
+                foreach (var w in waves)
+                {
+                    var id = $"{sc.NodeId}#{seq}/{w.Channel}";
+                    ids.Add(id);
+                    _waveforms.Add(new ResultWaveform(id, seq, sc.NodeId, w));
+                }
+            }
+            _events.Add(new ResultEvent(seq, ResultEventKind.Step, sc.NodeId, sc.Path, sc.Iteration, sc.Time, sc.Rating,
+                StorableValue(sc.Value), sc.Unit, sc.LowLimit, sc.HighLimit, sc.Message, sc.Cancelled, ids));
         }
 
         /// <summary>Bild einmalig einbetten (SHA-256 als Id; gleicher Inhalt → gleicher Anhang).</summary>

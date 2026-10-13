@@ -135,11 +135,7 @@ public sealed class SimulatedStreamDut : IByteStreamAdapter
         var text = CommText.Raw(body);
         foreach (var rule in _rules)
         {
-            string? response = null;
-            if (rule.Pattern is { } regex && regex.Match(text) is { Success: true } m)
-                response = Substitute(rule.Response, m);
-            else if (rule.HexPattern is { } hp && hp.Length == bytes.Length && hp.Select((b, i) => b is null || b == bytes[i]).All(x => x))
-                response = rule.Response;
+            var response = MatchResponse(rule, text, bytes);
             if (response is null) continue;
             var payload = rule.HexResponse ? CommText.ParseHex(response) : CommText.Parse(response, hex: false);
             foreach (var b in payload) _input.Enqueue(b);
@@ -148,6 +144,16 @@ public sealed class SimulatedStreamDut : IByteStreamAdapter
             break;
         }
         return Task.CompletedTask;
+    }
+
+    private string? MatchResponse(Rule rule, string text, byte[] bytes)
+    {
+        string? response = null;
+        if (rule.Pattern is { } regex && regex.Match(text) is { Success: true } m)
+            response = Substitute(rule.Response, m);
+        else if (rule.HexPattern is { } hp && hp.Length == bytes.Length && hp.Select((b, i) => b is null || b == bytes[i]).All(x => x))
+            response = rule.Response;
+        return response;
     }
 
     private static (byte[] Body, byte[] End) SplitLineEnd(byte[] bytes)
@@ -232,34 +238,46 @@ public sealed class SimulatedModbusDut : IModbusAdapter
             }
             try
             {
-                var colon = left.IndexOf(':');
-                var (area, address) = ModbusCodec.ParseAddress(colon < 0 ? left : left[..colon]);
-                var type = colon < 0 ? (area is ModbusArea.Coil or ModbusArea.DiscreteInput ? ModbusDataType.Bool : ModbusDataType.UInt16) : ModbusCodec.ParseType(left[(colon + 1)..]);
-                if (type == ModbusDataType.Text)
-                {
-                    var regs = ModbusCodec.Encode(right, type);
-                    for (var i = 0; i < regs.Length; i++)
-                    {
-                        var r = regs[i];
-                        _map[(area, address + i)] = () => r;
-                    }
-                    continue;
-                }
-                var value = type == ModbusDataType.Bool && !right.Contains('±')
-                    ? (right is "1" or "true" or "wahr" ? () => 1.0 : () => 0.0)
-                    : CommSimulation.Value(right, random);
-                var count = ModbusCodec.Registers(type);
-                for (var i = 0; i < count; i++)
-                {
-                    var index = i;
-                    var t = type;
-                    _map[(area, address + i)] = () => ModbusCodec.Encode(t is ModbusDataType.Float32 or ModbusDataType.Float64 or ModbusDataType.Bool ? value() : Math.Round(value()), t, lowFirst)[index];
-                }
+                AddRegisters(left, right, random, lowFirst);
             }
             catch (Exception ex) when (ex is FormatException or OverflowException)
             {
                 throw new FormatException($"Zeile {line}: {ex.Message}");
             }
+        }
+    }
+
+    private void AddRegisters(string left, string right, Random random, bool lowFirst)
+    {
+        var (area, address, type) = ParseRegisterPoint(left);
+        if (type == ModbusDataType.Text) { AddTextRegisters(area, address, right, type); return; }
+        var value = type == ModbusDataType.Bool && !right.Contains('±')
+            ? (right is "1" or "true" or "wahr" ? () => 1.0 : () => 0.0)
+            : CommSimulation.Value(right, random);
+        var count = ModbusCodec.Registers(type);
+        for (var i = 0; i < count; i++)
+        {
+            var index = i;
+            var t = type;
+            _map[(area, address + i)] = () => ModbusCodec.Encode(t is ModbusDataType.Float32 or ModbusDataType.Float64 or ModbusDataType.Bool ? value() : Math.Round(value()), t, lowFirst)[index];
+        }
+    }
+
+    private static (ModbusArea Area, int Address, ModbusDataType Type) ParseRegisterPoint(string left)
+    {
+        var colon = left.IndexOf(':');
+        var (area, address) = ModbusCodec.ParseAddress(colon < 0 ? left : left[..colon]);
+        var type = colon < 0 ? (area is ModbusArea.Coil or ModbusArea.DiscreteInput ? ModbusDataType.Bool : ModbusDataType.UInt16) : ModbusCodec.ParseType(left[(colon + 1)..]);
+        return (area, address, type);
+    }
+
+    private void AddTextRegisters(ModbusArea area, int address, string right, ModbusDataType type)
+    {
+        var regs = ModbusCodec.Encode(right, type);
+        for (var i = 0; i < regs.Length; i++)
+        {
+            var r = regs[i];
+            _map[(area, address + i)] = () => r;
         }
     }
 
@@ -388,17 +406,7 @@ public sealed class SimulatedCanDut : ICanAdapter
                 }
                 if (text.StartsWith("uds ", StringComparison.OrdinalIgnoreCase))
                 {
-                    var parts = text[4..].Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length < 2) throw new FormatException("„uds ANFRAGE-ID ANTWORT-ID [fd]“ erwartet, z. B. uds 0x7E0 0x7E8.");
-                    var (rq, ext1) = Id(parts[0]);
-                    var (rs, ext2) = Id(parts[1]);
-                    endpoint = new UdsEndpoint(rq, rs, ext1 || ext2, parts.Skip(2).Any(p => p.Equals("fd", StringComparison.OrdinalIgnoreCase)));
-                    foreach (var option in parts.Skip(2))
-                    {
-                        if (option.StartsWith("tx=", StringComparison.OrdinalIgnoreCase)) endpoint.InAddress = Hex(option[3..]);
-                        else if (option.StartsWith("rx=", StringComparison.OrdinalIgnoreCase)) endpoint.OutAddress = Hex(option[3..]);
-                    }
-                    _uds.Add(endpoint);
+                    endpoint = AddUdsEndpoint(text);
                     continue;
                 }
                 var split = text.IndexOf("=>", StringComparison.Ordinal);
@@ -431,6 +439,22 @@ public sealed class SimulatedCanDut : ICanAdapter
     }
 
     /// <summary>„sicherheit 01 seed=11 22 33 44 xor=5A“ (oder add=, invert, addrotxor=AA BB).</summary>
+    private UdsEndpoint AddUdsEndpoint(string text)
+    {
+        var parts = text[4..].Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2) throw new FormatException("„uds ANFRAGE-ID ANTWORT-ID [fd]“ erwartet, z. B. uds 0x7E0 0x7E8.");
+        var (rq, ext1) = Id(parts[0]);
+        var (rs, ext2) = Id(parts[1]);
+        var endpoint = new UdsEndpoint(rq, rs, ext1 || ext2, parts.Skip(2).Any(p => p.Equals("fd", StringComparison.OrdinalIgnoreCase)));
+        foreach (var option in parts.Skip(2))
+        {
+            if (option.StartsWith("tx=", StringComparison.OrdinalIgnoreCase)) endpoint.InAddress = Hex(option[3..]);
+            else if (option.StartsWith("rx=", StringComparison.OrdinalIgnoreCase)) endpoint.OutAddress = Hex(option[3..]);
+        }
+        _uds.Add(endpoint);
+        return endpoint;
+    }
+
     private static void ParseSecurity(UdsEndpoint e, string text)
     {
         var tokens = text.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
@@ -572,13 +596,13 @@ public sealed class SimulatedCanDut : ICanAdapter
         switch (d[0] >> 4)
         {
             case 0:
-            {
-                var length = d[0] & 0x0F;
-                var start = 1;
-                if (length == 0 && d.Length > 8) { length = d[1]; start = 2; }
-                if (length > 0 && start + length <= d.Length) Process(e, d.AsSpan(start, length).ToArray());
-                break;
-            }
+                {
+                    var length = d[0] & 0x0F;
+                    var start = 1;
+                    if (length == 0 && d.Length > 8) { length = d[1]; start = 2; }
+                    if (length > 0 && start + length <= d.Length) Process(e, d.AsSpan(start, length).ToArray());
+                    break;
+                }
             case 1:
                 e.IncomingLength = (d[0] & 0x0F) << 8 | d[1];
                 e.Incoming = [.. d.Skip(2).Take(e.IncomingLength)];
@@ -795,18 +819,18 @@ public sealed class SimulatedDoIpDut : IByteStreamAdapter
                 Reply(version, DoIpTransport.RoutingActivationResponse, [payload[0], payload[1], .. Addr(_address), (byte)(_refuseRouting ? 0x00 : 0x10), 0, 0, 0, 0]);
                 break;
             case DoIpTransport.DiagnosticMessage when payload.Length > 4:
-            {
-                var tester = (ushort)(payload[0] << 8 | payload[1]);
-                var target = (ushort)(payload[2] << 8 | payload[3]);
-                if (!_active) { Reply(version, DoIpTransport.DiagnosticNack, [.. Addr(target), .. Addr(tester), 0x06]); break; }
-                if (target != _address) { Reply(version, DoIpTransport.DiagnosticNack, [.. Addr(target), .. Addr(tester), 0x03]); break; }
-                Reply(version, DoIpTransport.DiagnosticAck, [.. Addr(_address), .. Addr(tester), 0x00]);
-                var request = payload[4..];
-                Requests.Enqueue(request);
-                foreach (var response in SimulatedCanDut.AnswerUds(_rules, request))
-                    Reply(version, DoIpTransport.DiagnosticMessage, [.. Addr(_address), .. Addr(tester), .. response]);
-                break;
-            }
+                {
+                    var tester = (ushort)(payload[0] << 8 | payload[1]);
+                    var target = (ushort)(payload[2] << 8 | payload[3]);
+                    if (!_active) { Reply(version, DoIpTransport.DiagnosticNack, [.. Addr(target), .. Addr(tester), 0x06]); break; }
+                    if (target != _address) { Reply(version, DoIpTransport.DiagnosticNack, [.. Addr(target), .. Addr(tester), 0x03]); break; }
+                    Reply(version, DoIpTransport.DiagnosticAck, [.. Addr(_address), .. Addr(tester), 0x00]);
+                    var request = payload[4..];
+                    Requests.Enqueue(request);
+                    foreach (var response in SimulatedCanDut.AnswerUds(_rules, request))
+                        Reply(version, DoIpTransport.DiagnosticMessage, [.. Addr(_address), .. Addr(tester), .. response]);
+                    break;
+                }
         }
     }
 

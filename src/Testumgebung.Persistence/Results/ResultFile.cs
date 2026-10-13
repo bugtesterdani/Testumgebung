@@ -343,12 +343,42 @@ public static class ResultFile
     }
 
     /// <summary>Prüft und dekodiert jeweils nur einen Chunk; kein vollständiges Dateiabbild im RAM.</summary>
-    private static IEnumerable<(string Type, byte[] Raw)> ReadStreamChunks(Stream stream, List<string> problems)
+    private static byte[]? DecodeStreamChunk(byte[] header, byte[] body, int size, int rawSize, long position, List<string> problems)
     {
-        var end = stream.Length;
+        byte[]? raw = null;
+        try
+        {
+            raw = header[4] switch
+            {
+                CodecNone when size == rawSize => body,
+                CodecDeflate => Inflate(body, rawSize),
+                _ => throw new InvalidDataException("Unbekannter Codec oder ungültige Rohlänge."),
+            };
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException)
+        { problems.Add($"Chunk @ {position}: {ex.Message}"); }
+        return raw;
+    }
+
+    private static void ValidateStreamIndex(byte[] raw, List<(string Type, long Offset, int Length, uint Crc)> seen, List<string> problems)
+    {
+        try
+        {
+            var entries = (object?[])MsgPackReader.Parse(raw)!;
+            if (entries.Length != seen.Count) throw new FormatException("Anzahl der Indexeinträge stimmt nicht.");
+            for (var i = 0; i < entries.Length; i++)
+            {
+                var item = seen[i];
+                ValidateIndexEntry(entries[i], item);
+            }
+        }
+        catch (Exception ex) when (ex is FormatException or InvalidCastException)
+        { problems.Add("Index beschädigt: " + ex.Message); }
+    }
+
+    private static (long End, long? IndexOffset) ReadStreamTrailer(Stream stream, long end, List<string> problems)
+    {
         long? indexOffset = null;
-        var indexSeen = false;
-        var seen = new List<(string Type, long Offset, int Length, uint Crc)>();
         if (end >= 20)
         {
             stream.Position = end - 4;
@@ -364,6 +394,19 @@ public static class ResultFile
             }
             else problems.Add("Dateiende/Index fehlt – Datei unvollständig, sequenziell gelesen.");
         }
+        return (end, indexOffset);
+    }
+
+    private static bool ValidChunkLength(int size, int rawSize, long remaining)
+        => size >= 0 && rawSize >= 0 && size <= 128 * 1024 * 1024 && rawSize <= 128 * 1024 * 1024 && size <= remaining;
+
+    private static IEnumerable<(string Type, byte[] Raw)> ReadStreamChunks(Stream stream, List<string> problems)
+    {
+        var end = stream.Length;
+        long? indexOffset = null;
+        var indexSeen = false;
+        var seen = new List<(string Type, long Offset, int Length, uint Crc)>();
+        (end, indexOffset) = ReadStreamTrailer(stream, end, problems);
         stream.Position = 8;
         while (stream.Position + ChunkHeaderSize <= end)
         {
@@ -373,40 +416,18 @@ public static class ResultFile
             var type = Encoding.ASCII.GetString(header, 0, 4);
             var size = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(5));
             var rawSize = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(9));
-            if (size < 0 || rawSize < 0 || size > 128 * 1024 * 1024 || rawSize > 128 * 1024 * 1024 || size > end - stream.Position)
+            if (!ValidChunkLength(size, rawSize, end - stream.Position))
             { problems.Add($"Chunk @ {position}: ungültige Länge oder abgeschnitten."); yield break; }
             var body = new byte[size];
             stream.ReadExactly(body);
             if (Crc32.Compute(body) != BinaryPrimitives.ReadUInt32LittleEndian(header.AsSpan(13)))
             { problems.Add($"Chunk @ {position}: Prüfsumme falsch (beschädigt)."); continue; }
-            byte[]? raw = null;
-            try
-            {
-                raw = header[4] switch
-                {
-                    CodecNone when size == rawSize => body,
-                    CodecDeflate => Inflate(body, rawSize),
-                    _ => throw new InvalidDataException("Unbekannter Codec oder ungültige Rohlänge."),
-                };
-            }
-            catch (Exception ex) when (ex is IOException or InvalidDataException)
-            { problems.Add($"Chunk @ {position}: {ex.Message}"); }
+            var raw = DecodeStreamChunk(header, body, size, rawSize, position, problems);
             if (type == "INDX" && raw is not null)
             {
                 indexSeen = true;
                 if (position != indexOffset || stream.Position != end) problems.Add("Indexposition stimmt nicht mit dem Dateiende überein.");
-                try
-                {
-                    var entries = (object?[])MsgPackReader.Parse(raw)!;
-                    if (entries.Length != seen.Count) throw new FormatException("Anzahl der Indexeinträge stimmt nicht.");
-                    for (var i = 0; i < entries.Length; i++)
-                    {
-                        var item = seen[i];
-                        ValidateIndexEntry(entries[i], item);
-                    }
-                }
-                catch (Exception ex) when (ex is FormatException or InvalidCastException)
-                { problems.Add("Index beschädigt: " + ex.Message); }
+                ValidateStreamIndex(raw, seen, problems);
             }
             else
             {
@@ -448,6 +469,39 @@ public static class ResultFile
                             || a[1] is not long off || off != item.Offset || a[2] is not long length || length != item.Length
                             || a[3] is not long crc || crc != item.Crc)
             throw new FormatException("Index entry does not match its chunk.");
+    }
+
+    private static List<ResultWaveform> ReadWaveforms(Dictionary<string, WaveParts> parts, List<string> problems, Func<long, DateTimeOffset> Time)
+    {
+        var waveforms = new List<ResultWaveform>();
+        foreach (var (id, list) in parts)
+        {
+            var first = list.First;
+            if (!list.IsComplete)
+            {
+                problems.Add($"Kurve '{id}' unvollständig oder Blöcke ungültig – nicht übernommen.");
+                list.Dispose();
+                continue;
+            }
+            var wave = new Waveform(first.S("channel") ?? "", first.S("unit") ?? "", first.D("rate") ?? 0, Time(first.L("start") ?? 0),
+                list.Samples.Complete(), null, first.S("quality"), first.S("sync"))
+            { TimeValues = list.Times?.Complete() };
+            list.Dispose();
+            waveforms.Add(new ResultWaveform(id, first.L("event") ?? 0, first.S("node"), wave));
+        }
+        // Reihenfolge wie beim Schreiben (nach Ereignis, dann Kanal-Id)
+        waveforms = waveforms.OrderBy(w => w.EventSequence).ThenBy(w => w.Id, StringComparer.Ordinal).ToList();
+
+        return waveforms;
+    }
+
+    private static void CheckAttachments(List<ResultEvent> events, List<ResultAttachment> attachments, List<string> problems)
+    {
+        foreach (var e in events)
+        {
+            if (e.AttachmentId is { } aid && attachments.All(a => a.Id != aid)) problems.Add($"Anhang {aid[..Math.Min(12, aid.Length)]}… fehlt.");
+        }
+
     }
 
     private static ResultFileContent DecodeChunks(IEnumerable<(string Type, byte[] Raw)> chunks, List<string> problems, int version, long fileSize)
@@ -509,29 +563,9 @@ public static class ResultFile
             }
         }
 
-        var waveforms = new List<ResultWaveform>();
-        foreach (var (id, list) in parts)
-        {
-            var first = list.First;
-            if (!list.IsComplete)
-            {
-                problems.Add($"Kurve '{id}' unvollständig oder Blöcke ungültig – nicht übernommen.");
-                list.Dispose();
-                continue;
-            }
-            var wave = new Waveform(first.S("channel") ?? "", first.S("unit") ?? "", first.D("rate") ?? 0, Time(first.L("start") ?? 0),
-                list.Samples.Complete(), null, first.S("quality"), first.S("sync"))
-            { TimeValues = list.Times?.Complete() };
-            list.Dispose();
-            waveforms.Add(new ResultWaveform(id, first.L("event") ?? 0, first.S("node"), wave));
-        }
-        // Reihenfolge wie beim Schreiben (nach Ereignis, dann Kanal-Id)
-        waveforms = waveforms.OrderBy(w => w.EventSequence).ThenBy(w => w.Id, StringComparer.Ordinal).ToList();
+        var waveforms = ReadWaveforms(parts, problems, Time);
 
-        foreach (var e in events)
-        {
-            if (e.AttachmentId is { } aid && attachments.All(a => a.Id != aid)) problems.Add($"Anhang {aid[..Math.Min(12, aid.Length)]}… fehlt.");
-        }
+        CheckAttachments(events, attachments, problems);
 
         var run = ReadRunHeader();
 
@@ -615,19 +649,24 @@ public static class ResultFile
             problems.Add("Index nicht interpretierbar – sequenziell gelesen.");
             return false;
         }
+        ReadIndexChunks(data, entries, chunks, problems);
+        _ = error;
+        return true;
+    }
+
+    private static void ReadIndexChunks(byte[] data, object?[] entries, List<(string, byte[])> chunks, List<string> problems)
+    {
         foreach (var e in entries)
         {
             if (e is not object?[] { Length: 4 } a || a[0] is not string t || a[1] is not long off) continue;
             if (t == "INDX") continue;
-            if (!TryReadChunk(data, off, out var actualType, out var body, out error) || actualType != t)
+            if (!TryReadChunk(data, off, out var actualType, out var body, out var error) || actualType != t)
             {
                 problems.Add($"Chunk {t} @ {off}: {error ?? "Typ passt nicht zum Index"}");
                 continue;
             }
             chunks.Add((t, body));
         }
-        _ = error;
-        return true;
     }
 
     private static void ReadSequential(byte[] data, List<(string, byte[])> chunks, List<string> problems)

@@ -222,33 +222,39 @@ public sealed class UdsNegativeResponseException(byte service, byte code)
 /// <summary>UDS-Anfragen über ISO-TP: Wartezeiten P2/P2*, „Antwort folgt“ (NRC 0x78), negative Antworten.</summary>
 public static class Uds
 {
-    public static string Describe(byte nrc) => nrc switch
+    private static readonly IReadOnlyDictionary<byte, string> NegativeResponseNames = new Dictionary<byte, string>
     {
-        0x10 => "generalReject (allgemein abgelehnt)",
-        0x11 => "serviceNotSupported (Dienst nicht unterstützt)",
-        0x12 => "subFunctionNotSupported (Unterfunktion nicht unterstützt)",
-        0x13 => "incorrectMessageLengthOrInvalidFormat (Länge/Format falsch)",
-        0x14 => "responseTooLong (Antwort zu lang)",
-        0x21 => "busyRepeatRequest (beschäftigt, wiederholen)",
-        0x22 => "conditionsNotCorrect (Bedingungen nicht erfüllt)",
-        0x24 => "requestSequenceError (falsche Reihenfolge)",
-        0x25 => "noResponseFromSubnetComponent (Teilnehmer antwortet nicht)",
-        0x26 => "failurePreventsExecutionOfRequestedAction (Fehler verhindert Ausführung)",
-        0x31 => "requestOutOfRange (außerhalb des Bereichs)",
-        0x33 => "securityAccessDenied (Zugriff verweigert)",
-        0x35 => "invalidKey (falscher Schlüssel)",
-        0x36 => "exceedNumberOfAttempts (zu viele Versuche)",
-        0x37 => "requiredTimeDelayNotExpired (Wartezeit läuft)",
-        0x70 => "uploadDownloadNotAccepted (Übertragung abgelehnt)",
-        0x71 => "transferDataSuspended (Übertragung unterbrochen)",
-        0x72 => "generalProgrammingFailure (Programmierfehler)",
-        0x73 => "wrongBlockSequenceCounter (Blockzähler falsch)",
-        0x78 => "requestCorrectlyReceived-ResponsePending (Antwort folgt)",
-        0x7E => "subFunctionNotSupportedInActiveSession (Unterfunktion in Sitzung nicht erlaubt)",
-        0x7F => "serviceNotSupportedInActiveSession (Dienst in Sitzung nicht erlaubt)",
-        >= 0x81 and <= 0x8F => "Bedingung nicht erfüllt (Drehzahl, Spannung, Temperatur …)",
-        _ => "herstellerspezifisch",
+        [0x10] = "generalReject (allgemein abgelehnt)",
+        [0x11] = "serviceNotSupported (Dienst nicht unterstützt)",
+        [0x12] = "subFunctionNotSupported (Unterfunktion nicht unterstützt)",
+        [0x13] = "incorrectMessageLengthOrInvalidFormat (Länge/Format falsch)",
+        [0x14] = "responseTooLong (Antwort zu lang)",
+        [0x21] = "busyRepeatRequest (beschäftigt, wiederholen)",
+        [0x22] = "conditionsNotCorrect (Bedingungen nicht erfüllt)",
+        [0x24] = "requestSequenceError (falsche Reihenfolge)",
+        [0x25] = "noResponseFromSubnetComponent (Teilnehmer antwortet nicht)",
+        [0x26] = "failurePreventsExecutionOfRequestedAction (Fehler verhindert Ausführung)",
+        [0x31] = "requestOutOfRange (außerhalb des Bereichs)",
+        [0x33] = "securityAccessDenied (Zugriff verweigert)",
+        [0x35] = "invalidKey (falscher Schlüssel)",
+        [0x36] = "exceedNumberOfAttempts (zu viele Versuche)",
+        [0x37] = "requiredTimeDelayNotExpired (Wartezeit läuft)",
+        [0x70] = "uploadDownloadNotAccepted (Übertragung abgelehnt)",
+        [0x71] = "transferDataSuspended (Übertragung unterbrochen)",
+        [0x72] = "generalProgrammingFailure (Programmierfehler)",
+        [0x73] = "wrongBlockSequenceCounter (Blockzähler falsch)",
+        [0x78] = "requestCorrectlyReceived-ResponsePending (Antwort folgt)",
+        [0x7E] = "subFunctionNotSupportedInActiveSession (Unterfunktion in Sitzung nicht erlaubt)",
+        [0x7F] = "serviceNotSupportedInActiveSession (Dienst in Sitzung nicht erlaubt)",
     };
+
+    public static string Describe(byte nrc)
+    {
+        if (NegativeResponseNames.TryGetValue(nrc, out var name)) return name;
+        return nrc is >= 0x81 and <= 0x8F
+            ? "Bedingung nicht erfüllt (Drehzahl, Spannung, Temperatur …)"
+            : "herstellerspezifisch";
+    }
 
     /// <summary>
     /// Anfrage senden und positive Antwort liefern (beginnend mit Dienst + 0x40). Bei „Unterdrücke positive Antwort“
@@ -301,21 +307,33 @@ public static class Uds
                 throw new CommunicationTimeoutException(
                     $"UDS 0x{request[0]:X2} an {transport}: keine Antwort innerhalb von {wait.TotalMilliseconds:0} ms{(pending > 0 ? $" nach {pending}× „Antwort folgt“" : "")}.", ex.Partial);
             }
-            if (response.Length >= 3 && response[0] == 0x7F && response[1] == request[0])
+            switch (ClassifyResponse(request[0], response))
             {
-                if (response[2] == 0x78)
-                {
+                case UdsResponseKind.Pending:
                     if (++pending > 100) throw new CommunicationException("UDS: Steuergerät meldet über 100× „Antwort folgt“.");
                     wait = p2Star;
                     continue;
-                }
-                throw new UdsNegativeResponseException(request[0], response[2]);
+                case UdsResponseKind.Positive:
+                    return response;
+                default:
+                    continue;
             }
-            if (response.Length > 0 && response[0] == (byte)(request[0] + 0x40)) return response;
-            if (response.Length >= 1 && response[0] == 0x7F) continue; // negative Antwort auf anderen Dienst: weiter warten
-            throw new CommunicationException($"UDS: unerwartete Antwort {Convert.ToHexString(response)} auf 0x{request[0]:X2}.");
         }
     }
+    private enum UdsResponseKind { Positive, Pending, OtherService }
+
+    private static UdsResponseKind ClassifyResponse(byte service, byte[] response)
+    {
+        if (response.Length >= 3 && response[0] == 0x7F && response[1] == service)
+        {
+            if (response[2] == 0x78) return UdsResponseKind.Pending;
+            throw new UdsNegativeResponseException(service, response[2]);
+        }
+        if (response.Length > 0 && response[0] == (byte)(service + 0x40)) return UdsResponseKind.Positive;
+        if (response.Length >= 1 && response[0] == 0x7F) return UdsResponseKind.OtherService;
+        throw new CommunicationException($"UDS: unerwartete Antwort {Convert.ToHexString(response)} auf 0x{service:X2}.");
+    }
+
 }
 
 /// <summary>Transport für Diagnosenachrichten (eine Nachricht = eine UDS-Anfrage bzw. -Antwort).</summary>
@@ -998,21 +1016,7 @@ public sealed class LinDiagnosticTransport(ILinAdapter lin, string channel, byte
             var pci = frame[1];
             if (buffer is null)
             {
-                switch (pci >> 4)
-                {
-                    case 0:
-                        var length = pci & 0x0F;
-                        if (length is < 1 or > 6 || 2 + length > frame.Length) continue;
-                        return frame.AsSpan(2, length).ToArray();
-                    case 1:
-                        if (frame.Length < 3) continue;
-                        total = (pci & 0x0F) << 8 | frame[2];
-                        if (total <= 6) continue;
-                        buffer = [.. frame.Skip(3).Take(total)];
-                        break;
-                    default:
-                        continue;
-                }
+                if (ReadInitialFrame(frame, ref buffer, ref total) is { } single) return single;
             }
             else if (pci >> 4 == 2 && (pci & 0x0F) == (expected & 0x0F))
             {
@@ -1021,6 +1025,27 @@ public sealed class LinDiagnosticTransport(ILinAdapter lin, string channel, byte
             }
             if (buffer is not null && buffer.Count >= total) return [.. buffer];
         }
+    }
+
+    private static byte[]? ReadInitialFrame(byte[] frame, ref List<byte>? buffer, ref int total)
+    {
+        var pci = frame[1];
+        switch (pci >> 4)
+        {
+            case 0:
+                var length = pci & 0x0F;
+                if (length is < 1 or > 6 || 2 + length > frame.Length) return null;
+                return frame.AsSpan(2, length).ToArray();
+            case 1:
+                if (frame.Length < 3) return null;
+                total = (pci & 0x0F) << 8 | frame[2];
+                if (total <= 6) return null;
+                buffer = [.. frame.Skip(3).Take(total)];
+                break;
+            default:
+                return null;
+        }
+        return null;
     }
 
     public void DiscardInput() { }

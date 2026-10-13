@@ -125,22 +125,29 @@ public sealed class NodeViewModel : ObservableObject
         GroupDefinition when IsExit => NodeIcon.ExitGroup,
         GroupDefinition g when g.IsDutRun => NodeIcon.DutGroup,
         GroupDefinition => NodeIcon.Group,
-        StepDefinition s => s.BlockType switch
-        {
-            BlockCatalog.Measure => NodeIcon.Measure,
-            BlockCatalog.Output or BlockCatalog.SetValue => NodeIcon.Arrow,
-            BlockCatalog.DigitalRead or BlockCatalog.DigitalWrite => NodeIcon.Digital,
-            BlockCatalog.Evaluate or BlockCatalog.SetRating => NodeIcon.Check,
-            BlockCatalog.Operator => NodeIcon.Operator,
-            BlockCatalog.Wait => NodeIcon.Wait,
-            BlockCatalog.RaiseError => NodeIcon.Error,
-            BlockCatalog.Code => NodeIcon.Code,
-            BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock => NodeIcon.LibraryBlock,
-            null => NodeIcon.Code,
-            _ => NodeIcon.Doc,
-        },
+        StepDefinition s => s.BlockType is null ? NodeIcon.Code : IconFor(s.BlockType),
         _ => NodeIcon.Doc,
     };
+
+    private static readonly IReadOnlyDictionary<string, NodeIcon> BlockIcons = new Dictionary<string, NodeIcon>(StringComparer.Ordinal)
+    {
+        [BlockCatalog.Measure] = NodeIcon.Measure,
+        [BlockCatalog.Output] = NodeIcon.Arrow,
+        [BlockCatalog.SetValue] = NodeIcon.Arrow,
+        [BlockCatalog.DigitalRead] = NodeIcon.Digital,
+        [BlockCatalog.DigitalWrite] = NodeIcon.Digital,
+        [BlockCatalog.Evaluate] = NodeIcon.Check,
+        [BlockCatalog.SetRating] = NodeIcon.Check,
+        [BlockCatalog.Operator] = NodeIcon.Operator,
+        [BlockCatalog.Wait] = NodeIcon.Wait,
+        [BlockCatalog.RaiseError] = NodeIcon.Error,
+        [BlockCatalog.Code] = NodeIcon.Code,
+        [BlockCatalog.LibraryBlock] = NodeIcon.LibraryBlock,
+        [BlockCatalog.GroupBlock] = NodeIcon.LibraryBlock,
+    };
+
+    internal static NodeIcon IconFor(string? type)
+        => type is not null && BlockIcons.TryGetValue(type, out var icon) ? icon : NodeIcon.Doc;
 
     /// <summary>Kurzinfo neben dem Namen, z. B. „(wiederholt bis Werkerabbruch)“, „×3“, „[Prüfling]“.</summary>
     public string Annotation

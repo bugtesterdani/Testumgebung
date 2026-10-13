@@ -187,36 +187,40 @@ public sealed class EnumEqualsConverter : IValueConverter
 /// <summary>Anzeigetexte für Enums der Gruppeneigenschaften.</summary>
 public sealed class EnumDisplayConverter : IValueConverter
 {
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    private static readonly IReadOnlyDictionary<object, string> DisplayNames = new Dictionary<object, string>
     {
-        Testumgebung.Domain.Definitions.RepeatMode.Once => "Einmal",
-        Testumgebung.Domain.Definitions.RepeatMode.Count => "Anzahl",
-        Testumgebung.Domain.Definitions.RepeatMode.Duration => "Zeitspanne",
-        Testumgebung.Domain.Definitions.RepeatMode.While => "Solange",
-        Testumgebung.Domain.Definitions.RepeatMode.Until => "Bis",
-        Testumgebung.Domain.Definitions.RepeatMode.Endless => "Endlos (bis Werkerabbruch)",
-        Testumgebung.Domain.Definitions.RepeatResultPolicy.Keep => "Ergebnis behalten",
-        Testumgebung.Domain.Definitions.RepeatResultPolicy.ResetToNResult => "Auf NRESULT zurücksetzen",
-        Testumgebung.Hardware.CommKind.Stream => "Byte-Strom (Seriell/TCP/UDP)",
-        Testumgebung.Hardware.CommKind.Modbus => "Modbus",
-        Testumgebung.Hardware.CommKind.Can => "CAN / CAN FD / UDS",
-        Testumgebung.Hardware.CommKind.Lin => "LIN",
-        Testumgebung.Hardware.CommKind.DoIp => "DoIP (UDS über Ethernet)",
-        Testumgebung.Hardware.CommKind.OpcUa => "OPC UA",
-        Testumgebung.Domain.Definitions.ProgressPosition.Top => "Oben",
-        Testumgebung.Domain.Definitions.ProgressPosition.Left => "Links",
-        Testumgebung.Domain.Definitions.ProgressPosition.Bottom => "Unten",
-        Testumgebung.Domain.Code.PortDirection.Input => "Eingang",
-        Testumgebung.Domain.Code.PortDirection.Output => "Ausgang",
-        Testumgebung.Domain.Code.PortDirection.InOut => "Ein-/Ausgang",
-        VarType.Bool => "bool",
-        VarType.Int => "int",
-        VarType.Double => "double",
-        VarType.String => "string",
-        VarType.DateTime => "DateTime",
-        null => "",
-        _ => value.ToString() ?? "",
+        [Testumgebung.Domain.Definitions.RepeatMode.Once] = "Einmal",
+        [Testumgebung.Domain.Definitions.RepeatMode.Count] = "Anzahl",
+        [Testumgebung.Domain.Definitions.RepeatMode.Duration] = "Zeitspanne",
+        [Testumgebung.Domain.Definitions.RepeatMode.While] = "Solange",
+        [Testumgebung.Domain.Definitions.RepeatMode.Until] = "Bis",
+        [Testumgebung.Domain.Definitions.RepeatMode.Endless] = "Endlos (bis Werkerabbruch)",
+        [Testumgebung.Domain.Definitions.RepeatResultPolicy.Keep] = "Ergebnis behalten",
+        [Testumgebung.Domain.Definitions.RepeatResultPolicy.ResetToNResult] = "Auf NRESULT zurücksetzen",
+        [Testumgebung.Hardware.CommKind.Stream] = "Byte-Strom (Seriell/TCP/UDP)",
+        [Testumgebung.Hardware.CommKind.Modbus] = "Modbus",
+        [Testumgebung.Hardware.CommKind.Can] = "CAN / CAN FD / UDS",
+        [Testumgebung.Hardware.CommKind.Lin] = "LIN",
+        [Testumgebung.Hardware.CommKind.DoIp] = "DoIP (UDS über Ethernet)",
+        [Testumgebung.Hardware.CommKind.OpcUa] = "OPC UA",
+        [Testumgebung.Domain.Definitions.ProgressPosition.Top] = "Oben",
+        [Testumgebung.Domain.Definitions.ProgressPosition.Left] = "Links",
+        [Testumgebung.Domain.Definitions.ProgressPosition.Bottom] = "Unten",
+        [Testumgebung.Domain.Code.PortDirection.Input] = "Eingang",
+        [Testumgebung.Domain.Code.PortDirection.Output] = "Ausgang",
+        [Testumgebung.Domain.Code.PortDirection.InOut] = "Ein-/Ausgang",
+        [VarType.Bool] = "bool",
+        [VarType.Int] = "int",
+        [VarType.Double] = "double",
+        [VarType.String] = "string",
+        [VarType.DateTime] = "DateTime",
     };
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is null) return "";
+        return DisplayNames.TryGetValue(value, out var text) ? text : value.ToString() ?? "";
+    }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }

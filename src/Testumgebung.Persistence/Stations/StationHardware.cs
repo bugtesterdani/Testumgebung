@@ -163,13 +163,18 @@ public static class StationHardware
     /// Konfigurationsprüfung: Zuordnung vollständig, Geräte bekannt, gemeinsame Geräte nur mit Sperre, keine
     /// Zyklusrisiken der Sperrreihenfolge über alle Prüfplätze (mit deren Sperrschlüsseln).
     /// </summary>
-    public static IReadOnlyList<ConfigIssue> Check(StationSetup setup, TestProject project)
+    private static void CheckProfiles(TestProject project, List<ConfigIssue> issues)
     {
-        var issues = new List<ConfigIssue>();
         foreach (var duplicate in project.DeviceProfiles.GroupBy(p => p.Id).Where(g => g.Count() > 1))
             issues.Add(new(ConfigSeverity.Error, null, null, $"Geräteprofil-ID '{duplicate.Key}' ist mehrfach vergeben."));
         foreach (var profile in project.DeviceProfiles)
             foreach (var error in profile.Validate()) issues.Add(new(ConfigSeverity.Error, null, null, $"{profile.Name}: {error}"));
+    }
+
+    public static IReadOnlyList<ConfigIssue> Check(StationSetup setup, TestProject project)
+    {
+        var issues = new List<ConfigIssue>();
+        CheckProfiles(project, issues);
         foreach (var dup in setup.Devices.GroupBy(d => d.Id).Where(g => g.Count() > 1))
             issues.Add(new(ConfigSeverity.Error, null, null, $"Geräte-ID '{dup.Key}' ist mehrfach vergeben."));
         var channelsOf = new Dictionary<string, IReadOnlyList<InstrumentChannel>?>(StringComparer.Ordinal);
@@ -221,6 +226,17 @@ public static class StationHardware
                         issues.Add(new(ConfigSeverity.Error, station.Name, a.Name, $"{a.Name}: Gerät '{a.Device}' ist nicht konfiguriert."));
                         return;
                     }
+                    CheckChannel(a, device);
+                    if (device.Shared && !a.RequiresLock)
+                        issues.Add(new(ConfigSeverity.Error, station.Name, a.Name,
+                            $"{a.Name} liegt auf dem gemeinsamen Gerät „{device.Name}“ ohne Sperre – widersprüchlicher Zugriff mehrerer Prüfplätze möglich.",
+                            "„Sperre erforderlich“ setzen und die Ressource an der Gruppe reservieren."));
+                    if (device.IsSimulation && !project.Simulation.Any(r => r.Name == a.Name) && !project.SimulationOutputs.Any(o => o.Name == a.Name) && !project.SimulationComm.Any(c => c.Name == a.Name) && used.Contains(a.Name))
+                        issues.Add(new(ConfigSeverity.Warning, station.Name, a.Name, $"{a.Name}: kein Simulationsverhalten im Projekt – liefert 0."));
+                }
+
+                void CheckChannel(ResourceAssignment a, DeviceConfig device)
+                {
                     if (string.IsNullOrWhiteSpace(a.Channel))
                         issues.Add(new(ConfigSeverity.Error, station.Name, a.Name, $"{a.Name}: kein Kanal angegeben."));
                     else if (InstrumentCatalog.IsCommunication(device.Adapter))
@@ -238,12 +254,6 @@ public static class StationHardware
                                  && !(sim.Unit == "bool" && channel.Unit == "bool"))
                             issues.Add(new(ConfigSeverity.Warning, station.Name, a.Name, $"{a.Name}: Ablauf erwartet {sim.Unit}, Gerätekanal liefert {channel.Unit} – keine Umrechnung."));
                     }
-                    if (device.Shared && !a.RequiresLock)
-                        issues.Add(new(ConfigSeverity.Error, station.Name, a.Name,
-                            $"{a.Name} liegt auf dem gemeinsamen Gerät „{device.Name}“ ohne Sperre – widersprüchlicher Zugriff mehrerer Prüfplätze möglich.",
-                            "„Sperre erforderlich“ setzen und die Ressource an der Gruppe reservieren."));
-                    if (device.IsSimulation && !project.Simulation.Any(r => r.Name == a.Name) && !project.SimulationOutputs.Any(o => o.Name == a.Name) && !project.SimulationComm.Any(c => c.Name == a.Name) && used.Contains(a.Name))
-                        issues.Add(new(ConfigSeverity.Warning, station.Name, a.Name, $"{a.Name}: kein Simulationsverhalten im Projekt – liefert 0."));
                 }
 
                 foreach (var a in station.Resources)

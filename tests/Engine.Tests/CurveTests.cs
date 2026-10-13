@@ -63,7 +63,10 @@ public sealed class CurveTests : IDisposable
         Assert.Equal([0, 0, 230, 230, 230], steps.Channels[0].Samples);
         var formula = CurveGenerator.Generate(new GeneratorSettings
         {
-            Kind = GeneratorKind.Formula, ChannelIds = ["L1", "L2"], SampleRate = 1000, Duration = 0.004,
+            Kind = GeneratorKind.Formula,
+            ChannelIds = ["L1", "L2"],
+            SampleRate = 1000,
+            Duration = 0.004,
             Formulas = ["100*t*1000", "max(0, 2^3 - t*1000) + clamp(-5, -1, 1) + step(t-0.002)"],
         }, "F", "Formel", "0.1", "x", T0);
         Assert.Equal([0, 100, 200, 300], formula.Channels[0].Samples.Select(v => Math.Round(v, 9)));
@@ -338,7 +341,8 @@ public sealed class CurveTests : IDisposable
         var t = CurveImport.Read(P("export.csv"));
         var settings = CurveImport.SuggestSettings(t) with
         {
-            Mode = TimeBaseMode.FixedRate, SampleRate = 5000,
+            Mode = TimeBaseMode.FixedRate,
+            SampleRate = 5000,
             Channels = [new("Phase_A", "L1", "V"), new("Phase_B", "L2", "V"), new("Phase_C", "L3", "V")],
         };
         var imported = CurveImport.ToCurve(t, settings, "AC_Mess", "AC_Mess", "0.2", "m.weber", T0);
@@ -380,6 +384,26 @@ public sealed class CurveTests : IDisposable
     }
 
     /// <summary>Minimale .xlsx (Kopfzeile als gemeinsame Zeichenfolgen, Zahlen als Werte).</summary>
+    [Fact]
+    public void ExcelSheetSelectionRefreshesThePreviewAndReportsAnUnknownSheet()
+    {
+        var editor = new EditorViewModel(SampleProjects.AcPruefung());
+        var vm = new CurvesViewModel(editor, null, () => "Tester", () => null, ImmediateDispatcher.Instance);
+        vm.SelectedSheet = "before-import";
+        vm.SelectedSheet = null;
+        var path = P("sheet-selection.xlsx");
+        File.WriteAllBytes(path, MinimalXlsx(["Zeit_s", "U_L1"], [[0, 1], [0.001, 2], [0.002, 3]]));
+        vm.ImportFile(path);
+        Assert.Null(vm.Error);
+        Assert.True(vm.HasTable);
+        vm.SelectedSheet = "Tabelle1";
+        vm.SelectedSheet = "unknown";
+        Assert.Contains("nicht gefunden", vm.Error);
+        vm.SelectedSheet = "Tabelle1";
+        Assert.Null(vm.Error);
+        Assert.Equal(3, vm.Table!.Rows);
+    }
+
     private static byte[] MinimalXlsx(string[] header, double[][] rows)
     {
         using var ms = new MemoryStream();

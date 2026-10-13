@@ -39,13 +39,8 @@ public partial class MainWindow : Window
             PythonExecutable = Environment.GetEnvironmentVariable("TESTUMGEBUNG_PYTHON") is { Length: > 0 } py ? py : new PythonEnvironments().LoadSelection(),
         });
 
-        // Einstellungen: %LOCALAPPDATA%\Testumgebung\einstellungen.json (Geheimnisse per DPAPI geschützt).
-        // Ohne Datei gelten die Standardwerte; TESTUMGEBUNG_ERGEBNISSE und TESTUMGEBUNG_DB=aus wirken nur dann.
-        var store = startup?.SettingsStore ?? new SettingsStore(SettingsStore.DefaultPath, new DpapiSecretProtector());
-        var defaults = new AppSettings { ResultFolder = Env("TESTUMGEBUNG_ERGEBNISSE") };
-        if (string.Equals(Env("TESTUMGEBUNG_DB"), "aus", StringComparison.OrdinalIgnoreCase)) defaults.Database.Provider = DatabaseChoice.None;
-        _services = startup?.CreateResultServices is { } createServices ? createServices(store.Load(defaults))
-            : new ResultServices(store.Load(defaults), new DatabaseProviderRegistry());
+        var (store, services) = LoadResultServices(startup);
+        _services = services;
 
         // Zugang je Prüfplatz: %ProgramData%\Testumgebung\zugang.json (Entra-App, Rechte je Konto).
         // Entwicklungsmodus muss ausdrücklich beim Start eingeschaltet werden.
@@ -66,6 +61,35 @@ public partial class MainWindow : Window
         // Prüfplatzkonfiguration des Rechners: %ProgramData%\Testumgebung\pruefplaetze.json (Geräte, Prüfplätze, Zuordnung).
         // Ohne Datei: Vorschlag aus dem Projekt. Beschädigt: Anzeige, kein Prüfplatz startet bis zur Korrektur.
         var stationStore = startup?.StationStore ?? new StationSetupStore(StationSetupStore.DefaultPath);
+        var (exampleProject, stationSetup, stationError) = LoadStationSetup(startup, stationStore, exampleMode);
+        var coordinator = _coordinator = new StationCoordinator(stationSetup ?? StationSetup.Default(SampleProjects.AcPruefung()), new ResourceManager())
+        {
+            IsSuggestion = stationSetup is null && stationError is null,
+            LoadError = stationError,
+        };
+
+        Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), new FileDialogService(), project: exampleProject, codeRuntime: _codeRuntime,
+            services: _services, settingsStore: store, identity: identity, releases: _releases,
+            stations: coordinator, stationStore: exampleMode ? null : stationStore);
+        ConfigureExampleMode(exampleMode);
+        DataContext = Shell;
+        _ = _releases.RefreshAsync();
+        _releases.StartPolling(TimeSpan.FromSeconds(30)); // Freigaben anderer Prüfplätze (gemeinsame Datenbank)
+
+        // Optionale Inaktivitätssperre: Eingaben merken, regelmäßig prüfen. Ein laufender Test wird nie beeinflusst.
+        PreviewMouseDown += (_, _) => Shell.NoteActivity();
+        PreviewKeyDown += (_, _) => Shell.NoteActivity();
+        _inactivity.Tick += (_, _) => Shell.CheckInactivity();
+        _inactivity.Start();
+        // Manuelles Öffnen der Anwendung: offene Runs aus der lokalen Outbox laden und Übertragung fortsetzen (P04).
+        _services.Outbox.Start();
+        _clock.Tick += (_, _) => UpdateClock();
+        _clock.Start();
+        UpdateClock();
+    }
+
+    private static (TestProject? Project, StationSetup? Setup, string? Error) LoadStationSetup(MainWindowStartup? startup, StationSetupStore stationStore, bool exampleMode)
+    {
         TestProject? exampleProject = null;
         StationSetup? stationSetup = null;
         string? stationError = null;
@@ -83,35 +107,30 @@ public partial class MainWindow : Window
         {
             stationError = ex.Message;
         }
-        var coordinator = _coordinator = new StationCoordinator(stationSetup ?? StationSetup.Default(SampleProjects.AcPruefung()), new ResourceManager())
-        {
-            IsSuggestion = stationSetup is null && stationError is null,
-            LoadError = stationError,
-        };
+        return (exampleProject, stationSetup, stationError);
+    }
 
-        Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), new FileDialogService(), project: exampleProject, codeRuntime: _codeRuntime,
-            services: _services, settingsStore: store, identity: identity, releases: _releases,
-            stations: coordinator, stationStore: exampleMode ? null : stationStore);
+    private static (SettingsStore Store, ResultServices Services) LoadResultServices(MainWindowStartup? startup)
+    {
+        // Einstellungen: %LOCALAPPDATA%\Testumgebung\einstellungen.json (Geheimnisse per DPAPI geschützt).
+        // Ohne Datei gelten die Standardwerte; TESTUMGEBUNG_ERGEBNISSE und TESTUMGEBUNG_DB=aus wirken nur dann.
+        var store = startup?.SettingsStore ?? new SettingsStore(SettingsStore.DefaultPath, new DpapiSecretProtector());
+        var defaults = new AppSettings { ResultFolder = Env("TESTUMGEBUNG_ERGEBNISSE") };
+        if (string.Equals(Env("TESTUMGEBUNG_DB"), "aus", StringComparison.OrdinalIgnoreCase)) defaults.Database.Provider = DatabaseChoice.None;
+        var services = startup?.CreateResultServices is { } createServices ? createServices(store.Load(defaults))
+            : new ResultServices(store.Load(defaults), new DatabaseProviderRegistry());
+
+        return (store, services);
+    }
+
+    private void ConfigureExampleMode(bool exampleMode)
+    {
         if (exampleMode)
         {
             Title = "Testumgebung – Programme A, B, C und D (Simulation / Entwurf)";
             Shell.SelectedStation.UseDraft = true;
             Shell.SelectedStation.Selection.ScanText = "A123";
         }
-        DataContext = Shell;
-        _ = _releases.RefreshAsync();
-        _releases.StartPolling(TimeSpan.FromSeconds(30)); // Freigaben anderer Prüfplätze (gemeinsame Datenbank)
-
-        // Optionale Inaktivitätssperre: Eingaben merken, regelmäßig prüfen. Ein laufender Test wird nie beeinflusst.
-        PreviewMouseDown += (_, _) => Shell.NoteActivity();
-        PreviewKeyDown += (_, _) => Shell.NoteActivity();
-        _inactivity.Tick += (_, _) => Shell.CheckInactivity();
-        _inactivity.Start();
-        // Manuelles Öffnen der Anwendung: offene Runs aus der lokalen Outbox laden und Übertragung fortsetzen (P04).
-        _services.Outbox.Start();
-        _clock.Tick += (_, _) => UpdateClock();
-        _clock.Start();
-        UpdateClock();
     }
 
     public ShellViewModel Shell { get; }
@@ -137,18 +156,15 @@ public partial class MainWindow : Window
         Close();
     }
 
-    protected override async void OnClosing(CancelEventArgs e)
+    private bool CanClose()
     {
-        if (_closeReady) { base.OnClosing(e); return; }
-        e.Cancel = true;
-        if (_closing) return;
         // Alle abbrechbaren Dialoge vor der ersten Änderung am laufenden Prüfablauf.
         if (!_faultShutdown && Shell.Editor.IsDirty)
         {
             var save = _showMessage("Ungespeicherte Änderungen am Projekt speichern?",
                 MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-            if (save == MessageBoxResult.Cancel) return;
-            if (save == MessageBoxResult.Yes && !Shell.Editor.Save(Shell.Editor.FilePath)) return;
+            if (save == MessageBoxResult.Cancel) return false;
+            if (save == MessageBoxResult.Yes && !Shell.Editor.Save(Shell.Editor.FilePath)) return false;
         }
         if (!_faultShutdown && Shell.Stations.Any(s => s.IsRunning))
         {
@@ -157,9 +173,18 @@ public partial class MainWindow : Window
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (answer != MessageBoxResult.Yes)
             {
-                return;
+                return false;
             }
         }
+        return true;
+    }
+
+    protected override async void OnClosing(CancelEventArgs e)
+    {
+        if (_closeReady) { base.OnClosing(e); return; }
+        e.Cancel = true;
+        if (_closing) return;
+        if (!CanClose()) return;
         _closing = true;
         IsEnabled = false;
         Title = "Testumgebung – Abschluss und Speicherung …";

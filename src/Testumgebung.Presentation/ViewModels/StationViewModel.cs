@@ -582,31 +582,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         }
     }
 
-    private async Task RunProjectCoreAsync(TestProject project, ReleaseInfo? release, IReadOnlyDictionary<string, object?>? presets, int? dutLimit,
-        string? selectionNote, bool orderSession, string? pythonVenv)
+    private HardwareRegistry? BuildRunRegistry(TestProject project)
     {
-        _runIsDraft = _simulationOnly || (_releases is not null && UseDraft);
-        _runningProject = project;
-        _runningReleaseId = release?.ReleaseId;
-        _rejectedReleaseId = null;
-        PendingVersionText = null;
-        ActiveRelease = release;
-        if (release is not null && _releases is not null)
-        {
-            var differences = await _releases.Service.VerifyEnvironmentAsync(release).ConfigureAwait(true);
-            if (differences.Count > 0)
-            {
-                Error = "Freigabe passt nicht zur Ausführungsumgebung: " + string.Join(" ", differences);
-                return;
-            }
-        }
-        var diagnostics = project.Definition.Validate();
-        if (diagnostics.Count > 0)
-        {
-            Error = string.Join(Environment.NewLine, diagnostics);
-            return;
-        }
-
         HardwareRegistry registry;
         if (_coordinator is not null && !_simulationOnly)
         {
@@ -614,7 +591,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             if (_coordinator.TryBeginRun(Name, project.Definition) is { } refusal)
             {
                 Error = refusal;
-                return;
+                return null;
             }
             try
             {
@@ -624,7 +601,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             {
                 _coordinator.EndRun(Name);
                 Error = ex.Message;
-                return;
+                return null;
             }
         }
         else
@@ -632,13 +609,32 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             registry = SampleProjects.CreateSimulation(project, seed: Name.GetHashCode()).Registry;
         }
 
-        Error = null;
-        _storage = new StorageResolver(project.Definition);
-        ApplyLayout(project.Definition.Layout);
-        ResetDisplay(project.Definition);
-        if (orderSession && presets?.GetValueOrDefault("Auftrag") is string order) CurrentOrder = order;
-        if (selectionNote is not null) LogSelection("Auswahl · Kennung zugeordnet", selectionNote, ResultRating.NResult, "OK");
-        _run = new TestRun(project.Definition, new TestRunOptions
+        return registry;
+    }
+
+    private async Task<bool> ValidateRunProjectAsync(TestProject project, ReleaseInfo? release)
+    {
+        if (release is not null && _releases is not null)
+        {
+            var differences = await _releases.Service.VerifyEnvironmentAsync(release).ConfigureAwait(true);
+            if (differences.Count > 0)
+            {
+                Error = "Freigabe passt nicht zur Ausführungsumgebung: " + string.Join(" ", differences);
+                return false;
+            }
+        }
+        var diagnostics = project.Definition.Validate();
+        if (diagnostics.Count > 0)
+        {
+            Error = string.Join(Environment.NewLine, diagnostics);
+            return false;
+        }
+
+        return true;
+    }
+
+    private TestRunOptions RunOptions(HardwareRegistry registry, IReadOnlyDictionary<string, object?>? presets, int? dutLimit, bool orderSession, string? pythonVenv)
+        => new()
         {
             Clock = _clock,
             Resources = _resources,
@@ -659,7 +655,29 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             EventHistoryLimit = 2000,
             RetainWaveformsInHistory = false,
             DevelopmentRun = _runIsDraft,
-        }, runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
+        };
+
+    private async Task RunProjectCoreAsync(TestProject project, ReleaseInfo? release, IReadOnlyDictionary<string, object?>? presets, int? dutLimit,
+        string? selectionNote, bool orderSession, string? pythonVenv)
+    {
+        _runIsDraft = _simulationOnly || (_releases is not null && UseDraft);
+        _runningProject = project;
+        _runningReleaseId = release?.ReleaseId;
+        _rejectedReleaseId = null;
+        PendingVersionText = null;
+        ActiveRelease = release;
+        if (!await ValidateRunProjectAsync(project, release).ConfigureAwait(true)) return;
+
+        var registry = BuildRunRegistry(project);
+        if (registry is null) return;
+
+        Error = null;
+        _storage = new StorageResolver(project.Definition);
+        ApplyLayout(project.Definition.Layout);
+        ResetDisplay(project.Definition);
+        if (orderSession && presets?.GetValueOrDefault("Auftrag") is string order) CurrentOrder = order;
+        if (selectionNote is not null) LogSelection("Auswahl · Kennung zugeordnet", selectionNote, ResultRating.NResult, "OK");
+        _run = new TestRun(project.Definition, RunOptions(registry, presets, dutLimit, orderSession, pythonVenv), runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
         if (_results is not null)
         {
             var resolver = _storage;
@@ -835,42 +853,10 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     // ------------------------------------------------------------------ Ereignisse der Engine
 
-    private void Handle(EngineEvent e)
+    private void HandleInteractionAndResources(EngineEvent e)
     {
         switch (e)
         {
-            case StateChanged s:
-                HandleStateChanged(s);
-                break;
-
-            case DutRunStarted d:
-                HandleDutRunStarted(d);
-                break;
-
-            case StepStarted st:
-                HandleStepStarted(st);
-                break;
-
-            case GroupEntered ge:
-                HandleGroupEntered(ge);
-                break;
-
-            case GroupNotEntered gn:
-                HandleGroupNotEntered(gn);
-                break;
-
-            case GroupCompleted gc:
-                HandleGroupCompleted(gc);
-                break;
-
-            case ExitGroupAborted ea:
-                HandleExitGroupAborted(ea);
-                break;
-
-            case StepCompleted sc:
-                HandleStepCompleted(sc);
-                break;
-
             case OperatorContentShown os:
                 HandleOperatorContentShown(os);
                 break;
@@ -909,6 +895,49 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
             case DutRunCompleted dc:
                 HandleDutRunCompleted(dc);
+                break;
+
+        }
+    }
+
+    private void Handle(EngineEvent e)
+    {
+        switch (e)
+        {
+            case StateChanged s:
+                HandleStateChanged(s);
+                break;
+
+            case DutRunStarted d:
+                HandleDutRunStarted(d);
+                break;
+
+            case StepStarted st:
+                HandleStepStarted(st);
+                break;
+
+            case GroupEntered ge:
+                HandleGroupEntered(ge);
+                break;
+
+            case GroupNotEntered gn:
+                HandleGroupNotEntered(gn);
+                break;
+
+            case GroupCompleted gc:
+                HandleGroupCompleted(gc);
+                break;
+
+            case ExitGroupAborted ea:
+                HandleExitGroupAborted(ea);
+                break;
+
+            case StepCompleted sc:
+                HandleStepCompleted(sc);
+                break;
+
+            default:
+                HandleInteractionAndResources(e);
                 break;
 
         }

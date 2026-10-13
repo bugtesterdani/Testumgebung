@@ -126,32 +126,10 @@ public static partial class CodeBlockConverter
         while (i < source.Length)
         {
             var c = source[i];
-            if (language != CodeLanguage.Python && c == '/' && i + 1 < source.Length && source[i + 1] == '/')
-            {
-                while (i < source.Length && source[i] != '\n') i++;
-                continue;
-            }
-            if (language != CodeLanguage.Python && c == '/' && i + 1 < source.Length && source[i + 1] == '*')
-            {
-                var end = source.IndexOf("*/", i + 2, StringComparison.Ordinal);
-                i = end < 0 ? source.Length : end + 2;
-                continue;
-            }
-            if (language == CodeLanguage.Python && c == '#')
-            {
-                while (i < source.Length && source[i] != '\n') i++;
-                continue;
-            }
+            if (SkipComment(source, ref i, language)) continue;
             if (c is '"' or '\'')
             {
-                var quote = c;
-                i++;
-                while (i < source.Length && source[i] != quote && source[i] != '\n')
-                {
-                    if (source[i] == '\\') i++;
-                    i++;
-                }
-                i++;
+                SkipQuotedText(source, ref i, c);
                 sb.Append(" \"\" ");
                 continue;
             }
@@ -159,6 +137,37 @@ public static partial class CodeBlockConverter
             i++;
         }
         return sb.ToString();
+    }
+
+    private static bool SkipComment(string source, ref int i, CodeLanguage language)
+    {
+        if (language == CodeLanguage.Python)
+        {
+            if (source[i] != '#') return false;
+            while (i < source.Length && source[i] != '\n') i++;
+            return true;
+        }
+        if (source[i] != '/' || i + 1 >= source.Length) return false;
+        if (source[i + 1] == '/')
+        {
+            while (i < source.Length && source[i] != '\n') i++;
+            return true;
+        }
+        if (source[i + 1] != '*') return false;
+        var end = source.IndexOf("*/", i + 2, StringComparison.Ordinal);
+        i = end < 0 ? source.Length : end + 2;
+        return true;
+    }
+
+    private static void SkipQuotedText(string source, ref int i, char quote)
+    {
+        i++;
+        while (i < source.Length && source[i] != quote && source[i] != '\n')
+        {
+            if (source[i] == '\\') i++;
+            i++;
+        }
+        i++;
     }
 
     [GeneratedRegex(@"\b(Var<[^>]+>|VarText|Var|SetVar|var|set_var)\s*\(\s*""[^""]*""")]

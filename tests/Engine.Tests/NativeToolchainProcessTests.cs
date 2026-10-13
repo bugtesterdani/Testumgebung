@@ -62,5 +62,63 @@ public sealed class NativeToolchainProcessTests
         }
         finally { Environment.SetEnvironmentVariable("TESTUMGEBUNG_CXX", previous); }
     }
+    [Theory]
+    [InlineData("missing-installer")]
+    [InlineData("empty-output")]
+    [InlineData("missing-vcvars")]
+    [InlineData("found")]
+    public void VisualStudioDiscoveryRequiresBothTheInstallerAndTheSetupScript(string scenario)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "vs-discovery-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var installer = Path.Combine(directory, "vswhere.exe");
+            var expected = Path.Combine(directory, "VC", "Auxiliary", "Build", "vcvars64.bat");
+            if (scenario != "missing-installer")
+            {
+                foreach (var file in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "fixtures", "compiler")))
+                    File.Copy(file, Path.Combine(directory, Path.GetFileName(file)));
+                File.Copy(Path.Combine(directory, "FakeCompiler.exe"), installer);
+                File.WriteAllText(Path.Combine(directory, "scenario.json"), JsonSerializer.Serialize(new Dictionary<string, string>
+                { ["stdout"] = scenario == "empty-output" ? "" : directory, ["exit"] = "0" }));
+            }
+            if (scenario == "found")
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(expected)!);
+                File.WriteAllText(expected, "fixture");
+            }
+            var method = Toolchain.GetMethod("FindVcVars", BindingFlags.Static | BindingFlags.NonPublic, [typeof(string)])!;
+            Assert.Equal(scenario == "found" ? expected : null, method.Invoke(null, [installer]));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [Theory]
+    [InlineData("msvc")]
+    [InlineData("clang++")]
+    [InlineData("g++")]
+    [InlineData("missing")]
+    public void InstalledCompilerSelectionUsesMsvcThenClangThenGcc(string available)
+    {
+        var probes = new List<string>();
+        string? Probe(string command) { probes.Add(command); return command == available ? "2.0" : null; }
+        object?[] arguments = [true, available == "msvc" ? Path.Combine(Path.GetTempPath(), "fixture-vcvars.bat") : null,
+            new Func<string, string?>(Probe), null];
+        var result = Toolchain.GetMethod("DetectInstalled", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, arguments);
+        if (available == "missing")
+        {
+            Assert.Null(result);
+            Assert.Contains("Keine C++-Toolchain", Assert.IsType<string>(arguments[3]));
+        }
+        else
+        {
+            Assert.NotNull(result);
+            Assert.Null(arguments[3]);
+            Assert.Equal(available == "msvc" ? "cl" : available, Property<string>(result, "Compiler"));
+        }
+        Assert.Equal(available switch { "msvc" => [], "clang++" => ["clang++"], _ => new[] { "clang++", "g++" } }, probes);
+    }
+
     private static T Property<T>(object value, string name) => (T)value.GetType().GetProperty(name)!.GetValue(value)!;
 }

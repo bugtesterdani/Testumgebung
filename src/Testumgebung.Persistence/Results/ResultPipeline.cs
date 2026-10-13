@@ -51,7 +51,7 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
         }
         var report = new StorageReport(recorded.RunId, recorded.DutId, file, db);
         // Gesichert (Datei, Wiederherstellungsordner oder Outbox) → Zwischenaufzeichnung nicht mehr nötig.
-        if (file?.Path is not null || db is { Stored: true } || (file is null && db is null)) Journal?.Complete(recorded.RunId);
+        if (IsSecured(file, db)) Journal?.Complete(recorded.RunId);
         return report;
     }
 
@@ -77,18 +77,26 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
                 db = new OutboxSubmitResult(false, $"Outbox nicht beschreibbar: {ex.Message}");
             }
         }
-        if (file?.Path is not null || db is { Stored: true } || (file is null && db is null))
+        if (IsSecured(file, db))
         {
-            try
-            {
-                File.Delete(incomplete.Path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // bleibt sichtbar
-            }
+            CompleteRecovery(incomplete.Path);
         }
         return new StorageReport(run.RunId, run.DutId, file, db);
+    }
+
+    private static bool IsSecured(FileSaveResult? file, OutboxSubmitResult? db)
+        => file?.Path is not null || db is { Stored: true } || (file is null && db is null);
+
+    private static void CompleteRecovery(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // bleibt sichtbar
+        }
     }
 
     private static ResultRun Exclude(ResultRun run, IReadOnlyCollection<string> excluded, string label)

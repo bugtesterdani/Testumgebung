@@ -20,6 +20,7 @@ public sealed partial class DevelopmentWorkspaceTests
         {
             var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown, LicenseTermsConsent = () => true };
             app.InitializeComponent();
+            InteractionBoundaryTests.VerifyPlotGestures();
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();
             VerifySettingsPasswords();
@@ -342,7 +343,7 @@ public sealed partial class DevelopmentWorkspaceTests
         using var stop = new CancellationTokenSource();
         Task<object?> Ask(StationViewModel station, string text) => ((Testumgebung.Engine.IOperatorInterface)station).AskAsync("paired-preview",
             new Testumgebung.Domain.Definitions.OperatorPrompt(Testumgebung.Domain.Definitions.OperatorPromptKind.Input, text)
-                { DisplayId = station.Name, StepName = "Seriennummer erfassen", Required = true }, stop.Token);
+            { DisplayId = station.Name, StepName = "Seriennummer erfassen", Required = true }, stop.Token);
         var answerFirst = Ask(first, "Seriennummer für Seite 1 scannen");
         var answerSecond = Ask(second, "Seriennummer für Seite 2 scannen");
         first.ActiveContent!.Input = "SN-001"; second.ActiveContent!.Input = "SN-002";

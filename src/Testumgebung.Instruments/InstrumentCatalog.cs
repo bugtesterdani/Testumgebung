@@ -68,10 +68,23 @@ public static class InstrumentCatalog
     ];
 
     /// <summary>Kommunikationsgeräte (Kanalnamen frei: Modbus-Adressen, beliebiger Kanal bei Byte-Strom/CAN).</summary>
-    public static bool IsCommunication(string adapter)
-        => adapter is StreamDevice.SerialAdapter or StreamDevice.TcpAdapter or StreamDevice.UdpAdapter or ModbusDevice.RtuAdapter
-            or ModbusDevice.TcpAdapter or CanDevice.PcanAdapter or CanDevice.KvaserAdapter or CanDevice.VirtualAdapter or CanDevice.VectorAdapter
-            or LinDevice.PlinAdapter or LinDevice.VirtualAdapter or OpcUaDevice.AdapterName;
+    private static readonly HashSet<string> CommunicationAdapters = new(StringComparer.Ordinal)
+    {
+        StreamDevice.SerialAdapter,
+        StreamDevice.TcpAdapter,
+        StreamDevice.UdpAdapter,
+        ModbusDevice.RtuAdapter,
+        ModbusDevice.TcpAdapter,
+        CanDevice.PcanAdapter,
+        CanDevice.KvaserAdapter,
+        CanDevice.VirtualAdapter,
+        CanDevice.VectorAdapter,
+        LinDevice.PlinAdapter,
+        LinDevice.VirtualAdapter,
+        OpcUaDevice.AdapterName,
+    };
+
+    public static bool IsCommunication(string adapter) => CommunicationAdapters.Contains(adapter);
 
     public static InstrumentFamily? Family(string adapter) => Families.FirstOrDefault(f => f.Adapter == adapter);
 

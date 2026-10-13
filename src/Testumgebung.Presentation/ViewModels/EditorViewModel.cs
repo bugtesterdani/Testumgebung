@@ -287,7 +287,13 @@ public sealed partial class EditorViewModel : ObservableObject
         if (block is null) return [$"Baustein '{id}' ist nicht in der Bibliothek."];
         if (step.BlockType == BlockCatalog.GroupBlock && Project.Definition.OwningGroupBlock(step.Id) is { } owner && owner.Id == id)
             return ["Ein grafischer Baustein darf sich nicht selbst aufrufen."];
-        foreach (var port in block.Ports)
+        CheckPortBindings(step, block.Ports, list);
+        return list;
+    }
+
+    private static void CheckPortBindings(StepDefinition step, IReadOnlyList<CodePort> ports, List<string> list)
+    {
+        foreach (var port in ports)
         {
             var key = (port.Direction == PortDirection.Output ? BlockCatalog.OutputBindingPrefix : BlockCatalog.InputBindingPrefix) + port.Name;
             var text = step.Parameters.GetValueOrDefault(key);
@@ -307,7 +313,6 @@ public sealed partial class EditorViewModel : ObservableObject
                 list.Add($"„{port.Name}“: {ex.Message}");
             }
         }
-        return list;
     }
 
     /// <summary>Auswählbare Bausteine für einen Baustein-Schritt (Code- oder Gruppenbausteine).</summary>
@@ -558,17 +563,5 @@ public sealed partial class EditorViewModel : ObservableObject
         }
     }
 
-    private static NodeIcon IconFor(string type) => type switch
-    {
-        BlockCatalog.Measure => NodeIcon.Measure,
-        BlockCatalog.Output or BlockCatalog.SetValue => NodeIcon.Arrow,
-        BlockCatalog.DigitalRead or BlockCatalog.DigitalWrite => NodeIcon.Digital,
-        BlockCatalog.Evaluate or BlockCatalog.SetRating => NodeIcon.Check,
-        BlockCatalog.Operator => NodeIcon.Operator,
-        BlockCatalog.Wait => NodeIcon.Wait,
-        BlockCatalog.RaiseError => NodeIcon.Error,
-        BlockCatalog.Code => NodeIcon.Code,
-        BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock => NodeIcon.LibraryBlock,
-        _ => NodeIcon.Doc,
-    };
+    private static NodeIcon IconFor(string type) => NodeViewModel.IconFor(type);
 }

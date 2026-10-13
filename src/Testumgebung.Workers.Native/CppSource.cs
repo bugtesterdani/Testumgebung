@@ -337,7 +337,7 @@ internal static class CppInstrument
             var startInComment = inBlockComment;
             var trimmed = line.TrimStart();
             var indent = line[..(line.Length - trimmed.Length)];
-            var boundary = !startInComment && lastSig is '\0' or ';' or '{' or '}';
+            var boundary = IsStatementBoundary(startInComment, lastSig);
             var isPreproc = inPreprocessor || !startInComment && trimmed.StartsWith('#');
             var emitted = line;
             if (boundary && !isPreproc && !IsContinuation(trimmed) && HasCode(line, startInComment))
@@ -352,6 +352,9 @@ internal static class CppInstrument
         }
         return sb.ToString();
     }
+
+    private static bool IsStatementBoundary(bool inComment, char lastSig)
+        => !inComment && lastSig is '\0' or ';' or '{' or '}';
 
     private static bool IsContinuation(string trimmed)
     {
@@ -372,11 +375,11 @@ internal static class CppInstrument
             var c = line[i];
             if (block)
             {
-                if (c == '*' && i + 1 < line.Length && line[i + 1] == '/') { block = false; i++; }
+                if (c == '*' && FollowedBy(line, i, '/')) { block = false; i++; }
                 continue;
             }
-            if (c == '/' && i + 1 < line.Length && line[i + 1] == '/') return false;
-            if (c == '/' && i + 1 < line.Length && line[i + 1] == '*') { block = true; i++; continue; }
+            if (c == '/' && FollowedBy(line, i, '/')) return false;
+            if (c == '/' && FollowedBy(line, i, '*')) { block = true; i++; continue; }
             if (!char.IsWhiteSpace(c)) return true;
         }
         return false;
@@ -390,25 +393,33 @@ internal static class CppInstrument
             var c = line[i];
             if (inBlockComment)
             {
-                if (c == '*' && i + 1 < line.Length && line[i + 1] == '/') { inBlockComment = false; i++; }
+                if (c == '*' && FollowedBy(line, i, '/')) { inBlockComment = false; i++; }
                 continue;
             }
-            if (c == '/' && i + 1 < line.Length && line[i + 1] == '/') return;
-            if (c == '/' && i + 1 < line.Length && line[i + 1] == '*') { inBlockComment = true; i++; continue; }
+            if (c == '/' && FollowedBy(line, i, '/')) return;
+            if (c == '/' && FollowedBy(line, i, '*')) { inBlockComment = true; i++; continue; }
             if (c is '"' or '\'')
             {
                 var quote = c;
-                i++;
-                while (i < line.Length)
-                {
-                    if (line[i] == '\\') { i += 2; continue; }
-                    if (line[i] == quote) break;
-                    i++;
-                }
+                SkipQuotedText(line, ref i, quote);
                 lastSig = quote; // Zeichenkette zählt als Code (kein Anweisungsende)
                 continue;
             }
             if (!char.IsWhiteSpace(c)) lastSig = c;
+        }
+    }
+
+    private static bool FollowedBy(ReadOnlySpan<char> text, int i, char next)
+        => i + 1 < text.Length && text[i + 1] == next;
+
+    private static void SkipQuotedText(string line, ref int i, char quote)
+    {
+        i++;
+        while (i < line.Length)
+        {
+            if (line[i] == '\\') { i += 2; continue; }
+            if (line[i] == quote) break;
+            i++;
         }
     }
 
@@ -438,7 +449,7 @@ internal static class CppInstrument
     {
         var previous = i > 0 ? code[i - 1] : '\0';
         var next = i + 1 < code.Length ? code[i + 1] : '\0';
-        return next != '=' && previous is not ('=' or '<' or '>' or '!' or '+' or '-' or '*' or '/' or '%' or '&' or '|' or '^');
+        return next != '=' && "=<>!+-*/%&|^".IndexOf(previous) < 0;
     }
 
     private static bool HasAssignmentTerminator(string code, int i)
@@ -479,25 +490,30 @@ internal static class CppInstrument
             var c = chars[i];
             if (block)
             {
-                var star = c == '*' && i + 1 < chars.Length && chars[i + 1] == '/';
+                var star = c == '*' && FollowedBy(chars, i, '/');
                 chars[i] = ' ';
                 if (star) { chars[i + 1] = ' '; i++; block = false; }
                 continue;
             }
-            if (c == '/' && i + 1 < chars.Length && chars[i + 1] == '/') { for (var j = i; j < chars.Length; j++) chars[j] = ' '; break; }
-            if (c == '/' && i + 1 < chars.Length && chars[i + 1] == '*') { chars[i] = chars[i + 1] = ' '; i++; block = true; continue; }
+            if (c == '/' && FollowedBy(chars, i, '/')) { for (var j = i; j < chars.Length; j++) chars[j] = ' '; break; }
+            if (c == '/' && FollowedBy(chars, i, '*')) { chars[i] = chars[i + 1] = ' '; i++; block = true; continue; }
             if (c is '"' or '\'')
             {
-                var quote = c; chars[i] = ' ';
-                i++;
-                while (i < chars.Length)
-                {
-                    if (chars[i] == '\\') { if (i + 1 < chars.Length) chars[i + 1] = ' '; chars[i] = ' '; i += 2; continue; }
-                    if (chars[i] == quote) { chars[i] = ' '; break; }
-                    chars[i] = ' '; i++;
-                }
+                BlankQuotedText(chars, ref i, c);
             }
         }
         return new string(chars);
     }
+    private static void BlankQuotedText(char[] chars, ref int i, char quote)
+    {
+        chars[i] = ' ';
+        i++;
+        while (i < chars.Length)
+        {
+            if (chars[i] == '\\') { if (i + 1 < chars.Length) chars[i + 1] = ' '; chars[i] = ' '; i += 2; continue; }
+            if (chars[i] == quote) { chars[i] = ' '; break; }
+            chars[i] = ' '; i++;
+        }
+    }
+
 }

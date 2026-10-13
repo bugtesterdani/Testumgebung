@@ -172,19 +172,7 @@ public sealed class ScpiSession : IDisposable
             {
                 var chunk = await Io.ReadAsync(timeout ?? Timeout, ct).ConfigureAwait(false);
                 var offset = 0;
-                while (length is null && offset < chunk.Data.Length)
-                {
-                    header.Add(chunk.Data[offset++]);
-                    if (header[0] != '#' || (header.Count >= 2 && (header[1] < '1' || header[1] > '9')))
-                        throw new InstrumentException("Streaming benötigt einen definite-length IEEE-Block.");
-                    if (header.Count >= 2 && header.Count == 2 + header[1] - '0')
-                    {
-                        if (!int.TryParse(Encoding.ASCII.GetString(header.Skip(2).ToArray()), NumberStyles.None, CultureInfo.InvariantCulture, out var count) || count > 100_000_000)
-                            throw new InstrumentException("Ungültige IEEE-Blocklänge.");
-                        length = remaining = count;
-                        begin(count);
-                    }
-                }
+                ReadStreamingHeader(chunk.Data, header, ref offset, ref length, ref remaining, begin);
                 if (length is not null)
                 {
                     var count = Math.Min(remaining, chunk.Data.Length - offset);
@@ -203,6 +191,23 @@ public sealed class ScpiSession : IDisposable
             throw;
         }
         finally { _gate.Release(); }
+    }
+
+    private static void ReadStreamingHeader(byte[] data, List<byte> header, ref int offset, ref int? length, ref int remaining, Action<int> begin)
+    {
+        while (length is null && offset < data.Length)
+        {
+            header.Add(data[offset++]);
+            if (header[0] != '#' || (header.Count >= 2 && (header[1] < '1' || header[1] > '9')))
+                throw new InstrumentException("Streaming benötigt einen definite-length IEEE-Block.");
+            if (header.Count >= 2 && header.Count == 2 + header[1] - '0')
+            {
+                if (!int.TryParse(Encoding.ASCII.GetString(header.Skip(2).ToArray()), NumberStyles.None, CultureInfo.InvariantCulture, out var count) || count > 100_000_000)
+                    throw new InstrumentException("Ungültige IEEE-Blocklänge.");
+                length = remaining = count;
+                begin(count);
+            }
+        }
     }
 
     public async Task<InstrumentIdentity> IdentifyAsync(CancellationToken ct = default)
@@ -296,32 +301,34 @@ public sealed class ScpiSession : IDisposable
     /// <summary>Nachricht vollständig: Block mit voller Länge bzw. Zeilenende (Socket) oder END (VISA).</summary>
     private static bool Complete(List<byte> data, bool end)
     {
-        if (data.Count > 0 && data[0] == (byte)'#')
-        {
-            if (data.Count < 2)
-            {
-                if (end) throw new InstrumentException("IEEE-Blockkopf abgeschnitten.");
-                return false;
-            }
-            var digits = data[1] - '0';
-            if (digits is < 0 or > 9) throw new InstrumentException("Ungültiger IEEE-Blockkopf.");
-            if (digits == 0) return end || data[^1] == '\n'; // indefinite block: bis zum Ende
-            if (data.Count < 2 + digits)
-            {
-                if (end) throw new InstrumentException("IEEE-Blockkopf abgeschnitten.");
-                return false;
-            }
-            if (!int.TryParse(Encoding.ASCII.GetString([.. data.GetRange(2, digits)]), NumberStyles.None, CultureInfo.InvariantCulture, out var length))
-                throw new InstrumentException("Ungültige IEEE-Blocklänge.");
-            var total = 2 + digits + length;
-            if (data.Count < total)
-            {
-                if (end) throw new InstrumentException("IEEE-Block abgeschnitten.");
-                return false;
-            }
-            return end || data.Count > total && data[total] == '\n';
-        }
+        if (data.Count > 0 && data[0] == (byte)'#') return CompleteBlock(data, end);
         return end || data.Count > 0 && data[^1] == '\n';
+    }
+
+    private static bool CompleteBlock(List<byte> data, bool end)
+    {
+        if (data.Count < 2)
+        {
+            if (end) throw new InstrumentException("IEEE-Blockkopf abgeschnitten.");
+            return false;
+        }
+        var digits = data[1] - '0';
+        if (digits is < 0 or > 9) throw new InstrumentException("Ungültiger IEEE-Blockkopf.");
+        if (digits == 0) return end || data[^1] == '\n'; // indefinite block: bis zum Ende
+        if (data.Count < 2 + digits)
+        {
+            if (end) throw new InstrumentException("IEEE-Blockkopf abgeschnitten.");
+            return false;
+        }
+        if (!int.TryParse(Encoding.ASCII.GetString([.. data.GetRange(2, digits)]), NumberStyles.None, CultureInfo.InvariantCulture, out var length))
+            throw new InstrumentException("Ungültige IEEE-Blocklänge.");
+        var total = 2 + digits + length;
+        if (data.Count < total)
+        {
+            if (end) throw new InstrumentException("IEEE-Block abgeschnitten.");
+            return false;
+        }
+        return end || data.Count > total && data[total] == '\n';
     }
 
     internal static (int Offset, int Length)? BlockBounds(byte[] reply)

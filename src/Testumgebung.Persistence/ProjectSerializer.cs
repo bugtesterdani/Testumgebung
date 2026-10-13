@@ -152,15 +152,23 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
 
     private void ReadLibraries(ProjectDto dto, TestDefinition def)
     {
-        foreach (var assembly in dto.Assemblies ?? [])
-        {
-            try { ManagedAssemblyImport.Validate(assembly); }
-            catch (ArgumentException ex) { throw new ProjectFormatException(ex.Message); }
-            if (def.Assemblies.Any(a => a.Name.Equals(assembly.Name, StringComparison.OrdinalIgnoreCase)))
-                throw new ProjectFormatException("DLL doppelt: " + assembly.Name);
-            def.Assemblies.Add(assembly);
-        }
+        ReadManagedAssemblies(dto, def);
         foreach (var b in dto.Library ?? []) def.Library.Add(FromDto(b));
+        ReadGroupLibrary(dto, def);
+        foreach (var c in dto.Curves ?? []) def.Curves.Add(FromDto(c));
+        if (dto.OperatorLayout is { } layout) def.Layout = layout.Clone();
+        foreach (var b in dto.BusDatabases ?? [])
+        {
+            var name = Require(b.Name, "Busdatenbank-name");
+            if (def.BusDatabases.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
+                throw new ProjectFormatException($"Busdatenbank '{name}' ist doppelt.");
+            var format = string.Equals(b.Format, "LDF", StringComparison.OrdinalIgnoreCase) ? Testumgebung.Contracts.BusDatabaseFormat.Ldf : Testumgebung.Contracts.BusDatabaseFormat.Dbc;
+            def.BusDatabases.Add(new BusDatabaseDefinition(name, format, b.Content ?? "", b.FileName));
+        }
+    }
+
+    private void ReadGroupLibrary(ProjectDto dto, TestDefinition def)
+    {
         foreach (var g in dto.GroupLibrary ?? [])
         {
             if (g.Body is null) throw new ProjectFormatException($"Grafischer Baustein '{g.Name}': Körper fehlt.");
@@ -172,15 +180,17 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             foreach (var p in g.Ports ?? []) block.Ports.Add(FromDto(p, block.Name));
             def.GroupLibrary.Add(block);
         }
-        foreach (var c in dto.Curves ?? []) def.Curves.Add(FromDto(c));
-        if (dto.OperatorLayout is { } layout) def.Layout = layout.Clone();
-        foreach (var b in dto.BusDatabases ?? [])
+    }
+
+    private static void ReadManagedAssemblies(ProjectDto dto, TestDefinition def)
+    {
+        foreach (var assembly in dto.Assemblies ?? [])
         {
-            var name = Require(b.Name, "Busdatenbank-name");
-            if (def.BusDatabases.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
-                throw new ProjectFormatException($"Busdatenbank '{name}' ist doppelt.");
-            var format = string.Equals(b.Format, "LDF", StringComparison.OrdinalIgnoreCase) ? Testumgebung.Contracts.BusDatabaseFormat.Ldf : Testumgebung.Contracts.BusDatabaseFormat.Dbc;
-            def.BusDatabases.Add(new BusDatabaseDefinition(name, format, b.Content ?? "", b.FileName));
+            try { ManagedAssemblyImport.Validate(assembly); }
+            catch (ArgumentException ex) { throw new ProjectFormatException(ex.Message); }
+            if (def.Assemblies.Any(a => a.Name.Equals(assembly.Name, StringComparison.OrdinalIgnoreCase)))
+                throw new ProjectFormatException("DLL doppelt: " + assembly.Name);
+            def.Assemblies.Add(assembly);
         }
     }
 

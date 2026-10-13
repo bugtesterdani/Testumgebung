@@ -33,7 +33,7 @@ public sealed class CustomDeviceProfile : System.ComponentModel.INotifyPropertyC
             errors.Add("Kanalnamen müssen eindeutig sein.");
         foreach (var channel in Channels) errors.AddRange(channel.Validate());
         if (ProbeQuery is null || SafeCommands is null) errors.Add("Befehlsfelder dürfen nicht null sein.");
-        if (ProbeQuery?.Contains('\n') == true || ProbeQuery?.Contains('\r') == true) errors.Add("Prüfabfrage darf nur einen Befehl enthalten.");
+        if (CustomDeviceChannel.ContainsLineBreak(ProbeQuery)) errors.Add("Prüfabfrage darf nur einen Befehl enthalten.");
         return errors;
     }
 
@@ -61,8 +61,11 @@ public sealed class CustomDeviceChannel
         if (string.IsNullOrWhiteSpace(ReadQuery) && string.IsNullOrWhiteSpace(WriteCommand)) errors.Add($"{Name}: Lese- oder Schreibbefehl erforderlich.");
         if (!string.IsNullOrWhiteSpace(WriteCommand) && !WriteCommand.Contains("{value}", StringComparison.Ordinal))
             errors.Add($"{Name}: Schreibbefehl muss {{value}} enthalten.");
-        if (ReadQuery?.Contains('\n') == true || ReadQuery?.Contains('\r') == true || WriteCommand?.Contains('\n') == true || WriteCommand?.Contains('\r') == true)
+        if (ContainsLineBreak(ReadQuery) || ContainsLineBreak(WriteCommand))
             errors.Add($"{Name}: je Feld nur einen Befehl angeben.");
         return errors;
     }
+    internal static bool ContainsLineBreak(string? command)
+        => command?.IndexOfAny(['\r', '\n']) >= 0;
+
 }

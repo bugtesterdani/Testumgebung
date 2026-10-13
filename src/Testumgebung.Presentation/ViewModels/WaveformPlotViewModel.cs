@@ -249,6 +249,20 @@ public sealed class WaveformPlotViewModel : ObservableObject
 
     private double Y(double v) => _yMax > _yMin ? PlotHeight - (v - _yMin) / (_yMax - _yMin) * PlotHeight : PlotHeight / 2;
 
+    private void UpdateRmsLabels()
+    {
+        foreach (var c in Channels)
+        {
+            if (!HasData) { c.RmsText = "—"; continue; }
+            var s = _sources[c.ColorIndex].Samples;
+            var a = IndexAt(_viewStart);
+            var b = Math.Max(a, Math.Min(Count - 1, IndexAt(_viewEnd - 1e-15)));
+            double sum = 0;
+            for (var i = a; i <= b; i++) sum += s[i] * s[i];
+            c.RmsText = string.Create(CultureInfo.InvariantCulture, $"{Math.Sqrt(sum / (b - a + 1)):0.###} {c.Unit}");
+        }
+    }
+
     private void Render()
     {
         Series.Clear();
@@ -302,16 +316,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
                 Series.Add(new PlotSeries(c.Id, c.ColorIndex, points, $"{c.Id} [{c.Unit}]"));
             }
         }
-        foreach (var c in Channels)
-        {
-            if (!HasData) { c.RmsText = "—"; continue; }
-            var s = _sources[c.ColorIndex].Samples;
-            var a = IndexAt(_viewStart);
-            var b = Math.Max(a, Math.Min(Count - 1, IndexAt(_viewEnd - 1e-15)));
-            double sum = 0;
-            for (var i = a; i <= b; i++) sum += s[i] * s[i];
-            c.RmsText = string.Create(CultureInfo.InvariantCulture, $"{Math.Sqrt(sum / (b - a + 1)):0.###} {c.Unit}");
-        }
+        UpdateRmsLabels();
         UpdateCursor();
         OnPropertiesChanged(nameof(HasData), nameof(Count), nameof(Duration), nameof(ViewStart), nameof(ViewEnd), nameof(ViewText),
             nameof(RangeText), nameof(ZeroY), nameof(ShowZero), nameof(YTopText), nameof(YMidText), nameof(YBottomText));
