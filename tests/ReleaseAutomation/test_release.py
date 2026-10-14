@@ -42,13 +42,33 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn('@all', line)
         self.assertNotIn('[click](url)', line)
 
-    def test_official_release_installs_above_development_builds(self):
+    def test_official_release_uses_the_shared_run_number(self):
         with tempfile.NamedTemporaryFile(delete=False) as f: path = f.name
         try:
             with patch.dict(os.environ, {'GITHUB_OUTPUT': path, 'GITHUB_RUN_NUMBER': '31'}):
                 release.plan(None, SimpleNamespace(tag='v1.0.14', base='', fallback='1.0.13'))
-            self.assertIn('version=1.0.14.65535', Path(path).read_text())
+            self.assertIn('version=1.0.14.31', Path(path).read_text())
         finally: Path(path).unlink()
+
+    def test_all_build_kinds_and_reruns_share_the_run_revision(self):
+        for tag in ('', 'v1.0.16'):
+            for attempt in ('1', '2'):
+                with self.subTest(tag=tag, attempt=attempt), patch.dict(os.environ, {'GITHUB_RUN_NUMBER': '125', 'GITHUB_RUN_ATTEMPT': attempt}), patch.object(release, 'output') as out:
+                    release.plan(None, SimpleNamespace(tag=tag, base='1.0.16', fallback='1.0.15'))
+                    out.assert_called_once_with(version='1.0.16.125', base='1.0.16')
+
+    def test_revision_boundaries_never_wrap_or_truncate(self):
+        with patch.dict(os.environ, {'GITHUB_RUN_NUMBER': '65535'}), patch.object(release, 'output') as out:
+            release.plan(None, SimpleNamespace(tag='v1.0.16', base='', fallback='1.0.15'))
+            out.assert_called_once_with(version='1.0.16.65535', base='1.0.16')
+        for number in ('0', '-1', '65536', '38123456789'):
+            with self.subTest(number=number), patch.dict(os.environ, {'GITHUB_RUN_NUMBER': number}), self.assertRaises(ValueError):
+                release.plan(None, SimpleNamespace(tag='v1.0.16', base='', fallback='1.0.15'))
+
+    def test_release_notes_reject_mismatched_or_oversized_package_version(self):
+        for package in ('1.0.15.1', '1.0.14.65536', '1.0.14.0', '1.0.14.01'):
+            with self.subTest(package=package), self.assertRaises(ValueError):
+                release.publish(None, SimpleNamespace(tag='v1.0.14', package_version=package))
 
     def test_no_release_for_an_ordinary_merge(self):
         class API:
@@ -123,7 +143,7 @@ class ReleaseTests(unittest.TestCase):
             if args[0] == 'show': return '2026-10-01T00:00:00+00:00'
             raise AssertionError(args)
         api = API()
-        with patch.object(release, 'git', fake_git): release.publish(api, SimpleNamespace(tag='v1.0.14'))
+        with patch.object(release, 'git', fake_git): release.publish(api, SimpleNamespace(tag='v1.0.14', package_version='1.0.14.42'))
         self.assertEqual(api.method, 'PATCH')
         self.assertEqual('v1.0.14', api.updated['tag_name'])
         self.assertEqual('a'*40, api.updated['target_commitish'])
@@ -131,6 +151,6 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('PR #5', api.written)
         self.assertIn('Issue #3', api.written)
         self.assertNotIn('SECRET', api.written)
-        self.assertIn('1.0.14.65535', api.written)
+        self.assertIn('1.0.14.42', api.written)
 
 if __name__ == '__main__': unittest.main()

@@ -11,15 +11,30 @@ Release-Issue geben. Main- und PR-Builds lesen dieselbe Quelle; ohne offenes
 Issue bleibt die letzte Release-Version maßgeblich. Die Repository-Variable
 `RELEASE_VERSION` ist lediglich ein Fallback vor dem ersten Release-Issue.
 
-Tag und Release heißen `v1.0.14` beziehungsweise `1.0.14`. MSIX benötigt eine
-vierte Versionsstelle: Entwicklungsbuilds heißen `1.0.14.<Run-Nummer>`, das
-offizielle Paket `1.0.14.65535`. Die reservierte höchste Revision erlaubt ein
-Upgrade von Entwicklungsbuilds derselben Basisversion. Ab Run-Nummer 65535
-stoppt der Build, statt eine widersprüchliche Versionsnummer zu erzeugen.
-Neue offizielle Veröffentlichungen benötigen eine neue Basisversion.
-Die interne CLR-AssemblyVersion bleibt dabei `X.Y.Z.0`; FileVersion und
-MSIX tragen die jeweilige Build- beziehungsweise Release-Revision. Dadurch
-wird die für CLR-Assemblies unzulässige Revision 65535 dort nicht verwendet.
+Tag und Release heißen `v1.0.16` beziehungsweise `1.0.16`. Die vierte
+MSIX-Versionsstelle ist die GitHub-`GITHUB_RUN_NUMBER` des Workflows `msix.yml`,
+beispielsweise `1.0.16.123`. PR-, Main-, manuelle und offizielle Release-Builds
+laufen in diesem einen Workflow und teilen dadurch denselben Zähler im Repository.
+Andere Workflows, etwa die Wiki-Aktualisierung, verbrauchen keine Buildnummern.
+Der Zähler läuft auch über Basisversionswechsel hinweg weiter; Lücken durch
+abgebrochene oder fehlgeschlagene Runs sind normal. Größere Buildnummern bedeuten
+später gestartete Runs, nicht zwingend neueren Quellcode oder spätere Fertigstellung.
+Eine Wiederholung desselben Runs behält die Nummer. `BUILD-INFO.json` enthält
+zusätzlich die vollständige Run-ID, Versuchszahl, Commit und den Link zum Run.
+Die vierte Stelle identifiziert den Run; Run-ID plus Versuch identifizieren den Versuch.
+
+Der vorhandene Workflow und sein Name/Pfad sollen deshalb nicht durch einen neuen
+Workflow ersetzt werden: Dessen Zähler könnte neu beginnen. GitHub-Zähler gelten je
+Workflow, nicht global über alle Workflows einer Organisation. Die vollständige
+Run-ID passt nicht in die MSIX-Versionsstelle und wird weder gekürzt noch gehasht.
+Ab Run-Nummer 65536 stoppt der Build ausdrücklich. Vor Erreichen dieser Grenze
+benötigt die Vergabe eine neue, dokumentierte Strategie.
+
+Die bisherige reservierte Release-Revision `.65535` entfällt für zukünftige Builds.
+Bereits veröffentlichte Versionen, insbesondere `1.0.15.65535`, bleiben erhalten.
+Neue Pakete benötigen daher eine höhere Basisversion (aktuell `1.0.16`), um diese
+Installation aktualisieren zu können. Die CLR-AssemblyVersion bleibt `X.Y.Z.0`;
+FileVersion und MSIX tragen die gemeinsame Buildrevision.
 
 ## Mehrere Änderungen sammeln
 
@@ -30,9 +45,10 @@ Release-PR enthält im Beschreibungstext ausdrücklich **Closes #1**, wobei #1
 die tatsächliche ID des Release-Issues ist. Dieser PR muss die erforderlichen
 Buildprüfungen bestehen und nach main gemergt werden.
 
-Erst dieser Merge erzeugt den Tag am exakten Merge-Commit und ruft den
-Release-Build direkt auf. Das ist notwendig, weil Tags, die der normale
-Actions-Token anlegt, keine weitere Push-Automation auslösen. Das signierte
+Erst dieser Merge erzeugt den Tag am exakten Merge-Commit und führt den
+Release-Build im selben MSIX-Workflow aus. Tags, die der normale
+Actions-Token anlegt, lösen keine weitere Push-Automation aus; der Main-Run
+übernimmt deshalb auch das offizielle Paket und den Release-Entwurf. Das signierte
 Paket, Quellen, Hinweise und Prüfnachweise landen zunächst in einem
 **Release-Entwurf**. Prüfe ihn und veröffentliche ihn anschließend bewusst.
 Bei normalem PR-Build wird ein separates Entwicklungszertifikat verwendet;
@@ -43,7 +59,7 @@ der produktive Signierschlüssel wird dafür nicht bereitgestellt.
 PR #6 ist gemerged, schließt aber nur das Dokumentations-Issue ab. Für das offizielle
 Release muss der abschließende Release-PR zusätzlich **Closes #1** enthalten.
 Nach bestandenem Build und Merge erzeugt die Release-Issue-Automatik `v1.0.14` und
-den Entwurf mit `1.0.14.65535`. Öffne anschließend GitHub → Releases, prüfe den
+den Entwurf (damals mit `1.0.14.65535`; zukünftige Releases verwenden die Run-Nummer). Öffne anschließend GitHub → Releases, prüfe den
 Entwurf samt MSIX, Zertifikat, Quellen und Lizenznachweisen und veröffentliche ihn.
 Das manuelle Schließen des Release-Issues allein erzeugt keinen Tag.
 
