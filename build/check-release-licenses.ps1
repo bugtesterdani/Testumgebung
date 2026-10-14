@@ -25,7 +25,7 @@ foreach ($manifest in Get-ChildItem -LiteralPath $base -Recurse -Filter '*.deps.
         if ($deps.libraries[$key].type -in @('package','runtimepack')) {
             if (-not $inventory.packages.ContainsKey($key)) { throw "Abhängigkeit fehlt im Lizenzinventar: $key" }
             $package = $inventory.packages[$key]
-            $reviewedWindowsRuntime = $key -in @('runtimepack.Microsoft.NETCore.App.Runtime.win-x64/10.0.12','runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12') -and $package.license_effective -eq 'MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution'
+            $reviewedWindowsRuntime = $key -in @('runtimepack.Microsoft.NETCore.App.Runtime.win-x64/10.0.13','runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.13') -and $package.license_effective -eq 'MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution'
             if (-not $reviewedWindowsRuntime -and $package.license_effective -notin @('MIT','Apache-2.0','PostgreSQL')) { throw "Nicht freigegebene NuGet-Lizenz: $key / $($package.license_effective)" }
             foreach ($record in $package.metadata.license_files) {
                 $notice = Join-Path $base $record.path

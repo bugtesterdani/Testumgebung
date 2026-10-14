@@ -136,6 +136,13 @@ def trigger(api, args):
     output(release='true', base=base, tag='v'+base, sha=sha, issue=issue['number'])
     print(f'Release-Issue #{issue["number"]}: Tag v{base} am geprüften Merge-Commit.')
 
+def release_for_tag(api, tag):
+    # Draft releases are not reliably returned by the tag lookup endpoint.
+    # Authenticated release listing includes drafts; retain the returned ID.
+    matches = [r for r in api.pages(f'repos/{api.repo}/releases') if r['tag_name'] == tag]
+    if len(matches) != 1: raise ValueError('Release für den Tag fehlt oder ist nicht eindeutig.')
+    return matches[0]
+
 def publish(api, args):
     base = version(args.tag.removeprefix('v'))
     current = git('rev-parse', args.tag + '^{commit}')
@@ -169,8 +176,12 @@ def publish(api, args):
         milestone = (issue.get('milestone') or {}).get('title')
         if milestone == base or issue['number'] in linked or (not milestone and any(start < t <= end for t in times)):
             selected.append(issue)
-    release = api.api(f'repos/{api.repo}/releases/tags/{args.tag}')
-    api.api(f'repos/{api.repo}/releases/{release["id"]}', {'body': body(base, previous, selected, list(pulls.values()))}, method='PATCH')
+    release = release_for_tag(api, args.tag)
+    if not release.get('draft'): raise ValueError('Release Notes eines veröffentlichten Releases werden nicht überschrieben.')
+    api.api(f'repos/{api.repo}/releases/{release["id"]}', {
+        'body': body(base, previous, selected, list(pulls.values())),
+        'tag_name': args.tag, 'target_commitish': current, 'draft': True,
+    }, method='PATCH')
     print(f'Release Notes direkt auf GitHub gespeichert: {len(pulls)} PRs, {len(selected)} Issues.')
 
 def milestone_for(api, base):
@@ -193,7 +204,7 @@ def next_version(base):
 def next_release(api, args):
     if not args.tag.startswith('v'): raise ValueError('Tag muss vX.Y.Z heißen.')
     base = version(args.tag[1:])
-    release = api.api(f'repos/{api.repo}/releases/tags/{args.tag}')
+    release = release_for_tag(api, args.tag)
     if not any(a['name'].endswith('.msixbundle') for a in release.get('assets', [])):
         raise ValueError('Release enthält noch kein erfolgreich gebautes MSIX-Bundle.')
     issues = api.issues()

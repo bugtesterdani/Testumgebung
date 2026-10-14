@@ -1,6 +1,6 @@
 # Vollständiges Abhängigkeitsinventar
 
-Prüfstand: 13.10.2026. Binärstand: MSIX 1.0.13.3. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.
+Prüfstand: 2026-10-14. Binärstand: MSIX 1.0.15.1. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.
 
 ## Dateien für die genaue Auswertung
 
@@ -20,20 +20,20 @@ Die CSV-Dateien verwenden UTF-8 mit BOM und lassen sich in Excel importieren. `b
 
 | Projekt | Framework | Version im Prüfstand | Aufgabe |
 | --- | --- | --- | --- |
-| src/Testumgebung.Contracts/Testumgebung.Contracts.csproj | net10.0 | 1.0.13.3 in audited MSIX | Gemeinsame Verträge und Grundtypen |
-| src/Testumgebung.DatabaseAdapters/Testumgebung.DatabaseAdapters.csproj | net10.0 | 1.0.13.3 in audited MSIX | Datenbank-Verbindungen |
-| src/Testumgebung.Desktop/Testumgebung.Desktop.csproj | net10.0-windows | 1.0.13.3 in audited MSIX | WPF-Oberfläche, Entra/MSAL, Datenbankprovider und OPC UA |
-| src/Testumgebung.Domain/Testumgebung.Domain.csproj | net10.0 | 1.0.13.3 in audited MSIX | Prüfprojekt-, Variablen- und Ergebnismodell |
-| src/Testumgebung.Engine/Testumgebung.Engine.csproj | net10.0 | 1.0.13.3 in audited MSIX | Ablaufausführung, Bausteine und Ressourcen-Sperren |
-| src/Testumgebung.Hardware/Testumgebung.Hardware.csproj | net10.0 | 1.0.13.3 in audited MSIX | Hardware-Abstraktionen und Simulation |
-| src/Testumgebung.Identity/Testumgebung.Identity.csproj | net10.0 | 1.0.13.3 in audited MSIX | Anmeldung und Berechtigungsverträge |
-| src/Testumgebung.Instruments/Testumgebung.Instruments.csproj | net10.0 | 1.0.13.3 in audited MSIX | Gerätetreiber, SSH/SFTP, Busse und Netzwerk |
-| src/Testumgebung.Notifications/Testumgebung.Notifications.csproj | net10.0 | 1.0.13.3 in audited MSIX | Meldewege und Benachrichtigungen |
-| src/Testumgebung.Persistence/Testumgebung.Persistence.csproj | net10.0 | 1.0.13.3 in audited MSIX | Projekt-, Ergebnis-, Einstellungs- und Release-Speicherung |
-| src/Testumgebung.Presentation/Testumgebung.Presentation.csproj | net10.0 | 1.0.13.3 in audited MSIX | Ansichtsmodelle, Editor und Werkersteuerung |
-| src/Testumgebung.Workers/Testumgebung.Workers.csproj | net10.0 | 1.0.13.3 in audited MSIX | C#/Python/C++-Prozesssteuerung, Laufzeitwahl und GDB |
-| src/Testumgebung.Workers.CSharp/Testumgebung.Workers.CSharp.csproj | net10.0 | 1.0.13.3 in audited MSIX | Isolierter Roslyn-C#-Compiler/Worker |
-| src/Testumgebung.Workers.Native/Testumgebung.Workers.Native.csproj | net10.0 | 1.0.13.3 in audited MSIX | C++-Compileraufruf und native Ausführung |
+| src/Testumgebung.Contracts/Testumgebung.Contracts.csproj | net10.0 | 1.0.15.1 in audited MSIX | Gemeinsame Verträge und Grundtypen |
+| src/Testumgebung.DatabaseAdapters/Testumgebung.DatabaseAdapters.csproj | net10.0 | 1.0.15.1 in audited MSIX | Datenbank-Verbindungen |
+| src/Testumgebung.Desktop/Testumgebung.Desktop.csproj | net10.0-windows | 1.0.15.1 in audited MSIX | WPF-Oberfläche, Entra/MSAL, Datenbankprovider und OPC UA |
+| src/Testumgebung.Domain/Testumgebung.Domain.csproj | net10.0 | 1.0.15.1 in audited MSIX | Prüfprojekt-, Variablen- und Ergebnismodell |
+| src/Testumgebung.Engine/Testumgebung.Engine.csproj | net10.0 | 1.0.15.1 in audited MSIX | Ablaufausführung, Bausteine und Ressourcen-Sperren |
+| src/Testumgebung.Hardware/Testumgebung.Hardware.csproj | net10.0 | 1.0.15.1 in audited MSIX | Hardware-Abstraktionen und Simulation |
+| src/Testumgebung.Identity/Testumgebung.Identity.csproj | net10.0 | 1.0.15.1 in audited MSIX | Anmeldung und Berechtigungsverträge |
+| src/Testumgebung.Instruments/Testumgebung.Instruments.csproj | net10.0 | 1.0.15.1 in audited MSIX | Gerätetreiber, SSH/SFTP, Busse und Netzwerk |
+| src/Testumgebung.Notifications/Testumgebung.Notifications.csproj | net10.0 | 1.0.15.1 in audited MSIX | Meldewege und Benachrichtigungen |
+| src/Testumgebung.Persistence/Testumgebung.Persistence.csproj | net10.0 | 1.0.15.1 in audited MSIX | Projekt-, Ergebnis-, Einstellungs- und Release-Speicherung |
+| src/Testumgebung.Presentation/Testumgebung.Presentation.csproj | net10.0 | 1.0.15.1 in audited MSIX | Ansichtsmodelle, Editor und Werkersteuerung |
+| src/Testumgebung.Workers/Testumgebung.Workers.csproj | net10.0 | 1.0.15.1 in audited MSIX | C#/Python/C++-Prozesssteuerung, Laufzeitwahl und GDB |
+| src/Testumgebung.Workers.CSharp/Testumgebung.Workers.CSharp.csproj | net10.0 | 1.0.15.1 in audited MSIX | Isolierter Roslyn-C#-Compiler/Worker |
+| src/Testumgebung.Workers.Native/Testumgebung.Workers.Native.csproj | net10.0 | 1.0.15.1 in audited MSIX | C++-Compileraufruf und native Ausführung |
 | tests/Desktop.UiTests/Desktop.UiTests.csproj | net10.0-windows | Default assembly 1.0.0; not shipped | Automated tests |
 | tests/Engine.Tests/Engine.Tests.csproj | net10.0 | Default assembly 1.0.0; not shipped | Automated tests |
 | tests/Fixtures/FakeCompiler/FakeCompiler.csproj | net10.0 | Default assembly 1.0.0; not shipped | Test-only fixture |
@@ -60,8 +60,8 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | Microsoft.CodeCoverage | 18.5.1 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | Microsoft.Data.SqlClient | 6.0.2 | MIT | . |
 | Microsoft.Data.SqlClient.SNI.runtime | 6.0.2 | Microsoft proprietary redistributable terms (LICENSE.txt) | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
-| Microsoft.Data.Sqlite | 10.0.12 | MIT | . |
-| Microsoft.Data.Sqlite.Core | 10.0.12 | MIT | . |
+| Microsoft.Data.Sqlite | 10.0.13 | MIT | . |
+| Microsoft.Data.Sqlite.Core | 10.0.13 | MIT | . |
 | Microsoft.Extensions.Caching.Abstractions | 9.0.4 | MIT | . |
 | Microsoft.Extensions.Caching.Memory | 9.0.4 | MIT | . |
 | Microsoft.Extensions.DependencyInjection | 10.0.8 | MIT | . |
@@ -100,19 +100,19 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | OPCFoundation.NetStandard.Opc.Ua.Core | 1.5.378.182 | MIT | . |
 | OPCFoundation.NetStandard.Opc.Ua.Security.Certificates | 1.5.378.182 | MIT | . |
 | OPCFoundation.NetStandard.Opc.Ua.Types | 1.5.378.182 | MIT | . |
-| runtimepack.Microsoft.NETCore.App.Runtime.win-x64 | 10.0.12 | MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution | ., ., ., workers/csharp, workers/native |
-| runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 | 10.0.12 | MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution | . |
-| SQLitePCLRaw.bundle_e_sqlite3 | 2.1.12 | Apache-2.0 | . |
-| SQLitePCLRaw.core | 2.1.12 | Apache-2.0 | . |
-| SQLitePCLRaw.lib.e_sqlite3 | 2.1.12 | Apache-2.0 | . |
-| SQLitePCLRaw.provider.e_sqlite3 | 2.1.12 | Apache-2.0 | . |
+| runtimepack.Microsoft.NETCore.App.Runtime.win-x64 | 10.0.13 | MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution | ., ., ., workers/csharp, workers/native |
+| runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 | 10.0.13 | MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution | . |
+| SQLitePCLRaw.bundle_e_sqlite3 | 2.1.13 | Apache-2.0 | . |
+| SQLitePCLRaw.core | 2.1.13 | Apache-2.0 | . |
+| SQLitePCLRaw.lib.e_sqlite3 | 2.1.13 | Apache-2.0 | . |
+| SQLitePCLRaw.provider.e_sqlite3 | 2.1.13 | Apache-2.0 | . |
 | SSH.NET | 2026.0.0 | MIT | . |
 | System.ClientModel | 1.0.0 | MIT | . |
 | System.Configuration.ConfigurationManager | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | System.Diagnostics.EventLog | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | System.IdentityModel.Tokens.Jwt | 7.5.0 | MIT | . |
 | System.Memory.Data | 1.0.2 | MIT | . |
-| System.Security.Cryptography.Pkcs | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
+| System.Security.Cryptography.Pkcs | 9.0.21 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | System.Security.Cryptography.ProtectedData | 9.0.0 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | System.Security.Cryptography.ProtectedData | 9.0.4 | MIT | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
 | xunit | 2.9.3 | Apache-2.0 | Nicht im Release-Manifestsatz; nur Restore/Build/Test |
@@ -165,12 +165,13 @@ Die vollständigen Projektverweise und umgekehrten Verwendungsorte stehen in `pr
 | MSVC runtime | 14.51.36247.0 | Microsoft redistributable terms, not MIT | Bundled by official Python ZIP; PE version verified |
 | pip | 26.2.1 | MIT plus vendor licenses | build/acquire-pip.ps1; PythonEnvironments.cs |
 | ReportGenerator | 5.5.11 | Apache-2.0 | build/coverage.ps1; development only |
+| Doxygen | 1.18.0 | GPL-2.0; generated documents exempt per upstream | build/doxygen.ps1; development/CI only; not bundled |
 | ReportLab | 4.4.9 | BSD-3-Clause | build/create-complete-manual.py; documentation only |
 | Pillow (CI documentation) | 12.3.0 in audited Actions run | HPND/Pillow license plus codec notices | ReportLab dependency; version from run 38297143493 |
 | charset-normalizer (CI documentation) | 3.5.2 in audited Actions run | MIT | ReportLab dependency; version from run 38297143493 |
 | Python (CI documentation) | 3.12.x | PSF | actions/setup-python; exact patch depends on runner |
-| .NET SDK (local) | 10.0.401 | MIT and third-party/MS build tool terms | dotnet build/test/publish; not itself shipped |
-| .NET SDK (CI) | 10.0.401 | MIT and third-party/MS build tool terms | actions/setup-dotnet; SDK pinned via global.json and workflow |
+| .NET SDK (local) | 10.0.402 | MIT and third-party/MS build tool terms | dotnet build/test/publish; not itself shipped |
+| .NET SDK (CI) | 10.0.402 | MIT and third-party/MS build tool terms | actions/setup-dotnet; SDK pinned via global.json and workflow |
 | Windows SDK MakeAppx/SignTool | Externally installed; chosen SDK directory | Microsoft SDK terms | build/msix.ps1; build only |
 | PowerShell | 7.x for builds; Windows PowerShell external for console | MIT for PowerShell 7; OS terms for Windows PowerShell | build scripts; PythonEnvironments.cs |
 | Inno Setup | 6.x, exact version not pinned | Inno Setup license | build/publish.ps1 -Installer; not used by MSIX workflow |
@@ -229,8 +230,3 @@ Numerische Versionen werden nur genannt, wenn sie im Paket, im Quellarchiv, in e
 Manche EXEs sind Alias-Launcher ohne eigene Versionsressource. Bei GNU-Utilities, Headern und statischen Bibliotheken beruht die Komponentenzuordnung auf dem unveränderten Kit und seinen Quellen; solche Zuordnungen sind in `attribution_evidence` als abgeleitet markiert. Die genaue Unterlizenz wird durch die Originaltexte und Quellkopfzeilen bestimmt, nicht durch den allgemeinen Kit-Namen.
 
 Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für den oben genannten inventarisierten MSIX-Stand. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.
-
-
-## Ergänzung: Doxygen für die Code-Dokumentation
-
-Doxygen 1.18.0, GNU GPL Version 2 mit ausdrücklicher Ausnahme der erzeugten Dokumente: `build/doxygen.ps1`, lokal und GitHub Actions; Cache `artifacts/tools/doxygen/1.18.0`. Kein Bestandteil des MSIX. [Lizenz und Herkunft](../../licenses/third-party/doxygen/1.18.0/NOTICE.md). Die Ergänzung ändert nicht den oben genannten historischen Binärprüfstand.

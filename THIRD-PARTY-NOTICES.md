@@ -1,6 +1,6 @@
 # Drittanbieterhinweise - Testumgebung
 
-Stand: 13.10.2026. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.
+Stand: 2026-10-14. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.
 
 Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden nicht rückwirkend bereinigt. Zusätzliche Bedingungen stehen in THIRD-PARTY-TERMS.md.
 
@@ -96,23 +96,23 @@ Microsoft-Windows-Ausnahmen: coreclr.dll, PresentationNative_cor3.dll, wpfgfx_co
 - Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.SqlClient/6.0.2/SPDX-MIT.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.SqlClient/6.0.2/PACKAGE-NOTICE.txt)
 
-### Microsoft.Data.Sqlite 10.0.12
+### Microsoft.Data.Sqlite 10.0.13
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
 - Upstream: https://github.com/dotnet/dotnet
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/10.0.12/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/10.0.12/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/10.0.13/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite/10.0.13/PACKAGE-NOTICE.txt)
 
-### Microsoft.Data.Sqlite.Core 10.0.12
+### Microsoft.Data.Sqlite.Core 10.0.13
 
 - Lizenz: MIT
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
 - Upstream: https://github.com/dotnet/dotnet
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/10.0.12/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/10.0.12/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/10.0.13/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.Data.Sqlite.Core/10.0.13/PACKAGE-NOTICE.txt)
 
 ### Microsoft.Extensions.Caching.Abstractions 9.0.4
 
@@ -368,62 +368,62 @@ Microsoft-Windows-Ausnahmen: coreclr.dll, PresentationNative_cor3.dll, wpfgfx_co
 - Lizenztext: [LICENSE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Types/1.5.378.182/LICENSE.txt)
 - Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/OPCFoundation.NetStandard.Opc.Ua.Types/1.5.378.182/PACKAGE-NOTICE.txt)
 
-### runtimepack.Microsoft.NETCore.App.Runtime.win-x64 10.0.12
+### runtimepack.Microsoft.NETCore.App.Runtime.win-x64 10.0.13
 
 - Lizenz: MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
 - Upstream: https://github.com/dotnet/dotnet
-- Lizenztext: [LICENSE.TXT](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/LICENSE.TXT)
-- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/THIRD-PARTY-NOTICES.TXT)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt)
+- Lizenztext: [LICENSE.TXT](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.13/LICENSE.TXT)
+- Lizenztext: [THIRD-PARTY-NOTICES.TXT](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.13/THIRD-PARTY-NOTICES.TXT)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.13/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.NETCore.App.Runtime.win-x64/10.0.13/PACKAGE-NOTICE.txt)
 
-### runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 10.0.12
+### runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64 10.0.13
 
 - Lizenz: MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution
 - Copyright laut Paket: © Microsoft Corporation. All rights reserved.
 - Autoren laut Paket: Microsoft
 - Upstream: https://github.com/dotnet/dotnet
-- Lizenztext: [LICENSE](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/LICENSE)
-- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/SPDX-MIT.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.12/PACKAGE-NOTICE.txt)
+- Lizenztext: [LICENSE](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.13/LICENSE)
+- Lizenztext: [SPDX-MIT.txt](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.13/SPDX-MIT.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/Microsoft.WindowsDesktop.App.Runtime.win-x64/10.0.13/PACKAGE-NOTICE.txt)
 
-### SQLitePCLRaw.bundle_e_sqlite3 2.1.12
-
-- Lizenz: Apache-2.0
-- Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
-- Autoren laut Paket: Eric Sink
-- Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.12/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.12/PACKAGE-NOTICE.txt)
-
-### SQLitePCLRaw.core 2.1.12
+### SQLitePCLRaw.bundle_e_sqlite3 2.1.13
 
 - Lizenz: Apache-2.0
 - Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
 - Autoren laut Paket: Eric Sink
 - Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.12/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.12/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.13/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.bundle_e_sqlite3/2.1.13/PACKAGE-NOTICE.txt)
 
-### SQLitePCLRaw.lib.e_sqlite3 2.1.12
-
-- Lizenz: Apache-2.0
-- Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
-- Autoren laut Paket: Eric Sink
-- Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.12/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.12/PACKAGE-NOTICE.txt)
-
-### SQLitePCLRaw.provider.e_sqlite3 2.1.12
+### SQLitePCLRaw.core 2.1.13
 
 - Lizenz: Apache-2.0
 - Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
 - Autoren laut Paket: Eric Sink
 - Upstream: https://github.com/ericsink/SQLitePCL.raw
-- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.12/SPDX-Apache-2.0.txt)
-- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.12/PACKAGE-NOTICE.txt)
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.13/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.core/2.1.13/PACKAGE-NOTICE.txt)
+
+### SQLitePCLRaw.lib.e_sqlite3 2.1.13
+
+- Lizenz: Apache-2.0
+- Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
+- Autoren laut Paket: Eric Sink
+- Upstream: https://github.com/ericsink/SQLitePCL.raw
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.13/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.lib.e_sqlite3/2.1.13/PACKAGE-NOTICE.txt)
+
+### SQLitePCLRaw.provider.e_sqlite3 2.1.13
+
+- Lizenz: Apache-2.0
+- Copyright laut Paket: Copyright 2014-2024 SourceGear, LLC
+- Autoren laut Paket: Eric Sink
+- Upstream: https://github.com/ericsink/SQLitePCL.raw
+- Lizenztext: [SPDX-Apache-2.0.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.13/SPDX-Apache-2.0.txt)
+- Lizenztext: [PACKAGE-NOTICE.txt](licenses/third-party/nuget/SQLitePCLRaw.provider.e_sqlite3/2.1.13/PACKAGE-NOTICE.txt)
 
 ### SSH.NET 2026.0.0
 
@@ -479,7 +479,8 @@ Bei jeder Weitergabe müssen diese Quellen und Hinweise erhalten bleiben. GNU-Bi
 
 NI-DAQmx/VISA, PEAK, Kvaser, Vector und benutzerdefinierte DLLs sind nicht Bestandteil des geprüften MSIX. Ihre Installation und Nutzung unterliegen den jeweiligen Hersteller-/Projektlizenzen.
 
-
 ## Entwicklungswerkzeug Doxygen 1.18.0
 
-GNU GPL Version 2, ausschließlich Entwicklungs-/CI-Werkzeug; nicht im MSIX gebündelt. Erzeugte Dokumente sind laut Hersteller von der Werkzeuglizenz ausgenommen. [Lizenztext](licenses/third-party/doxygen/1.18.0/LICENSE), [Herkunft und Verwendung](licenses/third-party/doxygen/1.18.0/NOTICE.md). Die Hinweise der erzeugten HTML-Assets bleiben erhalten.
+Doxygen wird ausschließlich zur Quellcode-Dokumentation verwendet, nicht im MSIX gebündelt. Werkzeuglizenz: GNU GPL Version 2. Der Hersteller nimmt die erzeugten Dokumente ausdrücklich von der Werkzeuglizenz aus; eigener Code bleibt MIT.
+
+[Lizenztext](licenses/third-party/doxygen/1.18.0/LICENSE), [Herkunft und Verwendung](licenses/third-party/doxygen/1.18.0/NOTICE.md). Hinweise der erzeugten HTML-Assets bleiben erhalten.
