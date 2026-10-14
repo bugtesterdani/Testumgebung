@@ -108,9 +108,11 @@ als Leser. Externe Programmdialoge sind keine gesperrten Werkeraufforderungen.
 
 **Konsolenfenster zulassen** erlaubt ein Konsolenfenster. GUI-Programme steuern
 ihre Fenster selbst; die Option versteckt keine beliebige GUI-Anwendung.
-Gebundene Aufrufe sind für automatisierbare Programme gedacht; ihre stdin-Pipe
-ist kein interaktiver Konsoleneingabekanal. Parameter über Argumente/Umgebung
-übergeben oder eine geeignete externe Benutzeroberfläche verwenden.
+Alle Aufrufe erhalten eine stdin-Pipe für automatisierte Dialoge. Befehle werden
+über **An Prozess senden** übergeben. Nach dem Schließen dieser Pipe oder dem
+Ende der Anwendung erhält das Ziel EOF; ein unabhängiger Prozess darf weiterlaufen,
+muss EOF aber selbst sinnvoll behandeln. Eine echte Terminalemulation (TTY/PTY)
+wird nicht bereitgestellt.
 
 Beim gezielten Testen einzelner Schritte/Gruppen im Debugger werden gebundene
 Prozesse am Ende dieser gezielten Ausführung aufgeräumt. Zum Testen einer Folge
@@ -179,3 +181,44 @@ deaktivieren. Für Messwerkzeuge mit verlässlicher Aufräumregel gebunden verwe
 ## Mitgeliefertes Beispiel
 
 [prozess-python.tproj.json](beispiele/prozess-python.tproj.json) und [prozess-demo.py](beispiele/prozess-demo.py) zeigen einen Python-Aufruf pro Seriennummer ohne Hardwarezugriffe. Hauptvariable `SkriptDatei` vor dem Start auf den absoluten Pfad des Skripts setzen. `DemoExitcode = 0` ergibt PASS, andere Werte ergeben FAIL. **Auch im Simulationsmodus werden Prozessbausteine wirklich ausgeführt.** Daher nur bekannte Testprogramme verwenden.
+
+
+## Dialoge ohne feste Pausen
+
+1. **Prozess starten**: **Auf Prozessende warten = false**, Ausgabeerfassung aktivieren,
+   Prozesskennung in einer Stringvariable speichern.
+2. **Auf Prozessausgabe warten**: Prozess `{MeinProzess}`, Stream `stdout`, Muster
+   `ready>`, Regex `false`, Zeitlimit beispielsweise 30000 ms.
+3. **An Prozess senden**: Prozess `{MeinProzess}`, Text `measure {Kennung}`,
+   Zeilenende `LF` (oder `CRLF` für das Zielprogramm).
+4. Erneut auf Ausgabe warten, etwa Stream `stderr`, Regex `true`, Muster
+   `value=[0-9]+;`, Treffer nach einer Stringvariable schreiben.
+5. Weitere Befehle senden oder stdin mit **stdin danach schließen = true** schließen.
+6. **Auf Prozess warten** bewertet den abschließenden Exitcode wie bisher.
+
+Textsuche ist eine groß-/kleinschreibungssensitive, wortgetreue Teilstringsuche.
+Regex nutzt .NET-Syntax; Flags wie `(?i)` und `(?m)` können im Muster stehen.
+Regex-Quantoren in Vorlagen mit doppelten geschweiften Klammern schreiben,
+beispielsweise `value=[0-9]{{2}};`, damit sie nicht als Variablen interpretiert werden.
+Ein Regex muss mindestens ein Zeichen treffen. Regex-Auswertung ist pro Suche
+auf 250 ms begrenzt; der Wartebaustein hat zusätzlich sein Gesamtzeitlimit.
+Treffer enthalten den vollständigen erkannten Text, keine separate Gruppenliste.
+Bei variabler Antwortlänge ein eindeutiges Ende wie `;` mit ins Muster aufnehmen:
+Ein laufender Stream kann keine zukünftigen Zeichen vorhersehen.
+
+Je stdout/stderr werden bis zu 1048576 **ungelesene** Zeichen unabhängig vom
+Ausgabelimit des Protokolls gehalten. Ein Treffer verbraucht alle Zeichen bis
+zu seinem Ende. Späteres Warten beginnt dahinter; bereits eingetroffene, noch
+ungelesene Signale werden ebenfalls erkannt. Mehrere Wartevorgänge desselben
+Streams werden nacheinander abgearbeitet. Die Streams werden nicht zusammengeführt.
+Überlauf erzeugt einen Fehler statt still Meldungen zu verlieren. Das Ende eines
+Streams ohne Treffer ist ebenfalls ein Fehler. Prompts brauchen keinen Zeilenumbruch;
+das externe Programm muss seine Ausgabe aber flushen. Python dafür mit `print(..., flush=True)` im Skript oder der Umgebungsvariable
+`PYTHONUNBUFFERED=1` starten.
+
+Senden nutzt die konfigurierte Kodierung, erhält Argument-/Vorlagenersetzungen
+und flush't nach jedem Befehl. Zeilenende `Keines` ermöglicht auch unvollständige
+Befehle oder reines EOF mit leerem Text und **stdin danach schließen**. Nach EOF
+ist weiteres Senden ein Fehler. Senden und Signalerkennung sind NRESULT; erst
+explizite Mess-/Exitcodebewertung ergibt PASS oder FAIL. Timeouts und Werkerabbruch
+beenden gebundene Prozesse; unabhängige Prozesse bleiben bestehen.

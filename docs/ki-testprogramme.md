@@ -313,3 +313,17 @@ das Beispiel mit dem echten Serializer. Bei Änderungen an Parametern oder
 Softwarefunktionen Anleitung, Referenz und Beispieldatei zusammen aktualisieren.
 Das JSON ist ein Bausteinkatalog, kein vollständiges JSON Schema und kein Beweis
 für Laufzeitkompatibilität eines erzeugten Projekts.
+
+
+### Interaktive externe Prozesse
+
+Für Dialoge `prozess.start` mit `Warten=false` und `ProzessZiel` verwenden.
+`prozess.ausgabe-warten` hat `Prozess`, `Muster`, `Regex` (false/true),
+`Stream` (stdout/stderr), optional `TrefferZiel` (String) und `Zeitlimit` (ms).
+`prozess.senden` hat `Prozess`, `Text`, `Zeilenende` (Keines/LF/CRLF),
+`Schliessen` (false/true, EOF) und `Zeitlimit` (ms). Prozess ist z. B. `{Handle}`.
+Muster und Text unterstützen Variablenvorlagen. Regex-Klammern für Quantoren
+als `{{` und `}}` schreiben. Ausgabe wird je Stream bis zum Treffer verbraucht;
+wiederholtes Warten erkennt keine bereits konsumierte Meldung. Kein Sleep als
+Synchronisierung einbauen; eindeutige Programmsignale mit Timeout verwenden.
+Details und Grenzen: [Externe Prozesse](externe-prozesse.md#dialoge-ohne-feste-pausen).

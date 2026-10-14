@@ -25,6 +25,27 @@ public sealed class ProcessBlockTests
         await run.RunAsync().Within(); return run;
     }
     [Theory]
+    [InlineData("LF")]
+    [InlineData("CRLF")]
+    public async Task Graphical_dialog_matches_signals_sends_commands_and_evaluates_exit(string ending)
+    {
+        var p = Launch(["dialog"]); p["Warten"] = "false";
+        var loop = Variables().Var("Match", VarType.String).Var("Command", VarType.String, "hello");
+        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Start, "start", parameters: p));
+        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.WaitOutput, "ready", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Muster"] = "ready>" }));
+        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Send, "send", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Text"] = "{Command}", ["Zeilenende"] = ending }));
+        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.WaitOutput, "response", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Muster"] = @"value=\d+;hello;", ["Regex"] = "true", ["Stream"] = "stderr", ["TrefferZiel"] = "Match" }));
+        string? match = null;
+        loop.Add(new StepDefinition("inspect", "Inspect", new DelegateAction(ctx => { match = (string)ctx.Get("Match"); return Task.FromResult(StepOutcome.Unrated()); })));
+        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Send, "finish", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Text"] = "done\n", ["Zeilenende"] = "Keines", ["Schliessen"] = "true" }));
+        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Wait, "wait", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}" }));
+        var run = await Run(loop);
+        Assert.Equal("value=42;hello;", match);
+        Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("response")).Rating);
+        Assert.Equal(ResultRating.Pass, Assert.Single(run.Steps("wait")).Rating);
+    }
+
+    [Theory]
     [InlineData("0;7", ResultRating.Pass)]
     [InlineData("0", ResultRating.Fail)]
     [InlineData("", ResultRating.NResult)]

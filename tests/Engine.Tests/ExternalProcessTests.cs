@@ -38,6 +38,85 @@ public sealed class ExternalProcessTests : IDisposable
         catch (ArgumentException) { return false; }
     }
 
+    [Fact]
+    public async Task Bundled_python_dialog_reacts_without_sleep()
+    {
+        var file = Path.Combine(_directory, "dialog.py");
+        File.WriteAllText(file, "import sys\nprint('ready>', end='', flush=True)\nline = input()\nprint('answer=' + line + ';', flush=True)\n");
+        using var session = new ProcessSession();
+        var request = new ProcessLaunch(ExternalProcessKind.Python, file, [], _directory, new Dictionary<string, string>());
+        var handle = session.Start(request, "owner", Workers, null).Handle;
+        var timeout = TimeSpan.FromSeconds(30);
+        await session.WaitForOutputAsync(handle, "ready>", false, ProcessOutputStream.StandardOutput, timeout, default);
+        await session.SendAsync(handle, "Ü漢字\n", false, timeout, default);
+        Assert.Equal("answer=Ü漢字;", (await session.WaitForOutputAsync(handle, "answer=Ü漢字;", false, ProcessOutputStream.StandardOutput, timeout, default)).Value);
+        Assert.Equal(0, (await session.WaitAsync(handle, timeout, default)).ExitCode);
+    }
+    [Fact]
+    public async Task Output_overflow_is_explicit_and_completed_unread_output_is_searchable()
+    {
+        using var session = new ProcessSession();
+        var timeout = TimeSpan.FromSeconds(30);
+        var handle = session.Start(Request(["flood"]), "owner", Workers, null).Handle;
+        await session.WaitAsync(handle, timeout, default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => session.WaitForOutputAsync(handle, "end", false, ProcessOutputStream.StandardOutput, timeout, default));
+        var completed = session.Start(Request(["echo", "0"]), "owner", Workers, null).Handle;
+        await session.WaitAsync(completed, timeout, default);
+        Assert.Equal("probe stderr", (await session.WaitForOutputAsync(completed, "(?i)PROBE STDERR", true, ProcessOutputStream.StandardError, timeout, default)).Value);
+    }
+
+    [Theory]
+    [InlineData(true, ExternalProcessKind.Executable)]
+    [InlineData(false, ExternalProcessKind.Executable)]
+    [InlineData(true, ExternalProcessKind.ManagedEntryPoint)]
+    [InlineData(false, ExternalProcessKind.ManagedEntryPoint)]
+    public async Task Live_dialog_consumes_prompts_and_forwards_unicode_input_and_EOF(bool bound, ExternalProcessKind kind)
+    {
+        using var session = new ProcessSession();
+        var handle = session.Start(Request(["dialog"], bound, kind) with { OutputLimit = 0 }, "owner", Workers, null).Handle;
+        var timeout = TimeSpan.FromSeconds(30);
+        Assert.Equal("ready>", (await session.WaitForOutputAsync(handle, "ready>", false, ProcessOutputStream.StandardOutput, timeout, default)).Value);
+        await session.SendAsync(handle, "Ü漢字\n", false, timeout, default);
+        Assert.Equal("value=42;Ü漢字;", (await session.WaitForOutputAsync(handle, @"value=\d+;Ü漢字;", true, ProcessOutputStream.StandardError, timeout, default)).Value);
+        Assert.Equal("ready>", (await session.WaitForOutputAsync(handle, "ready>", false, ProcessOutputStream.StandardOutput, timeout, default)).Value);
+        await session.SendAsync(handle, "finish\ntail", true, timeout, default);
+        Assert.Equal("done:finish:tail", (await session.WaitForOutputAsync(handle, "done:finish:tail", false, ProcessOutputStream.StandardOutput, timeout, default)).Value);
+        Assert.Equal(0, (await session.WaitAsync(handle, timeout, default)).ExitCode);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => session.SendAsync(handle, "late", false, timeout, default));
+        await Assert.ThrowsAsync<EndOfStreamException>(() => session.WaitForOutputAsync(handle, "ready>", false, ProcessOutputStream.StandardOutput, timeout, default));
+    }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Missing_signal_times_out_and_only_stops_bound_process(bool bound)
+    {
+        using var session = new ProcessSession();
+        var handle = session.Start(Request(["dialog"], bound), "owner", Workers, null).Handle;
+        await session.WaitForOutputAsync(handle, "ready>", false, ProcessOutputStream.StandardOutput, TimeSpan.FromSeconds(30), default);
+        await Assert.ThrowsAsync<TimeoutException>(() => session.WaitForOutputAsync(handle, "ready>", false, ProcessOutputStream.StandardOutput, TimeSpan.FromMilliseconds(100), default));
+        Assert.Equal(bound, session.Snapshot(handle).Stopped);
+        session.Stop(handle);
+        await session.WaitAsync(handle, TimeSpan.FromSeconds(30), default);
+    }
+    [Fact]
+    public async Task Output_wait_validates_patterns_stream_capture_and_cancellation()
+    {
+        using var session = new ProcessSession();
+        var handle = session.Start(Request(["dialog"]), "owner", Workers, null).Handle;
+        var timeout = TimeSpan.FromSeconds(30);
+        await Assert.ThrowsAsync<ArgumentException>(() => session.WaitForOutputAsync(handle, "", false, ProcessOutputStream.StandardOutput, timeout, default));
+        await Assert.ThrowsAsync<System.Text.RegularExpressions.RegexParseException>(() => session.WaitForOutputAsync(handle, "[", true, ProcessOutputStream.StandardOutput, timeout, default));
+        await Assert.ThrowsAsync<ArgumentException>(() => session.WaitForOutputAsync(handle, "^", true, ProcessOutputStream.StandardOutput, timeout, default));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => session.WaitForOutputAsync(handle, "x", false, (ProcessOutputStream)99, timeout, default));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => session.SendAsync(handle, "", false, TimeSpan.Zero, default));
+        using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => session.WaitForOutputAsync(handle, "missing", false, ProcessOutputStream.StandardOutput, timeout, cancellation.Token));
+        await session.WaitAsync(handle, timeout, default);
+        var uncaptured = session.Start(Request(["sleep", "1000"]) with { CaptureOutput = false }, "owner", Workers, null).Handle;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => session.WaitForOutputAsync(uncaptured, "x", false, ProcessOutputStream.StandardOutput, timeout, default));
+        session.Stop(uncaptured); await session.WaitAsync(uncaptured, timeout, default);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

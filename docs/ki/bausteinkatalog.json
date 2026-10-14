@@ -2834,6 +2834,71 @@
       ]
     },
     {
+      "type": "prozess.ausgabe-warten",
+      "displayName": "Auf Prozessausgabe warten",
+      "category": "Prozesse",
+      "description": "Erkennt ein Signal in ungelesenem stdout oder stderr, auch ohne Zeilenumbruch. Verbraucht die Ausgabe bis zum Treffer.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "Muster",
+          "label": "Gesuchter Text / Regex",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Regex",
+          "label": "Regul\u00E4rer Ausdruck",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Stream",
+          "label": "Ausgabestream",
+          "kind": "Choice",
+          "default": "stdout",
+          "required": false,
+          "choices": [
+            "stdout",
+            "stderr"
+          ],
+          "hint": null
+        },
+        {
+          "name": "TrefferZiel",
+          "label": "Treffer \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Wartezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "prozess.beenden",
       "displayName": "Prozess beenden",
       "category": "Prozesse",
@@ -2847,6 +2912,63 @@
           "required": true,
           "choices": null,
           "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        }
+      ]
+    },
+    {
+      "type": "prozess.senden",
+      "displayName": "An Prozess senden",
+      "category": "Prozesse",
+      "description": "Sendet Text an stdin und leert den Schreibpuffer. Optional stdin nach dem letzten Befehl schlie\u00DFen.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "Text",
+          "label": "Zu sendender Text",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeilenende",
+          "label": "Zeilenende",
+          "kind": "Choice",
+          "default": "LF",
+          "required": false,
+          "choices": [
+            "Keines",
+            "LF",
+            "CRLF"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Schliessen",
+          "label": "stdin danach schlie\u00DFen (EOF)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Sendezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
         }
       ]
     },

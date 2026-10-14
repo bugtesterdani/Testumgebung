@@ -41,8 +41,9 @@ public sealed class ProcessSession : IProcessSession
                 var gated = request.Bound && OperatingSystem.IsWindows();
                 var start = gated ? StartInfo(Worker(workerDirectory), ["--process-proxy"], request with { ShowWindow = false, Environment = new Dictionary<string, string>() })
                     : StartInfo(command.Executable, command.Arguments, request);
-                start.RedirectStandardInput = gated;
-                if (gated) start.StandardInputEncoding = new System.Text.UTF8Encoding(false);
+                start.RedirectStandardInput = true;
+                var inputEncoding = System.Text.Encoding.GetEncoding(request.OutputEncoding);
+                start.StandardInputEncoding = gated || inputEncoding.CodePage == 65001 ? new System.Text.UTF8Encoding(false) : inputEncoding;
                 process = Process.Start(start) ?? throw new InvalidOperationException("Prozess konnte nicht gestartet werden.");
                 if (gated)
                 {
@@ -50,7 +51,7 @@ public sealed class ProcessSession : IProcessSession
                     using var startupCancellation = cancellationToken.Register(job.Dispose);
                     cancellationToken.ThrowIfCancellationRequested();
                     process.StandardInput.WriteLine(JsonSerializer.Serialize(command));
-                    process.StandardInput.Close();
+                    process.StandardInput.Flush();
                 }
                 var record = new ExternalProcessRecord(process, job, directory, owner, request);
                 _records.Add(record.Handle, record);
@@ -81,7 +82,7 @@ public sealed class ProcessSession : IProcessSession
         if (request.Kind == ExternalProcessKind.ManagedMain && string.IsNullOrWhiteSpace(request.TypeName)) throw new ArgumentException("DLL-Main benötigt den vollständigen Typnamen.");
     }
     private sealed record LaunchCommand(string Executable, string[] Arguments, string WorkingDirectory,
-        Dictionary<string, string> Environment, bool ShowWindow, bool CaptureOutput, string ErrorFile);
+        Dictionary<string, string> Environment, bool ShowWindow, bool CaptureOutput, string ErrorFile, string Encoding);
     private static LaunchCommand Command(ProcessLaunch request, string workers, string? python, string error)
     {
         var arguments = request.Arguments.ToList();
@@ -99,7 +100,7 @@ public sealed class ProcessSession : IProcessSession
             executable = Worker(workers);
             arguments.InsertRange(0, ["--managed-main", request.File, request.Kind == ExternalProcessKind.ManagedMain ? request.TypeName! : "", error, request.OutputEncoding]);
         }
-        return new(executable, arguments.ToArray(), request.WorkingDirectory, request.Environment.ToDictionary(), request.ShowWindow, request.CaptureOutput, error);
+        return new(executable, arguments.ToArray(), request.WorkingDirectory, request.Environment.ToDictionary(), request.ShowWindow, request.CaptureOutput, error, request.OutputEncoding);
     }
     private static string Worker(string workers)
     {
@@ -138,6 +139,29 @@ public sealed class ProcessSession : IProcessSession
             throw;
         }
         return record.Snapshot();
+    }
+    /// <summary>Waits for live output, including unread text received before registration.</summary>
+    public async Task<ProcessOutputMatch> WaitForOutputAsync(string handle, string pattern, bool regex, ProcessOutputStream stream, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        var record = Find(handle);
+        using var deadline = Deadline(timeout, cancellationToken);
+        try { return await record.WaitForOutputAsync(pattern, regex, stream, deadline.Token).ConfigureAwait(false); }
+        catch (OperationCanceledException) { if (record.Bound) record.Stop(); cancellationToken.ThrowIfCancellationRequested(); throw new TimeoutException("Prozessausgabe nicht innerhalb des Zeitlimits erkannt."); }
+    }
+    /// <summary>Serializes stdin writes and optionally closes stdin after the last command.</summary>
+    public async Task SendAsync(string handle, string text, bool closeInput, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        var record = Find(handle);
+        using var deadline = Deadline(timeout, cancellationToken);
+        try { await record.SendAsync(text, closeInput, deadline.Token).ConfigureAwait(false); }
+        catch (OperationCanceledException) { if (record.Bound) record.Stop(); cancellationToken.ThrowIfCancellationRequested(); throw new TimeoutException("Prozesseingabe nicht innerhalb des Zeitlimits gesendet."); }
+    }
+    private static CancellationTokenSource Deadline(TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        if (timeout <= TimeSpan.Zero || timeout.TotalMilliseconds > int.MaxValue) throw new ArgumentOutOfRangeException(nameof(timeout));
+        var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        source.CancelAfter(timeout);
+        return source;
     }
     public void Stop(string handle) => Find(handle).Stop();
     public void CloseOwner(string owner)

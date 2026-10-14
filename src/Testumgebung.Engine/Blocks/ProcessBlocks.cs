@@ -16,6 +16,7 @@ namespace Testumgebung.Engine.Blocks;
 public static class ProcessBlocks
 {
     public const string Start = "prozess.start", Wait = "prozess.warten", Status = "prozess.status", Stop = "prozess.beenden";
+    public const string WaitOutput = "prozess.ausgabe-warten", Send = "prozess.senden";
     private static readonly string[] Kinds = ["EXE", "Python", ".NET-DLL", "DLL-Main"];
     public static void Register(BlockCatalog catalog)
     {
@@ -42,6 +43,19 @@ public static class ProcessBlocks
         [HandleParameter(), .. ResultParameters()], p => new StatusAction(p.Text("Prozess"), Results(p))));
         catalog.Register(new(Stop, "Prozess beenden", "Prozesse", "error", "Beendet ausdrücklich die Prozesskennung und deren Prozessbaum; kein automatisches PASS.",
         [HandleParameter()], p => new StopAction(p.Text("Prozess"))));
+        catalog.Register(new(WaitOutput, "Auf Prozessausgabe warten", "Prozesse", "wait", "Erkennt ein Signal in ungelesenem stdout oder stderr, auch ohne Zeilenumbruch. Verbraucht die Ausgabe bis zum Treffer.",
+        [HandleParameter(), new("Muster", "Gesuchter Text / Regex", ParameterKind.Text, Required: true),
+         new("Regex", "Regulärer Ausdruck", ParameterKind.Bool, "false"),
+         new("Stream", "Ausgabestream", ParameterKind.Choice, "stdout", Choices: ["stdout", "stderr"]),
+         new("TrefferZiel", "Treffer → Stringvariable", ParameterKind.Variable),
+         new("Zeitlimit", "Wartezeitlimit [ms]", ParameterKind.Number, "30000")],
+         p => new OutputAction(p.Text("Prozess"), p.Text("Muster"), p.Bool("Regex"), p.Choice("Stream") == "stdout" ? ProcessOutputStream.StandardOutput : ProcessOutputStream.StandardError, p.Optional("TrefferZiel"), Timeout(p))));
+        catalog.Register(new(Send, "An Prozess senden", "Prozesse", "arrow", "Sendet Text an stdin und leert den Schreibpuffer. Optional stdin nach dem letzten Befehl schließen.",
+        [HandleParameter(), new("Text", "Zu sendender Text", ParameterKind.Text),
+         new("Zeilenende", "Zeilenende", ParameterKind.Choice, "LF", Choices: ["Keines", "LF", "CRLF"]),
+         new("Schliessen", "stdin danach schließen (EOF)", ParameterKind.Bool, "false"),
+         new("Zeitlimit", "Sendezeitlimit [ms]", ParameterKind.Number, "30000")],
+         p => new SendAction(p.Text("Prozess"), p.Text("Text"), p.Choice("Zeilenende"), p.Bool("Schliessen"), Timeout(p))));
     }
     private static ParameterDescriptor HandleParameter() => new("Prozess", "Prozesskennung", ParameterKind.Text, Required: true, Hint: "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID.");
     private static ParameterDescriptor[] ResultParameters() =>
@@ -150,6 +164,26 @@ public static class ProcessBlocks
     private sealed record StatusAction(string Handle, ResultTargets Targets) : IStepAction
     {
         public Task<StepOutcome> ExecuteAsync(IStepContext ctx) => Task.FromResult(Targets.Apply(ctx.Processes.Snapshot(Expand(Handle, ctx)), ctx));
+    }
+    private sealed record OutputAction(string Handle, string Pattern, bool Regex, ProcessOutputStream Stream, string? Target, TimeSpan Timeout) : IStepAction
+    {
+        public async Task<StepOutcome> ExecuteAsync(IStepContext ctx)
+        {
+            CheckTarget(ctx, Target, typeof(string));
+            if (Target is not null) ctx.Set(Target, "");
+            var match = await ctx.Processes.WaitForOutputAsync(Expand(Handle, ctx), Expand(Pattern, ctx), Regex, Stream, Timeout, ctx.CancellationToken).ConfigureAwait(false);
+            if (Target is not null) ctx.Set(Target, match.Value);
+            return StepOutcome.Unrated(message: "Prozesssignal erkannt.");
+        }
+    }
+    private sealed record SendAction(string Handle, string Text, string Ending, bool Close, TimeSpan Timeout) : IStepAction
+    {
+        public async Task<StepOutcome> ExecuteAsync(IStepContext ctx)
+        {
+            var suffix = Ending switch { "LF" => "\n", "CRLF" => "\r\n", _ => "" };
+            await ctx.Processes.SendAsync(Expand(Handle, ctx), Expand(Text, ctx) + suffix, Close, Timeout, ctx.CancellationToken).ConfigureAwait(false);
+            return StepOutcome.Unrated(message: "Prozesseingabe gesendet.");
+        }
     }
     private sealed record StopAction(string Handle) : IStepAction
     {

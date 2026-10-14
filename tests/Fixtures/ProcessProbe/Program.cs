@@ -8,6 +8,18 @@ public static class Program
     public static async Task<int> Main(string[] args)
     {
         if (args[0] == "-X") { Console.Write(JsonSerializer.Serialize(args)); return 0; }
+        if (args[0] == "flood") { Console.Write(new string('X', 1048577)); return 0; }
+        if (args[0] == "dialog")
+        {
+            Console.Write("rea"); Console.Out.Flush();
+            Console.Write("dy>"); Console.Out.Flush();
+            var first = await Console.In.ReadLineAsync();
+            Console.Error.Write("value=42;" + first + ";"); Console.Error.Flush();
+            Console.Write("ready>"); Console.Out.Flush();
+            var second = await Console.In.ReadLineAsync();
+            Console.Write("done:" + second + ":" + await Console.In.ReadToEndAsync());
+            return 0;
+        }
         if (args[0] == "sleep") { await Task.Delay(int.Parse(args[1])); return 0; }
         if (args[0] == "streams")
         {
