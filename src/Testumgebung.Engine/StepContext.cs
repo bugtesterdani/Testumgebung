@@ -29,6 +29,17 @@ internal sealed class StepContext(
 
     private static long _displayCounter;
 
+    public Testumgebung.Domain.Processes.IProcessSession Processes => run.Processes;
+    public string ProcessOwner
+    {
+        get
+        {
+            if (run.ProcessOwnerOverride.Value is { } owner) return owner;
+            for (var current = scope; current is not null; current = current.Parent)
+                if (current.GroupId is { } id && run.Definition.Find(id) is GroupDefinition { IsDutRun: true }) return current.Id;
+            return run.RunId;
+        }
+    }
     public string RunId => run.RunId;
     public IReadOnlyList<Testumgebung.Domain.Code.ManagedAssembly> ManagedAssemblies => run.Definition.Assemblies;
     public string StepId => step.Id;

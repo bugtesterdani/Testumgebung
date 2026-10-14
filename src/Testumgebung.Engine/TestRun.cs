@@ -82,6 +82,8 @@ public sealed record TargetedExecutionResult(bool Executed, ResultRating Rating,
 /// </summary>
 public sealed class TestRun
 {
+    internal AsyncLocal<string?> ProcessOwnerOverride { get; } = new();
+    internal Testumgebung.Workers.ProcessSession Processes { get; } = new();
     private static int _runCounter;
 
     private readonly object _gate = new();
@@ -146,7 +148,8 @@ public sealed class TestRun
 
         var total = new ResultAccumulator();
         PublishState();
-        await ExecuteNodeAsync(Definition.Root, null, _abort.Regular, total, "", 1, forceEnter: false).ConfigureAwait(false);
+        try { await ExecuteNodeAsync(Definition.Root, null, _abort.Regular, total, "", 1, forceEnter: false).ConfigureAwait(false); }
+        finally { Processes.Dispose(); }
         lock (_gate) _completed = true;
         PublishState();
         return new RunStatus(total.Rating, _abort.OperatorAborted);
@@ -181,6 +184,7 @@ public sealed class TestRun
         MarkDevelopmentRun();
         Emit(new DevelopmentEvent(user, "Schritt gezielt ausgeführt", step.Name) { Time = Clock.Now, RunId = RunId });
         using var phase = new ExecutionPhase("gezielt", isExit: false);
+        using var processScope = BeginTargetedProcessScope();
         var rating = await ExecuteStepAsync(step, scope, phase, PathOf(stepId), 1).ConfigureAwait(false);
         return new TargetedExecutionResult(rating is not null, rating ?? ResultRating.NResult, null);
     }
@@ -212,8 +216,20 @@ public sealed class TestRun
         Emit(new DevelopmentEvent(user, "Gruppe gezielt ausgeführt", group.Name) { Time = Clock.Now, RunId = RunId });
         using var phase = new ExecutionPhase("gezielt", isExit: false);
         var parentPath = string.Join(" > ", Definition.AncestorsOf(groupId).Skip(1).Select(g => g.Name));
+        using var processScope = BeginTargetedProcessScope();
         var result = await ExecuteGroupAsync(group, parentScope, phase, parentPath, 1, forceEnter: false, isExit: false).ConfigureAwait(false);
         return new TargetedExecutionResult(result is not null, result?.Rating ?? ResultRating.NResult, null);
+    }
+
+    private IDisposable BeginTargetedProcessScope()
+    {
+        var owner = RunId + "/debug/" + Guid.NewGuid().ToString("N");
+        ProcessOwnerOverride.Value = owner;
+        return new TargetedProcessScope(this, owner);
+    }
+    private sealed class TargetedProcessScope(TestRun run, string owner) : IDisposable
+    {
+        public void Dispose() { run.Processes.CloseOwner(owner); run.ProcessOwnerOverride.Value = null; }
     }
 
     private Scope BuildDebugContext(string nodeId, IReadOnlyDictionary<string, object>? context)
@@ -549,6 +565,7 @@ public sealed class TestRun
         }
         finally
         {
+            if (group.IsDutRun) Processes.CloseOwner(scope.Id);
             // 6. Sperren freigeben (nach Exit), Prüflingstest abschließen, Scope verwerfen
             if (lease is not null)
             {

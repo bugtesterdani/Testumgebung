@@ -38,6 +38,7 @@
     <ProjectReference Include="..\..\src\Testumgebung.Presentation\Testumgebung.Presentation.csproj" />
     <ProjectReference Include="..\..\src\Testumgebung.Workers\Testumgebung.Workers.csproj" />
     <ProjectReference Include="..\Fixtures\OrderLibrary\OrderLibrary.csproj" />
+    <ProjectReference Include="../Fixtures/ProcessProbe/ProcessProbe.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Fixtures\FakeGdb\FakeGdb.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Fixtures\FakeCompiler\FakeCompiler.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
@@ -52,5 +53,9 @@
   <Target Name="CopyFakeCompiler" AfterTargets="Build">
     <ItemGroup><FakeCompilerFiles Include="..\Fixtures\FakeCompiler\bin\$(Configuration)\net10.0\FakeCompiler.*" /></ItemGroup>
     <Copy SourceFiles="@(FakeCompilerFiles)" DestinationFolder="$(OutDir)fixtures\compiler" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyProcessProbe" AfterTargets="Build">
+    <ItemGroup><ProcessProbeFiles Include="../Fixtures/ProcessProbe/bin/$(Configuration)/net10.0/ProcessProbe.*" /></ItemGroup>
+    <Copy SourceFiles="@(ProcessProbeFiles)" DestinationFolder="$(OutDir)fixtures/process" SkipUnchangedFiles="true" />
   </Target>
 </Project>

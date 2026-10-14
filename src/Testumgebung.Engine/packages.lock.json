@@ -16,6 +16,12 @@
         "dependencies": {
           "Testumgebung.Contracts": "[1.0.0, )"
         }
+      },
+      "testumgebung.workers": {
+        "type": "Project",
+        "dependencies": {
+          "Testumgebung.Domain": "[1.0.0, )"
+        }
       }
     },
     "net10.0/win-x64": {}

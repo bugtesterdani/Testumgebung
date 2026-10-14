@@ -226,6 +226,27 @@ Python-Laufzeiten und Pakete sind separat einzurichten; das alte Pythonprogramm
 nicht einfach als vollständige externe Anwendung in einen Host-Codeblock kopieren.
 Siehe [portable-python.md](portable-python.md) und [dynamische-verbindungen.md](dynamische-verbindungen.md).
 
+## Externe Prozesse in alten Prüfprogrammen
+
+System-/Subprocess-Aufrufe auf die Katalogtypen `prozess.start`, `prozess.warten`,
+`prozess.status` und `prozess.beenden` abbilden. Technische Parameter sind im Katalog
+belegt; insbesondere `Argumente` als JSON-Array von Strings und `Umgebung` als
+JSON-Objekt von Strings **innerhalb** des äußeren Parameter-Strings maskieren.
+Beispiel: `"Argumente":"[\"--serial\",\"{Kennung}\"]"`.
+JSON-Struktur wird zuerst gelesen, dann einzelne Werte erweitert. Keine beliebigen
+Shell-Kommandos als scheinbar sicher getrennte Argumente behandeln.
+
+Prozesskennung als String deklarieren und mit `"Prozess":"{MeinProzess}"` in
+Warte-/Status-/Stoppschritten verwenden. Exitcodes sind erst nach Ende gültig;
+Nichtwarten bleibt NRESULT. Bei erforderlicher Aufräumregel gebunden verwenden,
+bei ausdrücklich gewünschter unabhängiger Lebensdauer unabhängig. In Prüflingsgruppen
+endet die gebundene Lebensdauer nach den Exit-Aktionen. Erlaubte Exitcodes aus dem
+Altprogramm übernehmen, nicht pauschal jeden Code akzeptieren. DLL-Main unterstützt
+genau eine öffentliche statische Main-Methode mit null oder einem `string[]`-Argument
+und Rückgabe void/int/Task/Task<int> im mitgelieferten .NET-10-Host. Native DLL-Exports
+haben keinen solchen Vertrag. Python nutzt die vorhandene laufbezogene Auswahl.
+Weitere Regeln und Einschränkungen: [externe-prozesse.md](externe-prozesse.md).
+
 ## Auftragsauswahl, Hardware und Parallelbetrieb
 
 Auftragsauswahl ist ein **separates Projekt**, konfiguriert unter Auswahl & Auftrag.

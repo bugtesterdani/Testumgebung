@@ -45,6 +45,7 @@
   <ItemGroup>
     <Content Include="../../docs/ki-testprogramme.md" Link="docs/ki-testprogramme.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../docs/ki/**/*" Link="docs/ki/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../docs/beispiele/prozess-demo.py" Link="docs/beispiele/prozess-demo.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../docs/beispiele/*.md" Link="docs/beispiele/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\docs\beispiele\*.tproj.json" Link="docs\beispiele\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

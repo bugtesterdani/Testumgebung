@@ -119,3 +119,7 @@ Tagesverlauf; Export als PDF und CSV (Excel).
 Wiederholung „Zeitspanne“ prüft die Frist standardmäßig zwischen den Iterationen. Mit „Frist auch innerhalb der Iteration
 prüfen“ werden nach Ablauf die restlichen Schritte der laufenden Iteration übersprungen (ein laufender Schritt wird nicht
 unterbrochen, die Exit-Gruppe läuft).
+
+## Externe Programme
+
+Die Palette **Prozesse** startet EXE, Python-Skripte und .NET-DLL-Einstiegspunkte. Gebundene Lebensdauer, getrennte Argumente, spätere Warte-/Statusabfragen und Exitcode-Bewertung sind in [Externe Prozesse](../externe-prozesse.md) beschrieben.

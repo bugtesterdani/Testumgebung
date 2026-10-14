@@ -518,6 +518,7 @@ public sealed class BlockCatalog
                 p.Raw.Where(kv => kv.Key.StartsWith(OutputBindingPrefix, StringComparison.Ordinal))
                     .ToDictionary(kv => kv.Key[OutputBindingPrefix.Length..], kv => kv.Value))));
 
+        ProcessBlocks.Register(c);
         CommunicationBlocks.Register(c);
         BusBlocks.Register(c);
         return c;

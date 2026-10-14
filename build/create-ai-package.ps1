@@ -10,7 +10,7 @@ foreach ($name in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $base $name) -PathType Leaf)) { throw "KI-Paket: Datei fehlt im Publish-Layout: $name" }
 }
 $files = @('LICENSE', 'docs/ki-testprogramme.md', 'docs/handbuch-csharp-dll.md', 'docs/portable-python.md',
-    'docs/dynamische-verbindungen.md', 'docs/zwei-pruefplaetze.md', 'docs/eigene-geraete.md') |
+    'docs/dynamische-verbindungen.md', 'docs/externe-prozesse.md', 'docs/zwei-pruefplaetze.md', 'docs/eigene-geraete.md') |
     ForEach-Object { Get-Item -LiteralPath (Join-Path $base $_) }
 foreach ($directory in @('docs/ki', 'docs/handbuch', 'docs/beispiele')) {
     $files += Get-ChildItem -LiteralPath (Join-Path $base $directory) -Recurse -File
