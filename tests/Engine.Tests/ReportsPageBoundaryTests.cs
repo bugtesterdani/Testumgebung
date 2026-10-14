@@ -29,6 +29,38 @@ public sealed class ReportsPageBoundaryTests
         finally { Directory.Delete(directory, true); }
     }
 
+    [Fact]
+    public async Task Queued_folder_progress_cannot_overwrite_completed_or_subsequent_load_status()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "report-progress-" + Guid.NewGuid());
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var dispatcher = new QueueDispatcher();
+            var page = new ReportsViewModel(() => null, null, dispatcher) { Folder = directory };
+            var corruptFile = Path.Combine(directory, "bad" + ResultFile.Extension);
+            File.WriteAllText(corruptFile, "broken");
+            await page.LoadAsync();
+            Assert.Contains("mit Problemen", page.Status);
+            var completedStatus = page.Status;
+
+            // Intentionally deliver worker notifications after the final result.
+            dispatcher.Pump();
+            Assert.Equal(completedStatus, page.Status);
+
+            // Leave another load's notifications queued while the next load finishes.
+            await page.LoadAsync();
+            File.Delete(corruptFile);
+            await page.LoadAsync();
+            Assert.Contains("0 Datei", page.Status);
+            var subsequentStatus = page.Status;
+            dispatcher.Pump();
+            Assert.Equal(subsequentStatus, page.Status);
+            Assert.False(page.IsBusy);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
     [Theory]
     [InlineData(null, null)]
     [InlineData(2d, null)]

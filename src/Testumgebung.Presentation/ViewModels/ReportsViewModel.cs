@@ -159,8 +159,10 @@ public sealed class ReportsViewModel : ObservableObject
         Status = $"Lade Ergebnisdateien aus {folder} …";
         try
         {
-            var progress = new Progress<(int Done, int Total)>(p => Status = $"Lade Ergebnisdateien … {p.Done}/{p.Total}");
-            _loaded = await Task.Run(() => ResultAnalysis.Load(folder, progress)).ConfigureAwait(true);
+            // Close the progress scope before publishing the final result. Queued UI
+            // callbacks from this load must also stay silent during subsequent loads.
+            using (var progress = new FolderLoadProgress(_ui, p => Status = $"Lade Ergebnisdateien … {p.Done}/{p.Total}"))
+                _loaded = await Task.Run(() => ResultAnalysis.Load(folder, progress)).ConfigureAwait(true);
             Problems.Clear();
             foreach (var p in _loaded.Problems.Take(50)) Problems.Add(p);
             Fill(Tests, _loaded.Runs.Select(r => r.TestName));
@@ -174,6 +176,20 @@ public sealed class ReportsViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Dispatches progress only while its own folder load is active.</summary>
+    private sealed class FolderLoadProgress(IUiDispatcher ui, Action<(int Done, int Total)> update)
+        : IProgress<(int Done, int Total)>, IDisposable
+    {
+        private int _completed;
+
+        public void Report((int Done, int Total) value) => ui.Post(() =>
+        {
+            if (Volatile.Read(ref _completed) == 0) update(value);
+        });
+
+        public void Dispose() => Interlocked.Exchange(ref _completed, 1);
     }
 
     private async Task LoadFromDatabaseAsync()
