@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementiert den benötigten MQTT-Übertragungsweg einschließlich Verbindungs- und Paketformaten.
+ */
+
 using System.Buffers.Binary;
 using System.Net.Security;
 using System.Net.Sockets;

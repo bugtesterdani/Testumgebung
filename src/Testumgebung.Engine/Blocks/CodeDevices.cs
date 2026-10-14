@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt sprachübergreifende Geräteoperationen aus Codebausteinen in dieselben Protokollzugriffe wie grafische Bausteine.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 

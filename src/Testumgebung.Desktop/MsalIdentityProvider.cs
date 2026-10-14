@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt die Windows-/MSAL-Anmeldung in die anbieterunabhängige Identität der Anwendung.
+ */
+
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Broker;
 using Testumgebung.Identity;

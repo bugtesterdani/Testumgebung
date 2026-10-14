@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Initialisiert die WPF-Anwendung und verbindet Plattformdienste mit den unabhängigen Fachmodulen.
+ */
+
 using System.Windows;
 using System.Windows.Threading;
 

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet eine einzelne Werkeraufforderung mit Eingabezustand und Validierung.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Presentation.Mvvm;

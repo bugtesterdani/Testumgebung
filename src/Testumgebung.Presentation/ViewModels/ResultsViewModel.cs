@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Lädt gespeicherte Prüfläufe für Detailansicht, Kurvenanzeige und Wiederherstellung unvollständiger Ergebnisse.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

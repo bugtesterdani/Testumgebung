@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt Release-Lebenszyklus, Entwicklungsprüfung, Freigabe und Prüfplatzversionen dar.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

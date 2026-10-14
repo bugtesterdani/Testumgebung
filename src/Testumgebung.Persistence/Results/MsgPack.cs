@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Kodiert die verwendete MessagePack-Teilmenge und Prüfsummen des Ergebnisdateiformats.
+ */
+
 using System.Buffers.Binary;
 using System.Text;
 

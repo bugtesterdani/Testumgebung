@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Wählt Prüfläufe für statistische Auswertung und PDF-Berichte in der Oberfläche aus.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Persistence.Reports;

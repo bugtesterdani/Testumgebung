@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Prüft verschachtelte Sperrerweiterungen auf Zyklusrisiken über alle beteiligten Prüfplätze.
+ */
+
 using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Engine;

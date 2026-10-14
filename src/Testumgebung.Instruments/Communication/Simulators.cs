@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt Kommunikationsgegenstellen bereit, damit Übertragungswege ohne reale Geräte geprüft werden können.
+ */
+
 using System.Net;
 using System.Net.Sockets;
 using Testumgebung.Contracts;

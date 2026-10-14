@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verknüpft simulierte Auftragsbeispiele mit passenden Prüfprogrammen für die lokale Entwicklung.
+ */
+
 namespace Testumgebung.Persistence.Stations;
 
 /// <summary>Lokales Auftragsbeispiel mit ausschließlich simulierten Geräten, ohne Änderung der Prüfplatzkonfiguration.</summary>

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt LabVIEW-Aufrufe über eine native Brücke und deren konfigurierte DLL-Schnittstelle.
+ */
+
 using System.Text;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;

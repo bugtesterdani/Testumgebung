@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet Ergebnisdateien und alternative Sicherungspfade bei Speicherfehlern.
+ */
+
 using System.Text;
 
 namespace Testumgebung.Persistence.Results;

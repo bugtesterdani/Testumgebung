@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Entkoppelt MQTT-Meldungen durch einen begrenzten Speicherpuffer; Zustellfehler verändern das Prüfergebnis nicht.
+ */
+
 using System.Globalization;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -25,6 +30,8 @@ public sealed class MqttNotifier : IRunNotifier, IAsyncDisposable
     {
         Options = options;
         _publish = publish ?? MqttClientLite.PublishAsync;
+        // Meldungen sind best effort, keine zweite Datenbank-Outbox. Ein begrenzter Puffer
+        // verhindert, dass ein langsamer Broker den Prüflauf mit wachsendem Speicherbedarf belastet.
         _queue = Channel.CreateBounded<RunNotification>(new BoundedChannelOptions(64)
         {
             FullMode = BoundedChannelFullMode.DropWrite,

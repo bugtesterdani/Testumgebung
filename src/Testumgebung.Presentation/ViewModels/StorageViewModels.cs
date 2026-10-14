@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bearbeitet zielabhängige Speicherregeln mit sichtbarer Vererbung aus übergeordneten Gruppen.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Storage;

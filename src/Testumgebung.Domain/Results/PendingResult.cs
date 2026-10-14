@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Trennt noch ausstehende Bewertungen von bereits aggregierten Ergebnissen, etwa bei Debug-Wiederholungen.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Domain.Results;

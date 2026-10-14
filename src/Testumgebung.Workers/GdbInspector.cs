@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Liest einen GDB/MI-Schnappschuss des wartenden nativen Workers und trennt den Debugger anschließend ab.
+ */
+
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Nodes;

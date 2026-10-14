@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Vermittelt einem Schritt seine Variablen, Geräte, Werkerinteraktion und Abbruchsignale.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Scopes;

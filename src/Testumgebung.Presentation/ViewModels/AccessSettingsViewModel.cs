@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bearbeitet Mandant, Anbieter und Rechtezuordnung mit den Zugangsbeschränkungen der Oberfläche.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Identity;
 using Testumgebung.Presentation.Mvvm;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt gespeicherte Läufe, Ereignisse, Kurven und Anhänge unabhängig von Dateiformat und Anzeige.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Persistence.Results;

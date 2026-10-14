@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ordnet importierte Spalten Kanälen und Zeitbasis zu und meldet ungültige Samples ausdrücklich.
+ */
+
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;

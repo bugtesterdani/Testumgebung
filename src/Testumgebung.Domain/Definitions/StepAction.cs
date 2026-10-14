@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert Schrittergebnisse und Werkeraufforderungen einschließlich typisierter Eingabeprüfung.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Domain.Definitions;

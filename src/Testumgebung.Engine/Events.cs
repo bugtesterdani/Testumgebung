@@ -1,10 +1,15 @@
+/**
+ * @file
+ * @brief Definiert den Ereignisstrom, den Oberfläche, Protokollierung und Ergebnisaufzeichnung gemeinsam auswerten.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Engine;
 
 /// <summary>
-/// Ausführungsereignisse – Grundlage für Protokoll, Werkeranzeige, Ergebnisdatei und Datenbank (spätere Etappen).
+/// Ausführungsereignisse – Grundlage für Protokoll, Werkeranzeige, Ergebnisdatei und Datenbank.
 /// </summary>
 public abstract record EngineEvent
 {

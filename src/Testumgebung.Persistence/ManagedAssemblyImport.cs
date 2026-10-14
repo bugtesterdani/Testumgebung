@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Prüft und übernimmt .NET-Bibliotheken als projektbezogene Abhängigkeiten der Codebausteine.
+ */
+
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Testumgebung.Domain.Code;

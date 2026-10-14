@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bewahrt importierte Busbeschreibungen im Projekt, sodass Release-Pakete denselben Beschreibungsstand verwenden.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Domain.Definitions;

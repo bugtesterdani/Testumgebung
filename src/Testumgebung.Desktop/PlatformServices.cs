@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet Datenbankprovider und Windows-Geheimnisschutz in die plattformunabhängigen Verträge ein.
+ */
+
 using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erstellt beschreibbare Python-Laufzeitkopien und verwaltet die benutzerbezogene Umgebungsauswahl.
+ */
+
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Win32;

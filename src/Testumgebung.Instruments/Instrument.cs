@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert Gerätekanäle und gemeinsame Instrumentoperationen für konkrete Treiber.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 

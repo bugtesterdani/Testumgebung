@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt Zustände und Werte für WPF-Bindings; die fachliche Bewertung wird nicht hier berechnet.
+ */
+
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;

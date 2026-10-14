@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verteilt Werkerabbrüche auf regulären Ablauf und verschachtelte Exit-Phasen statt alle Cleanup-Schritte zu überspringen.
+ */
+
 namespace Testumgebung.Engine;
 
 /// <summary>

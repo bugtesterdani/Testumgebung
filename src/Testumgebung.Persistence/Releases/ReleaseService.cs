@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Prüft Akteur, Rechte und Zustandsübergänge vor Erstellung und Freigabe von Releases.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 

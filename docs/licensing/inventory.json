@@ -41770,6 +41770,13 @@
       "license": "MIT",
       "location": "GitHub runner action",
       "used_by": "Both GitHub workflows; not redistributed"
+    },
+    {
+      "name": "Doxygen",
+      "version": "1.18.0",
+      "license": "GPL-2.0; generated documents exempt per upstream",
+      "location": "artifacts/tools/doxygen/1.18.0",
+      "used_by": "build/doxygen.ps1; development/CI only; not bundled"
     }
   ],
   "external": [

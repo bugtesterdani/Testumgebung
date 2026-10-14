@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verdrahtet Ergebnisablage, Datenbank und Meldewege mit den aktuellen Anwendungseinstellungen.
+ */
+
 using System.Data.Common;
 using Testumgebung.Contracts;
 using Testumgebung.DatabaseAdapters;

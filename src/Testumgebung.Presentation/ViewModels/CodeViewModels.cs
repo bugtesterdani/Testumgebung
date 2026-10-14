@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet Codeeditor, Build-Prüfung und Bibliotheksports mit dem geöffneten Projekt.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

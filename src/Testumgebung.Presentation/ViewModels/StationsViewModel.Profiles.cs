@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ergänzt die Prüfplatzkonfiguration um projektbezogene, benutzerdefinierte Geräteprofile.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Instruments;
 using Testumgebung.Persistence.Stations;

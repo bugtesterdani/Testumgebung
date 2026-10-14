@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet serielle Textkommunikation an die gemeinsame Instrument-IO-Schnittstelle.
+ */
+
 using System.Text;
 using Testumgebung.Instruments.Communication;
 

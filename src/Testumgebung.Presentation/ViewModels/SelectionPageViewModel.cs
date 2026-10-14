@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bearbeitet rechnerbezogene Auswahlmethoden und Kennungsregeln vor ihrer Übernahme.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Contracts;
 using Testumgebung.Engine;

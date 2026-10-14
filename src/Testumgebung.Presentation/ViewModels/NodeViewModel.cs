@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt einen Definitionsknoten in eine grafische Ablaufkarte und deren Bearbeitungszustand.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;

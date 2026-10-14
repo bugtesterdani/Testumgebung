@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Überträgt Ergebnismeldungen an OPC-UA-Knoten; der Meldeweg ist vom Prüfablauf getrennt.
+ */
+
 using System.IO;
 using Opc.Ua;
 using Opc.Ua.Client;

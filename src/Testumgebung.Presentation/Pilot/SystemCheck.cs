@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ermittelt lokale Betriebsbereitschaft durch ersetzbare Prozess-, Laufzeit- und Treiberprüfungen.
+ */
+
 using System.Diagnostics;
 using Testumgebung.DatabaseAdapters;
 using Testumgebung.Identity;

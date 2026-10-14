@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verdrahtet Anwendungsstart und Hauptfenster; Prüfablauf und Werkerzustand werden von ViewModels verwaltet.
+ */
+
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;

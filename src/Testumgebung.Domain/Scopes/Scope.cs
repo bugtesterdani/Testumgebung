@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet hierarchische Variablensichtbarkeit und Typprüfung über Eintritt und Austritt von Gruppen.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;

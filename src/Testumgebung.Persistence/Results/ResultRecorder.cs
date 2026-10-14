@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Sammelt Engine-Ereignisse zu vollständigen Prüflingsläufen, bevor zielabhängige Filter angewendet werden.
+ */
+
 using System.Globalization;
 using System.Security.Cryptography;
 using Testumgebung.Contracts;

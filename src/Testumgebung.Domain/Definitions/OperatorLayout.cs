@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt die Anordnung der Werkeransicht als Teil des Prüfprogramms.
+ */
+
 namespace Testumgebung.Domain.Definitions;
 
 /// <summary>Bereich für „Aktueller Schritt und Fortschritt“ in der Werkeransicht (Abschnitt 4).</summary>

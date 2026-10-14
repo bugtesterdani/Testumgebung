@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Löst geerbte Speicherregeln für Anzeige, Datei und Datenbank unabhängig voneinander auf.
+ */
+
 using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Domain.Storage;

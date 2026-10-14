@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet die Anzeige und den Nachweis der Zustimmung zu mitgelieferten Drittanbieterbedingungen.
+ */
+
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows;

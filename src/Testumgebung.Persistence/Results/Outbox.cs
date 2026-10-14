@@ -1,17 +1,31 @@
+/**
+ * @file
+ * @brief Bewahrt ausstehende Datenbankübertragungen dauerhaft und organisiert spätere idempotente Wiederholungen.
+ */
+
 using System.Text.Json;
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Persistence.Results;
 
 /// <summary>
-/// Datenbankadapter (MSSQL, PostgreSQL, MySQL, SQLite folgen in Etappe 6).
+/// Datenbankadapter für die dauerhafte Speicherung abgeschlossener Prüflingsläufe.
 /// Vertrag: eine Transaktion je Run, Unique-Key auf der Run-ID, idempotente Einfügung – ein bereits vorhandener Run
 /// gilt als Erfolg. So erzeugt eine Wiederholung nach verlorener Commit-Antwort keine Duplikate.
 /// </summary>
 public interface IRunDatabase
 {
+    /// <summary>Lesbare Bezeichnung des Speicherziels für Diagnose und Oberfläche.</summary>
     string Name { get; }
 
+    /// <summary>Speichert einen vollständigen Lauf atomar und idempotent anhand seiner Run-ID.</summary>
+    /// <param name="run">Lauf mit Struktur, Ereignissen, Messwerten und Kurven.</param>
+    /// <param name="cancellationToken">Abbruchsignal für die Speicherung.</param>
+    /// <remarks>
+    /// Bei bereits gespeicherter Run-ID gilt der Aufruf als erfolgreich. Ein Fehler nach einem
+    /// Commit kann beim Aufrufer trotzdem als Fehlschlag erscheinen; erneutes Speichern darf
+    /// dann keine Duplikate erzeugen. Erst die erfolgreiche Rückkehr bestätigt die Speicherung.
+    /// </remarks>
     Task StoreAsync(ResultRun run, CancellationToken cancellationToken);
 }
 

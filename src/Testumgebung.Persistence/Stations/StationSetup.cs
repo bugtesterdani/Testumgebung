@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Speichert rechnerbezogene Geräte und Prüfplatzzuordnungen; gemeinsame Geräte werden nur einmal definiert.
+ */
+
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;

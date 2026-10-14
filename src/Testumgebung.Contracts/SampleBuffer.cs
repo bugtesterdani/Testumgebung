@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Begrenzt den Speicherbedarf großer Aufnahmen durch blockweises Lesen und temporäre Dateipuffer.
+ */
+
 using System.Collections;
 using System.Runtime.InteropServices;
 

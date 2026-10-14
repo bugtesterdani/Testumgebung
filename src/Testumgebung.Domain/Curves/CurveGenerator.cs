@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erzeugt reproduzierbare Samples und führt bewusst gewählte Kurvenoperationen aus.
+ */
+
 using System.Globalization;
 
 namespace Testumgebung.Domain.Curves;

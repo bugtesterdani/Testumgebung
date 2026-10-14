@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt Aufnahmen und Ausgabekurven einschließlich Einheiten, Zeitbasis und Geräteeignung.
+ */
+
 using System.Globalization;
 
 namespace Testumgebung.Contracts;

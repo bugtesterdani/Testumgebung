@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Validiert und übernimmt Änderungen am laufenden Ablauf, ohne gerade aktive Scopes umzuschreiben.
+ */
+
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
 using Testumgebung.Engine.Blocks;

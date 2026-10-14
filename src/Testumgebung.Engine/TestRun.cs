@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Orchestriert Gruppen, Wiederholungen und Exit-Abläufe; Ereignisse trennen Ausführung von Darstellung und Speicherung.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;

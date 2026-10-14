@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Zeichnet Beginn und Ende zentral vermittelter Gerätezugriffe für Diagnose und Prüfplatzanzeige auf.
+ */
+
 using System.Collections.Concurrent;
 using Testumgebung.Contracts;
 

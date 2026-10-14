@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Interpretiert SCPI-Befehle auf einem gemeinsamen simulierten Geräteprüfstand.
+ */
+
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Globalization;

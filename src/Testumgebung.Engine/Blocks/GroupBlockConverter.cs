@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ermittelt die Schnittstelle einer wiederverwendbaren Gruppe und ersetzt sie durch einen Bibliotheksaufruf.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;

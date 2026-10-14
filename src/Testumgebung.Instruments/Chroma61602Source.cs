@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt Netzteiloperationen für die Chroma-61602-Quelle in deren Gerätekommunikation.
+ */
+
 namespace Testumgebung.Instruments;
 
 /// <summary>Chroma 61602, AC-Grundbetrieb; Befehle laut Benutzerhandbuch 61601–61604, Kapitel 7.</summary>

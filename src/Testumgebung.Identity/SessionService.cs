@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet Anmeldung, Rechteprüfung und Inaktivität; überholte Anmeldeantworten dürfen neue Sitzungen nicht überschreiben.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Identity;
@@ -76,6 +81,8 @@ public sealed class SessionService
     /// </summary>
     public async Task<bool> SignInAsync(bool selectAccount = false, CancellationToken cancellationToken = default)
     {
+        // Eine später abgeschlossene Anmeldung darf eine zwischenzeitliche Abmeldung oder
+        // einen neueren Anmeldeversuch nicht rückgängig machen; Generationen trennen diese Versuche.
         var generation = ++_signInGeneration;
         var previous = User;
         if (selectAccount && previous is not null) Clear(null); // Wechsel: alte Rechte sofort entziehen

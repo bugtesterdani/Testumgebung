@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt pausierte Ausführung, Variablenbearbeitung und sichere Run-Patches in der Oberfläche dar.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

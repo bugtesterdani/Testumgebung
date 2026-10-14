@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Wendet zielabhängige Filter an und koordiniert Datei, Datenbank-Outbox und Abschluss des Zwischenjournals.
+ */
+
 using Testumgebung.Domain.Storage;
 
 namespace Testumgebung.Persistence.Results;
@@ -32,6 +37,8 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
         FileSaveResult? file = null;
         if (Files is not null)
         {
+            // Datei- und Datenbankfilter wirken auf getrennte Kopien desselben aufgezeichneten Laufs;
+            // der Dateifilter darf der Datenbank keine Messwerte entziehen.
             var forFile = ResultFilter.ForFile(recorded, resolver);
             file = await Task.Run(() => Files.Save(forFile)).ConfigureAwait(false);
         }
@@ -84,6 +91,8 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
         return new StorageReport(run.RunId, run.DutId, file, db);
     }
 
+    // Der Aufrufer beendet das Zwischenjournal erst anhand dieser gemeinsamen Regel.
+    // Ohne konfiguriertes Speicherziel ist keine zusätzliche Übertragung ausstehend.
     private static bool IsSecured(FileSaveResult? file, OutboxSubmitResult? db)
         => file?.Path is not null || db is { Stored: true } || (file is null && db is null);
 

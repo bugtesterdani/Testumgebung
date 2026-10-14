@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet die Dateiauswahl der Oberfläche an native Windows-Dialoge.
+ */
+
 using System.Windows;
 using Microsoft.Win32;
 using Testumgebung.Presentation.Mvvm;

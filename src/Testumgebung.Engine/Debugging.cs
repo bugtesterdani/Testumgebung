@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt Halteentscheidungen und sichtbare Variablen für Ablauf- und Code-Debugging.
+ */
+
 using System.Collections.Concurrent;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;

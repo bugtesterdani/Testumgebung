@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Transportiert JSON-Lines zwischen Host und isoliertem Prozess und verteilt Antworten nach Aufrufkennung.
+ */
+
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -6,7 +11,7 @@ using System.Text.Json.Nodes;
 namespace Testumgebung.Workers;
 
 /// <summary>
-/// Ein Worker-Prozess (C# oder Python) mit JSON-Lines-Protokoll über stdin/stdout.
+/// Ein isolierter Worker-Prozess mit JSON-Lines-Protokoll über stdin/stdout.
 /// Nachrichten mit einer <c>id</c> werden an den registrierten Empfänger verteilt.
 /// </summary>
 public sealed class WorkerProcess : IDisposable
@@ -83,6 +88,8 @@ public sealed class WorkerProcess : IDisposable
     public void Send(JsonObject message)
     {
         var text = message.ToJsonString();
+        // Mehrere Rückrufe können gleichzeitig senden. Die Sperre umfasst eine ganze JSON-Zeile,
+        // damit der Empfänger niemals ineinander verschachtelte Nachrichten lesen muss.
         lock (_writeLock)
         {
             if (!IsAlive) throw new InvalidOperationException("Worker-Prozess läuft nicht.");
@@ -106,6 +113,8 @@ public sealed class WorkerProcess : IDisposable
     {
         try
         {
+            // stdout ist der Protokollkanal, stderr der Diagnosekanal. Beide werden unabhängig
+            // gelesen, damit ein voller Diagnosepuffer den Worker nicht am Antworten hindert.
             while (await _process.StandardOutput.ReadLineAsync().ConfigureAwait(false) is { } line)
             {
                 if (string.IsNullOrWhiteSpace(line)) continue;

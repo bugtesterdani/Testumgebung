@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Parst und wertet Prüfausdrücke gegen einen Variablenresolver aus, ohne unbekannte Variablen still anzulegen.
+ */
+
 using System.Globalization;
 using System.Text;
 using Testumgebung.Contracts;

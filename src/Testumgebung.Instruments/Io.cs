@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Kapselt geräteunabhängige IO-Verbindungen einschließlich VISA und Socket-Zugriffen.
+ */
+
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;

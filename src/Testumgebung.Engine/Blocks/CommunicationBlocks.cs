@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet Kommunikationsparameter mit Übertragung und Antwortbewertung über abstrakte Ressourcen.
+ */
+
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;

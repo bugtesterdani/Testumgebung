@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet Scan, Auftragsauswertung und Programmauswahl vor dem Start eines einzelnen Prüfplatzes.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Contracts;
 using Testumgebung.Engine;

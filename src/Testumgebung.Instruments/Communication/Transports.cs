@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementiert Byte-Transporte und Empfangspuffer; Protokollbewertung erfolgt in den aufrufenden Schichten.
+ */
+
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Globalization;
@@ -15,19 +20,32 @@ namespace Testumgebung.Instruments.Communication;
 /// <summary>Byte-Transport zum Prüfling (Seriell, TCP, UDP, Testschleife). Ein Aufrufer zur Zeit.</summary>
 public interface IStreamTransport : IDisposable
 {
+    /// <summary>Beschreibung der Verbindung für Protokoll und Fehlermeldungen.</summary>
     string Description { get; }
 
+    /// <summary>Ob der Transport derzeit geöffnet ist.</summary>
     bool IsOpen { get; }
 
+    /// <summary>Öffnet die konfigurierte Verbindung.</summary>
+    /// <param name="cancellationToken">Abbruchsignal für den Verbindungsaufbau.</param>
     Task OpenAsync(CancellationToken cancellationToken);
 
+    /// <summary>Sendet die übergebenen Bytes ohne automatische Text- oder Protokollumwandlung.</summary>
+    /// <param name="data">Zu sendende Bytes.</param>
+    /// <param name="cancellationToken">Abbruchsignal für den Schreibvorgang.</param>
     Task WriteAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken);
 
     /// <summary>Liest verfügbare Bytes; wartet höchstens <paramref name="timeout"/>. 0 = nichts empfangen.</summary>
+    /// <param name="buffer">Zielpuffer; nur die zurückgegebene Anzahl Bytes ist gültig.</param>
+    /// <param name="timeout">Maximale Wartezeit dieses Leseaufrufs.</param>
+    /// <param name="cancellationToken">Abbruchsignal für das Lesen.</param>
+    /// <returns>Anzahl der in den Puffer geschriebenen Bytes.</returns>
     Task<int> ReadAsync(Memory<byte> buffer, TimeSpan timeout, CancellationToken cancellationToken);
 
+    /// <summary>Verwirft gepufferte Eingangsdaten des Transports.</summary>
     void DiscardInput();
 
+    /// <summary>Schließt die Verbindung und gibt ihre Verbindungsressourcen frei.</summary>
     void Close();
 }
 

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Trennt Telnet-Steuersequenzen von Nutzdaten und beantwortet die unterstützten Aushandlungsbefehle.
+ */
+
 using System.Diagnostics;
 
 namespace Testumgebung.Instruments.Communication;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet die Python-Umgebungsauswahl der Oberfläche mit den beschreibbaren Laufzeitkopien.
+ */
+
 using System.Diagnostics;
 using Testumgebung.Presentation.Mvvm;
 using Testumgebung.Workers;

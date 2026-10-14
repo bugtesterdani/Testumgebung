@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Findet mitgelieferte native Werkzeuge relativ zur Anwendung oder zum Entwicklungsprojekt.
+ */
+
 namespace Testumgebung.Workers;
 
 /// <summary>Portable Toolchain neben der Anwendung; in Entwicklungs-Checkouts im Projektverzeichnis.</summary>

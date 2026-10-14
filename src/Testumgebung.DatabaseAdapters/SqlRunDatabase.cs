@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Schreibt einen Prüflingslauf transaktional; Run-ID, Messwerte und Kurven gehören zu derselben Speicherung.
+ */
+
 using System.Buffers.Binary;
 using System.Data;
 using System.Data.Common;
@@ -46,6 +51,8 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
         await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         await EnsureSchemaAsync(connection, cancellationToken).ConfigureAwait(false);
 
+        // Die Existenzprüfung gehört zur selben Transaktion wie der vollständige Lauf.
+        // So bleibt eine erneute Übertragung nach verlorener Commit-Antwort idempotent.
         await using var tx = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         if (await ExistsAsync(connection, tx, run.RunId, cancellationToken).ConfigureAwait(false))
         {

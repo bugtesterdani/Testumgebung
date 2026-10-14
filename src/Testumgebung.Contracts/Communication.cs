@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert transportübergreifende Kommunikationsverträge und Empfangsregeln für die Gerätevermittlung.
+ */
+
 namespace Testumgebung.Contracts;
 
 public interface IConfigurableConnection

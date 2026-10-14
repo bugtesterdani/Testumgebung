@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ergänzt die Release-Ansicht um den Vergleich freigegebener Pakete und des Editorstands.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Persistence;
 using Testumgebung.Persistence.Releases;

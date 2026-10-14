@@ -359,3 +359,5 @@ Lizenzen. Siehe [Maßnahmen zur Lizenzprüfung](docs/licensing/massnahmen.md),
 Für neue Veröffentlichungen werden NuGet-Lockdateien verwendet; CI bricht bei
 ungeplanten Abhängigkeitsänderungen ab. Historische MSIX-Versionen bis 1.0.12.x
 sind nicht durch die Nachprüfung der Version 1.0.13.3 freigegeben.
+
+Quellcode-Referenz und sichtbare Dokumentationslücken: `Report-Doxygen.cmd`. [Anleitung und Lizenzentscheidung](docs/code-dokumentation.md).

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bündelt Operationen und Zustände dreiphasiger Quellen für die konkreten Netzteiltreiber.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Instruments;

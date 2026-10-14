@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erzeugt lokale Beispielprüfprogramme aus denselben Definitionen und Bausteinen wie Benutzerprojekte.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Curves;

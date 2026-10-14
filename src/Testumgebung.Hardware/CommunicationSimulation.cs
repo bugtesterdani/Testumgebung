@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erzeugt regelbasierte Antworten simulierter Prüflinge für Byte-Ströme, Modbus und Feldbusse.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;

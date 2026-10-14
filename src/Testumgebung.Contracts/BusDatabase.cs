@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Parst Busbeschreibungen und ordnet Nachrichten, Signale und LIN-Gruppen ihren Protokollkennungen zu.
+ */
+
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;

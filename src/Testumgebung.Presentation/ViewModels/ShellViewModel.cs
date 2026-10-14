@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verdrahtet Seiten und Prüfplätze und steuert Navigation sowie angemeldete Benutzerrechte.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Contracts;
 using Testumgebung.Engine.Blocks;

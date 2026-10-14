@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Startet den nativen Worker; übersetzte Bibliotheken und Callback-Speicher bleiben im isolierten Prozess.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -13,6 +18,8 @@ namespace Testumgebung.Workers.Native;
 /// Native-Worker: JSON-Lines-Protokoll wie die anderen Worker (compile, invoke, cancel, reply).
 /// Übersetzt C++-CodeBlocks zu Bibliotheken (Cache je Quelltext und Signatur) und ruft <c>tu_invoke</c> auf.
 /// </summary>
+// Native Bibliotheken und Callback-Zeiger leben in diesem Prozess. Ein erzwungenes
+// Prozessende begrenzt den Schaden eines nicht kooperativ abbrechenden Codebausteins.
 public static class Program
 {
     private static readonly object WriteLock = new();

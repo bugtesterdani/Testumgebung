@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Schreibt Diagnoseinformationen zu unbehandelten Fehlern für die nachträgliche Untersuchung.
+ */
+
 using System.IO;
 using System.Text.Json;
 

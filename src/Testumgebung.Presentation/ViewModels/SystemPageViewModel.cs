@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet Systemprüfung und Konfigurationssicherung mit den Bedienaktionen der Oberfläche.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Presentation.Mvvm;
 using Testumgebung.Presentation.Pilot;

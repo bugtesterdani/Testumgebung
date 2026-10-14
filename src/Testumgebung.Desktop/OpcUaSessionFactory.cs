@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bündelt Stack-Aufrufe zum Aufbau einer OPC-UA-Sitzung an einer testbaren Verbindungsgrenze.
+ */
+
 using Opc.Ua;
 using Opc.Ua.Client;
 using Opc.Ua.Configuration;

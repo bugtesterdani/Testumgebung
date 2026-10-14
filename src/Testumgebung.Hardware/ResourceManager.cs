@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Vergibt Ressourcenpakete atomar und verwaltet Besitz, Wartende und erneute Anforderungen desselben Laufs.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Hardware;

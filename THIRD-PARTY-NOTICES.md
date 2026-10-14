@@ -478,3 +478,8 @@ Bei jeder Weitergabe müssen diese Quellen und Hinweise erhalten bleiben. GNU-Bi
 ## Extern installierte Treiber
 
 NI-DAQmx/VISA, PEAK, Kvaser, Vector und benutzerdefinierte DLLs sind nicht Bestandteil des geprüften MSIX. Ihre Installation und Nutzung unterliegen den jeweiligen Hersteller-/Projektlizenzen.
+
+
+## Entwicklungswerkzeug Doxygen 1.18.0
+
+GNU GPL Version 2, ausschließlich Entwicklungs-/CI-Werkzeug; nicht im MSIX gebündelt. Erzeugte Dokumente sind laut Hersteller von der Werkzeuglizenz ausgenommen. [Lizenztext](licenses/third-party/doxygen/1.18.0/LICENSE), [Herkunft und Verwendung](licenses/third-party/doxygen/1.18.0/NOTICE.md). Die Hinweise der erzeugten HTML-Assets bleiben erhalten.

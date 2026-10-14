@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ordnet grafische Bausteintypen ihren Parametern, Prüfregeln und ausführbaren Aktionen zu.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;

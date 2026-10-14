@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt Text, Register und Signalwerte in Protokolldaten; Byte-Reihenfolge und Adressbereiche sind hier zentralisiert.
+ */
+
 using System.Globalization;
 using System.Text;
 

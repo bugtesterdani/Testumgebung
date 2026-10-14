@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet gespeicherte Ergebnisse und Statistik mit der Ausgabe von Prüf- und Auswertungsberichten.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 using Testumgebung.Persistence.Results;
