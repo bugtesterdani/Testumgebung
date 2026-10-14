@@ -22,10 +22,11 @@ class API:
 
     def pages(self, path, **query):
         if path.endswith('/milestones'): return self.milestones
+        if path.endswith('/releases'): return [{'id': 10, 'tag_name': 'v1.0.14', 'draft': True, 'assets': self.assets}]
         raise AssertionError(path)
 
     def api(self, path, data=None, method=None):
-        if '/releases/tags/' in path: return {'assets': self.assets}
+        if '/releases/tags/' in path: raise AssertionError('Draft must be resolved via release listing')
         if data is None: return next(i for i in self.items if path.endswith('/' + str(i['number'])))
         self.writes.append((path, data, method))
         if path.endswith('/milestones'):
@@ -97,6 +98,13 @@ class NextReleaseTests(unittest.TestCase):
         self.assertEqual('1.1.0', release.next_version('1.0.65535'))
         self.assertEqual('2.0.0', release.next_version('1.65535.65535'))
         with self.assertRaises(ValueError): release.next_version('65535.65535.65535')
+
+    def test_draft_lookup_requires_an_exact_unique_tag(self):
+        api = API()
+        self.assertEqual(10, release.release_for_tag(api, 'v1.0.14')['id'])
+        with self.assertRaises(ValueError): release.release_for_tag(api, 'v1.0.140')
+        api.pages = lambda *args, **kwargs: [{'tag_name': 'v1.0.14'}, {'tag_name': 'v1.0.14'}]
+        with self.assertRaises(ValueError): release.release_for_tag(api, 'v1.0.14')
 
 
 if __name__ == '__main__': unittest.main()

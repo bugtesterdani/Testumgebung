@@ -65,8 +65,8 @@ TOOLS=[
 ('Pillow (CI documentation)','12.3.0 in audited Actions run','HPND/Pillow license plus codec notices','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
 ('charset-normalizer (CI documentation)','3.5.2 in audited Actions run','MIT','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
 ('Python (CI documentation)','3.12.x','PSF','GitHub runner','actions/setup-python; exact patch depends on runner'),
-('.NET SDK (local)','10.0.401','MIT and third-party/MS build tool terms','External installed SDK','dotnet build/test/publish; not itself shipped'),
-('.NET SDK (CI)','10.0.401','MIT and third-party/MS build tool terms','GitHub runner','actions/setup-dotnet; SDK pinned via global.json and workflow'),
+('.NET SDK (local)','10.0.402','MIT and third-party/MS build tool terms','External installed SDK','dotnet build/test/publish; not itself shipped'),
+('.NET SDK (CI)','10.0.402','MIT and third-party/MS build tool terms','GitHub runner','actions/setup-dotnet; SDK pinned via global.json and workflow'),
 ('Windows SDK MakeAppx/SignTool','Externally installed; chosen SDK directory','Microsoft SDK terms','Windows Kits/10/bin/<SDK>/x64','build/msix.ps1; build only'),
 ('PowerShell','7.x for builds; Windows PowerShell external for console','MIT for PowerShell 7; OS terms for Windows PowerShell','External installed runtime','build scripts; PythonEnvironments.cs'),
 ('Inno Setup','6.x, exact version not pinned','Inno Setup license','External ISCC.exe','build/publish.ps1 -Installer; not used by MSIX workflow'),
@@ -97,7 +97,7 @@ def normalize_license(row):
     name=row['name'];value=row['metadata'].get('license','UNRESOLVED')
     expected=None
     if name in ('runtimepack.Microsoft.NETCore.App.Runtime.win-x64','runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64'):
-        if row['version']!='10.0.12':raise ValueError('Windows runtime version needs a new license review: '+row['version'])
+        if row['version']!='10.0.13':raise ValueError('Windows runtime version needs a new license review: '+row['version'])
         return 'MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution'
     if name.startswith('OPCFoundation.NetStandard.Opc.Ua.') and row['version']=='1.5.378.182':
         expected='3927c73bc0abbd9327364bcfdcbb7d8a7be50c05c2948fcfb49a45b165bda737'
@@ -215,7 +215,7 @@ def pip_vendors():
     return rows
 
 def write_notices(data):
-    lines=['# Drittanbieterhinweise - Testumgebung','','Stand: 13.10.2026. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.','',
+    lines=['# Drittanbieterhinweise - Testumgebung','','Stand: '+data['date']+'. Diese Datei vergibt keine Lizenz für den eigenen Projektcode. Die Fremdkomponenten behalten ihre jeweiligen Lizenzen.','',
       'Diese Sammlung begleitet die aktuelle Distribution. Historische Versionen werden nicht rückwirkend bereinigt. Zusätzliche Bedingungen stehen in THIRD-PARTY-TERMS.md.','',
       'Microsoft-Windows-Ausnahmen: coreclr.dll, PresentationNative_cor3.dll, wpfgfx_cor3.dll und vcruntime140_cor3.dll unterliegen der .NET Library License; D3DCompiler_47_cor3.dll der Windows SDK License. Originalverträge und lesbare Texte: `licenses/third-party/microsoft/`. Die MIT-Paketdeklaration ersetzt diese Zuordnung nicht.','',
       '## NuGet und .NET-Laufzeiten','']
@@ -242,7 +242,7 @@ def write_notices(data):
     (ROOT/'THIRD-PARTY-NOTICES.md').write_text('\n'.join(lines),encoding='utf-8')
 
 def write_inventory(data):
-    lines=['# Vollständiges Abhängigkeitsinventar','','Prüfstand: 13.10.2026. Binärstand: MSIX '+data['release_version']+'. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.','',
+    lines=['# Vollständiges Abhängigkeitsinventar','','Prüfstand: '+data['date']+'. Binärstand: MSIX '+data['release_version']+'. Die Version einer NuGet-Komponente kann von ihrer Assembly-/Dateiversion abweichen. Tabellen unterscheiden deshalb Paket-, Produkt- und Dateiversionen.','',
       '## Dateien für die genaue Auswertung','',
       '- [Alle eigenen Projekte](projects.csv)','- [NuGet-Versionen, Lizenzen und Verwendungsorte](nuget.csv)','- [Jede ausgelieferte Binär-/Bibliotheksdatei](binaries.csv)','- [Prüfsummen aller Lizenz- und Hinweisdateien](license-files.csv)',
       '- [Aufgelöste NuGet-Abhängigkeitskanten je Projekt/Framework](dependency-edges.csv)','- [Werkzeuge, Laufzeiten und native Bestandteile](tools.csv)',

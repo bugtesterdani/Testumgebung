@@ -99,7 +99,7 @@ class ReleaseTests(unittest.TestCase):
             repo = 'owner/repo'
             written = None
             def pages(self, path, **kwargs):
-                if path.endswith('/releases'): return [{'tag_name': 'v1.0.13', 'draft': False}]
+                if path.endswith('/releases'): return [{'tag_name': 'v1.0.13', 'draft': False}, {'id': 42, 'tag_name': 'v1.0.14', 'draft': True}]
                 if '/commits/' in path:
                     return [{'number': 5, 'title': 'Included change', 'merged_at': '2026-10-13T00:00:00Z', 'base': {'ref': 'main'}, 'labels': []}]
                 raise AssertionError(path)
@@ -113,7 +113,7 @@ class ReleaseTests(unittest.TestCase):
                         'pageInfo': {'hasNextPage': False, 'endCursor': None}}}}}}
                 if '/releases/tags/' in path: return {'id': 42}
                 if path.endswith('/releases/42'):
-                    self.written = data['body']; self.method = method; return {}
+                    self.written = data['body']; self.method = method; self.updated = data; return {}
                 raise AssertionError(path)
         def fake_git(*args):
             if args[0] == 'rev-parse': return 'a'*40
@@ -125,6 +125,9 @@ class ReleaseTests(unittest.TestCase):
         api = API()
         with patch.object(release, 'git', fake_git): release.publish(api, SimpleNamespace(tag='v1.0.14'))
         self.assertEqual(api.method, 'PATCH')
+        self.assertEqual('v1.0.14', api.updated['tag_name'])
+        self.assertEqual('a'*40, api.updated['target_commitish'])
+        self.assertTrue(api.updated['draft'])
         self.assertIn('PR #5', api.written)
         self.assertIn('Issue #3', api.written)
         self.assertNotIn('SECRET', api.written)

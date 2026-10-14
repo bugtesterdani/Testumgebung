@@ -1,0 +1,5 @@
+System.Security.Cryptography.Pkcs 9.0.21
+© Microsoft Corporation. All rights reserved.
+Authors: Microsoft
+Declared license: MIT
+Repository: https://github.com/dotnet/runtime

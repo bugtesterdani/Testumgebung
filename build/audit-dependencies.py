@@ -1,5 +1,6 @@
 """Evidence-based dependency inventory. Does not select the project's own license."""
 from pathlib import Path
+from datetime import date
 from collections import defaultdict
 import argparse, csv, hashlib, io, json, re, shutil, sys, tarfile, urllib.request, zipfile
 import xml.etree.ElementTree as ET
@@ -184,7 +185,7 @@ def main():
             for name in z.namelist():
                 if Path(name).name.lower().startswith(('license','copying','notice','authors','copyright')) and not name.endswith('/'):
                     save_license('pip-26.2.1',name,z.read(name))
-    result={'date':'2026-10-13','projects':projects,'packages':packages,'dependency_edges':edges,'binaries':binaries,'release_manifests':deps,'release_license_files':release_licenses,'toolchain_sources':source_archives,'unresolved_bundled_packages':missing,'bundle':rel(args.bundle)}
+    result={'date':date.today().isoformat(),'projects':projects,'packages':packages,'dependency_edges':edges,'binaries':binaries,'release_manifests':deps,'release_license_files':release_licenses,'toolchain_sources':source_archives,'unresolved_bundled_packages':missing,'bundle':rel(args.bundle)}
     (REPORT/'inventory.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     csv_write('projects.csv',projects)
     csv_write('nuget.csv',[{'name':r['name'],'version':r['version'],'license':r['metadata'].get('license','UNRESOLVED'),'license_type':r['metadata'].get('license_type',''),'direct_in':r['direct_in'],'resolved_in':r['projects'],'bundled_manifests':r['bundled_manifests'],'authors':r['metadata'].get('authors',''),'copyright':r['metadata'].get('copyright',''),'repository':r['metadata'].get('repository',{}).get('url',''),'license_files':[x['path'] for x in r['metadata'].get('license_files',[])]} for r in sorted(packages.values(),key=lambda r:(r['name'].lower(),r['version']))])

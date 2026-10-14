@@ -85,7 +85,9 @@ foreach ($worker in @(@('CSharp','csharp'), @('Native','native'))) {
     $info = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $layout 'Testumgebung.Desktop.dll'))
     if ($info.FileVersion -ne $Version) { throw 'Vorbereiteter Publish-Stand hat eine andere Version.' }
 }
-& (Join-Path $PSScriptRoot 'check-release-licenses.ps1') -Layout $layout
+# Preparation precedes generation of the inventory for the newly restored packages.
+# The final packaging pass must validate that inventory before producing a bundle.
+if (-not $PrepareOnly) { & (Join-Path $PSScriptRoot 'check-release-licenses.ps1') -Layout $layout }
 $assets = Join-Path $layout 'Assets'
 New-Item -ItemType Directory -Force $assets | Out-Null
 Copy-Item (Join-Path $root 'src\Testumgebung.Desktop\Assets\Msix\*.png') $assets -Force
