@@ -78,6 +78,7 @@ jobs:
         run: |
           python -m unittest discover -s tests/ReleaseAutomation -p 'test_*.py'
           if ($LASTEXITCODE) { throw 'Release-Automation fehlerhaft.' }
+          ./build/tests/verify-ai-package.ps1
       - name: Git-Historie auf ausgewählte Geheimnismuster prüfen
         shell: pwsh
         run: |
@@ -217,6 +218,7 @@ jobs:
           if ($LASTEXITCODE) { throw 'Release-Artefakt konnte nicht heruntergeladen werden.' }
           $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','BUILD-INFO.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
           if (-not ($assets | Where-Object Extension -EQ '.msixbundle')) { throw 'MSIX-Bundle fehlt.' }
+          if (-not ($assets | Where-Object Name -EQ "Testumgebung_$($env:RELEASE_VERSION)_KI-Paket.zip")) { throw 'KI-Paket für diese Release-Version fehlt.' }
           $existingJson=gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json databaseId,isDraft 2>$null
           if ($LASTEXITCODE -eq 0) {
             $existing=$existingJson | ConvertFrom-Json

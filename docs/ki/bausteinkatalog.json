@@ -1,0 +1,3525 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "blocks": [
+    {
+      "type": "analog.ausgeben",
+      "displayName": "Ausgabe setzen",
+      "category": "Analog messen / ausgeben",
+      "description": "Setzt einen analogen Ausgang bzw. eine Quelle (unbewertet).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "AC_Quelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Wert",
+          "label": "Wert",
+          "kind": "Expression",
+          "default": "0",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "analog.messen",
+      "displayName": "Messung",
+      "category": "Analog messen / ausgeben",
+      "description": "Liest einen Messwert, schreibt ihn in die Zielvariable und bewertet gegen Grenzwerte.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Spannung_Pruefling",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Zahl oder Ausdruck, z. B. GrenzwertMin"
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "V",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "auswahl.test",
+      "displayName": "Test ausw\u00E4hlen",
+      "category": "Auswahl \u0026 Auftrag",
+      "description": "Ausgabevertrag des eigenen Auswahlablaufs: Testkennung, optional Version, Auftrag und Pr\u00FCfparameter (Schl\u00FCssel=Wert;\u2026).",
+      "parameters": [
+        {
+          "name": "Testkennung",
+          "label": "Testkennung",
+          "kind": "Expression",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "z. B. \u0022AC-Pr\u00FCfung\u0022 oder eine Variable"
+        },
+        {
+          "name": "Version",
+          "label": "Version (leer = aktuell freigegebene)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Auftrag",
+          "label": "Auftrag",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Pruefparameter",
+          "label": "Pr\u00FCfparameter",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Text \u201EGrenzwertMin=220;GrenzwertMax=240\u201C"
+        },
+        {
+          "name": "PythonVenv",
+          "label": "Python-Umgebung (optional)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Absoluter Ordnerpfad als String oder Variable; fehlende Umgebung f\u00E4llt auf die n\u00E4chste Stufe zur\u00FCck."
+        }
+      ]
+    },
+    {
+      "type": "baustein",
+      "displayName": "Baustein",
+      "category": "CodeBlocks",
+      "description": "Wiederverwendbarer Baustein aus der Bibliothek. Eing\u00E4nge aus Ausdr\u00FCcken, Ausg\u00E4nge in Zielvariablen; kein impliziter Variablenzugriff.",
+      "parameters": [
+        {
+          "name": "Baustein",
+          "label": "Baustein (ID)",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Timeout",
+          "label": "Abbruch-Timeout [s]",
+          "kind": "Number",
+          "default": "5",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "bewertung",
+      "displayName": "Bewertung",
+      "category": "Bewertung",
+      "description": "PASS, wenn die Bedingung erf\u00FCllt ist, sonst FAIL.",
+      "parameters": [
+        {
+          "name": "Bedingung",
+          "label": "Bedingung",
+          "kind": "Expression",
+          "default": "true",
+          "required": true,
+          "choices": null,
+          "hint": "z. B. Spannung \u003E= GrenzwertMin \u0026\u0026 Spannung \u003C= GrenzwertMax"
+        },
+        {
+          "name": "Wert",
+          "label": "Angezeigter Wert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Meldung",
+          "label": "Meldung bei FAIL",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "bewertung.setzen",
+      "displayName": "Bewertung setzen",
+      "category": "Bewertung",
+      "description": "Setzt eine feste Bewertung.",
+      "parameters": [
+        {
+          "name": "Bewertung",
+          "label": "Bewertung",
+          "kind": "Choice",
+          "default": "PASS",
+          "required": false,
+          "choices": [
+            "NRESULT",
+            "PASS",
+            "FAIL",
+            "ERROR"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "can.botschaft.senden",
+      "displayName": "CAN-Botschaft senden (DBC)",
+      "category": "Kommunikation",
+      "description": "Setzt die Botschaft aus Signalwerten zusammen (nicht genannte Signale mit Startwert, Multiplexer automatisch) und sendet sie \u2013 optional mehrfach im Zyklus. J1939-Botschaften \u00FCber 8 Bytes laufen \u00FCber das Transportprotokoll.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Botschaft",
+          "label": "Botschaft",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Name oder ID laut Datenbank"
+        },
+        {
+          "name": "Werte",
+          "label": "Signalwerte",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Signal = Ausdruck; \u2026, z. B. Drehzahl = Solldrehzahl * 2; Modus = Aktiv (Wertetabelle)"
+        },
+        {
+          "name": "Anzahl",
+          "label": "Anzahl",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Abstand",
+          "label": "Abstand [ms]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = Zykluszeit der Botschaft bzw. 100 ms"
+        },
+        {
+          "name": "Quelladresse",
+          "label": "J1939: Quelladresse",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "\u00FCberschreibt die Adresse aus der ID, z. B. 0xF9"
+        }
+      ]
+    },
+    {
+      "type": "can.empfangen",
+      "displayName": "CAN empfangen",
+      "category": "Kommunikation",
+      "description": "Wartet auf einen Rahmen (ID/Maske), optional nach einer Anfrage; pr\u00FCft Daten oder liest ein Signal (Startbit, L\u00E4nge, Byteorder, Faktor, Offset).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Id",
+          "label": "CAN-ID",
+          "kind": "Text",
+          "default": "0x7E8",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erweitert",
+          "label": "29-Bit-ID",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Maske",
+          "label": "Maske",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = genau diese ID"
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AnfrageId",
+          "label": "Anfrage: CAN-ID",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "optional: vorher senden"
+        },
+        {
+          "name": "AnfrageDaten",
+          "label": "Anfrage: Daten (Hex)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erwartet",
+          "label": "Erwartete Daten",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Hex, ** = beliebig, z. B. 04 41 0C ** **"
+        },
+        {
+          "name": "Startbit",
+          "label": "Signal: Startbit",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Bits",
+          "label": "Signal: L\u00E4nge [Bit]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Byteorder",
+          "label": "Signal: Byteorder",
+          "kind": "Choice",
+          "default": "Intel",
+          "required": false,
+          "choices": [
+            "Intel",
+            "Motorola"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Vorzeichen",
+          "label": "Signal: vorzeichenbehaftet",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Faktor",
+          "label": "Signal: Faktor",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Offset",
+          "label": "Signal: Offset",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "can.senden",
+      "displayName": "CAN senden",
+      "category": "Kommunikation",
+      "description": "Sendet einen CAN- oder CAN-FD-Rahmen. Daten in Hex; {Ausdruck} f\u00FCgt ein Byte ein.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Id",
+          "label": "CAN-ID",
+          "kind": "Text",
+          "default": "0x7E0",
+          "required": true,
+          "choices": null,
+          "hint": "Hex mit 0x oder dezimal; \u003E 0x7FF = 29 Bit"
+        },
+        {
+          "name": "Erweitert",
+          "label": "29-Bit-ID",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Fd",
+          "label": "CAN FD",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Brs",
+          "label": "Bitratenumschaltung (BRS)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Daten",
+          "label": "Daten (Hex)",
+          "kind": "Text",
+          "default": "02 01 0C",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "can.signal.lesen",
+      "displayName": "CAN-Signal lesen (DBC)",
+      "category": "Kommunikation",
+      "description": "Wartet auf die Botschaft des Signals (frisch nach Verwerfen alter Rahmen), dekodiert es nach der Datenbank (Faktor, Offset, Byteorder, Multiplex, Wertetabelle) und bewertet gegen Sollwert oder Grenzwerte.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Signal",
+          "label": "Signal",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Botschaft.Signal oder eindeutiger Signalname, z. B. EEC1.EngineSpeed"
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = 3 \u00D7 Zykluszeit (mindestens 100 ms) bzw. 1000 ms"
+        },
+        {
+          "name": "Sollwert",
+          "label": "Sollwert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Gleichheit: Zahl oder Text der Wertetabelle (z. B. \u0022Aktiv\u0022); sonst Grenzwerte"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = Einheit aus der Datenbank"
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "displayName": "CodeBlock",
+      "category": "CodeBlocks",
+      "description": "C#- oder Python-Code im Ablauf. Greift auf die Variablen seines Ordners zu (als Felder bzw. lokale Namen).",
+      "parameters": [
+        {
+          "name": "Sprache",
+          "label": "Sprache",
+          "kind": "Choice",
+          "default": "C#",
+          "required": false,
+          "choices": [
+            "C#",
+            "Python",
+            "C\u002B\u002B"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Quelltext",
+          "label": "Quelltext",
+          "kind": "Code",
+          "default": "return Pass();",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Timeout",
+          "label": "Abbruch-Timeout [s]",
+          "kind": "Number",
+          "default": "5",
+          "required": false,
+          "choices": null,
+          "hint": "Reagiert der Code nicht auf den Abbruch, wird der Worker-Prozess danach beendet."
+        }
+      ]
+    },
+    {
+      "type": "digital.lesen",
+      "displayName": "Digitaleingang lesen",
+      "category": "Digitale Ein-/Ausg\u00E4nge",
+      "description": "Liest einen digitalen Eingang; optional Bewertung gegen Erwartungswert.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Digital_Start",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable (bool)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erwartet",
+          "label": "Erwartet",
+          "kind": "Choice",
+          "default": "",
+          "required": false,
+          "choices": [
+            "",
+            "true",
+            "false"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "digital.setzen",
+      "displayName": "Digitalausgang setzen",
+      "category": "Digitale Ein-/Ausg\u00E4nge",
+      "description": "Setzt einen digitalen Ausgang (unbewertet).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Digital_Start",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Wert",
+          "label": "Wert",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "doip.suche",
+      "displayName": "DoIP Fahrzeugsuche",
+      "category": "Kommunikation",
+      "description": "Sendet eine DoIP-Fahrzeugsuche (Vehicle Identification Request, UDP 13400) und sammelt die antwortenden Steuerger\u00E4te/Gateways (VIN, logische Adresse). Ohne Hardware-Reservierung. Optional auf eine erwartete VIN oder Adresse pr\u00FCfen.",
+      "parameters": [
+        {
+          "name": "Host",
+          "label": "Adresse",
+          "kind": "Text",
+          "default": "255.255.255.255",
+          "required": false,
+          "choices": null,
+          "hint": "Broadcast (\u2026255) oder gezielt host/IP"
+        },
+        {
+          "name": "Port",
+          "label": "Port",
+          "kind": "Number",
+          "default": "13400",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteteVin",
+          "label": "Erwartete VIN",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = keine Pr\u00FCfung; sonst muss ein Fahrzeug diese VIN melden"
+        },
+        {
+          "name": "ErwarteteAdresse",
+          "label": "Erwartete Adresse",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "z. B. 0x1000"
+        },
+        {
+          "name": "Mindestens",
+          "label": "Mindestanzahl",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "mindestens so viele Fahrzeuge erwartet"
+        },
+        {
+          "name": "Ziel",
+          "label": "Ergebnis in Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Liste \u201EVIN@0xAdresse\u201C"
+        }
+      ]
+    },
+    {
+      "type": "fehler",
+      "displayName": "Fehler erzeugen",
+      "category": "Ablauf",
+      "description": "Erzeugt einen Ausf\u00FChrungsfehler (ERROR) \u2013 f\u00FCr Simulation und Tests.",
+      "parameters": [
+        {
+          "name": "Meldung",
+          "label": "Meldung",
+          "kind": "Text",
+          "default": "Simulierter Fehler",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "gruppenbaustein",
+      "displayName": "Gruppenbaustein",
+      "category": "CodeBlocks",
+      "description": "Wiederverwendbarer grafischer Baustein (aus einer Gruppe erstellt). Eing\u00E4nge aus Ausdr\u00FCcken, Ausg\u00E4nge in Zielvariablen.",
+      "parameters": [
+        {
+          "name": "Baustein",
+          "label": "Baustein (ID)",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "j1939.adresse",
+      "displayName": "J1939 Adresse beanspruchen",
+      "category": "Kommunikation",
+      "description": "Beansprucht eine Quelladresse nach J1939-81 (Address Claimed, PGN 60928) mit dem eigenen 64-Bit-NAME und pr\u00FCft 250 ms lang auf Gegenanspr\u00FCche. Verliert die eigene Station (kleinerer NAME der Gegenstelle), ist der Schritt FAIL. Optional vorher alle Teilnehmer abfragen und in eine Variable schreiben.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Quelladresse",
+          "kind": "Text",
+          "default": "0x80",
+          "required": true,
+          "choices": null,
+          "hint": "0x00\u20130xFD"
+        },
+        {
+          "name": "Name",
+          "label": "NAME (64 Bit)",
+          "kind": "Text",
+          "default": "0x00000000000000FF",
+          "required": true,
+          "choices": null,
+          "hint": "kleiner = h\u00F6here Priorit\u00E4t"
+        },
+        {
+          "name": "Abfragen",
+          "label": "Teilnehmer vorher abfragen",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Teilnehmer in Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Liste \u201EAdresse=NAME\u201C (bei Abfrage)"
+        }
+      ]
+    },
+    {
+      "type": "j1939.empfangen",
+      "displayName": "J1939 empfangen",
+      "category": "Kommunikation",
+      "description": "Empf\u00E4ngt eine Parametergruppe (PGN) \u2013 einzeln, als BAM oder per RTS/CTS \u2013 optional nach einer Anforderung (PGN 59904). Signal aus der Datenbank oder \u00FCber Startbit/L\u00E4nge; \u201Enicht verf\u00FCgbar\u201C (alle Bits 1) ist FAIL.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Pgn",
+          "label": "PGN",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "z. B. 0xFEEE oder 65262; leer bei Signal aus der Datenbank"
+        },
+        {
+          "name": "Quelle",
+          "label": "Quelladresse",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = von jedem Teilnehmer"
+        },
+        {
+          "name": "Anfordern",
+          "label": "Vorher anfordern (Request)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Eigene",
+          "label": "Eigene Adresse",
+          "kind": "Text",
+          "default": "0xF9",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Signal",
+          "label": "Signal (Datenbank)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Botschaft.Signal oder Signalname"
+        },
+        {
+          "name": "Startbit",
+          "label": "Signal: Startbit",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "ohne Datenbank; J1939: Byte 4 Bit 1 = Startbit 24"
+        },
+        {
+          "name": "Bits",
+          "label": "Signal: L\u00E4nge [Bit]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Byteorder",
+          "label": "Signal: Byteorder",
+          "kind": "Choice",
+          "default": "Intel",
+          "required": false,
+          "choices": [
+            "Intel",
+            "Motorola"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Vorzeichen",
+          "label": "Signal: vorzeichenbehaftet",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Faktor",
+          "label": "Signal: Faktor",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Offset",
+          "label": "Signal: Offset",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erwartet",
+          "label": "Erwartete Daten",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Hex, ** = beliebig, z. B. 62 F1 90 ** **"
+        },
+        {
+          "name": "Sollwert",
+          "label": "Sollwert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Gleichheit: Zahl oder Text der Wertetabelle (z. B. \u0022Aktiv\u0022); sonst Grenzwerte"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = Einheit aus der Datenbank"
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "j1939.senden",
+      "displayName": "J1939 senden",
+      "category": "Kommunikation",
+      "description": "Sendet eine Parametergruppe mit Priorit\u00E4t, Quell- und Zieladresse; mehr als 8 Bytes \u00FCber das Transportprotokoll (global BAM, sonst RTS/CTS).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_CAN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Pgn",
+          "label": "PGN",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = PGN der Datenbank-Botschaft"
+        },
+        {
+          "name": "Prioritaet",
+          "label": "Priorit\u00E4t",
+          "kind": "Number",
+          "default": "6",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Quelle",
+          "label": "Quelladresse",
+          "kind": "Text",
+          "default": "0xF9",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Zieladresse",
+          "kind": "Text",
+          "default": "0xFF",
+          "required": false,
+          "choices": null,
+          "hint": "nur PDU1 (PF \u003C 240); 0xFF = global"
+        },
+        {
+          "name": "Daten",
+          "label": "Daten (Hex)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "z. B. FF FF 00 7D; {Ausdruck} f\u00FCgt ein Byte ein"
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Botschaft",
+          "label": "Botschaft (Datenbank)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Werte",
+          "label": "Signalwerte",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Signal = Ausdruck; \u2026"
+        }
+      ]
+    },
+    {
+      "type": "komm.abfrage",
+      "displayName": "Abfrage",
+      "category": "Kommunikation",
+      "description": "Verwirft alte Eingangsdaten, sendet einen Befehl und wertet die Antwort aus (Muster, Zahlenwert, Grenzwerte).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Seriell",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Daten",
+          "label": "Daten",
+          "kind": "Text",
+          "default": "*IDN?",
+          "required": true,
+          "choices": null,
+          "hint": "Text mit \\r \\n \\xHH; {Ausdruck} f\u00FCgt Werte ein, z. B. SET:VOLT {Sollspannung}. Hex: 01 03 00 00 00 02"
+        },
+        {
+          "name": "Format",
+          "label": "Format",
+          "kind": "Choice",
+          "default": "Text",
+          "required": false,
+          "choices": [
+            "Text",
+            "Hex"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Zeilenende",
+          "label": "Zeilenende (Text)",
+          "kind": "Choice",
+          "default": "\\r\\n",
+          "required": false,
+          "choices": [
+            "\\r\\n",
+            "\\n",
+            "\\r",
+            "Keins"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Ende",
+          "label": "Antwortende",
+          "kind": "Choice",
+          "default": "Zeilenende",
+          "required": false,
+          "choices": [
+            "Zeilenende",
+            "L\u00E4nge",
+            "Ruhe"
+          ],
+          "hint": "Zeilenende (siehe oben), feste L\u00E4nge oder Ruhe nach den letzten Bytes"
+        },
+        {
+          "name": "Laenge",
+          "label": "L\u00E4nge [Bytes]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Muster",
+          "label": "Antwortmuster",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Regul\u00E4rer Ausdruck; Gruppe 1 = Wert, z. B. ^VOLT ([-\\d.]\u002B)$. Ohne Treffer: FAIL"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "komm.empfangen",
+      "displayName": "Empfangen",
+      "category": "Kommunikation",
+      "description": "Empf\u00E4ngt eine Antwort (bis Zeilenende, L\u00E4nge oder Ruhe), pr\u00FCft optional ein Muster und bewertet einen enthaltenen Zahlenwert.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Seriell",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Format",
+          "label": "Format",
+          "kind": "Choice",
+          "default": "Text",
+          "required": false,
+          "choices": [
+            "Text",
+            "Hex"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Zeilenende",
+          "label": "Zeilenende (Text)",
+          "kind": "Choice",
+          "default": "\\r\\n",
+          "required": false,
+          "choices": [
+            "\\r\\n",
+            "\\n",
+            "\\r",
+            "Keins"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Ende",
+          "label": "Antwortende",
+          "kind": "Choice",
+          "default": "Zeilenende",
+          "required": false,
+          "choices": [
+            "Zeilenende",
+            "L\u00E4nge",
+            "Ruhe"
+          ],
+          "hint": "Zeilenende (siehe oben), feste L\u00E4nge oder Ruhe nach den letzten Bytes"
+        },
+        {
+          "name": "Laenge",
+          "label": "L\u00E4nge [Bytes]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Muster",
+          "label": "Antwortmuster",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Regul\u00E4rer Ausdruck; Gruppe 1 = Wert, z. B. ^VOLT ([-\\d.]\u002B)$. Ohne Treffer: FAIL"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "komm.senden",
+      "displayName": "Senden",
+      "category": "Kommunikation",
+      "description": "Sendet Text oder Bytes an den Pr\u00FCfling (RS-232/RS-485, TCP, UDP). Unbewertet.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Seriell",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Daten",
+          "label": "Daten",
+          "kind": "Text",
+          "default": "*IDN?",
+          "required": true,
+          "choices": null,
+          "hint": "Text mit \\r \\n \\xHH; {Ausdruck} f\u00FCgt Werte ein, z. B. SET:VOLT {Sollspannung}. Hex: 01 03 00 00 00 02"
+        },
+        {
+          "name": "Format",
+          "label": "Format",
+          "kind": "Choice",
+          "default": "Text",
+          "required": false,
+          "choices": [
+            "Text",
+            "Hex"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Zeilenende",
+          "label": "Zeilenende (Text)",
+          "kind": "Choice",
+          "default": "\\r\\n",
+          "required": false,
+          "choices": [
+            "\\r\\n",
+            "\\n",
+            "\\r",
+            "Keins"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "komm.verbindung",
+      "displayName": "Verbindung konfigurieren",
+      "category": "Kommunikation",
+      "description": "\u00C4ndert COM-Port oder Netzwerkadresse und Optionen aus aktuellen Variablen. Eine bestehende Streamverbindung wird geschlossen.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Seriell",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        }
+      ]
+    },
+    {
+      "type": "kurve.aufnehmen",
+      "displayName": "Kurve aufnehmen",
+      "category": "Analog messen / ausgeben",
+      "description": "Nimmt Kurven mehrerer Kan\u00E4le mit gemeinsamer Zeitbasis auf (z. B. L1/L2/L3); optional Bewertung des Effektivwerts je Kanal.",
+      "parameters": [
+        {
+          "name": "Ressourcen",
+          "label": "Kan\u00E4le",
+          "kind": "Text",
+          "default": "Spannung_L1, Spannung_L2, Spannung_L3",
+          "required": true,
+          "choices": null,
+          "hint": "Abstrakte Namen, durch Komma getrennt \u2013 alle am selben Ger\u00E4t"
+        },
+        {
+          "name": "Abtastrate",
+          "label": "Abtastrate [Hz]",
+          "kind": "Number",
+          "default": "5000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Dauer",
+          "label": "Dauer [ms]",
+          "kind": "Number",
+          "default": "100",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Effektivwert min",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Effektivwert max",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "V",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "kurve.laden",
+      "displayName": "Kurve laden",
+      "category": "Kurvenausgabe",
+      "description": "L\u00E4dt eine Ausgabekurve (feste Version) und pr\u00FCft die Ger\u00E4teeignung. Keine automatische Skalierung oder Abtastraten\u00E4nderung.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ausgabeger\u00E4t",
+          "kind": "Resource",
+          "default": "AC_Kurvenquelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kurve",
+          "label": "Kurve (ID)",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Version",
+          "label": "Version",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)"
+        }
+      ]
+    },
+    {
+      "type": "kurve.starten",
+      "displayName": "Kurvenausgabe starten",
+      "category": "Kurvenausgabe",
+      "description": "Startet die Ausgabe der \u00FCbertragenen Kurve.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ausgabeger\u00E4t",
+          "kind": "Resource",
+          "default": "AC_Kurvenquelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "kurve.stoppen",
+      "displayName": "Kurvenausgabe stoppen",
+      "category": "Kurvenausgabe",
+      "description": "Stoppt die Ausgabe (auch in Exit-Gruppen verwenden).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ausgabeger\u00E4t",
+          "kind": "Resource",
+          "default": "AC_Kurvenquelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "kurve.uebertragen",
+      "displayName": "Kurve \u00FCbertragen",
+      "category": "Kurvenausgabe",
+      "description": "\u00DCbertr\u00E4gt die geladene Kurve ins Ger\u00E4t.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ausgabeger\u00E4t",
+          "kind": "Resource",
+          "default": "AC_Kurvenquelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "lin.fahrplan",
+      "displayName": "LIN-Fahrplan",
+      "category": "Kommunikation",
+      "description": "Arbeitet eine LIN-Fahrplantabelle ab: je Zeile ein Frame (empfangen oder senden) mit festem Abstand. Optional mehrere Durchl\u00E4ufe. Unbeantwortete Subscriber-Frames sind FAIL (oder nur Hinweis).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_LIN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Tabelle",
+          "label": "Fahrplan",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Je Zeile: ID [Abstand ms]  bzw. ID=DATEN (senden). Name aus der LDF erlaubt. Beispiel: 0x21 15; FH_Befehl=01 C8 15"
+        },
+        {
+          "name": "Durchlaeufe",
+          "label": "Durchl\u00E4ufe",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FehlendFail",
+          "label": "Fehlende Antwort = FAIL",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "lin.lesen",
+      "displayName": "LIN lesen",
+      "category": "Kommunikation",
+      "description": "Sendet als Master den Header und liest die Slave-Antwort; pr\u00FCft Daten oder ein Signal (aus der LDF oder Startbit/L\u00E4nge).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_LIN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Frame",
+          "label": "Frame",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "ID (0x00\u20130x3F) oder Name aus der LDF"
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Signal",
+          "label": "Signal (Datenbank)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Laenge",
+          "label": "L\u00E4nge [Bytes]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = laut LDF bzw. 8"
+        },
+        {
+          "name": "Pruefsumme",
+          "label": "Pr\u00FCfsumme",
+          "kind": "Choice",
+          "default": "Erweitert (LIN 2.x)",
+          "required": false,
+          "choices": [
+            "Erweitert (LIN 2.x)",
+            "Klassisch (LIN 1.x)"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "100",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Startbit",
+          "label": "Signal: Startbit",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "ohne Datenbank; J1939: Byte 4 Bit 1 = Startbit 24"
+        },
+        {
+          "name": "Bits",
+          "label": "Signal: L\u00E4nge [Bit]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Byteorder",
+          "label": "Signal: Byteorder",
+          "kind": "Choice",
+          "default": "Intel",
+          "required": false,
+          "choices": [
+            "Intel",
+            "Motorola"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Vorzeichen",
+          "label": "Signal: vorzeichenbehaftet",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Faktor",
+          "label": "Signal: Faktor",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Offset",
+          "label": "Signal: Offset",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erwartet",
+          "label": "Erwartete Daten",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Hex, ** = beliebig, z. B. 62 F1 90 ** **"
+        },
+        {
+          "name": "Sollwert",
+          "label": "Sollwert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Gleichheit: Zahl oder Text der Wertetabelle (z. B. \u0022Aktiv\u0022); sonst Grenzwerte"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = Einheit aus der Datenbank"
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "lin.senden",
+      "displayName": "LIN senden",
+      "category": "Kommunikation",
+      "description": "Sendet als Master einen Frame mit Daten (Hex) oder aus Signalwerten der LDF.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_LIN",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Frame",
+          "label": "Frame",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "ID (0x00\u20130x3F) oder Name aus der LDF"
+        },
+        {
+          "name": "Datenbank",
+          "label": "Busdatenbank",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Name einer im Projekt importierten DBC-/LDF-Datei (Projekteigenschaften \u2192 Busdatenbanken)"
+        },
+        {
+          "name": "Daten",
+          "label": "Daten (Hex)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "z. B. 01 00 FF; {Ausdruck} f\u00FCgt ein Byte ein"
+        },
+        {
+          "name": "Werte",
+          "label": "Signalwerte",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Signal = Ausdruck; \u2026 (mit Datenbank)"
+        },
+        {
+          "name": "Pruefsumme",
+          "label": "Pr\u00FCfsumme",
+          "kind": "Choice",
+          "default": "Erweitert (LIN 2.x)",
+          "required": false,
+          "choices": [
+            "Erweitert (LIN 2.x)",
+            "Klassisch (LIN 1.x)"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "modbus.lesen",
+      "displayName": "Modbus lesen",
+      "category": "Kommunikation",
+      "description": "Liest Register oder Bits (RTU/TCP), wandelt den Datentyp, skaliert (Wert \u00D7 Faktor \u002B Offset) und bewertet gegen Grenzwerte bzw. Sollwert.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Modbus",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse",
+          "kind": "Text",
+          "default": "HR0",
+          "required": true,
+          "choices": null,
+          "hint": "HR100, IR5, C3, DI2 (0-basiert) oder 40101 (klassisch)"
+        },
+        {
+          "name": "Datentyp",
+          "label": "Datentyp",
+          "kind": "Choice",
+          "default": "UInt16",
+          "required": false,
+          "choices": [
+            "UInt16",
+            "Int16",
+            "UInt32",
+            "Int32",
+            "Float32",
+            "Float64",
+            "Bool",
+            "Text"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Wortfolge",
+          "label": "Wortfolge (32/64 Bit)",
+          "kind": "Choice",
+          "default": "Hoch zuerst",
+          "required": false,
+          "choices": [
+            "Hoch zuerst",
+            "Niedrig zuerst"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Laenge",
+          "label": "Textl\u00E4nge [Zeichen]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Faktor",
+          "label": "Faktor",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Offset",
+          "label": "Offset",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Sollwert",
+          "label": "Sollwert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Gleichheit (z. B. f\u00FCr Status, Bool, Text); sonst Grenzwerte"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "modbus.schreiben",
+      "displayName": "Modbus schreiben",
+      "category": "Kommunikation",
+      "description": "Schreibt einen Wert in Holding-Register oder Coils; optional Zur\u00FCcklesen (Abweichung = FAIL).",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Modbus",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse",
+          "kind": "Text",
+          "default": "HR0",
+          "required": true,
+          "choices": null,
+          "hint": "HR\u2026 oder C\u2026"
+        },
+        {
+          "name": "Datentyp",
+          "label": "Datentyp",
+          "kind": "Choice",
+          "default": "UInt16",
+          "required": false,
+          "choices": [
+            "UInt16",
+            "Int16",
+            "UInt32",
+            "Int32",
+            "Float32",
+            "Float64",
+            "Bool",
+            "Text"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Wortfolge",
+          "label": "Wortfolge (32/64 Bit)",
+          "kind": "Choice",
+          "default": "Hoch zuerst",
+          "required": false,
+          "choices": [
+            "Hoch zuerst",
+            "Niedrig zuerst"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Wert",
+          "label": "Wert",
+          "kind": "Expression",
+          "default": "0",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zuruecklesen",
+          "label": "Zur\u00FCcklesen und vergleichen",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "netz.http",
+      "displayName": "HTTP-Anfrage (GET / POST / \u2026)",
+      "category": "Kommunikation",
+      "description": "HTTP/HTTPS direkt ohne curl-Installation. Antwort und Statuscode als Variablen; maximal 1 MiB Antwort.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Netzwerk",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Antwort / Byteanzahl \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StatusZiel",
+          "label": "Status / Exitcode \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FehlerZiel",
+          "label": "SSH-Fehlerausgabe \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteterStatus",
+          "label": "Erwarteter Status / Exitcode",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
+        },
+        {
+          "name": "Methode",
+          "label": "Methode",
+          "kind": "Choice",
+          "default": "GET",
+          "required": false,
+          "choices": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Pfad",
+          "label": "Pfad / URL",
+          "kind": "Text",
+          "default": "/",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Body",
+          "label": "Request-Body",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Platzhalter {Variable}; JSON-Klammern als {{ und }} schreiben."
+        },
+        {
+          "name": "Header",
+          "label": "Header",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Eine Zeile Name: Wert; z.B. Content-Type: application/json oder Authorization: Bearer {Token}. Nicht protokolliert."
+        }
+      ]
+    },
+    {
+      "type": "netz.sftp.download",
+      "displayName": "SFTP-Datei herunterladen",
+      "category": "Kommunikation",
+      "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Netzwerk",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Antwort / Byteanzahl \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StatusZiel",
+          "label": "Status / Exitcode \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FehlerZiel",
+          "label": "SSH-Fehlerausgabe \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteterStatus",
+          "label": "Erwarteter Status / Exitcode",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
+        },
+        {
+          "name": "Lokal",
+          "label": "Lokale Datei",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Remote",
+          "label": "Datei auf Gegenstelle",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ueberschreiben",
+          "label": "Bestehende Datei \u00FCberschreiben",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "netz.sftp.upload",
+      "displayName": "SFTP-Datei hochladen",
+      "category": "Kommunikation",
+      "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Netzwerk",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Antwort / Byteanzahl \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StatusZiel",
+          "label": "Status / Exitcode \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FehlerZiel",
+          "label": "SSH-Fehlerausgabe \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteterStatus",
+          "label": "Erwarteter Status / Exitcode",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
+        },
+        {
+          "name": "Lokal",
+          "label": "Lokale Datei",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Remote",
+          "label": "Datei auf Gegenstelle",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ueberschreiben",
+          "label": "Bestehende Datei \u00FCberschreiben",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "netz.ssh",
+      "displayName": "SSH-Befehl",
+      "category": "Kommunikation",
+      "description": "F\u00FChrt einen Befehl \u00FCber SSH aus. Passwort oder Schl\u00FCsseldatei und HostKeySHA256 in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Netzwerk",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Adresse",
+          "label": "Adresse / COM-Port",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: COM3 oder {ComPort}, {Host}:{Port}, https://{Host}. Zur Laufzeit ausgewertet; leer = aktuelle Ger\u00E4teadresse."
+        },
+        {
+          "name": "Verbindungsoptionen",
+          "label": "Verbindungsoptionen",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Antwort / Byteanzahl \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StatusZiel",
+          "label": "Status / Exitcode \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FehlerZiel",
+          "label": "SSH-Fehlerausgabe \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteterStatus",
+          "label": "Erwarteter Status / Exitcode",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
+        },
+        {
+          "name": "Befehl",
+          "label": "Befehl",
+          "kind": "Text",
+          "default": "uname -a",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "opcua.zugriff",
+      "displayName": "OPC UA",
+      "category": "Kommunikation",
+      "description": "Liest oder schreibt einen OPC-UA-Variablenknoten, ruft eine Methode auf oder wartet auf eine Daten\u00E4nderung (Abo). Gelesene/zur\u00FCckgegebene Werte k\u00F6nnen gegen Sollwert oder Grenzwerte gepr\u00FCft werden.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_OPCUA",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Aktion",
+          "label": "Aktion",
+          "kind": "Choice",
+          "default": "Lesen",
+          "required": false,
+          "choices": [
+            "Lesen",
+            "Schreiben",
+            "Methode aufrufen",
+            "Abonnieren (auf \u00C4nderung warten)"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Knoten",
+          "label": "Knoten (NodeId)",
+          "kind": "Text",
+          "default": "ns=2;s=Spannung",
+          "required": false,
+          "choices": null,
+          "hint": "Lesen/Schreiben/Abonnieren; z. B. ns=2;s=Name oder ns=2;i=42"
+        },
+        {
+          "name": "Wert",
+          "label": "Wert (Schreiben)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "nur bei Schreiben"
+        },
+        {
+          "name": "Objekt",
+          "label": "Methode: Objektknoten",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "nur bei Methode aufrufen"
+        },
+        {
+          "name": "Methode",
+          "label": "Methode: Methodenknoten",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Argumente",
+          "label": "Methode: Argumente",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "mit ; getrennt, z. B. 2;3 oder true;\u0022Text\u0022"
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Abo: Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Sollwert",
+          "label": "Sollwert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Gleichheit (Zahl/Text/Bool)"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "pruefplatz.freigabe.erteilen",
+      "displayName": "Andere Seite freigeben",
+      "category": "Zwei Pr\u00FCfpl\u00E4tze",
+      "description": "Gibt den zuvor erhaltenen Kanal an die andere Seite weiter, z. B. nach Best\u00E4tigung der Entnahme.",
+      "parameters": [
+        {
+          "name": "Kanal",
+          "label": "Freigabekanal",
+          "kind": "Text",
+          "default": "Pruefung",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "pruefplatz.freigabe.warten",
+      "displayName": "Freigabe abwarten",
+      "category": "Zwei Pr\u00FCfpl\u00E4tze",
+      "description": "Wartet auf die andere Seite; die konfigurierte erste Seite darf zu Beginn starten.",
+      "parameters": [
+        {
+          "name": "Kanal",
+          "label": "Freigabekanal",
+          "kind": "Text",
+          "default": "Pruefung",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErsteSeite",
+          "label": "Erste Seite",
+          "kind": "Choice",
+          "default": "1",
+          "required": false,
+          "choices": [
+            "1",
+            "2"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "uds.anfrage",
+      "displayName": "UDS-Diagnose",
+      "category": "Kommunikation",
+      "description": "Sendet eine Diagnoseanfrage \u00FCber ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder pr\u00FCft eine erwartete negative Antwort.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Diagnose",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Transport",
+          "label": "Transport",
+          "kind": "Choice",
+          "default": "CAN (ISO-TP)",
+          "required": false,
+          "choices": [
+            "CAN (ISO-TP)",
+            "DoIP (Ethernet)",
+            "LIN (Transportprotokoll)"
+          ],
+          "hint": "DoIP: Ressource ist ein TCP-Client-Ger\u00E4t (Port 13400)"
+        },
+        {
+          "name": "AnfrageId",
+          "label": "CAN: Anfrage-ID (Tester)",
+          "kind": "Text",
+          "default": "0x7E0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AntwortId",
+          "label": "CAN: Antwort-ID (Steuerger\u00E4t)",
+          "kind": "Text",
+          "default": "0x7E8",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erweitert",
+          "label": "CAN: 29-Bit-IDs",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Fd",
+          "label": "CAN FD (bis 64 Bytes je Rahmen)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AdresseTx",
+          "label": "CAN: Adressbyte Anfrage",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal"
+        },
+        {
+          "name": "AdresseRx",
+          "label": "CAN: Adressbyte Antwort",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "erstes Datenbyte der Antworten, z. B. 0xF1"
+        },
+        {
+          "name": "Fuellbyte",
+          "label": "CAN: F\u00FCllbyte",
+          "kind": "Text",
+          "default": "CC",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "TesterAdresse",
+          "label": "DoIP: Tester-Adresse",
+          "kind": "Text",
+          "default": "0x0E00",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SteuergeraetAdresse",
+          "label": "DoIP: Steuerger\u00E4t-Adresse",
+          "kind": "Text",
+          "default": "0x1000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Nad",
+          "label": "LIN: NAD (Knotenadresse)",
+          "kind": "Text",
+          "default": "0x01",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Anfrage",
+          "label": "Anfrage (Hex)",
+          "kind": "Text",
+          "default": "22 F1 90",
+          "required": true,
+          "choices": null,
+          "hint": "z. B. 10 03, 22 F1 90; LIN: ohne NAD/PCI (automatisch); {Ausdruck} f\u00FCgt ein Byte ein"
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "P2 [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ZeitlimitLang",
+          "label": "P2* nach \u201EAntwort folgt\u201C [ms]",
+          "kind": "Number",
+          "default": "5000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteteNrc",
+          "label": "Erwartete negative Antwort (NRC)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "z. B. 0x33 \u2013 dann ist genau diese Ablehnung PASS"
+        },
+        {
+          "name": "AbByte",
+          "label": "Daten ab Byte",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "1 = Dienstkennung; leer: 22/2E \u2192 4, 31 \u2192 5, 19 \u2192 3, sonst 2"
+        },
+        {
+          "name": "Laenge",
+          "label": "L\u00E4nge [Bytes]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = bis zum Ende"
+        },
+        {
+          "name": "Darstellung",
+          "label": "Darstellung",
+          "kind": "Choice",
+          "default": "Hex",
+          "required": false,
+          "choices": [
+            "Hex",
+            "Text (ASCII)",
+            "Zahl",
+            "Zahl mit Vorzeichen"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Faktor",
+          "label": "Faktor (Zahl)",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Offset",
+          "label": "Offset (Zahl)",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erwartet",
+          "label": "Erwartete Daten",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Hex, ** = beliebig, z. B. 62 F1 90 ** **"
+        },
+        {
+          "name": "Sollwert",
+          "label": "Sollwert",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Gleichheit: Zahl oder Text der Wertetabelle (z. B. \u0022Aktiv\u0022); sonst Grenzwerte"
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Untergrenze",
+          "label": "Untergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Obergrenze",
+          "label": "Obergrenze",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "leer = Einheit aus der Datenbank"
+        },
+        {
+          "name": "BeiZeitlimit",
+          "label": "Bei Zeit\u00FCberschreitung",
+          "kind": "Choice",
+          "default": "ERROR",
+          "required": false,
+          "choices": [
+            "ERROR",
+            "FAIL"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "uds.sicherheit",
+      "displayName": "UDS-Sicherheitszugang",
+      "category": "Kommunikation",
+      "description": "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schl\u00FCssel und sendet ihn (Stufe\u002B1). Schl\u00FCsselverfahren w\u00E4hlbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder \u201EAusdruck je Byte\u201C (s = Seedbyte, i = Index). Seed aus lauter Nullen = bereits freigeschaltet. Negative Antwort (z. B. falscher Schl\u00FCssel) = FAIL.",
+      "parameters": [
+        {
+          "name": "Ressource",
+          "label": "Ressource",
+          "kind": "Resource",
+          "default": "Pruefling_Diagnose",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Transport",
+          "label": "Transport",
+          "kind": "Choice",
+          "default": "CAN (ISO-TP)",
+          "required": false,
+          "choices": [
+            "CAN (ISO-TP)",
+            "DoIP (Ethernet)",
+            "LIN (Transportprotokoll)"
+          ],
+          "hint": "DoIP: Ressource ist ein TCP-Client-Ger\u00E4t (Port 13400)"
+        },
+        {
+          "name": "AnfrageId",
+          "label": "CAN: Anfrage-ID (Tester)",
+          "kind": "Text",
+          "default": "0x7E0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AntwortId",
+          "label": "CAN: Antwort-ID (Steuerger\u00E4t)",
+          "kind": "Text",
+          "default": "0x7E8",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Erweitert",
+          "label": "CAN: 29-Bit-IDs",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Fd",
+          "label": "CAN FD (bis 64 Bytes je Rahmen)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AdresseTx",
+          "label": "CAN: Adressbyte Anfrage",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal"
+        },
+        {
+          "name": "AdresseRx",
+          "label": "CAN: Adressbyte Antwort",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "erstes Datenbyte der Antworten, z. B. 0xF1"
+        },
+        {
+          "name": "Fuellbyte",
+          "label": "CAN: F\u00FCllbyte",
+          "kind": "Text",
+          "default": "CC",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "TesterAdresse",
+          "label": "DoIP: Tester-Adresse",
+          "kind": "Text",
+          "default": "0x0E00",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SteuergeraetAdresse",
+          "label": "DoIP: Steuerger\u00E4t-Adresse",
+          "kind": "Text",
+          "default": "0x1000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Nad",
+          "label": "LIN: NAD (Knotenadresse)",
+          "kind": "Text",
+          "default": "0x01",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Stufe",
+          "label": "Seed-Stufe",
+          "kind": "Text",
+          "default": "0x01",
+          "required": true,
+          "choices": null,
+          "hint": "ungerade: 0x01, 0x03, \u2026; Schl\u00FCssel geht an Stufe\u002B1"
+        },
+        {
+          "name": "Verfahren",
+          "label": "Schl\u00FCsselverfahren",
+          "kind": "Choice",
+          "default": "Seed XOR Konstante",
+          "required": false,
+          "choices": [
+            "Seed XOR Konstante",
+            "Seed \u002B Konstante",
+            "Seed invertieren",
+            "Add-Rotate-XOR",
+            "Ausdruck je Byte"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Konstante",
+          "label": "Konstante (Hex)",
+          "kind": "Text",
+          "default": "5A",
+          "required": false,
+          "choices": null,
+          "hint": "f\u00FCr XOR/Addition/Add-Rotate-XOR; byteweise wiederholt"
+        },
+        {
+          "name": "Ausdruck",
+          "label": "Ausdruck je Byte",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "nur bei \u201EAusdruck je Byte\u201C: Funktion von s (Seedbyte 0\u2013255) und i (Index), z. B. (s \u002B 7) * 3"
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "P2 [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ZeitlimitLang",
+          "label": "P2* [ms]",
+          "kind": "Number",
+          "default": "5000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Schl\u00FCssel in Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "warten",
+      "displayName": "Warten",
+      "category": "Ablauf",
+      "description": "Wartet die angegebene Zeit (abbrechbar).",
+      "parameters": [
+        {
+          "name": "Dauer",
+          "label": "Dauer [ms]",
+          "kind": "Number",
+          "default": "1000",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "werker",
+      "displayName": "Werkerinteraktion",
+      "category": "Werkerinteraktion",
+      "description": "Anweisung, Bild mit Best\u00E4tigung, Eingabe oder Auswahl. Ausgang: Antwort bzw. Eingabewert.",
+      "parameters": [
+        {
+          "name": "Art",
+          "label": "Art",
+          "kind": "Choice",
+          "default": "Anweisung",
+          "required": false,
+          "choices": [
+            "Anweisung",
+            "Bild mit Best\u00E4tigung",
+            "Eingabe",
+            "Auswahl"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Text",
+          "label": "Anweisungstext",
+          "kind": "Text",
+          "default": "Bitte best\u00E4tigen",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Bild",
+          "label": "Bild (optional)",
+          "kind": "Image",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Datentyp",
+          "label": "Datentyp",
+          "kind": "Choice",
+          "default": "Zahl",
+          "required": false,
+          "choices": [
+            "Zahl",
+            "Ganzzahl",
+            "Text",
+            "Ja/Nein"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Pflicht",
+          "label": "Pflichtfeld",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Standardwert",
+          "label": "Standardwert",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Min",
+          "label": "Erlaubter Bereich von",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Max",
+          "label": "Erlaubter Bereich bis",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheit",
+          "label": "Einheit",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErlaubteWerte",
+          "label": "Erlaubte Werte",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "durch ; getrennt, z. B. i. O.;n. i. O."
+        },
+        {
+          "name": "Warten",
+          "label": "Auf Antwort warten",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Anzeige",
+          "label": "Inhalt im Verlauf",
+          "kind": "Choice",
+          "default": "Vorherigen Inhalt ersetzen",
+          "required": false,
+          "choices": [
+            "Vorherigen Inhalt ersetzen",
+            "Bis Gruppenende sichtbar"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "wert.setzen",
+      "displayName": "Wert setzen",
+      "category": "Variablen",
+      "description": "Zielvariable = Ausdruck (unbewertet).",
+      "parameters": [
+        {
+          "name": "Ziel",
+          "label": "Zielvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ausdruck",
+          "label": "Ausdruck",
+          "kind": "Expression",
+          "default": "0",
+          "required": true,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    }
+  ]
+}

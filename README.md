@@ -361,3 +361,5 @@ ungeplanten Abhängigkeitsänderungen ab. Historische MSIX-Versionen bis 1.0.12.
 sind nicht durch die Nachprüfung der Version 1.0.13.3 freigegeben.
 
 Quellcode-Referenz und sichtbare Dokumentationslücken: `Report-Doxygen.cmd`. [Anleitung und Lizenzentscheidung](docs/code-dokumentation.md).
+
+Prüfprogramme mit KI übertragen: [Anleitung, Konvertierungsauftrag, Bausteinkatalog und geprüftes Beispiel](docs/ki-testprogramme.md).

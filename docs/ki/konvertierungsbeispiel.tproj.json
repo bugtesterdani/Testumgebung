@@ -1,0 +1,115 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "KI-Konvertierungsbeispiel – Simulation",
+  "version": "0.1",
+  "description": "Lernbeispiel: wiederholte Seriennummerneingabe und simulierte Spannungsmessung. Kein freigegebenes Produktionsprogramm; Grenzwerte nur zur Demonstration.",
+  "variables": [
+    {
+      "name": "Auftrag",
+      "type": "String"
+    },
+    {
+      "name": "Artikel",
+      "type": "String"
+    },
+    {
+      "name": "GrenzwertMin",
+      "type": "Double",
+      "initial": "220"
+    },
+    {
+      "name": "GrenzwertMax",
+      "type": "Double",
+      "initial": "240"
+    }
+  ],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "a-dut",
+        "name": "Prüfling",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Spannung",
+            "type": "Double"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "id": "a-scan",
+            "name": "Seriennummer erfassen",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Seriennummer scannen",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Ziel": "Kennung"
+            }
+          },
+          {
+            "art": "schritt",
+            "block": "analog.messen",
+            "id": "a-mess",
+            "name": "Spannung messen und bewerten",
+            "parameters": {
+              "Ressource": "Spannung_Pruefling",
+              "Ziel": "Spannung",
+              "Untergrenze": "GrenzwertMin",
+              "Obergrenze": "GrenzwertMax",
+              "Einheit": "V"
+            }
+          }
+        ]
+      }
+    ],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": [
+    {
+      "name": "Spannung_Pruefling",
+      "channel": "ai0",
+      "unit": "V",
+      "value": 230
+    }
+  ]
+}
