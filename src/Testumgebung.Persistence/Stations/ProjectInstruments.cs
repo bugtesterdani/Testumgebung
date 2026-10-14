@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ergänzt Gerätefabriken um Profile des geöffneten Projekts, ohne den globalen Katalog zu ändern.
+ */
+
 using Testumgebung.Instruments;
 
 namespace Testumgebung.Persistence.Stations;

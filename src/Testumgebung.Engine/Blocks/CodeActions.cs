@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet Codeaufrufe an Schrittscopes und Ports; Bibliotheksgrenzen bestimmen die sichtbaren Variablen.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;

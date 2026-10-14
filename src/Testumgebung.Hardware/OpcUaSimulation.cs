@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt OPC-UA-Geräteverhalten ohne externen Server für Entwicklung und Tests bereit.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using Testumgebung.Contracts;

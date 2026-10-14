@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verpackt Projekt und Abhängigkeiten mit Manifest und Prüfsummen zur späteren Integritätsprüfung.
+ */
+
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;

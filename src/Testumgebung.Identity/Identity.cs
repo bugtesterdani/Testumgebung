@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert anbieterunabhängige Identitäten, Rechte und die Konfiguration der Anmeldung.
+ */
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Testumgebung.Contracts;

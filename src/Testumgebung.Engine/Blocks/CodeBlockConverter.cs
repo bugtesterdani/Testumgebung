@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Analysiert sichtbare Variablenzugriffe für die Umwandlung freien Codes in einen Baustein mit Ports.
+ */
+
 using System.Text;
 using System.Text.RegularExpressions;
 using Testumgebung.Contracts;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief WPF-Anbindung für Debugging. Ereignisse und Bindings verbinden diese Ansicht mit ihrem Datenkontext.
+ */
+
 using System.Windows;
 using System.Windows.Controls;
 using Testumgebung.Presentation.ViewModels;

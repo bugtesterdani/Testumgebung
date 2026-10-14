@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Filtert Prüfläufe und berechnet Messwertstatistik, Fehlerhäufigkeit und Berichtszellen.
+ */
+
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;

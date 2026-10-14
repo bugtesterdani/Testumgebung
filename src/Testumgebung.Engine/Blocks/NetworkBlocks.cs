@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt Netzwerkoperationen und Verbindungskonfiguration als grafische Prüfbausteine bereit.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;

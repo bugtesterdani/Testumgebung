@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Adaptiert den OPC-Foundation-Stack an die Kommunikationsverträge für reale Geräte.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;

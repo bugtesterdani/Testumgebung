@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet einen OPC-UA-Client als konfigurierbares Gerät ein; die reale Clientfabrik kommt aus der Desktop-Schicht.
+ */
+
 using Testumgebung.Contracts;
 
 namespace Testumgebung.Instruments.Communication;

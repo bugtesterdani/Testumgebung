@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erkennt Compiler und übersetzt native Codebausteine mit ihren Diagnosen und Build-Optionen.
+ */
+
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;

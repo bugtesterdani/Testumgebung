@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet Freigabekanäle innerhalb einer Auftragssitzung; nachfolgende Aufträge erhalten keinen alten Freigabestand.
+ */
+
 using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Engine;
@@ -32,6 +37,8 @@ public sealed class StationHandover : IStationHandover
                 if (state.Turn == side && state.Holder is null) { state.Holder = side; return; }
                 changed = state.Changed.Task;
             }
+            // Nach jedem Signal wird der Zustand unter derselben Sperre erneut geprüft.
+            // Ein Signal allein bedeutet noch nicht, dass diese Seite den Kanal besitzt.
             await changed.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
     }
@@ -45,6 +52,8 @@ public sealed class StationHandover : IStationHandover
             state.Holder = null;
             state.Turn = side == 1 ? 2 : 1;
             var changed = state.Changed;
+            // Neue Wartende benötigen ein frisches Signal, sonst würde ein bereits
+            // abgeschlossenes Task sofort wieder aufwachen und eine Warteschleife erzeugen.
             state.Changed = NewSignal();
             changed.TrySetResult();
         }

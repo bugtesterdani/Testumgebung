@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ermittelt gültige Freigaben und lädt geprüfte Pakete für die Prüfprogrammauswahl.
+ */
+
 using Testumgebung.Persistence;
 using Testumgebung.Persistence.Releases;
 

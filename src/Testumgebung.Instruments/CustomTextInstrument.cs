@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Führt Befehle aus einem benutzerdefinierten Geräteprofil über den gemeinsamen Texttransport aus.
+ */
+
 using System.Globalization;
 
 namespace Testumgebung.Instruments;

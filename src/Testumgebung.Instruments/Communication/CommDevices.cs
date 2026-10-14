@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet Byte- und Modbus-Verbindungen als Geräte an die Hardwarevermittlung an.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using Testumgebung.Contracts;

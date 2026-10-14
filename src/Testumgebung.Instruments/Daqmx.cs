@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet NI-DAQmx-Aufnahme und Ausgabe an die Kurvenverträge, einschließlich Rate und Kanalzuordnung.
+ */
+
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;

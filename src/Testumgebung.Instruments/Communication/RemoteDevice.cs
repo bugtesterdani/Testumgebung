@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bündelt SSH-, SFTP-, HTTP- und weitere entfernte Operationen hinter einer Geräteverbindung.
+ */
+
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;

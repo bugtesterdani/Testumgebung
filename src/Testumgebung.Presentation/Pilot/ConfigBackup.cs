@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Prüft und überträgt Konfigurationssicherungen mit Manifest und Integritätsinformationen.
+ */
+
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt OPC-UA-Verbindungen und Abonnements unabhängig von der verwendeten Clientbibliothek.
+ */
+
 namespace Testumgebung.Contracts;
 
 /// <summary>Fehler beim OPC-UA-Zugriff (Verbindung, unbekannter Knoten, abgelehnter Methodenaufruf).</summary>

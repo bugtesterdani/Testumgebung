@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet konfigurierbare Freigabe- und Warteaktionen an die gemeinsame Auftragssitzung zweier Prüfplätze.
+ */
+
 using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Engine.Blocks;

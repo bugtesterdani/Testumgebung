@@ -1,8 +1,13 @@
+/**
+ * @file
+ * @brief Hält die unterstützten Variablentypen und ihre expliziten Konvertierungsregeln zusammen.
+ */
+
 using System.Globalization;
 
 namespace Testumgebung.Contracts;
 
-/// <summary>Unterstützte Variablentypen. Weitere Typen (Waveform, Arrays) folgen in späteren Etappen.</summary>
+/// <summary>Unterstützte Typen der Scope-Variablen; Kurvendaten verwenden eigene Verträge.</summary>
 public enum VarType
 {
     Bool,

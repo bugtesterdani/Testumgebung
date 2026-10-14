@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet den editierbaren Prüfbaum und koordiniert Projektänderungen mit den Eigenschaftenansichten.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;

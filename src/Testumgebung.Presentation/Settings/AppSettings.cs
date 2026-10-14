@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt Anwendungseinstellungen und den Umgang mit geschützten Geheimniswerten.
+ */
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Testumgebung.DatabaseAdapters;

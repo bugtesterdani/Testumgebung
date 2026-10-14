@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet bearbeitbare Anwendungseinstellungen mit Speicher- und Verbindungsprüfungen.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.DatabaseAdapters;

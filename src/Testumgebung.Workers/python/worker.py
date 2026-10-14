@@ -21,6 +21,7 @@ import time
 import traceback
 
 PY_TYPES = {"Bool", "Int", "Double", "String", "DateTime"}
+# Die originalen Streams bleiben für RPC verfügbar, auch wenn Nutzercode Standardausgaben umleitet.
 _stdin = sys.stdin
 _stdout = sys.stdout
 _cache = {}
@@ -32,6 +33,7 @@ _write_lock = threading.Lock()
 
 
 def send(message):
+    # Ein vollständiger JSON-Datensatz pro Zeile ist die Nachrichtengrenze des Host-Protokolls.
     with _write_lock:
         _stdout.write(json.dumps(message, ensure_ascii=False) + "\n")
         _stdout.flush()

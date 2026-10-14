@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief WPF-Anbindung für Ablaufeditor. Ereignisse und Bindings verbinden diese Ansicht mit ihrem Datenkontext.
+ */
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;

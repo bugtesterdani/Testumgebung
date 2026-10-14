@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet Session, Zugangskonfiguration und den zur Konfiguration passenden Anmeldeanbieter.
+ */
+
 using Testumgebung.Identity;
 
 namespace Testumgebung.Presentation.Releases;

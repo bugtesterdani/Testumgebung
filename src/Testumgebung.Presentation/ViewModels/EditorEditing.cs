@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ergänzt den Ablaufeditor um Bearbeitung und Suche in Definitionen, Parametern und Ressourcen.
+ */
+
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Testumgebung.Domain.Definitions;

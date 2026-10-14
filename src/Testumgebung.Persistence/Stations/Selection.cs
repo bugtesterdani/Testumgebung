@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ordnet gescannte Kennungen und Auswahlregeln verfügbaren Testprogrammen zu.
+ */
+
 using System.Text.RegularExpressions;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;

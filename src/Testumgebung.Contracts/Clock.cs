@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Trennt die Engine von der realen Uhr, damit Wiederholungen und Zeitlimits kontrolliert getestet werden können.
+ */
+
 namespace Testumgebung.Contracts;
 
 /// <summary>

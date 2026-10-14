@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Koordiniert einen gemeinsamen Auftrag mit zwei getrennten Prüfläufen und gemeinsamem Sitzungsende.
+ */
+
 using System.Collections.ObjectModel;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine;

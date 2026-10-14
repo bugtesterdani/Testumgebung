@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erzeugt die native ABI und instrumentiert Nutzercode für Host-Aufrufe und Debugging.
+ */
+
 using System.Text;
 
 namespace Testumgebung.Workers.Native;

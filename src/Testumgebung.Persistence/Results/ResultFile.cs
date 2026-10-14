@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Liest und schreibt das Chunk-basierte Ergebnisformat; beschädigte Teilinhalte werden getrennt diagnostiziert.
+ */
+
 using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Runtime.InteropServices;

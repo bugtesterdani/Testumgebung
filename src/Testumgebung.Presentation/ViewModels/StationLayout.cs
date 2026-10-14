@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet die Layoutdefinition eines Prüfprogramms an die sichtbaren Bereiche der Werkeransicht.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 

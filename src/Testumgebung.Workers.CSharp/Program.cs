@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Startet den isolierten .NET-Worker und verarbeitet Compile-, Invoke-, Reply- und Cancel-Nachrichten.
+ */
+
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -22,6 +27,8 @@ namespace Testumgebung.Workers.CSharp;
 /// </list>
 /// Nutzercode wird als Methodenrumpf in eine generierte Klasse eingebettet; Variablen sind typisierte Felder.
 /// </summary>
+// Dieser Prozess isoliert Nutzercode vom Host. Host-Funktionen werden über Nachrichten
+// angefordert; Ausgaben für das Protokoll dürfen nicht mit normalen Logtexten vermischt werden.
 public static class Program
 {
     private static readonly object WriteLock = new();

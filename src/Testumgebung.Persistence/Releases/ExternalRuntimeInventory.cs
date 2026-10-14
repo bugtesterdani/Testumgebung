@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erfasst externe Laufzeitdateien als Nachweise für reproduzierbare Release-Prüfungen.
+ */
+
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;

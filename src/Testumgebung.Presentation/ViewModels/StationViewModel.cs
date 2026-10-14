@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Vermittelt zwischen Engine-Ereignissen, Werkerinteraktion und UI-Zustand eines Prüfplatzes.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;
@@ -679,6 +684,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             var recorder = new ResultRecorder(_run, _results.Journal, resolver);
             recorder.RunRecorded += recorded => QueueStorage(recorded, resolver);
         }
+        // Engine-Ereignisse kommen aus dem Ausführungskontext. Observable Collections und
+        // gebundene Eigenschaften werden erst über den UI-Dispatcher geändert.
         _run.EventRaised += e => _ui.Post(() => Handle(e));
         RunningVersion = project.Definition.Version;
         OnPropertyChanged(nameof(RunningVersionText));
@@ -704,6 +711,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             return;
         }
         _coordinator?.EndRun(Name);
+        // Der sichere Gerätezustand wird vor dem abschließenden UI-Status geprüft.
+        // Ein abgeschlossenes Prüfergebnis bestätigt allein noch keinen sicheren Ausgangszustand.
         var safeProblems = await SafeStateAsync().ConfigureAwait(false);
         _ui.Post(() => CompleteRunDisplay(status, safeProblems));
     }

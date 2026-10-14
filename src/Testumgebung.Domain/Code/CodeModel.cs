@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert Codebausteine, Ports und Host-Rückrufe als gemeinsame Schnittstelle aller Programmiersprachen.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 

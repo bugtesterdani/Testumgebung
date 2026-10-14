@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Berechnet Zeichenpunkte, Achsen, Cursor und RMS-Anzeige aus den Kurvendaten des sichtbaren Bereichs.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

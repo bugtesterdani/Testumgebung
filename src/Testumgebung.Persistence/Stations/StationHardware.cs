@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Prüft Gerätezuordnungen und vermittelt reale oder simulierte Geräte zwischen den Prüfplätzen.
+ */
+
 using System.Globalization;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;

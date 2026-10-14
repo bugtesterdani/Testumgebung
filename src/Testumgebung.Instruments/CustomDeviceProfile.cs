@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Validiert projektbezogene Gerätebeschreibungen mit Kanälen und Textbefehlen.
+ */
+
 using System.Text.Json;
 
 namespace Testumgebung.Instruments;

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erzeugt die benötigten PDF-Strukturen und Zeichenoperationen ohne externe PDF-Laufzeit.
+ */
+
 using System.Globalization;
 using System.Text;
 

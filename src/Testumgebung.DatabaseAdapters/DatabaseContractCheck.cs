@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Prüft den Speichervertrag gegen einen Datenbankadapter, einschließlich Wiederholung nach Antwortverlust.
+ */
+
 using System.Diagnostics;
 using Testumgebung.Contracts;
 using Testumgebung.Persistence.Results;

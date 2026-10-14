@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Adaptiert LIN-Zugriffe an die unterstützte Treiberbibliothek und den gemeinsamen Busvertrag.
+ */
+
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;

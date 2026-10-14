@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Kapselt die serielle Kommunikation mit der ET-Instrumente-EAQ-1000-Quelle.
+ */
+
 namespace Testumgebung.Instruments;
 
 /// <summary>ET Instrumente EAQ-1000/EAQ-M-1000; dokumentierte Sollwertbefehle, optionale gerätespezifische Abfragen.</summary>

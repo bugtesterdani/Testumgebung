@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Übersetzt Mess- und Generatoroperationen für die unterstützten Keysight-Geräte.
+ */
+
 using System.Buffers.Binary;
 using System.Globalization;
 using Testumgebung.Contracts;

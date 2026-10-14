@@ -81,3 +81,23 @@ sich um Parser-Ergebnisse einschließlich privater Mitglieder, nicht um eine
 Dokumentationsqualitätsquote. Die Referenz wird erfolgreich erstellt; Parserwarnungen
 zu modernen C#-Konstrukten bleiben in `warnings.log` sichtbar. Solution-Build und die
 drei Tests der Bestandsauswertung bestehen.
+
+## Ergänzung vom 14.10.2026: Einstieg und Ablaufgründe
+
+Alle 188 eigenen C#-Quelldateien besitzen nun einen Doxygen-Dateikommentar mit
+Aufgabe und fachlicher Einordnung. Der Python-Worker hat bereits eine ausführliche
+Modulbeschreibung; seine Kommentare wurden an den Protokollstreams und der
+Nachrichtensperre ergänzt. Generierter Code unter bin/obj bleibt unverändert.
+
+Zusätzliche Kommentare erklären insbesondere Transaktionsgrenzen, idempotente
+Wiederholung, überholte Anmeldeantworten, UI-Dispatcher, unabhängige Speicherfilter,
+SCPI-Antwortzuordnung sowie Signalwechsel bei der Prüfplatzübergabe. Der Vertrag
+für Übergabekanäle und die Priorität der Python-Umgebung haben eigene XML-Texte.
+Veraltete Hinweise auf noch ausstehende Datenbankanbindung wurden korrigiert.
+
+Die Änderungen wurden über einen Roslyn-Tokenvergleich aller C#-Dateien und einen
+Python-Tokenvergleich gegen den vorherigen Commit geprüft: ausführbare Tokens und
+eingebettete Quelltext-/SQL-Strings bleiben nach Normalisierung der Zeilenenden
+identisch. Solution-Build und Doxygen-Erzeugung bestehen. Dateikommentare sind
+Orientierungshilfen, kein Nachweis vollständig beschriebener Mitglieder oder einer
+abgeschlossenen fachlichen Prüfung aller Implementierungen.

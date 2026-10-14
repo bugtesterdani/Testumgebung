@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Hält Kurvenversionen und ihre Herkunft; gespeicherte Versionen dienen als Referenzen im Prüfprogramm.
+ */
+
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;

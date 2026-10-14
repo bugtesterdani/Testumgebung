@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bewahrt ausstehende Datenbankübertragungen dauerhaft und organisiert spätere idempotente Wiederholungen.
+ */
+
 using System.Text.Json;
 using Testumgebung.Contracts;
 

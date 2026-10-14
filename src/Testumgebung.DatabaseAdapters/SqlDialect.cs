@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Kapselt providerspezifisches SQL und Migrationen hinter einem gemeinsamen logischen Datenmodell.
+ */
+
 namespace Testumgebung.DatabaseAdapters;
 
 public enum DatabaseProvider

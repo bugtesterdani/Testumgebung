@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Serialisiert SCPI-Befehle, Antwortlesen und Fehlerprüfung einer Geräteverbindung.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
@@ -72,6 +77,8 @@ public sealed class ScpiSession : IDisposable
     /// <summary>Befehl senden; bei <see cref="CheckErrors"/> anschließend Fehlerwarteschlange lesen.</summary>
     public async Task WriteAsync(string command, CancellationToken ct = default)
     {
+        // Eine SCPI-Transaktion umfasst auch ihre Antwort bzw. Fehlerabfrage.
+        // Sonst könnten parallele Aufrufer die Antwort des jeweils anderen lesen.
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {

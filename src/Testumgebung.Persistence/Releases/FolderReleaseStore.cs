@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bewahrt Pakete, Zustände und Audit-Daten in einer Ordnerablage statt einer SQL-Datenbank.
+ */
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Testumgebung.Persistence.Results;

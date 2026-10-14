@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Speichert Release-Pakete, Zustandswechsel und Audit-Einträge in der Prüfdatenbank.
+ */
+
 using System.Data.Common;
 using System.Globalization;
 using Testumgebung.Persistence.Releases;
@@ -128,6 +133,7 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
         for (var attempt = 1; ; attempt++)
         {
             await using var connection = await database.OpenMigratedAsync(ct).ConfigureAwait(false);
+            // Zustandswechsel und Audit-Nachweis dürfen nicht unabhängig voneinander dauerhaft werden.
             await using var tx = await connection.BeginTransactionAsync(ct).ConfigureAwait(false);
             try
             {

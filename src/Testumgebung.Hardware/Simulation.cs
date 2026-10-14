@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt simulierte Geräte und deren Zustände über dieselben Hardwareverträge wie reale Geräte bereit.
+ */
+
 using System.Collections.Concurrent;
 using Testumgebung.Contracts;
 

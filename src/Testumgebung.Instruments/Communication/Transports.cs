@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Implementiert Byte-Transporte und Empfangspuffer; Protokollbewertung erfolgt in den aufrufenden Schichten.
+ */
+
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Globalization;

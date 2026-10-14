@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Parst mathematische Formeln für den Kurvengenerator; Auswertung und Formatfehler werden explizit behandelt.
+ */
+
 using System.Globalization;
 
 namespace Testumgebung.Domain.Curves;

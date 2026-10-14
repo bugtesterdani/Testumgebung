@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Vereinheitlicht Meldungsdaten und best-effort-Meldewege, getrennt von dauerhafter Ergebnisspeicherung.
+ */
+
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;

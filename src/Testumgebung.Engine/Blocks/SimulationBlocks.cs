@@ -1,10 +1,15 @@
+/**
+ * @file
+ * @brief Stellt einfache Aktionen für Variablen, Messungen und Simulation als ausführbare Schritte bereit.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
 
 namespace Testumgebung.Engine.Blocks;
 
-/// <summary>Simulationsbausteine für Etappe 0 (Abschnitt 13, Punkt 4).</summary>
+/// <summary>Grundlegende Schrittaktionen für Simulationen und einfache Prüfabläufe.</summary>
 public static class Steps
 {
     /// <summary>Wert setzen: Zielvariable = Ausdruck (unbewertet).</summary>

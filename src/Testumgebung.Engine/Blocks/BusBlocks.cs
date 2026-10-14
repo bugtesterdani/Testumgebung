@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet beschreibungsbasierte Bus- und Diagnosebausteine mit der reservierten Gerätevermittlung.
+ */
+
 using System.Globalization;
 using System.Text;
 using Testumgebung.Contracts;

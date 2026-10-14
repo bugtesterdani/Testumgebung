@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verwaltet Kurvenimport, Generator und bearbeitbare Arbeitskopien neben gespeicherten Versionen.
+ */
+
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Globalization;

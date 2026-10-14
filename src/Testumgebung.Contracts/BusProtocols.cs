@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Setzt Diagnose- und Transportprotokolle auf CAN um; Rahmenübertragung und Diagnosebewertung bleiben getrennte Ebenen.
+ */
+
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;

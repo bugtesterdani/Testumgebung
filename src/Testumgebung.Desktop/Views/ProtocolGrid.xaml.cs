@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief WPF-Anbindung für Protokolltabelle. Ereignisse und Bindings verbinden diese Ansicht mit ihrem Datenkontext.
+ */
+
 using System.Collections.Specialized;
 using System.Windows.Controls;
 using System.Windows.Threading;

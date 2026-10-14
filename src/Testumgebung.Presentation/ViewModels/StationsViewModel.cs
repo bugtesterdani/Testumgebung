@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bearbeitet Gerätekonfiguration und Zuordnungen und zeigt Besitz, Wartende und Zugriffsdiagnosen.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

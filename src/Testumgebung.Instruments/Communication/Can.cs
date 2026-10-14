@@ -1,4 +1,9 @@
-﻿using System.Collections.Concurrent;
+/**
+ * @file
+ * @brief Adaptiert CAN-Hardwarebibliotheken und deren unterschiedliche Rahmenlayouts an einen gemeinsamen CAN-Vertrag.
+ */
+
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;

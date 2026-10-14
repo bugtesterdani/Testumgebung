@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Bindet bearbeitbare Definitionen an Eigenschaftsfelder und übernimmt validierte Änderungen ins Projekt.
+ */
+
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Testumgebung.Contracts;

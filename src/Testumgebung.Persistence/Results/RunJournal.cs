@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Schreibt Zwischenaufzeichnungen und rekonstruiert unvollständige Prüflingsläufe nach einem Neustart.
+ */
+
 using System.Globalization;
 using System.Text;
 using System.Text.Json;

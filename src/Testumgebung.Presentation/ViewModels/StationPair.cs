@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ergänzt einen Prüfplatz um seinen Seitenkontext und die Freigaben der gemeinsamen Auftragssitzung.
+ */
+
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine;
 

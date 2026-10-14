@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Liest COMTRADE-Konfigurationen und Samples mit ihren Kanal- und Zeitbasisinformationen.
+ */
+
 using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;

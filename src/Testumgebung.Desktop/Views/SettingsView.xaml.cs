@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief WPF-Anbindung für Anwendungseinstellungen. Ereignisse und Bindings verbinden diese Ansicht mit ihrem Datenkontext.
+ */
+
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;

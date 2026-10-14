@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Koordiniert isolierte Worker, Codeaufrufe und Rückrufe an den laufbezogenen Host.
+ */
+
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;

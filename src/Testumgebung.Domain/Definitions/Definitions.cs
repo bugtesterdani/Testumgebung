@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Beschreibt die hierarchische Prüfstruktur, Variablen und Wiederholungen unabhängig von ihrer Ausführung.
+ */
+
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Expressions;
 

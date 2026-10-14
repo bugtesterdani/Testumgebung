@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert Release-Zustände und Audit-Daten unabhängig vom Speicheradapter.
+ */
+
 using System.Security.Cryptography;
 using System.Text;
 

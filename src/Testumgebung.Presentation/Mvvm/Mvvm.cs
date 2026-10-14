@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt Benachrichtigungen, Befehle und UI-Dispatcher bereit, ohne WPF in die ViewModels zu koppeln.
+ */
+
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;

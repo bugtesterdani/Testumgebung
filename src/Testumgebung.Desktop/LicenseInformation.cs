@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt die mitgelieferten Lizenz- und Drittanbieterinformationen für die Oberfläche bereit.
+ */
+
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;

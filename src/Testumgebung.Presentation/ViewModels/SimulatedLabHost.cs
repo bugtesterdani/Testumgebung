@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Startet lokale simulierte Gegenstellen für Entwicklungsverbindungen und verwaltet deren Lebensdauer.
+ */
+
 using Testumgebung.Instruments;
 
 namespace Testumgebung.Presentation.ViewModels;

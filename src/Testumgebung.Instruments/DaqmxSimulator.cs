@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Stellt DAQ-Verhalten über eine ersetzbare API bereit, ohne den realen NI-Treiber vorauszusetzen.
+ */
+
 using System.Diagnostics;
 
 namespace Testumgebung.Instruments;

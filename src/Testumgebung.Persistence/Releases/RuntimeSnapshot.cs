@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Hält den zum Release gehörenden Stand der Ausführungsumgebung fest.
+ */
+
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Testumgebung.Domain.Code;

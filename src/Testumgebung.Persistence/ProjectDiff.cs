@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erstellt fachliche Änderungslisten zwischen Projektständen für den Versionsvergleich.
+ */
+
 using System.Globalization;
 using System.Text.Json;
 using Testumgebung.Contracts;

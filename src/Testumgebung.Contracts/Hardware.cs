@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Definiert Ressourcenanforderungen, Besitz und Gerätezugriffe unabhängig von realer Hardware oder Simulation.
+ */
+
 namespace Testumgebung.Contracts;
 
 /// <summary>Anforderung einer oder mehrerer Ressourcen durch eine Gruppe (Scope) eines Laufs.</summary>

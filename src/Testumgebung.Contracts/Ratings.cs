@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Legt die Rangfolge der Bewertungen fest und trennt fachliches Prüfergebnis vom Ausführungszustand.
+ */
+
 namespace Testumgebung.Contracts;
 
 /// <summary>

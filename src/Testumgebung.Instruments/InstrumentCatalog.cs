@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Ordnet Adapterkennungen den Gerätefabriken zu; Projektprofile ergänzen den eingebauten Katalog.
+ */
+
 using Testumgebung.Instruments.Communication;
 
 namespace Testumgebung.Instruments;

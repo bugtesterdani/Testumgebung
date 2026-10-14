@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Verbindet Sichtbarkeit und Bedienbarkeit mit dem Tastaturfokus für den Scannerbetrieb.
+ */
+
 using System;
 using System.Windows;
 using System.Windows.Controls;

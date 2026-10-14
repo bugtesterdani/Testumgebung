@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Erzeugt die C#-Basis-API für Nutzercode; Host-Rückrufe überbrücken die Prozessgrenze.
+ */
+
 namespace Testumgebung.Workers.CSharp;
 
 /// <summary>

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Liest tabellarische Excel-Daten für den Kurvenimport ohne eine laufende Excel-Anwendung.
+ */
+
 using System.Globalization;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
