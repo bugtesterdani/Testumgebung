@@ -35,6 +35,11 @@ jobs:
   package:
     needs: plan
     if: needs.plan.outputs.release == 'true'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: read
+      actions: read
     uses: ./.github/workflows/msix.yml
     with:
       release_tag: ${{ needs.plan.outputs.tag }}

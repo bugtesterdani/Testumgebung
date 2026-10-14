@@ -38,6 +38,38 @@ Paket, Quellen, Hinweise und Prüfnachweise landen zunächst in einem
 Bei normalem PR-Build wird ein separates Entwicklungszertifikat verwendet;
 der produktive Signierschlüssel wird dafür nicht bereitgestellt.
 
+## Konkret zur ersten Version 1.0.14
+
+PR #6 ist gemerged, schließt aber nur das Dokumentations-Issue ab. Für das offizielle
+Release muss der abschließende Release-PR zusätzlich **Closes #1** enthalten.
+Nach bestandenem Build und Merge erzeugt die Release-Issue-Automatik `v1.0.14` und
+den Entwurf mit `1.0.14.65535`. Öffne anschließend GitHub → Releases, prüfe den
+Entwurf samt MSIX, Zertifikat, Quellen und Lizenznachweisen und veröffentliche ihn.
+Das manuelle Schließen des Release-Issues allein erzeugt keinen Tag.
+
+## Nächste Version automatisch planen und bearbeiten
+
+Nach erfolgreichem offiziellen Paket-Build, Release-Entwurf und Release Notes legt
+die Automatik ein Issue **Release 1.0.15** mit Label `release` und passendem Milestone
+an. Standardmäßig wird die dritte Versionsstelle erhöht. An der MSIX-Grenze erfolgt
+ein Übertrag in die nächste Stelle. Das neue Issue entsteht bereits beim fertigen
+Entwurf; die öffentliche Veröffentlichung bleibt eine bewusste Entscheidung.
+
+Du kannst den Titel später beispielsweise in **Release 1.1.0** ändern. Drei
+Versionsstellen sind erforderlich. Die Issue-Automatik erstellt beziehungsweise
+verwendet den passenden Milestone und ordnet ihn dem Release-Issue zu. Feature-Issues
+und PRs werden nicht still verschoben; ändere deren Milestone bei Bedarf selbst.
+Main- und PR-Builds verwenden den aktuellen Issue-Titel; bereits gebaute Pakete und
+vorhandene Tags ändern sich dadurch nicht. Verwende eine höhere Version als die
+bereits ausgelieferten Versionen.
+
+Wiederholte Builds desselben Tags erzeugen keine doppelten Planungs-Issues. Eine
+bereits vorhandene spätere offene Planung wird nicht überschrieben. Auch ein
+umbenanntes und später geschlossenes Folge-Issue wird beim Wiederholen des alten
+Builds nicht erneut erstellt. Mehrere offene Release-Issues sind ein Fehler, weil
+sonst die gemeinsame Versionsquelle unklar wäre. Ohne erfolgreiches MSIX-Bundle
+wird keine nächste Planung begonnen.
+
 ## Inhalt der automatisch erzeugten Notes
 
 Die Notes nennen alle gemergten PRs, die zu den Commits seit dem vorherigen

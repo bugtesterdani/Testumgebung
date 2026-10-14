@@ -173,13 +173,79 @@ def publish(api, args):
     api.api(f'repos/{api.repo}/releases/{release["id"]}', {'body': body(base, previous, selected, list(pulls.values()))}, method='PATCH')
     print(f'Release Notes direkt auf GitHub gespeichert: {len(pulls)} PRs, {len(selected)} Issues.')
 
+def milestone_for(api, base):
+    matches = [m for m in api.pages(f'repos/{api.repo}/milestones', state='all') if m['title'] == base]
+    if len(matches) > 1: raise ValueError('Versions-Milestone ist nicht eindeutig.')
+    if matches:
+        if matches[0].get('state') == 'closed': raise ValueError('Der gewünschte Versions-Milestone ist bereits geschlossen.')
+        return matches[0]['number']
+    return api.api(f'repos/{api.repo}/milestones', {'title': base, 'description': 'Geplante Änderungen dieser Version.'})['number']
+
+def next_version(base):
+    parts = [int(p) for p in version(base).split('.')]
+    for index in (2, 1, 0):
+        if parts[index] < 65535:
+            parts[index] += 1
+            return '.'.join(map(str, parts))
+        parts[index] = 0
+    raise ValueError('Keine höhere MSIX-Basisversion verfügbar.')
+
+def next_release(api, args):
+    if not args.tag.startswith('v'): raise ValueError('Tag muss vX.Y.Z heißen.')
+    base = version(args.tag[1:])
+    release = api.api(f'repos/{api.repo}/releases/tags/{args.tag}')
+    if not any(a['name'].endswith('.msixbundle') for a in release.get('assets', [])):
+        raise ValueError('Release enthält noch kein erfolgreich gebautes MSIX-Bundle.')
+    issues = api.issues()
+    marker = f'<!-- next-release-for:{args.tag} -->'
+    if any(marker in (i.get('body') or '') and i['state'] == 'closed' for i in issues):
+        print('Folgeplanung dieses Tags ist bereits abgeschlossen; kein neues Issue.')
+        return
+    active = [i for i in issues if i['state'] == 'open' and 'release' in labels(i)]
+    if len(active) > 1: raise ValueError('Mehrere offene Release-Issues; Planung nicht eindeutig.')
+    if active:
+        planned = release_version(active[0])
+        if tuple(map(int, planned.split('.'))) <= tuple(map(int, base.split('.'))):
+            raise ValueError('Offenes Release-Issue ist keine spätere Version.')
+        print(f'Bestehendes Release-Issue #{active[0]["number"]} bleibt unverändert.')
+        return
+    proposed = next_version(base)
+    # A closed planning issue must not be recreated, even on an old build rerun.
+    if any('release' in labels(i) and i.get('title', '').casefold() == f'Release {proposed}'.casefold() for i in issues):
+        raise ValueError('Planung dieser Folgeversion existiert bereits und ist geschlossen.')
+    milestone = milestone_for(api, proposed)
+    issue = api.api(f'repos/{api.repo}/issues', {
+        'title': f'Release {proposed}', 'labels': ['release'], 'milestone': milestone,
+        'body': marker + f'\nNächste Planung nach erfolgreichem Build von **{args.tag}**.\n\n'
+                'Der Titel **Release X.Y.Z** ist die gemeinsame Versionsquelle für main und PR-Builds. '
+                'Du kannst den Titel später ändern; die Automatik ordnet diesem Issue den passenden Milestone zu. '
+                'Bereits zugeordnete Feature-Issues/PRs bei einer Versionsänderung selbst umordnen.\n\n'
+                'Mehrere normale PRs sammeln. Erst ein abschließender Release-PR mit `Closes #<ID dieses Issues>` '
+                'erzeugt nach Merge Tag und Release-Entwurf.\n\n'
+                '- [ ] Geplante Änderungen abgeschlossen\n- [ ] Release-PR geprüft und gemerged\n'
+                '- [ ] Paket und Lizenznachweise geprüft\n- [ ] Release-Entwurf veröffentlicht\n\n'
+                'Anleitung: docs/release-ablauf.md.'})
+    print(f'Nächstes bearbeitbares Release-Issue #{issue["number"]}: {proposed}.')
+
+def sync_release(api, args):
+    issue = api.api(f'repos/{api.repo}/issues/{args.issue}')
+    if issue['state'] != 'open' or 'release' not in labels(issue): return
+    base = release_version(issue)
+    active = [i for i in api.issues() if i['state'] == 'open' and 'release' in labels(i)]
+    if len(active) != 1: raise ValueError('Genau ein offenes Release-Issue erforderlich.')
+    if (issue.get('milestone') or {}).get('title') == base: return
+    number = milestone_for(api, base)
+    api.api(f'repos/{api.repo}/issues/{issue["number"]}', {'milestone': number}, method='PATCH')
+    print(f'Release-Issue #{issue["number"]}: Milestone {base} zugeordnet.')
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=['plan', 'trigger', 'publish'])
+    parser.add_argument('command', choices=['plan', 'trigger', 'publish', 'next', 'sync'])
     parser.add_argument('--tag', default=''); parser.add_argument('--base', default='')
     parser.add_argument('--fallback', default='1.0.14'); parser.add_argument('--pull', type=int)
     parser.add_argument('--sha', default='')
+    parser.add_argument('--issue', type=int)
     args = parser.parse_args()
-    {'plan': plan, 'trigger': trigger, 'publish': publish}[args.command](GitHub(), args)
+    {'plan': plan, 'trigger': trigger, 'publish': publish, 'next': next_release, 'sync': sync_release}[args.command](GitHub(), args)
 
 if __name__ == '__main__': main()

@@ -157,10 +157,13 @@ jobs:
     if: inputs.release_tag != ''
     needs: build
     runs-on: windows-latest
+    concurrency:
+      group: release-publication-and-next-planning
+      cancel-in-progress: false
     permissions:
       contents: write
       actions: read
-      issues: read
+      issues: write
       pull-requests: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -193,3 +196,11 @@ jobs:
           if ($LASTEXITCODE) { throw 'Release-Erstellung fehlgeschlagen.' }
           python build/github-release.py publish --tag $env:RELEASE_TAG
           if ($LASTEXITCODE) { throw 'Release Notes konnten nicht vollständig erstellt werden. Release bleibt Entwurf.' }
+      - name: Nächstes bearbeitbares Release-Issue vorbereiten
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          python build/github-release.py next --tag "$env:RELEASE_TAG"
+          if ($LASTEXITCODE) { throw 'Release gebaut; nächste Versionsplanung konnte nicht angelegt werden.' }
