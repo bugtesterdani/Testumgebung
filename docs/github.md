@@ -37,7 +37,7 @@ Der Workflow **MSIX-Build und Release** läuft für Änderungen an main, Pull Re
 | Auslöser | Ergebnis |
 | --- | --- |
 | Normaler PR oder Merge nach main | Entwicklungsbuild `X.Y.Z.<Laufnummer>`; kein Release |
-| Merge des abschließenden PRs mit `Closes #<Release-Issue>` | Automatischer Tag `vX.Y.Z`, Bundle `X.Y.Z.65535` und Release-Entwurf |
+| Merge des abschließenden PRs mit `Closes #<Release-Issue>` | Automatischer Tag `vX.Y.Z`, Bundle `X.Y.Z.<Run-Nummer>` und Release-Entwurf |
 | Manueller Start | Dreiteilige Basisversion oder aktuelle Issue-Version, mit Buildnummer; kein offizielles Release |
 
 Die Notes stehen direkt in GitHub und nennen die enthaltenen Issues und PRs. Vertraulich gekennzeichnete Einträge enthalten nur IDs. Mehrere normale Merges sind vor einem Release möglich. Eine neue offizielle Version benötigt ein neues Release-Issue und einen gleichnamigen Milestone. Entwicklungsartefakte bleiben 14 Tage verfügbar; Releases bis zu ihrer Löschung. Der letzte Einrichtungspush ist die Ausnahme; anschließend ist main durch den erforderlichen PR- und Build-Ablauf geschützt.

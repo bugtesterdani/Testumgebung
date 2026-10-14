@@ -34,9 +34,9 @@ def item_line(item, pull=False):
     title = re.sub(r'([\\`*_{}\[\]()<>#!|])', r'\\\1', title)
     return f"- {'PR' if pull else 'Issue'} #{number}: {title}"
 
-def body(base, previous, issues, pulls):
+def body(base, previous, issues, pulls, package_version=None):
     lines = [f"# Testumgebung {base}", '',
-             f"Installer-Version: `{base}.65535`.", '',
+             f"Installer-Version: `{package_version or base + ".65535"}`.", '',
              f"Zeitraum: seit `{previous}`." if previous else "Erstes Release: gesamte bisherige Git-Historie.", '',
              "## Pull Requests", '']
     lines += [item_line(p, True) for p in sorted(pulls, key=lambda x: x['number'])] or ['Keine Pull Requests in diesem Release.']
@@ -93,12 +93,14 @@ def base_version(issues, fallback):
 def plan(api, args):
     if args.tag:
         if not args.tag.startswith('v'): raise ValueError('Tag muss vX.Y.Z heißen.')
-        base = version(args.tag[1:]); build = base + '.65535'
+        base = version(args.tag[1:])
     else:
         base = version(args.base) if args.base else base_version(api.issues(), args.fallback)
-        index = int(os.environ['GITHUB_RUN_NUMBER'])
-        if not 1 <= index < 65535: raise ValueError('Buildnummer überschreitet den MSIX-Bereich.')
-        build = f'{base}.{index}'
+    # All package builds originate in msix.yml; its counter is shared across events.
+    # A rerun deliberately keeps the run's version; attempt is recorded separately.
+    index = int(os.environ['GITHUB_RUN_NUMBER'])
+    if not 1 <= index <= 65535: raise ValueError('Buildnummer überschreitet den MSIX-Bereich; kein Abschneiden oder Überlauf erlaubt.')
+    build = f'{base}.{index}'
     output(version=build, base=base)
     print('Build-Version: ' + build)
 
@@ -145,6 +147,9 @@ def release_for_tag(api, tag):
 
 def publish(api, args):
     base = version(args.tag.removeprefix('v'))
+    package = getattr(args, 'package_version', '')
+    if package and (not re.fullmatch(re.escape(base) + r'\.(?:0|[1-9]\d*)', package) or not 1 <= int(package.split('.')[-1]) <= 65535):
+        raise ValueError('Paketversion muss zur Release-Basis passen und eine gültige Buildrevision enthalten.')
     current = git('rev-parse', args.tag + '^{commit}')
     published = {r['tag_name'] for r in api.pages(f'repos/{api.repo}/releases') if not r.get('draft') and not r.get('prerelease')}
     candidates = [t for t in git('tag', '--merged', current).splitlines()
@@ -179,7 +184,7 @@ def publish(api, args):
     release = release_for_tag(api, args.tag)
     if not release.get('draft'): raise ValueError('Release Notes eines veröffentlichten Releases werden nicht überschrieben.')
     api.api(f'repos/{api.repo}/releases/{release["id"]}', {
-        'body': body(base, previous, selected, list(pulls.values())),
+        'body': body(base, previous, selected, list(pulls.values()), getattr(args, 'package_version', '') or None),
         'tag_name': args.tag, 'target_commitish': current, 'draft': True,
     }, method='PATCH')
     print(f'Release Notes direkt auf GitHub gespeichert: {len(pulls)} PRs, {len(selected)} Issues.')
@@ -256,6 +261,7 @@ def main():
     parser.add_argument('--fallback', default='1.0.14'); parser.add_argument('--pull', type=int)
     parser.add_argument('--sha', default='')
     parser.add_argument('--issue', type=int)
+    parser.add_argument('--package-version', default='')
     args = parser.parse_args()
     {'plan': plan, 'trigger': trigger, 'publish': publish, 'next': next_release, 'sync': sync_release}[args.command](GitHub(), args)
 
