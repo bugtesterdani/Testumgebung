@@ -23,3 +23,5 @@ try {
     }
 } finally { $zip.Dispose() }
 Write-Host "Lizenztexte und passende Toolchain-Quellen: $zipPath"
+
+& (Join-Path $PSScriptRoot 'create-ai-package.ps1') -Layout $Layout -Output $Output -Version $Version

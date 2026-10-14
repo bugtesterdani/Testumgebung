@@ -5,6 +5,16 @@ Diese Datei richtet sich an ein KI-Modell, das ein vorhandenes Prüfprogramm in
 nicht die Versionsnummer des Installers. Ein geladenes JSON ist noch kein Nachweis
 für korrektes Prüfverhalten oder korrekte Gerätekommunikation.
 
+## Download je Release
+
+Ab dem Release, das diese Änderung enthält, liegt unter GitHub → Releases → Assets
+auch `Testumgebung_X.Y.Z.Build_KI-Paket.zip`. Es enthält diese Anleitung, Katalog,
+Beispiel, ergänzende Anleitungen und die MIT-Lizenz aus demselben Publish-Stand
+wie das MSIX. Die enthaltene `PACKAGE-INFO.json` nennt die Buildversion;
+`SHA256SUMS.txt` im Release enthält auch den Hash dieses ZIPs. Im entpackten
+Paket mit `docs/ki-testprogramme.md` beginnen. PR- und Main-Buildartefakte enthalten
+das Paket ebenfalls; ältere veröffentlichte Releases werden nicht nachträglich verändert.
+
 ## Dem Modell mitgeben
 
 Gib der KI diese Anleitung, [bausteinkatalog.json](ki/bausteinkatalog.json),

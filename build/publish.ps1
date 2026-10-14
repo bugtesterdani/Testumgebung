@@ -63,6 +63,7 @@ $docs = Join-Path $publish "docs"
 New-Item -ItemType Directory -Force $docs | Out-Null
 Copy-Item (Join-Path $root "docs\*.md") $docs
 Copy-Item (Join-Path $root "docs\ki") $docs -Recurse -Force
+Copy-Item (Join-Path $root "docs\beispiele") $docs -Recurse -Force
 Copy-Item (Join-Path $root "docs\handbuch") $docs -Recurse -Force
 Copy-Item (Join-Path $root "docs\pilot") $docs -Recurse -Force
 Copy-Item (Join-Path $root "docs\sql") $docs -Recurse -Force
