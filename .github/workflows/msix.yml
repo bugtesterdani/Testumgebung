@@ -5,17 +5,6 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
-  workflow_call:
-    inputs:
-      release_tag:
-        type: string
-        default: ''
-      base_version:
-        type: string
-        default: ''
-      target_sha:
-        type: string
-        default: ''
   workflow_dispatch:
     inputs:
       version:
@@ -27,10 +16,36 @@ permissions:
   issues: read
   pull-requests: read
 concurrency:
-  group: msix-${{ inputs.release_tag || github.ref }}
+  group: msix-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  plan:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      base: ${{ steps.release.outputs.base }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Release-Abschluss prüfen und Tag setzen
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MERGED_SHA: ${{ github.sha }}
+        run: python build/github-release.py trigger --sha "$MERGED_SHA"
   build:
+    needs: plan
+    if: ${{ !cancelled() && (needs.plan.result == 'success' || needs.plan.result == 'skipped') }}
     runs-on: windows-latest
     timeout-minutes: 90
     outputs:
@@ -40,7 +55,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-          ref: ${{ inputs.target_sha || github.sha }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '10.0.402'
@@ -52,8 +67,8 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          REQUESTED_VERSION: ${{ inputs.base_version || inputs.version }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          REQUESTED_VERSION: ${{ needs.plan.outputs.base || inputs.version }}
+          RELEASE_TAG: ${{ needs.plan.outputs.tag }}
           FALLBACK_VERSION: ${{ vars.RELEASE_VERSION || '1.0.14' }}
         run: |
           python build/github-release.py plan --base "$env:REQUESTED_VERSION" --tag "$env:RELEASE_TAG" --fallback "$env:FALLBACK_VERSION"
@@ -115,10 +130,10 @@ jobs:
       - name: Signiertes MSIX-Bundle bauen
         shell: pwsh
         env:
-          SIGNING_PFX_BASE64: ${{ (github.event_name != 'pull_request' || inputs.release_tag != '') && secrets.SIGNING_PFX_BASE64 || '' }}
-          TESTUMGEBUNG_SIGN_PASSWORD: ${{ (github.event_name != 'pull_request' || inputs.release_tag != '') && secrets.SIGNING_PFX_PASSWORD || '' }}
+          SIGNING_PFX_BASE64: ${{ (github.event_name != 'pull_request' || needs.plan.outputs.tag != '') && secrets.SIGNING_PFX_BASE64 || '' }}
+          TESTUMGEBUNG_SIGN_PASSWORD: ${{ (github.event_name != 'pull_request' || needs.plan.outputs.tag != '') && secrets.SIGNING_PFX_PASSWORD || '' }}
           BUILD_VERSION: ${{ steps.version.outputs.version }}
-          PR_BUILD: ${{ github.event_name == 'pull_request' && inputs.release_tag == '' }}
+          PR_BUILD: ${{ github.event_name == 'pull_request' && needs.plan.outputs.tag == '' }}
         run: |
           if ($env:PR_BUILD -ne 'true' -and -not $env:SIGNING_PFX_BASE64) { throw 'SIGNING_PFX_BASE64 fehlt. Kein neues Zufallszertifikat für CI verwenden; siehe docs/github.md.' }
           $pfx=Join-Path $env:RUNNER_TEMP ('signing-'+[guid]::NewGuid().ToString('N')+'.pfx')
@@ -129,6 +144,13 @@ jobs:
               $signOptions.CertificatePath=$pfx
             }
             ./build/msix.ps1 -Version $env:BUILD_VERSION @signOptions -PrepareOnly -SkipTests
+            # Preserve the globally unique run identity without exceeding MSIX's uint16 revision.
+            @{
+              version=$env:BUILD_VERSION; run_number=$env:GITHUB_RUN_NUMBER
+              run_id=$env:GITHUB_RUN_ID; run_attempt=$env:GITHUB_RUN_ATTEMPT
+              commit=$env:GITHUB_SHA; repository=$env:GITHUB_REPOSITORY
+              run_url="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            } | ConvertTo-Json | Set-Content "artifacts/msix/$env:BUILD_VERSION/BUILD-INFO.json" -Encoding utf8
             $testResults="artifacts/msix/$env:BUILD_VERSION/tests"
             New-Item -ItemType Directory -Path $testResults -Force | Out-Null
             Get-ChildItem artifacts/coverage/ci/raw -Filter '*.trx' -Recurse | Copy-Item -Destination $testResults
@@ -164,8 +186,8 @@ jobs:
           compression-level: 0
           retention-days: 14
   release:
-    if: inputs.release_tag != ''
-    needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.plan.outputs.tag != '' }}
+    needs: [plan, build]
     runs-on: windows-latest
     concurrency:
       group: release-publication-and-next-planning
@@ -180,7 +202,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-          ref: ${{ inputs.target_sha }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
@@ -189,11 +211,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ needs.build.outputs.version }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_TAG: ${{ needs.plan.outputs.tag }}
         run: |
           gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "MSIX-$env:RELEASE_VERSION" --dir release
           if ($LASTEXITCODE) { throw 'Release-Artefakt konnte nicht heruntergeladen werden.' }
-          $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
+          $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','BUILD-INFO.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
           if (-not ($assets | Where-Object Extension -EQ '.msixbundle')) { throw 'MSIX-Bundle fehlt.' }
           $existingJson=gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json databaseId,isDraft 2>$null
           if ($LASTEXITCODE -eq 0) {
@@ -204,13 +226,13 @@ jobs:
             gh release create $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --verify-tag --draft --title "Testumgebung $env:RELEASE_VERSION" @($assets.FullName)
           }
           if ($LASTEXITCODE) { throw 'Release-Erstellung fehlgeschlagen.' }
-          python build/github-release.py publish --tag $env:RELEASE_TAG
+          python build/github-release.py publish --tag $env:RELEASE_TAG --package-version $env:RELEASE_VERSION
           if ($LASTEXITCODE) { throw 'Release Notes konnten nicht vollständig erstellt werden. Release bleibt Entwurf.' }
       - name: Nächstes bearbeitbares Release-Issue vorbereiten
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_TAG: ${{ needs.plan.outputs.tag }}
         run: |
           python build/github-release.py next --tag "$env:RELEASE_TAG"
           if ($LASTEXITCODE) { throw 'Release gebaut; nächste Versionsplanung konnte nicht angelegt werden.' }
