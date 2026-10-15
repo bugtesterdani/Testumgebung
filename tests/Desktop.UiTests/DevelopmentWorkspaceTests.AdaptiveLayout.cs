@@ -26,13 +26,13 @@ public sealed partial class DevelopmentWorkspaceTests
     public void Layout_density_uses_both_window_and_current_monitor(double width, double height, double workWidth, double workHeight, double expected)
         => Assert.Equal(expected, AdaptiveWindowLayout.Calculate(new(width, height), new(workWidth, workHeight)), 6);
 
-    private static void VerifyAdaptiveLayout(Dispatcher dispatcher)
+    private static void VerifyAdaptiveWindow(Dispatcher dispatcher, Size maximum)
     {
         var work = new Size(1366, 728);
         var content = new Grid();
         content.Children.Add(new TextBlock { Text = "Prüfplatz – Testprogramm", FontSize = 22 });
         var viewport = new ScrollViewer { Content = content, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        var window = new Window { Content = viewport, Width = 1500, Height = 900,
+        var window = new Window { Content = viewport, Width = 1500, Height = 900, MaxWidth = maximum.Width, MaxHeight = maximum.Height,
             ShowInTaskbar = false, ShowActivated = false, Left = -10000, Top = -10000,
             WindowStartupLocation = WindowStartupLocation.Manual };
         _ = new AdaptiveWindowLayout(window, viewport, content, _ => work);
@@ -47,7 +47,10 @@ public sealed partial class DevelopmentWorkspaceTests
             work = new Size(1920, 1040);
             window.Left += 20;
             window.Width = 1800; window.Height = 1000; Layout();
-            Assert.Equal(1, scale.ScaleX);
+            // A real CI desktop may constrain a requested 1800px window to
+            // roughly 1024px. The controller must use its actual client area.
+            Assert.Equal(AdaptiveWindowLayout.Calculate(new(viewport.ActualWidth, viewport.ActualHeight), work), scale.ScaleX, 6);
+            Assert.Equal(scale.ScaleX, scale.ScaleY);
             window.Width = 1200; Layout();
             Assert.InRange(scale.ScaleX, 0.65, 0.81);
             // Same window moves to a smaller work area without changing display 1.
@@ -68,6 +71,12 @@ public sealed partial class DevelopmentWorkspaceTests
         finally { window.Close(); }
         void Layout() { window.UpdateLayout(); Sta.Flush(dispatcher); }
 
+    }
+
+    private static void VerifyAdaptiveLayout(Dispatcher dispatcher)
+    {
+        VerifyAdaptiveWindow(dispatcher, new(double.PositiveInfinity, double.PositiveInfinity));
+        VerifyAdaptiveWindow(dispatcher, new(1024, 768));
         // Verify actual transformed page bounds. Pixel rendering is unavailable
         // in some unattended Windows sessions, so these checks use WPF layout.
         foreach (var size in new[] { new Size(1280, 720), new Size(1920, 1080) })
