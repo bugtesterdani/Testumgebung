@@ -31,6 +31,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyWindowLifecycle(dispatcher, root.FullName);
             var output = Path.Combine(root.FullName, "artifacts", "verification");
             Directory.CreateDirectory(output);
+            VerifyAdaptiveLayout(dispatcher);
             VerifyPairedView(dispatcher, output);
             VerifyCustomDevices(dispatcher, output);
             foreach (var size in new[] { new Size(1280, 900), new Size(1920, 1080) })

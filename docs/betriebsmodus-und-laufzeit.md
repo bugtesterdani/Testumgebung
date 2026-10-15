@@ -34,3 +34,21 @@ Software überprüfen, einen Entwurf mit neuer Prüfprogramm-Version anlegen, di
 Entwicklungsprüfung durchführen und ausdrücklich freigeben. Bestehende Pakete bleiben
 unverändert. Die kompakte Anzeige hebt die Laufzeit- und Integritätsprüfung nicht auf.
 Andere Ursachen wie eine unerreichbare Ablage anhand der Details beheben.
+
+
+## Automatische Anpassung an Monitor und Fenster
+
+Das Hauptfenster passt seine Ansicht automatisch an die verfügbare Fensterfläche
+und die Arbeitsfläche seines aktuellen Monitors an. Beim Verschieben zwischen
+Monitoren wird der Monitor verwendet, auf dem der größte Teil des Fensters liegt.
+Ein fest ausgewähltes „Display 1“ ist dafür nicht maßgeblich. Taskleiste und die
+Windows-Skalierung des aktuellen Fenstermonitors werden berücksichtigt.
+
+Bei wenig Platz werden Text, Abstände und Bedienelemente gemeinsam kompakter.
+Auf großen Flächen bleibt die normale Schriftgröße erhalten und die Arbeitsbereiche
+bekommen mehr Platz. Auch ein manuell kleiner gezogenes Fenster wird berücksichtigt.
+Die zusätzliche Layoutskalierung liegt zwischen 65 und 100 Prozent; die persönliche
+Windows-DPI-Skalierung kommt unabhängig davon hinzu. Bei noch kleineren Flächen
+sind die Inhalte scrollbar, damit Steuerelemente erreichbar bleiben. Beim Start
+und beim Wechsel auf eine kleinere Arbeitsfläche wird ein normales Fenster auf
+die verfügbare Größe begrenzt. Eine zusätzliche Konfiguration ist nicht erforderlich.

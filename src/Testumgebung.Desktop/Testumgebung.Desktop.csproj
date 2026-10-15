@@ -5,6 +5,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Testumgebung.Desktop</RootNamespace>
     <AssemblyTitle>Testumgebung</AssemblyTitle>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\Testumgebung.ico</ApplicationIcon>
     <!-- Generierter WPF-Code soll den Build nicht an Warnungen scheitern lassen -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>

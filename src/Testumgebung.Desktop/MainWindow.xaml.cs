@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     internal MainWindow(MainWindowStartup? startup)
     {
         InitializeComponent();
+        _ = new AdaptiveWindowLayout(this, LayoutViewport, LayoutContent);
         _showMessage = startup?.ShowMessage ?? ((text, buttons, icon) => MessageBox.Show(text, "Testumgebung", buttons, icon));
         // Explizite Umgebung, gespeicherte externe Kopie, sonst mitgelieferte Laufzeit.
         _codeRuntime = new CodeRuntime(new CodeRuntimeOptions
@@ -47,17 +48,10 @@ public partial class MainWindow : Window
         var (store, services) = LoadResultServices(startup);
         _services = services;
 
-        // Zugang je Prüfplatz: %ProgramData%\Testumgebung\zugang.json (Entra-App, Rechte je Konto).
-        // Entwicklungsmodus muss ausdrücklich beim Start eingeschaltet werden.
-        var accessStore = startup?.AccessStore ?? new AccessConfigStore(AccessConfigStore.DefaultPath);
-        var access = accessStore.Load();
-        IIdentityProvider Provider(AccessConfig? c) => c is { UsesEntra: true }
-            ? new MsalIdentityProvider(c.ClientId!, c.TenantId!, () => new WindowInteropHelper(this).Handle)
-            : new SimulatedIdentityProvider(() => Shell?.LoginName ?? "");
         var arguments = startup?.Arguments ?? Environment.GetCommandLineArgs();
         var developmentMode = arguments.Contains("--development", StringComparer.OrdinalIgnoreCase);
         var exampleMode = developmentMode && arguments.Contains("--example-order", StringComparer.OrdinalIgnoreCase);
-        var identity = new IdentityServices(new SessionService(Provider(access), access, allowDevelopmentMode: developmentMode), accessStore, Provider);
+        var identity = CreateIdentityServices(startup, developmentMode);
 
         // Release-Pakete und Audit-Log: in der Prüfdatenbank (falls SQL-Datenbank eingestellt), sonst lokal.
         _releases = new ReleaseHub(new ReleaseService(_services.ReleaseStore) { CodeRuntime = _codeRuntime, RequireRuntimeSnapshot = true });
@@ -91,6 +85,19 @@ public partial class MainWindow : Window
         _clock.Tick += (_, _) => UpdateClock();
         _clock.Start();
         UpdateClock();
+    }
+
+    /// <summary>Keeps account configuration and provider selection together during startup.</summary>
+    private IdentityServices CreateIdentityServices(MainWindowStartup? startup, bool developmentMode)
+    {
+        // Zugang je Prüfplatz: %ProgramData%\Testumgebung\zugang.json (Entra-App, Rechte je Konto).
+        // Entwicklungsmodus muss ausdrücklich beim Start eingeschaltet werden.
+        var accessStore = startup?.AccessStore ?? new AccessConfigStore(AccessConfigStore.DefaultPath);
+        var access = accessStore.Load();
+        IIdentityProvider Provider(AccessConfig? c) => c is { UsesEntra: true }
+            ? new MsalIdentityProvider(c.ClientId!, c.TenantId!, () => new WindowInteropHelper(this).Handle)
+            : new SimulatedIdentityProvider(() => Shell?.LoginName ?? "");
+        return new IdentityServices(new SessionService(Provider(access), access, allowDevelopmentMode: developmentMode), accessStore, Provider);
     }
 
     private static (TestProject? Project, StationSetup? Setup, string? Error) LoadStationSetup(MainWindowStartup? startup, StationSetupStore stationStore, bool exampleMode)
