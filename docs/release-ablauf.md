@@ -5,8 +5,8 @@ keine eingecheckte Release-Notes-Datei oder CHANGELOG im Projekt.
 
 ## Eine Version vorbereiten
 
-Ein Issue mit Label `release` und Titel **Release 1.0.14** legt die gemeinsame
-Basisversion fest. Ordne ihm den Milestone **1.0.14** zu. Es darf nur ein offenes
+Ein Issue mit Label `release` und Titel **Release 1.0.16** legt die gemeinsame
+Basisversion fest. Ordne ihm den Milestone **1.0.16** zu. Es darf nur ein offenes
 Release-Issue geben. Main- und PR-Builds lesen dieselbe Quelle; ohne offenes
 Issue bleibt die letzte Release-Version maßgeblich. Die Repository-Variable
 `RELEASE_VERSION` ist lediglich ein Fallback vor dem ersten Release-Issue.
@@ -54,14 +54,22 @@ Paket, Quellen, Hinweise und Prüfnachweise landen zunächst in einem
 Bei normalem PR-Build wird ein separates Entwicklungszertifikat verwendet;
 der produktive Signierschlüssel wird dafür nicht bereitgestellt.
 
-## Konkret zur ersten Version 1.0.14
+## Release 1.0.16 abschließen
 
-PR #6 ist gemerged, schließt aber nur das Dokumentations-Issue ab. Für das offizielle
-Release muss der abschließende Release-PR zusätzlich **Closes #1** enthalten.
-Nach bestandenem Build und Merge erzeugt die Release-Issue-Automatik `v1.0.14` und
-den Entwurf (damals mit `1.0.14.65535`; zukünftige Releases verwenden die Run-Nummer). Öffne anschließend GitHub → Releases, prüfe den
-Entwurf samt MSIX, Zertifikat, Quellen und Lizenznachweisen und veröffentliche ihn.
-Das manuelle Schließen des Release-Issues allein erzeugt keinen Tag.
+Die Planung erfolgt im Issue **#12 – Release 1.0.16** mit dem Milestone **1.0.16**.
+Die vorgesehenen Feature-PRs sind gemerged. Der abschließende Pull Request für
+Version 1.0.16 enthält **Closes #12** und muss vor dem Merge den erforderlichen
+Build bestehen. Er wird über den normalen Main-Schutz gemergt.
+
+Nach diesem Merge setzt die bestehende Automatik den Tag **v1.0.16** auf den
+Merge-Commit und erstellt das signierte MSIX-Bundle mit der fortlaufenden
+Buildnummer sowie den Release-Entwurf. Die Release Notes werden direkt auf
+GitHub aus den aufgenommenen Pull Requests und Issues erzeugt. Dort liegen
+auch KI-Paket, Dokumentation, Quellen und Lizenznachweise als Anlagen.
+
+Den fertigen Entwurf unter GitHub → Releases prüfen und anschließend bewusst
+veröffentlichen. Der erfolgreiche Paket-Build legt bereits die bearbeitbare
+Planung für **1.0.17** an. Das manuelle Schließen von #12 allein erzeugt keinen Tag.
 
 ## Nächste Version automatisch planen und bearbeiten
 
