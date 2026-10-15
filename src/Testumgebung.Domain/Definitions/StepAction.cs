@@ -129,6 +129,8 @@ public sealed record OperatorPrompt(
 /// </summary>
 public interface IStepContext
 {
+    Processes.IProcessSession Processes => throw new NotSupportedException("Prozessaufrufe werden hier nicht unterstützt.");
+    string ProcessOwner => RunId;
     string RunId { get; }
     string StepId { get; }
     IReadOnlyList<Testumgebung.Domain.Code.ManagedAssembly> ManagedAssemblies => [];

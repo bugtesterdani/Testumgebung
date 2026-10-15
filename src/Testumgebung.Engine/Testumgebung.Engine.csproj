@@ -3,6 +3,7 @@
     <RootNamespace>Testumgebung.Engine</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Testumgebung.Workers/Testumgebung.Workers.csproj" />
     <ProjectReference Include="..\Testumgebung.Contracts\Testumgebung.Contracts.csproj" />
     <ProjectReference Include="..\Testumgebung.Domain\Testumgebung.Domain.csproj" />
     <ProjectReference Include="..\Testumgebung.Hardware\Testumgebung.Hardware.csproj" />

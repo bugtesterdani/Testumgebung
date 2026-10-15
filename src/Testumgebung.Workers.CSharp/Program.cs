@@ -45,7 +45,15 @@ public static class Program
         task.ContinueWith(t => Pending.TryRemove(t, out _), TaskScheduler.Default);
     }
 
-    public static async Task<int> Main()
+    public static Task<int> Main(string[] args)
+    {
+        if (args is ["--process-proxy"]) return ExternalProcessHost.ProxyAsync();
+        if (args.Length >= 5 && args[0] == "--managed-main") return ExternalProcessHost.ManagedAsync(args);
+        return RunCodeWorkerAsync();
+    }
+
+    // The external-program entry routes do not share the code worker's wire protocol.
+    private static async Task<int> RunCodeWorkerAsync()
     {
         Console.InputEncoding = new UTF8Encoding(false);
         var stdout = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true };

@@ -363,3 +363,5 @@ sind nicht durch die Nachprüfung der Version 1.0.13.3 freigegeben.
 Quellcode-Referenz und sichtbare Dokumentationslücken: `Report-Doxygen.cmd`. [Anleitung und Lizenzentscheidung](docs/code-dokumentation.md).
 
 Prüfprogramme mit KI übertragen: [Anleitung, Konvertierungsauftrag, Bausteinkatalog und geprüftes Beispiel](docs/ki-testprogramme.md).
+
+Externe EXE-, Python- und .NET-DLL-Aufrufe im Prüfprogramm: [Prozesse, Lebensdauer und Exitcode-Auswertung](docs/externe-prozesse.md).

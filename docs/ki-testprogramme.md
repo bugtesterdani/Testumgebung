@@ -226,6 +226,27 @@ Python-Laufzeiten und Pakete sind separat einzurichten; das alte Pythonprogramm
 nicht einfach als vollständige externe Anwendung in einen Host-Codeblock kopieren.
 Siehe [portable-python.md](portable-python.md) und [dynamische-verbindungen.md](dynamische-verbindungen.md).
 
+## Externe Prozesse in alten Prüfprogrammen
+
+System-/Subprocess-Aufrufe auf die Katalogtypen `prozess.start`, `prozess.warten`,
+`prozess.status` und `prozess.beenden` abbilden. Technische Parameter sind im Katalog
+belegt; insbesondere `Argumente` als JSON-Array von Strings und `Umgebung` als
+JSON-Objekt von Strings **innerhalb** des äußeren Parameter-Strings maskieren.
+Beispiel: `"Argumente":"[\"--serial\",\"{Kennung}\"]"`.
+JSON-Struktur wird zuerst gelesen, dann einzelne Werte erweitert. Keine beliebigen
+Shell-Kommandos als scheinbar sicher getrennte Argumente behandeln.
+
+Prozesskennung als String deklarieren und mit `"Prozess":"{MeinProzess}"` in
+Warte-/Status-/Stoppschritten verwenden. Exitcodes sind erst nach Ende gültig;
+Nichtwarten bleibt NRESULT. Bei erforderlicher Aufräumregel gebunden verwenden,
+bei ausdrücklich gewünschter unabhängiger Lebensdauer unabhängig. In Prüflingsgruppen
+endet die gebundene Lebensdauer nach den Exit-Aktionen. Erlaubte Exitcodes aus dem
+Altprogramm übernehmen, nicht pauschal jeden Code akzeptieren. DLL-Main unterstützt
+genau eine öffentliche statische Main-Methode mit null oder einem `string[]`-Argument
+und Rückgabe void/int/Task/Task<int> im mitgelieferten .NET-10-Host. Native DLL-Exports
+haben keinen solchen Vertrag. Python nutzt die vorhandene laufbezogene Auswahl.
+Weitere Regeln und Einschränkungen: [externe-prozesse.md](externe-prozesse.md).
+
 ## Auftragsauswahl, Hardware und Parallelbetrieb
 
 Auftragsauswahl ist ein **separates Projekt**, konfiguriert unter Auswahl & Auftrag.
@@ -292,3 +313,17 @@ das Beispiel mit dem echten Serializer. Bei Änderungen an Parametern oder
 Softwarefunktionen Anleitung, Referenz und Beispieldatei zusammen aktualisieren.
 Das JSON ist ein Bausteinkatalog, kein vollständiges JSON Schema und kein Beweis
 für Laufzeitkompatibilität eines erzeugten Projekts.
+
+
+### Interaktive externe Prozesse
+
+Für Dialoge `prozess.start` mit `Warten=false` und `ProzessZiel` verwenden.
+`prozess.ausgabe-warten` hat `Prozess`, `Muster`, `Regex` (false/true),
+`Stream` (stdout/stderr), optional `TrefferZiel` (String) und `Zeitlimit` (ms).
+`prozess.senden` hat `Prozess`, `Text`, `Zeilenende` (Keines/LF/CRLF),
+`Schliessen` (false/true, EOF) und `Zeitlimit` (ms). Prozess ist z. B. `{Handle}`.
+Muster und Text unterstützen Variablenvorlagen. Regex-Klammern für Quantoren
+als `{{` und `}}` schreiben. Ausgabe wird je Stream bis zum Treffer verbraucht;
+wiederholtes Warten erkennt keine bereits konsumierte Meldung. Kein Sleep als
+Synchronisierung einbauen; eindeutige Programmsignale mit Timeout verwenden.
+Details und Grenzen: [Externe Prozesse](externe-prozesse.md#dialoge-ohne-feste-pausen).

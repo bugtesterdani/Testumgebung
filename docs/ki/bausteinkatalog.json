@@ -2834,6 +2834,510 @@
       ]
     },
     {
+      "type": "prozess.ausgabe-warten",
+      "displayName": "Auf Prozessausgabe warten",
+      "category": "Prozesse",
+      "description": "Erkennt ein Signal in ungelesenem stdout oder stderr, auch ohne Zeilenumbruch. Verbraucht die Ausgabe bis zum Treffer.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "Muster",
+          "label": "Gesuchter Text / Regex",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Regex",
+          "label": "Regul\u00E4rer Ausdruck",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Stream",
+          "label": "Ausgabestream",
+          "kind": "Choice",
+          "default": "stdout",
+          "required": false,
+          "choices": [
+            "stdout",
+            "stderr"
+          ],
+          "hint": null
+        },
+        {
+          "name": "TrefferZiel",
+          "label": "Treffer \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Wartezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "prozess.beenden",
+      "displayName": "Prozess beenden",
+      "category": "Prozesse",
+      "description": "Beendet ausdr\u00FCcklich die Prozesskennung und deren Prozessbaum; kein automatisches PASS.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        }
+      ]
+    },
+    {
+      "type": "prozess.senden",
+      "displayName": "An Prozess senden",
+      "category": "Prozesse",
+      "description": "Sendet Text an stdin und leert den Schreibpuffer. Optional stdin nach dem letzten Befehl schlie\u00DFen.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "Text",
+          "label": "Zu sendender Text",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeilenende",
+          "label": "Zeilenende",
+          "kind": "Choice",
+          "default": "LF",
+          "required": false,
+          "choices": [
+            "Keines",
+            "LF",
+            "CRLF"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Schliessen",
+          "label": "stdin danach schlie\u00DFen (EOF)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Sendezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "prozess.start",
+      "displayName": "Prozess starten",
+      "category": "Prozesse",
+      "description": "Startet ein Programm, Python-Skript oder .NET-DLL. Gebundene Prozesse werden beim Pr\u00FCflingsende aufger\u00E4umt.",
+      "parameters": [
+        {
+          "name": "Art",
+          "label": "Aufrufart",
+          "kind": "Choice",
+          "default": "EXE",
+          "required": false,
+          "choices": [
+            "EXE",
+            "Python",
+            ".NET-DLL",
+            "DLL-Main"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Datei",
+          "label": "Absoluter Datei-/Skriptpfad",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {Variable} erlaubt."
+        },
+        {
+          "name": "Argumente",
+          "label": "Argumente (JSON-Liste)",
+          "kind": "Text",
+          "default": "[]",
+          "required": false,
+          "choices": null,
+          "hint": "Beispiel: [\u0022--serial\u0022,\u0022{Kennung}\u0022]"
+        },
+        {
+          "name": "Arbeitsverzeichnis",
+          "label": "Arbeitsverzeichnis",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt."
+        },
+        {
+          "name": "Umgebung",
+          "label": "Umgebungsvariablen (JSON-Objekt)",
+          "kind": "Text",
+          "default": "{}",
+          "required": false,
+          "choices": null,
+          "hint": "Stringwerte; nicht protokolliert. Beispiel: {\u0022MODE\u0022:\u0022test\u0022}"
+        },
+        {
+          "name": "Typ",
+          "label": "DLL-Main: vollst\u00E4ndiger .NET-Typname",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Python",
+          "label": "Eigener Python-Interpreter (optional)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Leer = bestehende Python-Auswahl des Pr\u00FCfprogramms."
+        },
+        {
+          "name": "Modus",
+          "label": "Lebensdauer",
+          "kind": "Choice",
+          "default": "Gebunden",
+          "required": false,
+          "choices": [
+            "Gebunden",
+            "Unabh\u00E4ngig"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Fenster",
+          "label": "Konsolenfenster zulassen",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ausgabe",
+          "label": "stdout/stderr erfassen",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kodierung",
+          "label": "Ausgabekodierung",
+          "kind": "Text",
+          "default": "utf-8",
+          "required": false,
+          "choices": null,
+          "hint": "Python: utf-8; \u00E4ltere EXE ggf. windows-1252 oder ibm850."
+        },
+        {
+          "name": "Ausgabelimit",
+          "label": "Max. Zeichen je Ausgabestream",
+          "kind": "Number",
+          "default": "65536",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Warten",
+          "label": "Auf Prozessende warten",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Wartezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ProzessZiel",
+          "label": "Prozesskennung \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "PidZiel",
+          "label": "Host-Prozess-ID \u2192 Intvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ExitcodeZiel",
+          "label": "Exitcode \u2192 Intvariable (erst nach Ende g\u00FCltig)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StdoutZiel",
+          "label": "stdout \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StderrZiel",
+          "label": "stderr \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FertigZiel",
+          "label": "Prozess beendet \u2192 Boolvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteteExitcodes",
+          "label": "Erlaubte Exitcodes",
+          "kind": "Text",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt."
+        },
+        {
+          "name": "Protokoll",
+          "label": "Ausgabe protokollieren",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        }
+      ]
+    },
+    {
+      "type": "prozess.status",
+      "displayName": "Prozessstatus abfragen",
+      "category": "Prozesse",
+      "description": "Liefert einen Zwischenstand. Ein noch laufender Prozess wird nicht als PASS bewertet.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "ExitcodeZiel",
+          "label": "Exitcode \u2192 Intvariable (erst nach Ende g\u00FCltig)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StdoutZiel",
+          "label": "stdout \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StderrZiel",
+          "label": "stderr \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FertigZiel",
+          "label": "Prozess beendet \u2192 Boolvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteteExitcodes",
+          "label": "Erlaubte Exitcodes",
+          "kind": "Text",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt."
+        },
+        {
+          "name": "Protokoll",
+          "label": "Ausgabe protokollieren",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        }
+      ]
+    },
+    {
+      "type": "prozess.warten",
+      "displayName": "Auf Prozess warten",
+      "category": "Prozesse",
+      "description": "Wartet auf eine Prozesskennung desselben Pr\u00FCflaufs und bewertet erst danach den Exitcode.",
+      "parameters": [
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Wartezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ExitcodeZiel",
+          "label": "Exitcode \u2192 Intvariable (erst nach Ende g\u00FCltig)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StdoutZiel",
+          "label": "stdout \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StderrZiel",
+          "label": "stderr \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FertigZiel",
+          "label": "Prozess beendet \u2192 Boolvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteteExitcodes",
+          "label": "Erlaubte Exitcodes",
+          "kind": "Text",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt."
+        },
+        {
+          "name": "Protokoll",
+          "label": "Ausgabe protokollieren",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        }
+      ]
+    },
+    {
       "type": "pruefplatz.freigabe.erteilen",
       "displayName": "Andere Seite freigeben",
       "category": "Zwei Pr\u00FCfpl\u00E4tze",

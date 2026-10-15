@@ -1,0 +1,119 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Python-Prozess – Demonstration",
+  "version": "0.1",
+  "description": "Keine Hardwarezugriffe. Vor dem Start Hauptvariable SkriptDatei auf den absoluten Pfad der beigelegten prozess-demo.py setzen. Prozessbausteine fuehren auch im Simulationsmodus echte Programme aus.",
+  "variables": [
+    {
+      "name": "SkriptDatei",
+      "type": "String",
+      "initial": "C:\\Pruefung\\prozess-demo.py"
+    },
+    {
+      "name": "DemoExitcode",
+      "type": "Int",
+      "initial": "0"
+    }
+  ],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Test Start / Init"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "a-dut",
+        "name": "Prüfling",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Exitcode",
+            "type": "Int",
+            "initial": "-1"
+          },
+          {
+            "name": "Fertig",
+            "type": "Bool"
+          },
+          {
+            "name": "Ausgabe",
+            "type": "String"
+          },
+          {
+            "name": "Fehlertext",
+            "type": "String"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "id": "a-scan",
+            "name": "Seriennummer erfassen",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Seriennummer scannen",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Ziel": "Kennung"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "prozess-start",
+            "name": "Python-Demo ausführen",
+            "block": "prozess.start",
+            "parameters": {
+              "Art": "Python",
+              "Datei": "{SkriptDatei}",
+              "Argumente": "[\"--serial\",\"{Kennung}\",\"--exit\",\"{DemoExitcode}\"]",
+              "Modus": "Gebunden",
+              "Warten": "true",
+              "Zeitlimit": "30000",
+              "ExitcodeZiel": "Exitcode",
+              "FertigZiel": "Fertig",
+              "StdoutZiel": "Ausgabe",
+              "StderrZiel": "Fehlertext",
+              "ErwarteteExitcodes": "0"
+            }
+          }
+        ]
+      }
+    ],
+    "id": "loop",
+    "name": "Test Loop / Testing"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Test End / Finalization"
+  },
+  "simulation": []
+}
