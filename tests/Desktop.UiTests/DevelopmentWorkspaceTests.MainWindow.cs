@@ -80,15 +80,44 @@ public sealed partial class DevelopmentWorkspaceTests
             finally
             {
                 if (!closed) { window.CloseAfterFault(); Wait(() => closed, dispatcher); }
-                Directory.Delete(directory, true);
+                // Closing the window can still leave a queued audit read finishing.
+                // Retry only Windows sharing/lock violations, never other IO errors.
+                Wait(() => TryDeleteWindowDirectory(directory), dispatcher,
+                    "Temporäre Fensterdaten sind nach dem Schließen weiterhin gesperrt.");
             }
         }
     }
 
-    private static void Wait(Func<bool> predicate, Dispatcher dispatcher)
+    [Fact]
+    public void Window_cleanup_waits_for_a_real_file_lock_and_accepts_an_already_removed_directory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "tu-ui-cleanup-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            using (var held = new FileStream(Path.Combine(directory, "audit.jsonl"), FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            {
+                Assert.False(TryDeleteWindowDirectory(directory));
+                Assert.True(Directory.Exists(directory));
+            }
+            Assert.True(TryDeleteWindowDirectory(directory));
+            Assert.False(Directory.Exists(directory));
+            Assert.True(TryDeleteWindowDirectory(directory));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    private static bool TryDeleteWindowDirectory(string directory)
+    {
+        try { Directory.Delete(directory, true); return true; }
+        catch (DirectoryNotFoundException) { return true; }
+        catch (IOException error) when ((error.HResult & 0xffff) is 32 or 33) { return false; }
+    }
+
+    private static void Wait(Func<bool> predicate, Dispatcher dispatcher, string message = "Fensterabschluss nicht rechtzeitig beendet.")
     {
         var elapsed = Stopwatch.StartNew();
         while (!predicate() && elapsed.Elapsed < TimeSpan.FromSeconds(10)) { Sta.Flush(dispatcher); Thread.Sleep(5); }
-        Assert.True(predicate(), "Fensterabschluss nicht rechtzeitig beendet.");
+        Assert.True(predicate(), message);
     }
 }

@@ -24,6 +24,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();
             VerifySettingsPasswords();
+            VerifyReleaseErrorLayout(dispatcher);
             var view = new DevelopmentWorkspace { DataContext = new ShellViewModel() };
             var root = new DirectoryInfo(AppContext.BaseDirectory);
             while (root.Parent is not null && !File.Exists(Path.Combine(root.FullName, "Testumgebung.sln"))) root = root.Parent;

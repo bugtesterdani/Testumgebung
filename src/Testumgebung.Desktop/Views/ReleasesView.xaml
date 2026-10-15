@@ -38,8 +38,18 @@
                     <TextBlock Style="{StaticResource Caption}">
                         <Run Text="Ablage: " /><Run Text="{Binding StoreName, Mode=OneWay}" />
                     </TextBlock>
-                    <TextBlock Text="{Binding StoreError}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"
-                               Visibility="{Binding StoreError, Converter={StaticResource NullVis}}" />
+                    <!-- Diagnostics must not displace the release list after an application update. -->
+                    <StackPanel x:Name="ReleaseErrorPanel" Margin="0,6,0,0"
+                                Visibility="{Binding StoreError, Converter={StaticResource NullVis}}">
+                        <TextBlock Text="Freigaben konnten nicht vollständig geladen werden."
+                                   Style="{StaticResource ErrorText}" TextWrapping="Wrap" />
+                        <Expander x:Name="ReleaseErrorDetails" Header="Details anzeigen" Margin="0,4,0,0">
+                            <TextBox Text="{Binding StoreError, Mode=OneWay}" IsReadOnly="True"
+                                     MaxHeight="140" TextWrapping="Wrap" AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                     AutomationProperties.Name="Details zur Release-Meldung" />
+                        </Expander>
+                    </StackPanel>
 
                     <!-- Fortschritt Entwurf → Entwicklungsprüfung → Freigabe -->
                     <ItemsControl ItemsSource="{Binding Stages}" Margin="0,12,0,12" HorizontalAlignment="Center">

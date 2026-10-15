@@ -18,3 +18,19 @@ Die Freigabeaufnahme erfasst zusätzlich vorhandene NI-DAQmx-/VISA-/CAN-Treiberd
 Jede Datei erhält eine feste Version und SHA-256-Bindung im Freigabepaket. Fehlende konfigurierte Dateien blockieren die Aufnahme/Prüfung; geänderte Inhalte erfordern neue Entwicklungsprüfung und Freigabe. Gleiche logische Namen können auf anderen Stationen auf andere absolute Pfade zeigen, sofern Inhalt und Version identisch sind. Die Liste muss alle für den konkreten Prüfablauf benötigten externen Binärdateien enthalten. Die Inventarisierung ersetzt keine Funktionsprüfung am Gerät oder eine tatsächliche LabVIEW-VI-Abnahme.
 
 Integrationstests für externe Datenbankserver werden bei fehlendem Verbindungsstring ausdrücklich als übersprungen gemeldet. Ein grüner Testlauf mit übersprungenen Tests ist kein Server-Abnahmenachweis.
+
+
+## Release-Meldungen nach einem Softwareupdate
+
+Eine Prüfprogramm-Freigabe hält die Versionen und Prüfsummen ihrer Laufzeitumgebung
+fest. Ein Update der Testumgebung kann diese Komponenten ändern. Die Release-Ansicht
+meldet dann, dass Freigaben nicht vollständig geladen werden konnten. Unter
+**Details anzeigen** stehen die betroffenen Komponenten in einem begrenzten,
+scrollbaren Textfeld. Der vollständige Text lässt sich markieren und kopieren;
+Programmwahl und Release-Liste bleiben erreichbar.
+
+Bei einer bestätigten Laufzeitabweichung den bisherigen Prüfablauf unter der neuen
+Software überprüfen, einen Entwurf mit neuer Prüfprogramm-Version anlegen, die
+Entwicklungsprüfung durchführen und ausdrücklich freigeben. Bestehende Pakete bleiben
+unverändert. Die kompakte Anzeige hebt die Laufzeit- und Integritätsprüfung nicht auf.
+Andere Ursachen wie eine unerreichbare Ablage anhand der Details beheben.
