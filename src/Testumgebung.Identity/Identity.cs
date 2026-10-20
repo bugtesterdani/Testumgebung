@@ -90,6 +90,14 @@ public sealed class AccessConfig
 
     public List<RightsEntry> Users { get; set; } = [];
 
+    /// <summary>Explicitly configured local simulation; never a confirmed production identity.</summary>
+    public bool AllowLocalDevelopment { get; set; }
+
+    [JsonIgnore]
+    public bool SupportsLocalDevelopment => AllowLocalDevelopment && LoadError is null
+        && string.IsNullOrWhiteSpace(ClientId) && string.IsNullOrWhiteSpace(TenantId)
+        && RightsSource.Equals("Lokal", StringComparison.OrdinalIgnoreCase) && Users.Any(u => u.Develop);
+
     /// <summary>
     /// Rechtequelle (Abschnitt 15): „Lokal“ (Liste je Prüfplatz, Standard), „AppRollen“ (zentral über Entra-App-Rollen) oder
     /// „Beide“ (Vereinigung). App-Rollen gelten nur für bestätigte Entra-Anmeldungen.
