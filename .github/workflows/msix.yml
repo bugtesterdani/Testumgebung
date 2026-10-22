@@ -3,7 +3,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
@@ -169,6 +168,20 @@ jobs:
           } finally {
             if (Test-Path -LiteralPath $pfx) { Remove-Item -LiteralPath $pfx -Force }
           }
+      - name: Eigenständige Kommandozeile bauen und prüfen
+        shell: pwsh
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+        run: ./build/publish-cli.ps1 -Version $env:BUILD_VERSION
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: CLI-${{ steps.version.outputs.version }}
+          path: |
+            artifacts/Testumgebung-Cli-*-win-x64.zip
+            artifacts/Testumgebung-Cli-*-win-x64.zip.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -216,7 +229,9 @@ jobs:
         run: |
           gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "MSIX-$env:RELEASE_VERSION" --dir release
           if ($LASTEXITCODE) { throw 'Release-Artefakt konnte nicht heruntergeladen werden.' }
-          $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','BUILD-INFO.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
+          gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "CLI-$env:RELEASE_VERSION" --dir release
+          if ($LASTEXITCODE) { throw 'CLI-Artefakt konnte nicht heruntergeladen werden.' }
+          $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip','.sha256' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','BUILD-INFO.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
           if (-not ($assets | Where-Object Extension -EQ '.msixbundle')) { throw 'MSIX-Bundle fehlt.' }
           if (-not ($assets | Where-Object Name -EQ "Testumgebung_$($env:RELEASE_VERSION)_KI-Paket.zip")) { throw 'KI-Paket für diese Release-Version fehlt.' }
           $existingJson=gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json databaseId,isDraft 2>$null

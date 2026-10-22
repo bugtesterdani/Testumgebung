@@ -403,6 +403,13 @@
           "OrderHelper": "[1.0.0, )"
         }
       },
+      "testumgebung.cli": {
+        "type": "Project",
+        "dependencies": {
+          "Testumgebung.Persistence": "[1.0.0, )",
+          "Testumgebung.Workers": "[1.0.0, )"
+        }
+      },
       "testumgebung.contracts": {
         "type": "Project"
       },

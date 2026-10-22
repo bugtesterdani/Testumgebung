@@ -12,7 +12,7 @@ try {
     & (Join-Path $root 'build/create-ai-package.ps1') -Layout $layout -Output $out -Version '1.0.16.23'
     $zip = [IO.Compression.ZipFile]::OpenRead((Join-Path $out 'Testumgebung_1.0.16.23_KI-Paket.zip'))
     try {
-        foreach ($name in @('LICENSE','docs/ki-testprogramme.md','docs/ki/bausteinkatalog.json','docs/ki/konvertierungsbeispiel.tproj.json')) {
+        foreach ($name in @('LICENSE','docs/ki-testprogramme.md','docs/kommandozeile.md','docs/beispiele/kommandozeile/normal.tsim.json','docs/ki/bausteinkatalog.json','docs/ki/konvertierungsbeispiel.tproj.json')) {
             $entry = $zip.GetEntry($name)
             if (-not $entry) { throw "Pflichtdatei fehlt im ZIP: $name" }
             $reader = [IO.StreamReader]::new($entry.Open())

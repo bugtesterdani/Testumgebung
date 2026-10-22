@@ -33,12 +33,12 @@ public sealed class SessionService
     public AccessConfig? Config { get; private set; }
 
     public bool AllowDevelopmentMode { get; private set; }
-    public bool CanEnableDevelopmentMode => !AllowDevelopmentMode && Config is null && !IsSigningIn && !IsSignedIn;
+    public bool CanEnableDevelopmentMode => !AllowDevelopmentMode && (Config is null || Config.SupportsLocalDevelopment) && !IsSigningIn && !IsSignedIn;
 
-    /// <summary>Bewusste lokale Entwicklung ohne eingerichtete Produktionsanmeldung; keine automatische Rechtevergabe.</summary>
+    /// <summary>Bewusste lokale Entwicklung ohne eingerichtete Produktionsanmeldung oder mit ausdrücklich lokaler Konfiguration; keine automatische Rechtevergabe.</summary>
     public void EnableDevelopmentMode()
     {
-        if (!CanEnableDevelopmentMode) throw new InvalidOperationException("Lokale Entwicklung ist nur ohne Zugangskonfiguration aktivierbar.");
+        if (!CanEnableDevelopmentMode) throw new InvalidOperationException("Lokale Entwicklung benötigt eine fehlende oder ausdrücklich lokale Zugangskonfiguration.");
         AllowDevelopmentMode = true;
         LastError = null;
         Changed?.Invoke();

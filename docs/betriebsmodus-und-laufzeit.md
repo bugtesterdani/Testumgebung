@@ -52,3 +52,49 @@ Windows-DPI-Skalierung kommt unabhängig davon hinzu. Bei noch kleineren Fläche
 sind die Inhalte scrollbar, damit Steuerelemente erreichbar bleiben. Beim Start
 und beim Wechsel auf eine kleinere Arbeitsfläche wird ein normales Fenster auf
 die verfügbare Größe begrenzt. Eine zusätzliche Konfiguration ist nicht erforderlich.
+
+
+## Lokale Benutzer einrichten und Aussperrung vermeiden
+
+Die lokale Anmeldung ist eine ausdrücklich aktivierte **Entwicklungssimulation ohne
+Passwortprüfung**. Für bestätigte Firmenkonten im Produktivbetrieb Microsoft Entra
+verwenden. „M. Weber“ ist ein vorausgefüllter Simulationsname, kein festes
+Administratorkonto.
+
+Bei der ersten Anmeldung wird das aktuelle Entwicklerkonto für die erste
+Zugangskonfiguration vorgeschlagen. Es muss beim Speichern sein Recht **Entwickeln**
+behalten. Ein Speicherversuch, der ihm dieses Recht innerhalb derselben Anmeldeart
+entzieht, wird vor dem Schreiben abgelehnt; Datei und Sitzung bleiben unverändert.
+Zum Entfernen des ursprünglichen Kontos zuerst ein weiteres Entwicklerkonto
+speichern, sich damit anmelden und danach das alte Konto entfernen.
+
+Lokale Namen wie `Tester` werden als `tester@simuliert.local` gespeichert.
+Ungültige und nach der Normalisierung doppelte Anmeldenamen werden abgelehnt.
+Beim Speichern im lokalen Entwicklungsmodus wird die ausdrücklich lokale
+Konfiguration festgehalten. Nach einem Neustart im Anmeldefenster den zugeordneten
+Namen eingeben und **Lokal anmelden (Entwicklungsmodus)** wählen. Es gelten dann
+nur dessen gespeicherte Rechte. Unbekannte Konten erhalten keinen Zugang.
+
+### Bereits ausgesperrte ältere lokale Testinstallation wiederherstellen
+
+Diese Schritte gelten ab der korrigierten Softwareversion und nur für eine lokale
+Testinstallation. Die maschinenweite Zugangsdatei liegt unter
+`%ProgramData%\Testumgebung\zugang.json`; ein Zurücksetzen der paketbezogenen
+App-Daten über Windows setzt diese Datei nicht zuverlässig zurück.
+
+1. Die Software schließen. Ein berechtigter Windows-Administrator erstellt zuerst
+   eine separate Sicherung von `zugang.json`; vorhandene Sicherungen beibehalten.
+2. Bei einer bewusst lokalen Konfiguration ohne Client-ID und Mandanten-ID,
+   mit Rechtequelle `Lokal` und einem vorgesehenen Benutzer mit `develop: true`,
+   auf oberster JSON-Ebene `"allowLocalDevelopment": true` ergänzen. Die
+   Benutzerliste und die vorgesehenen Rechte beibehalten; den gespeicherten
+   Anmeldenamen prüfen. Für lokale Namenseingabe muss er dem normalisierten
+   Namen entsprechen, beispielsweise `tester@simuliert.local`.
+3. Mit der korrigierten Version starten, genau dieses Konto eingeben und die
+   lokale Entwicklung im Anmeldefenster ausdrücklich aktivieren.
+
+Bei einer Entra-Produktivkonfiguration stattdessen die Firmenanmeldung und deren
+Rechtezuordnung administrativ korrigieren. Der lokale Schalter wird bei Entra-
+Einstellungen, beschädigter Konfiguration oder fehlendem Entwicklerkonto nicht
+als Wiederherstellungszugang angeboten. Es gibt keinen automatischen
+Administrator-Fallback auf „M. Weber“.

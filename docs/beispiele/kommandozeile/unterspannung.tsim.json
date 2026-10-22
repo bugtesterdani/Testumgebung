@@ -1,0 +1,43 @@
+{
+  "format": "testumgebung.szenario",
+  "formatVersion": 1,
+  "project": "netzteil.tproj.json",
+  "name": "Unterspannung an der Grenze",
+  "duts": 2,
+  "simulation": {
+    "Spannung_Pruefling": [
+      220.0,
+      219.9
+    ]
+  },
+  "answers": [
+    {
+      "step": "sn",
+      "values": [
+        "SN-010",
+        "SN-011"
+      ]
+    }
+  ],
+  "expect": {
+    "status": "FAIL",
+    "duts": [
+      {
+        "dutId": "SN-010",
+        "rating": "PASS"
+      },
+      {
+        "dutId": "SN-011",
+        "rating": "FAIL"
+      }
+    ],
+    "steps": [
+      {
+        "step": "u",
+        "occurrence": 2,
+        "rating": "FAIL",
+        "value": 219.9
+      }
+    ]
+  }
+}

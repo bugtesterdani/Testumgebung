@@ -304,6 +304,11 @@ Hardware, Einheiten noch vollständige fachliche Gleichwertigkeit. Dafür sind d
 obigen Abnahmeschritte notwendig. Das Werkzeug ist ein Entwicklerwerkzeug und
 benötigt außerhalb der installierten Software einen Quellcode-Checkout samt SDK.
 
+Weiter geht die [Kommandozeile](kommandozeile.md) `testumgebung-cli`: `build` übersetzt
+zusätzlich alle CodeBlocks, `test` simuliert das Projekt mit Szenario-Dateien
+(`*.tsim.json`: Werkereingaben, Simulationswerte, erwartete Bewertungen) und schreibt
+einen JUnit-Bericht. Auch das ist Simulation und keine Hardware-Abnahme.
+
 ## Referenz aktualisieren
 
 Im Repository `./build/project-format-reference.ps1` ausführen. Es exportiert

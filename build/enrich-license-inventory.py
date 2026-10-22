@@ -10,6 +10,7 @@ spec=importlib.util.spec_from_file_location('audit',ROOT/'build/audit-dependenci
 audit=importlib.util.module_from_spec(spec);spec.loader.exec_module(audit)
 
 PURPOSES={
+'Cli':'Standalone command-line project validation, code compilation and scenario simulation (separate ZIP)',
 'Contracts':'Gemeinsame Verträge und Grundtypen','Domain':'Prüfprojekt-, Variablen- und Ergebnismodell',
 'Engine':'Ablaufausführung, Bausteine und Ressourcen-Sperren','Hardware':'Hardware-Abstraktionen und Simulation',
 'Identity':'Anmeldung und Berechtigungsverträge','Instruments':'Gerätetreiber, SSH/SFTP, Busse und Netzwerk',
@@ -127,7 +128,7 @@ def attach_usage(data):
         project['references']=list(dict.fromkeys(project['references']))
         name=Path(project['project']).stem;short=name.removeprefix('Testumgebung.')
         project['purpose']=PURPOSES.get(short,'Automated tests' if 'Tests' in name else 'Test-only fixture')
-        project['version']=data['release_version']+' in audited MSIX' if project['kind']=='product' else 'Default assembly 1.0.0; not shipped'
+        project['version']=(data['release_version']+' (separate CLI ZIP; not in audited MSIX)' if short=='Cli' else data['release_version']+' in audited MSIX') if project['kind']=='product' else 'Default assembly 1.0.0; not shipped'
         project['used_by']=[r['project'] for r in data['projects'] if project['project'] in r['references']]
         if 'CodeWorkers.targets' in (ROOT/project['project']).read_text(encoding='utf-8-sig'):
             for reference in ['src/Testumgebung.Workers.CSharp/Testumgebung.Workers.CSharp.csproj (imported build-only reference)','src/Testumgebung.Workers.Native/Testumgebung.Workers.Native.csproj (imported build-only reference)']:

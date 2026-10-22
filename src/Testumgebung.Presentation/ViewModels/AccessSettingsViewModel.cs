@@ -64,6 +64,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
         { LoadError: { } e } => "Zugangsdatei beschädigt – niemand hat Rechte: " + e,
         { UsesEntra: true } => "Anmeldung über Microsoft Entra ID (MSAL/WAM); Rechte aus der Liste unten.",
         _ when _identity.Session.IsDevelopmentMode => "Expliziter Entwicklungsmodus: simulierte Anmeldung; Rechte aus der Liste unten.",
+        { SupportsLocalDevelopment: true } => "Lokale Entwicklung eingerichtet: Im Anmeldefenster ausdrücklich lokal anmelden. Rechte aus der Benutzerliste; keine bestätigte Firmenanmeldung.",
         _ => "Produktivbetrieb: Entra-App fehlt – keine erweiterten Rechte.",
     };
 
@@ -91,6 +92,15 @@ public sealed class AccessSettingsViewModel : ObservableObject
         ReleaseRole = c?.ReleaseRole ?? "Testumgebung.Freigeben";
         Users.Clear();
         foreach (var u in c?.Users ?? []) Users.Add(new RightsEditRow { Upn = u.Upn, Name = u.Name ?? "", Develop = u.Develop, Release = u.Release });
+        RefreshSession();
+    }
+
+    /// <summary>Called on the UI dispatcher after sign-in, including when this page was created before login.</summary>
+    public void RefreshSession()
+    {
+        if (_identity.Session.Config is null && _identity.Store?.Exists != true && Users.Count == 0
+            && _identity.Session.CanDevelop && _identity.Session.User is { } user)
+            Users.Add(new RightsEditRow { Upn = user.Upn, Name = user.DisplayName, Develop = true, Release = _identity.Session.CanRelease });
         OnPropertyChanged(nameof(ModeText));
     }
 
@@ -124,11 +134,13 @@ public sealed class AccessSettingsViewModel : ObservableObject
             ClientId = ClientId.Length == 0 ? null : ClientId,
             TenantId = TenantId.Length == 0 ? null : TenantId,
             InactivityMinutes = InactivityMinutes,
+            AllowLocalDevelopment = _identity.Session.IsDevelopmentMode && ClientId.Length == 0 && TenantId.Length == 0,
             RightsSource = RightsSource,
             DevelopRole = DevelopRole.Length == 0 ? "Testumgebung.Entwickeln" : DevelopRole,
             ReleaseRole = ReleaseRole.Length == 0 ? "Testumgebung.Freigeben" : ReleaseRole,
             Users = Users.Select(u => new RightsEntry { Upn = u.Upn.Trim(), Name = u.Name.Length == 0 ? null : u.Name, Develop = u.Develop, Release = u.Release }).ToList(),
         };
+        if (!ValidateReachableAccess(config)) return false;
         try
         {
             store.Save(config);
@@ -148,4 +160,32 @@ public sealed class AccessSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ModeText));
         return true;
     }
+
+    /// <summary>Validate the future mapping before writing, so rejected edits leave file and session intact.</summary>
+    private bool ValidateReachableAccess(AccessConfig config)
+    {
+        if (config.AllowLocalDevelopment)
+            foreach (var user in config.Users)
+                if (!user.Upn.Contains('@')) user.Upn = SimulatedIdentityProvider.ToUpn(user.Upn);
+        if (config.Users.Any(u => !System.Net.Mail.MailAddress.TryCreate(u.Upn, out var address)
+            || !string.Equals(address.Address, u.Upn, StringComparison.OrdinalIgnoreCase)))
+        {
+            Status = "Ungültiger Anmeldename. Einen vollständigen UPN wie name@firma.example verwenden; lokale Namen werden im Entwicklungsmodus normalisiert.";
+            return false;
+        }
+        if (config.Users.GroupBy(u => u.Upn, StringComparer.OrdinalIgnoreCase).Any(g => g.Count() > 1))
+        {
+            Status = "Anmeldenamen sind nach der Normalisierung doppelt vorhanden. Jede Person nur einmal zuordnen.";
+            return false;
+        }
+        var session = _identity.Session;
+        if (session.CanDevelop && session.User is { } current && config.UsesEntra == (session.Config?.UsesEntra ?? false)
+            && (config.RightsFor(current) & Testumgebung.Contracts.UserRights.Develop) == 0)
+        {
+            Status = $"Nicht gespeichert: {current.Upn} würde den Zugang zu den Einstellungen verlieren. Aktuelles Konto mit Entwickeln beibehalten; zum Entfernen zuerst mit einem anderen berechtigten Konto anmelden.";
+            return false;
+        }
+        return true;
+    }
+
 }

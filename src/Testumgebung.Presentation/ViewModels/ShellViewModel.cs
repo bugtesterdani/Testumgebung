@@ -544,6 +544,7 @@ public sealed class ShellViewModel : ObservableObject
 
     private void RaiseUser()
     {
+        AccessPage.RefreshSession();
         HandlePausedOnSignOut();
         if (!Allowed(Page)) Page = ShellPage.Operator;
         OnPropertiesChanged(nameof(IsDeveloper), nameof(CanRelease), nameof(IsSignedIn), nameof(IsSigningIn), nameof(LoginError),

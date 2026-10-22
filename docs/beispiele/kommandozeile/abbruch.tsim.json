@@ -1,0 +1,26 @@
+{
+  "format": "testumgebung.szenario",
+  "formatVersion": 1,
+  "project": "netzteil.tproj.json",
+  "name": "Werkerabbruch während der Strommessung",
+  "duts": 1,
+  "answers": [
+    {
+      "step": "sn",
+      "value": "SN-020"
+    }
+  ],
+  "abort": {
+    "atStep": "i",
+    "occurrence": 1
+  },
+  "expect": {
+    "status": "PASS + WERROR",
+    "steps": [
+      {
+        "step": "p",
+        "count": 0
+      }
+    ]
+  }
+}

@@ -150,6 +150,8 @@
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionTitle}" Text="Zugang und Rechte (dieser Prüfplatz)" />
                             <TextBlock Text="{Binding ModeText}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,6" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                       Text="Das aktuelle Entwicklerkonto beim Speichern beibehalten. Zum Entfernen zuerst mit einem anderen Entwicklerkonto anmelden. Lokale Namen gelten nur für die ausdrücklich aktivierte Simulation; Firmenkonten benötigen ihren vollständigen UPN." />
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
