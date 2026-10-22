@@ -10,6 +10,7 @@ spec=importlib.util.spec_from_file_location('audit',ROOT/'build/audit-dependenci
 audit=importlib.util.module_from_spec(spec);spec.loader.exec_module(audit)
 
 PURPOSES={
+'Cli':'Standalone command-line project validation, code compilation and scenario simulation (separate ZIP)',
 'Contracts':'Gemeinsame Verträge und Grundtypen','Domain':'Prüfprojekt-, Variablen- und Ergebnismodell',
 'Engine':'Ablaufausführung, Bausteine und Ressourcen-Sperren','Hardware':'Hardware-Abstraktionen und Simulation',
 'Identity':'Anmeldung und Berechtigungsverträge','Instruments':'Gerätetreiber, SSH/SFTP, Busse und Netzwerk',

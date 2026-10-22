@@ -364,4 +364,6 @@ Quellcode-Referenz und sichtbare Dokumentationslücken: `Report-Doxygen.cmd`. [A
 
 Prüfprogramme mit KI übertragen: [Anleitung, Konvertierungsauftrag, Bausteinkatalog und geprüftes Beispiel](docs/ki-testprogramme.md).
 
+Ohne Oberfläche prüfen, bauen und mit Szenarien simulieren (CI, KI-Agenten in einer Offline-VM): [Kommandozeile `testumgebung-cli`](docs/kommandozeile.md).
+
 Externe EXE-, Python- und .NET-DLL-Aufrufe im Prüfprogramm: [Prozesse, Lebensdauer und Exitcode-Auswertung](docs/externe-prozesse.md).

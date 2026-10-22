@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\src\Testumgebung.Notifications\Testumgebung.Notifications.csproj" />
     <ProjectReference Include="..\..\src\Testumgebung.Presentation\Testumgebung.Presentation.csproj" />
     <ProjectReference Include="..\..\src\Testumgebung.Workers\Testumgebung.Workers.csproj" />
+    <ProjectReference Include="..\..\src\Testumgebung.Cli\Testumgebung.Cli.csproj" />
     <ProjectReference Include="..\Fixtures\OrderLibrary\OrderLibrary.csproj" />
     <ProjectReference Include="../Fixtures/ProcessProbe/ProcessProbe.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Fixtures\FakeGdb\FakeGdb.csproj" ReferenceOutputAssembly="false" />

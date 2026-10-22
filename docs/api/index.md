@@ -14,6 +14,7 @@ Die separate Datei `Dokumentationsstatus.html` weist fehlende Beschreibungen aus
 - **Persistence / DatabaseAdapters:** Projekte, Releases, Ergebnisse, Outbox und SQL.
 - **Identity:** Anmeldung und Rechteprüfung.
 - **Presentation / Desktop:** Zustandsmodelle und WPF-Oberfläche.
+- **Cli:** Projekte prüfen, Code übersetzen und Szenarien simulieren; [Anleitung](../kommandozeile.md).
 - **Notifications:** externe Ergebnismeldungen.
 
 ## Wichtige Verträge

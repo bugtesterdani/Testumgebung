@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Kommandozeile ohne Oberfläche: Projekte prüfen, Codeartefakte bauen, Abläufe mit Szenarien simulieren.
+       Für Automatisierung (CI, KI-Agenten in einer Offline-VM). Anleitung: docs/kommandozeile.md -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Testumgebung.Cli</RootNamespace>
+    <AssemblyName>Testumgebung.Cli</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testumgebung.Persistence\Testumgebung.Persistence.csproj" />
+    <ProjectReference Include="..\Testumgebung.Workers\Testumgebung.Workers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Formatanleitung und Bausteinkatalog für Befehl „anleitung“ und Hinweise bei Fehlern. -->
+    <None Include="..\..\docs\ki-testprogramme.md" Link="ki\ki-testprogramme.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\ki\bausteinkatalog.json" Link="ki\bausteinkatalog.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\ki\konvertierungsbeispiel.tproj.json" Link="ki\konvertierungsbeispiel.tproj.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\kommandozeile.md" Link="ki\kommandozeile.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Import Project="..\..\build\CodeWorkers.targets" />
+</Project>
