@@ -170,6 +170,8 @@ jobs:
           }
       - name: Eigenständige Kommandozeile bauen und prüfen
         shell: pwsh
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
         run: ./build/publish-cli.ps1 -Version $env:BUILD_VERSION
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
