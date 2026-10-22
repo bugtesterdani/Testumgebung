@@ -106,5 +106,7 @@ public static class ProjectChecks
         }
     }
 
-    public static string SuiteName(string path) => Path.GetFileName(path);
+    /// <summary>Names remain readable while the relative path separates identically named projects in different folders.</summary>
+    public static string SuiteName(string path)
+        => $"{Path.GetFileName(path)} [{Path.GetRelativePath(Environment.CurrentDirectory, Path.GetFullPath(path)).Replace('\\', '/')}]";
 }

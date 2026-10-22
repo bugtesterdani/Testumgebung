@@ -20,7 +20,7 @@ public static class ScenarioRunner
     /// <summary>Simuliert das Szenario mit dem (bereits geprüften) Projekt und trägt die Prüfpunkte in den Bericht ein.</summary>
     public static async Task RunAsync(Scenario scenario, TestProject project, ICodeRuntime runtime, Report report, bool printTrace)
     {
-        var suite = $"{Path.GetFileName(scenario.SourcePath)} ({scenario.Name})";
+        var suite = $"{ProjectChecks.SuiteName(scenario.SourcePath)} ({scenario.Name})";
         var trace = new StringBuilder();
         var problems = new ConcurrentQueue<string>();
 

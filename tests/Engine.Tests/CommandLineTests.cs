@@ -107,7 +107,7 @@ public sealed class CommandLineTests : IDisposable
         var failures = Cases(junit).Where(c => c.Failure is not null).ToList();
         Assert.Contains(failures, c => c.Suite.StartsWith(Path.GetFileName(used), StringComparison.Ordinal)
                                       && c.Failure!.Contains("Antworten für „sn“ aufgebraucht", StringComparison.Ordinal));
-        Assert.Contains(failures, c => c.Suite == Path.GetFileName(typo) && c.Name == "Szenario laden");
+        Assert.Contains(failures, c => c.Suite == ProjectChecks.SuiteName(typo) && c.Name == "Szenario laden");
     }
 
     [Fact]
@@ -263,6 +263,21 @@ public sealed class CommandLineTests : IDisposable
         var result = await RunAsync("test", scenario);
         Assert.Equal(exit, result.Exit);
         Assert.Contains(Cases(result.Junit), c => c.Name == "Schritt p" && (c.Failure is null) == (exit == 0));
+    }
+
+    [Fact]
+    public async Task Gleichnamige_Dateien_in_unterschiedlichen_Ordnern_bleiben_getrennte_Suites()
+    {
+        var original = Copy("netzteil.tproj.json");
+        foreach (var folder in new[] { "eins", "zwei" })
+        {
+            var directory = Directory.CreateDirectory(Path.Combine(_dir, folder)).FullName;
+            File.Copy(original, Path.Combine(directory, "netzteil.tproj.json"));
+        }
+        var result = await RunAsync("check", _dir);
+        Assert.Equal(0, result.Exit);
+        Assert.Equal(3, result.Junit.Descendants("testsuite").Count());
+        Assert.Equal(3, result.Junit.Descendants("testsuite").Select(s => (string?)s.Attribute("name")).Distinct().Count());
     }
 
 }

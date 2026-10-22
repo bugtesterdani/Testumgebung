@@ -184,18 +184,18 @@ namespace Testumgebung.Cli
                 }
                 catch (InvalidDataException ex)
                 {
-                    report.Fail(Path.GetFileName(file), "Szenario laden", ex.Message);
+                    report.Fail(ProjectChecks.SuiteName(file), "Szenario laden", ex.Message);
                     continue;
                 }
                 covered.Add(scenario.ProjectPath);
                 if (!valid.TryGetValue(scenario.ProjectPath, out var ok))
                 {
-                    report.Fail(Path.GetFileName(file), "Projekt", $"Projektdatei {scenario.Project} nicht gefunden bzw. nicht unter {path}.");
+                    report.Fail(ProjectChecks.SuiteName(file), "Projekt", $"Projektdatei {scenario.Project} nicht gefunden bzw. nicht unter {path}.");
                     continue;
                 }
                 if (!ok)
                 {
-                    report.Skip(Path.GetFileName(file), "Simulation", "Projekt ist ungültig oder nicht baubar – siehe oben.");
+                    report.Skip(ProjectChecks.SuiteName(file), "Simulation", "Projekt ist ungültig oder nicht baubar – siehe oben.");
                     continue;
                 }
                 var fresh = new ProjectSerializer().Load(scenario.ProjectPath); // jeder Lauf mit unveränderter Projektdatei
