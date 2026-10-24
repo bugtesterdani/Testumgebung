@@ -206,6 +206,21 @@ def next_version(base):
         parts[index] = 0
     raise ValueError('Keine höhere MSIX-Basisversion verfügbar.')
 
+def planned_successor(issues, base):
+    # Read the completed release's plan, not a second active release issue.
+    plans = [i for i in issues if 'release' in labels(i)
+             and i.get('title', '').casefold() == f'Release {base}'.casefold()]
+    choices = []
+    for plan in plans:
+        choices.extend(re.findall(r'<!-- next-release-version:(.*?) -->', plan.get('body') or ''))
+    if not choices: return next_version(base)
+    if len(choices) != 1: raise ValueError('Folgeversion ist mehrfach angegeben.')
+    proposed = version(choices[0])
+    if tuple(map(int, proposed.split('.'))) <= tuple(map(int, base.split('.'))):
+        raise ValueError('Folgeversion muss höher als die abgeschlossene Version sein.')
+    return proposed
+
+
 def next_release(api, args):
     if not args.tag.startswith('v'): raise ValueError('Tag muss vX.Y.Z heißen.')
     base = version(args.tag[1:])
@@ -225,7 +240,7 @@ def next_release(api, args):
             raise ValueError('Offenes Release-Issue ist keine spätere Version.')
         print(f'Bestehendes Release-Issue #{active[0]["number"]} bleibt unverändert.')
         return
-    proposed = next_version(base)
+    proposed = planned_successor(issues, base)
     # A closed planning issue must not be recreated, even on an old build rerun.
     if any('release' in labels(i) and i.get('title', '').casefold() == f'Release {proposed}'.casefold() for i in issues):
         raise ValueError('Planung dieser Folgeversion existiert bereits und ist geschlossen.')
