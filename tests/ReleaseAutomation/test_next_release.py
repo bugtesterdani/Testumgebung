@@ -94,6 +94,34 @@ class NextReleaseTests(unittest.TestCase):
         api.items[0]['title'] = 'Release 1.0.14'
         with self.assertRaises(ValueError): release.next_release(api, SimpleNamespace(tag='v1.0.14'))
 
+    def test_explicit_successor_is_created_after_release_and_controls_next_builds(self):
+        api = API()
+        api.items = [{'number': 24, 'title': 'Release 1.0.14', 'state': 'closed',
+                      'labels': [{'name': 'release'}],
+                      'body': '<!-- next-release-version:1.1.0 -->'}]
+        self.assertEqual('1.0.14', release.base_version(api.items, '1.0.0'))
+        release.next_release(api, SimpleNamespace(tag='v1.0.14'))
+        successor = api.items[-1]
+        self.assertEqual('Release 1.1.0', successor['title'])
+        self.assertEqual('1.1.0', successor['milestone']['title'])
+        self.assertEqual('1.1.0', release.base_version(api.items, '1.0.0'))
+        count = len(api.writes)
+        release.next_release(api, SimpleNamespace(tag='v1.0.14'))
+        self.assertEqual(count, len(api.writes))
+
+    def test_bad_successor_stops_before_creating_anything(self):
+        for body in ('<!-- next-release-version:1.0.14 -->', '<!-- next-release-version:1.0.13 -->',
+                     '<!-- next-release-version:v1.1.0 -->', '<!-- next-release-version:1.1 -->',
+                     '<!-- next-release-version:65536.0.0 -->',
+                     '<!-- next-release-version:1.1.0 --><!-- next-release-version:1.2.0 -->'):
+            with self.subTest(body=body):
+                api = API()
+                api.items = [{'number': 24, 'title': 'Release 1.0.14', 'state': 'closed',
+                              'labels': [{'name': 'release'}], 'body': body}]
+                with self.assertRaises(ValueError):
+                    release.next_release(api, SimpleNamespace(tag='v1.0.14'))
+                self.assertFalse(api.writes)
+
     def test_version_rollover_and_exhaustion(self):
         self.assertEqual('1.1.0', release.next_version('1.0.65535'))
         self.assertEqual('2.0.0', release.next_version('1.65535.65535'))

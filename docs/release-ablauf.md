@@ -71,6 +71,19 @@ Den fertigen Entwurf unter GitHub → Releases prüfen und anschließend bewusst
 veröffentlichen. Der erfolgreiche Paket-Build legt bereits die bearbeitbare
 Planung für **1.0.17** an. Das manuelle Schließen von #12 allein erzeugt keinen Tag.
 
+## Release 1.0.17 und Folgeversion 1.1.0
+
+Der Abschluss-PR für **1.0.17** schließt das Planungs-Issue **#24** mit
+`Closes #24`. Nach bestandenem Build und Merge nach `main` entstehen der Tag
+**v1.0.17**, die Pakete mit fortlaufender Buildrevision und der Release-Entwurf
+mit den auf GitHub erzeugten Notes und Anlagen, einschließlich des CLI-ZIP.
+
+Im Issue #24 ist **1.1.0** als anschließende Version vorgemerkt. Erst nach dem
+erfolgreichen offiziellen 1.0.17-Paket-Build legt die Automatik die offene Planung
+**Release 1.1.0** mit passendem Milestone an. Bis dahin bleibt 1.0.17 die
+Versionsquelle. Der 1.0.17-Entwurf kann anschließend geprüft und veröffentlicht
+werden; der Release-PR veröffentlicht ihn nicht automatisch.
+
 ## Nächste Version automatisch planen und bearbeiten
 
 Nach erfolgreichem offiziellen Paket-Build, Release-Entwurf und Release Notes legt
@@ -78,6 +91,20 @@ die Automatik ein Issue **Release 1.0.15** mit Label `release` und passendem Mil
 an. Standardmäßig wird die dritte Versionsstelle erhöht. An der MSIX-Grenze erfolgt
 ein Übertrag in die nächste Stelle. Das neue Issue entsteht bereits beim fertigen
 Entwurf; die öffentliche Veröffentlichung bleibt eine bewusste Entscheidung.
+
+Eine Folgeversion kann schon im aktuellen Release-Issue festgelegt werden,
+beispielsweise mit genau einem Marker:
+
+```html
+<!-- next-release-version:1.1.0 -->
+```
+
+Die Angabe benötigt drei Versionsstellen und muss höher als die abzuschließende
+Version sein. Sie bestimmt nur das anschließend automatisch angelegte Issue;
+der aktuelle Issue-Titel und damit die aktuellen Builds bleiben unverändert.
+Ohne Marker gilt die normale Erhöhung der dritten Stelle. Ungültige oder
+mehrfache Angaben stoppen die Folgeplanung vor dem Anlegen eines Issues.
+Eine bereits offene spätere Planung behält weiterhin Vorrang.
 
 Du kannst den Titel später beispielsweise in **Release 1.1.0** ändern. Drei
 Versionsstellen sind erforderlich. Die Issue-Automatik erstellt beziehungsweise
