@@ -74,14 +74,14 @@ public sealed class NetworkConnectionTests
             var ssh = SshExecute("DUT", "version");
             SftpUpload("DUT", "local", "/remote");
             SftpDownload("DUT", "/remote", "local");
-            return http["code"].GetValue<int>() == 200 && ssh["code"].GetValue<int>() == 0 ? Pass() : Fail();
+            return http["code"].GetValue<int>() == 200 && ssh["code"].GetValue<int>() == 0 && ssh["hostKeySHA256"].GetValue<string>() == "SHA256:test" && ssh["hostKeyBase64"].GetValue<string>() == "AQID" ? Pass() : Fail();
             """ : """
             configure_connection("DUT", "COM7")
             http = http_request("DUT", "/status")
             ssh = ssh_execute("DUT", "version")
             sftp_upload("DUT", "local", "/remote")
             sftp_download("DUT", "/remote", "local")
-            return Pass() if http["code"] == 200 and ssh["code"] == 0 else Fail()
+            return Pass() if http["code"] == 200 and ssh["code"] == 0 and ssh["hostKeySHA256"] == "SHA256:test" and ssh["hostKeyBase64"] == "AQID" else Fail()
             """;
         var loop = Group("loop").Add(S(BlockCatalog.Code, "code", ("Sprache", language), ("Quelltext", source)));
         var run = new TestRun(Test(loop), new TestRunOptions { Hardware = new HardwareRegistry().Bind("DUT", device, ""), CodeRuntime = CodeBlockTests.SharedRuntime.Value });
@@ -189,7 +189,7 @@ public sealed class NetworkConnectionTests
         public List<string> SentTo { get; } = [];
         public List<string> Operations { get; } = [];
         public Task<RemoteResponse> ExecuteAsync(RemoteRequest request, CancellationToken cancellationToken)
-        { Operations.Add(request.Operation); return Task.FromResult(new RemoteResponse("OK", request.Operation == "http" ? 200 : 0)); }
+        { Operations.Add(request.Operation); return Task.FromResult(new RemoteResponse("OK", request.Operation == "http" ? 200 : 0) { HostKeySHA256 = "SHA256:test", HostKeyBase64 = "AQID" }); }
         public ChannelCapabilities GetCapabilities(string channel) => new("", 0, 0);
         public Task<double> ReadAsync(string channel, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task WriteAsync(string channel, double value, CancellationToken cancellationToken) => throw new NotSupportedException();

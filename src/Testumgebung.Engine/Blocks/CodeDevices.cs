@@ -123,7 +123,7 @@ public static class CodeDevices
             a.Text(operation == "http.request" ? "path" : operation == "ssh.exec" ? "command" : "remote", operation == "http.request" ? "/" : ""),
             a.Text("method", "GET"), a.Text("body", ""), a.Text("headers", ""), a.Text("local", ""), a.Timeout("timeout", 30000), a.Flag("overwrite"));
         var response = await CommunicationBlocks.As<IRemoteConnection>(adapter, "SSH/SFTP/HTTP").ExecuteAsync(request, token).ConfigureAwait(false);
-        return new Dictionary<string, object?> { ["text"] = response.Text, ["code"] = response.Code, ["error"] = response.Error };
+        return new Dictionary<string, object?> { ["text"] = response.Text, ["code"] = response.Code, ["error"] = response.Error, ["hostKeySHA256"] = response.HostKeySHA256, ["hostKeyBase64"] = response.HostKeyBase64 };
 
     }
 

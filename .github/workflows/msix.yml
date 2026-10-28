@@ -88,8 +88,8 @@ jobs:
         run: |
           ./build/acquire-toolchain.ps1
           ./build/acquire-python.ps1
-          python -m pip install reportlab==4.4.9 pefile==2024.8.26
-          if ($LASTEXITCODE) { throw 'PDF-Abhängigkeit fehlt.' }
+          python -m pip install reportlab==4.4.9 pefile==2024.8.26 paramiko==4.0.0
+          if ($LASTEXITCODE) { throw 'Dokumentations- oder SSH-Testabhängigkeit fehlt.' }
           python build/create-complete-manual.py
           if ($LASTEXITCODE) { throw 'PDF-Erstellung fehlgeschlagen.' }
       - name: API-Dokumentation und Dokumentationsstatus erstellen
@@ -109,7 +109,7 @@ jobs:
         shell: pwsh
         run: |
           ./build/tests/verify-coverage-goals.ps1
-          ./build/coverage.ps1 -EnforceTargets -RunDirectory artifacts/coverage/ci
+          ./build/coverage.ps1 -EnforceTargets -RunDirectory artifacts/coverage/ci -PythonForSsh (Get-Command python).Source
       - name: Aufgelöste Pakete auf bekannte Sicherheitslücken prüfen
         shell: pwsh
         run: ./build/check-security.ps1

@@ -73,7 +73,7 @@ TOOLS=[
 ('Inno Setup','6.x, exact version not pinned','Inno Setup license','External ISCC.exe','build/publish.ps1 -Installer; not used by MSIX workflow'),
 ('GitHub CLI','2.102.0 local; runner version external','MIT and Go dependency notices','artifacts/tools/github-cli/bin/gh.exe','setup-github.ps1 and GitHub release job; not shipped'),
 ('Git','External version','GPL-2.0','External git.exe','Source/wikis upload; not shipped'),
-('Paramiko','Optional, unpinned','LGPL-2.1-or-later; dependencies separate','External test Python','tests/Fixtures/ssh_server.py; not shipped'),
+('Paramiko','4.0.0 in CI; local environment may differ','LGPL-2.1-or-later; dependencies separate','External test Python','tests/Fixtures/ssh_server.py; not shipped'),
 ('Segoe UI / Consolas','Windows-provided, exact installed font version','Microsoft document embedding permissions','C:/Windows/Fonts/segoeui.ttf; segoeuib.ttf; consola.ttf','PDF font subsets; no standalone TTF shipped'),
 ('pefile','2024.8.26','MIT','artifacts/tools/license-audit','Audit-only PE parser; not shipped'),
 ('PyYAML','6.0.3','MIT','artifacts/tools/python-docs','Audit/setup-only workflow syntax checker; not shipped')]

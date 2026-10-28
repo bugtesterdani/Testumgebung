@@ -44,7 +44,7 @@ public static class InstrumentCatalog
 
         // Kommunikationsgeräte (Prüflingskommunikation)
         new(StreamDevice.TelnetAdapter, "Telnet", ["Telnet"], "192.168.1.10:23", "Byte-Strom mit Telnet-Aushandlung; Senden/Empfangen/Abfrage, Adresse zur Laufzeit änderbar."),
-        new(RemoteDevice.SshAdapter, "SSH / SFTP", ["SSH / SFTP"], "192.168.1.10:22", "Optionen Benutzer, Passwort oder Schlüsseldatei, Schlüsselpasswort, HostKeySHA256 (Pflicht). SSH-Befehl und SFTP-Transfer."),
+        new(RemoteDevice.SshAdapter, "SSH / SFTP", ["SSH / SFTP"], "192.168.1.10:22", "Optionen Benutzer, Passwort oder Schlüsseldatei, Schlüsselpasswort, HostKeySHA256 oder ausdrücklich HostKeyPruefung=Akzeptieren, optional HostKeyProtokollieren=true. SSH-Befehl und SFTP-Transfer."),
         new(RemoteDevice.HttpAdapter, "HTTP / HTTPS", ["HTTP / HTTPS"], "https://192.168.1.10", "HTTP-Anfragen mit GET, POST, PUT, PATCH, DELETE, HEAD und OPTIONS; normale TLS-Zertifikatsprüfung."),
         new(StreamDevice.SerialAdapter, "Seriell RS-232/RS-485 (COM-Port, USB-Seriell)", ["RS-232/RS-485"], "COM3",
             "Optionen Baud=115200, Datenbits=8, Parität=N, Stoppbits=1, Handshake=Kein|RTS-CTS|XON-XOFF, RS485=ja (RTS-Umschaltung), Prüfbefehl, Zeilenende, Sicherer Zustand. Kanal beliebig (z. B. Daten)."),
