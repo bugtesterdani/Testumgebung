@@ -12,7 +12,13 @@ public interface IConfigurableConnection
 
 public sealed record RemoteRequest(string Operation, string Argument, string Method = "GET", string Body = "", string Headers = "",
     string LocalPath = "", TimeSpan? Timeout = null, bool Overwrite = false);
-public sealed record RemoteResponse(string Text, int Code, string Error = "");
+public sealed record RemoteResponse(string Text, int Code, string Error = "")
+{
+    /// <summary>Empfangener SSH-Hostschlüssel als SHA256:…; leer bei HTTP oder Simulation ohne Schlüsseldaten.</summary>
+    public string HostKeySHA256 { get; init; } = "";
+    /// <summary>Öffentlicher SSH-Schlüsselblob als Base64, kein privater Schlüssel.</summary>
+    public string HostKeyBase64 { get; init; } = "";
+}
 public interface IRemoteConnection
 {
     Task<RemoteResponse> ExecuteAsync(RemoteRequest request, CancellationToken cancellationToken);

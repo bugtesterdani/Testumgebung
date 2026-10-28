@@ -75,7 +75,40 @@ public sealed class ReleasePageWorkflowTests
             await page.LoadAuditAsync(); ui.Pump(); Assert.Contains("Hash-Kette geprüft", page.AuditState); Assert.NotEmpty(page.Audit);
             await shell.LogoutAsync(); ui.Pump(); Assert.False(page.CreateDraftCommand.CanExecute(null)); Assert.Equal("Nicht angemeldet", page.UserName);
         }
-        finally { await Task.Delay(50); ui.Pump(); if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+        finally
+        {
+            // UI updates can still have an audit read in flight after logout.
+            // Wait for actual file release instead of relying on runner timing.
+            await ui.Until(() => TryDeleteTestDirectory(directory), "Freigabe der temporären Release-Ablage");
+        }
     }
+
+    [Fact]
+    public void Cleanup_waits_for_a_real_audit_lock_and_handles_removed_directories()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "release-page-cleanup-" + Guid.NewGuid());
+        Directory.CreateDirectory(directory);
+        try
+        {
+            using (var held = new FileStream(Path.Combine(directory, "audit.jsonl"), FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            {
+                Assert.False(TryDeleteTestDirectory(directory));
+                Assert.True(Directory.Exists(directory));
+            }
+            Assert.True(TryDeleteTestDirectory(directory));
+            Assert.False(Directory.Exists(directory));
+            Assert.True(TryDeleteTestDirectory(directory));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    private static bool TryDeleteTestDirectory(string directory)
+    {
+        try { Directory.Delete(directory, true); return true; }
+        catch (DirectoryNotFoundException) { return true; }
+        // Retry only Windows sharing/lock violations. Other IO failures stay visible.
+        catch (IOException error) when ((error.HResult & 0xffff) is 32 or 33) { return false; }
+    }
+
 }
 

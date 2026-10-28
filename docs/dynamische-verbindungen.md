@@ -31,7 +31,49 @@ Benutzer=pruefer
 HostKeySHA256=SHA256:FingerabdruckDerGegenstelle
 ```
 
-Zusätzlich entweder `Passwort` oder `Schlüsseldatei` und bei Bedarf `Schlüsselpasswort`. Der Host-Fingerabdruck muss von der tatsächlichen Gegenstelle stammen und wird bei jeder Verbindung geprüft. Fehlender oder falscher Fingerabdruck verhindert die Verbindung.
+Zusätzlich entweder `Passwort` oder `Schlüsseldatei` und bei Bedarf `Schlüsselpasswort`. Der Host-Fingerabdruck muss von der tatsächlichen Gegenstelle stammen und wird bei jeder Verbindung geprüft. Fehlender oder falscher Fingerabdruck verhindert im Standardmodus die Verbindung. `HostKeyPruefung=Pruefen` wählt diesen Modus ausdrücklich; auch `Prüfen` ist zulässig.
+
+### Wechselnde Produktionsprüflinge an derselben IP
+
+Für Geräte mit bei jedem Prüfling wechselnden Hostschlüsseln lassen sich die
+Verbindungsoptionen ausdrücklich so einstellen:
+
+```text
+Benutzer={SshBenutzer}
+Passwort={SshPasswort}
+HostKeyPruefung=Akzeptieren
+```
+
+In diesem Modus wird der vom aktuellen Gerät präsentierte SSH-Hostschlüssel
+akzeptiert. Ein `HostKeySHA256` ist nicht erforderlich; ein noch eingetragener
+alter Fingerabdruck wird in diesem Modus nicht verglichen. Jede SSH-/SFTP-Verbindung
+erfasst den tatsächlich empfangenen Schlüssel neu. Es wird kein geräteübergreifender
+Schlüsselcache angelegt. Benutzer-/Passwort- beziehungsweise Schlüsselanmeldung,
+Verschlüsselung und Zeitlimits gelten weiterhin. Der Schlüssel beweist in diesem
+Modus nicht die Identität des erwarteten Prüflings.
+
+In **SSH-Befehl**, **SFTP-Datei hochladen** und **SFTP-Datei herunterladen** stehen
+zwei optionale Zielparameter zur Verfügung:
+
+| Parameter | Zielvariable vom Typ String erhält |
+| --- | --- |
+| `HostKeyZiel` | SHA-256-Fingerabdruck, z. B. `SHA256:…` |
+| `HostKeyDatenZiel` | Öffentlichen SSH-Schlüsselblob als Base64 |
+
+Beispiel: String-Variable `PrueflingHostKey` anlegen und im SSH-Baustein unter
+**SSH-Hostschlüssel SHA256 → Variable** auswählen. Für die Ablage im Prüflingsbericht
+den Wert mit einem anschließenden Prüfschritt als Ergebnis ausgeben, z. B.
+in einem C#-Codeblock im selben Variablenscope mit `return Pass(PrueflingHostKey);`. Zielvariablen werden nach einer erfolgreich
+abgeschlossenen Netzwerkoperation gesetzt, auch bei einem von null abweichenden
+SSH-Exitcode; sie sind sowohl im Prüf- als auch im Akzeptieren-Modus nutzbar.
+
+Optional schreibt `HostKeyProtokollieren=true` den empfangenen Fingerabdruck und die
+Annahme/Ablehnung bereits beim Handshake ins Geräteprotokoll. Das funktioniert auch,
+wenn danach die Benutzeranmeldung fehlschlägt. Ohne diese Option erfolgt kein solcher
+Protokolleintrag. Es werden keine privaten Schlüssel oder Passwörter protokolliert.
+
+Die Einstellung betrifft **SSH/SFTP**. HTTPS verwendet eine eigene
+TLS-Zertifikatsprüfung; TCP und Telnet präsentieren keinen SSH-Hostschlüssel.
 
 Bausteine:
 
@@ -88,12 +130,12 @@ var antwort = SshExecute("Pruefling_SSH", "uname -a");
 return antwort["code"].GetValue<int>() == 0 ? Pass(antwort["text"].GetValue<string>()) : Fail();
 ```
 
-Weitere Funktionen: `HttpRequest(resource, path, method, body, headers, timeoutMs)`, `SftpUpload(resource, local, remote, overwrite, timeoutMs)`, `SftpDownload(resource, remote, local, overwrite, timeoutMs)`. Netzwerkfunktionen liefern JSON-Felder `text`, `code`, `error`. `ConfigureConnection(resource, address, options)` setzt Optionen aus einem mehrzeiligen String. Im Code werden Werte direkt übergeben; keine `{…}`-Vorlagen nötig.
+Weitere Funktionen: `HttpRequest(resource, path, method, body, headers, timeoutMs)`, `SftpUpload(resource, local, remote, overwrite, timeoutMs)`, `SftpDownload(resource, remote, local, overwrite, timeoutMs)`. Netzwerkfunktionen liefern JSON-Felder `text`, `code`, `error`, außerdem `hostKeySHA256` und `hostKeyBase64` (bei HTTP und Simulation ohne Schlüsseldaten leer). Nach `var antwort = SshExecute(...)` kann C# beispielsweise mit `PrueflingHostKey = antwort["hostKeySHA256"].GetValue<string>();` den Fingerabdruck übernehmen; in Python mit `PrueflingHostKey = antwort["hostKeySHA256"]`. `ConfigureConnection(resource, address, options)` setzt Optionen aus einem mehrzeiligen String. Im Code werden Werte direkt übergeben; keine `{…}`-Vorlagen nötig.
 
 Python: `configure_connection`, `http_request`, `ssh_execute`, `sftp_upload`, `sftp_download`. Rückgaben sind Dictionaries mit denselben Feldern. Im C++-Code kann dieselbe Host-Schnittstelle über `tu::device` mit `comm.configure`, `http.request`, `ssh.exec`, `sftp.upload`, `sftp.download` angesprochen werden.
 
 ## Integrationstests
 
-HTTP, COM-Variablenauflösung, TCP-Zielwechsel, Telnet und CodeBlock-Aufrufe sind reguläre Engine-Tests. Für die zusätzliche lokale SSH-/SFTP-Testgegenstelle Python mit Paramiko bereitstellen und `TESTUMGEBUNG_SSH_TEST_PYTHON` auf die Python-Datei setzen. Diese Testabhängigkeit wird nicht mit der Anwendung ausgeliefert. Ohne diese Umgebungsvariable wird der zusätzliche SSH-Integrationstest ausdrücklich übersprungen.
+HTTP, COM-Variablenauflösung, TCP-Zielwechsel, Telnet und CodeBlock-Aufrufe sind reguläre Engine-Tests. Für die zusätzliche lokale SSH-/SFTP-Testgegenstelle Python mit Paramiko bereitstellen und `TESTUMGEBUNG_SSH_TEST_PYTHON` auf die Python-Datei setzen. GitHub Actions installiert dafür Paramiko 4.0.0 und führt den Test einschließlich Schlüsselwechsel an derselben IP und demselben Port aus. Diese bereits im Lizenzinventar aufgeführte Testabhängigkeit wird nicht mit der Anwendung ausgeliefert. Ohne diese Umgebungsvariable wird der zusätzliche SSH-Integrationstest ausdrücklich übersprungen.
 
 Verwendete Bibliothek: [SSH.NET 2026.0.0](https://www.nuget.org/packages/SSH.NET/2026.0.0), [offizielle API](https://sshnet.github.io/SSH.NET/examples.html).

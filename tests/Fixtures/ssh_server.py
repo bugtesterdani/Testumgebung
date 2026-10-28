@@ -13,6 +13,7 @@ root = os.path.abspath(sys.argv[1])
 os.makedirs(root, exist_ok=True)
 paramiko.util.log_to_file(os.path.join(root, 'ssh.log'))
 key = paramiko.ECDSAKey.generate()
+host_key = key
 key_path = os.path.join(root, 'client.key')
 key.write_private_key_file(key_path)
 
@@ -33,7 +34,10 @@ class Auth(paramiko.ServerInterface):
     def check_channel_exec_request(self, channel, command):
         def execute():
             try:
+                global host_key
                 text = command.decode('utf-8')
+                if text == 'rotate-host-key':
+                    host_key = paramiko.ECDSAKey.generate()
                 if text == 'slow':
                     time.sleep(10)
                 if text == 'fail':
@@ -89,7 +93,7 @@ print(json.dumps({'port': listener.getsockname()[1], 'fingerprint': 'SHA256:' + 
 def serve(sock):
     transport = paramiko.Transport(sock)
     try:
-        transport.add_server_key(key)
+        transport.add_server_key(host_key)
         transport.set_subsystem_handler('sftp', paramiko.SFTPServer, Files)
         transport.start_server(server=Auth())
         channels = []

@@ -32,6 +32,11 @@ public static class NetworkBlocks
         new("FehlerZiel", "SSH-Fehlerausgabe → Variable", ParameterKind.Variable),
         new("ErwarteterStatus", "Erwarteter Status / Exitcode", ParameterKind.Text, Hint: "HTTP leer = 200–299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."),
     ];
+    private static IEnumerable<ParameterDescriptor> HostKeyTargets() =>
+    [
+        new("HostKeyZiel", "SSH-Hostschlüssel SHA256 → Variable", ParameterKind.Variable, Hint: "Optional: String-Variable für den empfangenen SHA256:…-Fingerabdruck."),
+        new("HostKeyDatenZiel", "SSH-Hostschlüssel Base64 → Variable", ParameterKind.Variable, Hint: "Optional: String-Variable für den öffentlichen Schlüsselblob (Base64)."),
+    ];
     public static void Register(BlockCatalog c)
     {
         c.Register(new(Configure, "Verbindung konfigurieren", CommunicationBlocks.Category, "arrow",
@@ -46,12 +51,12 @@ public static class NetworkBlocks
                 new("Header", "Header", ParameterKind.Text, Hint: "Eine Zeile Name: Wert; z.B. Content-Type: application/json oder Authorization: Bearer {Token}. Nicht protokolliert.")],
             p => Create(p, "http", "Pfad")));
         c.Register(new(Ssh, "SSH-Befehl", CommunicationBlocks.Category, "arrow",
-            "Führt einen Befehl über SSH aus. Passwort oder Schlüsseldatei und HostKeySHA256 in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
-            [.. Common(), new("Befehl", "Befehl", ParameterKind.Text, "uname -a", Required: true)], p => Create(p, "ssh", "Befehl")));
+            "Führt einen Befehl über SSH aus. Passwort oder Schlüsseldatei; HostKeySHA256 oder ausdrücklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
+            [.. Common(), .. HostKeyTargets(), new("Befehl", "Befehl", ParameterKind.Text, "uname -a", Required: true)], p => Create(p, "ssh", "Befehl")));
         foreach (var upload in new[] { true, false })
             c.Register(new(upload ? Upload : Download, upload ? "SFTP-Datei hochladen" : "SFTP-Datei herunterladen", CommunicationBlocks.Category, "arrow",
                 "Überträgt eine Datei über SSH/SFTP. Pfade unterstützen Variablen. Überschreiben ist ausdrücklich wählbar.",
-                [.. Common(), new("Lokal", "Lokale Datei", ParameterKind.Text, Required: true), new("Remote", "Datei auf Gegenstelle", ParameterKind.Text, Required: true),
+                [.. Common(), .. HostKeyTargets(), new("Lokal", "Lokale Datei", ParameterKind.Text, Required: true), new("Remote", "Datei auf Gegenstelle", ParameterKind.Text, Required: true),
                     new("Ueberschreiben", "Bestehende Datei überschreiben", ParameterKind.Bool, "false")],
                 p => Create(p, upload ? "sftp.upload" : "sftp.download", "Remote")));
     }
@@ -59,12 +64,14 @@ public static class NetworkBlocks
     {
         var timeout = p.Number("Zeitlimit") ?? 30000;
         if (!double.IsFinite(timeout) || timeout <= 0) throw new BlockConfigurationException("Zeitlimit muss positiv sein.");
+        (string? Fingerprint, string? Data) keys = operation == "http" ? (null, null)
+            : (p.Optional("HostKeyZiel"), p.Optional("HostKeyDatenZiel"));
         return new(p.Text("Ressource"), p.Optional("Adresse"), p.Optional("Verbindungsoptionen"),
             new RemoteRequest(operation, p.Text(argument), operation == "http" ? p.Choice("Methode") : "GET",
                 operation == "http" ? p.Text("Body") : "", operation == "http" ? p.Text("Header") : "",
                 operation.StartsWith("sftp", StringComparison.Ordinal) ? p.Text("Lokal") : "", TimeSpan.FromMilliseconds(timeout),
                 operation.StartsWith("sftp", StringComparison.Ordinal) && p.Bool("Ueberschreiben")),
-            p.Optional("Ziel"), p.Optional("StatusZiel"), p.Optional("FehlerZiel"), p.Optional("ErwarteterStatus"));
+            p.Optional("Ziel"), p.Optional("StatusZiel"), p.Optional("FehlerZiel"), p.Optional("ErwarteterStatus"), keys.Fingerprint, keys.Data);
     }
     internal static async Task ConfigureAsync(IHardwareAdapter adapter, string? endpoint, string? options, IStepContext ctx, CancellationToken token)
     {
@@ -94,7 +101,7 @@ public static class NetworkBlocks
         }
     }
     private sealed class RemoteAction(string resource, string? endpoint, string? options, RemoteRequest request,
-        string? target, string? statusTarget, string? errorTarget, string? expected) : IStepAction
+        string? target, string? statusTarget, string? errorTarget, string? expected, string? hostKeyTarget, string? hostKeyDataTarget) : IStepAction
     {
         public async Task<StepOutcome> ExecuteAsync(IStepContext context)
         {
@@ -105,14 +112,22 @@ public static class NetworkBlocks
                 await ConfigureAsync(a, endpoint, options, context, ct).ConfigureAwait(false);
                 return await CommunicationBlocks.As<IRemoteConnection>(a, "SSH/SFTP/HTTP").ExecuteAsync(resolved, ct).ConfigureAwait(false);
             }).ConfigureAwait(false);
-            if (target is not null) CommunicationBlocks.SetTarget(context, target, response.Text);
-            if (statusTarget is not null) CommunicationBlocks.SetTarget(context, statusTarget, response.Code);
-            if (errorTarget is not null) CommunicationBlocks.SetTarget(context, errorTarget, response.Error);
+            SaveResponse(context, response);
             var range = (expected is null ? (request.Operation == "http" ? "200-299" : "0") : Expand(expected)).Split('-', 2);
             var low = int.Parse(range[0], CultureInfo.InvariantCulture);
             var high = range.Length == 1 ? low : int.Parse(range[1], CultureInfo.InvariantCulture);
             return new StepOutcome(response.Code >= low && response.Code <= high ? ResultRating.Pass : ResultRating.Fail,
                 response.Text, Message: $"{request.Operation}: Status {response.Code}");
         }
+
+        private void SaveResponse(IStepContext context, RemoteResponse response)
+        {
+            if (target is not null) CommunicationBlocks.SetTarget(context, target, response.Text);
+            if (statusTarget is not null) CommunicationBlocks.SetTarget(context, statusTarget, response.Code);
+            if (errorTarget is not null) CommunicationBlocks.SetTarget(context, errorTarget, response.Error);
+            if (hostKeyTarget is not null) CommunicationBlocks.SetTarget(context, hostKeyTarget, response.HostKeySHA256);
+            if (hostKeyDataTarget is not null) CommunicationBlocks.SetTarget(context, hostKeyDataTarget, response.HostKeyBase64);
+        }
+
     }
 }

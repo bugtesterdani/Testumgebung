@@ -2479,6 +2479,24 @@
           "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
         },
         {
+          "name": "HostKeyZiel",
+          "label": "SSH-Hostschl\u00FCssel SHA256 \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: String-Variable f\u00FCr den empfangenen SHA256:\u2026-Fingerabdruck."
+        },
+        {
+          "name": "HostKeyDatenZiel",
+          "label": "SSH-Hostschl\u00FCssel Base64 \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: String-Variable f\u00FCr den \u00F6ffentlichen Schl\u00FCsselblob (Base64)."
+        },
+        {
           "name": "Lokal",
           "label": "Lokale Datei",
           "kind": "Text",
@@ -2586,6 +2604,24 @@
           "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
         },
         {
+          "name": "HostKeyZiel",
+          "label": "SSH-Hostschl\u00FCssel SHA256 \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: String-Variable f\u00FCr den empfangenen SHA256:\u2026-Fingerabdruck."
+        },
+        {
+          "name": "HostKeyDatenZiel",
+          "label": "SSH-Hostschl\u00FCssel Base64 \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: String-Variable f\u00FCr den \u00F6ffentlichen Schl\u00FCsselblob (Base64)."
+        },
+        {
           "name": "Lokal",
           "label": "Lokale Datei",
           "kind": "Text",
@@ -2618,7 +2654,7 @@
       "type": "netz.ssh",
       "displayName": "SSH-Befehl",
       "category": "Kommunikation",
-      "description": "F\u00FChrt einen Befehl \u00FCber SSH aus. Passwort oder Schl\u00FCsseldatei und HostKeySHA256 in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
+      "description": "F\u00FChrt einen Befehl \u00FCber SSH aus. Passwort oder Schl\u00FCsseldatei; HostKeySHA256 oder ausdr\u00FCcklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
       "parameters": [
         {
           "name": "Ressource",
@@ -2691,6 +2727,24 @@
           "required": false,
           "choices": null,
           "hint": "HTTP leer = 200\u2013299, SSH/SFTP leer = 0; alternativ z.B. 201 oder 200-204."
+        },
+        {
+          "name": "HostKeyZiel",
+          "label": "SSH-Hostschl\u00FCssel SHA256 \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: String-Variable f\u00FCr den empfangenen SHA256:\u2026-Fingerabdruck."
+        },
+        {
+          "name": "HostKeyDatenZiel",
+          "label": "SSH-Hostschl\u00FCssel Base64 \u2192 Variable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional: String-Variable f\u00FCr den \u00F6ffentlichen Schl\u00FCsselblob (Base64)."
         },
         {
           "name": "Befehl",

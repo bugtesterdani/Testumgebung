@@ -83,6 +83,7 @@ public sealed class SshIntegrationTests
             values["HostKeySHA256"] = "SHA256:wrong";
             await device.ConfigureAsync(endpoint, values, default);
             await Assert.ThrowsAnyAsync<Exception>(() => device.ExecuteAsync(new("ssh", "hello"), default));
+            await VerifyAcceptedKeysAsync(device, endpoint, folder, ready.RootElement.GetProperty("fingerprint").GetString()!);
         }
         finally
         {
@@ -91,4 +92,57 @@ public sealed class SshIntegrationTests
             Directory.Delete(folder, recursive: true);
         }
     }
+
+    private static async Task VerifyAcceptedKeysAsync(RemoteDevice device, string endpoint, string folder, string original)
+    {
+        var values = new Dictionary<string, string>
+        {
+            ["Benutzer"] = "test", ["Passwort"] = "fixture-password", ["HostKeySHA256"] = "SHA256:old",
+            ["HostKeyPruefung"] = "Akzeptieren", ["HostKeyProtokollieren"] = "true",
+        };
+        await device.ConfigureAsync(endpoint, values, default);
+        var result = await device.ExecuteAsync(new("ssh", "rotate-host-key"), default);
+        Assert.Equal(original, result.HostKeySHA256);
+        var replacement = await device.ExecuteAsync(new("ssh", "hello"), default);
+        Assert.NotEqual(original, replacement.HostKeySHA256);
+        Assert.StartsWith("SHA256:", replacement.HostKeySHA256);
+        Assert.NotEmpty(replacement.HostKeyBase64);
+        Assert.Contains(device.Log, l => l.Contains(replacement.HostKeySHA256, StringComparison.Ordinal));
+        Assert.DoesNotContain(device.Log, l => l.Contains("fixture-password", StringComparison.Ordinal));
+        var transfer = await device.ExecuteAsync(new("sftp.download", "/remote.bin", LocalPath: Path.Combine(folder, "accepted.bin")), default);
+        Assert.Equal(replacement.HostKeySHA256, transfer.HostKeySHA256);
+        Assert.Equal(replacement.HostKeyBase64, transfer.HostKeyBase64);
+        await VerifyHostKeyTargetsAsync(device, replacement);
+        values.Remove("HostKeySHA256");
+        values.Remove("HostKeyProtokollieren");
+        await device.ConfigureAsync(endpoint, values, default);
+        var logCount = device.Log.Count;
+        Assert.Equal(replacement.HostKeySHA256, (await device.ExecuteAsync(new("ssh", "hello"), default)).HostKeySHA256);
+        Assert.Equal(logCount, device.Log.Count);
+        values["Passwort"] = "wrong";
+        await device.ConfigureAsync(endpoint, values, default);
+        await Assert.ThrowsAnyAsync<Renci.SshNet.Common.SshAuthenticationException>(() => device.ExecuteAsync(new("ssh", "hello"), default));
+        values["Passwort"] = "fixture-password";
+        values["HostKeySHA256"] = original;
+        values["HostKeyPruefung"] = "Pruefen";
+        await device.ConfigureAsync(endpoint, values, default);
+        await Assert.ThrowsAnyAsync<Exception>(() => device.ExecuteAsync(new("ssh", "hello"), default));
+    }
+
+    private static async Task VerifyHostKeyTargetsAsync(RemoteDevice device, RemoteResponse expected)
+    {
+        var step = BlockCatalog.Default.Create(NetworkBlocks.Ssh, "key", "Hostkey erfassen", new Dictionary<string, string>
+        { ["Ressource"] = "SSH", ["Befehl"] = "hello", ["HostKeyZiel"] = "Fingerprint", ["HostKeyDatenZiel"] = "PublicKey" });
+        var loop = Group("loop").Var("Fingerprint", VarType.String).Var("PublicKey", VarType.String).Add(step,
+            new StepDefinition("verify", "Werte prüfen", new DelegateAction(ctx =>
+            {
+                Assert.Equal(expected.HostKeySHA256, ctx.Get("Fingerprint"));
+                Assert.Equal(expected.HostKeyBase64, ctx.Get("PublicKey"));
+                return Task.FromResult(StepOutcome.Pass());
+            })));
+        var run = new TestRun(Test(loop), new TestRunOptions { Hardware = new HardwareRegistry().Bind("SSH", device, "") });
+        await run.RunAsync().Within();
+        Assert.All(run.Events.OfType<StepCompleted>(), s => Assert.Equal(ResultRating.Pass, s.Rating));
+    }
+
 }

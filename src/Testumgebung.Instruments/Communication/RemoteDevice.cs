@@ -4,7 +4,6 @@
  */
 
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using Renci.SshNet;
 using Testumgebung.Contracts;
@@ -42,58 +41,72 @@ public sealed class RemoteDevice(string adapter, string resource, InstrumentOpti
             {
                 if (request.Operation == "http" && Adapter == HttpAdapter) return await HttpAsync(request, deadline.Token).ConfigureAwait(false);
                 if (Adapter != SshAdapter) throw new CommunicationException("Operation passt nicht zum Adapter.");
-                var fingerprint = Options.Text("HostKeySHA256")?.Replace("SHA256:", "", StringComparison.Ordinal).TrimEnd('=')
-                    ?? throw new CommunicationException("SSH: HostKeySHA256 fehlt. Fingerabdruck der Gegenstelle hinterlegen.");
-                var (host, port) = Endpoints.Parse(Resource, 22);
-                var user = Options.Text("Benutzer") ?? throw new CommunicationException("SSH: Benutzer fehlt.");
-                using var key = Options.Text("Schlüsseldatei") is { } keyPath
-                    ? new PrivateKeyFile(keyPath, Options.Text("Schlüsselpasswort") ?? "") : null;
-                AuthenticationMethod auth = key is not null ? new PrivateKeyAuthenticationMethod(user, key)
-                    : new PasswordAuthenticationMethod(user, Options.Text("Passwort") ?? "");
-                var info = new ConnectionInfo(host, port, user, auth) { Timeout = timeout };
-                void CheckKey(object? sender, Renci.SshNet.Common.HostKeyEventArgs e)
-                    => e.CanTrust = string.Equals(Convert.ToBase64String(SHA256.HashData(e.HostKey)).TrimEnd('='), fingerprint, StringComparison.Ordinal);
-                if (request.Operation == "ssh")
-                {
-                    using var client = new SshClient(info);
-                    client.HostKeyReceived += CheckKey;
-                    await client.ConnectAsync(deadline.Token).ConfigureAwait(false);
-                    using var command = client.CreateCommand(request.Argument);
-                    command.CommandTimeout = timeout;
-                    await command.ExecuteAsync(deadline.Token).ConfigureAwait(false);
-                    return new RemoteResponse(command.Result, command.ExitStatus ?? -1, command.Error);
-                }
-                if (request.Operation is not ("sftp.upload" or "sftp.download")) throw new CommunicationException("Unbekannte SSH/SFTP-Operation.");
-                using var sftp = new SftpClient(info) { OperationTimeout = timeout };
-                sftp.HostKeyReceived += CheckKey;
-                await sftp.ConnectAsync(deadline.Token).ConfigureAwait(false);
-                if (request.Operation == "sftp.upload")
-                {
-                    await using var file = File.OpenRead(request.LocalPath);
-                    await sftp.UploadFileAsync(file, request.Argument, request.Overwrite, cancellationToken: deadline.Token).ConfigureAwait(false);
-                    return new RemoteResponse(file.Length.ToString(System.Globalization.CultureInfo.InvariantCulture), 0);
-                }
-                // Erst temporär laden: Abbruch oder Fehler lässt eine bestehende Zieldatei unverändert.
-                var destination = Path.GetFullPath(request.LocalPath);
-                if (!request.Overwrite && File.Exists(destination)) throw new IOException("SFTP-Zieldatei existiert bereits.");
-                var temp = destination + "." + Guid.NewGuid().ToString("N") + ".part";
-                try
-                {
-                    long length;
-                    await using (var file = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                    {
-                        await sftp.DownloadFileAsync(request.Argument, file, deadline.Token).ConfigureAwait(false);
-                        length = file.Length;
-                    }
-                    deadline.Token.ThrowIfCancellationRequested();
-                    File.Move(temp, destination, request.Overwrite);
-                    return new RemoteResponse(length.ToString(System.Globalization.CultureInfo.InvariantCulture), 0);
-                }
-                finally { if (File.Exists(temp)) File.Delete(temp); }
+                var hostKey = new SshHostKeyPolicy(Options);
+                var response = await SshAsync(request, timeout, deadline.Token, hostKey).ConfigureAwait(false);
+                return hostKey.Attach(response);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             { throw new CommunicationTimeoutException("Netzwerkoperation: Zeitlimit überschritten.", []); }
         }, cancellationToken);
+
+    private async Task<RemoteResponse> SshAsync(RemoteRequest request, TimeSpan timeout, CancellationToken token, SshHostKeyPolicy hostKey)
+    {
+        var (host, port) = Endpoints.Parse(Resource, 22);
+        var user = Options.Text("Benutzer") ?? throw new CommunicationException("SSH: Benutzer fehlt.");
+        using var key = Options.Text("Schlüsseldatei") is { } keyPath
+            ? new PrivateKeyFile(keyPath, Options.Text("Schlüsselpasswort") ?? "") : null;
+        AuthenticationMethod auth = key is not null ? new PrivateKeyAuthenticationMethod(user, key)
+            : new PasswordAuthenticationMethod(user, Options.Text("Passwort") ?? "");
+        var info = new ConnectionInfo(host, port, user, auth) { Timeout = timeout };
+        void CheckKey(object? sender, Renci.SshNet.Common.HostKeyEventArgs e)
+        {
+            e.CanTrust = hostKey.Check(e.HostKey);
+            if (Options.Flag("HostKeyProtokollieren"))
+                Trace("SSH-Hostkey", $"{hostKey.Fingerprint}; {(e.CanTrust ? "akzeptiert" : "abgelehnt")}");
+        }
+        if (request.Operation == "ssh")
+        {
+            using var client = new SshClient(info);
+            client.HostKeyReceived += CheckKey;
+            await client.ConnectAsync(token).ConfigureAwait(false);
+            using var command = client.CreateCommand(request.Argument);
+            command.CommandTimeout = timeout;
+            await command.ExecuteAsync(token).ConfigureAwait(false);
+            return new RemoteResponse(command.Result, command.ExitStatus ?? -1, command.Error);
+        }
+        if (request.Operation is not ("sftp.upload" or "sftp.download")) throw new CommunicationException("Unbekannte SSH/SFTP-Operation.");
+        using var sftp = new SftpClient(info) { OperationTimeout = timeout };
+        sftp.HostKeyReceived += CheckKey;
+        await sftp.ConnectAsync(token).ConfigureAwait(false);
+        if (request.Operation == "sftp.upload")
+        {
+            await using var file = File.OpenRead(request.LocalPath);
+            await sftp.UploadFileAsync(file, request.Argument, request.Overwrite, cancellationToken: token).ConfigureAwait(false);
+            return new RemoteResponse(file.Length.ToString(System.Globalization.CultureInfo.InvariantCulture), 0);
+        }
+        return await DownloadAsync(sftp, request, token).ConfigureAwait(false);
+    }
+
+    private static async Task<RemoteResponse> DownloadAsync(SftpClient sftp, RemoteRequest request, CancellationToken token)
+    {
+        // Erst temporär laden: Abbruch oder Fehler lässt eine bestehende Zieldatei unverändert.
+        var destination = Path.GetFullPath(request.LocalPath);
+        if (!request.Overwrite && File.Exists(destination)) throw new IOException("SFTP-Zieldatei existiert bereits.");
+        var temp = destination + "." + Guid.NewGuid().ToString("N") + ".part";
+        try
+        {
+            long length;
+            await using (var file = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                await sftp.DownloadFileAsync(request.Argument, file, token).ConfigureAwait(false);
+                length = file.Length;
+            }
+            token.ThrowIfCancellationRequested();
+            File.Move(temp, destination, request.Overwrite);
+            return new RemoteResponse(length.ToString(System.Globalization.CultureInfo.InvariantCulture), 0);
+        }
+        finally { if (File.Exists(temp)) File.Delete(temp); }
+    }
 
     private async Task<RemoteResponse> HttpAsync(RemoteRequest request, CancellationToken token)
     {
