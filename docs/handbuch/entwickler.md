@@ -123,3 +123,11 @@ unterbrochen, die Exit-Gruppe läuft).
 ## Externe Programme
 
 Die Palette **Prozesse** startet EXE, Python-Skripte und .NET-DLL-Einstiegspunkte. Gebundene Lebensdauer, getrennte Argumente, spätere Warte-/Statusabfragen und Exitcode-Bewertung sind in [Externe Prozesse](../externe-prozesse.md) beschrieben.
+
+
+## Parallele Gruppenschritte
+
+In den Gruppeneigenschaften **Schritte und Untergruppen parallel starten** wählen.
+Die Gruppe wartet vor Wiederholung und Exit auf alle Zweige. Abhängige Schritte
+in einer intern sequenziellen Untergruppe bündeln und eigene Zielvariablen verwenden.
+[Anleitung, Geräteverriegelung und Beispiel](../parallele-gruppen.md).

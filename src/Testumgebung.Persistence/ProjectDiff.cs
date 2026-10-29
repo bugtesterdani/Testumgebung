@@ -145,6 +145,7 @@ public static class ProjectDiff
     {
         if (ga.EntryCondition != gb.EntryCondition) list.Add(new(DiffKind.Changed, area, item, $"Bedingung: {ga.EntryCondition ?? "immer"} → {gb.EntryCondition ?? "immer"}"));
         if (ga.Repetition != gb.Repetition) list.Add(new(DiffKind.Changed, area, item, $"Wiederholung: {Rep(ga.Repetition)} → {Rep(gb.Repetition)}"));
+        if (ga.Parallel != gb.Parallel) list.Add(new(DiffKind.Changed, area, item, $"Parallele Ausführung: {ga.Parallel} → {gb.Parallel}"));
         if (ga.ResultBeforeRepeat != gb.ResultBeforeRepeat) list.Add(new(DiffKind.Changed, area, item, $"Ergebnis bei Wiederholung: {ga.ResultBeforeRepeat} → {gb.ResultBeforeRepeat}"));
         if (!ga.Resources.SequenceEqual(gb.Resources)) list.Add(new(DiffKind.Changed, area, item, $"Reservierung: {string.Join(", ", ga.Resources)} → {string.Join(", ", gb.Resources)}"));
         if (ga.ResourceTimeout != gb.ResourceTimeout) list.Add(new(DiffKind.Changed, area, item, $"Wartezeit: {ga.ResourceTimeout} → {gb.ResourceTimeout}"));

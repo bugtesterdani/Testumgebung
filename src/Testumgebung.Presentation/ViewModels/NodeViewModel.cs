@@ -164,6 +164,7 @@ public sealed class NodeViewModel : ObservableObject
             if (Note is not null) parts.Add(Note);
             if (IsExit) parts.Add("Exit");
             if (g.IsDutRun) parts.Add("Prüfling-Run");
+            if (g.Parallel) parts.Add("parallel");
             parts.Add(g.Repetition.Mode switch
             {
                 RepeatMode.Endless => "wiederholt bis Werkerabbruch",

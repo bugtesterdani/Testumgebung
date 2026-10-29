@@ -12,7 +12,11 @@ namespace Testumgebung.Contracts;
 /// sonst das zugeordnete Gerät/der Kanal – damit sperren zwei Prüfplätze dasselbe Gerät auch unter verschiedenen Namen gemeinsam.</param>
 /// <param name="OwnerName">Anzeigename des Besitzers (z. B. „Prüfplatz 02“).</param>
 /// <param name="ScopeName">Anzeigename des Gültigkeitsbereichs (Gruppe).</param>
-public sealed record ResourceRequest(string OwnerRunId, string ScopeId, IReadOnlyList<string> Resources, string? OwnerName = null, string? ScopeName = null);
+public sealed record ResourceRequest(string OwnerRunId, string ScopeId, IReadOnlyList<string> Resources, string? OwnerName = null, string? ScopeName = null)
+{
+    /// <summary>Hierarchischer Ausführungszweig innerhalb des Runs; leer = sequenzieller Stamm. Geschwisterzweige schließen sich aus.</summary>
+    public string Branch { get; init; } = "";
+}
 
 /// <summary>Erworbene Sperre. <see cref="IDisposable.Dispose"/> gibt sie frei.</summary>
 public interface IResourceLease : IDisposable
@@ -47,6 +51,9 @@ public interface IResourceManager
     /// <exception cref="ResourceTimeoutException">Zeitlimit überschritten.</exception>
     /// <exception cref="OperationCanceledException">Abbruch während des Wartens.</exception>
     Task<IResourceLease> AcquireAsync(ResourceRequest request, TimeSpan? timeout, CancellationToken cancellationToken);
+
+    /// <summary>Kann getrennte, hierarchische Ausführungszweige desselben Runs sicher reservieren.</summary>
+    bool SupportsParallelBranches => false;
 
     bool IsHeldBy(string resource, string runId);
 

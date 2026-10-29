@@ -21,6 +21,9 @@ namespace Testumgebung.Hardware;
 public sealed class ResourceManager(IClock clock) : IResourceManager
 {
     private readonly object _gate = new();
+    private readonly BranchReservations _branches = new();
+    private readonly Dictionary<string, DateTimeOffset> _availableAt = new(StringComparer.Ordinal);
+    public bool SupportsParallelBranches => true;
     private readonly Dictionary<string, (string Owner, int Count)> _owners = new(StringComparer.Ordinal);
     private readonly Dictionary<string, (string? OwnerName, string? ScopeName, DateTimeOffset Since)> _ownerInfo = new(StringComparer.Ordinal);
     private readonly LinkedList<Waiter> _queue = new();
@@ -37,19 +40,21 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
         if (request.Resources.Count == 0) return new Lease(this, request);
         cancellationToken.ThrowIfCancellationRequested();
 
+        var started = clock.Now;
+        var available = DateTimeOffset.MinValue;
         Waiter waiter;
         lock (_gate)
         {
             if (CanGrant(request, before: null))
             {
-                Grant(request);
+                available = Grant(request);
                 waiter = null!;
             }
             else
             {
                 waiter = new Waiter(request);
                 var node = _queue.AddLast(waiter);
-                if (FindCycle(request.OwnerRunId) is { } cycle)
+                if (FindCycle(BranchReservations.Node(request)) is { } cycle)
                 {
                     _queue.Remove(node);
                     throw new ResourceDeadlockException(
@@ -59,17 +64,17 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
             }
         }
         Changed?.Invoke();
-        if (waiter is null) return new Lease(this, request);
+        if (waiter is null) return CompleteAcquisition(request, available, started, timeout);
 
         using var delayCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var limit = timeout is { } t
-            ? clock.Delay(t, delayCts.Token)
+            ? WaitTimeout(t, delayCts.Token)
             : Task.Delay(Timeout.Infinite, delayCts.Token);
 
         var finished = await Task.WhenAny(waiter.Granted.Task, limit).ConfigureAwait(false);
         delayCts.Cancel();
 
-        if (finished == waiter.Granted.Task) return new Lease(this, request);
+        if (finished == waiter.Granted.Task) return CompleteAcquisition(request, waiter.AvailableAt, started, timeout);
 
         bool removed;
         lock (_gate)
@@ -80,11 +85,31 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
         Changed?.Invoke();
 
         // Wettlauf: inzwischen zugeteilt → Sperre behalten.
-        if (!removed) return new Lease(this, request);
+        if (!removed) return CompleteAcquisition(request, waiter.AvailableAt, started, timeout);
 
         cancellationToken.ThrowIfCancellationRequested();
+        if (timeout is { } expired && clock is IParallelClock { AdvancesBranches: true } virtualClock) virtualClock.Synchronize(started + expired);
         throw new ResourceTimeoutException(
             $"Zeitlimit {timeout} beim Warten auf {string.Join(", ", request.Resources)} überschritten.");
+    }
+
+    private Task WaitTimeout(TimeSpan timeout, CancellationToken token)
+        => clock is IParallelClock { AdvancesBranches: true } ? Task.Delay(timeout, token) : clock.Delay(timeout, token);
+
+    private IResourceLease CompleteAcquisition(ResourceRequest request, DateTimeOffset available, DateTimeOffset started, TimeSpan? timeout)
+    {
+        var lease = new Lease(this, request);
+        if (clock is IParallelClock { AdvancesBranches: true } virtualClock)
+        {
+            if (timeout is { } limit && available > started + limit)
+            {
+                lease.Dispose();
+                virtualClock.Synchronize(started + limit);
+                throw new ResourceTimeoutException($"Zeitlimit {limit} beim Warten auf {string.Join(", ", request.Resources)} überschritten.");
+            }
+            virtualClock.Synchronize(available);
+        }
+        return lease;
     }
 
     public bool IsHeldBy(string resource, string runId)
@@ -119,25 +144,30 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
     {
         foreach (var r in request.Resources)
         {
-            if (_owners.TryGetValue(r, out var o) && o.Owner != request.OwnerRunId) return false;
+            if (!_branches.CanAccess(request, r)) return false;
         }
 
         // Fairness: frühere Wartende anderer Runs mit überlappenden, noch nicht selbst gehaltenen Ressourcen haben Vorrang.
         for (var n = _queue.First; n is not null && n != before; n = n.Next)
         {
             var other = n.Value.Request;
-            if (other.OwnerRunId == request.OwnerRunId) continue;
+            if (BranchReservations.Node(other) == BranchReservations.Node(request)) continue;
             foreach (var r in request.Resources)
             {
-                var ownedBySelf = _owners.TryGetValue(r, out var o) && o.Owner == request.OwnerRunId;
+                var ownedBySelf = OwnedBySelf(request, r);
                 if (!ownedBySelf && other.Resources.Contains(r)) return false;
             }
         }
         return true;
     }
 
-    private void Grant(ResourceRequest request)
+    private bool OwnedBySelf(ResourceRequest request, string resource)
+        => _owners.TryGetValue(resource, out var owner) && owner.Owner == request.OwnerRunId && _branches.CanAccess(request, resource);
+
+    private DateTimeOffset Grant(ResourceRequest request)
     {
+        var available = request.Resources.Select(r => _availableAt.GetValueOrDefault(r, DateTimeOffset.MinValue)).DefaultIfEmpty(DateTimeOffset.MinValue).Max();
+        _branches.Add(request);
         foreach (var r in request.Resources.Distinct())
         {
             if (_owners.TryGetValue(r, out var o))
@@ -147,18 +177,22 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
             else
             {
                 _owners[r] = (request.OwnerRunId, 1);
-                _ownerInfo[r] = (request.OwnerName, request.ScopeName, clock.Now);
+                _ownerInfo[r] = (request.OwnerName, request.ScopeName, clock.Now > available ? clock.Now : available);
             }
         }
+        return available;
     }
 
     private void Release(ResourceRequest request)
     {
         lock (_gate)
         {
+            _branches.Remove(request);
             foreach (var r in request.Resources.Distinct())
             {
                 if (!_owners.TryGetValue(r, out var o) || o.Owner != request.OwnerRunId) continue;
+                if (clock is IParallelClock { AdvancesBranches: true } && clock.Now > _availableAt.GetValueOrDefault(r, DateTimeOffset.MinValue))
+                    _availableAt[r] = clock.Now;
                 if (o.Count <= 1)
                 {
                     _owners.Remove(r);
@@ -179,7 +213,7 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
             var next = node.Next;
             if (CanGrant(node.Value.Request, before: node))
             {
-                Grant(node.Value.Request);
+                node.Value.AvailableAt = Grant(node.Value.Request);
                 _queue.Remove(node);
                 node.Value.Granted.TrySetResult();
             }
@@ -194,15 +228,14 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
         for (var n = _queue.First; n is not null; n = n.Next)
         {
             var req = n.Value.Request;
-            if (req.OwnerRunId != run) continue;
-            foreach (var r in req.Resources)
-                if (_owners.TryGetValue(r, out var o) && o.Owner != run) result.Add(o.Owner);
+            if (!BranchReservations.Within(BranchReservations.Node(req), run)) continue;
+            result.UnionWith(_branches.Blockers(req));
             for (var e = _queue.First; e is not null && e != n; e = e.Next)
             {
                 var other = e.Value.Request;
-                if (other.OwnerRunId == run) continue;
-                if (req.Resources.Any(r => other.Resources.Contains(r) && !(_owners.TryGetValue(r, out var o) && o.Owner == run)))
-                    result.Add(other.OwnerRunId);
+                if (BranchReservations.Node(other) == BranchReservations.Node(req)) continue;
+                if (req.Resources.Any(r => other.Resources.Contains(r) && !OwnedBySelf(req, r)))
+                    result.Add(BranchReservations.Node(other));
             }
         }
         return result;
@@ -212,10 +245,11 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
     private string? FindCycle(string start)
     {
         var names = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var w in _queue) names[w.Request.OwnerRunId] = w.Request.OwnerName ?? w.Request.OwnerRunId;
+        foreach (var w in _queue) names[BranchReservations.Node(w.Request)] = w.Request.Branch.Length == 0 ? w.Request.OwnerName ?? w.Request.OwnerRunId
+            : (w.Request.OwnerName ?? w.Request.OwnerRunId) + " / " + (w.Request.ScopeName ?? w.Request.Branch);
         foreach (var (key, info) in _ownerInfo)
             if (info.OwnerName is { } on && _owners.TryGetValue(key, out var o)) names[o.Owner] = on;
-        string Name(string run) => names.TryGetValue(run, out var n) ? n : run;
+        string Name(string run) => names.TryGetValue(run, out var n) ? n : run.Replace('\0', '/');
 
         var path = new List<string> { start };
         var visited = new HashSet<string>(StringComparer.Ordinal);
@@ -237,6 +271,7 @@ public sealed class ResourceManager(IClock clock) : IResourceManager
     private sealed class Waiter(ResourceRequest request)
     {
         public ResourceRequest Request { get; } = request;
+        public DateTimeOffset AvailableAt { get; set; }
         public TaskCompletionSource Granted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 

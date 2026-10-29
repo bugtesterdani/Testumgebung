@@ -591,9 +591,11 @@ public sealed class GroupPropertiesViewModel : PropertiesViewModel
             if (value is RepeatMode.While or RepeatMode.Until) RepeatExpression = _repeatExpression;
             if (value == RepeatMode.Duration && Group.Repetition.Duration <= TimeSpan.Zero) DurationSeconds = 10;
             Changed();
-            OnPropertiesChanged(nameof(RepeatMode), nameof(ShowCount), nameof(ShowDuration), nameof(ShowExpression));
+            OnPropertiesChanged(nameof(RepeatMode), nameof(ShowCount), nameof(ShowDuration), nameof(ShowExpression), nameof(CanStopWithinIteration));
         }
     }
+
+    public bool CanStopWithinIteration => ShowDuration && !Parallel;
 
     public bool ShowCount => RepeatMode == RepeatMode.Count;
     public bool ShowDuration => RepeatMode == RepeatMode.Duration;
@@ -659,6 +661,19 @@ public sealed class GroupPropertiesViewModel : PropertiesViewModel
     {
         get => _repeatError;
         private set => SetProperty(ref _repeatError, value);
+    }
+
+    public bool Parallel
+    {
+        get => Group.Parallel;
+        set
+        {
+            if (Group.Parallel == value) return;
+            Group.Parallel = value;
+            if (value) Group.Repetition = Group.Repetition with { StopWithinIteration = false };
+            Changed();
+            OnPropertiesChanged(nameof(Parallel), nameof(StopWithinIteration), nameof(CanStopWithinIteration));
+        }
     }
 
     public RepeatResultPolicy ResultBeforeRepeat

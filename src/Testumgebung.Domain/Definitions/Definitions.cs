@@ -110,6 +110,9 @@ public sealed class GroupDefinition(string id, string name) : NodeDefinition(id,
     public Repetition Repetition { get; set; } = Repetition.Once;
     public RepeatResultPolicy ResultBeforeRepeat { get; set; } = RepeatResultPolicy.Keep;
 
+    /// <summary>Direkte Kinder gemeinsam starten und vor Wiederholung/Exit auf alle warten. Standard: nacheinander.</summary>
+    public bool Parallel { get; set; }
+
     /// <summary>Exit-Gruppe: läuft nach allen regulären Wiederholungen bzw. beim Werkerabbruch.</summary>
     public GroupDefinition? ExitGroup { get; set; }
 
@@ -242,6 +245,16 @@ public sealed class TestDefinition
         }
     }
 
+    private void ValidateParallel(GroupDefinition group, List<string> diagnostics)
+    {
+        if (!group.Parallel) return;
+        if (group.Repetition is { Mode: RepeatMode.Duration, StopWithinIteration: true })
+            diagnostics.Add($"Gruppe '{group.Name}': Bei paralleler Ausführung gilt die Zeitspanne zwischen vollständigen Iterationen, nicht zwischen einzelnen Schritten.");
+        if (ReferenceEquals(group, Root)) diagnostics.Add("Der Hauptablauf muss Init, Loop und Finalization nacheinander ausführen.");
+        if (group.Children.OfType<GroupDefinition>().Any(g => g.IsDutRun || g.Descendants().OfType<GroupDefinition>().Any(c => c.IsDutRun)))
+            diagnostics.Add($"Gruppe '{group.Name}': Prüflingsdurchläufe dürfen nicht parallel betreten werden. Parallelität innerhalb eines Prüflings oder getrennte Prüfplätze verwenden.");
+    }
+
     /// <summary>Statische Prüfungen: eindeutige Ids, gültige Wiederholungen.</summary>
     public IReadOnlyList<string> Validate()
     {
@@ -253,6 +266,7 @@ public sealed class TestDefinition
             diagnostics.Add($"Knoten-Id '{dup.Key}' ist mehrfach vergeben.");
         foreach (var g in all.OfType<GroupDefinition>())
         {
+            ValidateParallel(g, diagnostics);
             var r = g.Repetition;
             if (r.Mode == RepeatMode.Count && r.Count < 1) diagnostics.Add($"Gruppe '{g.Name}': Anzahl muss ≥ 1 sein.");
             if (r.Mode == RepeatMode.Duration && r.Duration <= TimeSpan.Zero) diagnostics.Add($"Gruppe '{g.Name}': Zeitspanne muss > 0 sein.");

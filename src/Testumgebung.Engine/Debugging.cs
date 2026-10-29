@@ -151,6 +151,7 @@ public sealed class DebugController
 
     private readonly ConcurrentDictionary<string, HashSet<int>> _codeBreakpoints = new(StringComparer.Ordinal);
     private readonly object _codeGate = new();
+    private readonly SemaphoreSlim _codePauseSerial = new(1, 1);
     private bool _codeStopOnEntry;
     private bool _codeStep;
     private TaskCompletionSource<string>? _codeWaiting;
@@ -244,6 +245,15 @@ public sealed class DebugController
     /// meldet die Pause und wartet auf die Steuerung; liefert Befehl und aktualisierten Haltepunktstand zurück.
     /// </summary>
     internal async Task<CodeDebugStop> OnCodeEventAsync(
+        string nodeId, string nodeName, string path, int iteration, CodeDebugCapability capability,
+        CodeDebugEvent e, CancellationToken abortToken)
+    {
+        await _codePauseSerial.WaitAsync(abortToken).ConfigureAwait(false);
+        try { return await OnCodeEventCoreAsync(nodeId, nodeName, path, iteration, capability, e, abortToken).ConfigureAwait(false); }
+        finally { _codePauseSerial.Release(); }
+    }
+
+    private async Task<CodeDebugStop> OnCodeEventCoreAsync(
         string nodeId, string nodeName, string path, int iteration, CodeDebugCapability capability,
         CodeDebugEvent e, CancellationToken abortToken)
     {

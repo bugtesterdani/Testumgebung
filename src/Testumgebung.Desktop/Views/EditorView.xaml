@@ -296,6 +296,8 @@
                 <TextBlock Style="{StaticResource SectionTitle}" FontSize="20">
                     <Run Text="Eigenschaften: " /><Run Text="{Binding Title, Mode=OneWay}" />
                 </TextBlock>
+                <CheckBox Content="Schritte und Untergruppen parallel starten" IsChecked="{Binding Parallel}" Margin="0,4,0,4" />
+                <TextBlock Style="{StaticResource Caption}" Text="Parallel: Gruppe wartet vor Wiederholung und Exit auf alle Zweige. Gemeinsame Zielvariablen vermeiden; Gerätezugriffe werden gesperrt." TextWrapping="Wrap" Margin="0,0,0,8" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="150" />
@@ -339,7 +341,7 @@
                         </StackPanel>
                     </StackPanel>
                     <CheckBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,4" Content="Frist auch innerhalb der Iteration prüfen (restliche Schritte überspringen)"
-                              IsChecked="{Binding StopWithinIteration}" Visibility="{Binding ShowDuration, Converter={StaticResource BoolVis}}" />
+                              IsChecked="{Binding StopWithinIteration}" IsEnabled="{Binding CanStopWithinIteration}" Visibility="{Binding ShowDuration, Converter={StaticResource BoolVis}}" />
                     <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,0,0,4" Visibility="{Binding ShowExpression, Converter={StaticResource BoolVis}}">
                         <TextBox Style="{StaticResource CodeBox}" Text="{Binding RepeatExpression, UpdateSourceTrigger=PropertyChanged, Delay=300}" />
                         <TextBlock Style="{StaticResource ErrorText}" Text="{Binding RepeatError}" Visibility="{Binding RepeatError, Converter={StaticResource NullVis}}" />

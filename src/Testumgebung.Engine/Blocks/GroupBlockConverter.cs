@@ -143,6 +143,7 @@ public static class GroupBlockConverter
             EntryCondition = group.EntryCondition,
             Repetition = group.Repetition,
             ResultBeforeRepeat = group.ResultBeforeRepeat,
+            Parallel = group.Parallel,
             ExitGroup = group.ExitGroup,
             ResourceTimeout = group.ResourceTimeout,
             IsDutRun = group.IsDutRun,

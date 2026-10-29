@@ -102,6 +102,7 @@ in JSON-Strings. Quelltextzeilenumbrüche als `\n`, Anführungszeichen als `\"`.
 | `id`, `name`, `description` | stabile ID, Anzeigename, optionale Beschreibung |
 | `variables` | lokale Variablendefinitionen |
 | `children` | geordnete Liste von Gruppen und Schritten |
+| `parallel` | optional `true`: direkte Kinder gemeinsam starten und vor Wiederholung/Exit auf alle warten; Standard `false` |
 | `condition` | optionaler boolescher Eintrittsausdruck; Bedingungen liegen an Gruppen |
 | `repeat` | Wiederholungsobjekt |
 | `resultBeforeRepeat` | `Keep` oder `ResetToNResult`; betrifft Bewertung, nicht Variablen |
@@ -127,6 +128,12 @@ Prüfling ohne erneute Seriennummerneingabe wiederholt bewerten. Bei Abbruch
 Aufräumaktionen ausführen; die nächste Sitzung beginnt wieder mit Auftragsauswahl.
 Ob FAIL den Ablauf fortsetzen soll, muss aus dem Altprogramm abgeleitet werden;
 keine neue Stop-Regel erfinden.
+
+Parallelgruppen ab Software 1.1.0: Abhängigkeiten vorher oder in intern sequenziellen
+Untergruppen abarbeiten, getrennte Zielvariablen verwenden und zusammengehörige
+Geräteoperationen an der Untergruppe reservieren. Kein `stopWithinIteration` bei
+paralleler Duration-Wiederholung. Keine parallelen Prüflingsdurchläufe innerhalb
+eines Runs. Siehe [Parallele Gruppen](parallele-gruppen.md).
 
 ### Variablen und Ausdrücke
 

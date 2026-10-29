@@ -23,9 +23,12 @@ internal sealed class StepContext(
     string path,
     Scope scope,
     ExecutionPhase phase,
-    int iteration) : IStepContext
+    int iteration) : IStepContext, IAsyncDisposable
 {
-    private readonly CancellationToken token = phase.Token;
+    private readonly ParallelStepAccess? _parallelAccess = run.ExecutionBranch.Value is { Length: > 0 } branch
+        ? new ParallelStepAccess(run, branch, scope.Id, step.Name, phase.Token) : null;
+    private CancellationToken token => _parallelAccess?.Token ?? phase.Token;
+    public ValueTask DisposeAsync() => _parallelAccess?.DisposeAsync() ?? ValueTask.CompletedTask;
 
     private static long _displayCounter;
 
@@ -56,21 +59,21 @@ internal sealed class StepContext(
 
     public async Task<double> ReadAsync(string resource)
     {
-        var binding = CheckAccess(resource);
+        var binding = await CheckAccessAsync(resource).ConfigureAwait(false);
         using (Track(binding, "lesen"))
             return await binding.Adapter.ReadAsync(binding.Channel, token).ConfigureAwait(false);
     }
 
     public async Task WriteAsync(string resource, double value)
     {
-        var binding = CheckAccess(resource);
+        var binding = await CheckAccessAsync(resource).ConfigureAwait(false);
         using (Track(binding, "schreiben"))
             await binding.Adapter.WriteAsync(binding.Channel, value, token).ConfigureAwait(false);
     }
 
     public async Task<T> UseDeviceAsync<T>(string resource, string operation, Func<IHardwareAdapter, string, CancellationToken, Task<T>> action)
     {
-        var binding = CheckAccess(resource);
+        var binding = await CheckAccessAsync(resource).ConfigureAwait(false);
         using (Track(binding, operation))
             return await action(binding.Adapter, binding.Channel, token).ConfigureAwait(false);
     }
@@ -85,7 +88,7 @@ internal sealed class StepContext(
 
     public async Task<OutputState> CurveOutputAsync(string resource, CurveCommand command, OutputCurve? curve)
     {
-        var binding = CheckAccess(resource);
+        var binding = await CheckAccessAsync(resource).ConfigureAwait(false);
         if (binding.Adapter is not IWaveformOutputAdapter output)
             throw new InvalidOperationException($"Gerät '{binding.Adapter.Name}' ({resource}) ist kein Kurvenausgang.");
         using var tracked = Track(binding, "Kurve " + command);
@@ -115,7 +118,7 @@ internal sealed class StepContext(
         return OutputSuitability.Check(output.GetOutputCapabilities(binding.Channel), curve);
     }
 
-    public Task<WaveformSet> CaptureAsync(IReadOnlyList<string> resources, double sampleRate, int samples)
+    public async Task<WaveformSet> CaptureAsync(IReadOnlyList<string> resources, double sampleRate, int samples)
     {
         if (resources.Count == 0) throw new InvalidOperationException("Keine Kanäle für die Kurvenaufnahme angegeben.");
         var bindings = resources.Select(CheckAccess).ToList();
@@ -124,7 +127,8 @@ internal sealed class StepContext(
             throw new InvalidOperationException("Gemeinsame Zeitbasis: alle Kanäle einer Aufnahme müssen am selben Gerät liegen.");
         if (adapter is not IWaveformAdapter wave)
             throw new InvalidOperationException($"Gerät '{adapter.Name}' unterstützt keine Kurvenaufnahme.");
-        return CaptureMapped(wave, bindings, sampleRate, samples);
+        if (_parallelAccess is not null) await _parallelAccess.AcquireAsync(bindings.Select(b => b.Key)).ConfigureAwait(false);
+        return await CaptureMapped(wave, bindings, sampleRate, samples).ConfigureAwait(false);
     }
 
     private async Task<WaveformSet> CaptureMapped(IWaveformAdapter wave, List<ResourceBinding> bindings, double sampleRate, int samples)
@@ -197,11 +201,25 @@ internal sealed class StepContext(
     public void Log(string message)
         => run.Emit(new Diagnostic(step.Id, message) { Time = run.Clock.Now, RunId = run.RunId });
 
+    private async Task<ResourceBinding> CheckAccessAsync(string resource)
+    {
+        var binding = CheckAccess(resource);
+        if (_parallelAccess is not null) await _parallelAccess.AcquireAsync([binding.Key]).ConfigureAwait(false);
+        return binding;
+    }
+
+    private bool ReservedInScope(string key)
+    {
+        for (var current = scope; current is not null; current = current.Parent)
+            if (run.HasScopeReservation(current.Id, key)) return true;
+        return false;
+    }
+
     private ResourceBinding CheckAccess(string resource)
     {
         var registry = run.Options.Hardware ?? throw new InvalidOperationException("Keine Prüfplatzkonfiguration (HardwareRegistry) gesetzt.");
         var binding = registry.Resolve(resource);
-        if (binding.RequiresLock && !run.Resources.IsHeldBy(binding.Key, run.RunId))
+        if (binding.RequiresLock && (!run.Resources.IsHeldBy(binding.Key, run.RunId) || (_parallelAccess is not null && !ReservedInScope(binding.Key))))
             throw new UnreservedHardwareAccessException(
                 $"Zugriff auf '{resource}' ohne Reservierung. Gemeinsam genutzte Hardware muss an einer Gruppe reserviert werden.");
         return binding;

@@ -262,7 +262,27 @@ public sealed partial class DevelopmentWorkspaceTests
         Assert.Equal(Testumgebung.Contracts.VarType.String, saved.Type);
         Assert.Equal("COM7", saved.Initial);
         properties.Variables.RemoveCommand.Execute(row);
+        VerifyParallelEditing(shell, page, dispatcher);
         shell.Editor.SelectedNode = null;
+    }
+
+    private static void VerifyParallelEditing(ShellViewModel shell, EditorView page, System.Windows.Threading.Dispatcher dispatcher)
+    {
+        var group = shell.Editor.Project.Definition.AllNodes().OfType<Testumgebung.Domain.Definitions.GroupDefinition>().First(g => g.IsDutRun);
+        shell.Editor.SelectedNode = shell.Editor.FindNode(group.Id);
+        page.UpdateLayout();
+        Sta.Flush(dispatcher);
+        var check = Descendants(page).OfType<CheckBox>().Single(c =>
+            c.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.ParentBinding.Path.Path == "Parallel");
+        Assert.False(group.Parallel);
+        check.IsChecked = true;
+        Sta.Flush(dispatcher);
+        Assert.True(group.Parallel);
+        Assert.True(((Testumgebung.Domain.Definitions.GroupDefinition)new ProjectSerializer().Clone(shell.Editor.Project).Definition.Find(group.Id)!).Parallel);
+        Assert.Contains("parallel", shell.Editor.SelectedNode!.Annotation);
+        check.IsChecked = false;
+        Sta.Flush(dispatcher);
+        Assert.False(group.Parallel);
     }
 
     private static void CaptureHandbook(ShellViewModel shell, string folder, string root,

@@ -1,0 +1,154 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Parallele Gruppen – Beispiel",
+  "version": "0.1",
+  "variables": [],
+  "init": {
+    "id": "init",
+    "name": "init",
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": []
+  },
+  "loop": {
+    "id": "loop",
+    "name": "loop",
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "dut",
+        "name": "Prüfling",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "children": [
+          {
+            "art": "schritt",
+            "id": "sn",
+            "name": "sn",
+            "block": "werker",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Seriennummer scannen",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Ziel": "Kennung"
+            }
+          },
+          {
+            "art": "gruppe",
+            "id": "parallel",
+            "name": "Zwei Messzweige",
+            "variables": [],
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "gruppe",
+                "id": "links",
+                "name": "links",
+                "variables": [],
+                "repeat": {
+                  "mode": "Once"
+                },
+                "resultBeforeRepeat": "Keep",
+                "children": [
+                  {
+                    "art": "schritt",
+                    "id": "links.wait",
+                    "name": "links.wait",
+                    "block": "warten",
+                    "parameters": {
+                      "Dauer": "1000"
+                    }
+                  },
+                  {
+                    "art": "schritt",
+                    "id": "links.done",
+                    "name": "links.done",
+                    "block": "bewertung.setzen",
+                    "parameters": {
+                      "Bewertung": "PASS"
+                    }
+                  }
+                ]
+              },
+              {
+                "art": "gruppe",
+                "id": "rechts",
+                "name": "rechts",
+                "variables": [],
+                "repeat": {
+                  "mode": "Once"
+                },
+                "resultBeforeRepeat": "Keep",
+                "children": [
+                  {
+                    "art": "schritt",
+                    "id": "rechts.wait",
+                    "name": "rechts.wait",
+                    "block": "warten",
+                    "parameters": {
+                      "Dauer": "1500"
+                    }
+                  },
+                  {
+                    "art": "schritt",
+                    "id": "rechts.done",
+                    "name": "rechts.done",
+                    "block": "bewertung.setzen",
+                    "parameters": {
+                      "Bewertung": "PASS"
+                    }
+                  }
+                ]
+              }
+            ],
+            "parallel": true
+          },
+          {
+            "art": "schritt",
+            "id": "after",
+            "name": "after",
+            "block": "werker",
+            "parameters": {
+              "Art": "Anweisung",
+              "Text": "Beide Zweige abgeschlossen"
+            }
+          }
+        ],
+        "dutRun": true,
+        "dutIdVariable": "Kennung"
+      }
+    ]
+  },
+  "finalization": {
+    "id": "fin",
+    "name": "fin",
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": []
+  },
+  "simulation": []
+}
