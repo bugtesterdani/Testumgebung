@@ -59,3 +59,17 @@ alten Workflows verwendet dessen alten Commit; die korrigierte Version gilt nach
 
 Offizielle Quellen: [Microsoft .NET 10 Downloads](https://dotnet.microsoft.com/en-us/download/dotnet/10.0),
 [Release-Metadaten](https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json).
+
+## MySqlConnector 2.6.1
+
+Desktop und Engine-Tests verwenden MySqlConnector 2.6.1 statt 2.4.0.
+Diese Version behebt [GHSA-473q-m89c-ghf8](https://github.com/mysql-net/MySqlConnector/security/advisories/GHSA-473q-m89c-ghf8):
+Bei bestimmten TLS-Einstellungen konnte das Kennwort vor der Zertifikatsprüfung
+an einen nicht vertrauenswürdigen Server gesendet werden. Die Sicherheitsprüfung
+bleibt verpflichtend, einschließlich transitiver Abhängigkeiten. Es gibt keine
+Ausnahme für diese Meldung.
+
+Die Paketlizenz bleibt MIT; die Hinweise der neuen Version liegen unter
+`licenses/third-party/nuget/MySqlConnector/2.6.1/`. Das Lizenzinventar und die
+Drittanbieterhinweise werden beim Paketbau aus den tatsächlich ausgelieferten
+Dateien erneut erstellt und überprüft.

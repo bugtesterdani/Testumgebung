@@ -15,7 +15,7 @@
     <!-- Managed networking only: native SNI has separate redistribution terms. -->
     <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="6.0.2" ExcludeAssets="all" PrivateAssets="all" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="MySqlConnector" Version="2.6.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <!-- Security override for the SQL client test dependency; production uses the .NET runtime implementation. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
