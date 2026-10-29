@@ -229,6 +229,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             StopWithinIteration = g.Repetition.StopWithinIteration ? true : null,
         },
         ResultBeforeRepeat = g.ResultBeforeRepeat,
+        Parallel = g.Parallel ? true : null,
         Exit = g.ExitGroup is null ? null : ToDto(g.ExitGroup),
         Resources = g.Resources.Count == 0 ? null : g.Resources.ToList(),
         ResourceTimeoutMs = g.ResourceTimeout?.TotalMilliseconds,
@@ -338,6 +339,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         {
             Description = dto.Description,
             ResultBeforeRepeat = dto.ResultBeforeRepeat,
+            Parallel = dto.Parallel ?? false,
             ResourceTimeout = dto.ResourceTimeoutMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null,
             IsInterfaceBoundary = dto.InterfaceBoundary ?? false,
             IsDutRun = dto.DutRun ?? false,
@@ -566,6 +568,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         public string? Condition { get; set; }
         public RepeatDto? Repeat { get; set; }
         public RepeatResultPolicy ResultBeforeRepeat { get; set; }
+        public bool? Parallel { get; set; }
         public List<string>? Resources { get; set; }
         public double? ResourceTimeoutMs { get; set; }
         public bool? InterfaceBoundary { get; set; }

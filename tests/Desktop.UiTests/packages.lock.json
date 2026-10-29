@@ -274,8 +274,8 @@
       },
       "MySqlConnector": {
         "type": "Transitive",
-        "resolved": "2.4.0",
-        "contentHash": "78M+gVOjbdZEDIyXQqcA7EYlCGS3tpbUELHvn6638A2w0pkPI625ixnzsa5staAd3N9/xFmPJtkKDYwsXpFi/w==",
+        "resolved": "2.6.1",
+        "contentHash": "MzNSfnHWBc0Mo3zVbYxG+556zuex9obs8NYtwcPCwFahel40e49stH+osjX4k/doEHp4LT/zTtGdax4nlGWhcw==",
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
           "Microsoft.Extensions.Logging.Abstractions": "8.0.2"
@@ -453,7 +453,7 @@
           "Microsoft.Data.Sqlite": "[10.0.13, )",
           "Microsoft.Identity.Client": "[4.65.0, )",
           "Microsoft.Identity.Client.Broker": "[4.65.0, )",
-          "MySqlConnector": "[2.4.0, )",
+          "MySqlConnector": "[2.6.1, )",
           "Npgsql": "[9.0.3, )",
           "OPCFoundation.NetStandard.Opc.Ua.Client": "[1.5.378.182, )",
           "OPCFoundation.NetStandard.Opc.Ua.Configuration": "[1.5.378.182, )",

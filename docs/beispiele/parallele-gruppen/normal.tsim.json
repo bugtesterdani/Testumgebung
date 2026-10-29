@@ -1,0 +1,38 @@
+{
+  "format": "testumgebung.szenario",
+  "formatVersion": 1,
+  "name": "Zwei Zweige für denselben Prüfling",
+  "project": "parallel.tproj.json",
+  "duts": 1,
+  "answers": [
+    {
+      "step": "sn",
+      "value": "PAR-001"
+    }
+  ],
+  "expect": {
+    "status": "PASS",
+    "duts": [
+      {
+        "dutId": "PAR-001",
+        "rating": "PASS"
+      }
+    ],
+    "steps": [
+      {
+        "step": "links.done",
+        "rating": "PASS",
+        "count": 1
+      },
+      {
+        "step": "rechts.done",
+        "rating": "PASS",
+        "count": 1
+      },
+      {
+        "step": "after",
+        "count": 1
+      }
+    ]
+  }
+}

@@ -3,6 +3,7 @@
  * @brief Orchestriert Gruppen, Wiederholungen und Exit-Abläufe; Ereignisse trennen Ausführung von Darstellung und Speicherung.
  */
 
+using System.Collections.Concurrent;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
@@ -71,7 +72,10 @@ public interface IVersionSource
 }
 
 /// <summary>Eintrag des Ausführungsstacks (konkrete Verschachtelung statt globaler Statusvariable).</summary>
-public sealed record ExecutionFrame(string NodeId, string Name, string Path, int Iteration, bool IsExit, bool IsGroup, string? ScopeId);
+public sealed record ExecutionFrame(string NodeId, string Name, string Path, int Iteration, bool IsExit, bool IsGroup, string? ScopeId)
+{
+    internal string Branch { get; init; } = "";
+}
 
 /// <summary>Ergebnis einer gezielten Ausführung im Debugkontext.</summary>
 public sealed record TargetedExecutionResult(bool Executed, ResultRating Rating, string? RefusalReason);
@@ -87,6 +91,10 @@ public sealed class TestRun
     private static int _runCounter;
 
     private readonly object _gate = new();
+    private readonly object _eventGate = new();
+    private readonly ConcurrentDictionary<string, IResourceLease> _scopeReservations = new(StringComparer.Ordinal);
+    private readonly SemaphoreSlim _debugGate = new(1, 1);
+    internal AsyncLocal<string?> ExecutionBranch { get; } = new();
     private readonly List<EngineEvent> _events = [];
     private readonly List<ExecutionFrame> _stack = [];
     private readonly List<EngineState> _transient = [];
@@ -104,6 +112,8 @@ public sealed class TestRun
         IsDevelopmentRun = Options.DevelopmentRun;
         Clock = Options.Clock;
         Resources = Options.Resources ?? new ResourceManager(Clock);
+        if (!Resources.SupportsParallelBranches && definition.AllNodes().OfType<GroupDefinition>().Any(g => g.Parallel))
+            throw new ArgumentException("Die Ressourcenvermittlung unterstützt keine parallelen Ausführungszweige.", nameof(options));
         RunId = runId ?? $"Run-{Interlocked.Increment(ref _runCounter):D3}";
         _patcher = new RunPatcher(this, Options.Catalog ?? Blocks.BlockCatalog.Default);
         if (Options.Debugger is { } dbg) dbg.Run = this;
@@ -290,6 +300,10 @@ public sealed class TestRun
         return owners.Count == 0 ? "" : " – belegt von " + string.Join(", ", owners);
     }
 
+    /// <summary>Prüft den tatsächlichen Besitz einer Vorfahrengruppe, unabhängig von Geschwisterzweigen.</summary>
+    internal bool HasScopeReservation(string scopeId, string key)
+        => _scopeReservations.TryGetValue(scopeId, out var lease) && lease.Request.Resources.Contains(key);
+
     /// <summary>Abstrakte Namen → Sperrschlüssel der Prüfplatzkonfiguration (gleiches Gerät = gleiche Sperre).</summary>
     internal IReadOnlyList<string> LockKeys(IEnumerable<string> names)
         => names.Select(n => Options.Hardware?.LockKeyOf(n) ?? n).Distinct(StringComparer.Ordinal).ToList();
@@ -320,27 +334,51 @@ public sealed class TestRun
             pending.Replace(result.Rating);
 
             // Haltepunkt: nach Ausführung (Ausgänge wirksam), vor Bewertungsrückgabe.
-            if (Options.Debugger is { } dbg && parentScope is not null && !phase.IsCancelled && dbg.ShouldPause(node.Id, Combine(parentPath, node.Name)))
+            if (await PauseAfterNodeAsync(node, parentScope, phase, parentPath, parentIteration, pending, parent, executions, result).ConfigureAwait(false))
             {
-                dbg.ClearStep();
-                var info = new PauseInfo(
-                    node.Id, node.Name, Combine(parentPath, node.Name), parentIteration, node is GroupDefinition,
-                    pending.Rating, parent.Rating, executions, result.Snapshot);
-                var waiting = dbg.BeginPause(info, parentScope);
-                Emit(new Paused(info) { Time = Clock.Now, RunId = RunId });
-                DebugCommand command;
-                using (EnterTransientState(EngineState.PausedBeforeResultReturn))
-                    command = await dbg.WaitAsync(waiting, info, phase.Token).ConfigureAwait(false);
-                Emit(new Resumed(command) { Time = Clock.Now, RunId = RunId });
-                if (command == DebugCommand.Rerun && !phase.IsCancelled)
-                {
-                    MarkDevelopmentRun();
-                    continue; // Wiederholung ersetzt die noch nicht übergebene Bewertung
-                }
+                MarkDevelopmentRun();
+                continue;
             }
             break;
         }
         pending.CommitTo(parent);
+    }
+
+    private async Task<bool> PauseAfterNodeAsync(NodeDefinition node, Scope? parentScope, ExecutionPhase phase, string parentPath,
+        int iteration, PendingResult pending, ResultAccumulator parent, int executions, NodeResult result)
+    {
+        if (Options.Debugger is not { } dbg || parentScope is null || phase.IsCancelled || !dbg.ShouldPause(node.Id, Combine(parentPath, node.Name))) return false;
+        await _debugGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (phase.IsCancelled || !dbg.ShouldPause(node.Id, Combine(parentPath, node.Name))) return false;
+            dbg.ClearStep();
+            var info = new PauseInfo(node.Id, node.Name, Combine(parentPath, node.Name), iteration, node is GroupDefinition,
+                pending.Rating, parent.Rating, executions, result.Snapshot);
+            var waiting = dbg.BeginPause(info, parentScope);
+            Emit(new Paused(info) { Time = Clock.Now, RunId = RunId });
+            DebugCommand command;
+            using (EnterTransientState(EngineState.PausedBeforeResultReturn))
+                command = await dbg.WaitAsync(waiting, info, phase.Token).ConfigureAwait(false);
+            Emit(new Resumed(command) { Time = Clock.Now, RunId = RunId });
+            return command == DebugCommand.Rerun && !phase.IsCancelled;
+        }
+        finally { _debugGate.Release(); }
+    }
+
+    private async Task ExecuteParallelChildrenAsync(GroupDefinition group, Scope scope, ExecutionPhase phase,
+        ResultAccumulator accumulator, string path, int iteration)
+    {
+        var parentBranch = ExecutionBranch.Value ?? "";
+        var started = Clock.Now;
+        var tasks = group.Children.ToArray().Select(child => Task.Run(async () =>
+        {
+            using var clockBranch = (Clock as IParallelClock)?.BeginBranch(started);
+            ExecutionBranch.Value = parentBranch + "/" + Guid.NewGuid().ToString("N");
+            try { await ExecuteNodeAsync(child, scope, phase, accumulator, path, iteration, forceEnter: false).ConfigureAwait(false); }
+            finally { ExecutionBranch.Value = parentBranch; }
+        })).ToList();
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     private async Task<ResultRating?> ExecuteStepAsync(StepDefinition step, Scope scope, ExecutionPhase phase, string path, int iteration)
@@ -355,7 +393,7 @@ public sealed class TestRun
         {
             using (EnterTransientState(EngineState.Executing))
             {
-                var context = new StepContext(this, step, path, scope, phase, iteration);
+                await using var context = new StepContext(this, step, path, scope, phase, iteration);
                 outcome = await step.Action.ExecuteAsync(context).ConfigureAwait(false)
                           ?? StepOutcome.Error("Baustein lieferte kein Ergebnis.");
             }
@@ -387,6 +425,7 @@ public sealed class TestRun
 
     /// <summary>Versionswechsel ausschließlich vor Beginn eines Prüflingstests.</summary>
     private int _dutsCompleted;
+    private int _activeDut;
 
     /// <summary>Abgeschlossene Prüflingstests dieses Laufs.</summary>
     public int DutsCompleted => Volatile.Read(ref _dutsCompleted);
@@ -444,6 +483,20 @@ public sealed class TestRun
     }
 
     private async Task<NodeResult?> ExecuteGroupAsync(
+        GroupDefinition group, Scope? parentScope, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
+    {
+        if (!CanEnterGroup(group, phase, parentPath, parentIteration, forceEnter, isExit)) return null;
+        if (!group.IsDutRun) return await ExecuteGroupCoreAsync(group, parentScope, phase, parentPath, parentIteration, forceEnter, isExit).ConfigureAwait(false);
+        if (Interlocked.CompareExchange(ref _activeDut, 1, 0) != 0)
+        {
+            Emit(new Diagnostic(group.Id, "Ein Prüflingsdurchlauf ist bereits aktiv. Parallele Schritte innerhalb eines Prüflings oder getrennte Prüfplätze verwenden.") { Time = Clock.Now, RunId = RunId });
+            return new NodeResult(ResultRating.Error, null);
+        }
+        try { return await ExecuteGroupCoreAsync(group, parentScope, phase, parentPath, parentIteration, forceEnter, isExit).ConfigureAwait(false); }
+        finally { Volatile.Write(ref _activeDut, 0); }
+    }
+
+    private async Task<NodeResult?> ExecuteGroupCoreAsync(
         GroupDefinition group, Scope? parentScope, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
         if (!CanEnterGroup(group, phase, parentPath, parentIteration, forceEnter, isExit)) return null;
@@ -530,8 +583,9 @@ public sealed class TestRun
                 try
                 {
                     using (EnterTransientState(EngineState.WaitingResource))
-                        lease = await Resources.AcquireAsync(new ResourceRequest(RunId, scope.Id, LockKeys(group.Resources), Options.StationName, group.Name),
+                        lease = await Resources.AcquireAsync(new ResourceRequest(RunId, scope.Id, LockKeys(group.Resources), Options.StationName, group.Name) { Branch = ExecutionBranch.Value ?? "" },
                             group.ResourceTimeout, phase.Token).ConfigureAwait(false);
+                    _scopeReservations[scope.Id] = lease;
                     scope.Set(ResourcesAcquiredVariable, true);
                     Emit(new ResourceAcquired(group.Resources.ToList()) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
                 }
@@ -570,6 +624,7 @@ public sealed class TestRun
             if (lease is not null)
             {
                 Emit(new ResourceReleased(group.Resources.ToList()) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
+                _scopeReservations.TryRemove(scope.Id, out _);
                 lease.Dispose();
             }
         }
@@ -637,6 +692,11 @@ public sealed class TestRun
 
         async Task ExecuteIterationChildrenAsync()
         {
+            if (group.Parallel)
+            {
+                await ExecuteParallelChildrenAsync(group, scope, phase, accumulator, childPath, iteration).ConfigureAwait(false);
+                return;
+            }
             var first = true;
             foreach (var child in group.Children)
             {
@@ -727,16 +787,20 @@ public sealed class TestRun
 
     internal void Emit(EngineEvent e)
     {
-        lock (_gate)
+        // Assign and deliver events in one order, without holding the execution-stack gate during callbacks.
+        lock (_eventGate)
         {
-            e.Sequence = ++_sequence;
-            var historyEvent = !Options.RetainWaveformsInHistory && e is StepCompleted { Value: WaveformSet or Waveform } step
-                ? step with { Value = step.Value.ToString() } : e;
-            _events.Add(historyEvent);
-            if (_events.Count > Options.EventHistoryLimit)
-                _events.RemoveRange(0, _events.Count - Math.Max(0, Options.EventHistoryLimit));
+            lock (_gate)
+            {
+                e.Sequence = ++_sequence;
+                var historyEvent = !Options.RetainWaveformsInHistory && e is StepCompleted { Value: WaveformSet or Waveform } step
+                    ? step with { Value = step.Value.ToString() } : e;
+                _events.Add(historyEvent);
+                if (_events.Count > Options.EventHistoryLimit)
+                    _events.RemoveRange(0, _events.Count - Math.Max(0, Options.EventHistoryLimit));
+            }
+            EventRaised?.Invoke(e);
         }
-        EventRaised?.Invoke(e);
     }
 
     internal IDisposable EnterTransientState(EngineState state)
@@ -752,7 +816,7 @@ public sealed class TestRun
 
     private void PushFrame(ExecutionFrame frame)
     {
-        lock (_gate) _stack.Add(frame);
+        lock (_gate) _stack.Add(frame with { Branch = ExecutionBranch.Value ?? "" });
         PublishState();
     }
 
@@ -760,7 +824,7 @@ public sealed class TestRun
     {
         lock (_gate)
         {
-            var index = _stack.FindLastIndex(f => f.NodeId == nodeId);
+            var index = _stack.FindLastIndex(f => f.NodeId == nodeId && f.Branch == (ExecutionBranch.Value ?? ""));
             if (index >= 0) _stack.RemoveAt(index);
         }
         PublishState();
@@ -770,7 +834,7 @@ public sealed class TestRun
     {
         lock (_gate)
         {
-            var index = _stack.FindLastIndex(f => f.NodeId == nodeId);
+            var index = _stack.FindLastIndex(f => f.NodeId == nodeId && f.Branch == (ExecutionBranch.Value ?? ""));
             if (index >= 0) _stack[index] = _stack[index] with { Iteration = iteration };
         }
     }
