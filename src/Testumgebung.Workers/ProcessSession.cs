@@ -93,7 +93,7 @@ public sealed class ProcessSession : IProcessSession
             // Embedded Python's _pth omits the script directory. Restore normal local
             // imports explicitly; the script path remains a separate argv value.
             const string bootstrap = "import os,sys,runpy; path=sys.argv[1]; sys.path.insert(0,os.path.dirname(os.path.abspath(path))); sys.argv=sys.argv[1:]; runpy.run_path(path,run_name='__main__')";
-            arguments.InsertRange(0, ["-X", "utf8", "-c", bootstrap, request.File]);
+            arguments.InsertRange(0, ["-u", "-X", "utf8", "-c", bootstrap, request.File]);
         }
         if (request.Kind is ExternalProcessKind.ManagedEntryPoint or ExternalProcessKind.ManagedMain)
         {
@@ -128,6 +128,8 @@ public sealed class ProcessSession : IProcessSession
         }
     }
     public ProcessSnapshot Snapshot(string handle) => Find(handle).Snapshot();
+    public Task<ProcessOutputChunk> ReadOutputAsync(string handle, ProcessOutputStream stream, long offset, CancellationToken cancellationToken)
+        => Find(handle).ReadOutputAsync(stream, offset, cancellationToken);
     public async Task<ProcessSnapshot> WaitAsync(string handle, TimeSpan timeout, CancellationToken cancellationToken)
     {
         if (timeout <= TimeSpan.Zero || timeout.TotalMilliseconds > int.MaxValue) throw new ArgumentOutOfRangeException(nameof(timeout));

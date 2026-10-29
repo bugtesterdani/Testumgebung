@@ -1,0 +1,29 @@
+{
+  "format": "testumgebung.szenario",
+  "formatVersion": 1,
+  "name": "Live-Anzeige ohne Hardware",
+  "project": "live-ausgabe.tproj.json",
+  "duts": 1,
+  "answers": [
+    {
+      "step": "sn",
+      "value": "LIVE-001"
+    }
+  ],
+  "expect": {
+    "status": "PASS",
+    "duts": [
+      {
+        "dutId": "LIVE-001",
+        "rating": "PASS"
+      }
+    ],
+    "steps": [
+      {
+        "step": "live-demo",
+        "rating": "PASS",
+        "count": 1
+      }
+    ]
+  }
+}

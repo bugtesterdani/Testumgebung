@@ -222,3 +222,8 @@ Befehle oder reines EOF mit leerem Text und **stdin danach schließen**. Nach EO
 ist weiteres Senden ein Fehler. Senden und Signalerkennung sind NRESULT; erst
 explizite Mess-/Exitcodebewertung ergibt PASS oder FAIL. Timeouts und Werkerabbruch
 beenden gebundene Prozesse; unabhängige Prozesse bleiben bestehen.
+
+## Live-Ausgabe und Fortschritt
+
+Prozessausgabe, laufend geschriebene Logdateien und eigene Python-/C#-Meldungen können
+mit Status und Prozentwert angezeigt werden. [Anleitung und Regeln](live-log-und-fortschritt.md).

@@ -172,6 +172,10 @@ public interface ICodeHost
     /// <param name="message">Anzuzeigender Text.</param>
     void Log(string message);
 
+    /// <summary>Live-Anzeige eines Codebausteins; einfache Hosts protokollieren den Text.</summary>
+    void ReportLiveOutput(LiveOutputUpdate update) { update.Validate(); Log(update.Text); }
+
+
     /// <summary>
     /// Kommunikation mit dem Prüfling (Operationen comm.*, modbus.*, can.*, uds, j1939.*, lin.*; Argument „resource“ = abstrakter Name)
     /// über die zentrale Hardwarevermittlung – Reservierungen und Zugriffsprotokoll gelten wie bei den Bausteinen.

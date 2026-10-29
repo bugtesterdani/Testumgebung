@@ -94,3 +94,6 @@ public sealed record DevelopmentEvent(string User, string Kind, string Details) 
 
 /// <summary>Neue freigegebene Version ab diesem Prüflingstest aktiv (V01).</summary>
 public sealed record VersionActivated(string FromVersion, string ToVersion) : EngineEvent;
+
+/// <summary>Begrenztes Textstück und optionaler benutzerdefinierter Fortschritt, unabhängig von der Schrittbewertung.</summary>
+public sealed record LiveOutputReported(Testumgebung.Domain.Definitions.LiveOutputUpdate Update) : NodeEvent;

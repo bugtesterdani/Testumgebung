@@ -519,6 +519,7 @@ public sealed class BlockCatalog
                     .ToDictionary(kv => kv.Key[OutputBindingPrefix.Length..], kv => kv.Value))));
 
         ProcessBlocks.Register(c);
+        LiveLogBlocks.Register(c);
         CommunicationBlocks.Register(c);
         BusBlocks.Register(c);
         return c;

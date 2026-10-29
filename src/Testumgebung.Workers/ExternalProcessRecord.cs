@@ -19,6 +19,7 @@ internal sealed class ExternalProcessRecord : IDisposable
     private readonly object _gate = new();
     private readonly StringBuilder _output = new(), _error = new();
     private readonly ProcessOutputBuffer _liveOutput = new(), _liveError = new();
+    private readonly ProcessOutputFeed _feedOutput = new(), _feedError = new();
     private readonly SemaphoreSlim _inputLock = new(1);
     private readonly bool _capture;
     private bool _inputClosed;
@@ -39,14 +40,14 @@ internal sealed class ExternalProcessRecord : IDisposable
     }
     private async Task CompleteAsync(bool capture)
     {
-        var output = capture ? DrainAsync(_process.StandardOutput, _output, _liveOutput) : Task.CompletedTask;
-        var error = capture ? DrainAsync(_process.StandardError, _error, _liveError) : Task.CompletedTask;
+        var output = capture ? DrainAsync(_process.StandardOutput, _output, _liveOutput, _feedOutput) : Task.CompletedTask;
+        var error = capture ? DrainAsync(_process.StandardError, _error, _liveError, _feedError) : Task.CompletedTask;
         await _process.WaitForExitAsync().ConfigureAwait(false);
         await Task.WhenAll(output, error).ConfigureAwait(false);
         var file = Path.Combine(_directory, "error.txt");
         if (File.Exists(file)) _hostError = File.ReadAllText(file);
     }
-    private async Task DrainAsync(StreamReader reader, StringBuilder target, ProcessOutputBuffer live)
+    private async Task DrainAsync(StreamReader reader, StringBuilder target, ProcessOutputBuffer live, ProcessOutputFeed feed)
     {
         var bytes = new byte[4096];
         var buffer = new char[reader.CurrentEncoding.GetMaxCharCount(bytes.Length)];
@@ -64,9 +65,16 @@ internal sealed class ExternalProcessRecord : IDisposable
                 if (keep < count) _truncated = true;
             }
             live.Append(buffer.AsSpan(0, count));
+            feed.Append(buffer.AsSpan(0, count));
             if (read == 0) break;
         } }
-        finally { live.Close(); }
+        finally { live.Close(); feed.Close(); }
+    }
+    public Task<ProcessOutputChunk> ReadOutputAsync(ProcessOutputStream stream, long offset, CancellationToken token)
+    {
+        if (!_capture) throw new InvalidOperationException("Live-Ausgabe benötigt aktivierte stdout/stderr-Erfassung.");
+        return (stream switch { ProcessOutputStream.StandardOutput => _feedOutput, ProcessOutputStream.StandardError => _feedError,
+            _ => throw new ArgumentOutOfRangeException(nameof(stream)) }).ReadAsync(offset, token);
     }
     public Task<ProcessOutputMatch> WaitForOutputAsync(string pattern, bool regex, ProcessOutputStream stream, CancellationToken cancellationToken)
     {

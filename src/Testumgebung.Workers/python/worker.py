@@ -251,6 +251,8 @@ def _api(ctx):
         "read": lambda resource: float(ctx.call("read", {"resource": resource})),
         "write": lambda resource, value: ctx.call("write", {"resource": resource, "value": float(value)}),
         "log": lambda message: ctx.call("log", {"message": str(message)}),
+        "live_output": lambda text="", percent=None, status=None, channel="Ausgabe", reset=False: ctx.call(
+            "live.output", {"text": str(text), "percent": percent, "status": status, "channel": channel, "reset": reset}),
         "var": lambda path: ctx.call("get", {"path": path}),
         "set_var": lambda path, value: ctx.call("set", {"path": path, "value": _out(value)}),
         "ask": lambda text: ctx.call("ask", {"kind": "Input", "text": text, "type": "String", "required": True}),

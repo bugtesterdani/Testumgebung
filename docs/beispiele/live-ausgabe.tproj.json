@@ -1,0 +1,83 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Live-Ausgabe – Beispiel",
+  "version": "0.1",
+  "variables": [],
+  "init": {
+    "id": "init",
+    "name": "init",
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": []
+  },
+  "loop": {
+    "id": "loop",
+    "name": "loop",
+    "variables": [],
+    "repeat": {
+      "mode": "Endless"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "dut",
+        "name": "Prüfling",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "children": [
+          {
+            "art": "schritt",
+            "id": "sn",
+            "name": "sn",
+            "block": "werker",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Seriennummer scannen",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Ziel": "Kennung"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "live-demo",
+            "name": "Live-Fortschritt",
+            "parameters": {
+              "Sprache": "Python",
+              "Quelltext": "live_output('Vorbereitung\\n', 5, 'Initialisieren', reset=True)\nsleep(0.1)\nlive_output('37 von 100\\n', 37, 'Übertragen')\nsleep(0.1)\nlive_output('Fertig\\n', 100, 'Abgeschlossen')\nreturn Pass()",
+              "Timeout": "10"
+            },
+            "block": "code"
+          }
+        ],
+        "dutRun": true,
+        "dutIdVariable": "Kennung"
+      }
+    ]
+  },
+  "finalization": {
+    "id": "fin",
+    "name": "fin",
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": []
+  },
+  "simulation": [],
+  "description": "Ohne Hardware: Python-Codebaustein aktualisiert Live-Text und Fortschritt. Seriennummer eingeben, danach werden drei Statuswerte angezeigt."
+}

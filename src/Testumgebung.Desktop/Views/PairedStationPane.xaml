@@ -23,6 +23,8 @@
                 </DataGrid.Columns>
             </DataGrid>
             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                <views:LiveOutputPanel />
                 <ItemsControl ItemsSource="{Binding Contents}">
                     <ItemsControl.ItemTemplate><DataTemplate>
                         <Border Style="{StaticResource InfoBox}" Margin="0,0,0,10">
@@ -46,6 +48,7 @@
                         </Border>
                     </DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
+                </StackPanel>
             </ScrollViewer>
             <DockPanel Grid.Row="3" Margin="0,10,0,0">
                 <TextBlock Text="Protokoll" DockPanel.Dock="Top" Style="{StaticResource SectionTitle}"/>

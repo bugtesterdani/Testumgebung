@@ -177,6 +177,10 @@ public interface IStepContext
 
     void Log(string message);
 
+    /// <summary>Aktualisiert die laufende Werkeranzeige ohne Eingabeaufforderung oder Bewertungsänderung.</summary>
+    void ReportLiveOutput(LiveOutputUpdate update) { update.Validate(); Log(update.Text); }
+
+
     /// <summary>Im Ordner sichtbare Variablen (Verdeckung berücksichtigt) – für CodeBlocks im Ablauf.</summary>
     IReadOnlyList<(string Name, VarType Type)> VisibleVariables();
 

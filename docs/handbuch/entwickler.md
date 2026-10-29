@@ -131,3 +131,8 @@ In den Gruppeneigenschaften **Schritte und Untergruppen parallel starten** wähl
 Die Gruppe wartet vor Wiederholung und Exit auf alle Zweige. Abhängige Schritte
 in einer intern sequenziellen Untergruppe bündeln und eigene Zielvariablen verwenden.
 [Anleitung, Geräteverriegelung und Beispiel](../parallele-gruppen.md).
+
+## Live-Ausgabe und Fortschritt
+
+Prozessausgabe, laufend geschriebene Logdateien und eigene Python-/C#-Meldungen können
+mit Status und Prozentwert angezeigt werden. [Anleitung und Regeln](../live-log-und-fortschritt.md).

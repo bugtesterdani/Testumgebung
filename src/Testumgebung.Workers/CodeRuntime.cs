@@ -475,13 +475,9 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             host.SelectTest((string?)args["test"] ?? "", (string?)args["version"], (string?)args["order"], (string?)args["parameters"], (string?)args["pythonVenv"]);
         }
 
-        void HandleLogMessage()
-        {
-            host.Log((string?)args["message"] ?? "");
-        }
-
         try
         {
+            if (!CodeOutputCalls.TryHandle((string?)msg["op"], args, host))
             switch ((string?)msg["op"])
             {
                 case "get":
@@ -491,9 +487,6 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
                 case "read":
                 case "write":
                     await HandleHardwareAsync((string)msg["op"]!);
-                    break;
-                case "log":
-                    HandleLogMessage();
                     break;
                 case "ask":
                     await HandleOperatorPromptAsync();
