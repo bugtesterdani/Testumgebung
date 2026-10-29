@@ -46,6 +46,8 @@ internal static class LiveLogSources
                 var text = new string(chars, 0, decoded);
                 if (first) { first = false; text = text.TrimStart('\uFEFF'); }
                 yield return new(text);
+                // Bound UI-dispatch traffic even when an existing log is much larger than the visible tail.
+                await Task.Delay(50, token).ConfigureAwait(false);
             }
         }
     }

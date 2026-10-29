@@ -98,7 +98,10 @@ Ersetzen die Überwachung neu starten. Eine beobachtete Dateikürzung setzt den
 Lesecursor und die halbe gepufferte Zeile zurück. Sehr schnelles Kürzen und
 Wiederauffüllen kann zwischen zwei Lesevorgängen unentdeckt bleiben. Deshalb
 für Produktionslogs vorzugsweise anhängen oder je Vorgang eine neue Datei nutzen.
-Quelle und Mitschrift dürfen nicht derselbe Pfad sein.
+Quelle und Mitschrift dürfen nicht derselbe Pfad sein. Die Datei wird in begrenzten
+Textstücken eingelesen, damit große Logs die Bedienoberfläche nicht mit Ereignissen
+überlasten. Bei großen vorhandenen Logs kann die Anzeige nachlaufen; für ausschließlich
+neue Meldungen **Datei erst ab aktuellem Ende lesen** verwenden.
 
 Ein Python-Schreibbaustein und der Datei-Monitor können in einer Parallelgruppe
 laufen. Benötigte Pfadvariablen vorher setzen. Beispiel zum Erzeugen einer Datei:
