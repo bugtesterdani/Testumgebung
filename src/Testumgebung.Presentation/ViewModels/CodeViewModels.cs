@@ -21,7 +21,7 @@ internal static class CodeHelp
         CodeLanguage.Python =>
             "Rückgabe: Pass(wert), Fail(meldung, wert), Error(meldung), Measured(wert, min, max, einheit). " +
             "Hardware: read(res), write(res, wert). Werker: ask(text), ask_number(text, min, max, einheit), confirm(text). " +
-            "Sonstiges: log(text), var(\"../Name\"), set_var(\"Name\", wert), sleep(s), cancelled().",
+            "Sonstiges: log(text), live_output(text, percent, status), var(\"../Name\"), set_var(\"Name\", wert), sleep(s), cancelled().",
         CodeLanguage.Cpp =>
             "C++17-Funktionsrumpf. Rückgabe: Pass(wert), Fail(meldung, wert), Error(meldung), Measured(wert, min, max, einheit). " +
             "Hardware: Read(res), Write(res, wert). Werker: AskNumber(text, min, max, einheit), Confirm(text). " +
@@ -33,7 +33,7 @@ internal static class CodeHelp
         _ =>
             "Rückgabe: Pass(wert), Fail(meldung, wert), Error(meldung), Measured(wert, min, max, einheit). " +
             "Hardware: Read(res), Write(res, wert). Werker: Ask(text), AskNumber(text, min, max, einheit), Confirm(text). " +
-            "Sonstiges: Log(text), Var<T>(\"../Name\"), SetVar(\"Name\", wert), Sleep(ms), IsCancelled.",
+            "Sonstiges: Log(text), LiveOutput(text, percent, status), Var<T>(\"../Name\"), SetVar(\"Name\", wert), Sleep(ms), IsCancelled.",
     };
 
     public static string Template(CodeLanguage language) => language switch

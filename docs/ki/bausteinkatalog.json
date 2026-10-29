@@ -82,6 +82,117 @@
       ]
     },
     {
+      "type": "anzeige.live-log",
+      "displayName": "Live-Log und Fortschritt",
+      "category": "Anzeige",
+      "description": "Zeigt laufende stdout/stderr-Ausgabe oder eine anwachsende Logdatei. Fortschritt aus Textregeln oder current/total-Regex. Keine Exitcode-Bewertung.",
+      "parameters": [
+        {
+          "name": "Quelle",
+          "label": "Quelle",
+          "kind": "Choice",
+          "default": "Prozess-stdout",
+          "required": false,
+          "choices": [
+            "Prozess-stdout",
+            "Prozess-stderr",
+            "Datei"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Prozess zuerst ohne Warten starten; {Variable} erlaubt."
+        },
+        {
+          "name": "Datei",
+          "label": "Absoluter Logdateipfad",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AbEnde",
+          "label": "Datei erst ab aktuellem Ende lesen",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kodierung",
+          "label": "Dateikodierung",
+          "kind": "Text",
+          "default": "utf-8",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Mitschrift",
+          "label": "Optionale UTF-8-Mitschrift (absoluter Pfad)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Anh\u00E4ngen; Quelle und Mitschrift m\u00FCssen verschieden sein."
+        },
+        {
+          "name": "Textregeln",
+          "label": "Text-/Regex-Regeln (JSON-Liste)",
+          "kind": "Text",
+          "default": "[]",
+          "required": false,
+          "choices": null,
+          "hint": "[{\u0022text\u0022:\u0022Start\u0022,\u0022percent\u0022:10,\u0022status\u0022:\u0022Vorbereitung\u0022}]"
+        },
+        {
+          "name": "ZahlenRegex",
+          "label": "Zahlenmuster mit current und total",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "(?\u003Ccurrent\u003E\\d\u002B) von (?\u003Ctotal\u003E\\d\u002B)"
+        },
+        {
+          "name": "Statusvorlage",
+          "label": "Status bei Zahlentreffer",
+          "kind": "Text",
+          "default": "{current} / {total}",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "EndeRegex",
+          "label": "Optionales Ende-Muster",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Datei: z. B. ^FERTIG$; Prozess: sonst bis Ende des Streams."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Gesamtzeitlimit [ms]",
+          "kind": "Number",
+          "default": "300000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "auswahl.test",
       "displayName": "Test ausw\u00E4hlen",
       "category": "Auswahl \u0026 Auftrag",

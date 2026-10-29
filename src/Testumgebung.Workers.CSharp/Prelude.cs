@@ -132,6 +132,9 @@ internal static class Prelude
 
                 protected void Log(string message) => _call(_id, "log", new JsonObject { ["message"] = message });
 
+                protected void LiveOutput(string text = "", double? percent = null, string? status = null, string channel = "Ausgabe", bool reset = false)
+                    => _call(_id, "live.output", new JsonObject { ["text"] = text, ["percent"] = percent, ["status"] = status, ["channel"] = channel, ["reset"] = reset });
+
                 /// <summary>Variable per Pfad lesen, z. B. Var&lt;double&gt;("../Spannung").</summary>
                 protected T Var<T>(string path)
                 {

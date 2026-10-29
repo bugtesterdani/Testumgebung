@@ -33,6 +33,9 @@ internal sealed class StepCodeHost(IStepContext context, bool allowVariables, Co
 
     public void Log(string message) => context.Log(message);
 
+    public void ReportLiveOutput(LiveOutputUpdate update) => context.ReportLiveOutput(update);
+
+
     public Task<object?> DeviceAsync(string operation, IReadOnlyDictionary<string, object?> arguments) => CodeDevices.ExecuteAsync(context, operation, arguments);
 
     public Task<CodeDebugStop> DebugAsync(CodeDebugEvent debugEvent) => context.CodeDebugAsync(debugEvent, capability);

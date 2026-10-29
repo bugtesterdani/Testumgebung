@@ -7,7 +7,7 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        if (args[0] == "-X") { Console.Write(JsonSerializer.Serialize(args)); return 0; }
+        if (args[0] is "-X" or "-u") { Console.Write(JsonSerializer.Serialize(args)); return 0; }
         if (args[0] == "flood") { Console.Write(new string('X', 1048577)); return 0; }
         if (args[0] == "dialog")
         {

@@ -198,6 +198,13 @@ internal sealed class StepContext(
         GroupBlockDefinition block, IReadOnlyDictionary<string, object?> inputs)
         => run.ExecuteGroupBlockAsync(block, inputs, phase, path, iteration);
 
+    public void ReportLiveOutput(LiveOutputUpdate update)
+    {
+        token.ThrowIfCancellationRequested();
+        update.Validate();
+        run.Emit(new LiveOutputReported(update) { Time = run.Clock.Now, RunId = run.RunId, NodeId = step.Id, Path = path });
+    }
+
     public void Log(string message)
         => run.Emit(new Diagnostic(step.Id, message) { Time = run.Clock.Now, RunId = run.RunId });
 

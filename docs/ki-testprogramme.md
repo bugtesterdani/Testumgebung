@@ -339,3 +339,8 @@ als `{{` und `}}` schreiben. Ausgabe wird je Stream bis zum Treffer verbraucht;
 wiederholtes Warten erkennt keine bereits konsumierte Meldung. Kein Sleep als
 Synchronisierung einbauen; eindeutige Programmsignale mit Timeout verwenden.
 Details und Grenzen: [Externe Prozesse](externe-prozesse.md#dialoge-ohne-feste-pausen).
+
+## Live-Ausgabe und Fortschritt
+
+Prozessausgabe, laufend geschriebene Logdateien und eigene Python-/C#-Meldungen können
+mit Status und Prozentwert angezeigt werden. [Anleitung und Regeln](live-log-und-fortschritt.md).

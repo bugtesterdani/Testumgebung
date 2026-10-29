@@ -488,6 +488,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     public int CurrentStepIndex => Overview.FirstOrDefault(o => o.State == ItemState.Running)?.Number ?? Overview.Count(o => o.State == ItemState.Done);
 
+    public LiveOutputCollection LiveOutputs { get; } = new();
+
     public string ProgressText => Overview.Count == 0
         ? ""
         : $"Durchlauf {Math.Max(DutCount, 1)} • Schritt {Math.Max(CurrentStepIndex, 1)} von {Overview.Count}";
@@ -809,6 +811,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void ResetDisplay(TestDefinition definition)
     {
+        LiveOutputs.Clear();
         LiveWaveform.Clear();
         LiveWaveformTitle = null;
         Overview.Clear();
@@ -899,6 +902,10 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
                 HandleResourceNotAcquired(rn);
                 break;
 
+            case LiveOutputReported live:
+                LiveOutputs.Apply(live.NodeId, Last(live.Path), live.Update);
+                break;
+
             case Diagnostic dg:
                 HandleDiagnostic(dg);
                 break;
@@ -970,6 +977,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void HandleDutRunStarted(DutRunStarted d)
     {
+        LiveOutputs.Clear();
         DutCount++;
         DutRating = ResultRating.NResult;
         DutWerror = false;
@@ -1023,6 +1031,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void HandleStepCompleted(StepCompleted sc)
     {
+        LiveOutputs.Complete(sc.NodeId);
         OnStepCompleted(sc);
     }
 
