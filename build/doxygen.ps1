@@ -9,12 +9,11 @@ $archive = Join-Path $cache 'package.zip'
 $exe = Join-Path $cache 'bin/doxygen.exe'
 $output = [IO.Path]::GetFullPath($OutputDirectory, $root)
 New-Item -ItemType Directory -Force $cache, $output | Out-Null
-if (-not (Test-Path -LiteralPath $archive)) {
-    Invoke-WebRequest "https://www.doxygen.nl/files/doxygen-$version.windows.x64.bin.zip" -OutFile $archive
-}
-if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $sha256) {
-    throw 'Doxygen-Archiv: SHA-256 stimmt nicht mit der geprüften Version überein.'
-}
+. (Join-Path $PSScriptRoot 'verified-archive.ps1')
+Get-VerifiedArchive -Path $archive -Sha256 $sha256 -Urls @(
+    "https://github.com/doxygen/doxygen/releases/download/Release_1_18_0/doxygen-$version.windows.x64.bin.zip",
+    "https://www.doxygen.nl/files/doxygen-$version.windows.x64.bin.zip"
+)
 # Always extract from the verified archive; do not trust a modified cached executable.
 Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $cache 'bin') -Force
 $actualVersion = & $exe --version

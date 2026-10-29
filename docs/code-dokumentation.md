@@ -17,6 +17,10 @@ pwsh -File build/doxygen.ps1
 pwsh -File build/doxygen.ps1 -Python 'C:\Pfad\zu\python.exe' -OutputDirectory artifacts/doxygen/mein-bericht
 ```
 
+Der Download erfolgt aus dem offiziellen GitHub-Release, ersatzweise vom Hersteller.
+Nur ein Archiv mit der festgelegten SHA-256-Prüfsumme wird entpackt; fehlerhafte
+Downloads werden verworfen und beschädigte Cache-Dateien erneut bezogen.
+
 Doxygen 1.18.0 wird in `artifacts/tools/doxygen/1.18.0` zwischengespeichert. Jeder
 Aufruf prüft den SHA-256 des Originalarchivs und extrahiert daraus das Werkzeug neu.
 Die Ausgabe liegt standardmäßig in `artifacts/doxygen/current`:
