@@ -129,3 +129,8 @@ Gleichzeitige echte Halte werden nacheinander bedient. Eine falsche Bedingung
 wartet nicht hinter dem Haltepunkt eines anderen parallelen Zweigs. Haltefilter
 werden beim Erreichen der Position ausgewertet; eine bereits wartende
 Halteanforderung kann noch aus der vorherigen Filtereinstellung stammen.
+
+Im Ablaufeditor und in der Baustein-Bibliothek zeigt der Codeeditor links die
+Quelltextzeilennummern ab 1 an. Diese Nummern entsprechen dem Feld **Zeile**
+für Code-Haltepunkte. Die Nummerierung bleibt beim horizontalen Scrollen stehen
+und folgt beim vertikalen Scrollen den sichtbaren Codezeilen.
