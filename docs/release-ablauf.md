@@ -146,3 +146,15 @@ Statuscheck `build` erfolgreich sein und die PR-Branch aktuell sein.
 Für dieses derzeit von einer Person betreute Repository wird keine zweite
 Person als Pflichtreviewer verlangt; offene Review-Diskussionen müssen jedoch
 abgeschlossen sein. Der Wiki-Schlüssel erhält keine Main-Ausnahme.
+
+## Release 1.1.0 und Folgeversion 1.1.1
+
+Der Abschluss-PR für **1.1.0** schließt das Planungs-Issue **#30** mit
+`Closes #30`. Nach bestandenem Build und Merge nach `main` erzeugt die
+bestehende Automatik den Tag **v1.1.0**, das signierte Paket mit fortlaufender
+Buildrevision sowie den Release-Entwurf mit Notes und Download-Anlagen.
+
+Als Folgeplanung ist im Issue #30 **1.1.1** vorgemerkt. Nach erfolgreichem
+Paket-Build wird dafür ein neues bearbeitbares Release-Issue mit dem Milestone
+**1.1.1** angelegt. Der aktuelle Build bleibt bis zum Abschluss bei 1.1.0.
+Der fertige Release-Entwurf wird nach Prüfung der Anlagen veröffentlicht.
