@@ -20,5 +20,6 @@ public sealed partial class DevelopmentWorkspaceTests
         Assert.Equal(BreakpointMode.FailOrError,node.Definition.BreakpointRule.Mode);
         point.IsChecked=false;Sta.Flush(dispatcher);Assert.False(shell.Editor.Breakpoints.HasBreakpoint(node.Id));
         modes.SelectedItem=BreakpointMode.Always;Sta.Flush(dispatcher);Assert.Equal(BreakpointRule.Default,node.Definition.BreakpointRule);
+        VerifyNodeHistoryWindow(shell, page, dispatcher);
     }
 }

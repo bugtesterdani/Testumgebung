@@ -42,6 +42,14 @@ public partial class EditorView : UserControl
 
     private EditorViewModel? Editor => (DataContext as ShellViewModel)?.Editor;
 
+    private void OnNodeHistory(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ShellViewModel shell || sender is not FrameworkElement { DataContext: NodeOptionsViewModel options }) return;
+        var model = new NodeHistoryViewModel(shell.Releases?.Service, shell.Editor.Project.Definition.Name, options.NodeId, options.NodeName);
+        var window = new NodeHistoryWindow(model) { Owner = Window.GetWindow(this) };
+        window.Show();
+    }
+
     private void OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if (Editor is { } editor && e.NewValue is NodeViewModel node) editor.SelectedNode = node;

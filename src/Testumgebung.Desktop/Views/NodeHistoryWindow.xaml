@@ -1,0 +1,51 @@
+<Window x:Class="Testumgebung.Desktop.Views.NodeHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Title}" Width="1100" Height="760" MinWidth="720" MinHeight="500"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+            <RowDefinition Height="6"/><RowDefinition Height="180"/>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding Identity}" Style="{StaticResource Caption}" TextWrapping="Wrap"/>
+            <TextBlock Margin="0,6" TextWrapping="Wrap" Style="{StaticResource Caption}"
+                       Text="Gespeicherte Werte dieser Karte, chronologisch nach Freigabe. Entwürfe und Laufzeitwerte sind nicht enthalten. Eine Freigabe ist nicht der Übernahmezeitpunkt an einem laufenden Prüfplatz."/>
+        </StackPanel>
+        <DockPanel Grid.Row="1" Margin="0,4">
+            <Button DockPanel.Dock="Right" Content="Aktualisieren" Command="{Binding ReloadCommand}" Style="{StaticResource OutlineButton}"/>
+            <CheckBox DockPanel.Dock="Right" Content="Nur zuletzt belegte Werte" IsChecked="{Binding LatestOnly}" Margin="12,0" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged, Delay=250}" ToolTip="Nach Feld, Wert oder Version suchen" AutomationProperties.Name="Historie durchsuchen"/>
+        </DockPanel>
+        <TextBox Grid.Row="2" Text="{Binding Status, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                 MaxHeight="90" VerticalScrollBarVisibility="Auto" BorderThickness="0" Margin="0,4"/>
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected}" AutoGenerateColumns="False"
+                  IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column" RowHeight="32">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Feld" Binding="{Binding Field}" Width="2*"/>
+                <DataGridTextColumn Header="Änderung" Binding="{Binding ChangeText}" Width="140"/>
+                <DataGridTextColumn Header="Alter Wert" Binding="{Binding BeforeText}" Width="*"/>
+                <DataGridTextColumn Header="Neuer Wert" Binding="{Binding ValueText}" Width="*"/>
+                <DataGridTextColumn Header="Belegt ab Freigabe" Binding="{Binding SinceText}" Width="190"/>
+                <DataGridTextColumn Header="Unverändert bis" Binding="{Binding UntilText}" Width="200"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <GridSplitter Grid.Row="4" Height="6" HorizontalAlignment="Stretch"/>
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Alter Wert (vollständig)" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Selected.BeforeText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True"
+                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"/>
+            </DockPanel>
+            <DockPanel Grid.Column="2">
+                <TextBlock DockPanel.Dock="Top" Text="Neuer Wert (vollständig)" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Selected.ValueText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True"
+                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"/>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</Window>

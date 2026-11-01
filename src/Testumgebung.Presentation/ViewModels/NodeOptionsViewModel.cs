@@ -20,6 +20,8 @@ public sealed class NodeOptionsViewModel : ObservableObject
     }
     public BreakpointPropertiesViewModel Card { get; }
     public BreakpointPropertiesViewModel Code { get; }
+    public string NodeId => _node.Id;
+    public string NodeName => _node.Name;
     public bool CanDeactivate => !_node.IsSection;
     public bool HasCode => _node.Step?.BlockType is BlockCatalog.Code or BlockCatalog.LibraryBlock;
     public bool Enabled
