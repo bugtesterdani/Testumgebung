@@ -142,3 +142,24 @@ mit Status und Prozentwert angezeigt werden. [Anleitung und Regeln](../live-log-
 Schritte und Gruppen können mit `disabled: true` übersprungen werden. Haltefilter
 für Ablaufkarten und Codezeilen sind konfigurierbar; Standard ist immer.
 [Bedienung, Ausdruckssprache und Trefferzahlen](../aktivierung-und-haltepunkte.md).
+
+## Kommentare an Schritten und Gruppen
+
+Im Ablaufeditor einen Schritt oder eine Gruppe auswählen. In den Eigenschaften
+steht **Kommentar / Verlauf** als mehrzeiliges Textfeld bereit. Mit **Enter** wird
+eine neue Zeile eingefügt. Längere Texte sind im Feld scrollbar.
+
+Beispiel für manuelle Verlaufsnotizen:
+
+```text
+2026-11-01 – D. Weber – Wartezeit nach Geräteinitialisierung begründet.
+2026-11-02 – D. Weber – Nach Firmwareprüfung wieder auf 2 s reduziert.
+```
+
+Die Ablaufkarte zeigt bei vorhandenem Text ein Kommentarsymbol. Beim Darüberfahren
+erscheint der Kommentar mit seinen Zeilenumbrüchen. Kommentare werden als bisheriges
+Beschreibungsfeld (`description`) im Projekt gespeichert; vorhandene Beschreibungen
+erscheinen dort weiterhin. Speichern, Rückgängig/Wiederholen und der Versionsvergleich
+verwenden die vorhandenen Projektfunktionen. Der Text verändert weder die Ausführung
+noch die Bewertung. Datum und Autor werden bei Bedarf von Hand eingetragen; das Feld
+ist kein automatisch geführtes oder unveränderliches Änderungsprotokoll.

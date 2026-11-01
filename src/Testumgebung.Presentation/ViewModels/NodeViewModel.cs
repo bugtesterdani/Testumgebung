@@ -66,6 +66,10 @@ public sealed class NodeViewModel : ObservableObject
     public GroupDefinition? Group => Definition as GroupDefinition;
     public StepDefinition? Step => Definition as StepDefinition;
 
+    /// <summary>Mehrzeilige Dokumentation der Karte; beeinflusst die Ausführung nicht.</summary>
+    public string? Comment => Definition.Description;
+    public bool HasComment => !string.IsNullOrWhiteSpace(Comment);
+
     public bool IsInactive => Definition.Disabled || Parent?.IsInactive == true;
 
     public bool CanMove => !IsExit && !IsSection;
@@ -184,7 +188,7 @@ public sealed class NodeViewModel : ObservableObject
         }
     }
 
-    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive));
+    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment));
 
     public IEnumerable<NodeViewModel> SelfAndDescendants()
     {

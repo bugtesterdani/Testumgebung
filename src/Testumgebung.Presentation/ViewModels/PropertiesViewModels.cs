@@ -843,7 +843,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     public string Description
     {
         get => Step.Description ?? "";
-        set { Step.Description = value; _editor.MarkChanged(); OnPropertyChanged(); }
+        set { Step.Description = value; _node.Refresh(); _editor.MarkChanged(); OnPropertyChanged(); }
     }
 
     public IReadOnlyList<string> Diagnostics
