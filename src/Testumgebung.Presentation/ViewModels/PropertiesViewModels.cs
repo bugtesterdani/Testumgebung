@@ -16,6 +16,7 @@ namespace Testumgebung.Presentation.ViewModels;
 public abstract class PropertiesViewModel : ObservableObject
 {
     public abstract string Title { get; }
+    public virtual NodeOptionsViewModel? Options => null;
 }
 
 /// <summary>Bearbeitbare Variablendefinition einer Gruppe.</summary>
@@ -526,10 +527,12 @@ public sealed class GroupPropertiesViewModel : PropertiesViewModel
         Variables = new VariableListViewModel(Group, Changed);
         CreateBlockCommand = new RelayCommand(() => editor.CreateGroupBlock(_node), () => CanCreateBlock);
         Storage = new StorageSettingsViewModel(editor, node.Definition);
+        Options = new(editor, node);
     }
 
     /// <summary>Filter Anzeige/Datei/Datenbank (Gruppendefault).</summary>
     public StorageSettingsViewModel Storage { get; }
+    public override NodeOptionsViewModel Options { get; }
 
     private GroupDefinition Group => _node.Group!;
 
@@ -811,10 +814,12 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         if (Step.BlockType is BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock) Bindings = new LibraryBindingsViewModel(editor, this);
         _diagnostics = editor.DiagnosticsFor(Step);
         Storage = new StorageSettingsViewModel(editor, node.Definition);
+        Options = new(editor, node);
     }
 
     /// <summary>Filter Anzeige/Datei/Datenbank (Override).</summary>
     public StorageSettingsViewModel Storage { get; }
+    public override NodeOptionsViewModel Options { get; }
 
     /// <summary>Werkzeuge für CodeBlocks im Ablauf (Build prüfen, Variablen, Umwandeln).</summary>
     public CodeToolsViewModel? CodeTools { get; }

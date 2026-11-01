@@ -269,7 +269,7 @@ public static class StationHardware
                     issues.Add(new(ConfigSeverity.Error, station.Name, missing, $"{missing} wird im Ablauf verwendet, ist aber nicht zugeordnet.",
                         "„Fehlende aus Projekt übernehmen“."));
                 // Gesperrte Hardware muss im Ablauf an einer Gruppe reserviert werden
-                var reserved = project.Definition.AllNodes().OfType<GroupDefinition>().SelectMany(g => g.Resources).ToHashSet(StringComparer.Ordinal);
+                var reserved = project.Definition.EnabledNodes().OfType<GroupDefinition>().SelectMany(g => g.Resources).ToHashSet(StringComparer.Ordinal);
                 foreach (var a in station.Resources.Where(a => a.RequiresLock && used.Contains(a.Name)))
                 {
                     var key = setup.LockKey(station.Name, a);

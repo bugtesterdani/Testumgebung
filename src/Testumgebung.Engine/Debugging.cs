@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Scopes;
+using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Engine;
 
@@ -59,7 +60,7 @@ public sealed record CodeLinePause(
 /// </summary>
 public sealed class DebugController
 {
-    private readonly ConcurrentDictionary<string, byte> _breakpoints = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, BreakpointState> _breakpoints = new(StringComparer.Ordinal);
     private readonly object _gate = new();
     private TaskCompletionSource<DebugCommand>? _waiting;
     private PauseInfo? _current;
@@ -68,7 +69,16 @@ public sealed class DebugController
     /// <summary>Wird ausgelöst, sobald der Lauf an einem Haltepunkt pausiert.</summary>
     public event Action<PauseInfo>? Paused;
 
-    internal TestRun? Run { get; set; }
+    private TestRun? _run;
+    internal TestRun? Run
+    {
+        get => _run;
+        set
+        {
+            _run = value;
+            foreach (var state in _breakpoints.Values.Concat(_codeRules.Values)) state.Reset();
+        }
+    }
 
     public IReadOnlyCollection<string> Breakpoints => _breakpoints.Keys.ToList();
 
@@ -79,11 +89,17 @@ public sealed class DebugController
 
     public bool IsPaused => CurrentPause is not null;
 
-    public void SetBreakpoint(string nodeId, string user = "")
+    public void SetBreakpoint(string nodeId, string user = "") => SetBreakpoint(nodeId, BreakpointRule.Default, user);
+
+    public void SetBreakpoint(string nodeId, BreakpointRule rule, string user = "")
     {
-        _breakpoints[nodeId] = 0;
+        _breakpoints[nodeId] = new(rule);
         Run?.Emit(new DevelopmentEvent(user, "Breakpoint gesetzt", nodeId) { Time = Run.Clock.Now, RunId = Run.RunId });
     }
+
+    /// <summary>Ändert die Filter eines aktiven Haltepunkts und beginnt dessen Trefferzählung neu.</summary>
+    public void ConfigureBreakpoint(string nodeId, BreakpointRule rule) => _breakpoints[nodeId] = new(rule);
+    public BreakpointRule GetBreakpointRule(string nodeId) => _breakpoints.TryGetValue(nodeId, out var state) ? state.Rule : BreakpointRule.Default;
 
     public void ClearBreakpoint(string nodeId) => _breakpoints.TryRemove(nodeId, out _);
 
@@ -123,15 +139,35 @@ public sealed class DebugController
     /// <summary>Haltepunkt oder fälliger Einzelschritt nach Abschluss dieses Elements.</summary>
     public bool ShouldPause(string nodeId, string path)
     {
-        if (HasBreakpoint(nodeId)) return true;
+        return HasBreakpoint(nodeId) || StepDue(path);
+    }
+
+    internal bool ShouldPause(PauseInfo info, Scope scope)
+    {
+        var configured = _breakpoints.TryGetValue(info.NodeId, out var state)
+            && EvaluateRule(state, info.NodeId, info.Iteration, info.PendingRating, name => ResolveNode(name, scope, info.LeftScopeSnapshot));
+        return configured || StepDue(info.Path);
+    }
+    private bool StepDue(string path)
+    {
         var depth = DepthOf(path);
-        return _stepMode switch
+        return _stepMode switch { StepMode.Into => true, StepMode.Over => depth <= _stepDepth, StepMode.Out => depth < _stepDepth, _ => false };
+    }
+    private static object ResolveNode(string name, Scope parent, ScopeSnapshot? left)
+    {
+        if (left is null) return parent.Get(name);
+        if (name.StartsWith("../", StringComparison.Ordinal)) return parent.Get(name[3..]);
+        return left.Variables.FirstOrDefault(v => v.Name == name)?.Value ?? parent.Get(name);
+    }
+    private bool EvaluateRule(BreakpointState state, string nodeId, int iteration, ResultRating? rating, Func<string, object> resolve)
+    {
+        try { return state.Evaluate(iteration, rating, resolve); }
+        catch (Exception ex) when (ex is Domain.Expressions.ExpressionException or Domain.Scopes.VariableNotFoundException or TypeMismatchException or KeyNotFoundException)
         {
-            StepMode.Into => true,
-            StepMode.Over => depth <= _stepDepth,
-            StepMode.Out => depth < _stepDepth,
-            _ => false,
-        };
+            // A mistyped condition must be visible, not silently suppress a requested stop.
+            if (Run is { } run) run.Emit(new Diagnostic(nodeId, "Haltebedingung nicht auswertbar; halte zur Prüfung: " + ex.Message) { Time = run.Clock.Now, RunId = run.RunId });
+            return true;
+        }
     }
 
     /// <summary>Beim Anhalten Einzelschritt zurücksetzen.</summary>
@@ -150,6 +186,7 @@ public sealed class DebugController
     // ================================================================== Zeilen-Debugger für CodeBlocks (ADR 0017)
 
     private readonly ConcurrentDictionary<string, HashSet<int>> _codeBreakpoints = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<(string Node, int Line), BreakpointState> _codeRules = new();
     private readonly object _codeGate = new();
     private readonly SemaphoreSlim _codePauseSerial = new(1, 1);
     private bool _codeStopOnEntry;
@@ -188,13 +225,30 @@ public sealed class DebugController
 
     public void ClearCodeBreakpoint(string nodeId, int line)
     {
+        _codeRules.TryRemove((nodeId, line), out _);
         if (_codeBreakpoints.TryGetValue(nodeId, out var set)) lock (set) set.Remove(line);
     }
 
-    public void ClearCodeBreakpoints(string nodeId) => _codeBreakpoints.TryRemove(nodeId, out _);
+    public void ClearCodeBreakpoints(string nodeId)
+    {
+        _codeBreakpoints.TryRemove(nodeId, out _);
+        foreach (var key in _codeRules.Keys.Where(k => k.Node == nodeId)) _codeRules.TryRemove(key, out _);
+    }
+    public void ConfigureCodeBreakpoint(string nodeId, int line, BreakpointRule rule)
+    {
+        if (line < 1) throw new ArgumentOutOfRangeException(nameof(line));
+        var state = new BreakpointState(rule, code: true);
+        _codeRules[(nodeId, line)] = state;
+        SetCodeBreakpoint(nodeId, line);
+    }
+    public BreakpointRule GetCodeBreakpointRule(string nodeId, int line)
+        => _codeRules.TryGetValue((nodeId, line), out var state) ? state.Rule : BreakpointRule.Default;
 
     public bool HasCodeBreakpoint(string nodeId, int line)
-        => _codeBreakpoints.TryGetValue(nodeId, out var set) && set.Contains(line);
+    {
+        if (!_codeBreakpoints.TryGetValue(nodeId, out var set)) return false;
+        lock (set) return set.Contains(line);
+    }
 
     /// <summary>Fortsetzen bis zum nächsten Haltepunkt.</summary>
     public void CodeContinue() => ReleaseCode("continue");
@@ -223,7 +277,7 @@ public sealed class DebugController
         return new CodeDebugConfig(true, [.. breakpoints], entry, Step: false);
     }
 
-    private bool ShouldPauseCode(string nodeId, CodeDebugCapability capability, CodeDebugEvent e)
+    private bool ShouldPauseCode(string nodeId, int iteration, CodeDebugCapability capability, CodeDebugEvent e)
     {
         lock (_codeGate)
         {
@@ -232,13 +286,22 @@ public sealed class DebugController
             {
                 if (_codeStopOnEntry) return true;
                 // Reduzierter Modus: ein beliebiger Haltepunkt am Baustein = Halt bei Eintritt (Zeilen gibt es nicht).
-                return capability == CodeDebugCapability.EntryExitOnly
-                       && _codeBreakpoints.TryGetValue(nodeId, out var s) && s.Count > 0;
+                return capability == CodeDebugCapability.EntryExitOnly && MatchReducedCode(nodeId, iteration, e);
             }
             if (e.Kind == "exit") return false;
         }
-        return HasCodeBreakpoint(nodeId, e.Line);
+        return HasCodeBreakpoint(nodeId, e.Line) && MatchCodeRule(nodeId, e.Line, iteration, e);
     }
+
+    private bool MatchReducedCode(string nodeId, int iteration, CodeDebugEvent e)
+    {
+        var stop = false;
+        foreach (var line in CodeBreakpoints(nodeId)) stop |= MatchCodeRule(nodeId, line, iteration, e);
+        return stop;
+    }
+    private bool MatchCodeRule(string nodeId, int line, int iteration, CodeDebugEvent e)
+        => EvaluateRule(_codeRules.GetOrAdd((nodeId, line), _ => new(BreakpointRule.Default)), nodeId, iteration, null,
+            name => e.Variables.TryGetValue(name, out var value) && value is not null ? value : throw new KeyNotFoundException("Codevariable '" + name + "' nicht im Schnappschuss vorhanden."));
 
     /// <summary>
     /// Vom Host aufgerufen, wenn der Worker eine Nutzercode-Zeile meldet. Entscheidet über Anhalten,
@@ -248,6 +311,8 @@ public sealed class DebugController
         string nodeId, string nodeName, string path, int iteration, CodeDebugCapability capability,
         CodeDebugEvent e, CancellationToken abortToken)
     {
+        e = await NativeBreakpointContext.PrepareAsync(e, GetCodeBreakpointRule(nodeId, e.Line).Mode == BreakpointMode.Expression, abortToken).ConfigureAwait(false);
+        if (!ShouldPauseCode(nodeId, iteration, capability, e)) return new("continue", [.. CodeBreakpoints(nodeId)], Step: false);
         await _codePauseSerial.WaitAsync(abortToken).ConfigureAwait(false);
         try { return await OnCodeEventCoreAsync(nodeId, nodeName, path, iteration, capability, e, abortToken).ConfigureAwait(false); }
         finally { _codePauseSerial.Release(); }
@@ -258,7 +323,6 @@ public sealed class DebugController
         CodeDebugEvent e, CancellationToken abortToken)
     {
         IReadOnlyList<int> Bps() => [.. CodeBreakpoints(nodeId)];
-        if (!ShouldPauseCode(nodeId, capability, e)) return new CodeDebugStop("continue", Bps(), Step: false);
 
         var variables = e.Variables
             .OrderBy(v => v.Key, StringComparer.Ordinal)

@@ -174,6 +174,9 @@ public sealed class ResultRecorder
                     _events.Add(new ResultEvent(++_seq, ResultEventKind.Group, gc.NodeId, gc.Path, gc.Iteration, gc.Time, gc.Rating,
                         (long)gc.Iterations, Message: gc.IsExit ? "Exit" : null));
                     break;
+                case NodeSkipped skipped:
+                    _events.Add(new ResultEvent(++_seq, ResultEventKind.Diagnostic, skipped.NodeId, skipped.Path, skipped.Iteration, skipped.Time, Message: skipped.Reason));
+                    break;
                 case GroupNotEntered gn:
                     _events.Add(new ResultEvent(++_seq, ResultEventKind.GroupNotEntered, gn.NodeId, gn.Path, gn.Iteration, gn.Time, Message: gn.Reason));
                     break;

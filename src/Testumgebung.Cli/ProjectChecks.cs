@@ -37,7 +37,7 @@ public static class ProjectChecks
 
         var blockErrors = new List<string>();
         var hints = new List<string>();
-        foreach (var step in project.Definition.AllRoots.SelectMany(r => r.Descendants()).OfType<StepDefinition>())
+        foreach (var step in project.Definition.EnabledNodes().OfType<StepDefinition>())
         {
             var errors = BlockCatalog.Default.Rebuild(step);
             if (errors.Count == 0) continue;
@@ -78,7 +78,7 @@ public static class ProjectChecks
         var requests = new List<(string Name, CodeRequest Request)>();
         foreach (var b in d.Library)
             requests.Add(($"Build Baustein {b.Id} ({b.Language})", new CodeRequest(b.Language, b.Source, b.Ports) { Assemblies = d.Assemblies }));
-        foreach (var s in d.AllRoots.SelectMany(r => r.Descendants()).OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.Code))
+        foreach (var s in d.EnabledNodes().OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.Code))
         {
             var ports = CodeBlockConverter.VisibleVariables(d, s.Id).Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
             var language = s.Parameters.GetValueOrDefault("Sprache") ?? "C#";

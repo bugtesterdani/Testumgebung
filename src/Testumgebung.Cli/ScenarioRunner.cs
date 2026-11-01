@@ -213,6 +213,9 @@ public static class ScenarioRunner
                 case DutRunCompleted d:
                     trace.AppendLine($"Prüfling {d.DutId}: {d.Status}");
                     break;
+                case NodeSkipped skipped:
+                    trace.AppendLine($"  Element {skipped.NodeId} übersprungen: {skipped.Reason}");
+                    break;
                 case GroupNotEntered g:
                     trace.AppendLine($"  Gruppe {g.NodeId} nicht betreten: {g.Reason}");
                     break;

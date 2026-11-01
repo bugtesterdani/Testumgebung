@@ -21,6 +21,11 @@ public abstract class NodeDefinition
     public string Id { get; }
     public string Name { get; set; }
     public string? Description { get; set; }
+    /// <summary>Deaktivierte Elemente bleiben definiert, werden aber einschließlich ihrer Kinder und Exit-Gruppe nicht betreten.</summary>
+    public bool Disabled { get; set; }
+    public BreakpointRule BreakpointRule { get; set; } = BreakpointRule.Default;
+    public Dictionary<int, BreakpointRule> CodeBreakpointRules { get; } = [];
+
 
     /// <summary>Filter für Anzeige, Ergebnisdatei und Datenbank (null-Werte = erben).</summary>
     public global::Testumgebung.Domain.Storage.StorageSettings Storage { get; set; } = global::Testumgebung.Domain.Storage.StorageSettings.Inherit;
@@ -215,6 +220,18 @@ public sealed class TestDefinition
     /// <summary>Alle Knoten in Hauptablauf und Bausteinkörpern.</summary>
     public IEnumerable<NodeDefinition> AllNodes() => AllRoots.SelectMany(r => r.Descendants().Prepend(r));
 
+    /// <summary>Aktive Definitionsknoten, einschließlich der vorhandenen Bibliothekskörper. Deaktivierte Teilbäume entfallen.</summary>
+    public IEnumerable<NodeDefinition> EnabledNodes() => AllRoots.SelectMany(EnabledTree);
+    private static IEnumerable<NodeDefinition> EnabledTree(NodeDefinition node)
+    {
+        if (node.Disabled) yield break;
+        yield return node;
+        if (node is not GroupDefinition group) yield break;
+        foreach (var child in group.Children.Concat(group.ExitGroup is null ? [] : [group.ExitGroup]))
+            foreach (var descendant in EnabledTree(child)) yield return descendant;
+    }
+    public bool IsDisabled(string id) => Find(id)?.Disabled == true || AncestorsOf(id).Any(g => g.Disabled);
+
     public NodeDefinition? Find(string id) => AllNodes().FirstOrDefault(n => n.Id == id);
 
     /// <summary>Grafischer Baustein, zu dessen Körper der Knoten gehört (null = Hauptablauf).</summary>
@@ -260,6 +277,8 @@ public sealed class TestDefinition
     {
         var diagnostics = new List<string>();
         var all = AllNodes().ToList();
+        if (new[] { Root, Init, Loop, Finalization }.Any(g => g.Disabled))
+            diagnostics.Add("Hauptablauf, Init, Loop und Finalization dürfen nicht deaktiviert werden; einzelne Kinder deaktivieren.");
         foreach (var dup in GroupLibrary.GroupBy(b => b.Id).Where(g => g.Count() > 1))
             diagnostics.Add($"Baustein-Id '{dup.Key}' ist mehrfach vergeben.");
         foreach (var dup in all.GroupBy(n => n.Id).Where(g => g.Count() > 1))

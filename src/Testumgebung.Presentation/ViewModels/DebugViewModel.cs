@@ -249,6 +249,9 @@ public sealed class DebugViewModel : ObservableObject
                 _lastStep[sc.NodeId] = sc;
                 Mark(sc.NodeId, RunMarker.Done);
                 break;
+            case NodeSkipped skipped:
+                Mark(skipped.NodeId, RunMarker.None);
+                break;
             case StepStarted st:
                 Mark(st.NodeId, RunMarker.Running);
                 break;

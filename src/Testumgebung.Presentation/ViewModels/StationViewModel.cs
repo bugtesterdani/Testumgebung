@@ -945,6 +945,10 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
                 HandleGroupEntered(ge);
                 break;
 
+            case NodeSkipped skipped:
+                HandleDisabledNode(skipped);
+                break;
+
             case GroupNotEntered gn:
                 HandleGroupNotEntered(gn);
                 break;
@@ -1002,6 +1006,19 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     {
         if (_overviewByNode.TryGetValue(ge.NodeId, out var gi) && gi.NodeId == ge.NodeId) gi.State = ItemState.Running;
         SetExitState(ge.NodeId, ItemState.Running, null);
+    }
+
+    private void HandleDisabledNode(NodeSkipped skipped)
+    {
+        var ids = _run?.Definition.Find(skipped.NodeId) is GroupDefinition group
+            ? group.Descendants().Select(n => n.Id).Append(group.Id) : [skipped.NodeId];
+        foreach (var id in ids)
+        {
+            if (_overviewByNode.TryGetValue(id, out var item)) item.State = ItemState.Skipped;
+            SetExitState(id, ItemState.Skipped, null);
+        }
+        AddProtocol(new ProtocolEntry(skipped.Time, ProtocolKind.Info, Last(skipped.Path), "—", "", "", null, "Deaktiviert"));
+        OnPropertiesChanged(nameof(ProgressText), nameof(DutProgress));
     }
 
     private void HandleGroupNotEntered(GroupNotEntered gn)

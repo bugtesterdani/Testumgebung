@@ -164,7 +164,7 @@ public sealed class StationSetup
     public static IReadOnlyList<string> UsedResources(TestProject project)
     {
         var names = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var n in project.Definition.AllNodes())
+        foreach (var n in project.Definition.EnabledNodes())
         {
             if (n is GroupDefinition g) foreach (var r in g.Resources) names.Add(r);
             if (n is StepDefinition s)

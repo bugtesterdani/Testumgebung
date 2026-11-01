@@ -136,3 +136,9 @@ in einer intern sequenziellen Untergruppe bündeln und eigene Zielvariablen verw
 
 Prozessausgabe, laufend geschriebene Logdateien und eigene Python-/C#-Meldungen können
 mit Status und Prozentwert angezeigt werden. [Anleitung und Regeln](../live-log-und-fortschritt.md).
+
+## Aktivierung und bedingte Haltepunkte
+
+Schritte und Gruppen können mit `disabled: true` übersprungen werden. Haltefilter
+für Ablaufkarten und Codezeilen sind konfigurierbar; Standard ist immer.
+[Bedienung, Ausdruckssprache und Trefferzahlen](../aktivierung-und-haltepunkte.md).

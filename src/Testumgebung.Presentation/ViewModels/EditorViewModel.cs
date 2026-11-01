@@ -53,6 +53,7 @@ public sealed partial class EditorViewModel : ObservableObject
         MoveDownCommand = new RelayCommand(() => MoveBy(SelectedNode, +1), () => SelectedNode?.CanMove == true);
         IndentCommand = new RelayCommand(() => Indent(SelectedNode), () => SelectedNode?.CanMove == true);
         OutdentCommand = new RelayCommand(() => Outdent(SelectedNode), () => SelectedNode?.CanMove == true);
+        ToggleEnabledCommand = new RelayCommand(() => { if (SelectedNode is { } n) SetNodeEnabled(n, n.Definition.Disabled); }, () => SelectedNode is { IsSection: false });
         ToggleBreakpointCommand = new RelayCommand(p => ToggleBreakpoint(p as NodeViewModel ?? SelectedNode), _ => _breakpoints is not null);
         ShowProjectCommand = new RelayCommand(() => SelectedNode = null);
         NewCommand = new RelayCommand(NewProject);
@@ -94,6 +95,7 @@ public sealed partial class EditorViewModel : ObservableObject
     public RelayCommand IndentCommand { get; }
     public RelayCommand OutdentCommand { get; }
     public RelayCommand ToggleBreakpointCommand { get; }
+    public RelayCommand ToggleEnabledCommand { get; }
     public RelayCommand ShowProjectCommand { get; }
     public RelayCommand NewCommand { get; }
     public RelayCommand OpenCommand { get; }
@@ -162,7 +164,7 @@ public sealed partial class EditorViewModel : ObservableObject
                 { IsGroup: true } n => new GroupPropertiesViewModel(this, n),
                 var n => new StepPropertiesViewModel(this, n),
             };
-            foreach (var c in new[] { DeleteCommand, MoveUpCommand, MoveDownCommand, IndentCommand, OutdentCommand, ToggleBreakpointCommand, CopyCommand, CutCommand, DuplicateCommand })
+            foreach (var c in new[] { DeleteCommand, MoveUpCommand, MoveDownCommand, IndentCommand, OutdentCommand, ToggleBreakpointCommand, ToggleEnabledCommand, CopyCommand, CutCommand, DuplicateCommand })
                 c.RaiseCanExecuteChanged();
         }
     }
@@ -180,8 +182,10 @@ public sealed partial class EditorViewModel : ObservableObject
         set
         {
             _breakpoints = value;
+            SynchronizeBreakpointRules();
             foreach (var n in AllNodes()) n.HasBreakpoint = value?.HasBreakpoint(n.Id) ?? false;
             ToggleBreakpointCommand.RaiseCanExecuteChanged();
+            Properties?.Options?.Refresh();
         }
     }
 
@@ -219,6 +223,7 @@ public sealed partial class EditorViewModel : ObservableObject
             if (expanded.TryGetValue(n.Id, out var e)) n.IsExpanded = e;
             n.HasBreakpoint = _breakpoints?.HasBreakpoint(n.Id) ?? false;
         }
+        SynchronizeBreakpointRules();
         Renumber();
         Validate();
         SelectedNode = selectId is null ? null : FindNode(selectId);
@@ -273,7 +278,7 @@ public sealed partial class EditorViewModel : ObservableObject
             {
                 var diag = DiagnosticsFor(s).FirstOrDefault();
                 n.Diagnostic = diag;
-                if (diag is not null) Diagnostics.Add($"{n.Number} {n.Name}: {diag}");
+                if (diag is not null && !n.IsInactive) Diagnostics.Add($"{n.Number} {n.Name}: {diag}");
             }
         }
         OnPropertyChanged(nameof(HasDiagnostics));
@@ -438,7 +443,11 @@ public sealed partial class EditorViewModel : ObservableObject
         var parentGroup = node!.Parent!.Group!;
         if (node.IsExit) parentGroup.ExitGroup = null;
         else parentGroup.Children.Remove(node.Definition);
-        _breakpoints?.ClearBreakpoint(node.Id);
+        foreach (var removed in node.SelfAndDescendants())
+        {
+            _breakpoints?.ClearBreakpoint(removed.Id);
+            _breakpoints?.ClearCodeBreakpoints(removed.Id);
+        }
         MarkStructureChanged();
         RebuildTree(selectId: node.Parent.Id);
     }
@@ -497,12 +506,39 @@ public sealed partial class EditorViewModel : ObservableObject
         Move(node, grand, grand.Group!.Children.IndexOf(parent.Definition) + 1);
     }
 
+    /// <summary>Ändert den Entwurf; die laufende Prüfung behält ihre eigene Definitionskopie.</summary>
+    public void SetNodeEnabled(NodeViewModel node, bool enabled)
+    {
+        if (node.IsSection || node.Definition.Disabled == !enabled) return;
+        node.Definition.Disabled = !enabled;
+        foreach (var descendant in node.SelfAndDescendants()) descendant.Refresh();
+        Validate();
+        MarkChanged();
+        Properties?.Options?.Refresh();
+    }
+
+    private void SynchronizeBreakpointRules()
+    {
+        if (_breakpoints is not { } controller) return;
+        foreach (var node in AllNodes())
+        {
+            if (controller.HasBreakpoint(node.Id) && controller.GetBreakpointRule(node.Id) != node.Definition.BreakpointRule)
+                controller.ConfigureBreakpoint(node.Id, node.Definition.BreakpointRule);
+            foreach (var line in controller.CodeBreakpoints(node.Id))
+            {
+                var rule = node.Definition.CodeBreakpointRules.GetValueOrDefault(line, BreakpointRule.Default);
+                if (controller.GetCodeBreakpointRule(node.Id, line) != rule) controller.ConfigureCodeBreakpoint(node.Id, line, rule);
+            }
+        }
+    }
+
     public void ToggleBreakpoint(NodeViewModel? node)
     {
         if (node is null || _breakpoints is null || node.IsSection) return;
         if (_breakpoints.HasBreakpoint(node.Id)) _breakpoints.ClearBreakpoint(node.Id);
-        else _breakpoints.SetBreakpoint(node.Id);
+        else _breakpoints.SetBreakpoint(node.Id, node.Definition.BreakpointRule);
         node.HasBreakpoint = _breakpoints.HasBreakpoint(node.Id);
+        Properties?.Options?.Refresh();
     }
 
     public void MarkChanged()

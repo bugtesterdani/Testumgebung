@@ -283,7 +283,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
         var d = project.Definition;
         var requests = new List<(string Name, CodeRequest Request)>();
         foreach (var b in d.Library) requests.Add(($"Baustein {b.Name} ({b.Language})", new CodeRequest(b.Language, b.Source, b.Ports) { Assemblies = d.Assemblies }));
-        foreach (var s in d.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.Code))
+        foreach (var s in d.EnabledNodes().OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.Code))
         {
             var ports = CodeBlockConverter.VisibleVariables(d, s.Id).Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
             requests.Add(($"CodeBlock {s.Name}", new CodeRequest(BlockCatalog.ParseLanguage(s.Parameters.GetValueOrDefault("Sprache") ?? "C#"),

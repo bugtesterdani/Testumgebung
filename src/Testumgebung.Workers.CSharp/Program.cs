@@ -437,6 +437,7 @@ internal sealed class DebugRewriter : CSharpSyntaxRewriter
     {
         var visited = (BlockSyntax)base.VisitBlock(node)!;
         var statements = new List<StatementSyntax>();
+        foreach (var name in LoopNames(node)) statements.Add(Hook($"__DbgVar(\"{name}\", {name});"));
         for (var i = 0; i < node.Statements.Count; i++)
         {
             var original = node.Statements[i];
@@ -456,6 +457,18 @@ internal sealed class DebugRewriter : CSharpSyntaxRewriter
             statements.Add(current);
         }
         return visited.WithStatements(SyntaxFactory.List(statements));
+    }
+
+    // Loop variables are initialized by their header, not a LocalDeclarationStatement in the body.
+    private static IEnumerable<string> LoopNames(BlockSyntax block)
+    {
+        if (block.GetLocation().GetMappedLineSpan().Path != "CodeBlock") return [];
+        return block.Parent switch
+        {
+            ForStatementSyntax { Declaration: { } declaration } => declaration.Variables.Select(v => v.Identifier.Text),
+            ForEachStatementSyntax each => [each.Identifier.Text],
+            _ => [],
+        };
     }
 
     private static StatementSyntax Hook(string code)

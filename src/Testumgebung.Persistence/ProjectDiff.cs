@@ -112,6 +112,9 @@ public static class ProjectDiff
         var item = b.Path;
         if (a.Node.Name != b.Node.Name) list.Add(new(DiffKind.Changed, area, item, $"Name: {a.Node.Name} → {b.Node.Name}"));
         if (a.Node.Description != b.Node.Description) list.Add(new(DiffKind.Changed, area, item, "Beschreibung: " + Short(b.Node.Description)));
+        if (a.Node.Disabled != b.Node.Disabled) list.Add(new(DiffKind.Changed, area, item, b.Node.Disabled ? "Deaktiviert" : "Reaktiviert"));
+        if (a.Node.BreakpointRule != b.Node.BreakpointRule || Json(a.Node.CodeBreakpointRules) != Json(b.Node.CodeBreakpointRules))
+            list.Add(new(DiffKind.Changed, area, item, "Haltebedingungen geändert"));
         if (a.Node.Storage != b.Node.Storage) list.Add(new(DiffKind.Changed, area, item, "Anzeige/Speicherung geändert"));
         if (a.Parent != b.Parent) list.Add(new(DiffKind.Moved, area, item, $"aus {a.Path} verschoben"));
         else if (a.Index != b.Index) list.Add(new(DiffKind.Moved, area, item, $"Position {a.Index + 1} → {b.Index + 1}"));
