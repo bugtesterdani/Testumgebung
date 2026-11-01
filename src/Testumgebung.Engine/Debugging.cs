@@ -243,7 +243,10 @@ public sealed class DebugController
         => _codeRules.TryGetValue((nodeId, line), out var state) ? state.Rule : BreakpointRule.Default;
 
     public bool HasCodeBreakpoint(string nodeId, int line)
-        => _codeBreakpoints.TryGetValue(nodeId, out var set) && set.Contains(line);
+    {
+        if (!_codeBreakpoints.TryGetValue(nodeId, out var set)) return false;
+        lock (set) return set.Contains(line);
+    }
 
     /// <summary>Fortsetzen bis zum nächsten Haltepunkt.</summary>
     public void CodeContinue() => ReleaseCode("continue");
