@@ -216,6 +216,9 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     private static GroupDto ToDto(GroupDefinition g) => new()
     {
         Id = g.Id,
+        Disabled = g.Disabled ? true : null,
+        BreakpointRule = g.BreakpointRule == BreakpointRule.Default ? null : g.BreakpointRule,
+        CodeBreakpointRules = g.CodeBreakpointRules.Count == 0 ? null : g.CodeBreakpointRules,
         Name = g.Name,
         Description = g.Description,
         Variables = g.Variables.Select(ToDto).ToList(),
@@ -323,6 +326,9 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         StepDefinition s when s.BlockType is not null => new StepDto
         {
             Id = s.Id,
+            Disabled = s.Disabled ? true : null,
+            BreakpointRule = s.BreakpointRule == BreakpointRule.Default ? null : s.BreakpointRule,
+            CodeBreakpointRules = s.CodeBreakpointRules.Count == 0 ? null : s.CodeBreakpointRules,
             Name = s.Name,
             Description = s.Description,
             Block = s.BlockType,
@@ -338,6 +344,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         var g = new GroupDefinition(Require(dto.Id, "id"), dto.Name ?? dto.Id!)
         {
             Description = dto.Description,
+            Disabled = dto.Disabled == true,
             ResultBeforeRepeat = dto.ResultBeforeRepeat,
             Parallel = dto.Parallel ?? false,
             ResourceTimeout = dto.ResourceTimeoutMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null,
@@ -346,6 +353,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             DutIdVariable = dto.DutIdVariable ?? "Kennung",
             Storage = FromDto(dto.Storage),
         };
+        RestoreDebugRules(g, dto);
         try
         {
             g.EntryCondition = string.IsNullOrWhiteSpace(dto.Condition) ? null : dto.Condition;
@@ -379,8 +387,27 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         if (!catalog.TryGet(type, out _)) throw new ProjectFormatException($"Schritt '{dto.Name}': unbekannter Baustein '{type}'.");
         var step = catalog.Create(type, Require(dto.Id, "id"), dto.Name, dto.Parameters);
         step.Description = dto.Description;
+        step.Disabled = dto.Disabled == true;
+        RestoreDebugRules(step, dto);
         step.Storage = FromDto(dto.Storage);
         return step;
+    }
+
+    private static void RestoreDebugRules(NodeDefinition node, NodeDto dto)
+    {
+        try
+        {
+            node.BreakpointRule = dto.BreakpointRule ?? BreakpointRule.Default;
+            node.BreakpointRule.Validate();
+            foreach (var (line, rule) in dto.CodeBreakpointRules ?? [])
+            {
+                if (line < 1 || rule is null) throw new ProjectFormatException("Codehaltepunkt: gültige Zeile und Regel erforderlich.");
+                rule.Validate(code: true);
+                node.CodeBreakpointRules[line] = rule;
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or Testumgebung.Domain.Expressions.ExpressionException)
+        { throw new ProjectFormatException($"Haltebedingung in '{node.Name}' ungültig: {ex.Message}"); }
     }
 
     private static CurveDto ToDto(CurveDefinition c) => new()
@@ -546,6 +573,9 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     [JsonDerivedType(typeof(StepDto), "schritt")]
     private abstract class NodeDto
     {
+        public bool? Disabled { get; set; }
+        public BreakpointRule? BreakpointRule { get; set; }
+        public Dictionary<int, BreakpointRule>? CodeBreakpointRules { get; set; }
         public string? Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }

@@ -194,6 +194,11 @@ public sealed class EnumDisplayConverter : IValueConverter
 {
     private static readonly IReadOnlyDictionary<object, string> DisplayNames = new Dictionary<object, string>
     {
+        [Testumgebung.Domain.Definitions.BreakpointMode.Always] = "Immer",
+        [Testumgebung.Domain.Definitions.BreakpointMode.FailOrError] = "Bei FAIL oder ERROR",
+        [Testumgebung.Domain.Definitions.BreakpointMode.Fail] = "Nur bei FAIL",
+        [Testumgebung.Domain.Definitions.BreakpointMode.Error] = "Nur bei ERROR",
+        [Testumgebung.Domain.Definitions.BreakpointMode.Expression] = "Wenn Ausdruck wahr ist",
         [Testumgebung.Domain.Definitions.RepeatMode.Once] = "Einmal",
         [Testumgebung.Domain.Definitions.RepeatMode.Count] = "Anzahl",
         [Testumgebung.Domain.Definitions.RepeatMode.Duration] = "Zeitspanne",

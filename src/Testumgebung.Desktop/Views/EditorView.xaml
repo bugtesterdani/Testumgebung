@@ -120,6 +120,38 @@
         </DataTemplate>
 
         <!-- Projekt -->
+        <DataTemplate DataType="{x:Type vm:BreakpointPropertiesViewModel}">
+            <Expander Header="{Binding Title}" Margin="0,3" IsEnabled="{Binding CanConfigure}">
+                <StackPanel Margin="8">
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsCode, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="Quelltextzeile (ab 1): " VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Line, UpdateSourceTrigger=LostFocus}" Width="70"/>
+                    </StackPanel>
+                    <CheckBox Content="Haltepunkt aktiv" IsChecked="{Binding Enabled}" Margin="0,4"/>
+                    <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}">
+                        <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}"/></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding Condition, UpdateSourceTrigger=PropertyChanged, Delay=300}" Margin="0,4"
+                             Visibility="{Binding UsesExpression, Converter={StaticResource BoolVis}}" ToolTip="Typisierter Ausdruck; Debug.Treffer und Debug.Iteration sind verfügbar."/>
+                    <WrapPanel Margin="0,4">
+                        <TextBlock Text="Ab Treffer " VerticalAlignment="Center"/><TextBox Text="{Binding FirstHit, UpdateSourceTrigger=LostFocus}" Width="65"/>
+                        <TextBlock Text="  alle " VerticalAlignment="Center"/><TextBox Text="{Binding Every, UpdateSourceTrigger=LostFocus}" Width="65"/>
+                        <TextBlock Text=" Treffer" VerticalAlignment="Center"/>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Text="Standard: immer, ab Treffer 1, alle 1 Treffer. Filter zählen pro Prüflauf neu. Fehler im Ausdruck halten mit Diagnose an."/>
+                </StackPanel>
+            </Expander>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:NodeOptionsViewModel}">
+            <StackPanel Margin="0,4,0,12">
+                <CheckBox Content="Element aktiv" IsChecked="{Binding Enabled}" IsEnabled="{Binding CanDeactivate}"/>
+                <TextBlock Style="{StaticResource Caption}" Text="Deaktiviert: Element samt Kindern und Exit überspringen; keine Bewertung." TextWrapping="Wrap" Margin="0,3"/>
+                <ContentControl Content="{Binding Card}"/>
+                <ContentControl Content="{Binding Code}" Visibility="{Binding HasCode, Converter={StaticResource BoolVis}}"/>
+            </StackPanel>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:ProjectPropertiesViewModel}">
             <StackPanel>
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Eigenschaften: Projekt" FontSize="20" />
@@ -296,6 +328,7 @@
                 <TextBlock Style="{StaticResource SectionTitle}" FontSize="20">
                     <Run Text="Eigenschaften: " /><Run Text="{Binding Title, Mode=OneWay}" />
                 </TextBlock>
+                <ContentControl Content="{Binding Options}"/>
                 <CheckBox Content="Schritte und Untergruppen parallel starten" IsChecked="{Binding Parallel}" Margin="0,4,0,4" />
                 <TextBlock Style="{StaticResource Caption}" Text="Parallel: Gruppe wartet vor Wiederholung und Exit auf alle Zweige. Gemeinsame Zielvariablen vermeiden; Gerätezugriffe werden gesperrt." TextWrapping="Wrap" Margin="0,0,0,8" />
                 <Grid>
@@ -410,6 +443,7 @@
                     <Run Text="Baustein: " /><Run Text="{Binding Title, Mode=OneWay}" />
                 </TextBlock>
                 <TextBlock Text="{Binding BlockDescription}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                <ContentControl Content="{Binding Options}"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="150" />
@@ -696,6 +730,7 @@
                         <Button Style="{StaticResource ToolButton}" Command="{Binding DeleteCommand}" ToolTip="Löschen (Entf)">
                             <TextBlock Style="{StaticResource Icon}" FontSize="14" Text="&#xE74D;" Foreground="{StaticResource TextBrush}" />
                         </Button>
+                        <Button Style="{StaticResource ToolButton}" Content="Aktiv / inaktiv" Command="{Binding ToggleEnabledCommand}" ToolTip="Ausgewähltes Element deaktivieren oder reaktivieren"/>
                         <Button Style="{StaticResource ToolButton}" Command="{Binding ToggleBreakpointCommand}" ToolTip="Haltepunkt umschalten (F9)">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="11" Height="11" Fill="{StaticResource FailBrush}" Margin="0,0,6,0" />

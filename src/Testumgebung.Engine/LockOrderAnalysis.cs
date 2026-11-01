@@ -61,8 +61,9 @@ public static class LockOrderAnalysis
 
         void Visit(GroupDefinition group, Dictionary<string, string> held, string path, HashSet<string> blockStack)
         {
+            if (group.Disabled) return;
             var added = AddResourceEdges(group, held, path);
-            foreach (var child in group.Children)
+            foreach (var child in group.Children.Where(c => !c.Disabled))
             {
                 switch (child)
                 {

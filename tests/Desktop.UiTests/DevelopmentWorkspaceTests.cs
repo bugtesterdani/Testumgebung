@@ -264,6 +264,7 @@ public sealed partial class DevelopmentWorkspaceTests
         Assert.Equal("COM7", saved.Initial);
         properties.Variables.RemoveCommand.Execute(row);
         VerifyParallelEditing(shell, page, dispatcher);
+        VerifyNodeOptions(shell, page, dispatcher);
         shell.Editor.SelectedNode = null;
     }
 

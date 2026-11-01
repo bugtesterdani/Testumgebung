@@ -66,6 +66,8 @@ public sealed class NodeViewModel : ObservableObject
     public GroupDefinition? Group => Definition as GroupDefinition;
     public StepDefinition? Step => Definition as StepDefinition;
 
+    public bool IsInactive => Definition.Disabled || Parent?.IsInactive == true;
+
     public bool CanMove => !IsExit && !IsSection;
 
     public int Depth => Parent is null ? 0 : Parent.Depth + 1;
@@ -182,7 +184,7 @@ public sealed class NodeViewModel : ObservableObject
         }
     }
 
-    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon));
+    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive));
 
     public IEnumerable<NodeViewModel> SelfAndDescendants()
     {

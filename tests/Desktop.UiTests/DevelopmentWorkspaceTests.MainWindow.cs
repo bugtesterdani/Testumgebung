@@ -16,6 +16,8 @@ public sealed partial class DevelopmentWorkspaceTests
 {
     private static void VerifyWindowLifecycle(Dispatcher dispatcher, string projectDirectory)
     {
+        // OnStartup selects OnLastWindowClose for production. This fixture opens/closes several independent windows.
+        Application.Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         foreach (var mode in new[] { "normal", "dirty-save", "fault", "example", "bad-stations", "running" })
         {
             var directory = Path.Combine(Path.GetTempPath(), "tu-ui-window-" + Guid.NewGuid().ToString("N"));

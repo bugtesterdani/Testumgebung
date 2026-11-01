@@ -97,3 +97,6 @@ public sealed record VersionActivated(string FromVersion, string ToVersion) : En
 
 /// <summary>Begrenztes Textstück und optionaler benutzerdefinierter Fortschritt, unabhängig von der Schrittbewertung.</summary>
 public sealed record LiveOutputReported(Testumgebung.Domain.Definitions.LiveOutputUpdate Update) : NodeEvent;
+
+/// <summary>Konfiguriert deaktiviertes Element: keine Ausführung und keine Bewertung.</summary>
+public sealed record NodeSkipped(string Reason) : NodeEvent;

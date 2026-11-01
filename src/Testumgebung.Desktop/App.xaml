@@ -35,6 +35,7 @@
                         <TextBlock x:Name="NodeIcon" Style="{StaticResource Icon}" Text="{Binding Icon, Converter={StaticResource NodeGlyph}}" Margin="0,0,10,0" />
                         <TextBlock x:Name="NodeName" Text="{Binding Name}" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding Annotation}" Foreground="{StaticResource MutedBrush}" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="deaktiviert" Foreground="{StaticResource MutedBrush}" Margin="10,0,0,0" Visibility="{Binding IsInactive, Converter={StaticResource BoolVis}}"/>
                         <Ellipse Width="13" Height="13" Fill="{StaticResource FailBrush}" Stroke="White" StrokeThickness="2" Margin="12,0,0,0"
                                  ToolTip="Haltepunkt (vor Bewertungsrückgabe)"
                                  Visibility="{Binding HasBreakpoint, Converter={StaticResource BoolVis}}" />
@@ -43,6 +44,7 @@
                     </StackPanel>
                 </Border>
                 <HierarchicalDataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsInactive}" Value="True"><Setter TargetName="Card" Property="Opacity" Value="0.5"/></DataTrigger>
                     <DataTrigger Binding="{Binding IsGroup}" Value="True">
                         <Setter TargetName="NodeName" Property="FontWeight" Value="SemiBold" />
                     </DataTrigger>

@@ -112,7 +112,7 @@ public sealed class TestRun
         IsDevelopmentRun = Options.DevelopmentRun;
         Clock = Options.Clock;
         Resources = Options.Resources ?? new ResourceManager(Clock);
-        if (!Resources.SupportsParallelBranches && definition.AllNodes().OfType<GroupDefinition>().Any(g => g.Parallel))
+        if (!Resources.SupportsParallelBranches && definition.EnabledNodes().OfType<GroupDefinition>().Any(g => g.Parallel))
             throw new ArgumentException("Die Ressourcenvermittlung unterstützt keine parallelen Ausführungszweige.", nameof(options));
         RunId = runId ?? $"Run-{Interlocked.Increment(ref _runCounter):D3}";
         _patcher = new RunPatcher(this, Options.Catalog ?? Blocks.BlockCatalog.Default);
@@ -190,6 +190,7 @@ public sealed class TestRun
     public async Task<TargetedExecutionResult> ExecuteStepTargetedAsync(string stepId, IReadOnlyDictionary<string, object>? context = null, string user = "")
     {
         if (Definition.Find(stepId) is not StepDefinition step) throw new KeyNotFoundException($"Schritt '{stepId}' nicht gefunden.");
+        if (Definition.IsDisabled(stepId)) return new(false, ResultRating.NResult, "Element oder übergeordnete Gruppe ist deaktiviert.");
         var scope = BuildDebugContext(stepId, context);
         MarkDevelopmentRun();
         Emit(new DevelopmentEvent(user, "Schritt gezielt ausgeführt", step.Name) { Time = Clock.Now, RunId = RunId });
@@ -203,6 +204,7 @@ public sealed class TestRun
     public async Task<TargetedExecutionResult> ExecuteGroupTargetedAsync(string groupId, IReadOnlyDictionary<string, object>? context = null, string user = "")
     {
         if (Definition.Find(groupId) is not GroupDefinition group) throw new KeyNotFoundException($"Gruppe '{groupId}' nicht gefunden.");
+        if (Definition.IsDisabled(groupId)) return new(false, ResultRating.NResult, "Element oder übergeordnete Gruppe ist deaktiviert.");
         var parentScope = BuildDebugContext(groupId, context);
         if (group.ParsedEntryCondition is { } condition)
         {
@@ -317,6 +319,11 @@ public sealed class TestRun
         NodeDefinition node, Scope? parentScope, ExecutionPhase phase, ResultAccumulator parent,
         string parentPath, int parentIteration, bool forceEnter, bool isExit = false)
     {
+        if (node.Disabled)
+        {
+            Emit(new NodeSkipped("Deaktiviert") { Time = Clock.Now, RunId = RunId, NodeId = node.Id, Path = Combine(parentPath, node.Name), Iteration = parentIteration });
+            return;
+        }
         var pending = new PendingResult();
         var executions = 0;
         while (true)
@@ -347,14 +354,16 @@ public sealed class TestRun
     private async Task<bool> PauseAfterNodeAsync(NodeDefinition node, Scope? parentScope, ExecutionPhase phase, string parentPath,
         int iteration, PendingResult pending, ResultAccumulator parent, int executions, NodeResult result)
     {
-        if (Options.Debugger is not { } dbg || parentScope is null || phase.IsCancelled || !dbg.ShouldPause(node.Id, Combine(parentPath, node.Name))) return false;
+        if (Options.Debugger is not { } dbg || parentScope is null || phase.IsCancelled) return false;
+        var info = new PauseInfo(node.Id, node.Name, Combine(parentPath, node.Name), iteration, node is GroupDefinition,
+            pending.Rating, parent.Rating, executions, result.Snapshot);
+        // Decide once at arrival. False conditions must not wait behind a paused sibling.
+        if (!dbg.ShouldPause(info, parentScope)) return false;
         await _debugGate.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (phase.IsCancelled || !dbg.ShouldPause(node.Id, Combine(parentPath, node.Name))) return false;
+            if (phase.IsCancelled || !dbg.ShouldPause(node.Id, info.Path)) return false;
             dbg.ClearStep();
-            var info = new PauseInfo(node.Id, node.Name, Combine(parentPath, node.Name), iteration, node is GroupDefinition,
-                pending.Rating, parent.Rating, executions, result.Snapshot);
             var waiting = dbg.BeginPause(info, parentScope);
             Emit(new Paused(info) { Time = Clock.Now, RunId = RunId });
             DebugCommand command;

@@ -164,6 +164,8 @@ public static class GroupBlockConverter
         }
         var step = catalog.Create(BlockCatalog.GroupBlock, originalId, group.Name, parameters);
         step.Description = group.Description;
+        step.Disabled = group.Disabled;
+        step.BreakpointRule = group.BreakpointRule;
 
         parent.Children[index] = step;
         definition.GroupLibrary.Add(block);
