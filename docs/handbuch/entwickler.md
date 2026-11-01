@@ -163,3 +163,43 @@ erscheinen dort weiterhin. Speichern, Rückgängig/Wiederholen und der Versionsv
 verwenden die vorhandenen Projektfunktionen. Der Text verändert weder die Ausführung
 noch die Bewertung. Datum und Autor werden bei Bedarf von Hand eingetragen; das Feld
 ist kein automatisch geführtes oder unveränderliches Änderungsprotokoll.
+
+## Änderungshistorie einer Ablaufkarte
+
+Einen Schritt oder eine Gruppe auswählen und in den Eigenschaften auf
+**Änderungshistorie** klicken. Ein eigenes Fenster zeigt die freigegebenen
+Änderungen genau dieses Elements. Weitere Auswahlen im Editor verändern ein
+bereits geöffnetes Historienfenster nicht.
+
+Die Tabelle enthält das Feld, die Art der Änderung, den alten und neuen Wert,
+die Freigabeversion mit Freigabezeitpunkt sowie die nächste Freigabe, in der
+sich dieses Feld erneut geändert hat. Die Zeitangaben sind lokale Zeiten.
+Unveränderte Werte behalten ihre ursprüngliche Freigabe als Beginn ihres
+Zeitraums. Die Reihenfolge richtet sich nach dem Freigabezeitpunkt, nicht nach
+der Schreibweise der Versionsnummer. Eine Zeile auswählen, um beide Werte
+unten vollständig lesen und kopieren zu können, einschließlich mehrzeiliger
+Kommentare und Quelltexte. Die Suche berücksichtigt Felder, Werte und Versionen;
+**Nur zuletzt belegte Werte** blendet überholte und entfernte Werte aus.
+
+Die Zuordnung erfolgt innerhalb desselben Programmnamens über die Element-ID.
+Umbenennen oder Verschieben einer Karte beginnt deshalb keine neue Wertehistorie.
+Kopien mit neuer ID haben eine eigene Historie. Bei Gruppen werden die eigenen
+Einstellungen und Variablendeklarationen verglichen; für die Änderungen eines
+Kindes dessen Karte öffnen. Bei Bibliotheksaufrufen ist auch die gespeicherte
+Definition des aufgerufenen Bibliotheksbausteins enthalten. Die Reihenfolge
+benannter Listen wird als eigenes Feld ausgewiesen.
+
+Grundlage sind die vorhandenen freigegebenen und archivierten Release-Pakete.
+Entwürfe, ungespeicherte Editoränderungen, gemessene Laufzeitwerte sowie globale
+Prüfplatz- und DLL-Konfigurationen gehören nicht zu dieser Kartenhistorie.
+Ein fehlendes optionales Feld bedeutet Standard oder Vererbung; ein leerer
+String wird als `""` angezeigt. Der erste vorhandene Stand ist als **Erster
+belegter Stand** gekennzeichnet: Was vor der frühesten vorhandenen Freigabe galt,
+lässt sich daraus nicht ableiten. Die Historie kann vollständig aus der Ablage
+entfernte Releases nicht rekonstruieren. Bei einem fehlenden oder beschädigten
+Paket, fehlendem Freigabezeitpunkt oder nicht eindeutig sortierbaren Freigaben
+werden keine vermeintlich gesicherten Teilzeiträume angezeigt.
+
+Eine Freigabe ist nicht der Übernahmezeitpunkt an jedem Prüfplatz. Ein laufender
+Prüfling kann noch die vorherige Version verwenden; der tatsächlich verwendete
+Programmstand ist dem jeweiligen Prüfergebnis zu entnehmen.

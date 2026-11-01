@@ -157,6 +157,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:NodeOptionsViewModel}">
             <StackPanel Margin="0,4,0,12">
+                <Button Content="Änderungshistorie" Click="OnNodeHistory" HorizontalAlignment="Left"
+                        Style="{StaticResource OutlineButton}" Margin="0,0,0,8"
+                        ToolTip="Freigegebene Werteänderungen dieses Elements anzeigen"/>
                 <CheckBox Content="Element aktiv" IsChecked="{Binding Enabled}" IsEnabled="{Binding CanDeactivate}"/>
                 <TextBlock Style="{StaticResource Caption}" Text="Deaktiviert: Element samt Kindern und Exit überspringen; keine Bewertung." TextWrapping="Wrap" Margin="0,3"/>
                 <ContentControl Content="{Binding Card}"/>
