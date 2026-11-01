@@ -89,9 +89,11 @@ public sealed class DebugController
 
     public bool IsPaused => CurrentPause is not null;
 
-    public void SetBreakpoint(string nodeId, string user = "")
+    public void SetBreakpoint(string nodeId, string user = "") => SetBreakpoint(nodeId, BreakpointRule.Default, user);
+
+    public void SetBreakpoint(string nodeId, BreakpointRule rule, string user = "")
     {
-        _breakpoints[nodeId] = new(BreakpointRule.Default);
+        _breakpoints[nodeId] = new(rule);
         Run?.Emit(new DevelopmentEvent(user, "Breakpoint gesetzt", nodeId) { Time = Run.Clock.Now, RunId = Run.RunId });
     }
 
@@ -236,8 +238,8 @@ public sealed class DebugController
     {
         if (line < 1) throw new ArgumentOutOfRangeException(nameof(line));
         var state = new BreakpointState(rule, code: true);
-        SetCodeBreakpoint(nodeId, line);
         _codeRules[(nodeId, line)] = state;
+        SetCodeBreakpoint(nodeId, line);
     }
     public BreakpointRule GetCodeBreakpointRule(string nodeId, int line)
         => _codeRules.TryGetValue((nodeId, line), out var state) ? state.Rule : BreakpointRule.Default;

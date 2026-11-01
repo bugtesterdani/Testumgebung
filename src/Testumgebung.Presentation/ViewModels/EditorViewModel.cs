@@ -536,7 +536,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (node is null || _breakpoints is null || node.IsSection) return;
         if (_breakpoints.HasBreakpoint(node.Id)) _breakpoints.ClearBreakpoint(node.Id);
-        else { _breakpoints.SetBreakpoint(node.Id); _breakpoints.ConfigureBreakpoint(node.Id, node.Definition.BreakpointRule); }
+        else _breakpoints.SetBreakpoint(node.Id, node.Definition.BreakpointRule);
         node.HasBreakpoint = _breakpoints.HasBreakpoint(node.Id);
         Properties?.Options?.Refresh();
     }

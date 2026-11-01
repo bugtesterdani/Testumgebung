@@ -66,7 +66,7 @@ public sealed class BreakpointPropertiesViewModel : ObservableObject
             {
                 if (!TryRule(out var rule)) { Refresh(); return; }
                 if (IsCode) _editor.Breakpoints!.ConfigureCodeBreakpoint(_node.Id, LineNumber, rule!);
-                else { _editor.Breakpoints!.SetBreakpoint(_node.Id); _editor.Breakpoints.ConfigureBreakpoint(_node.Id, rule!); }
+                else _editor.Breakpoints!.SetBreakpoint(_node.Id, rule!);
             }
             else if (IsCode) _editor.Breakpoints!.ClearCodeBreakpoint(_node.Id, LineNumber);
             else _editor.Breakpoints!.ClearBreakpoint(_node.Id);
