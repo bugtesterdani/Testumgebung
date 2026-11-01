@@ -34,6 +34,16 @@
                         <TextBlock Text="{Binding Number}" MinWidth="46" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                         <TextBlock x:Name="NodeIcon" Style="{StaticResource Icon}" Text="{Binding Icon, Converter={StaticResource NodeGlyph}}" Margin="0,0,10,0" />
                         <TextBlock x:Name="NodeName" Text="{Binding Name}" VerticalAlignment="Center" />
+                        <TextBlock Text="&#xE90A;" Style="{StaticResource Icon}" Margin="10,0,0,0"
+                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
+                                   AutomationProperties.Name="Kommentar vorhanden"
+                                   Visibility="{Binding HasComment, Converter={StaticResource BoolVis}}">
+                            <TextBlock.ToolTip>
+                                <ToolTip><ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock Text="{Binding Comment}" TextWrapping="Wrap" MaxWidth="520"/>
+                                </ScrollViewer></ToolTip>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
                         <TextBlock Text="{Binding Annotation}" Foreground="{StaticResource MutedBrush}" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
                         <TextBlock Text="deaktiviert" Foreground="{StaticResource MutedBrush}" Margin="10,0,0,0" Visibility="{Binding IsInactive, Converter={StaticResource BoolVis}}"/>
                         <Ellipse Width="13" Height="13" Fill="{StaticResource FailBrush}" Stroke="White" StrokeThickness="2" Margin="12,0,0,0"

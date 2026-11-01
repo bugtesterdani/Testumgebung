@@ -144,6 +144,17 @@
                 </StackPanel>
             </Expander>
         </DataTemplate>
+        <DataTemplate x:Key="NodeCommentTemplate">
+            <StackPanel Margin="0,6,0,10">
+                <TextBlock Style="{StaticResource Label}" Text="Kommentar / Verlauf" />
+                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, Delay=400}"
+                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="84" MaxHeight="260"
+                         VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+                         AutomationProperties.Name="Kommentar / Verlauf" />
+                <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                           Text="Mehrere Zeilen möglich, z. B. Datum – Änderung – Begründung. Dokumentation ohne Einfluss auf die Prüfung." />
+            </StackPanel>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:NodeOptionsViewModel}">
             <StackPanel Margin="0,4,0,12">
                 <CheckBox Content="Element aktiv" IsChecked="{Binding Enabled}" IsEnabled="{Binding CanDeactivate}"/>
@@ -329,6 +340,7 @@
                 <TextBlock Style="{StaticResource SectionTitle}" FontSize="20">
                     <Run Text="Eigenschaften: " /><Run Text="{Binding Title, Mode=OneWay}" />
                 </TextBlock>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource NodeCommentTemplate}"/>
                 <ContentControl Content="{Binding Options}"/>
                 <CheckBox Content="Schritte und Untergruppen parallel starten" IsChecked="{Binding Parallel}" Margin="0,4,0,4" />
                 <TextBlock Style="{StaticResource Caption}" Text="Parallel: Gruppe wartet vor Wiederholung und Exit auf alle Zweige. Gemeinsame Zielvariablen vermeiden; Gerätezugriffe werden gesperrt." TextWrapping="Wrap" Margin="0,0,0,8" />
@@ -444,6 +456,7 @@
                     <Run Text="Baustein: " /><Run Text="{Binding Title, Mode=OneWay}" />
                 </TextBlock>
                 <TextBlock Text="{Binding BlockDescription}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource NodeCommentTemplate}"/>
                 <ContentControl Content="{Binding Options}"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -456,8 +469,6 @@
                     </Grid.RowDefinitions>
                     <TextBlock Style="{StaticResource Label}" Text="Bezeichnung" />
                     <TextBox Grid.Column="1" Text="{Binding Name}" Margin="0,4" />
-                    <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="Beschreibung" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Description}" Margin="0,4" />
                 </Grid>
 
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Parameter" Margin="0,14,0,6" />
