@@ -1,0 +1,168 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Visuelle Blockprogrammierung",
+  "version": "0.1",
+  "description": "Ohne Hardware: Wiederholung, einmalige Wenn/Sonst-Entscheidung und parallele Zweige.",
+  "variables": [
+    {
+      "name": "Spannung",
+      "type": "Double",
+      "initial": "12"
+    },
+    {
+      "name": "Bereit",
+      "type": "Bool",
+      "initial": "true"
+    }
+  ],
+  "init": {
+    "id": "start",
+    "name": "Start",
+    "children": []
+  },
+  "loop": {
+    "id": "loop",
+    "name": "Prüfen",
+    "children": [
+      {
+        "art": "gruppe",
+        "id": "zaehlen",
+        "name": "Wiederhole dreimal",
+        "children": [
+          {
+            "art": "schritt",
+            "id": "hoch",
+            "name": "Zähler erhöhen",
+            "block": "wert.setzen",
+            "parameters": {
+              "Ziel": "Zaehler",
+              "Ausdruck": "(Zaehler + 1)"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "wertpruefen",
+            "name": "Zähler bewerten",
+            "block": "bewertung",
+            "parameters": {
+              "Bedingung": "((Zaehler >= 1) && (Zaehler <= 3))",
+              "Wert": "Zaehler"
+            }
+          }
+        ],
+        "variables": [
+          {
+            "name": "Zaehler",
+            "type": "Int",
+            "initial": "0"
+          }
+        ],
+        "repeat": {
+          "mode": "Count",
+          "count": 3
+        }
+      },
+      {
+        "art": "gruppe",
+        "id": "auswahl",
+        "name": "Wenn / Sonst",
+        "children": [
+          {
+            "art": "schritt",
+            "id": "entscheidung",
+            "name": "Bedingung einmal prüfen",
+            "block": "wert.setzen",
+            "parameters": {
+              "Ziel": "_BlockZweig_auswahl",
+              "Ausdruck": "((Spannung >= 10.0) && Bereit)"
+            }
+          },
+          {
+            "art": "gruppe",
+            "id": "dann",
+            "name": "Dann",
+            "children": [
+              {
+                "art": "schritt",
+                "id": "bereit-aus",
+                "name": "Eingang nach Entscheidung ändern",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Bereit",
+                  "Ausdruck": "false"
+                }
+              },
+              {
+                "art": "schritt",
+                "id": "pass",
+                "name": "Dann bestätigt",
+                "block": "bewertung.setzen",
+                "parameters": {
+                  "Bewertung": "PASS"
+                }
+              }
+            ],
+            "condition": "_BlockZweig_auswahl"
+          },
+          {
+            "art": "gruppe",
+            "id": "sonst",
+            "name": "Sonst",
+            "children": [
+              {
+                "art": "schritt",
+                "id": "fail",
+                "name": "Sonst nicht erwartet",
+                "block": "bewertung.setzen",
+                "parameters": {
+                  "Bewertung": "FAIL"
+                }
+              }
+            ],
+            "condition": "!_BlockZweig_auswahl"
+          }
+        ],
+        "variables": [
+          {
+            "name": "_BlockZweig_auswahl",
+            "type": "Bool",
+            "initial": "false"
+          }
+        ]
+      },
+      {
+        "art": "gruppe",
+        "id": "parallel",
+        "name": "Parallel ausführen",
+        "children": [
+          {
+            "art": "schritt",
+            "id": "parallel-a",
+            "name": "Zweig A",
+            "block": "bewertung.setzen",
+            "parameters": {
+              "Bewertung": "PASS"
+            }
+          },
+          {
+            "art": "schritt",
+            "id": "parallel-b",
+            "name": "Zweig B",
+            "block": "bewertung.setzen",
+            "parameters": {
+              "Bewertung": "PASS"
+            }
+          }
+        ],
+        "parallel": true
+      }
+    ]
+  },
+  "finalization": {
+    "id": "ende",
+    "name": "Ende",
+    "children": []
+  },
+  "simulation": []
+}

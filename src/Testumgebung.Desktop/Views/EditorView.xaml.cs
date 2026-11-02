@@ -112,13 +112,15 @@ public partial class EditorView : UserControl
 
     private void OnTreeDragOver(object sender, DragEventArgs e)
     {
-        e.Effects = TryGetTarget(e, out _, out _, out _) ? DragDropEffects.Move : DragDropEffects.None;
+        e.Effects = TryGetTarget(e, out _, out _, out _) ? DragDropEffects.Move
+            : TryGetPaletteTarget(e, out _, out _, out _) ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
     private void OnTreeDrop(object sender, DragEventArgs e)
     {
         if (TryGetTarget(e, out var node, out var parent, out var index)) Editor!.Move(node, parent, index);
+        else if (TryGetPaletteTarget(e, out var palette, out parent, out index)) Editor!.InsertAt(palette, parent, index);
         e.Handled = true;
     }
 
@@ -130,25 +132,7 @@ public partial class EditorView : UserControl
         if (Editor is not { } editor || e.Data.GetData(typeof(NodeViewModel)) is not NodeViewModel dragged) return false;
         node = dragged;
 
-        var card = CardFrom(e.OriginalSource as DependencyObject);
-        if (card?.DataContext is not NodeViewModel target) return false;
-
-        var y = e.GetPosition(card).Y / Math.Max(1, card.ActualHeight);
-        var into = target.IsSection || target.IsExit || (target.IsGroup && y is > 0.25 and < 0.75);
-        if (into)
-        {
-            parent = target;
-            index = target.Group!.Children.Count;
-        }
-        else
-        {
-            if (target.Parent is null) return false;
-            parent = target.Parent;
-            var siblings = parent.Group!.Children;
-            index = siblings.IndexOf(target.Definition);
-            if (index < 0) return false; // Ziel ist Exit-Gruppe
-            if (y >= 0.5) index++;
-        }
+        if (!ResolveDropPosition(e, out parent, out index)) return false;
         return editor.CanMove(node, parent, index);
     }
 
@@ -157,7 +141,7 @@ public partial class EditorView : UserControl
     {
         for (var d = source; d is not null; d = ParentOf(d))
         {
-            if (d is Border { Name: "Card" } border) return border;
+            if (d is Border { Name: "Card" or "EmptySlot" } border) return border;
             if (d is TreeViewItem) return null;
         }
         return null;

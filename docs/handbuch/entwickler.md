@@ -212,3 +212,12 @@ Die schreibgeschützte Systemvariable `GruppenErgebnis` liefert das bisher
 `../GruppenErgebnis` liest die Elterngruppe. Sie ist in Bedingungen,
 Wiederholungsausdrücken und freien CodeBlocks ohne eigene Deklaration verfügbar.
 [Zeitpunkt, Bausteingrenzen und Beispiele für C#, Python und C++](../live-gruppenergebnis.md).
+
+
+## Visuelle Blockprogrammierung
+
+**Blockansicht** im Ablaufeditor einschalten, um Abläufe mit verschachtelten
+Steuerungsblöcken aufzubauen. **Blöcke …** an Ausdrucksfeldern öffnet den
+visuellen Baukasten für Berechnungen, Vergleiche und Logik. Beide Ansichten
+bearbeiten denselben Projektstand.
+[Bedienung mit Bildern und Beispielprogramm](../visuelle-blockprogrammierung.md).

@@ -70,6 +70,33 @@ public sealed class NodeViewModel : ObservableObject
     public string? Comment => Definition.Description;
     public bool HasComment => !string.IsNullOrWhiteSpace(Comment);
 
+    /// <summary>Farbe der zusätzlichen Blockansicht; die fachliche Bedeutung bleibt in Definition und Icon erhalten.</summary>
+    public string BlockColor => IsSection ? "#DCE7F8" : IsExit ? "#FFE2CA" : IsGroup ? "#FFEDBB" : Icon switch
+    {
+        NodeIcon.Code or NodeIcon.LibraryBlock => "#E8DEFB", NodeIcon.Check or NodeIcon.Error => "#D3F0DC",
+        NodeIcon.Measure or NodeIcon.Arrow or NodeIcon.Digital => "#D4EAFB", NodeIcon.Operator => "#FFE0EA", _ => "#DFEAF1"
+    };
+    public string ParameterSummary
+    {
+        get
+        {
+            if (Step is not { } step) return DecisionBranchLabel() ?? Annotation;
+            if (step.BlockType == BlockCatalog.SetValue && step.Parameters.GetValueOrDefault("Ziel")?.StartsWith("_BlockZweig_", StringComparison.Ordinal) == true)
+                return "wenn " + step.Parameters.GetValueOrDefault("Ausdruck");
+            return string.Join(" · ", step.Parameters.Where(p => p.Key != "Quelltext").Take(4)
+                .Select(p => p.Key + " = " + (p.Value.Length > 50 ? p.Value[..50] + "…" : p.Value)));
+        }
+    }
+
+    private string? DecisionBranchLabel()
+    {
+        if (Parent?.Group?.Children.FirstOrDefault() is not StepDefinition capture || capture.BlockType != BlockCatalog.SetValue) return null;
+        var name = capture.Parameters.GetValueOrDefault("Ziel");
+        if (name?.StartsWith("_BlockZweig_", StringComparison.Ordinal) != true) return null;
+        if (Group?.EntryCondition == name) return "Dann-Zweig · Bedingung am ersten Block bearbeiten";
+        return Group?.EntryCondition == "!" + name ? "Sonst-Zweig · Bedingung am ersten Block bearbeiten" : null;
+    }
+
     public bool IsInactive => Definition.Disabled || Parent?.IsInactive == true;
 
     public bool CanMove => !IsExit && !IsSection;
@@ -188,7 +215,7 @@ public sealed class NodeViewModel : ObservableObject
         }
     }
 
-    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment));
+    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment), nameof(BlockColor), nameof(ParameterSummary));
 
     public IEnumerable<NodeViewModel> SelfAndDescendants()
     {

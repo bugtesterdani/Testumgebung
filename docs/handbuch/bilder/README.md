@@ -14,3 +14,9 @@ dotnet test tests/Desktop.UiTests/Desktop.UiTests.csproj --filter FullyQualified
 ```
 
 Der optionale Bildgenerator liegt im vorhandenen WPF-Prüfharness. Für das DLL-Bild wird die nach dem C#-DLL-Handbuch gebaute Beispiel-DLL unter `artifacts/verification/dll-handbuch/bin/Release/net10.0/MeinePruefbibliothek.dll` verwendet. Er verändert keine Produktionskonfiguration und speichert keine echten Programmfreigaben. Die Beispielbilder enthalten lokale Pfade des Entwicklungsrechners, keine produktiven Zugangsdaten.
+
+`16-blockansicht.png` und `17-ausdrucksbloecke.png`: tatsächliche WPF-Ansichten der
+Blockprogrammierung für Version 1.1.1, erstellt am 02.11.2026 mit dem
+Oberflächentest `VerifyVisualBlockProgramming`. Beispielprogramm ohne Hardware
+und ohne Produktionsdaten. Die Testbilder werden unter
+`artifacts/verification/visual-flow.png` und `visual-expression.png` erzeugt.

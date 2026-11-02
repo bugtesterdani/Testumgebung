@@ -361,3 +361,14 @@ Sie liest nur bereits übergebene Teilbewertungen (`NRESULT`, `PASS`, `FAIL`,
 Bausteingrenzen. In langen CodeBlocks für erneutes Lesen `Var<string>(...)`,
 `var(...)` oder `VarText(...)` verwenden. Ein Aufruf-Feld ist ein Schnappschuss.
 Details und Beispiele: [Live-Gruppenergebnis](live-gruppenergebnis.md).
+
+
+### Visueller Editor (ab 1.1.1)
+
+Die Blockansicht verwendet dasselbe Format und dieselbe Ausdruckssprache.
+Keine separaten visuellen Koordinaten oder Scratch-Dateien erzeugen. Eine
+Wenn/Dann/Sonst-Vorlage speichert eine lokale Entscheidung über einen
+`wert.setzen`-Schritt, dann zwei bedingte Gruppen. Änderungen am ursprünglichen
+Eingang im Dann-Zweig dürfen nicht den Sonst-Zweig nachträglich aktivieren.
+[Beispiel im Projektformat](beispiele/blockprogrammierung/bloecke.tproj.json)
+und [Bedienung](visuelle-blockprogrammierung.md).

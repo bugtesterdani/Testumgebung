@@ -24,6 +24,7 @@ public sealed partial class DevelopmentWorkspaceTests
             InteractionBoundaryTests.VerifyPlotGestures();
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();
+            VerifyVisualBlockProgramming(dispatcher);
             VerifySettingsPasswords();
             VerifyReleaseErrorLayout(dispatcher);
             var view = new DevelopmentWorkspace { DataContext = new ShellViewModel() };

@@ -42,13 +42,35 @@ public sealed class Expression
     /// <summary>Alle referenzierten Variablennamen (für statische Prüfung).</summary>
     public IReadOnlyList<string> ReferencedNames => _root.Names().Distinct().ToList();
 
-    public static Expression Parse(string source)
+    public static Expression Parse(string source) => ParseTokens(source, Lexer.Tokenize(source));
+
+    /// <summary>Begrenztes Parsen für interaktive Eingaben; dieselbe Grammatik, aber begrenzte Token- und Klammertiefe.</summary>
+    public static Expression Parse(string source, int maximumTokens, int maximumParenthesesDepth)
     {
-        var parser = new Parser(Lexer.Tokenize(source));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumTokens);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumParenthesesDepth);
+        var tokens = Lexer.Tokenize(source);
+        if (tokens.Count > maximumTokens) throw new ExpressionException("Der Ausdruck enthält zu viele Bestandteile für die Blockansicht.");
+        int depth = 0;
+        foreach (var token in tokens)
+        {
+            if (token.Kind == T.LParen && ++depth > maximumParenthesesDepth)
+                throw new ExpressionException("Der Ausdruck ist für die Blockansicht zu tief geklammert.");
+            if (token.Kind == T.RParen) depth--;
+        }
+        return ParseTokens(source, tokens);
+    }
+
+    private static Expression ParseTokens(string source, List<Token> tokens)
+    {
+        var parser = new Parser(tokens);
         var node = parser.ParseExpression();
         parser.ExpectEnd();
         return new Expression(source, node);
     }
+
+    /// <summary>Liefert den vorhandenen Syntaxbaum für visuelle Editoren, ohne erneut zu parsen oder auszuwerten.</summary>
+    public ExpressionSyntax ToSyntax() => _root.ToSyntax();
 
     public object Evaluate(IValueResolver resolver) => _root.Eval(resolver);
 
@@ -199,10 +221,10 @@ public sealed class Expression
                     _p++;
                     if (t.Text.Contains('.') || t.Text.Contains('e') || t.Text.Contains('E'))
                         return double.TryParse(t.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)
-                            ? new Literal(d)
+                            ? new Literal(d, t.Text)
                             : throw new ExpressionException($"Ungültige Zahl '{t.Text}'.");
                     return long.TryParse(t.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l)
-                        ? new Literal(l)
+                        ? new Literal(l, t.Text)
                         : throw new ExpressionException($"Ungültige Zahl '{t.Text}'.");
                 case T.String:
                     _p++;
@@ -234,22 +256,31 @@ public sealed class Expression
     private abstract class Node
     {
         public abstract object Eval(IValueResolver r);
+        public abstract ExpressionSyntax ToSyntax();
         public virtual IEnumerable<string> Names() => [];
     }
 
-    private sealed class Literal(object value) : Node
+    private sealed class Literal(object value, string? numberSource = null) : Node
     {
         public override object Eval(IValueResolver r) => value;
+        public override ExpressionSyntax ToSyntax() => value switch
+        {
+            string text => new(ExpressionSyntaxKind.Text, text),
+            bool flag => new(ExpressionSyntaxKind.Boolean, flag ? "true" : "false"),
+            _ => new(ExpressionSyntaxKind.Number, numberSource!)
+        };
     }
 
     private sealed class Variable(string name) : Node
     {
+        public override ExpressionSyntax ToSyntax() => new(ExpressionSyntaxKind.Variable, name);
         public override object Eval(IValueResolver r) => Normalize(r.Resolve(name));
         public override IEnumerable<string> Names() => [name];
     }
 
     private sealed class Unary(string op, Node operand) : Node
     {
+        public override ExpressionSyntax ToSyntax() => new(ExpressionSyntaxKind.Unary, op, operand.ToSyntax());
         public override object Eval(IValueResolver r)
         {
             var v = operand.Eval(r);
@@ -267,6 +298,7 @@ public sealed class Expression
 
     private sealed class Binary(string op, Node left, Node right) : Node
     {
+        public override ExpressionSyntax ToSyntax() => new(ExpressionSyntaxKind.Binary, op, left.ToSyntax(), right.ToSyntax());
         public override IEnumerable<string> Names() => left.Names().Concat(right.Names());
 
         public override object Eval(IValueResolver r)
