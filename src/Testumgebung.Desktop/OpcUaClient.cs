@@ -51,7 +51,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         _session?.Dispose();
         _session = null;
 
-        var config = new ApplicationConfiguration
+        var config = new ApplicationConfiguration(OpcUaSessionFactory.Telemetry)
         {
             ApplicationName = "Testumgebung",
             ApplicationUri = Utils.Format("urn:{0}:Testumgebung", System.Net.Dns.GetHostName()),
@@ -72,9 +72,8 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
             TransportConfigurations = [],
             TransportQuotas = new TransportQuotas { OperationTimeout = _timeoutMs },
             ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60_000 },
-            TraceConfiguration = new TraceConfiguration(),
         };
-        await config.Validate(ApplicationType.Client).ConfigureAwait(false);
+        await config.ValidateAsync(ApplicationType.Client).ConfigureAwait(false);
         config.CertificateValidator.CertificateValidation += (_, e) =>
         {
             if (e.Error.StatusCode == StatusCodes.BadCertificateUntrusted) e.Accept = true;
@@ -86,7 +85,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
 
         try
         {
-            var description = _sessionFactory.SelectEndpoint(config, endpointUrl, _useSecurity, _timeoutMs);
+            var description = await _sessionFactory.SelectEndpointAsync(config, endpointUrl, _useSecurity, _timeoutMs).ConfigureAwait(false);
             var endpoint = new ConfiguredEndpoint(null, description, EndpointConfiguration.Create(config));
             IUserIdentity identity = _user is null
                 ? new UserIdentity(new AnonymousIdentityToken())
@@ -110,7 +109,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
             var response = await session.ReadAsync(null, 0, TimestampsToReturn.Neither, read, cancellationToken).ConfigureAwait(false);
             var value = response.Results[0];
             if (StatusCode.IsBad(value.StatusCode))
-                throw new OpcUaException($"OPC UA: Lesen von „{nodeId}“ abgelehnt ({StatusCode.LookupSymbolicId(value.StatusCode.Code)}).");
+                throw new OpcUaException($"OPC UA: Lesen von „{nodeId}“ abgelehnt ({value.StatusCode.SymbolicId}).");
             return FromVariant(value.Value);
         }
         catch (Exception ex) when (ex is not OpcUaException and not OperationCanceledException)
@@ -133,7 +132,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
             };
             var response = await session.WriteAsync(null, writes, cancellationToken).ConfigureAwait(false);
             if (StatusCode.IsBad(response.Results[0]))
-                throw new OpcUaException($"OPC UA: Schreiben auf „{nodeId}“ abgelehnt ({StatusCode.LookupSymbolicId(response.Results[0].Code)}).");
+                throw new OpcUaException($"OPC UA: Schreiben auf „{nodeId}“ abgelehnt ({response.Results[0].SymbolicId}).");
         }
         catch (Exception ex) when (ex is not OpcUaException and not OperationCanceledException)
         {
@@ -161,7 +160,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
             var response = await session.CallAsync(null, request, cancellationToken).ConfigureAwait(false);
             var result = response.Results[0];
             if (StatusCode.IsBad(result.StatusCode))
-                throw new OpcUaException($"OPC UA: Methode „{methodNodeId}“ abgelehnt ({StatusCode.LookupSymbolicId(result.StatusCode.Code)}).");
+                throw new OpcUaException($"OPC UA: Methode „{methodNodeId}“ abgelehnt ({result.StatusCode.SymbolicId}).");
             return [.. result.OutputArguments.Select(v => FromVariant(v.Value))];
         }
         catch (Exception ex) when (ex is not OpcUaException and not OperationCanceledException)
@@ -218,7 +217,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         List<SubscriptionHandle> handles;
         lock (_subscriptions) { handles = [.. _subscriptions]; _subscriptions.Clear(); }
         foreach (var handle in handles) await handle.DisposeAsync().ConfigureAwait(false);
-        try { _session?.Close(); } catch (Exception) { /* beim Beenden ohne Bedeutung */ }
+        try { if (_session is { } session) await session.CloseAsync().ConfigureAwait(false); } catch (Exception) { /* beim Beenden ohne Bedeutung */ }
         _session?.Dispose();
         _gate.Dispose();
     }
