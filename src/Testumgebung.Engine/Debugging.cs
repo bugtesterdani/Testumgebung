@@ -36,7 +36,7 @@ public sealed record PauseInfo(
     ScopeSnapshot? LeftScopeSnapshot);
 
 /// <summary>Eine Variable im aktiven Debugkontext mit sichtbarem Herkunftsordner.</summary>
-public sealed record DebugVariable(string Name, string LookupPath, VarType Type, object Value, string OriginGroup);
+public sealed record DebugVariable(string Name, string LookupPath, VarType Type, object Value, string OriginGroup, bool IsReadOnly = false);
 
 /// <summary>Eine im Code-Haltepunkt sichtbare Variable (lokaler Name und Wert, vom Worker erfasst).</summary>
 public sealed record CodeDebugVariable(string Name, object? Value);
@@ -373,7 +373,7 @@ public sealed class DebugController
             {
                 var visible = scope.TryLookup(v.Name, out var found, out _) && ReferenceEquals(found, v);
                 var path = visible ? v.Name : prefix + v.Name;
-                result.Add(new DebugVariable(v.Name, path, v.Type, v.Value, s.GroupName));
+                result.Add(new DebugVariable(v.Name, path, v.Type, v.Value, s.GroupName, v.IsReadOnly));
             }
             if (s.IsInterfaceBoundary) break;
             prefix += "../";

@@ -572,7 +572,8 @@ public sealed class TestRun
         PushFrame(new ExecutionFrame(group.Id, group.Name, path, parentIteration, isExit, true, scope.Id));
         Emit(new GroupEntered(scope.Id, isExit) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
 
-        var accumulator = new ResultAccumulator();
+        // Engine und lesbare Systemvariable verwenden denselben Live-Akkumulator.
+        var accumulator = scope.GroupResult;
         var dutRunId = group.IsDutRun ? $"PT-{Guid.NewGuid():N}"[..15] : null;
         var dutStarted = Clock.Now;
         var abortsAtEntry = _abort.AbortCount;

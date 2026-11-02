@@ -6,6 +6,7 @@
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
+using Testumgebung.Domain.Results;
 
 namespace Testumgebung.Domain.Scopes;
 
@@ -15,15 +16,20 @@ public sealed class VariableNotFoundException(string message) : Exception(messag
 /// <summary>Eine lebende Variable in einem Scope.</summary>
 public sealed class Variable
 {
-    internal Variable(string name, VarType type, object value, Scope owner)
+    internal Variable(string name, VarType type, object value, Scope owner, Func<object>? computedValue = null)
     {
         Name = name;
         Type = type;
         _value = value;
         Owner = owner;
+        _computedValue = computedValue;
     }
 
     private object _value;
+    private readonly Func<object>? _computedValue;
+
+    /// <summary>Berechnete Systemwerte dürfen weder von Schritten noch vom Debugger überschrieben werden.</summary>
+    public bool IsReadOnly => _computedValue is not null;
 
     public string Name { get; }
     public VarType Type { get; }
@@ -33,12 +39,17 @@ public sealed class Variable
 
     public object Value
     {
-        get { lock (Owner.SyncRoot) return _value; }
+        get
+        {
+            if (_computedValue is { } read) return read();
+            lock (Owner.SyncRoot) return _value;
+        }
     }
 
-    /// <summary>Typgeprüftes Schreiben. Int → Double ist erlaubt, alles andere wirft <see cref="TypeMismatchException"/>.</summary>
+    /// <summary>Typgeprüftes Schreiben mit Int-zu-Double-Erweiterung; Systemvariablen sind schreibgeschützt.</summary>
     public void Set(object? value)
     {
+        if (IsReadOnly) throw new InvalidOperationException($"Systemvariable '{Name}' ist schreibgeschützt.");
         var coerced = TypedValue.Coerce(value, Type);
         lock (Owner.SyncRoot) _value = coerced;
     }
@@ -55,6 +66,12 @@ public sealed class Variable
 /// </summary>
 public sealed class Scope : IValueResolver
 {
+    /// <summary>Live-Teilbewertung dieser Gruppeninstanz: NRESULT, PASS, FAIL oder ERROR.</summary>
+    public const string GroupResultVariable = "GruppenErgebnis";
+
+    /// <summary>Gemeinsame Quelle für Engine-Aggregation und Systemvariable; parallele Zugriffe sind atomar.</summary>
+    public ResultAccumulator GroupResult { get; } = new();
+
     private static long _nextId;
     private readonly Dictionary<string, Variable> _variables = new(StringComparer.Ordinal);
 
@@ -89,6 +106,7 @@ public sealed class Scope : IValueResolver
     {
         var scope = new Scope(group.Name, parent, group.IsInterfaceBoundary, group.Id);
         foreach (var v in group.Variables) scope.Define(v);
+        scope.DefineComputed(GroupResultVariable, VarType.String, () => scope.GroupResult.Rating.ToDisplay());
         return scope;
     }
 
@@ -97,6 +115,7 @@ public sealed class Scope : IValueResolver
 
     public Variable Define(string name, VarType type, object? initial = null)
     {
+        if (name == GroupResultVariable) throw new InvalidOperationException($"Systemvariable '{name}' darf nicht selbst definiert werden.");
         if (name.Contains('/')) throw new ArgumentException($"Ungültiger Variablenname '{name}'.", nameof(name));
         var variable = new Variable(name, type, initial is null ? TypedValue.Default(type) : TypedValue.Coerce(initial, type), this);
         lock (SyncRoot)
@@ -106,6 +125,13 @@ public sealed class Scope : IValueResolver
             _variables[name] = variable;
         }
         return variable;
+    }
+
+    /// <summary>Systemwerte werden ausschließlich intern registriert und bei jedem Lesen neu bestimmt.</summary>
+    private void DefineComputed(string name, VarType type, Func<object> read)
+    {
+        var variable = new Variable(name, type, TypedValue.Default(type), this, read);
+        lock (SyncRoot) _variables.Add(name, variable);
     }
 
     public bool TryGetLocal(string name, out Variable variable)

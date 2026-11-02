@@ -8,6 +8,7 @@ using System.Globalization;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
+using Testumgebung.Domain.Scopes;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Presentation.Mvvm;
 
@@ -69,6 +70,11 @@ public sealed class VariableRowViewModel : ObservableObject
 
     public VariableDefinition? ToDefinition()
     {
+        if (Name == Scope.GroupResultVariable)
+        {
+            Error = "Schreibgeschützte Systemvariable";
+            return null;
+        }
         if (string.IsNullOrWhiteSpace(Name) || Name.Contains('/') || Name.Contains(' '))
         {
             Error = "Ungültiger Name";

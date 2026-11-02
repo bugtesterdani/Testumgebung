@@ -26,13 +26,14 @@ public sealed class DebugVariableRowViewModel : ObservableObject
         _owner = owner;
         Variable = variable;
         _valueText = DebugViewModel.FormatValue(variable.Value);
-        CommitCommand = new RelayCommand(Commit);
+        CommitCommand = new RelayCommand(Commit, () => !IsReadOnly);
     }
 
     public DebugVariable Variable { get; }
     public string Name => Variable.LookupPath;
     public string Type => Variable.Type.ToString().ToLowerInvariant();
     public string Origin => Variable.OriginGroup;
+    public bool IsReadOnly => Variable.IsReadOnly;
     public bool IsShadowed => Variable.LookupPath.StartsWith("../", StringComparison.Ordinal);
     public RelayCommand CommitCommand { get; }
 
@@ -55,12 +56,12 @@ public sealed class DebugVariableRowViewModel : ObservableObject
         }
     }
 
-    public string StatusText => Error ?? "OK";
+    public string StatusText => Error ?? (IsReadOnly ? "Schreibgeschützt" : "OK");
 
     /// <summary>Änderung übernehmen (Enter / Fokusverlust).</summary>
     public void Commit()
     {
-        if (ValueText == DebugViewModel.FormatValue(Variable.Value)) return;
+        if (IsReadOnly || ValueText == DebugViewModel.FormatValue(Variable.Value)) return;
         Error = _owner.TrySetVariable(Variable.LookupPath, ValueText);
     }
 }

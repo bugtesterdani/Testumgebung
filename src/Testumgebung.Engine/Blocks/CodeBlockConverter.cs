@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Scopes;
 
 namespace Testumgebung.Engine.Blocks;
 
@@ -76,6 +77,8 @@ public static partial class CodeBlockConverter
         var language = BlockCatalog.ParseLanguage(codeStep.Parameters.GetValueOrDefault("Sprache") ?? "C#");
         var source = codeStep.Parameters.GetValueOrDefault("Quelltext") ?? "";
         var deps = Analyze(language, source, visible);
+        if (deps.Ports.Any(p => p.Name == Scope.GroupResultVariable && p.IsOutput))
+            throw new InvalidOperationException("GruppenErgebnis ist schreibgeschützt und kann kein Ausgang eines konvertierten Bausteins sein.");
 
         var block = new CodeBlockDefinition(blockId, codeStep.Name)
         {
@@ -108,6 +111,7 @@ public static partial class CodeBlockConverter
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var group in definition.AncestorsOf(nodeId).Reverse())
         {
+            if (seen.Add(Scope.GroupResultVariable)) result.Add((Scope.GroupResultVariable, VarType.String));
             foreach (var v in group.Variables)
                 if (seen.Add(v.Name)) result.Add((v.Name, v.Type));
             if (group.Resources.Count > 0 && seen.Add(TestRun.ResourcesAcquiredVariable))
