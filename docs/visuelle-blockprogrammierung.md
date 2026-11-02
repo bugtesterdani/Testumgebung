@@ -1,6 +1,6 @@
 # Visuelle Blockprogrammierung
 
-Ab Version 1.1.1 bietet der Ablaufeditor zwei Darstellungen desselben Projekts.
+Ab Version 1.2.0 bietet der Ablaufeditor zwei Darstellungen desselben Projekts.
 Oben **Blockansicht** einschalten. Die Darstellung ist eine Sitzungseinstellung;
 das Prüfprogramm bleibt eine normale `.tproj.json`-Datei. Speichern, Freigabe,
 Simulation, Haltepunkte, deaktivierte Elemente, Geräte und Codebausteine nutzen

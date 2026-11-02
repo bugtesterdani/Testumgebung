@@ -146,7 +146,7 @@ Bei ausgeschaltetem Auftragsmodus kann die Software stattdessen eine Kennung zuo
 
 ## 5. Prüfprogramm im Ablaufeditor erstellen
 
-Ab Version 1.1.1 kann **Blockansicht** eingeschaltet werden. Ablaufblöcke lassen sich
+Ab Version 1.2.0 kann **Blockansicht** eingeschaltet werden. Ablaufblöcke lassen sich
 verschachtelt zusammenstellen; **Blöcke …** öffnet den Baukasten für Berechnungen
 und Bedingungen. Die [Anleitung zur visuellen Blockprogrammierung](../visuelle-blockprogrammierung.md)
 zeigt beide Ansichten mit Bildern und einem ausführbaren Beispiel.

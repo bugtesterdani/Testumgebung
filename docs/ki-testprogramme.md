@@ -352,7 +352,7 @@ für Ablaufkarten und Codezeilen sind konfigurierbar; Standard ist immer.
 [Bedienung, Ausdruckssprache und Trefferzahlen](aktivierung-und-haltepunkte.md).
 
 
-### Live-Gruppenergebnis (ab 1.1.1)
+### Live-Gruppenergebnis (ab 1.2.0)
 
 `GruppenErgebnis` ist eine implizite, schreibgeschützte String-Systemvariable
 je Gruppeninstanz. Nicht unter `variables` deklarieren und nicht beschreiben.
@@ -363,7 +363,7 @@ Bausteingrenzen. In langen CodeBlocks für erneutes Lesen `Var<string>(...)`,
 Details und Beispiele: [Live-Gruppenergebnis](live-gruppenergebnis.md).
 
 
-### Visueller Editor (ab 1.1.1)
+### Visueller Editor (ab 1.2.0)
 
 Die Blockansicht verwendet dasselbe Format und dieselbe Ausdruckssprache.
 Keine separaten visuellen Koordinaten oder Scratch-Dateien erzeugen. Eine
