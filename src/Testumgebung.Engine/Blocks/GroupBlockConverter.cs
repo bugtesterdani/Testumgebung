@@ -7,6 +7,7 @@ using Testumgebung.Contracts;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
+using Testumgebung.Domain.Scopes;
 
 namespace Testumgebung.Engine.Blocks;
 
@@ -60,6 +61,8 @@ public static class GroupBlockConverter
         void Walk(GroupDefinition g, HashSet<string> parentLocals)
         {
             var locals = new HashSet<string>(parentLocals, StringComparer.Ordinal);
+            // Jede Gruppe besitzt ihr eigenes Ergebnis; es ist keine äußere Port-Abhängigkeit.
+            locals.Add(Scope.GroupResultVariable);
             foreach (var v in g.Variables) locals.Add(v.Name);
             if (g.Resources.Count > 0) locals.Add(TestRun.ResourcesAcquiredVariable);
             Expr(g.EntryCondition, locals);

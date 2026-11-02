@@ -173,7 +173,7 @@
                                     <DataGridTemplateColumn Header="Wert (Enter übernimmt)" Width="1.4*">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Text="{Binding ValueText, UpdateSourceTrigger=PropertyChanged}" Padding="3,1" LostFocus="OnValueLostFocus">
+                                                <TextBox Text="{Binding ValueText, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding IsReadOnly}" Padding="3,1" LostFocus="OnValueLostFocus">
                                                     <TextBox.InputBindings>
                                                         <KeyBinding Key="Enter" Command="{Binding CommitCommand}" />
                                                     </TextBox.InputBindings>

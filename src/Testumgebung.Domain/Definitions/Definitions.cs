@@ -5,6 +5,7 @@
 
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Expressions;
+using Testumgebung.Domain.Scopes;
 
 namespace Testumgebung.Domain.Definitions;
 
@@ -281,6 +282,8 @@ public sealed class TestDefinition
             diagnostics.Add("Hauptablauf, Init, Loop und Finalization dürfen nicht deaktiviert werden; einzelne Kinder deaktivieren.");
         foreach (var dup in GroupLibrary.GroupBy(b => b.Id).Where(g => g.Count() > 1))
             diagnostics.Add($"Baustein-Id '{dup.Key}' ist mehrfach vergeben.");
+        foreach (var block in GroupLibrary.Where(b => b.Ports.Any(p => p.Name == Scope.GroupResultVariable)))
+            diagnostics.Add($"Baustein '{block.Name}': '{Scope.GroupResultVariable}' ist für die Systemvariable reserviert und kein grafischer Portname.");
         foreach (var dup in all.GroupBy(n => n.Id).Where(g => g.Count() > 1))
             diagnostics.Add($"Knoten-Id '{dup.Key}' ist mehrfach vergeben.");
         foreach (var g in all.OfType<GroupDefinition>())
@@ -298,6 +301,8 @@ public sealed class TestDefinition
                     catch (ExpressionException ex) { diagnostics.Add($"Gruppe '{g.Name}': {ex.Message}"); }
                 }
             }
+            if (g.Variables.Any(v => v.Name == Scope.GroupResultVariable))
+                diagnostics.Add($"Gruppe '{g.Name}': '{Scope.GroupResultVariable}' ist eine schreibgeschützte Systemvariable.");
             foreach (var dupVar in g.Variables.GroupBy(v => v.Name).Where(x => x.Count() > 1))
                 diagnostics.Add($"Gruppe '{g.Name}': Variable '{dupVar.Key}' doppelt definiert.");
         }

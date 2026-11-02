@@ -203,3 +203,12 @@ werden keine vermeintlich gesicherten Teilzeiträume angezeigt.
 Eine Freigabe ist nicht der Übernahmezeitpunkt an jedem Prüfplatz. Ein laufender
 Prüfling kann noch die vorherige Version verwenden; der tatsächlich verwendete
 Programmstand ist dem jeweiligen Prüfergebnis zu entnehmen.
+
+
+## Live-Gruppenergebnis
+
+Die schreibgeschützte Systemvariable `GruppenErgebnis` liefert das bisher
+übergebene Ergebnis der eigenen Gruppe (`NRESULT`, `PASS`, `FAIL`, `ERROR`).
+`../GruppenErgebnis` liest die Elterngruppe. Sie ist in Bedingungen,
+Wiederholungsausdrücken und freien CodeBlocks ohne eigene Deklaration verfügbar.
+[Zeitpunkt, Bausteingrenzen und Beispiele für C#, Python und C++](../live-gruppenergebnis.md).

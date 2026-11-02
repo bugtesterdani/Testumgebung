@@ -350,3 +350,14 @@ mit Status und Prozentwert angezeigt werden. [Anleitung und Regeln](live-log-und
 Schritte und Gruppen können mit `disabled: true` übersprungen werden. Haltefilter
 für Ablaufkarten und Codezeilen sind konfigurierbar; Standard ist immer.
 [Bedienung, Ausdruckssprache und Trefferzahlen](aktivierung-und-haltepunkte.md).
+
+
+### Live-Gruppenergebnis (ab 1.1.1)
+
+`GruppenErgebnis` ist eine implizite, schreibgeschützte String-Systemvariable
+je Gruppeninstanz. Nicht unter `variables` deklarieren und nicht beschreiben.
+Sie liest nur bereits übergebene Teilbewertungen (`NRESULT`, `PASS`, `FAIL`,
+`ERROR`); `../GruppenErgebnis` beginnt bei der Elterngruppe und respektiert
+Bausteingrenzen. In langen CodeBlocks für erneutes Lesen `Var<string>(...)`,
+`var(...)` oder `VarText(...)` verwenden. Ein Aufruf-Feld ist ein Schnappschuss.
+Details und Beispiele: [Live-Gruppenergebnis](live-gruppenergebnis.md).
