@@ -162,12 +162,7 @@ public sealed partial class EditorViewModel : ObservableObject
             _selected = value;
             if (_selected is not null) _selected.IsSelected = true;
             OnPropertyChanged();
-            Properties = _selected switch
-            {
-                null => new ProjectPropertiesViewModel(this),
-                { IsGroup: true } n => new GroupPropertiesViewModel(this, n),
-                var n => new StepPropertiesViewModel(this, n),
-            };
+            Properties = _selected?.InlineProperties ?? new ProjectPropertiesViewModel(this);
             foreach (var c in new[] { DeleteCommand, MoveUpCommand, MoveDownCommand, IndentCommand, OutdentCommand, ToggleBreakpointCommand, ToggleEnabledCommand, CopyCommand, CutCommand, DuplicateCommand })
                 c.RaiseCanExecuteChanged();
         }
@@ -224,6 +219,7 @@ public sealed partial class EditorViewModel : ObservableObject
         }
         foreach (var n in AllNodes())
         {
+            n.Editor = this;
             if (expanded.TryGetValue(n.Id, out var e)) n.IsExpanded = e;
             n.HasBreakpoint = _breakpoints?.HasBreakpoint(n.Id) ?? false;
         }

@@ -47,6 +47,13 @@ public sealed class NodeViewModel : ObservableObject
         IsSection = isSection;
     }
 
+    // Ein gemeinsames Eigenschaftsmodell pro Karte: direkte Felder und klassische
+    // Ansicht dürfen keine voneinander abweichenden Eingabestände halten.
+    internal EditorViewModel? Editor { get; set; }
+    private PropertiesViewModel? _inlineProperties;
+    public PropertiesViewModel? InlineProperties => _inlineProperties ??= Editor is null ? null
+        : IsGroup ? new GroupPropertiesViewModel(Editor, this) : new StepPropertiesViewModel(Editor, this);
+
     public NodeDefinition Definition { get; }
 
     /// <summary>Zusatzhinweis (z. B. Schnittstelle eines Bausteinkörpers).</summary>
@@ -76,26 +83,7 @@ public sealed class NodeViewModel : ObservableObject
         NodeIcon.Code or NodeIcon.LibraryBlock => "#E8DEFB", NodeIcon.Check or NodeIcon.Error => "#D3F0DC",
         NodeIcon.Measure or NodeIcon.Arrow or NodeIcon.Digital => "#D4EAFB", NodeIcon.Operator => "#FFE0EA", _ => "#DFEAF1"
     };
-    public string ParameterSummary
-    {
-        get
-        {
-            if (Step is not { } step) return DecisionBranchLabel() ?? Annotation;
-            if (step.BlockType == BlockCatalog.SetValue && step.Parameters.GetValueOrDefault("Ziel")?.StartsWith("_BlockZweig_", StringComparison.Ordinal) == true)
-                return "wenn " + step.Parameters.GetValueOrDefault("Ausdruck");
-            return string.Join(" · ", step.Parameters.Where(p => p.Key != "Quelltext").Take(4)
-                .Select(p => p.Key + " = " + (p.Value.Length > 50 ? p.Value[..50] + "…" : p.Value)));
-        }
-    }
-
-    private string? DecisionBranchLabel()
-    {
-        if (Parent?.Group?.Children.FirstOrDefault() is not StepDefinition capture || capture.BlockType != BlockCatalog.SetValue) return null;
-        var name = capture.Parameters.GetValueOrDefault("Ziel");
-        if (name?.StartsWith("_BlockZweig_", StringComparison.Ordinal) != true) return null;
-        if (Group?.EntryCondition == name) return "Dann-Zweig · Bedingung am ersten Block bearbeiten";
-        return Group?.EntryCondition == "!" + name ? "Sonst-Zweig · Bedingung am ersten Block bearbeiten" : null;
-    }
+    public bool IsTemplateDecision => Step?.BlockType == BlockCatalog.SetValue && Step.Parameters.GetValueOrDefault("Ziel")?.StartsWith("_BlockZweig_", StringComparison.Ordinal) == true;
 
     public bool IsInactive => Definition.Disabled || Parent?.IsInactive == true;
 
@@ -215,7 +203,7 @@ public sealed class NodeViewModel : ObservableObject
         }
     }
 
-    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment), nameof(BlockColor), nameof(ParameterSummary));
+    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment), nameof(BlockColor), nameof(IsTemplateDecision));
 
     public IEnumerable<NodeViewModel> SelfAndDescendants()
     {

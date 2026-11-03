@@ -15,6 +15,15 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Themes/VisualBlocks.xaml"/></ResourceDictionary.MergedDictionaries>
 
+        <DataTemplate x:Key="InlineEnumTemplate"><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}"/></DataTemplate>
+        <DataTemplate x:Key="InlinePortTemplate">
+            <StackPanel Margin="8,2,8,8" MinWidth="180">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding DirectionText}" FontSize="11"/>
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}"/>
+                <Expander Header="◈ Wert aus Blöcken" Expanded="OnInlinePortExpression"/>
+            </StackPanel>
+        </DataTemplate>
         <!-- Filter Anzeige / Ergebnisdatei / Datenbank (Abschnitt 9.1) -->
         <DataTemplate x:Key="StorageTemplate" DataType="{x:Type vm:StorageSettingsViewModel}">
             <Expander Margin="0,14,0,0">
@@ -642,9 +651,9 @@
             <ColumnDefinition Width="350" MinWidth="260" />
         </Grid.ColumnDefinitions>
 
-        <GridSplitter Grid.Row="1" Grid.Column="1" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        <GridSplitter x:Name="PaletteSplitter" Grid.Row="1" Grid.Column="1" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Background="{StaticResource BorderBrush}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
-        <GridSplitter Grid.Row="1" Grid.Column="3" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        <GridSplitter x:Name="PropertiesSplitter" Grid.Row="1" Grid.Column="3" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Background="{StaticResource BorderBrush}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
         <!-- ============================== Projektleiste -->
@@ -698,7 +707,7 @@
         </WrapPanel>
 
         <!-- ============================== Palette -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="10">
+        <Border x:Name="PalettePanel" Grid.Row="1" Style="{StaticResource Card}" Padding="10">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Bausteine" Margin="4,0,0,4" />
                 <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="4,0,0,8"
@@ -733,9 +742,16 @@
         </Border>
 
         <!-- ============================== Ablauf -->
-        <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" Padding="10">
+        <Border Grid.Row="1" Padding="10">
+            <Border.Style><Style TargetType="Border" BasedOn="{StaticResource Card}">
+                <Setter Property="Grid.Column" Value="2"/><Setter Property="Grid.ColumnSpan" Value="1"/>
+                <Style.Triggers><DataTrigger Binding="{Binding VisualBlocks}" Value="True">
+                    <Setter Property="Grid.Column" Value="0"/><Setter Property="Grid.ColumnSpan" Value="5"/>
+                </DataTrigger></Style.Triggers>
+            </Style></Border.Style>
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="4,0,0,8">
+                    <DockPanel.Style><Style TargetType="DockPanel"><Style.Triggers><DataTrigger Binding="{Binding VisualBlocks}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></DockPanel.Style>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="Ablauf" Margin="0" VerticalAlignment="Center" />
                     <WrapPanel HorizontalAlignment="Right">
                         <Button Style="{StaticResource ToolButton}" Command="{Binding MoveUpCommand}" ToolTip="Nach oben">
@@ -789,6 +805,9 @@
                         </ItemsControl>
                     </ScrollViewer>
                 </Border>
+                <Expander DockPanel.Dock="Top" Header="Programm &amp; gemeinsame Variablen" Margin="8,0,8,12" Visibility="{Binding VisualBlocks, Converter={StaticResource BoolVis}}" Expanded="OnInlineProject">
+                    <ContentControl x:Name="ProjectInline"/>
+                </Expander>
                 <TreeView x:Name="FlowTree" ItemsSource="{Binding Nodes}"
                           SelectedItemChanged="OnSelectedItemChanged" AllowDrop="True"
                           PreviewMouseLeftButtonDown="OnTreeMouseDown" PreviewMouseMove="OnTreeMouseMove"
@@ -806,7 +825,7 @@
         </Border>
 
         <!-- ============================== Eigenschaften -->
-        <Border Grid.Row="1" Grid.Column="4" Style="{StaticResource Card}">
+        <Border x:Name="PropertiesPanel" Grid.Row="1" Grid.Column="4" Style="{StaticResource Card}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ContentControl x:Name="PropertyEditor" Content="{Binding Properties}" />
             </ScrollViewer>

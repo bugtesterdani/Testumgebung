@@ -10,5 +10,7 @@ Das Beispiel benötigt keine Hardware oder externen Programme und endet mit PASS
 - **Parallel ausführen** startet zwei unabhängige bewertende Schritte und wartet
   auf beide.
 
-Für die Bedingung **Bedingung einmal prüfen → Ausdruck → Blöcke …** öffnen.
+Die Bedingung direkt im äußeren **Wenn / Sonst**-Block bearbeiten; für den
+Baukasten **◈ Wert aus Blöcken** öffnen. Im klassischen Editor liegt derselbe
+Ausdruck am Schritt **Bedingung einmal prüfen**.
 Weitere Bedienung: [visuelle Blockprogrammierung](../../visuelle-blockprogrammierung.md).

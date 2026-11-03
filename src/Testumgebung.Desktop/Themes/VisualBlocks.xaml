@@ -1,20 +1,9 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:views="clr-namespace:Testumgebung.Desktop.Views">
     <HierarchicalDataTemplate x:Key="VisualBlockTemplate" ItemsSource="{Binding Children}">
         <Grid Margin="0,0,0,2">
-            <Border x:Name="Card" Background="{Binding BlockColor}" CornerRadius="7" Padding="10,9" Margin="0,5,0,0" MinWidth="280" BorderThickness="2" BorderBrush="Transparent">
+            <Border x:Name="Card" Background="{Binding BlockColor}" CornerRadius="7" Padding="14,12" Margin="0,5,0,0" MinWidth="420" MaxWidth="1050" BorderThickness="2" BorderBrush="Transparent">
                 <StackPanel>
-                    <DockPanel>
-                        <Button Style="{StaticResource ToolButton}" DockPanel.Dock="Right" Content="Werte …" Padding="6,2" Margin="12,0,0,0" Background="White" BorderThickness="0"
-                                Command="{Binding DataContext.Editor.SelectBlockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Number}" FontSize="12" Foreground="#526177" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" MaxWidth="200" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" VerticalAlignment="Center"/>
-                            <TextBlock Text="deaktiviert" Visibility="{Binding IsInactive, Converter={StaticResource BoolVis}}" Margin="8,0,0,0"/>
-                            <Ellipse Fill="#CF3030" Width="10" Height="10" Margin="8,0,0,0" Visibility="{Binding HasBreakpoint, Converter={StaticResource BoolVis}}"/>
-                        </StackPanel>
-                    </DockPanel>
-                    <TextBlock Text="{Binding ParameterSummary}" TextWrapping="Wrap" MaxWidth="340" FontSize="12" Foreground="#34435A" Margin="0,5,0,0"/>
-                    <TextBlock Text="{Binding Comment}" TextWrapping="Wrap" MaxWidth="340" FontSize="12" Foreground="#43516A" Margin="0,4,0,0" Visibility="{Binding HasComment, Converter={StaticResource BoolVis}}"/>
+                    <views:InlineBlockEditor/>
                     <TextBlock Text="{Binding Diagnostic}" TextWrapping="Wrap" MaxWidth="340" Foreground="#AD211E" Visibility="{Binding HasDiagnostic, Converter={StaticResource BoolVis}}"/>
                 </StackPanel>
             </Border>
@@ -26,6 +15,7 @@
         </HierarchicalDataTemplate.Triggers>
     </HierarchicalDataTemplate>
     <Style x:Key="VisualBlockItemStyle" TargetType="TreeViewItem" BasedOn="{StaticResource FlowItemStyle}">
+        <Style.Triggers><DataTrigger Binding="{Binding IsTemplateDecision}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="Template">
             <Setter.Value><ControlTemplate TargetType="TreeViewItem">
@@ -45,7 +35,7 @@
                     <Border x:Name="BodyRail" Grid.Row="1" BorderBrush="{Binding BlockColor}" BorderThickness="12,0,0,0" Margin="30,0,0,0" Padding="8,0,0,0">
                         <Grid><ItemsPresenter x:Name="ItemsHost"/>
                             <Border x:Name="EmptySlot" Padding="12,9" Margin="4" BorderBrush="#B5C3D3" BorderThickness="1" CornerRadius="5" Background="#F7FAFD" Visibility="Collapsed">
-                                <TextBlock Text="Blöcke in die Gruppenmitte ziehen oder aus der Palette anklicken" Foreground="#66768B" FontSize="12" TextWrapping="Wrap" MaxWidth="320"/>
+                                <TextBlock Text="Noch leer · oben am Block „+ Schritt“ wählen oder einen Schritt hierher ziehen" Foreground="#66768B" FontSize="12" TextWrapping="Wrap" MaxWidth="320"/>
                             </Border>
                         </Grid>
                     </Border>

@@ -15,6 +15,10 @@ internal static class Sta
 {
     public static void Run(Action<Dispatcher> body)
     {
+        // Bitmap-Prüfungen auch auf CI-Runnern ohne angeschlossenen Bildschirm
+        // rendern. Diese Schalter gelten nur für den kurzlebigen Testprozess.
+        AppContext.SetSwitch("Switch.System.Windows.Media.ShouldRenderEvenWhenNoDisplayDevicesAreAvailable", true);
+        AppContext.SetSwitch("Switch.System.Windows.Media.ShouldNotRenderInNonInteractiveWindowStation", false);
         ExceptionDispatchInfo? error = null;
         var thread = new Thread(() =>
         {

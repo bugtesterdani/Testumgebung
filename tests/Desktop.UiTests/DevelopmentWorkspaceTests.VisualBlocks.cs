@@ -45,8 +45,14 @@ public sealed partial class DevelopmentWorkspaceTests
         definition.Library.Add(library);
         var call = BlockCatalog.Default.Create(BlockCatalog.LibraryBlock, "visual-call", parameters: new Dictionary<string, string> { ["Baustein"] = library.Id });
         loop.Children.Add(call);
+        loop.Children.Add(new GroupDefinition("inline-repeat", "Mehrfach prüfen") { Repetition = Repetition.Times(3) });
+        foreach (var kind in new[] { ParameterKind.Bool, ParameterKind.Choice, ParameterKind.Code })
+        {
+            var descriptor = BlockCatalog.Default.All.First(d => d.Parameters.Any(p => p.Kind == kind));
+            loop.Children.Add(BlockCatalog.Default.Create(descriptor.Type, "inline-" + kind));
+        }
         var shell = new ShellViewModel(project: new TestProject(definition)); var editor = shell.Editor;
-        var view = new EditorView { DataContext = shell };
+        var view = new EditorView { DataContext = shell, Background = Brushes.White };
         var host = new Window { Content = view, Width = 1280, Height = 900, ShowActivated = false, ShowInTaskbar = false, Left = -10000, Top = -10000, WindowStyle = WindowStyle.None };
         host.Show();
         try
@@ -61,6 +67,7 @@ public sealed partial class DevelopmentWorkspaceTests
             mode.IsChecked = false; Sta.Flush(dispatcher); Assert.Same(view.FindResource("FlowNodeTemplate"), tree.ItemTemplate);
             mode.IsChecked = true; Sta.Flush(dispatcher);
             VerifyPaletteDrop(view, editor);
+            mode.IsChecked = false; Sta.Flush(dispatcher);
 
             editor.SelectedNode = editor.FindNode("visual-loop"); view.UpdateLayout(); Sta.Flush(dispatcher);
             var entry = Descendants(view).OfType<Button>().Single(b => b.Tag?.ToString() == "entry");
@@ -151,10 +158,163 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Equal("Notiz", editor.FindNode("visual-call")!.Step!.Parameters[BlockCatalog.InputBindingPrefix + "InOut"]);
             VerifyVariableDeclarationWindow(dispatcher, view, editor);
             editor.SelectedNode = editor.FindNode("visual-loop"); view.UpdateLayout(); Sta.Flush(dispatcher);
+            mode.IsChecked = true; Sta.Flush(dispatcher); view.UpdateLayout();
+            VerifyInlineBlocks(dispatcher, view, editor);
+            view.UpdateLayout(); Sta.Flush(dispatcher);
             CaptureVisual(host, "visual-flow.png");
         }
         finally { host.Close(); }
     }
+    private static void VerifyInlineBlocks(Dispatcher dispatcher, EditorView view, EditorViewModel editor)
+    {
+        Assert.False(((FrameworkElement)view.FindName("PalettePanel")).IsVisible);
+        Assert.False(((FrameworkElement)view.FindName("PropertiesPanel")).IsVisible);
+        var node = editor.FindNode("calc")!;
+        var block = Descendants(view).OfType<InlineBlockEditor>().Single(b => ReferenceEquals(b.DataContext, node));
+        var props = Assert.IsType<StepPropertiesViewModel>(node.InlineProperties);
+        editor.SelectedNode = node; Assert.Same(props, editor.Properties);
+        var row = props.Parameters.Single(p => p.Descriptor.Name == "Ausdruck");
+        var text = Descendants(block).OfType<TextBox>().Single(t => ReferenceEquals(t.DataContext, row));
+        text.Text = "8.0"; text.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+        Assert.Equal("8.0", node.Step!.Parameters["Ausdruck"]);
+        editor.Project.Definition.Root.Variables.Add(new("NeuesZiel", VarType.Double, 0d));
+        var target = props.Parameters.Single(p => p.IsVariable);
+        var targets = Descendants(block).OfType<ComboBox>().Single(c => ReferenceEquals(c.DataContext, target));
+        var oldTarget = target.Value; targets.IsDropDownOpen = true; Sta.Flush(dispatcher);
+        Assert.Contains("NeuesZiel", targets.Items.Cast<string>()); Assert.Equal(oldTarget, target.Value);
+        targets.IsDropDownOpen = false;
+        // Die Karte muss auch dann ihr eigenes Ziel bearbeiten, wenn eine andere ausgewählt ist.
+        editor.SelectedNode = editor.FindNode("visual-loop");
+        var slot = Descendants(block).OfType<Expander>().Single(e => ReferenceEquals(e.DataContext, row));
+        slot.IsExpanded = true; Sta.Flush(dispatcher); view.UpdateLayout();
+        var inline = Assert.IsType<InlineExpressionEditor>(slot.Content);
+        var model = Assert.IsType<ExpressionBuilderViewModel>(inline.DataContext);
+        Assert.Equal("8.0", model.Original);
+        var tile = Descendants(inline).OfType<Button>().Single(b => b.DataContext is ExpressionTile { Kind: VisualExpressionKind.Number } && b.Content?.ToString() == "Zahl");
+        typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(tile, []);
+        model.Root.Value = "12.5";
+        Assert.Equal("8.0", row.Value);
+        Click(inline, "Abbrechen"); Assert.Null(slot.Content); Assert.Equal("8.0", row.Value);
+        slot.IsExpanded = true; Sta.Flush(dispatcher); view.UpdateLayout();
+        inline = Assert.IsType<InlineExpressionEditor>(slot.Content); model = (ExpressionBuilderViewModel)inline.DataContext;
+        model.Root.Value = "12.5"; Assert.True(model.CanApply, model.Error); Click(inline, "Übernehmen");
+        Assert.Equal("12.5", node.Step.Parameters["Ausdruck"]);
+        Assert.Equal("visual-loop", editor.SelectedNode!.Id);
+        slot.IsExpanded = true; Sta.Flush(dispatcher); view.UpdateLayout();
+        inline = Assert.IsType<InlineExpressionEditor>(slot.Content);
+        var destination = props.Parameters.Single(p => p.IsVariable);
+        destination.Value = "Bereit"; // geänderter Zieltyp während eines offenen Double-Entwurfs
+        ((ExpressionBuilderViewModel)inline.DataContext).Root.Value = "99.0";
+        Click(inline, "Übernehmen");
+        Assert.Same(inline, slot.Content); Assert.Equal("12.5", row.Value);
+        Assert.Contains(Descendants(inline).OfType<TextBlock>(), t => t.Text.Contains("zwischenzeitlich"));
+        destination.Value = "X"; Click(inline, "Abbrechen");
+        // Entf in einem Eingabefeld darf den Ablaufpunkt nicht löschen.
+        var tree = (TreeView)view.FindName("FlowTree");
+        var args = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(view)!, 0, Key.Delete) { RoutedEvent = Keyboard.KeyDownEvent, Source = text };
+        typeof(EditorView).GetMethod("OnTreeKeyDown", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(view, [tree, args]);
+        Assert.NotNull(editor.FindNode("visual-loop")); Assert.False(args.Handled);
+        var loop = editor.FindNode("inline-repeat")!;
+        var groupBlock = Descendants(view).OfType<InlineBlockEditor>().Single(b => ReferenceEquals(b.DataContext, loop));
+        var check = Descendants(groupBlock).OfType<CheckBox>().Single(c => c.Content?.ToString() == "Gleichzeitig ausführen");
+        check.IsChecked = true; check.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)!.UpdateSource();
+        Assert.True(loop.Group!.Parallel);
+        check.IsChecked = false; check.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)!.UpdateSource();
+        VerifyInlineInputKinds(dispatcher, view, editor);
+        VerifyInlineCondition(dispatcher, view, editor);
+        VerifyInlineMenus(dispatcher, view, editor);
+        var original = new ProjectSerializer().Serialize(editor.Project);
+        editor.VisualBlocks = false; Sta.Flush(dispatcher); editor.VisualBlocks = true; Sta.Flush(dispatcher);
+        Assert.Equal(original, new ProjectSerializer().Serialize(editor.Project));
+    }
+
+    private static void VerifyInlineInputKinds(Dispatcher dispatcher, EditorView view, EditorViewModel editor)
+    {
+        foreach (var kind in new[] { ParameterKind.Bool, ParameterKind.Choice, ParameterKind.Code })
+        {
+            var node = editor.FindNode("inline-" + kind)!;
+            var block = Descendants(view).OfType<InlineBlockEditor>().Single(b => ReferenceEquals(b.DataContext, node));
+            var props = (StepPropertiesViewModel)node.InlineProperties!;
+            var row = props.Parameters.First(p => p.Kind == kind);
+            if (kind == ParameterKind.Bool)
+            {
+                var check = Descendants(block).OfType<CheckBox>().Single(c => ReferenceEquals(c.DataContext, row));
+                check.IsChecked = !row.BoolValue; Assert.Equal(check.IsChecked, row.BoolValue);
+            }
+            else if (kind == ParameterKind.Choice)
+            {
+                var choice = Descendants(block).OfType<ComboBox>().Single(c => ReferenceEquals(c.DataContext, row));
+                choice.SelectedItem = row.Choices.Last(); Assert.Equal(row.Choices.Last(), row.Value);
+            }
+            else
+            {
+                var code = Descendants(block).OfType<Testumgebung.Desktop.Controls.NumberedCodeEditor>().Single(c => ReferenceEquals(c.DataContext, row));
+                code.SetCurrentValue(Testumgebung.Desktop.Controls.NumberedCodeEditor.TextProperty, "return Pass();");
+                code.GetBindingExpression(Testumgebung.Desktop.Controls.NumberedCodeEditor.TextProperty)!.UpdateSource();
+                Assert.Equal("return Pass();", row.Value);
+            }
+        }
+        var library = Descendants(view).OfType<InlineBlockEditor>().Single(b => b.DataContext is NodeViewModel { Id: "visual-call" });
+        var port = Descendants(library).OfType<Expander>().First(e => e.DataContext is PortBindingViewModel { Name: "Input" });
+        port.IsExpanded = true; Sta.Flush(dispatcher); view.UpdateLayout();
+        var composer = Assert.IsType<InlineExpressionEditor>(port.Content);
+        ((ExpressionBuilderViewModel)composer.DataContext).Root.Value = "9.5";
+        Click(composer, "Übernehmen");
+        Assert.Equal("9.5", editor.FindNode("visual-call")!.Step!.Parameters[BlockCatalog.InputBindingPrefix + "Input"]);
+    }
+
+    private static void VerifyInlineCondition(Dispatcher dispatcher, EditorView view, EditorViewModel editor)
+    {
+        var wrapper = editor.AllNodes().First(n => n.Children.FirstOrDefault()?.IsTemplateDecision == true);
+        var block = Descendants(view).OfType<InlineBlockEditor>().Single(b => ReferenceEquals(b.DataContext, wrapper));
+        var slot = Descendants(block).OfType<Expander>().Single(e => e.DataContext is ParameterRowViewModel);
+        slot.IsExpanded = true; Sta.Flush(dispatcher); view.UpdateLayout();
+        var composer = Assert.IsType<InlineExpressionEditor>(slot.Content);
+        var model = (ExpressionBuilderViewModel)composer.DataContext;
+        Assert.Equal(VarType.Bool, model.ExpectedType);
+        ExpressionTile Tile(string value, VisualExpressionKind kind) => model.Palette.SelectMany(g => g.Items).Single(t => t.Value == value && t.Kind == kind);
+        model.Insert(Tile("&&", VisualExpressionKind.Binary));
+        model.Insert(Tile(">=", VisualExpressionKind.Binary));
+        model.Insert(Tile("", VisualExpressionKind.Variable)); model.Selected.VariableChoice = model.Variables.Single(v => v.Path == "X");
+        model.Selected = model.Root.Left!.Right!; model.Insert(Tile("0", VisualExpressionKind.Number)); model.Selected.Value = "10.0";
+        model.Selected = model.Root.Right!; model.Insert(Tile("", VisualExpressionKind.Variable)); model.Selected.VariableChoice = model.Variables.Single(v => v.Path == "Bereit");
+        Assert.True(model.CanApply, model.Error);
+        VerifyExpressionDrops(composer);
+        view.UpdateLayout(); Sta.Flush(dispatcher); slot.BringIntoView(); Sta.Flush(dispatcher);
+        CaptureVisual(Window.GetWindow(view), "visual-inline-expression.png");
+        Click(composer, "Abbrechen");
+        Assert.Equal("true", ((ParameterRowViewModel)slot.DataContext).Value);
+    }
+    private static void VerifyInlineMenus(Dispatcher dispatcher, EditorView view, EditorViewModel editor)
+    {
+        InlineBlockEditor Card(string id) => Descendants(view).OfType<InlineBlockEditor>().Single(b => b.DataContext is NodeViewModel n && n.Id == id);
+        void Add(string id)
+        {
+            var block = Card(id); Click(block, "+ Schritt");
+            var menu = Assert.IsType<ContextMenu>(block.ContextMenu);
+            var entry = menu.Items.Cast<MenuItem>().SelectMany(c => c.Items.Cast<MenuItem>()).First(i => i.Tag is PaletteItem p && p.BlockType == BlockCatalog.Wait);
+            typeof(MenuItem).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(entry, []);
+            menu.IsOpen = false; Sta.Flush(dispatcher); view.UpdateLayout();
+        }
+        var count = editor.Project.Definition.Loop.Children.Count;
+        var index = editor.Project.Definition.Loop.Children.FindIndex(n => n.Id == "calc");
+        editor.SelectedNode = editor.FindNode("visual-start");
+        Add("calc");
+        Assert.Equal(BlockCatalog.Wait, ((StepDefinition)editor.Project.Definition.Loop.Children[index + 1]).BlockType);
+        Assert.Equal(count + 1, editor.Project.Definition.Loop.Children.Count);
+        editor.UndoCommand.Execute(null); Sta.Flush(dispatcher); view.UpdateLayout();
+        Add("inline-repeat");
+        Assert.Single(((GroupDefinition)editor.Project.Definition.Find("inline-repeat")!).Children);
+        editor.UndoCommand.Execute(null); Sta.Flush(dispatcher); view.UpdateLayout();
+        var card = Card("calc"); Click(card, "⋯");
+        var actions = Assert.IsType<ContextMenu>(card.ContextMenu);
+        var duplicate = actions.Items.Cast<MenuItem>().Single(i => i.Header?.ToString() == "Duplizieren");
+        typeof(MenuItem).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(duplicate, []);
+        actions.IsOpen = false; Sta.Flush(dispatcher); Assert.Equal(count + 1, editor.Project.Definition.Loop.Children.Count);
+        editor.UndoCommand.Execute(null); Sta.Flush(dispatcher); view.UpdateLayout();
+        Assert.Equal(count, editor.Project.Definition.Loop.Children.Count);
+    }
+
     private static void ClickExpressionTile(ExpressionBuilderWindow window, string value, VisualExpressionKind kind)
     {
         var model = (ExpressionBuilderViewModel)window.DataContext;
@@ -167,7 +327,7 @@ public sealed partial class DevelopmentWorkspaceTests
         var button = Descendants(window).OfType<Button>().Single(b => ReferenceEquals(b.DataContext, node) && b.Content?.ToString() == node.Label);
         typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(button, []);
     }
-    private static void VerifyExpressionDrops(ExpressionBuilderWindow window)
+    private static void VerifyExpressionDrops(FrameworkElement window)
     {
         var model = (ExpressionBuilderViewModel)window.DataContext;
         var ctor = typeof(DragEventArgs).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
@@ -177,9 +337,9 @@ public sealed partial class DevelopmentWorkspaceTests
             var data = new DataObject(); data.SetData(payload.GetType(), payload);
             var args = (DragEventArgs)ctor.Invoke([data, copy ? DragDropKeyStates.ControlKey : DragDropKeyStates.None, DragDropEffects.Copy | DragDropEffects.Move, border, new Point()]);
             args.RoutedEvent = DragDrop.DragOverEvent; args.Source = border;
-            typeof(ExpressionBuilderWindow).GetMethod("OnBlockDragOver", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [border, args]);
+            window.GetType().GetMethod("OnBlockDragOver", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [border, args]);
             Assert.Equal(expected, args.Effects);
-            if (perform) typeof(ExpressionBuilderWindow).GetMethod("OnBlockDrop", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [border, args]);
+            if (perform) window.GetType().GetMethod("OnBlockDrop", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [border, args]);
         }
         var before = model.Source;
         Drop(model.Root, model.Root.Left!, false, false, DragDropEffects.None);
@@ -192,8 +352,8 @@ public sealed partial class DevelopmentWorkspaceTests
         Drop(model.Root.Right!, model.Root.Left!, false, true, DragDropEffects.Move);
         Assert.False(model.CanApply); Click(window, "Rückgängig"); Assert.Equal(before, model.Source);
         var mouse = new MouseEventArgs(Mouse.PrimaryDevice, 0);
-        typeof(ExpressionBuilderWindow).GetMethod("OnNodeMouseMove", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [window, mouse]);
-        typeof(ExpressionBuilderWindow).GetMethod("OnTileMouseMove", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [window, mouse]);
+        window.GetType().GetMethod("OnNodeMouseMove", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [window, mouse]);
+        window.GetType().GetMethod("OnTileMouseMove", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, [window, mouse]);
     }
 
     private static void InteractExpression(Dispatcher dispatcher, Action open, Action<ExpressionBuilderWindow> interact)
@@ -214,7 +374,8 @@ public sealed partial class DevelopmentWorkspaceTests
     private static void CaptureVisual(Window window, string name)
     {
         window.UpdateLayout();
-        var bitmap = new RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, PixelFormats.Pbgra32); bitmap.Render(window);
+        var bitmap = new RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render((Visual)window.Content);
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root.Parent is not null && !File.Exists(Path.Combine(root.FullName, "Testumgebung.sln"))) root = root.Parent;
         var path = Path.Combine(root.FullName, "artifacts", "verification", name); Directory.CreateDirectory(Path.GetDirectoryName(path)!);

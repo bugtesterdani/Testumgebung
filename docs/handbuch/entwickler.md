@@ -216,8 +216,10 @@ Wiederholungsausdrücken und freien CodeBlocks ohne eigene Deklaration verfügba
 
 ## Visuelle Blockprogrammierung
 
-**Blockansicht** im Ablaufeditor einschalten, um Abläufe mit verschachtelten
-Steuerungsblöcken aufzubauen. **Blöcke …** an Ausdrucksfeldern öffnet den
-visuellen Baukasten für Berechnungen, Vergleiche und Logik. Beide Ansichten
-bearbeiten denselben Projektstand.
+**Blockansicht** im Ablaufeditor einschalten. **+ Schritt** am Ablaufblock fügt
+Bausteine hinzu. Werte, Variablen, Auswahlfelder und Bedingungen werden direkt
+in der Karte bearbeitet; **◈ Wert aus Blöcken** öffnet dort den eingebetteten
+Baukasten für Berechnungen, Vergleiche und Logik. Seitliche Einstellungen und
+Palette entfallen. Spezialoptionen bleiben innerhalb der Karte aufklappbar.
+Beide Ansichten bearbeiten denselben Projektstand.
 [Bedienung mit Bildern und Beispielprogramm](../visuelle-blockprogrammierung.md).

@@ -5,6 +5,8 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Media;
 using Testumgebung.Presentation.ViewModels;
@@ -23,8 +25,36 @@ public partial class EditorView : UserControl
     public EditorView()
     {
         InitializeComponent();
+        Loaded += (_, _) => TrackBlockLayout();
+        DataContextChanged += (_, _) => TrackBlockLayout();
+        Unloaded += (_, _) => { if (_layoutEditor is not null) _layoutEditor.PropertyChanged -= OnBlockLayoutChanged; _layoutEditor = null; };
         // Strg+F: Suche (auch aus der Kartenliste)
         InputBindings.Add(new KeyBinding(new FocusSearchCommand(this), Key.F, ModifierKeys.Control));
+    }
+
+    private EditorViewModel? _layoutEditor;
+    private void TrackBlockLayout()
+    {
+        if (_layoutEditor is not null) _layoutEditor.PropertyChanged -= OnBlockLayoutChanged;
+        _layoutEditor = Editor;
+        if (_layoutEditor is not null) _layoutEditor.PropertyChanged += OnBlockLayoutChanged;
+        ApplyBlockLayout();
+    }
+    private void OnBlockLayoutChanged(object? sender, PropertyChangedEventArgs e)
+    { if (e.PropertyName is nameof(EditorViewModel.VisualBlocks) or nameof(EditorViewModel.Project)) ApplyBlockLayout(); }
+    private void ApplyBlockLayout()
+    {
+        var visibility = Editor?.VisualBlocks == true ? Visibility.Collapsed : Visibility.Visible;
+        foreach (var panel in new FrameworkElement[] { PalettePanel, PropertiesPanel, PaletteSplitter, PropertiesSplitter }) panel.Visibility = visibility;
+        ProjectInline.Content = null;
+    }
+    // Texte markieren, Listen öffnen und Zahlen bearbeiten darf weder einen
+    // Ablaufblock ziehen noch dessen Entf-/Strg+C-Befehle auslösen.
+    private static bool IsBlockInput(DependencyObject? source)
+    {
+        for (var p = source; p is not null && p is not TreeViewItem; p = ParentOf(p))
+            if (p is TextBoxBase or ComboBox or ButtonBase or Testumgebung.Desktop.Controls.NumberedCodeEditor) return true;
+        return false;
     }
 
     private sealed class FocusSearchCommand(EditorView view) : ICommand
@@ -57,6 +87,7 @@ public partial class EditorView : UserControl
 
     private void OnTreeKeyDown(object sender, KeyEventArgs e)
     {
+        if (IsBlockInput(e.OriginalSource as DependencyObject)) return;
         if (TryHandleTreeKey(e.Key, Keyboard.Modifiers)) e.Handled = true;
     }
 
@@ -90,6 +121,8 @@ public partial class EditorView : UserControl
 
     private void OnTreeMouseDown(object sender, MouseButtonEventArgs e)
     {
+        _dragNode = null;
+        if (IsBlockInput(e.OriginalSource as DependencyObject)) return;
         _dragStart = e.GetPosition(FlowTree);
         _dragNode = NodeFrom(e.OriginalSource as DependencyObject);
     }

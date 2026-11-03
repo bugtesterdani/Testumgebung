@@ -16,10 +16,53 @@ public partial class EditorView
     private PaletteItem? _paletteDrag;
     private sealed record ExpressionField(string Label, Func<string> Read, Action<string> Write, VarType? Expected, bool VariableOnly, bool AllowEmpty);
 
+    internal void OpenInlineExpression(InlineBlockEditor block, Expander slot)
+    {
+        FlushPendingInputs(block);
+        if (Editor is not { } editor || block.EditedNode is not { } node) return;
+        node = ExpressionOwner(slot, node);
+        var field = ExpressionFieldFor(slot, node);
+        if (field is null) return;
+        var project = editor.Project;
+        var variables = ExpressionVariableChoices.ForNode(project.Definition, node.Id, field.VariableOnly);
+        if (field.VariableOnly && field.Expected is { } expected) variables = variables.Where(v => v.Type == expected).ToList();
+        var bindingIdentity = BindingIdentity(node);
+        var model = new ExpressionBuilderViewModel(field.Read(), variables, field.Expected, field.VariableOnly, field.AllowEmpty);
+        slot.Content = new InlineExpressionEditor(model, field.Read, source => editor.ApplyVisualEdit(() => field.Write(source)),
+            () => ReferenceEquals(editor.Project, project) && ReferenceEquals(editor.Project.Definition.Find(node.Id), node.Definition)
+                && BindingIdentity(node) == bindingIdentity && VariablesStillVisible(editor, node, field.VariableOnly, variables),
+            () => { slot.Content = null; slot.IsExpanded = false; });
+    }
+    private static (string? Target, string? Library) BindingIdentity(NodeViewModel node)
+        => (node.Step?.Parameters.GetValueOrDefault("Ziel"), node.Step?.Parameters.GetValueOrDefault("Baustein"));
+    private static bool VariablesStillVisible(EditorViewModel editor, NodeViewModel node, bool writable, IReadOnlyList<ExpressionVariable> original)
+    {
+        var current = ExpressionVariableChoices.ForNode(editor.Project.Definition, node.Id, writable).ToHashSet();
+        return original.All(current.Contains);
+    }
+    private static InlineBlockEditor? InlineAncestor(DependencyObject element)
+    {
+        for (DependencyObject? p = element; p is not null; p = VisualTreeHelper.GetParent(p))
+            if (p is InlineBlockEditor block) return block;
+        return null;
+    }
+    private void OnInlinePortExpression(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Expander { Content: null } slot) return;
+        if (InlineAncestor(slot) is { } block) OpenInlineExpression(block, slot);
+    }
+    private void OnInlineProject(object sender, RoutedEventArgs e)
+    { if (ReferenceEquals(sender, e.OriginalSource) && Editor is { } editor) ProjectInline.Content = new ProjectPropertiesViewModel(editor); }
+
     private void OnExpressionBuilder(object sender, RoutedEventArgs e)
     {
         FlushPendingInputs(PropertyEditor);
-        if (Editor?.SelectedNode is not { } node || sender is not FrameworkElement element) return;
+        if (Editor is null || sender is not FrameworkElement element) return;
+        var inline = InlineAncestor(element);
+        if (inline is not null) FlushPendingInputs(inline);
+        var node = inline?.EditedNode ?? Editor.SelectedNode;
+        if (node is null) return;
+        node = ExpressionOwner(element, node);
         var field = ExpressionFieldFor(element, node);
         if (field is null) return;
         var variables = ExpressionVariableChoices.ForNode(Editor.Project.Definition, node.Id, field.VariableOnly);
@@ -47,6 +90,11 @@ public partial class EditorView
             codeBinding.UpdateSource();
         foreach (var child in children) FlushPendingInputs(child);
     }
+
+    // Eine Wenn/Sonst-Vorlage zeigt den Ausdruck ihres ausgeblendeten
+    // Entscheidungsschritts direkt im Gruppenblock. Scope und Typ gehören weiter diesem Schritt.
+    private NodeViewModel ExpressionOwner(FrameworkElement field, NodeViewModel fallback)
+        => field.DataContext is ParameterRowViewModel row ? Editor?.FindNode(row.NodeId) ?? fallback : fallback;
 
     private ExpressionField? ExpressionFieldFor(FrameworkElement element, NodeViewModel node) => element.DataContext switch
     {

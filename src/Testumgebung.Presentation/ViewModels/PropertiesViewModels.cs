@@ -761,6 +761,7 @@ public sealed class ParameterRowViewModel : ObservableObject
         Descriptor = descriptor;
     }
 
+    public string NodeId => _owner.Step.Id;
     public ParameterDescriptor Descriptor { get; }
     public string Label => Descriptor.Label;
     public string? Hint => Descriptor.Hint;

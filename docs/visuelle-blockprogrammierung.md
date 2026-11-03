@@ -1,127 +1,105 @@
 # Visuelle Blockprogrammierung
 
-Ab Version 1.2.0 bietet der Ablaufeditor zwei Darstellungen desselben Projekts.
-Oben **Blockansicht** einschalten. Die Darstellung ist eine Sitzungseinstellung;
-das Prüfprogramm bleibt eine normale `.tproj.json`-Datei. Speichern, Freigabe,
-Simulation, Haltepunkte, deaktivierte Elemente, Geräte und Codebausteine nutzen
-dieselbe Engine und denselben Projektstand.
+Ab Version 1.2.0 lässt sich ein Prüfprogramm direkt in seinen Ablaufblöcken
+bearbeiten. Oben **Blockansicht** einschalten. Diese Ansicht hat keine
+seitlichen Paletten oder Einstellungsfelder. Die klassische Darstellung bleibt
+über denselben Schalter erreichbar. Beide bearbeiten dieselbe `.tproj.json`-Datei.
 
-## Ablaufblöcke zusammenstecken
+## In drei Schritten zum Ablauf
 
-![Blockansicht mit verschachtelten Gruppen](handbuch/bilder/16-blockansicht.png)
+![Direkte Eingaben in der Blockansicht](handbuch/bilder/16-blockansicht.png)
 
-Links stehen die bisherigen Bausteine sowie die Kategorie **Steuerung**:
+1. Am gewünschten Abschnitt oder Block **+ Schritt** anklicken und einen Baustein
+   aus der passenden Kategorie wählen.
+2. Werte direkt in die weißen Felder des Blocks eintragen, Auswahllisten öffnen
+   oder Ja/Nein schalten. Den Namen oben im Block bearbeiten.
+3. Für Berechnungen **◈ Wert aus Blöcken** öffnen und den Ausdruck an Ort und
+   Stelle zusammensetzen. **Übernehmen** schreibt das Ergebnis in das Feld.
+
+Bei einer Gruppe fügt **+ Schritt** am Ende dieser Gruppe ein; bei einem
+normalen Schritt direkt dahinter. Vorhandene Blöcke können durch Ziehen auf der
+farbigen Fläche verschoben werden: oberes Viertel = davor, unteres Viertel =
+danach, Gruppenmitte oder leere Fläche = hinein. Texte lassen sich innerhalb
+der Eingabefelder markieren; dadurch wird kein Ablaufblock verschoben.
+
+Über **⋯** am Block lassen sich Schritte duplizieren, nach oben oder unten
+verschieben, deaktivieren und löschen. Gruppen mit +/− einklappen. Start, Loop
+und Ende bleiben feste Programmabschnitte. Rückgängig und Wiederholen stehen
+oben bereit. Die Ausführung, Geräte und Codebausteine nutzen dieselbe Engine
+wie die klassische Ansicht.
+
+## Bedingungen, Wiederholungen und parallele Schritte
+
+Die Kategorie **Steuerung** enthält diese Vorlagen:
 
 | Vorlage | Verhalten |
 | --- | --- |
-| Wenn … | Gruppe mit Eintrittsbedingung |
+| Wenn … | Gruppe nur bei erfüllter Bedingung ausführen |
 | Wenn … dann … sonst | Bedingung einmal prüfen, danach genau einen Zweig ausführen |
-| Wiederhole … mal | Gruppe mit anfangs drei Wiederholungen |
-| Wiederhole solange … | Bedingung vor jeder Iteration prüfen; startet mit false |
-| Wiederhole bis … | Bedingung nach der Iteration prüfen; startet mit true |
+| Wiederhole … mal | Gruppe zunächst dreimal wiederholen; Anzahl im Block ändern |
+| Wiederhole solange … | Bedingung vor jeder Iteration; beginnt mit false |
+| Wiederhole bis … | Bedingung nach der Iteration; beginnt mit true |
 | Parallel ausführen | Direkte Kinder gleichzeitig starten und gemeinsam abwarten |
-| Gruppe | Eigener Gültigkeitsbereich mit optionaler Exit-Gruppe |
 
-Ein Bausteinklick fügt relativ zur Auswahl ein. Alternativ aus der Palette auf
-einen Block ziehen: oberes Viertel = davor, unteres Viertel = danach,
-Gruppenmitte oder leere Gruppenfläche = hinein. Bestehende Blöcke lassen sich
-genauso verschieben. Ganze Gruppen nehmen ihre Kinder mit. Start, Loop und Ende
-bleiben die festen Programmabschnitte. Unzulässige Selbstverschachtelungen
-werden abgewiesen.
+**Wenn/Sonst** zeigt seine Bedingung direkt im äußeren Block. Die gewünschten
+Aktionen jeweils über **+ Schritt** in **Dann** oder **Sonst** einfügen. Die
+Entscheidung bleibt fest, auch wenn der Dann-Zweig anschließend eine beteiligte
+Eingangsvariable ändert. Bei der nächsten Ausführung wird erneut entschieden.
 
-**Werte …** oder ein Klick auf den Block wählt dessen Eigenschaften rechts.
-Dort Namen, Kommentar, Parameter, Bedingungen, Wiederholung und Schnittstellen
-bearbeiten. Die vorhandenen Schaltflächen für Verschieben, Einrücken,
-Ausrücken, Kopieren, Löschen und Rückgängig bleiben nutzbar. Gruppen können
-mit +/− eingeklappt werden. Die Spaltenteiler und Bildlaufleisten schaffen Platz
-für größere Programme; Farben werden zusätzlich durch Namen und Hinweise erklärt.
+Im Dateiformat besteht die Vorlage weiterhin aus normalen Gruppen, einem
+Entscheidungsschritt und einer lokalen booleschen Hilfsvariable mit Präfix
+`_BlockZweig_`. Die einfache Ansicht blendet diesen Hilfsschritt aus und
+bearbeitet dessen Ausdruck im äußeren Block. Wer diese Bestandteile im
+klassischen Editor oder über Spezialoptionen bewusst verändert, verändert die
+Programmlogik. Es wird keine zweite Laufzeitsprache eingeführt.
 
-### Wenn / Dann / Sonst
+## Werte und Variablen einsetzen
 
-Die Vorlage besteht im bestehenden Format aus einer umgebenden Gruppe,
-**Bedingung einmal prüfen**, einer **Dann**-Gruppe und einer **Sonst**-Gruppe.
-Die eigentliche Bedingung am ersten Block unter **Ausdruck → Blöcke …** ändern.
-Die Prüfaktionen in die leeren Dann-/Sonst-Bereiche ziehen.
+Zielvariablen lassen sich aus einer Auswahlliste wählen. Bei Eingängen und
+Berechnungen stehen unter **◈ Wert aus Blöcken** sichtbare Variablen sowie
+Zahlen-, Text-, Ja/Nein-, Rechen-, Vergleichs- und Logikblöcke bereit.
 
-Eine lokale boolesche Variable mit Präfix `_BlockZweig_` hält die Entscheidung
-für die beiden Zweige fest. Änderungen an den ursprünglichen Eingangsvariablen
-im Dann-Zweig ändern deshalb nicht nachträglich die Auswahl des Sonst-Zweigs.
-Bei jeder erneuten Ausführung wird die Bedingung wieder einmal geprüft.
-Die Vorlagenbestandteile gehören zusammen. Wer sie im normalen Editor bewusst
-umbaut oder die Entscheidungsvariable aus Code überschreibt, verändert die
-Programmlogik. Die Variable ist kein zusätzlicher globaler Systemwert.
+![Ausdruck direkt im Ablaufblock zusammensetzen](handbuch/bilder/17-ausdrucksbloecke.png)
 
-## Variablen anlegen und auswählen
+1. Einen Steckplatz oder bestehenden Ausdrucksblock anklicken.
+2. Einen passenden Werte- oder Operatorblock einsetzen. **↶** legt einen Operator
+   um die aktuelle Auswahl.
+3. Seine Eingänge mit Zahlen, Texten, Variablen oder weiteren Operatoren füllen.
+4. Vorschau und Ergebnistyp prüfen und **Übernehmen** wählen.
 
-**Variable anlegen …** öffnet einen Dialog für Gruppe, Namen, Typ und Anfangswert.
-Leer bedeutet den Standardwert des gewählten Typs. Der Gruppenbereich bestimmt
-die Sichtbarkeit. Gemeinsame Auftragsdaten im **Hauptablauf** anlegen.
-Vorhandene Namen und reservierte Systemnamen werden nicht überschrieben.
-
-An Zielvariablen öffnet **Blöcke …** eine Auswahlliste statt eines freien Ausdrucks.
-Schreibgeschützte Werte wie `GruppenErgebnis` sind dort keine Schreibziele.
-Bei Eingängen und Berechnungen können sichtbare Elternvariablen direkt gewählt
-werden; die Liste nennt Pfad, Typ und Herkunft. Verdeckte gleichnamige Werte sind
-über ihren Elternpfad erreichbar. Bausteingrenzen bleiben erhalten.
-
-## Berechnungen und Bedingungen aus Blöcken bauen
-
-![Ausdrucksbaukasten mit Vergleich und UND](handbuch/bilder/17-ausdrucksbloecke.png)
-
-An Ausdrucksparametern **Blöcke …**, bei Gruppen **Bedingung aus Blöcken …**
-anklicken. Bibliotheksein- und -ausgänge haben **Blöcke / Variable …**.
-Feste Zahlenparameter bleiben die vorhandenen Zahlenfelder.
-
-1. Einen Steckplatz oder vorhandenen Block anklicken.
-2. Links einen Werte-, Variablen-, Rechen-, Vergleichs- oder Logikblock einsetzen
-   oder in den Steckplatz ziehen.
-3. Zahlen und Texte eingeben, Ja/Nein schalten oder eine Variable auswählen.
-4. Weitere Blöcke in die Eingänge des Operators einsetzen.
-5. Unten Vorschau und Ergebnistyp prüfen, dann **Übernehmen**.
-
-**↶** legt einen Operator um die aktuelle Auswahl. Beim Wechsel zwischen
-Operatoren gleicher Bauart bleiben verbundene Eingaben erhalten. Vorhandene
-Ausdrucksblöcke können in andere Steckplätze bewegt werden; **Strg** zieht eine
-unabhängige Kopie. Selbstverschachtelungen und fremde Dialogobjekte werden
-abgewiesen. Leere Steckplätze sind keine verschiebbaren Werte.
-
-Verfügbar sind Zahl, Text, Ja/Nein und Variable sowie `+`, `−`, `×`, `÷`, Rest,
-Vorzeichenwechsel, Vergleiche und **UND**, **ODER**, **NICHT**. Text plus Text
-verbindet Zeichenketten. Nicht passende Typkombinationen und leere Steckplätze
-zeigen eine Meldung und verhindern die Übernahme. Gruppenbedingungen erwarten
-Ja/Nein; Bibliothekseingänge ihren Porttyp, Zuweisungen bei bekannter Zielvariable
-deren Typ. Zielvariablen einer Bibliothek müssen zum Ausgabetyp passen.
+Zahlen, Texte und Auswahlen werden innerhalb ihrer Ausdrucksblöcke bearbeitet.
+Vorhandene Ausdrucksblöcke lassen sich ziehen; **Strg** zieht eine Kopie.
+Unpassende Typen und leere Steckplätze verhindern die Übernahme.
+**Abbrechen** verwirft den Entwurf. Das Einklappen allein speichert ihn nicht;
+beim erneuten Aufklappen bleibt der noch offene Entwurf erhalten.
+Rückgängig/Wiederholen im Baukasten betrifft seinen Entwurf; nach der Übernahme
+wirkt wieder der Verlauf des Ablaufeditors.
 
 `1` ist eine Ganzzahl, `1.0` beziehungsweise `1,0` eine Gleitkommazahl.
-Die bestehende Ganzzahldivision bleibt erhalten: `3 / 2` ergibt 1,
-`3.0 / 2` ergibt 1.5. Eingegebene Dezimalkommas werden für den gespeicherten
-Ausdruck in Punkte übersetzt. Klammerung, Elternpfade und Kurzschlussauswertung
-von UND/ODER entsprechen der vorhandenen Ausdruckssprache. Die Typprüfung
-liest keine echten Laufzeitwerte und führt keine Gerätezugriffe aus.
-Wertabhängige Fehler, etwa Division durch null, sind weiterhin in der Simulation
-beziehungsweise Ausführung zu prüfen.
+`3 / 2` ergibt deshalb 1, `3.0 / 2` ergibt 1.5. Text plus Text verbindet
+Zeichenketten. Die Typprüfung führt keine Gerätezugriffe aus und liest keine
+Laufzeitwerte. Wertabhängige Fehler wie Division durch null in der Simulation
+prüfen. Ein Ausdruck ist auf 256 Knoten und 32 Ebenen begrenzt; größere bestehende
+Ausdrücke bleiben im klassischen Texteditor bearbeitbar.
 
-## Übernehmen, Abbrechen und bestehende Programme
+## Weitere Optionen bleiben im Block
 
-Der Ausdrucksdialog bearbeitet zunächst eine eigene Kopie. **Abbrechen** oder
-das Schließen des Fensters verändert das Projekt nicht. **Übernehmen** schreibt
-den fertigen Prüfausdruck als einen eigenen Rückgängig-Schritt. **Leer / Standard**
-ist nur an optionalen Feldern vorhanden. Änderungen an einem zwischenzeitlich
-gewechselten Projekt oder veränderten Zielwert werden nicht überschrieben.
+**Variablen in dieser Gruppe** öffnet die Deklarationen innerhalb des
+Gruppenblocks. Gemeinsame Variablen liegen oben unter
+**Programm & gemeinsame Variablen**. Sichtbarkeit, Elternpfade (`../Name`) und
+Bausteingrenzen entsprechen den Regeln des bisherigen Editors.
 
-Im Dialog gibt es zusätzlich einen eigenen Rückgängig-/Wiederholen-Verlauf.
-Er betrifft nur die aktuelle Berechnung. Nach der Übernahme greift wieder der
-Verlauf des Ablaufeditors.
+**Kommentar, Haltepunkte & weitere Optionen** öffnet selten benötigte
+Einstellungen ebenfalls innerhalb des Blocks: mehrzeilige Kommentare,
+Haltebedingungen, Speicherung, Ressourcen, Exit-Gruppe und Codewerkzeuge.
+Bibliotheksbausteine zeigen ihre Auswahl und Ein-/Ausgänge direkt am Block.
+Codebausteine enthalten weiterhin den Editor mit Zeilennummern.
 
-Bestehende gültige Ausdrücke werden über den vorhandenen Parser als Blöcke
-übernommen. Beim Übernehmen kann die Schreibweise durch eindeutige Klammern
-vereinheitlicht werden; beim Abbrechen bleibt der Originaltext exakt erhalten.
-Unbekannte Variablen oder unpassende Typen müssen vor einer neuen
-Übernahme korrigiert werden; mit Abbrechen bleibt der ursprüngliche Ausdruck
-erhalten. Sehr große oder tiefe Ausdrücke bleiben im Texteditor bearbeitbar.
-Die Blockansicht begrenzt einzelne Ausdrücke auf 256 Knoten und 32 Ebenen.
-Die neue Ansicht schreibt weder eine zweite Programmiersprache noch separate
-Bildschirmkoordinaten in die Projektdatei.
+Bei zwischenzeitlich veränderten Zielwerten oder gewechselten Projekten wird
+ein offener Ausdrucksentwurf nicht ungeprüft darübergeschrieben. Unbekannte
+Variablen oder ungültige bestehende Ausdrücke bleiben bis zu einer bewussten
+Übernahme unverändert. Der klassische Editor bietet weiterhin den separaten
+Ausdrucksdialog.
 
 Ein ausführbares Beispiel ohne Hardware liegt unter
 [Beispielprogramm](beispiele/blockprogrammierung/README.md).
