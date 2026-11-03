@@ -18,6 +18,8 @@ public sealed class OpcUaSessionContractTests
         public bool BadStatus;
         public bool Disposed;
         public bool Connected = true;
+        public readonly TaskCompletionSource CloseCalled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<StatusCode>? CloseCompletion;
         public object? Value = 42;
         public object?[]? LastArguments;
         protected override object? Invoke(MethodInfo? method, object?[]? arguments)
@@ -26,7 +28,7 @@ public sealed class OpcUaSessionContractTests
             {
                 case "get_Connected": return Connected;
                 case "Dispose": Disposed = true; return null;
-                case "Close": return new StatusCode(StatusCodes.Good);
+                case "CloseAsync": CloseCalled.TrySetResult(); return CloseCompletion?.Task ?? Task.FromResult(new StatusCode(StatusCodes.Good));
                 case "ReadAsync":
                     Check(); LastArguments = arguments;
                     return Task.FromResult(new ReadResponse { Results = [new DataValue(new Variant(Value)) { StatusCode = BadStatus ? StatusCodes.BadNodeIdUnknown : StatusCodes.Good }] });
@@ -72,6 +74,30 @@ public sealed class OpcUaSessionContractTests
             var calls = Assert.IsType<CallMethodRequestCollection>(peer.LastArguments![1]);
             Assert.Equal(NodeId.Parse("ns=2;s=Object"), Assert.Single(calls).ObjectId); Assert.Equal(NodeId.Parse("ns=2;s=Method"), calls[0].MethodId); Assert.Equal(5, calls[0].InputArguments.Count);
         }
+        Assert.True(peer.Disposed);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Dispose_waits_for_async_close_and_releases_session_even_if_close_fails(bool notifier, bool fail)
+    {
+        var session = DispatchProxy.Create<ISession, SessionPeer>();
+        var peer = (SessionPeer)(object)session;
+        peer.CloseCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        IAsyncDisposable resource = notifier
+            ? new OpcUaNotifier(new OpcUaNotifyOptions { EndpointUrl = "opc.tcp://fixture", Station = "P1" })
+            : new OpcUaClient("opc.tcp://fixture", new InstrumentOptions());
+        resource.GetType().GetField("_session", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(resource, session);
+        var disposal = resource.DisposeAsync().AsTask();
+        await peer.CloseCalled.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.False(disposal.IsCompleted);
+        Assert.False(peer.Disposed);
+        if (fail) peer.CloseCompletion.SetException(new IOException("close failed"));
+        else peer.CloseCompletion.SetResult(new StatusCode(StatusCodes.Good));
+        await disposal;
         Assert.True(peer.Disposed);
     }
 

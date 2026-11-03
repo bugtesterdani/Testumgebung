@@ -322,7 +322,7 @@ public sealed class ShellViewModel : ObservableObject
             if (ReferenceEquals(station, SelectedStation) &&
                 ((e.PropertyName == nameof(DebugViewModel.IsPaused) && station.Debug.IsPaused)
                 || (e.PropertyName == nameof(DebugViewModel.IsCodePaused) && station.Debug.IsCodePaused)))
-                WorkspaceToolTab = 2;
+                if (!Editor.GraphView || Page != ShellPage.Editor) WorkspaceToolTab = 2;
         };
     }
 

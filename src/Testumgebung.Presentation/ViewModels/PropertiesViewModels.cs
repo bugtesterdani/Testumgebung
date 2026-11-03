@@ -761,6 +761,7 @@ public sealed class ParameterRowViewModel : ObservableObject
         Descriptor = descriptor;
     }
 
+    public string NodeId => _owner.Step.Id;
     public ParameterDescriptor Descriptor { get; }
     public string Label => Descriptor.Label;
     public string? Hint => Descriptor.Hint;
@@ -775,6 +776,8 @@ public sealed class ParameterRowViewModel : ObservableObject
     /// <summary>Wird durch eine eigene Oberfläche ersetzt (z. B. Bausteinauswahl).</summary>
     public bool IsHidden { get; init; }
     public bool IsExpression => Kind is ParameterKind.Expression;
+    public bool IsVariable => Kind is ParameterKind.Variable;
+    public bool HasVisualBuilder => IsExpression || IsVariable && !Value.StartsWith("_BlockZweig_", StringComparison.Ordinal);
 
     public string Value
     {
@@ -785,6 +788,7 @@ public sealed class ParameterRowViewModel : ObservableObject
             _owner.Step.Parameters[Descriptor.Name] = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(BoolValue));
+            OnPropertyChanged(nameof(HasVisualBuilder));
             _owner.ParametersChanged();
         }
     }

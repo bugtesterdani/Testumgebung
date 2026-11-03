@@ -40,7 +40,7 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
         _session?.Dispose();
         _session = null;
 
-        var config = new ApplicationConfiguration
+        var config = new ApplicationConfiguration(OpcUaSessionFactory.Telemetry)
         {
             ApplicationName = "Testumgebung",
             ApplicationUri = Utils.Format("urn:{0}:Testumgebung", System.Net.Dns.GetHostName()),
@@ -61,9 +61,8 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
             TransportConfigurations = [],
             TransportQuotas = new TransportQuotas { OperationTimeout = (int)options.Timeout.TotalMilliseconds },
             ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60_000 },
-            TraceConfiguration = new TraceConfiguration(),
         };
-        await config.Validate(ApplicationType.Client).ConfigureAwait(false);
+        await config.ValidateAsync(ApplicationType.Client).ConfigureAwait(false);
         config.CertificateValidator.CertificateValidation += (_, e) =>
         {
             if (e.Error.StatusCode == StatusCodes.BadCertificateUntrusted) e.Accept = true;
@@ -73,7 +72,7 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
             await _sessionFactory.CheckCertificateAsync(config).ConfigureAwait(false);
         }
 
-        var description = _sessionFactory.SelectEndpoint(config, options.EndpointUrl, options.UseSecurity, (int)options.Timeout.TotalMilliseconds);
+        var description = await _sessionFactory.SelectEndpointAsync(config, options.EndpointUrl, options.UseSecurity, (int)options.Timeout.TotalMilliseconds).ConfigureAwait(false);
         var endpoint = new ConfiguredEndpoint(null, description, EndpointConfiguration.Create(config));
         IUserIdentity identity = options.Username is null
             ? new UserIdentity(new AnonymousIdentityToken())
@@ -100,7 +99,7 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
             var response = await session.WriteAsync(null, writes, cancellationToken).ConfigureAwait(false);
             var bad = response.Results.Select((r, i) => (Code: r, Field: OpcUaNotifyOptions.FieldNames[i])).Where(x => StatusCode.IsBad(x.Code)).ToList();
             if (bad.Count > 0)
-                throw new InvalidOperationException("Schreiben abgelehnt: " + string.Join(", ", bad.Select(b => $"{options.NodeFor(b.Field)} {StatusCode.LookupSymbolicId(b.Code.Code)}")));
+                throw new InvalidOperationException("Schreiben abgelehnt: " + string.Join(", ", bad.Select(b => $"{options.NodeFor(b.Field)} {b.Code.SymbolicId}")));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -120,7 +119,7 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
         await base.DisposeAsync().ConfigureAwait(false);
         try
         {
-            _session?.Close();
+            if (_session is { } session) await session.CloseAsync().ConfigureAwait(false);
         }
         catch (Exception)
         {

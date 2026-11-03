@@ -5,6 +5,8 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Media;
 using Testumgebung.Presentation.ViewModels;
@@ -23,8 +25,36 @@ public partial class EditorView : UserControl
     public EditorView()
     {
         InitializeComponent();
+        Loaded += (_, _) => TrackBlockLayout();
+        DataContextChanged += (_, _) => TrackBlockLayout();
+        Unloaded += (_, _) => { if (_layoutEditor is not null) _layoutEditor.PropertyChanged -= OnBlockLayoutChanged; _layoutEditor = null; };
         // Strg+F: Suche (auch aus der Kartenliste)
         InputBindings.Add(new KeyBinding(new FocusSearchCommand(this), Key.F, ModifierKeys.Control));
+    }
+
+    private EditorViewModel? _layoutEditor;
+    private void TrackBlockLayout()
+    {
+        if (_layoutEditor is not null) _layoutEditor.PropertyChanged -= OnBlockLayoutChanged;
+        _layoutEditor = Editor;
+        if (_layoutEditor is not null) _layoutEditor.PropertyChanged += OnBlockLayoutChanged;
+        ApplyBlockLayout();
+    }
+    private void OnBlockLayoutChanged(object? sender, PropertyChangedEventArgs e)
+    { if (e.PropertyName is nameof(EditorViewModel.VisualBlocks) or nameof(EditorViewModel.GraphView) or nameof(EditorViewModel.Project)) ApplyBlockLayout(); }
+    private void ApplyBlockLayout()
+    {
+        var visibility = Editor is { VisualBlocks: true } or { GraphView: true } ? Visibility.Collapsed : Visibility.Visible;
+        foreach (var panel in new FrameworkElement[] { PalettePanel, PropertiesPanel, PaletteSplitter, PropertiesSplitter }) panel.Visibility = visibility;
+        ProjectInline.Content = null;
+    }
+    // Texte markieren, Listen öffnen und Zahlen bearbeiten darf weder einen
+    // Ablaufblock ziehen noch dessen Entf-/Strg+C-Befehle auslösen.
+    private static bool IsBlockInput(DependencyObject? source)
+    {
+        for (var p = source; p is not null && p is not TreeViewItem; p = ParentOf(p))
+            if (p is TextBoxBase or ComboBox or ButtonBase or Testumgebung.Desktop.Controls.NumberedCodeEditor) return true;
+        return false;
     }
 
     private sealed class FocusSearchCommand(EditorView view) : ICommand
@@ -57,6 +87,7 @@ public partial class EditorView : UserControl
 
     private void OnTreeKeyDown(object sender, KeyEventArgs e)
     {
+        if (IsBlockInput(e.OriginalSource as DependencyObject)) return;
         if (TryHandleTreeKey(e.Key, Keyboard.Modifiers)) e.Handled = true;
     }
 
@@ -90,6 +121,8 @@ public partial class EditorView : UserControl
 
     private void OnTreeMouseDown(object sender, MouseButtonEventArgs e)
     {
+        _dragNode = null;
+        if (IsBlockInput(e.OriginalSource as DependencyObject)) return;
         _dragStart = e.GetPosition(FlowTree);
         _dragNode = NodeFrom(e.OriginalSource as DependencyObject);
     }
@@ -112,13 +145,15 @@ public partial class EditorView : UserControl
 
     private void OnTreeDragOver(object sender, DragEventArgs e)
     {
-        e.Effects = TryGetTarget(e, out _, out _, out _) ? DragDropEffects.Move : DragDropEffects.None;
+        e.Effects = TryGetTarget(e, out _, out _, out _) ? DragDropEffects.Move
+            : TryGetPaletteTarget(e, out _, out _, out _) ? DragDropEffects.Copy : DragDropEffects.None;
         e.Handled = true;
     }
 
     private void OnTreeDrop(object sender, DragEventArgs e)
     {
         if (TryGetTarget(e, out var node, out var parent, out var index)) Editor!.Move(node, parent, index);
+        else if (TryGetPaletteTarget(e, out var palette, out parent, out index)) Editor!.InsertAt(palette, parent, index);
         e.Handled = true;
     }
 
@@ -130,25 +165,7 @@ public partial class EditorView : UserControl
         if (Editor is not { } editor || e.Data.GetData(typeof(NodeViewModel)) is not NodeViewModel dragged) return false;
         node = dragged;
 
-        var card = CardFrom(e.OriginalSource as DependencyObject);
-        if (card?.DataContext is not NodeViewModel target) return false;
-
-        var y = e.GetPosition(card).Y / Math.Max(1, card.ActualHeight);
-        var into = target.IsSection || target.IsExit || (target.IsGroup && y is > 0.25 and < 0.75);
-        if (into)
-        {
-            parent = target;
-            index = target.Group!.Children.Count;
-        }
-        else
-        {
-            if (target.Parent is null) return false;
-            parent = target.Parent;
-            var siblings = parent.Group!.Children;
-            index = siblings.IndexOf(target.Definition);
-            if (index < 0) return false; // Ziel ist Exit-Gruppe
-            if (y >= 0.5) index++;
-        }
+        if (!ResolveDropPosition(e, out parent, out index)) return false;
         return editor.CanMove(node, parent, index);
     }
 
@@ -157,7 +174,7 @@ public partial class EditorView : UserControl
     {
         for (var d = source; d is not null; d = ParentOf(d))
         {
-            if (d is Border { Name: "Card" } border) return border;
+            if (d is Border { Name: "Card" or "EmptySlot" } border) return border;
             if (d is TreeViewItem) return null;
         }
         return null;

@@ -14,7 +14,7 @@ using Testumgebung.Presentation.Mvvm;
 
 namespace Testumgebung.Presentation.ViewModels;
 
-public sealed record PaletteItem(string? BlockType, string DisplayName, string Description, NodeIcon Icon);
+public sealed record PaletteItem(string? BlockType, string DisplayName, string Description, NodeIcon Icon, string? Preset = null);
 
 public sealed record PaletteCategory(string Name, IReadOnlyList<PaletteItem> Items);
 
@@ -25,6 +25,7 @@ public sealed record PaletteCategory(string Name, IReadOnlyList<PaletteItem> Ite
 public sealed partial class EditorViewModel : ObservableObject
 {
     private readonly ProjectSerializer _serializer;
+    private readonly IReadOnlyList<PaletteCategory> _palette;
     private readonly IFileDialogService? _dialogs;
     private NodeViewModel? _selected;
     private PropertiesViewModel? _properties;
@@ -41,10 +42,11 @@ public sealed partial class EditorViewModel : ObservableObject
         _dialogs = dialogs;
         Project = project;
 
-        Palette = Catalog.All
+        _palette = Catalog.All
             .GroupBy(b => b.Category)
             .Select(g => new PaletteCategory(g.Key, g.Select(b => new PaletteItem(b.Type, b.DisplayName, b.Description, IconFor(b.Type))).ToList()))
             .Append(new PaletteCategory("Struktur", [new PaletteItem(null, "Gruppe", "Untergruppe mit Variablen, Bedingung, Wiederholung und Exit-Gruppe.", NodeIcon.Group)]))
+            .Append(new PaletteCategory("Steuerung", ControlBlocks))
             .ToList();
 
         InsertCommand = new RelayCommand(p => { if (p is PaletteItem item) Insert(item); });
@@ -85,7 +87,9 @@ public sealed partial class EditorViewModel : ObservableObject
     public List<CodeBlockDefinition> Library => Project.Definition.Library;
     public TestProject Project { get; private set; }
     public ObservableCollection<NodeViewModel> Nodes { get; } = [];
-    public IReadOnlyList<PaletteCategory> Palette { get; }
+    public IReadOnlyList<PaletteCategory> Palette => VisualBlocks
+        ? _palette.OrderBy(p => PaletteRank(p.Name)).ToList() : _palette;
+    private static int PaletteRank(string name) => name switch { "Steuerung" => 0, "Struktur" => 1, "Variablen" => 2, "Bewertung" => 3, "Ablauf" => 4, _ => 5 };
     public ObservableCollection<string> Diagnostics { get; } = [];
 
     public RelayCommand InsertCommand { get; }
@@ -158,12 +162,7 @@ public sealed partial class EditorViewModel : ObservableObject
             _selected = value;
             if (_selected is not null) _selected.IsSelected = true;
             OnPropertyChanged();
-            Properties = _selected switch
-            {
-                null => new ProjectPropertiesViewModel(this),
-                { IsGroup: true } n => new GroupPropertiesViewModel(this, n),
-                var n => new StepPropertiesViewModel(this, n),
-            };
+            Properties = _selected?.InlineProperties ?? new ProjectPropertiesViewModel(this);
             foreach (var c in new[] { DeleteCommand, MoveUpCommand, MoveDownCommand, IndentCommand, OutdentCommand, ToggleBreakpointCommand, ToggleEnabledCommand, CopyCommand, CutCommand, DuplicateCommand })
                 c.RaiseCanExecuteChanged();
         }
@@ -220,6 +219,7 @@ public sealed partial class EditorViewModel : ObservableObject
         }
         foreach (var n in AllNodes())
         {
+            n.Editor = this;
             if (expanded.TryGetValue(n.Id, out var e)) n.IsExpanded = e;
             n.HasBreakpoint = _breakpoints?.HasBreakpoint(n.Id) ?? false;
         }
@@ -413,15 +413,8 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Neuen Baustein bzw. Gruppe an der festen Position relativ zur Auswahl einfügen.</summary>
     public NodeViewModel Insert(PaletteItem item)
     {
-        NodeDefinition node = item.BlockType is null
-            ? new GroupDefinition(NewId("gruppe"), "Neue Gruppe")
-            : Catalog.Create(item.BlockType, NewId("schritt"), item.DisplayName);
         var (parent, index) = InsertPosition();
-        parent.Group!.Children.Insert(index, node);
-        parent.IsExpanded = true;
-        MarkStructureChanged();
-        RebuildTree(selectId: node.Id);
-        return SelectedNode!;
+        return InsertAt(item, parent, index);
     }
 
     private (NodeViewModel Parent, int Index) InsertPosition()
@@ -553,6 +546,8 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void Load(TestProject project, string? path = null)
     {
+        GraphWorkspaceId = Guid.NewGuid();
+        OnPropertyChanged(nameof(GraphWorkspaceId));
         Project = project;
         FilePath = path;
         IsDirty = false;

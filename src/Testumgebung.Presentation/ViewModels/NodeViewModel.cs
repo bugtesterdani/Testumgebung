@@ -47,6 +47,13 @@ public sealed class NodeViewModel : ObservableObject
         IsSection = isSection;
     }
 
+    // Ein gemeinsames Eigenschaftsmodell pro Karte: direkte Felder und klassische
+    // Ansicht dürfen keine voneinander abweichenden Eingabestände halten.
+    internal EditorViewModel? Editor { get; set; }
+    private PropertiesViewModel? _inlineProperties;
+    public PropertiesViewModel? InlineProperties => _inlineProperties ??= Editor is null ? null
+        : IsGroup ? new GroupPropertiesViewModel(Editor, this) : new StepPropertiesViewModel(Editor, this);
+
     public NodeDefinition Definition { get; }
 
     /// <summary>Zusatzhinweis (z. B. Schnittstelle eines Bausteinkörpers).</summary>
@@ -69,6 +76,14 @@ public sealed class NodeViewModel : ObservableObject
     /// <summary>Mehrzeilige Dokumentation der Karte; beeinflusst die Ausführung nicht.</summary>
     public string? Comment => Definition.Description;
     public bool HasComment => !string.IsNullOrWhiteSpace(Comment);
+
+    /// <summary>Farbe der zusätzlichen Blockansicht; die fachliche Bedeutung bleibt in Definition und Icon erhalten.</summary>
+    public string BlockColor => IsSection ? "#DCE7F8" : IsExit ? "#FFE2CA" : IsGroup ? "#FFEDBB" : Icon switch
+    {
+        NodeIcon.Code or NodeIcon.LibraryBlock => "#E8DEFB", NodeIcon.Check or NodeIcon.Error => "#D3F0DC",
+        NodeIcon.Measure or NodeIcon.Arrow or NodeIcon.Digital => "#D4EAFB", NodeIcon.Operator => "#FFE0EA", _ => "#DFEAF1"
+    };
+    public bool IsTemplateDecision => Step?.BlockType == BlockCatalog.SetValue && Step.Parameters.GetValueOrDefault("Ziel")?.StartsWith("_BlockZweig_", StringComparison.Ordinal) == true;
 
     public bool IsInactive => Definition.Disabled || Parent?.IsInactive == true;
 
@@ -188,7 +203,7 @@ public sealed class NodeViewModel : ObservableObject
         }
     }
 
-    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment));
+    public void Refresh() => OnPropertiesChanged(nameof(Name), nameof(Annotation), nameof(Icon), nameof(IsInactive), nameof(Comment), nameof(HasComment), nameof(BlockColor), nameof(IsTemplateDecision));
 
     public IEnumerable<NodeViewModel> SelfAndDescendants()
     {

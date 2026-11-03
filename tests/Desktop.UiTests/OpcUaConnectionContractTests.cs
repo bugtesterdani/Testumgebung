@@ -21,11 +21,11 @@ public sealed class OpcUaConnectionContractTests
         internal string? SessionName;
         internal readonly List<OpcUaSessionContractTests.SessionPeer> Peers = [];
         internal override Task CheckCertificateAsync(ApplicationConfiguration configuration) { Certificates++; return Task.CompletedTask; }
-        internal override EndpointDescription SelectEndpoint(ApplicationConfiguration configuration, string url, bool security, int timeout)
+        internal override Task<EndpointDescription> SelectEndpointAsync(ApplicationConfiguration configuration, string url, bool security, int timeout)
         {
             Config = configuration; Assert.Equal("opc.tcp://fixture:4840", url); Assert.Equal(1234, timeout);
             if (Failure == "endpoint") throw new IOException("endpoint unavailable");
-            return new EndpointDescription { EndpointUrl = url, SecurityMode = security ? MessageSecurityMode.SignAndEncrypt : MessageSecurityMode.None, SecurityPolicyUri = security ? SecurityPolicies.Basic256Sha256 : SecurityPolicies.None };
+            return Task.FromResult(new EndpointDescription { EndpointUrl = url, SecurityMode = security ? MessageSecurityMode.SignAndEncrypt : MessageSecurityMode.None, SecurityPolicyUri = security ? SecurityPolicies.Basic256Sha256 : SecurityPolicies.None });
         }
         internal override Task<ISession> CreateAsync(ApplicationConfiguration configuration, ConfiguredEndpoint endpoint, string name, IUserIdentity identity)
         {

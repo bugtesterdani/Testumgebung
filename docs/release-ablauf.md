@@ -158,3 +158,16 @@ Als Folgeplanung ist im Issue #30 **1.1.1** vorgemerkt. Nach erfolgreichem
 Paket-Build wird dafür ein neues bearbeitbares Release-Issue mit dem Milestone
 **1.1.1** angelegt. Der aktuelle Build bleibt bis zum Abschluss bei 1.1.0.
 Der fertige Release-Entwurf wird nach Prüfung der Anlagen veröffentlicht.
+
+## Aktuelle Folgeplanung: 1.2.0
+
+Die zunächst angelegte Folgeplanung 1.1.1 wird übersprungen. Das bestehende
+[Release-Issue #44](https://github.com/bugtesterdani/Testumgebung/issues/44) und
+sein gemeinsamer Milestone heißen jetzt **1.2.0**. Bereits zugeordnete Issues und
+Pull Requests behalten ihre Zuordnung. Die neuen Funktionen einschließlich
+Live-Gruppenergebnis und visueller Blockprogrammierung erscheinen damit ab 1.2.0.
+
+Main- und PR-Builds lesen die Basisversion weiterhin aus dem Titel dieses
+Release-Issues und ergänzen die fortlaufende Buildnummer. Erst der abschließende
+Release-PR mit `Closes #44` erzeugt nach Merge und bestandenem Paket-Build den
+Tag **v1.2.0** und den Release-Entwurf. Die Umplanung selbst erstellt kein Release.

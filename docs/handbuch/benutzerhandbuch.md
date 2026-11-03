@@ -146,9 +146,19 @@ Bei ausgeschaltetem Auftragsmodus kann die Software stattdessen eine Kennung zuo
 
 ## 5. Prüfprogramm im Ablaufeditor erstellen
 
+Für einen Ablauf aus verbundenen, frei platzierbaren Blöcken **Knotenansicht** wählen.
+Die [Knoten-Anleitung](../knotenansicht.md) erklärt Anschlüsse, Zoom, Schieben und
+Debuggen mit seitlicher Werteansicht.
+
+Ab Version 1.2.0 kann **Blockansicht** eingeschaltet werden. Ablaufblöcke lassen sich
+verschachtelt zusammenstellen und direkt in den Blöcken bearbeiten. **+ Schritt**
+fügt hinzu; **◈ Wert aus Blöcken** öffnet den eingebetteten Baukasten für
+Berechnungen und Bedingungen. Seitliche Einstellungsfelder entfallen in dieser Ansicht. Die [Anleitung zur visuellen Blockprogrammierung](../visuelle-blockprogrammierung.md)
+zeigt beide Ansichten mit Bildern und einem ausführbaren Beispiel.
+
 ![Bild 2: Ablaufeditor mit Start, Loop und End](bilder/03-ablaufeditor.png)
 
-**Bild lesen:** Links befinden sich die einfügbaren Bausteine. In der Mitte steht der Ablauf. Rechts bearbeiten Sie die Eigenschaften der Auswahl. Der Knopf **Projekt** zeigt die projektweiten Einstellungen und Hauptvariablen.
+**Klassische Ansicht im Bild:** Links befinden sich die einfügbaren Bausteine. In der Mitte steht der Ablauf. Rechts bearbeiten Sie die Eigenschaften der Auswahl. Der Knopf **Projekt** zeigt die projektweiten Einstellungen und Hauptvariablen.
 
 ### 5.1 Projekt anlegen und speichern
 
