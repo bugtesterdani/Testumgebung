@@ -1,0 +1,5 @@
+Polly.RateLimiting 8.4.2
+Copyright (c) 2024, App vNext
+Authors: Michael Wolfenden, App vNext
+Declared license: BSD-3-Clause
+Repository: https://github.com/App-vNext/Polly

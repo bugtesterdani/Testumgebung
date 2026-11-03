@@ -8,6 +8,13 @@ namespace Testumgebung.Desktop.UiTests;
 
 public sealed class MsalIdentityContractTests
 {
+    [Fact]
+    public void System_browser_provider_can_be_constructed_without_a_native_broker_or_parent_window()
+    {
+        var provider = new MsalIdentityProvider("11111111-2222-3333-4444-555555555555", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+        Assert.Contains("Systembrowser", provider.Name);
+    }
+
     public class AccountPeer : DispatchProxy
     {
         protected override object? Invoke(MethodInfo? method, object?[]? args) => method!.Name switch
@@ -25,7 +32,7 @@ public sealed class MsalIdentityContractTests
         var result = new AuthenticationResult("fixture-token", false, "object", DateTimeOffset.UtcNow.AddMinutes(1), DateTimeOffset.UtcNow.AddMinutes(1), "tenant", account, null, ["User.Read"], Guid.Empty, claimsPrincipal: principal);
         var removed = new List<IAccount>(); using var cancellation = new CancellationTokenSource(); var count = 0;
         var provider = new MsalIdentityProvider((scopes, prompt, token) => { count++; Assert.Equal(new[] { "User.Read" }, scopes); Assert.Equal(Prompt.SelectAccount, prompt); Assert.Equal(cancellation.Token, token); return Task.FromResult(result); }, removedAccount => { removed.Add(removedAccount); return Task.CompletedTask; });
-        Assert.Contains("WAM", provider.Name);
+        Assert.Contains("Systembrowser", provider.Name);
         var identity = await provider.SignInAsync(selectAccount, cancellation.Token);
         Assert.Equal(1, count); Assert.Equal("worker@example.test", identity.Upn); Assert.Equal(claims == "name" ? "Worker Name" : identity.Upn, identity.DisplayName);
         Assert.True(identity.IsConfirmed); Assert.Equal("tenant", identity.TenantId); Assert.Equal("object", identity.ObjectId);

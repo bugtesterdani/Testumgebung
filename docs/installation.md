@@ -4,9 +4,9 @@
 
 | Komponente | Pflicht | Hinweis |
 |---|---|---|
-| Windows 10/11 x64 | ja | Anmeldung mit Firmenkonto über den Windows-Kontomanager (WAM) |
+| Windows 10/11 x64 | ja | Anmeldung mit Firmenkonto im Systembrowser |
 | .NET 10 Desktop Runtime x64 | ja (außer bei self-contained Installer) | Installer prüft und warnt |
-| Python 3.14.8 | mitgeliefert | keine separate Installation; eigener Interpreter/venv über `TESTUMGEBUNG_PYTHON` |
+| Python 3.15.2 | mitgeliefert | keine separate Installation; eigener Interpreter/venv über `TESTUMGEBUNG_PYTHON` |
 | MSVC Build Tools (oder clang++/g++) | nur für C++-/LabVIEW-Bausteine | fester Compiler über `TESTUMGEBUNG_CXX` |
 | Keysight IO Libraries Suite oder NI-VISA | nur für USB/GPIB-Geräte | LAN-Socket (`TCPIP::host::5025::SOCKET`) geht ohne VISA |
 | NI-DAQmx | nur für NI-DAQ-Module | ohne Hardware: simuliertes Gerät in NI MAX |

@@ -24,7 +24,7 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
 
     public string Create()
     {
-        foreach (var file in new[] { "python.exe", "python314.dll", "python314.zip", "LICENSE.txt", "pip-bootstrap/pip.whl" })
+        foreach (var file in new[] { "python.exe", "python315.dll", "python315.zip", "LICENSE.txt", "pip-bootstrap/pip.whl" })
             if (!File.Exists(Path.Combine(_source, file))) throw new FileNotFoundException($"Mitgelieferte Python-Laufzeit unvollständig: {file}");
         var destination = Path.Combine(_root, $"Python-{DateTime.Now:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(destination);
@@ -36,7 +36,7 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
             File.SetAttributes(target, FileAttributes.Normal);
         }
         Directory.CreateDirectory(Path.Combine(destination, "Lib", "site-packages"));
-        File.WriteAllLines(Path.Combine(destination, "python314._pth"), ["python314.zip", ".", "Lib/site-packages", "pip-bootstrap/pip.whl", "import site"]);
+        File.WriteAllLines(Path.Combine(destination, "python315._pth"), ["python315.zip", ".", "Lib/site-packages", "pip-bootstrap/pip.whl", "import site"]);
         File.WriteAllText(Path.Combine(destination, "BEFEHLE.txt"), Commands.Replace("\n", Environment.NewLine));
         File.WriteAllText(Path.Combine(destination, "Konsole.ps1"), ConsoleScript, new System.Text.UTF8Encoding(true));
         return Path.Combine(destination, "python.exe");

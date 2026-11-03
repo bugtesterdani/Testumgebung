@@ -4,13 +4,12 @@
  */
 
 using Microsoft.Identity.Client;
-using Microsoft.Identity.Client.Broker;
 using Testumgebung.Identity;
 
 namespace Testumgebung.Desktop;
 
 /// <summary>
-/// Anmeldung mit persönlichem Firmenkonto über MSAL und den Windows-Kontomanager (WAM, Abschnitt 6.1).
+/// Anmeldung mit persönlichem Firmenkonto über MSAL im Systembrowser.
 /// Kein Passwort im Produktcode. Es wird immer die Kontoauswahl gezeigt: Der Prüfplatz läuft unter der Windows-Sitzung
 /// des Werkers – dessen Konto darf nicht stillschweigend als Entwickler angemeldet werden.
 /// </summary>
@@ -21,22 +20,20 @@ internal sealed class MsalIdentityProvider : IIdentityProvider
     private readonly Func<IAccount, Task> _removeAccount;
     private IAccount? _account;
 
-    public MsalIdentityProvider(string clientId, string tenantId, Func<IntPtr> parentWindow)
+    public MsalIdentityProvider(string clientId, string tenantId)
     {
         var app = PublicClientApplicationBuilder.Create(clientId)
             .WithAuthority(AzureCloudInstance.AzurePublic, tenantId)
-            .WithDefaultRedirectUri()
-            .WithParentActivityOrWindow(parentWindow)
-            .WithBroker(new BrokerOptions(BrokerOptions.OperatingSystems.Windows) { Title = "Testumgebung – Anmeldung" })
+            .WithRedirectUri("http://localhost")
             .Build();
-        _acquireToken = (scopes, prompt, cancellationToken) => app.AcquireTokenInteractive(scopes).WithPrompt(prompt).ExecuteAsync(cancellationToken);
+        _acquireToken = (scopes, prompt, cancellationToken) => app.AcquireTokenInteractive(scopes).WithUseEmbeddedWebView(false).WithPrompt(prompt).ExecuteAsync(cancellationToken);
         _removeAccount = app.RemoveAsync;
     }
 
     internal MsalIdentityProvider(Func<IEnumerable<string>, Prompt, CancellationToken, Task<AuthenticationResult>> acquireToken, Func<IAccount, Task> removeAccount)
     { _acquireToken = acquireToken; _removeAccount = removeAccount; }
 
-    public string Name => "Microsoft Entra ID (WAM)";
+    public string Name => "Microsoft Entra ID (Systembrowser)";
 
     public async Task<UserIdentity> SignInAsync(bool selectAccount, CancellationToken cancellationToken)
     {

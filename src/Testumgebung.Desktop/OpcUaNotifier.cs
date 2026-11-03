@@ -63,14 +63,9 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
             ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60_000 },
         };
         await config.ValidateAsync(ApplicationType.Client).ConfigureAwait(false);
-        config.CertificateValidator.CertificateValidation += (_, e) =>
-        {
-            if (e.Error.StatusCode == StatusCodes.BadCertificateUntrusted) e.Accept = true;
-        };
-        if (options.UseSecurity)
-        {
-            await _sessionFactory.CheckCertificateAsync(config).ConfigureAwait(false);
-        }
+        // OPC UA 2 benötigt die Zertifikatsverwaltung auch für verschlüsselte Benutzer-Token
+        // auf einem Kanal ohne Nachrichtensicherheit. Die Endpunktauswahl bleibt unverändert.
+        await _sessionFactory.CheckCertificateAsync(config).ConfigureAwait(false);
 
         var description = await _sessionFactory.SelectEndpointAsync(config, options.EndpointUrl, options.UseSecurity, (int)options.Timeout.TotalMilliseconds).ConfigureAwait(false);
         var endpoint = new ConfiguredEndpoint(null, description, EndpointConfiguration.Create(config));
@@ -88,16 +83,16 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
         {
             var session = await EnsureSessionAsync().ConfigureAwait(false);
             var fields = NotificationPayload.Fields(n, options.Station);
-            var writes = new WriteValueCollection();
+            var writes = new List<WriteValue>();
             foreach (var name in OpcUaNotifyOptions.FieldNames)
                 writes.Add(new WriteValue
                 {
                     NodeId = NodeId.Parse(options.NodeFor(name)),
                     AttributeId = Attributes.Value,
-                    Value = new DataValue(new Variant(fields[name])),
+                    Value = new DataValue(Variant.From(fields[name])),
                 });
-            var response = await session.WriteAsync(null, writes, cancellationToken).ConfigureAwait(false);
-            var bad = response.Results.Select((r, i) => (Code: r, Field: OpcUaNotifyOptions.FieldNames[i])).Where(x => StatusCode.IsBad(x.Code)).ToList();
+            var response = await session.WriteAsync(null, [.. writes], cancellationToken).ConfigureAwait(false);
+            var bad = (response.Results.ToArray() ?? []).Select((r, i) => (Code: r, Field: OpcUaNotifyOptions.FieldNames[i])).Where(x => StatusCode.IsBad(x.Code)).ToList();
             if (bad.Count > 0)
                 throw new InvalidOperationException("Schreiben abgelehnt: " + string.Join(", ", bad.Select(b => $"{options.NodeFor(b.Field)} {b.Code.SymbolicId}")));
         }

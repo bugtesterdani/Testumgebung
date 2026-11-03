@@ -74,14 +74,9 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
             ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60_000 },
         };
         await config.ValidateAsync(ApplicationType.Client).ConfigureAwait(false);
-        config.CertificateValidator.CertificateValidation += (_, e) =>
-        {
-            if (e.Error.StatusCode == StatusCodes.BadCertificateUntrusted) e.Accept = true;
-        };
-        if (_useSecurity)
-        {
-            await _sessionFactory.CheckCertificateAsync(config).ConfigureAwait(false);
-        }
+        // OPC UA 2 benötigt die Zertifikatsverwaltung auch für verschlüsselte Benutzer-Token
+        // auf einem Kanal ohne Nachrichtensicherheit. Die Endpunktauswahl bleibt unverändert.
+        await _sessionFactory.CheckCertificateAsync(config).ConfigureAwait(false);
 
         try
         {
@@ -105,12 +100,12 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         try
         {
             var session = await EnsureSessionAsync().ConfigureAwait(false);
-            var read = new ReadValueIdCollection { new() { NodeId = NodeId.Parse(nodeId), AttributeId = Attributes.Value } };
+            ArrayOf<ReadValueId> read = [new() { NodeId = NodeId.Parse(nodeId), AttributeId = Attributes.Value }];
             var response = await session.ReadAsync(null, 0, TimestampsToReturn.Neither, read, cancellationToken).ConfigureAwait(false);
             var value = response.Results[0];
             if (StatusCode.IsBad(value.StatusCode))
                 throw new OpcUaException($"OPC UA: Lesen von „{nodeId}“ abgelehnt ({value.StatusCode.SymbolicId}).");
-            return FromVariant(value.Value);
+            return FromVariant(value.WrappedValue.AsBoxedObject());
         }
         catch (Exception ex) when (ex is not OpcUaException and not OperationCanceledException)
         {
@@ -126,10 +121,10 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         try
         {
             var session = await EnsureSessionAsync().ConfigureAwait(false);
-            var writes = new WriteValueCollection
-            {
+            ArrayOf<WriteValue> writes =
+            [
                 new() { NodeId = NodeId.Parse(nodeId), AttributeId = Attributes.Value, Value = new DataValue(ToVariant(value)) },
-            };
+            ];
             var response = await session.WriteAsync(null, writes, cancellationToken).ConfigureAwait(false);
             if (StatusCode.IsBad(response.Results[0]))
                 throw new OpcUaException($"OPC UA: Schreiben auf „{nodeId}“ abgelehnt ({response.Results[0].SymbolicId}).");
@@ -148,20 +143,20 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         try
         {
             var session = await EnsureSessionAsync().ConfigureAwait(false);
-            var request = new CallMethodRequestCollection
-            {
+            ArrayOf<CallMethodRequest> request =
+            [
                 new()
                 {
                     ObjectId = NodeId.Parse(objectNodeId),
                     MethodId = NodeId.Parse(methodNodeId),
                     InputArguments = [.. arguments.Select(a => ToVariant(a))],
                 },
-            };
+            ];
             var response = await session.CallAsync(null, request, cancellationToken).ConfigureAwait(false);
             var result = response.Results[0];
             if (StatusCode.IsBad(result.StatusCode))
                 throw new OpcUaException($"OPC UA: Methode „{methodNodeId}“ abgelehnt ({result.StatusCode.SymbolicId}).");
-            return [.. result.OutputArguments.Select(v => FromVariant(v.Value))];
+            return [.. (result.OutputArguments.ToArray() ?? []).Select(v => FromVariant(v.AsBoxedObject()))];
         }
         catch (Exception ex) when (ex is not OpcUaException and not OperationCanceledException)
         {
@@ -234,17 +229,12 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         _ => value.ToString(),
     };
 
-    private static Variant ToVariant(object? value) => value switch
+    private static Variant ToVariant(object? value)
     {
-        null => Variant.Null,
-        bool b => new Variant(b),
-        long l => new Variant(l),
-        int i => new Variant(i),
-        double d => new Variant(d),
-        float f => new Variant(f),
-        string s => new Variant(s),
-        _ => new Variant(value),
-    };
+        // Entspricht der bisherigen Konvertierung des object-Konstruktors, auch für Zusatztypen.
+        VariantHelper.TryCastFromWithReflectionFallback(value, out var variant);
+        return variant;
+    }
 
     private sealed class SubscriptionHandle : IOpcUaSubscription
     {
@@ -268,7 +258,7 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
         {
             foreach (var value in item.DequeueValues())
             {
-                lock (_lock) { Current = FromVariant(value.Value); Changes++; }
+                lock (_lock) { Current = FromVariant(value.WrappedValue.AsBoxedObject()); Changes++; }
                 _signal.Release();
             }
         }

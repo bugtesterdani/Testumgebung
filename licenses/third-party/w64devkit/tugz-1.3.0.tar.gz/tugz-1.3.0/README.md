@@ -1,0 +1,708 @@
+# tugz: tiny unity gzip/zip
+
+<p align="center"><img src="docs/tugz.png" width="320" alt="tugz mascot: a smiling blue tugboat with tire fenders"></p>
+
+A from-specification implementation of gzip ([RFC 1952][]), zlib ([RFC
+1950][]), and DEFLATE ([RFC 1951][]) in C11 with C23 attributes, for GCC
+or Clang, as a drop-in `gzip` command, a streaming library, and Info-ZIP
+compatible `zip` and `unzip`, with ZipInfo mode (`zipinfo`). It
+compresses faster than zlib at every level with better ratios, and
+validates input exactly as strictly as zlib.
+
+The core has no dependencies, no global state, no platform conditionals,
+and does no I/O. Each program is a unity build: a platform layer
+includes the core and supplies a handful of functions.
+
+In short, **tugz is a better Info-ZIP**, purpose built for [w64devkit][]:
+first-class Windows support, and safe to use on untrusted archives.
+
+## Build
+
+POSIX (Linux, macOS, BSD):
+
+    $ cc -O2 -o gzip platform/gzip_posix.c
+
+Windows, CRT-free (w64devkit):
+
+    $ cc -O2 -fno-builtin -nostartfiles -o gzip.exe platform/gzip_windows.c -lmemory -lshell32 -lkernel32
+
+Or with clang targeting MSVC, taking the mem functions from its static
+runtime:
+
+    $ clang -O2 -fno-builtin -nostartfiles -Wl,/subsystem:console -o gzip.exe platform/gzip_windows.c -llibvcruntime -llibcmt -lshell32 -lkernel32
+
+Hardware CRC-32 is used automatically: PCLMULQDQ, or VPCLMULQDQ with
+AVX2, on x86 (detected at run time), and the CRC instructions on ARMv8
+targets that have them.
+
+The zip and unzip programs build the same way from
+`platform/zip_posix.c` and `platform/zip_windows.c`, and from
+`platform/unzip_posix.c` and `platform/unzip_windows.c`:
+
+    $ cc -O2 -o unzip platform/unzip_posix.c
+    $ cc -O2 -fno-builtin -nostartfiles -o unzip.exe platform/unzip_windows.c -lmemory -lshell32 -lkernel32
+
+The Windows GUI, `tugz.exe` (see GUI below), builds from the source root,
+whose `platform/tugz.ico` it embeds:
+
+    $ cc -O2 -fno-builtin -nostartfiles -mwindows -o tugz.exe platform/gui_windows.c -lmemory -lcomctl32 -lole32
+
+Releases from 1.2.0 also carry `tugz.exe` itself, for i686 (so XP and
+later), large address aware, stripped, and signed, built by the release
+workflow with Ubuntu's Mingw-w64, whose `msvcrt.dll` provides `memcpy`
+and `memset`.
+
+CMake builds the library, the programs, and the tests (see Development):
+
+    $ cmake -B build && cmake --build build
+
+Each release also carries `tugz-amalgams-VERSION.zip`, which holds
+`gzip.c`, `zip.c`, `unzip.c`, and `tugz.c` (the GUI, its icon
+inlined), the Windows builds as single source files with their build
+commands in the header, beside the library's `libtugz.c` and `tugz.h`,
+all of which `cmake -P cmake/amalgamate.cmake` writes from a source
+tree:
+
+    $ cc -O2 -nostartfiles -o gzip.exe gzip.c -lmemory
+    $ cc -O2 -nostartfiles -o zip.exe zip.c -lmemory
+    $ cc -O2 -nostartfiles -o unzip.exe unzip.c -lmemory
+    $ cc -O2 -fno-builtin -nostartfiles -mwindows -o tugz.exe tugz.c -lmemory -lcomctl32 -lole32
+
+For 32-bit Windows programs (i686), add `-Wl,--large-address-aware`,
+as CMake does: they reserve memory in large ranges, which 64-bit Windows
+then gives them 4 GB of address space to hold, rather than 2 GB.
+
+The Windows programs are meant to run on Windows XP and later (i686 on
+XP, x86-64 on XP x64), built as above with w64devkit, whose `-lmemory`
+leaves them importing only kernel32 and shell32 functions that XP has.
+Those Vista added are looked up at run time, and where missing, the
+programs do their work through ntdll's native calls instead. On XP
+itself (i686), `test/cli.sh` and `test/xp.sh`, which need only
+w64devkit, test them, and on later Windows each fallback is tested by
+building with `-DTUGZ_FORCE_XP`, which makes the programs take them all
+(see [docs/notes.md](docs/notes.md)). Built with clang targeting MSVC,
+the runtime's static library may need a newer Windows.
+
+## Library
+
+`tugz.h` declares a streaming interface for raw DEFLATE, zlib, and gzip.
+The caller provides the memory and does all I/O, passing buffers of any
+size; sizes are `ptrdiff_t`.
+
+```c
+ptrdiff_t      len = tugz_inflate_size(TUGZ_GZIP);
+void          *mem = malloc(len);
+tugz_inflator *z   = tugz_inflate_init(mem, len, TUGZ_GZIP);  // null if mem is null
+tugz_buf       b   = {in, inlen, out, outlen};
+int status = tugz_inflate(z, &b);  // TUGZ_DONE, NEED_INPUT, NEED_OUTPUT, or error
+// ...
+free(mem);  // not z
+```
+
+The state lies inside the caller's memory, aligned, so it may begin
+past `mem`: keep `mem` to free it. A state holds pointers into itself,
+so it may not be copied or moved. Its size is the same for every format
+and level: currently about 301 KiB to inflate and 2.6 MiB to deflate.
+Sizes may change between releases, so always ask `tugz_inflate_size`
+and `tugz_deflate_size`. The library has no global state, so any
+function may be called from any thread, and separate states used
+concurrently.
+
+Calls return `TUGZ_DONE` (zero), a positive status asking to be called
+again with more input (`TUGZ_NEED_INPUT`) or more output space
+(`TUGZ_NEED_OUTPUT`), or a negative error. Errors are sticky until a
+reset, except `TUGZ_EUSAGE`, which refuses a misused call and changes
+nothing. Releases 1.x may add statuses of either sign, so test the sign
+rather than switch over today's values. `tugz.h` lists exactly what
+each error means and, as a table, how deflate's flushes proceed.
+
+A gzip state decodes concatenated members, returning `TUGZ_DONE` at the
+end of each. Once input runs out, `TUGZ_DONE` means the stream (or the
+last member) is complete and `TUGZ_NEED_INPUT` that it is truncated; a
+raw or zlib state stays done, leaving any data after the stream in
+`b.in`.
+
+Levels are 1 through 9; others are reserved, and init, `new`, and
+reset reject them. Deflate supports SYNC, FULL, and FINISH flushes. In
+place of caller memory, `tugz_inflate_new` and `tugz_deflate_new` take
+a Lua-style allocator callback, called once to allocate and once to
+free, never to resize. To compress many streams, reset a state rather
+than initialize it again: `tugz_deflate_reset` (which also sets the
+level) takes time in proportion to at most the first 1 KiB of the
+previous stream's input, rather than init's clearing of 512 KiB, so
+100-byte streams compress about 4x faster. One in 2,048 of the resets
+and FULL flushes that follow a longer history still clears as init
+does. Inflate init and `tugz_inflate_reset` both take a small constant
+time. Build `platform/libtugz.c` as an object (`cc -c -O2
+platform/libtugz.c`), or use the `libtugz.c` in a release's amalgams
+zip (or `cmake -DTUGZ_ARTIFACT=libtugz -P cmake/amalgamate.cmake`), a
+single-file amalgamation with the header inlined. Define `TUGZ_API` as
+`static` before including it to embed the library in another program.
+
+`tugz_crc32` and `tugz_adler32` compute the formats' checks over any
+data, as zlib's `crc32` and `adler32` do: start with 0 or 1
+respectively, and pass each result to the next call. CRC-32 uses the
+hardware CRC-32 described above, and neither keeps state.
+`tugz_deflate_bound(format, len)` is the most output deflate produces
+from `len` bytes with no flush but FINISH (each SYNC or FULL may add
+16 bytes), so that one FINISH call can compress into a buffer that
+large. `tugz_strerror(status)` returns a short message for any status.
+
+`TUGZ_VERSION` is the release as a string, "MAJOR.MINOR.PATCH", and
+`TUGZ_VERSION_MAJOR`, `TUGZ_VERSION_MINOR`, and `TUGZ_VERSION_PATCH` its
+numbers, for `#if`; `tugz_version()` returns the string the library was
+built with, which for a shared library may differ from the header's.
+
+Deflate64 (ZIP method 9, as unzip reads it) is an option, off by
+default: compiled with `TUGZ_DEFLATE64` defined (`cc -c -O2
+-DTUGZ_DEFLATE64 platform/libtugz.c`, the same before compiling or
+including `libtugz.c`, or the CMake option below), the library inflates
+raw Deflate64 streams as format `TUGZ_RAW64`, with a state of 398 KiB
+rather than 301 KiB. It only decodes: deflate rejects the format.
+`TUGZ_RAW64` is declared either way, and a library built without the
+option rejects it as any invalid format (`tugz_inflate_size` returns
+zero), so the header is the same for both builds and a program can ask
+at run time. Without the option, the library is as it was.
+
+### Streaming examples
+
+A gzip decompressor from standard input to standard output. Input after
+a member's `TUGZ_DONE` begins the next member, and at the end of input
+`TUGZ_DONE` means it ended cleanly, so a truncated stream, even one cut
+just past a member, is told apart without tracking member boundaries
+(on Windows, first set both to binary mode):
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include "tugz.h"
+
+int main(void)
+{
+    static unsigned char in[1<<16], out[1<<16];
+    ptrdiff_t      len = tugz_inflate_size(TUGZ_GZIP);
+    void          *mem = malloc(len);
+    tugz_inflator *z   = tugz_inflate_init(mem, len, TUGZ_GZIP);
+    if (!z) return 1;
+
+    tugz_buf b      = {0};
+    int      status = TUGZ_NEED_INPUT;
+    for (;;) {
+        if (!b.inlen && status!=TUGZ_NEED_OUTPUT) {
+            b.in    = in;
+            b.inlen = (ptrdiff_t)fread(in, 1, sizeof(in), stdin);
+            if (!b.inlen) break;  // end of input
+        }
+        b.out    = out;
+        b.outlen = sizeof(out);
+        status   = tugz_inflate(z, &b);  // after DONE, input starts a member
+        fwrite(out, 1, b.out-out, stdout);
+        if (status < 0) break;
+    }
+    free(mem);
+
+    if (status == TUGZ_NEED_INPUT) {
+        fprintf(stderr, "gunzip: truncated input\n");
+    } else if (status != TUGZ_DONE) {  // DONE: whole members, cleanly ended
+        fprintf(stderr, "gunzip: %s\n", tugz_strerror(status));
+    }
+    fflush(stdout);
+    return status!=TUGZ_DONE || ferror(stdin) || ferror(stdout);
+}
+```
+
+A compressor, which finishes the stream at the end of input:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include "tugz.h"
+
+int main(void)
+{
+    static unsigned char in[1<<16], out[1<<16];
+    ptrdiff_t      len = tugz_deflate_size(TUGZ_GZIP);
+    void          *mem = malloc(len);
+    tugz_deflator *d   = tugz_deflate_init(mem, len, TUGZ_GZIP, 6);
+    if (!d) return 1;
+
+    int status;
+    do {
+        ptrdiff_t n     = (ptrdiff_t)fread(in, 1, sizeof(in), stdin);
+        tugz_buf  b     = {in, n, 0, 0};
+        int       flush = n ? TUGZ_NONE : TUGZ_FINISH;  // FINISH at the end
+        do {
+            b.out    = out;
+            b.outlen = sizeof(out);
+            status   = tugz_deflate(d, &b, flush);
+            fwrite(out, 1, b.out-out, stdout);
+        } while (status == TUGZ_NEED_OUTPUT);
+    } while (status == TUGZ_NEED_INPUT);
+    free(mem);
+
+    fflush(stdout);
+    return status!=TUGZ_DONE || ferror(stdin) || ferror(stdout);
+}
+```
+
+### Using the library from CMake
+
+Each release's source tarball can be fetched as a dependency, which
+builds only the library, `tugz::tugz`:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(tugz
+    URL https://github.com/skeeto/tugz/releases/download/v1.3.0/tugz-1.3.0.tar.gz
+    URL_HASH SHA256=<the asset's digest on the release page>
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+FetchContent_MakeAvailable(tugz)
+target_link_libraries(app PRIVATE tugz::tugz)
+```
+
+Or, after `cmake --install`, `find_package(tugz 1.3 CONFIG REQUIRED)`
+provides the same target. The library is static unless
+`BUILD_SHARED_LIBS` is set, and position-independent code is the
+consumer's choice (`CMAKE_POSITION_INDEPENDENT_CODE`). A shared Windows
+build exports its functions by a generated module-definition file, and
+programs need no `__declspec(dllimport)`: with MinGW and MSVC-ABI
+toolchains alike, calls link through the import library. The targets keep
+the compiler's default C standard whatever `CMAKE_C_STANDARD` says, as
+C11 alone lacks the C23 attributes. Options:
+
+| Option | Default | Builds |
+|---|---|---|
+| `TUGZ_BUILD_LIBRARY` | ON | the library |
+| `TUGZ_BUILD_GZIP`, `TUGZ_BUILD_ZIP`, `TUGZ_BUILD_UNZIP` | top level | the programs |
+| `TUGZ_BUILD_TESTS` | top level, not cross | the tests (CTest) |
+| `TUGZ_BUILD_FUZZ` | OFF | the libFuzzer harnesses (LLVM clang) |
+| `TUGZ_BUILD_BENCH` | OFF | the benchmark |
+| `TUGZ_INSTALL` | top level | install rules and the package |
+| `TUGZ_WARNINGS` | top level | warnings for tugz's own targets |
+| `TUGZ_SANITIZE` | if supported | ASan and UBSan in the tests |
+| `TUGZ_TEST_SCRIPTS` | not cross | the programs' shell-script tests |
+| `TUGZ_LIBMEMORY` | AUTO | Windows programs with w64devkit's `-lmemory` |
+| `TUGZ_FORCE_XP` | OFF | Windows programs taking their XP fallbacks (testing) |
+| `TUGZ_DEFLATE64` | OFF | the library with Deflate64 (`TUGZ_RAW64`) |
+
+Built by clang targeting MSVC, the programs link the static runtime's
+mem functions, and the shell-script tests run unsanitized programs, as
+the sanitizers need the C runtime's startup code.
+
+A plain `cmake --install` installs whatever was built: the library, its
+header, and the package, and the programs as `gzip`, `zip`, and `unzip`
+in the prefix's `bin`, where they can serve as the system's own, with
+their manual pages, `man/gzip.1`, `zip.1`, and `unzip.1` (but on
+Windows), which cover `gunzip`, `zcat`, and `zipinfo` too.
+Configure with `-DTUGZ_BUILD_GZIP=OFF -DTUGZ_BUILD_ZIP=OFF
+-DTUGZ_BUILD_UNZIP=OFF` to install the library alone, or install with
+`--component programs` for the programs alone.
+
+## Usage
+
+    gzip [OPTION]... [FILE]...
+
+| Option | Meaning |
+|---|---|
+| `-1`..`-9` | compression level, `--fast` to `--best` (default 6) |
+| `-c`, `--stdout` | write to standard output, keep input files |
+| `-d`, `--decompress` | decompress |
+| `-f`, `--force` | force: overwrite outputs, follow links, allow terminals; with `-dc`, copy data that is not gzip |
+| `-k`, `--keep` | keep input files |
+| `-n`, `--no-name` | neither save nor restore the name and time (always the case) |
+| `-q`, `--quiet` | suppress warnings |
+| `--rsyncable` | accepted, without effect (below) |
+| `-t`, `--test` | test compressed file integrity |
+| `-h`, `-V` | help (`--help`, GNU gzip's, less what tugz lacks), version |
+
+Long options have GNU gzip's other names too (`--to-stdout`,
+`--uncompress`, `--silent`), and as there may be abbreviated to any
+prefix that is not ambiguous (`--dec --std`).
+Installed (or linked) as `gunzip` it decompresses, and as `zcat` or
+`gzcat` it decompresses to standard output. On Windows, where `cmd` and
+PowerShell pass wildcards on as they are, arguments with them are
+expanded as zip expands them, ignoring case, but for hidden and system
+files, as a POSIX shell leaves out dotfiles.
+
+Behavior follows GNU gzip: concatenated members, warnings for trailing
+garbage (but not zero padding), `zcat -f` passing other data through,
+its suffixes (`.gz`, `.z`, `-gz`, `-z`, `_z`, and `.tgz` or `.taz` for
+`.tar`), its messages (with the system's reason for a failure), exit
+status 0/1/2 for success/error/warning, a stop at the first read or
+write error, metadata copied to outputs, and no partial outputs on
+failure or interruption. In place, it skips links and sticky files
+unless `-f`, and special and set-ID files always, and it reads a header
+before replacing a file.
+
+Headers record no file name or time, as GNU gzip's do under `-n`, which
+is therefore accepted (as in `gzip -9n`). `--rsyncable` is accepted and
+ignored: it asks only for rsync-friendly output, which tugz's is not, but
+the result is an ordinary gzip file either way. Not yet supported, and
+refused rather than ignored: `-r` (`--recursive`), `-l` (`--list`), `-v`
+(`--verbose`), `-S` (`--suffix`), `-N` (`--name`), `-a` (`--ascii`), `-L`
+(`--license`), `--synchronous`, the `GZIP` environment variable, and GNU
+gzip's other input formats (compress, pack, LZH, zip).
+
+## zip
+
+A batch-oriented subset of Info-ZIP Zip 3.0 for scripts that package
+releases, such as `zip -qX9r release-1.2.3.zip build/`:
+
+    zip [-options] archive[.zip] [path ...] [-x pattern ...]
+
+| Option | Meaning |
+|---|---|
+| `-0`..`-9` | store only, or compression level (default 6) |
+| `-r` | recurse into directories |
+| `-q` | quiet: no progress or warnings |
+| `-X` | no extra attributes (Unix times, uid/gid) |
+| `-@` | read paths from standard input, one per line (UTF-8) |
+| `-j`, `-D` | junk directory names; no directory entries |
+| `-x`, `-i` | exclude or include only paths matching patterns (before `-j`) |
+| `-y` | store symbolic links as links (POSIX only) |
+| `-S` | include hidden and system files (Windows only) |
+| `-u`, `-f` | update newer entries and add; freshen existing only |
+| `-FS` | filesync: update changed entries, delete missing ones |
+| `-d` | delete entries matching patterns |
+| `-nw` | no wildcards, except `?` (as in Info-ZIP) |
+| `-v`, `-L`, `-h` | version (alone, or `--version`); license; help (also `-H`, `-?`) |
+
+Long options are Info-ZIP's (`--recurse-paths`, `--strip-extra`, ...)
+and, as there, may be abbreviated. Only `-X` may be negated (`-X-`).
+`-p` (store paths, the default) has no effect, nor does `-v` with other
+arguments. Options in `ZIPOPT`, or else `ZIP`, apply before the
+arguments.
+
+Existing archives are merged as Info-ZIP does: matching entries are
+replaced in place (keeping their comments), new ones appended, and the
+rest copied without recompression, with their extra fields, as `-X`
+applies only to entries written. Also as there, `-u` and `-f` without
+paths refresh every entry, and a path not on disk, such as a quoted
+wildcard, selects the entries it matches. As in Info-ZIP, a file also
+matches an entry by its Unicode path field, which Windows tools add to
+names they store in a code page, and on Windows by its name decoded from
+the OEM code page, in which Explorer stores names, or, if made elsewhere
+and not UTF-8, from the ANSI code page. Data before the first entry,
+such as a self-extractor's stub or a Python zipapp's `#!` line, is kept
+when the archive's offsets account for it (as after `zip -A`), as in
+Info-ZIP, while an archive whose offsets do not is refused (3), as
+there. The new archive is written to a temporary file and renamed over
+the old one, where symbolic links at its path lead, so that they survive
+(a dangling link gets its target created). Zip64 is used as needed for
+large files, large archives, and more than 65,535 entries. Names are
+stored as UTF-8 with flag bit 11 when they are valid UTF-8 and not
+ASCII. On Windows, arguments with wildcards are expanded, as `cmd` does
+not, except when freshening, as in Info-ZIP.
+
+Headers, attributes, extra fields, messages, and exit statuses match
+Info-ZIP's, but for deliberate departures, all listed in
+[docs/notes.md](docs/notes.md#departures-from-info-zip). Friendlier exit
+statuses include these: `-u` or `-f` with nothing newer exits 0
+(Info-ZIP: 12), an unreadable directory or a dangling link met while
+recursing exits 18 (Info-ZIP: 0) unless `-x` or `-i` leaves out all it
+could add, and `-i` that matches nothing exits 12 (Info-ZIP writes an
+empty archive). An archive that can be written but not read is an error
+(11), which Info-ZIP replaces as though missing, losing its entries, as
+is one that is found but then cannot be examined, and a new archive
+never replaces a file made at its path meanwhile. Warnings and errors go
+to standard error, without the tab that starts Info-ZIP's warnings on
+standard output. Every entry that does not shrink is stored (Info-ZIP
+stores only small ones), and none is marked as text. A directory loop
+through links is not followed. A hard-linked archive is replaced by a
+new file, so its other names keep the old archive. Entries select only
+files within the current directory, never by absolute names, `..`, or
+links, which they do not follow (with `-y`, a link is stored as one), so
+that refreshing an untrusted archive cannot read other files, and an
+archive whose entries overlap, as in a zip bomb, is refused rather than
+copied. A file that cannot be read to its end is
+left out (18), where Info-ZIP stores what it read (0).
+
+Output is deterministic: entries within each directory are sorted by
+name, and with `-X` an archive depends only on file contents, names,
+attributes, and times. When `SOURCE_DATE_EPOCH` is set, times are
+clamped to it and stored in UTC, so the archive does not depend on the
+time zone either, and access times (kept without `-X`) are the epoch
+itself, as reading the files may change them. Any integer is accepted,
+negative too, and times clamp to what entries can hold: DOS times run
+from 1980 through 2107, and `UT` fields from 1901 through 2106 (signed
+before 1970, as their spec has it, though UnZip ignores those times).
+`-u`, `-f`, and `-FS` still compare files' real times, so a file
+modified after the epoch always counts as changed (and if it is not,
+its entry is rewritten byte for byte).
+
+Other options are rejected (16) rather than ignored, among them the
+interactive and legacy features: encryption, comments, splits, adjusting
+self-extractors (`-A`, `-J`), `-F` fixes, line ending conversion,
+streaming (adding `-`, which `-d` takes as an entry's name, or to
+standard output without an archive name), `-T`, `-m`, `-n`, `--out`, and
+logging.
+
+## unzip
+
+A subset of Info-ZIP UnZip 6.0 with busybox unzip's features, such as
+`unzip -q release-1.2.3.zip -d dist`:
+
+    unzip [-Z] [-opts[modifiers]] file[.zip] [list] [-x xlist] [-d exdir]
+
+| Option | Meaning |
+|---|---|
+| `-l`, `-v` | list entries, briefly or verbosely (`-v` alone: version) |
+| `-t` | test entries' data |
+| `-p`, `-c` | extract to standard output, silently, or naming each entry |
+| `-z` | show only the archive comment |
+| `-d` | extract into the directory that follows (or `-dDIR`) |
+| `-x` | exclude the members that follow |
+| `-n`, `-o` | never, or always, replace existing files |
+| `-f`, `-u` | freshen existing files only; update them and add new ones |
+| `-j` | junk paths: extract every entry into one directory |
+| `-C` | match member names ignoring case |
+| `-D`, `-DD` | restore no directory times, or no times at all |
+| `-V` | keep a `;N` version suffix |
+| `-K`, `-X` | keep set-ID and sticky bits; restore owners (POSIX only) |
+| `-q`, `-qq` | quiet, quieter |
+| `-h`, `-hh` | usage, more help |
+| `-Z` | ZipInfo mode, first (below; `unzip -Z` for its usage) |
+
+Options follow Info-ZIP's grammar: letters combine (`-qo`), a `-` before
+one negates it (`--q` cancels a `-q` from the environment), `-d` may
+come anywhere, and `-x` takes the members after it. Options in `UNZIP`,
+or if it has none `UNZIPOPT`, apply first. As in busybox, an argument
+after the archive made only of option letters is taken for options
+(`unzip a.zip -o`), and an archive of `-` is read from standard input, a
+file in place and a pipe into memory, never replacing a file unless
+`-o`, as a prompt's answers would come from the archive. The archive is
+tried as named, then with `.zip` and `.ZIP` added, and a name with
+wildcards processes each match, in name order, with Info-ZIP's summary.
+Members are wildcards, matched against entries' names as Info-ZIP
+matches them: `*` matches `/` too, `[...]` is a set, and `\` escapes,
+except on Windows, where it separates, as `/` does.
+
+Extraction makes directories as needed, and the `-d` directory one level
+deep, as Info-ZIP does. An existing file is never replaced under `-n`,
+always under `-o`, and otherwise only once Info-ZIP's question, `replace
+NAME? [y]es, [n]o, [A]ll, [N]one, [r]ename: `, is answered on standard
+input: `A` and `N` answer for the rest of the run, and the end of input
+answers `N`, with a warning (1). `-f` and `-u` compare times as Info-ZIP
+does. A file is replaced by removing it, then creating a new one.
+Symbolic links are made last, once the files are extracted, and nothing
+is written through a link on disk, whether from the archive or already
+there: an entry whose path passes through one fails ("exists but is not
+directory", 2), and one in the way of a file is removed, not followed.
+Only the `-d` directory, and the path to it, may be links. A file whose
+data is damaged (a bad CRC, invalid data, more than its size) or cannot
+be written is not kept. Modes, times (from extended timestamps, else the
+DOS time, local), and under `-X` owners are restored as Info-ZIP
+restores them, directories' once their files are in.
+
+Names become paths as Info-ZIP's make them, with its warnings: leading
+`/` and `..` components are dropped, `\` separates in a name from MS-DOS
+that has no `/`, control characters are dropped, and so is a `;N`
+version, unless `-V`. A name is UTF-8 if flag bit 11 says so, or if it
+comes from a Unicode path field whose CRC checks out. Otherwise its
+bytes are used as they are, except on Windows, where, as Info-ZIP's port
+reads them, a name made on MS-DOS (as Explorer's zip folder makes them),
+OS/2, or by WinZip on NTFS is decoded from the OEM code page, and any
+other that is not UTF-8 from the ANSI code page. Names are shown in
+UTF-8, with control characters as `^X`.
+
+On Windows, names are also mapped as Info-ZIP's port maps them: `:`,
+`\`, `<`, `>`, `|`, `"`, `?`, and `*` become `_`, and a device's name
+(`aux.txt`, `com1`) gets a `_` before it, while trailing dots and spaces
+are dropped, and paths may be of any length. Links become files holding
+their targets, as in the port, and junctions count as links. Read-only,
+hidden, and system attributes are restored, and DOS times are local by
+each year's own daylight saving rules. `-K` and `-X` are refused (10).
+The console is read and written in UTF-16, so a new name typed at the
+prompt may be any Unicode.
+
+Listings by `-l` and `-v` show dates as `YYYY-MM-DD`, as Debian's UnZip
+does; otherwise messages, the streams they go to, and listing formats
+are Info-ZIP's, as are exit statuses: 0 success, 1 warnings, 2 errors in some entries, 3 a
+damaged archive, 4 out of memory, 9 no archive found, 10 bad or
+unsupported options, 11 no matching entries, 50 a failed write, 51 an
+archive cut short, and 81 entries skipped, plus Debian's 12 for
+overlapped entries, a zip bomb. Entries may be stored, deflated, or
+compressed by Deflate64 (PKWARE's "enhanced deflating", which Explorer's
+zip folder uses for large files). Encrypted entries, and those
+compressed by other methods (bzip2, LZMA, ...), are skipped (81).
+
+Deliberate departures from Info-ZIP, all listed in
+[docs/notes.md](docs/notes.md#departures-from-info-zip-unzip), include
+busybox's options after the archive and `-`, overlapped entries found
+before any is read, links never followed below the `-d` directory,
+damaged and failed files removed rather than kept as written, output
+that stops at an entry's size, control characters in comments shown as
+`^X`, a new name from the prompt mapped as entry names are, below the
+`-d` directory, and on Windows, links made last and junctions never
+followed. UnZip's other options are refused (10) rather than ignored:
+`-a`, `-B`, `-E`, `-F`, `-i`, `-I`, `-J`, `-L`, `-M`, `-N`, `-O`, `-P`,
+`-Q`, `-s`, `-S`, `-T`, `-U`, `-W`, `-Y`, `-$`, `-:`, `-^`, `-2`, and
+`-/`, among them text conversion, passwords, and `-:`'s paths outside the
+destination.
+
+### zipinfo
+
+`unzip -Z`, or the program run by a name starting with `zipinfo` or `ii`
+in any case (link or copy it as `zipinfo`, or `zipinfo.exe`, as nothing
+is installed by that name), lists archives as Info-ZIP's ZipInfo 3.00
+does, in its formats, such as `zipinfo -1 release-1.2.3.zip`:
+
+    zipinfo [-12smlvhtTzC] file[.zip] [list] [-x xlist]
+    unzip -Z [-12smlvhtTzC] file[.zip] [list] [-x xlist]
+
+| Option | Meaning |
+|---|---|
+| `-1` | names only, one per line |
+| `-2` | names, with the header, totals, or comment if asked for |
+| `-s`, `-m`, `-l` | as `ls -l`: short (the default), with the compression, with the compressed size |
+| `-v` | a report of every field of the end records and of each entry, with its extra fields decoded |
+| `-h`, `-t` | the header lines, the totals line |
+| `-z` | the archive comment |
+| `-T` | times as `yyyymmdd.hhmmss`, rather than `yy-Mon-dd hh:mm` |
+| `-C` | match member names ignoring case |
+| `-x` | exclude the members that follow |
+
+Options come before the archive, and a `-` negates the letter after it,
+even in the next argument (`--h`, `-l-t`). The header and totals show
+by default, unless members are named; `-1` shows neither, nor the
+comment. Options in `ZIPINFO`, or if it has none `ZIPINFOOPT`, apply
+first, and `UNZIP` does not. Messages for standard error go to standard
+output while the totals show, as in Info-ZIP, and statuses are unzip's:
+0 even with some members unmatched, 11 with none. Dates are those of
+extended timestamps, in local time, else DOS times as stored. The
+verbose report, `-v`, gives offsets and sizes as recorded, ZipInfo's
+estimate of data between entries, and each extra field subfield as
+ZipInfo describes it, from extended timestamps to Mac and VMS
+attributes. ZipInfo's `-M` (its pager) and Debian's `-U` are refused
+(10). Departures, all in
+[docs/notes.md](docs/notes.md#departures-from-info-zip-unzip), include
+the end record looked for where unzip looks for it, among the last 64
+KiB, rather than in the whole file, and names shown as unzip shows them.
+
+## GUI
+
+<p align="center"><img src="docs/gui-xp.png" width="940" alt="tugz.exe on Windows XP: the tugz 1.1.0 source archive, a folder tree beside a list of its entries with their sizes, ratios, methods, and times, under a toolbar of Open, Add, Extract, Move, Delete, Rename, Edit, and Test"></p>
+
+`tugz.exe` is an archive manager for Windows XP and later: a folder tree
+of the archive beside a list of its entries, with zipinfo's fields for
+columns (sizes, ratio, method, time, attributes, CRC-32, version and
+system), the system's icons for each type, and a toolbar to add,
+extract, move out (extract, then delete), delete, rename, test, and edit
+entries. Its work is zip's and unzip's own, through caller interfaces
+in their drivers (`zip_call`, `unzip_call`), on a worker thread with a
+progress dialog and Cancel; their messages are shown when something did
+not go as planned.
+
+- Open an archive from the File menu, the command line (`tugz
+  archive.zip`), or by dropping it on the window. New makes an empty
+  one to add to.
+- Double-click (or Enter) opens a file with its default program, from a
+  temporary folder removed when tugz exits; Open with... is in the
+  context menu.
+- Drop files and folders on the list or the tree to add them, into the
+  folder under the cursor. Drag entries out to Explorer or anywhere
+  files drop: they are extracted when the button is released over a
+  place that takes them.
+- Extract asks for a folder (by default beside the archive, named for
+  it), whether to keep folders, and what to do with existing files.
+  Selections extract as they are seen, relative to the folder shown.
+- Rename with F2, a file or a folder, in the list or the tree, which
+  renames every entry within it. New names are stored as UTF-8.
+- The tree's folders have their own context menu, to add into, extract,
+  move out, test, rename, or delete one without opening it.
+- Edit (F4) runs a command on a temporary copy, `notepad.exe` unless set
+  in Tools, Options (`%1` is the file), and once it exits with status 0
+  having changed the file, replaces the entry. Meanwhile a bar above the
+  panes says what is being edited, and the window stays free. For an
+  editor that hands the file to a running program and exits at once
+  (VS Code, Office), the bar offers Update, for once it is saved.
+- Properties (Alt+Enter) shows zipinfo's `-v` report.
+- An archive that unzip reads but zip would misread (data before it, as
+  in a self-extractor, or a damaged central directory) opens read-only,
+  with a note saying why.
+- Extracted and opened files get the archive's mark of the web.
+
+Names are Unicode throughout, and the window is sharp at any DPI, per
+monitor: its icons are painted in code at the size each needs. Settings
+are kept in `HKEY_CURRENT_USER\Software\tugz`.
+
+## Performance
+
+Silesia corpus, single-threaded, in memory, compression ratio @ MB/s,
+and decompression of zlib's level 6 output in MB/s. Intel i9-12900
+(WSL, gcc 14, zlib 1.3.1, libdeflate 1.23):
+
+| | level 1 | level 6 | level 9 | decompress |
+|---|---|---|---|---|
+| tugz | 35.97% @ 354 | 32.18% @ 135 | 31.73% @ 49 | 1147 |
+| zlib | 36.45% @ 148 | 32.19% @ 48 | 31.92% @ 19 | 473 |
+| libdeflate | 34.68% @ 318 | 31.85% @ 141 | 31.48% @ 50 | 1339 |
+
+Apple M4 Max (clang, zlib 1.3.2, libdeflate 1.26):
+
+| | level 1 | level 6 | level 9 | decompress |
+|---|---|---|---|---|
+| tugz | 35.97% @ 395 | 32.18% @ 155 | 31.73% @ 61 | 1238 |
+| zlib | 36.45% @ 173 | 32.19% @ 55 | 31.92% @ 23 | 630 |
+| libdeflate | 34.68% @ 368 | 31.85% @ 158 | 31.48% @ 56 | 1474 |
+
+Natively on Windows (w64devkit GCC 16), the i9-12900 compresses at 356,
+136, and 50 MB/s at levels 1, 6, and 9, and decompresses tugz's own
+level 6 output at 1100 MB/s. docs/notes.md, "Performance log", has
+every level and the history.
+
+## Development
+
+    $ cmake -B build && cmake --build build
+    $ ctest --test-dir build   # unit, library, and in-memory zip and
+                               # unzip tests (ASan/UBSan), then gzip,
+                               # zip, and unzip end to end
+
+unzip's tests are `tests-unzip`, its rules against tables recorded from
+UnZip 6.0, `tests-unzipcli`, the program in memory (with Windows
+conventions too), and `unzip-cli`, which runs `test/unzip.sh` to compare
+its statuses, output, and extracted trees with Info-ZIP's, and its
+ZipInfo mode with Info-ZIP's `zipinfo` (`REF=unzip sh test/unzip.sh
+build/unzip`); on Windows, `unzip-windows` runs `test/unzip_windows.sh`
+under w64devkit instead (`TUGZ_ZIP=zip.exe sh test/unzip_windows.sh
+unzip.exe`), comparing with Explorer, .NET, and tar, and `xp-windows`
+runs `test/xp.sh`, the platform's checks for all three programs that
+need nothing newer than XP (`sh test/xp.sh gzip.exe zip.exe
+unzip.exe`), both of them running copies named `zipinfo.exe` too.
+Options add the libFuzzer harnesses, `fuzz-unzip` among them, and
+differential ones (`-DTUGZ_BUILD_FUZZ=ON`, with LLVM clang as
+`CMAKE_C_COMPILER`), and a benchmark against zlib and libdeflate
+(`-DTUGZ_BUILD_BENCH=ON`).
+
+Tests and benchmarks use zlib and libdeflate as references, and zip
+archives are verified with unzip, Python's zipfile, and on Windows with
+Explorer, .NET, and tar. So the full test run needs zlib, libdeflate
+(without it, `tests` skips its libdeflate cross-checks), a reference
+gzip (`/usr/bin/gzip`, or `-DTUGZ_REF_GZIP=...`), and Info-ZIP's
+`unzip` (`-DTUGZ_UNZIP=...`) and `zipinfo`, while Python
+(through `uv` if installed) adds checks, and crafts most of unzip's
+archives. Configuring warns of a test skipped or disabled for want of
+one. Tested on macOS, Linux (x86-64, i386, aarch64, big-endian PowerPC),
+and Windows (x86-64, i686). See [docs/notes.md](docs/notes.md) for
+design decisions, test coverage, and the optimization log.
+
+Cross builds use a toolchain file from `cmake/`: `mingw-x86_64.cmake`
+and `mingw-i686.cmake` for Windows, and `linux-powerpc.cmake` for
+32-bit big-endian PowerPC, whose tests CTest runs under QEMU user mode
+(`qemu-ppc`). Cross-compiling, the tests are off by default
+(`-DTUGZ_BUILD_TESTS=ON`), and their zlib is a build for the target,
+found under `CMAKE_FIND_ROOT_PATH`:
+
+    $ cmake -B build-ppc -DCMAKE_TOOLCHAIN_FILE=cmake/linux-powerpc.cmake \
+            -DTUGZ_BUILD_TESTS=ON -DCMAKE_FIND_ROOT_PATH=/opt/ppc-zlib
+    $ cmake --build build-ppc && ctest --test-dir build-ppc -j4
+
+The shell-script tests run the programs directly rather than through the
+emulator, so a cross build disables them unless `-DTUGZ_TEST_SCRIPTS=ON`
+says the host runs the target's programs itself (binfmt_misc, with
+`QEMU_LD_PREFIX=/usr/powerpc-linux-gnu` for the sanitized ones, or Wine).
+
+[RFC 1950]: https://www.rfc-editor.org/rfc/rfc1950
+[RFC 1951]: https://www.rfc-editor.org/rfc/rfc1951
+[RFC 1952]: https://www.rfc-editor.org/rfc/rfc1952
+[w64devkit]: https://github.com/skeeto/w64devkit

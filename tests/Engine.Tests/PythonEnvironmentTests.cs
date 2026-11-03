@@ -72,7 +72,7 @@ public sealed class PythonEnvironmentTests
             var executable = service.Create();
             var directory = Path.GetDirectoryName(executable)!;
             Assert.True(File.Exists(Path.Combine(directory, "BEFEHLE.txt")));
-            Assert.Contains("import site", File.ReadAllText(Path.Combine(directory, "python314._pth")));
+            Assert.Contains("import site", File.ReadAllText(Path.Combine(directory, "python315._pth")));
             var start = PythonEnvironments.ConsoleStartInfo(executable);
             Assert.Equal(directory, start.WorkingDirectory);
             Assert.Contains(Path.Combine(directory, "Konsole.ps1"), start.ArgumentList);
@@ -87,9 +87,9 @@ public sealed class PythonEnvironmentTests
                 var consoleError = console.StandardError.ReadToEndAsync();
                 await console.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20));
                 Assert.True(console.ExitCode == 0, await consoleError);
-                Assert.Contains("26.2.1", await consoleOutput);
+                Assert.Contains("26.3", await consoleOutput);
             }
-            Assert.Contains("26.2.1", await Python(executable, "-m", "pip", "--version"));
+            Assert.Contains("26.3", await Python(executable, "-m", "pip", "--version"));
             var wheel = Path.Combine(directory, "tu_console_probe-1.0-py3-none-any.whl");
             using (var zip = ZipFile.Open(wheel, ZipArchiveMode.Create))
             {
@@ -190,7 +190,7 @@ public sealed class PythonEnvironmentTests
         var root = Temp(); Directory.CreateDirectory(root);
         var workers = Path.Combine(root, "workers"); var source = Path.Combine(workers, "python", "runtime");
         Directory.CreateDirectory(Path.Combine(source, "pip-bootstrap"));
-        foreach (var file in new[] { "python.exe", "python314.dll", "python314.zip", "LICENSE.txt", "pip-bootstrap/pip.whl" }) File.WriteAllText(Path.Combine(source, file), "fixture");
+        foreach (var file in new[] { "python.exe", "python315.dll", "python315.zip", "LICENSE.txt", "pip-bootstrap/pip.whl" }) File.WriteAllText(Path.Combine(source, file), "fixture");
         var config = Path.Combine(root, "config.json");
         var service = new PythonEnvironments(workers, root, config);
         using var runtime = new CodeRuntime(new CodeRuntimeOptions { PythonExecutable = Path.Combine(source, "python.exe") });

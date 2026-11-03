@@ -184,7 +184,7 @@ def main():
         with zipfile.ZipFile(wheel) as z:
             for name in z.namelist():
                 if Path(name).name.lower().startswith(('license','copying','notice','authors','copyright')) and not name.endswith('/'):
-                    save_license('pip-26.2.1',name,z.read(name))
+                    save_license('pip-26.3',name,z.read(name))
     result={'date':date.today().isoformat(),'projects':projects,'packages':packages,'dependency_edges':edges,'binaries':binaries,'release_manifests':deps,'release_license_files':release_licenses,'toolchain_sources':source_archives,'unresolved_bundled_packages':missing,'bundle':rel(args.bundle)}
     (REPORT/'inventory.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     csv_write('projects.csv',projects)

@@ -3,10 +3,10 @@ param()
 $ErrorActionPreference = 'Stop'
 $directory = Join-Path $PSScriptRoot '../toolchains/python/pip-bootstrap'
 $wheel = Join-Path $directory 'pip.whl'
-$expected = '71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e'
+$expected = 'f3b60b20ffaadd4415ed7957212a38ac63fa4c5fa375bd0f4a797777940fad13'
 New-Item -ItemType Directory -Force -Path $directory | Out-Null
 if (-not (Test-Path $wheel)) {
-    Invoke-WebRequest 'https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl' -OutFile $wheel
+    Invoke-WebRequest 'https://files.pythonhosted.org/packages/07/25/ee8c38ae72d66b844ce8eb9711ba905dba21ca1a8a0c960057c41cd23337/pip-26.3-py3-none-any.whl' -OutFile $wheel
 }
 if ((Get-FileHash -LiteralPath $wheel -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw 'pip-Prüfsumme falsch.' }
-Write-Host 'pip 26.2.1 für externe Python-Kopien bereit.'
+Write-Host 'pip 26.3 für externe Python-Kopien bereit.'

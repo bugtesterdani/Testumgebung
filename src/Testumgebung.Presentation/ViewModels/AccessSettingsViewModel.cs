@@ -62,7 +62,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
         null when _identity.Session.IsDevelopmentMode => "Expliziter Entwicklungsmodus (--development): simulierte Anmeldung mit allen Rechten.",
         null => "Produktivbetrieb: Zugangsdatei fehlt – keine erweiterten Rechte. Entra-Zugang konfigurieren.",
         { LoadError: { } e } => "Zugangsdatei beschädigt – niemand hat Rechte: " + e,
-        { UsesEntra: true } => "Anmeldung über Microsoft Entra ID (MSAL/WAM); Rechte aus der Liste unten.",
+        { UsesEntra: true } => "Anmeldung über Microsoft Entra ID im Systembrowser; Rechte aus der Liste unten.",
         _ when _identity.Session.IsDevelopmentMode => "Expliziter Entwicklungsmodus: simulierte Anmeldung; Rechte aus der Liste unten.",
         { SupportsLocalDevelopment: true } => "Lokale Entwicklung eingerichtet: Im Anmeldefenster ausdrücklich lokal anmelden. Rechte aus der Benutzerliste; keine bestätigte Firmenanmeldung.",
         _ => "Produktivbetrieb: Entra-App fehlt – keine erweiterten Rechte.",

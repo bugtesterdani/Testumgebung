@@ -8,6 +8,8 @@
   </ItemGroup>
 
   <Target Name="CopyCodeWorkers" AfterTargets="Build">
+    <!-- Rebuild this generated copy so an interpreter upgrade cannot retain an older DLL/stdlib. -->
+    <RemoveDir Directories="$(OutDir)workers\python\runtime" />
     <!-- Also remove an obsolete file from incremental output trees. -->
     <Delete Files="$(OutDir)workers\python\runtime\libtommath.dll" />
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\src\Testumgebung.Workers.CSharp\Testumgebung.Workers.CSharp.csproj"

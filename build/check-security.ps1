@@ -26,7 +26,7 @@ try {
                 foreach ($dependency in $framework.downloadDependencies) {
                     if ($dependency.name -match '^Microsoft\.(AspNetCore|NETCore|WindowsDesktop)\.App\.Runtime\.') {
                         $runtimeEntries++
-                        if ($dependency.version -ne '[10.0.13, 10.0.13]') {
+                        if ($dependency.version -ne '[10.0.14, 10.0.14]') {
                             throw "Nicht freigegebener Runtime-Download: $($dependency.name) $($dependency.version)"
                         }
                     }
@@ -35,5 +35,5 @@ try {
         }
     }
     if (-not $runtimeEntries) { throw 'Keine Runtime-Nachweise gefunden; zuerst die Solution wiederherstellen.' }
-    Write-Host "Keine bekannten verwundbaren NuGet-Pakete; $runtimeEntries Runtime-Downloads auf 10.0.13 geprüft."
+    Write-Host "Keine bekannten verwundbaren NuGet-Pakete; $runtimeEntries Runtime-Downloads auf 10.0.14 geprüft."
 } finally { Pop-Location }

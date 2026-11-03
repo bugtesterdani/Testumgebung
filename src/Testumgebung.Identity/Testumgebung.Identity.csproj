@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Anmeldung und Rechte (Abschnitt 6.1). Die Entra-Anmeldung über MSAL/WAM liegt in der Desktop-Anwendung. -->
+  <!-- Anmeldung und Rechte (Abschnitt 6.1). Die Entra-Anmeldung über MSAL im Systembrowser liegt in der Desktop-Anwendung. -->
   <PropertyGroup>
     <RootNamespace>Testumgebung.Identity</RootNamespace>
   </PropertyGroup>
