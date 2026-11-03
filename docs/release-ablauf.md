@@ -171,3 +171,17 @@ Main- und PR-Builds lesen die Basisversion weiterhin aus dem Titel dieses
 Release-Issues und ergänzen die fortlaufende Buildnummer. Erst der abschließende
 Release-PR mit `Closes #44` erzeugt nach Merge und bestandenem Paket-Build den
 Tag **v1.2.0** und den Release-Entwurf. Die Umplanung selbst erstellt kein Release.
+
+## Release 1.2.0 und Folgeversion 1.2.1
+
+Der Abschluss-PR für **1.2.0** schließt das Planungs-Issue **#44** mit
+`Closes #44`. Die geplanten Feature-PRs sind gemerged. Nach bestandenem Build
+und Merge des Abschluss-PRs nach `main` setzt die bestehende Automatik den
+Tag **v1.2.0** am Merge-Commit und erstellt die signierten Pakete sowie den
+Release-Entwurf mit den auf GitHub erzeugten Notes und Anlagen.
+
+Im Issue #44 ist **1.2.1** als Folgeversion vorgemerkt. Nach erfolgreichem
+offiziellen 1.2.0-Paket-Build wird das bearbeitbare Issue **Release 1.2.1** mit
+passendem Milestone angelegt. Bis dahin bleibt 1.2.0 die Versionsquelle für
+Main- und PR-Builds. Den Release-Entwurf nach Prüfung der Anlagen bewusst
+veröffentlichen. Der Abschluss-PR veröffentlicht ihn nicht automatisch.
