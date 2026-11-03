@@ -126,11 +126,11 @@ public sealed class ConverterContractTests
             else if (input is float or double) Assert.Equal(System.Convert.ToDouble(input), actual);
             else Assert.Equal(input, actual);
             var variant = Assert.IsType<Variant>(to.Invoke(null, [input]));
-            Assert.Equal(input, variant.Value);
+            Assert.Equal(input, variant.AsBoxedObject());
         }
         var date = new DateTime(2026, 10, 10);
         Assert.Equal(date.ToString(), from.Invoke(null, [date]));
-        Assert.Equal(date, Assert.IsType<Variant>(to.Invoke(null, [date])).Value);
+        Assert.Equal(date.ToUniversalTime(), Assert.IsType<DateTimeUtc>(Assert.IsType<Variant>(to.Invoke(null, [date])).AsBoxedObject()).ToDateTime());
         Assert.Equal(-1L, from.Invoke(null, [ulong.MaxValue]));
     }
 }

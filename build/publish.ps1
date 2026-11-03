@@ -54,7 +54,7 @@ dotnet publish (Join-Path $root "src\Testumgebung.Desktop\Testumgebung.Desktop.c
     -p:Version=$Version -p:FileVersion=$Version -p:InformationalVersion=$Version -m:1 -nr:false --nologo
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish fehlgeschlagen." }
 
-foreach ($w in @("workers\csharp", "workers\python\worker.py", "workers\python\runtime\python.exe", "workers\python\runtime\python314.zip", "workers\python\runtime\LICENSE.txt", "workers\python\runtime\pip-bootstrap\pip.whl", "workers\native", "toolchains\w64devkit\bin\g++.exe", "toolchains\w64devkit\bin\gdb.exe", "toolchains\w64devkit\source\source.tar")) {
+foreach ($w in @("workers\csharp", "workers\python\worker.py", "workers\python\runtime\python.exe", "workers\python\runtime\python315.zip", "workers\python\runtime\LICENSE.txt", "workers\python\runtime\pip-bootstrap\pip.whl", "workers\native", "toolchains\w64devkit\bin\g++.exe", "toolchains\w64devkit\bin\gdb.exe", "toolchains\w64devkit\source\source.tar")) {
     if (-not (Test-Path (Join-Path $publish $w))) { throw "Worker fehlt im Veröffentlichungsordner: $w" }
 }
 

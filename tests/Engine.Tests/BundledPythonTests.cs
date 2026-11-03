@@ -40,7 +40,7 @@ public sealed class BundledPythonTests
             RedirectStandardOutput = true, RedirectStandardError = true,
         };
         start.ArgumentList.Add("-c");
-        start.ArgumentList.Add("import sys,json,ssl,ctypes,sqlite3,importlib.metadata; assert sys.version_info[:3] == (3,14,8); assert sys.flags.isolated; print(json.dumps({'version':sys.version.split()[0]}))");
+        start.ArgumentList.Add("import sys,json,ssl,ctypes,sqlite3,importlib.metadata; assert sys.version_info[:3] == (3,15,2); assert sys.flags.isolated; print(json.dumps({'version':sys.version.split()[0]}))");
         start.Environment["PATH"] = "";
         start.Environment["PYTHONHOME"] = "C:/missing-python-home";
         start.Environment["PYTHONPATH"] = "C:/missing-python-path";
@@ -50,7 +50,7 @@ public sealed class BundledPythonTests
         await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20));
         Assert.Equal("", await error);
         Assert.Equal(0, process.ExitCode);
-        Assert.Contains("3.14.8", await output);
+        Assert.Contains("3.15.2", await output);
     }
 
     [Fact]
@@ -59,6 +59,6 @@ public sealed class BundledPythonTests
         using var runtime = new CodeRuntime();
         var compiled = await runtime.CompileAsync(new CodeRequest(CodeLanguage.Python, "import json\nreturn Pass(json.loads('42'))", []), CancellationToken.None);
         Assert.True(compiled.Success);
-        Assert.Contains("Python 3.14.8", compiled.RuntimeInfo);
+        Assert.Contains("Python 3.15.2", compiled.RuntimeInfo);
     }
 }

@@ -27,7 +27,7 @@ entfernen. Keine produktiven Zugangsdaten in öffentliche GitHub-Issues einfüge
 ## Microsoft-Dienste
 
 Bei konfigurierter Entra-Anmeldung erfolgt eine Verbindung zu Microsoft über
-MSAL und den Windows-Kontomanager. Die Anwendung erhält unter anderem Konto-,
+MSAL und den Systembrowser. Die Anwendung erhält unter anderem Konto-,
 Tenant- und Rolleninformationen. Microsoft- und Tenant-Bedingungen gelten dafür
 zusätzlich. Ohne entsprechende Konfiguration ist dies keine automatische
 Firmenkonto-Anmeldung.

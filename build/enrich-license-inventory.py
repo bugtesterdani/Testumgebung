@@ -25,63 +25,65 @@ SOURCE_PATTERNS={
 'Npgsql':r'\bNpgsql\b','MySqlConnector':r'\bMySqlConnector\b','Microsoft.Data.Sqlite':r'Microsoft\.Data\.Sqlite',
 'System.Security.Cryptography.ProtectedData':r'\bProtectedData\b|\bDataProtectionScope\b'}
 TOOLS=[
-('w64devkit','2.8.0','Unlicense for kit glue; component licenses separately','toolchains/w64devkit','build/acquire-toolchain.ps1; build/CodeWorkers.targets'),
-('GCC','16.1.0','GPL-3.0-or-later; runtime exception for eligible runtime use','toolchains/w64devkit/bin/g++.exe','src/Testumgebung.Workers.Native/Toolchain.cs'),
-('GDB','17.1','GPL-3.0-or-later','toolchains/w64devkit/bin/gdb.exe','src/Testumgebung.Workers/GdbInspector.cs'),
-('GNU Binutils','2.46.0','GPL family, subcomponent licenses in source','toolchains/w64devkit/bin','GCC linker/assembler/toolchain'),
+('w64devkit','2.11.0','Unlicense for kit glue; component licenses separately','toolchains/w64devkit','build/acquire-toolchain.ps1; build/CodeWorkers.targets'),
+('GCC','16.2.0','GPL-3.0-or-later; runtime exception for eligible runtime use','toolchains/w64devkit/bin/g++.exe','src/Testumgebung.Workers.Native/Toolchain.cs'),
+('NSIS','3.13','zlib/libpng; bzip2 and CPL-1.0 compression modules; see COPYING','toolchains/w64devkit/bin/makensis.exe','Kit installer compiler; corresponding sources included'),
+('aas-sign','1.1.1','Unlicense','toolchains/w64devkit/bin/aas-sign.exe','Optional kit Authenticode utility; not used for MSIX signing'),
+('GDB','18.1','GPL-3.0-or-later','toolchains/w64devkit/bin/gdb.exe','src/Testumgebung.Workers/GdbInspector.cs'),
+('GNU Binutils','2.47','GPL family, subcomponent licenses in source','toolchains/w64devkit/bin','GCC linker/assembler/toolchain'),
 ('GNU Make','4.4.1','GPL-3.0-or-later','toolchains/w64devkit/bin/make.exe','Shipped as part of full kit; not directly called by application'),
-('BusyBox-w32','FRP-5857-g3681e397f','GPL-2.0-only with component exceptions','toolchains/w64devkit/bin/busybox.exe','Full-kit utilities and launcher aliases'),
-('CMake','4.3.2','BSD-3-Clause plus bundled-library licenses','toolchains/w64devkit/bin/cmake.exe','Shipped as part of full kit'),
+('BusyBox-w32','FRP-6354-g5f09fb446','GPL-2.0-only with component exceptions','toolchains/w64devkit/bin/busybox.exe','Full-kit utilities and launcher aliases'),
+('CMake','4.4.4','BSD-3-Clause plus bundled-library licenses','toolchains/w64devkit/bin/cmake.exe','Shipped as part of full kit'),
 ('Ninja','1.13.2','Apache-2.0','toolchains/w64devkit/bin/ninja.exe','Shipped as part of full kit'),
-('CCache','4.13.4','GPL-3.0-or-later','toolchains/w64devkit/bin/ccache.exe','Full-kit compiler cache'),
+('CCache','4.14.1','GPL-3.0-or-later','toolchains/w64devkit/bin/ccache.exe','Full-kit compiler cache'),
 ('Universal Ctags','6.2.1','GPL-2.0 family; see source notices','toolchains/w64devkit/bin/ctags.exe','Shipped as part of full kit'),
 ('Vim','9.0','Vim license','toolchains/w64devkit/bin/vim.exe','Full-kit editor and alias launchers'),
 ('MinGW-w64','14.0.0','Mixed permissive/public-domain/LGPL parts; see COPYING','toolchains/w64devkit/include; toolchains/w64devkit/lib','Native compiler headers, import/static libraries, gendef/widl'),
 ('GMP','6.3.0','LGPL-3.0-or-later OR GPL-2.0-or-later','toolchains/w64devkit','Linked into GNU tools'),
 ('MPFR','4.2.2','LGPL-3.0-or-later','toolchains/w64devkit','Linked into GNU tools'),
 ('MPC','1.4.1','LGPL-3.0-or-later','toolchains/w64devkit','Linked into GNU tools'),
-('Expat (kit)','2.8.0','MIT','toolchains/w64devkit','Linked into GDB'),
+('Expat (kit)','2.9.0','MIT','toolchains/w64devkit','Linked into GDB'),
 ('libiconv','1.19','LGPL-2.1-or-later library; GPL utility','toolchains/w64devkit/bin/iconv.exe','Kit utility and GDB dependency'),
 ('PDCurses','3.9','Public domain core; port-specific licenses','toolchains/w64devkit','Windows-console support in Vim'),
 ('xxHash','0.8.3','BSD-2-Clause library; GPL utility portions','toolchains/w64devkit','Dependency of kit tools'),
 ('Zstandard','1.5.7','BSD-3-Clause OR GPL-2.0-only','toolchains/w64devkit/bin/zstd.exe','Kit tools and BusyBox dependency'),
 ('dcmake','1.7.1','Unlicense plus bundled MIT/Zlib library notices','toolchains/w64devkit/bin/dcmake.exe','Shipped as part of full kit'),
-('7-Zip SFX','23.01','LGPL and unRAR restriction; see source DOC/License.txt','toolchains/.stage-*/w64devkit-x64-2.8.0.7z.exe','Build-only archive extractor; not shipped as an EXE in MSIX'),
-('CPython','3.14.8','PSF and included third-party notices','workers/python/runtime/python.exe','src/Testumgebung.Workers/CodeRuntime.cs; PythonEnvironmentResolver.cs'),
+('7-Zip SFX','23.01','LGPL and unRAR restriction; see source DOC/License.txt','toolchains/.stage-*/w64devkit-x64-2.11.0.7z.exe','Build-only archive extractor; not shipped as an EXE in MSIX'),
+('CPython','3.15.2','PSF and included third-party notices','workers/python/runtime/python.exe','src/Testumgebung.Workers/CodeRuntime.cs; PythonEnvironmentResolver.cs'),
 ('OpenSSL','3.5.9','Apache-2.0','workers/python/runtime/libssl-3.dll; libcrypto-3.dll','Python ssl/hashlib; PE version verified'),
-('SQLite (Python)','3.50.4','Public domain','workers/python/runtime/sqlite3.dll','Python sqlite3; PE version verified'),
-('libffi','3.4.4','MIT','workers/python/runtime/libffi-8.dll','Python ctypes; version from CPython v3.14.8 build specification'),
+('SQLite (Python)','3.53.4','Public domain','workers/python/runtime/sqlite3.dll','Python sqlite3; PE version verified'),
+('libffi','3.4.4','MIT','workers/python/runtime/libffi-8.dll','Python ctypes; version from CPython v3.15.2 build specification'),
 ('Expat (Python)','2.8.5','MIT','workers/python/runtime/pyexpat.pyd','Version reported by bundled pyexpat.EXPAT_VERSION'),
-('libmpdec','4.0.0','BSD-2-Clause','workers/python/runtime/_decimal.pyd','Version reported by bundled _decimal.__libmpdec_version__'),
+('libmpdec','5.1.0','BSD-2-Clause','workers/python/runtime/_decimal.pyd','Version reported by bundled _decimal.__libmpdec_version__'),
 
 ('bzip2','1.0.8','bzip2 license','workers/python/runtime/_bz2.pyd','CPython build specification; notices in Python LICENSE.txt'),
 ('XZ/liblzma','5.2.5','Public-domain core plus component GPL/LGPL notices','workers/python/runtime/_lzma.pyd','CPython build specification; determine linked portions before assuming every source-license applies'),
-('zlib-ng','2.2.4','Zlib','workers/python/runtime/python314.dll','CPython build specification'),
+('zlib-ng','2.2.4','Zlib','workers/python/runtime/python315.dll','CPython build specification'),
 ('zstd (Python)','1.5.7','BSD-3-Clause OR GPL-2.0-only','workers/python/runtime/_zstd.pyd','CPython build specification'),
 ('MSVC runtime','14.51.36247.0','Microsoft redistributable terms, not MIT','workers/python/runtime/vcruntime140.dll; vcruntime140_1.dll','Bundled by official Python ZIP; PE version verified'),
-('pip','26.2.1','MIT plus vendor licenses','workers/python/runtime/pip-bootstrap/pip.whl','build/acquire-pip.ps1; PythonEnvironments.cs'),
-('ReportGenerator','5.5.11','Apache-2.0','artifacts/tools/reportgenerator','build/coverage.ps1; development only'),
+('pip','26.3','MIT plus vendor licenses','workers/python/runtime/pip-bootstrap/pip.whl','build/acquire-pip.ps1; PythonEnvironments.cs'),
+('ReportGenerator','5.5.12','Apache-2.0','artifacts/tools/reportgenerator','build/coverage.ps1; development only'),
 ('Doxygen','1.18.0','GPL-2.0; generated documents exempt per upstream','artifacts/tools/doxygen/1.18.0','build/doxygen.ps1; development/CI only; not bundled'),
-('ReportLab','4.4.9','BSD-3-Clause','Documentation workflow Python environment','build/create-complete-manual.py; documentation only'),
-('Pillow (CI documentation)','12.3.0 in audited Actions run','HPND/Pillow license plus codec notices','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
-('charset-normalizer (CI documentation)','3.5.2 in audited Actions run','MIT','GitHub runner Python environment','ReportLab dependency; version from run 38297143493'),
-('Python (CI documentation)','3.12.x','PSF','GitHub runner','actions/setup-python; exact patch depends on runner'),
-('.NET SDK (local)','10.0.402','MIT and third-party/MS build tool terms','External installed SDK','dotnet build/test/publish; not itself shipped'),
-('.NET SDK (CI)','10.0.402','MIT and third-party/MS build tool terms','GitHub runner','actions/setup-dotnet; SDK pinned via global.json and workflow'),
+('ReportLab','5.1.0','BSD-3-Clause','Documentation workflow Python environment','build/create-complete-manual.py; documentation only'),
+('Pillow (CI documentation)','13.0.0 in local dependency review','HPND/Pillow license plus codec notices','GitHub runner Python environment','ReportLab 5.1.0 dependency; locally resolved on 2026-11-03'),
+('charset-normalizer (CI documentation)','3.5.2 in audited Actions run','MIT','GitHub runner Python environment','ReportLab 5.1.0 dependency; locally resolved on 2026-11-03'),
+('Python (CI documentation)','3.15.2','PSF','GitHub runner','actions/setup-python; exact patch depends on runner'),
+('.NET SDK (local)','10.0.403','MIT and third-party/MS build tool terms','External installed SDK','dotnet build/test/publish; not itself shipped'),
+('.NET SDK (CI)','10.0.403','MIT and third-party/MS build tool terms','GitHub runner','actions/setup-dotnet; SDK pinned via global.json and workflow'),
 ('Windows SDK MakeAppx/SignTool','Externally installed; chosen SDK directory','Microsoft SDK terms','Windows Kits/10/bin/<SDK>/x64','build/msix.ps1; build only'),
 ('PowerShell','7.x for builds; Windows PowerShell external for console','MIT for PowerShell 7; OS terms for Windows PowerShell','External installed runtime','build scripts; PythonEnvironments.cs'),
 ('Inno Setup','6.x, exact version not pinned','Inno Setup license','External ISCC.exe','build/publish.ps1 -Installer; not used by MSIX workflow'),
 ('GitHub CLI','2.102.0 local; runner version external','MIT and Go dependency notices','artifacts/tools/github-cli/bin/gh.exe','setup-github.ps1 and GitHub release job; not shipped'),
 ('Git','External version','GPL-2.0','External git.exe','Source/wikis upload; not shipped'),
-('Paramiko','4.0.0 in CI; local environment may differ','LGPL-2.1-or-later; dependencies separate','External test Python','tests/Fixtures/ssh_server.py; not shipped'),
+('Paramiko','5.1.0 in CI; local environment may differ','LGPL-2.1; dependencies separate','External test Python','tests/Fixtures/ssh_server.py; not shipped'),
 ('Segoe UI / Consolas','Windows-provided, exact installed font version','Microsoft document embedding permissions','C:/Windows/Fonts/segoeui.ttf; segoeuib.ttf; consola.ttf','PDF font subsets; no standalone TTF shipped'),
 ('pefile','2024.8.26','MIT','artifacts/tools/license-audit','Audit-only PE parser; not shipped'),
 ('PyYAML','6.0.3','MIT','artifacts/tools/python-docs','Audit/setup-only workflow syntax checker; not shipped')]
 TOOLS.extend([
-('actions/checkout','v4 / 11d5960a326750d5838078e36cf38b85af677262','MIT','GitHub runner action','Both GitHub workflows; not redistributed'),
-('actions/setup-dotnet','v4 / 67a3573c9a986a3f9c594539f4ab511d57bb3ce9','MIT','GitHub runner action','MSIX workflow; not redistributed'),
-('actions/setup-python','v5 / a26af69be951a213d495a4c3e4e4022e16d87065','MIT','GitHub runner action','Both GitHub workflows; not redistributed'),
-('actions/upload-artifact','v4 / ea165f8d65b6e75b540449e92b4886f43607fa02','MIT','GitHub runner action','Both GitHub workflows; not redistributed')])
+('actions/checkout','v7.0.1 / 3d3c42e5aac5ba805825da76410c181273ba90b1','MIT','GitHub runner action','Both GitHub workflows; not redistributed'),
+('actions/setup-dotnet','v6.1.0 / 0f4a354dd5547a28c70b7853dbd95d5b67886e73','MIT','GitHub runner action','MSIX workflow; not redistributed'),
+('actions/setup-python','v7.1.0 / 6d4fd22b20465ccc0f7354476588e8df7c9ca0e0','MIT','GitHub runner action','Both GitHub workflows; not redistributed'),
+('actions/upload-artifact','v7.0.2 / cf430e030ddbb5b0abf93d22962f4752f3646cd9','MIT','GitHub runner action','Both GitHub workflows; not redistributed')])
 
 EXTERNAL=[
 ('NI-DAQmx','nicaiu.dll','src/Testumgebung.Instruments/Daqmx.cs','NI license; driver independently installed'),
@@ -98,11 +100,11 @@ def normalize_license(row):
     name=row['name'];value=row['metadata'].get('license','UNRESOLVED')
     expected=None
     if name in ('runtimepack.Microsoft.NETCore.App.Runtime.win-x64','runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64'):
-        if row['version']!='10.0.13':raise ValueError('Windows runtime version needs a new license review: '+row['version'])
+        if row['version']!='10.0.14':raise ValueError('Windows runtime version needs a new license review: '+row['version'])
         return 'MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution'
-    if name.startswith('OPCFoundation.NetStandard.Opc.Ua.') and row['version']=='1.5.378.182':
+    if name.startswith('OPCFoundation.NetStandard.Opc.Ua.') and row['version']=='2.0.1':
         expected='3927c73bc0abbd9327364bcfdcbb7d8a7be50c05c2948fcfb49a45b165bda737'
-    elif name=='BitFaster.Caching' and row['version']=='2.6.0':
+    elif name=='BitFaster.Caching' and row['version']=='2.6.1':
         expected='f3bf474c62109fbe7b81345419eff56bfd6e5b539accc877a9b840e2e7a5176b'
     if expected:
         if not any(record['sha256']==expected and hashlib.sha256((ROOT/record['path']).read_bytes()).hexdigest()==expected
@@ -155,14 +157,14 @@ def map_manifests(data):
             component,license=kit_component(path)
             row['component']=component;row['license']=license;row['attribution_evidence']='w64devkit Dockerfile/source archives; file role inferred from path'
         elif path.startswith('workers/python/runtime/'):
-            component='CPython/3.14.8';license='PSF plus relevant native component notices'
+            component='CPython/3.15.2';license='PSF plus relevant native component notices'
             if name.startswith('libssl') or name.startswith('libcrypto'):component='OpenSSL/3.5.9';license='Apache-2.0'
-            elif name=='sqlite3.dll':component='SQLite/3.50.4';license='Public domain'
+            elif name=='sqlite3.dll':component='SQLite/3.53.4';license='Public domain'
             elif name=='libffi-8.dll':component='libffi/3.4.4';license='MIT'
             elif name=='libtommath.dll':component='libtommath/UNRESOLVED';license='Exact attribution unresolved; upstream Unlicense not treated as proof'
             elif name.startswith('vcruntime'):component='Microsoft VC runtime/14.51.36247.0';license='Microsoft redistributable terms'
-            elif name=='pip.whl':component='pip/26.2.1 and vendored packages';license='MIT plus vendor notices'
-            row['component']=component;row['license']=license;row['attribution_evidence']='Official CPython 3.14.8 ZIP + PE versions + CPython build specification'
+            elif name=='pip.whl':component='pip/26.3 and vendored packages';license='MIT plus vendor notices'
+            row['component']=component;row['license']=license;row['attribution_evidence']='Official CPython 3.15.2 ZIP + PE versions + CPython build specification'
         elif name.startswith('Testumgebung.'):
             row['component']=name.split('.exe')[0].split('.dll')[0]+'/'+data['release_version'];row['license']='MIT (own project; LICENSE)';row['attribution_evidence']='Own project + MSIX PE version'
         row.setdefault('attribution_evidence','UNRESOLVED')
@@ -185,25 +187,27 @@ def map_manifests(data):
 def kit_component(path):
     name=Path(path).name.lower()
     for pattern,component,license in [
-      ('gdb','GDB/17.1','GPL-3.0-or-later'),('binutils','Binutils/2.46.0','GNU component licenses'),
-      ('ccache','CCache/4.13.4','GPL-3.0-or-later'),('cmake','CMake/4.3.2','BSD-3-Clause plus dependencies'),
-      ('ctest','CMake/4.3.2','BSD-3-Clause plus dependencies'),('cpack','CMake/4.3.2','BSD-3-Clause plus dependencies'),
-      ('ninja','Ninja/1.13.2','Apache-2.0'),('dcmake','dcmake/1.7.1','Unlicense plus bundled library notices'),
+      ('makensis','NSIS/3.13','zlib/libpng; bzip2 and CPL-1.0 compression modules'),('aas-sign','aas-sign/1.1.1','Unlicense'),
+      ('gdb','GDB/18.1','GPL-3.0-or-later'),('binutils','Binutils/2.47','GNU component licenses'),
+      ('dcmake','dcmake/1.8.0','Unlicense plus bundled library notices'),
+      ('ccache','CCache/4.14.1','GPL-3.0-or-later'),('cmake','CMake/4.4.4','BSD-3-Clause plus dependencies'),
+      ('ctest','CMake/4.4.4','BSD-3-Clause plus dependencies'),('cpack','CMake/4.4.4','BSD-3-Clause plus dependencies'),
+      ('ninja','Ninja/1.13.2','Apache-2.0'),('dcmake','dcmake/1.8.0','Unlicense plus bundled library notices'),
       ('ctags','Universal Ctags/6.2.1','GPL-2.0 family'),('vim','Vim/9.0','Vim license'),
       ('zstd','Zstandard/1.5.7','BSD-3-Clause OR GPL-2.0-only')]:
         if pattern in name:return component,license
     if '/gcc/' in path or any(x in name for x in ['gcc','g++','c++','gfortran','gcov','cc1','f951','collect2','lto-','libstdc++','libgomp','libquadmath','libatomic','libssp']):
-        return 'GCC/16.1.0','GPL-3.0-or-later for tools; runtime exceptions/component licenses for libraries'
+        return 'GCC/16.2.0','GPL-3.0-or-later for tools; runtime exceptions/component licenses for libraries'
     stem=name.removesuffix('.exe').removeprefix('x86_64-w64-mingw32-')
     if stem in {'as','ld','ld.bfd','ar','nm','ranlib','strings','strip','size','objdump','objcopy','addr2line','dlltool','dllwrap','elfedit','windres','windmc','gprof'}:
-        return 'Binutils/2.46.0','GPL/GNU component licenses'
+        return 'Binutils/2.47','GPL/GNU component licenses'
     if stem in {'make','mingw32-make'}:return 'GNU Make/4.4.1','GPL-3.0-or-later'
     if stem in {'gendef','widl'} or path.endswith('.a') or '/include/' in path:
         return 'MinGW-w64/14.0.0','Mixed permissive/public-domain/LGPL parts; COPYING.MinGW-w64-runtime.txt'
     if stem=='iconv':return 'libiconv/1.19','GPL utility / LGPL library'
     if stem in {'w64devkit','peports','vc++filt','pkg-config','debugbreak','uuidgen','recycle','quilt'}:
-        return 'w64devkit-glue/2.8.0','Unlicense / embedded-source notices (verify individual file)'
-    return 'w64devkit/2.8.0 (BusyBox or launcher/utility role)','Mixed licenses; detailed source and aliases apply, not a single kit-wide Unlicense'
+        return 'w64devkit-glue/2.11.0','Unlicense / embedded-source notices (verify individual file)'
+    return 'w64devkit/2.11.0 (BusyBox or launcher/utility role)','Mixed licenses; detailed source and aliases apply, not a single kit-wide Unlicense'
 
 def pip_vendors():
     licenses={'CacheControl':'Apache-2.0','distlib':'Python-2.0','distro':'Apache-2.0','msgpack':'Apache-2.0','packaging':'Apache-2.0 OR BSD-2-Clause','platformdirs':'MIT','pyproject-hooks':'MIT','requests':'Apache-2.0','certifi':'MPL-2.0','idna':'BSD-3-Clause','urllib3':'MIT','rich':'MIT','pygments':'BSD-2-Clause','resolvelib':'ISC','setuptools':'MIT','tomli':'MIT','tomli-w':'MIT','truststore':'MIT'}
@@ -212,7 +216,7 @@ def pip_vendors():
         for name,version in re.findall(r'^\s*([\w-]+)==([^\s]+)',z.read('pip/_vendor/vendor.txt').decode(),re.M):
             folder='pkg_resources' if name=='setuptools' else name.lower().replace('-','_')
             matches=[x for x in z.namelist() if ('/'+folder+'/' in x and re.search(r'(license|copying|notice)',Path(x).name,re.I))]
-            rows.append({'name':name,'version':version,'license':licenses.get(name,'UNRESOLVED'),'used_in':'workers/python/runtime/pip-bootstrap/pip.whl!/pip/_vendor/'+folder,'evidence':'pip/_vendor/vendor.txt','license_files':['licenses/third-party/pip-26.2.1/'+x for x in matches]})
+            rows.append({'name':name,'version':version,'license':licenses.get(name,'UNRESOLVED'),'used_in':'workers/python/runtime/pip-bootstrap/pip.whl!/pip/_vendor/'+folder,'evidence':'pip/_vendor/vendor.txt','license_files':['licenses/third-party/pip-26.3/'+x for x in matches]})
     return rows
 
 def write_notices(data):
@@ -229,11 +233,11 @@ def write_notices(data):
         for file in meta.get('license_files',[]):lines.append('- Lizenztext: ['+Path(file['path']).name+']('+file['path']+')')
         lines.append('')
     lines+=['## Python, pip und native Komponenten','',
-      'CPython 3.14.8: [Originaltext](licenses/third-party/python/LICENSE.txt). Die pip-Vendor-Lizenzen liegen vollständig unter `licenses/third-party/pip-26.2.1/`. Die zusätzlichen nativen Texte liegen unter `licenses/third-party/python-native/`. Native Microsoft-Laufzeiten behalten ihre eigenen Weitergabebedingungen.','',
+      'CPython 3.15.2: [Originaltext](licenses/third-party/python/LICENSE.txt). Die pip-Vendor-Lizenzen liegen vollständig unter `licenses/third-party/pip-26.3/`. Die zusätzlichen nativen Texte liegen unter `licenses/third-party/python-native/`. Native Microsoft-Laufzeiten behalten ihre eigenen Weitergabebedingungen.','',
       'libtommath.dll wird seit dem bereinigten Build nicht mehr mitgeliefert; das Originalarchiv bleibt als historische Nachweisquelle erhalten.','',
       '## GNU-/w64devkit-Werkzeuge','',
       'Die gesamte Toolchain wird weitergegeben, nicht nur GCC und GDB. Das Gesamtpaket hat unterschiedliche Lizenzen. Volltexte und Copyright-Hinweise wurden aus den passenden Source-Archiven übernommen: `licenses/third-party/w64devkit/`.','',
-      'Die zum Binärpaket 2.8.0 passenden Archive, Anpassungen und Buildskripte befinden sich im MSIX unter `toolchains/w64devkit/source/source.tar`, `toolchains/w64devkit/src/` und `toolchains/w64devkit/Dockerfile`. Der Quellen-SHA256 ist `5f76bc3b87ccfe4c3eb3d6045614cc983419a955f78f65f8921c10bb1f90e654`.','',
+      'Die zum Binärpaket 2.11.0 passenden Archive, Anpassungen und Buildskripte befinden sich im MSIX unter `toolchains/w64devkit/source/source.tar`, `toolchains/w64devkit/src/` und `toolchains/w64devkit/Dockerfile`. Der Quellen-SHA256 ist `50ee43ca02b9ca49e0e16da7eaf9701c9a396a019ebb2416a93d16769d53e5ff`.','',
       'Bei jeder Weitergabe müssen diese Quellen und Hinweise erhalten bleiben. GNU-Bibliotheken mit LGPL können weitere Bedingungen für Modifikationen beziehungsweise Relinking haben; die Komponentenzuordnung ist im Prüfbericht erläutert.','',
       '## Extern installierte Treiber','',
       'NI-DAQmx/VISA, PEAK, Kvaser, Vector und benutzerdefinierte DLLs sind nicht Bestandteil des geprüften MSIX. Ihre Installation und Nutzung unterliegen den jeweiligen Hersteller-/Projektlizenzen.','']
@@ -292,6 +296,11 @@ def main():
                 path=folder/name
                 record={'path':path.relative_to(ROOT).as_posix(),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
                 row['metadata']['license_files']=[r for r in row['metadata'].get('license_files',[]) if r['path']!=record['path']]+[record]
+        if row['name'].startswith('Polly.') and row['version']=='8.4.2':
+            # Retain the versioned upstream copyright as well as the generic SPDX text.
+            path=LICENSES/'upstream/polly-8.4.2/LICENSE'
+            record={'path':path.relative_to(ROOT).as_posix(),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+            row['metadata']['license_files']=[r for r in row['metadata'].get('license_files',[]) if r['path']!=record['path']]+[record]
     data['tools']=[dict(zip(['name','version','license','location','used_by'],t)) for t in TOOLS]
     data['external']=[{'name':name,'file':file,'version':'Externally installed; not pinned and not bundled','used_in':used,'license':license} for name,file,used,license in EXTERNAL]
     data['pip_vendors']=pip_vendors()

@@ -7,7 +7,7 @@ using Testumgebung.Identity;
 
 namespace Testumgebung.Presentation.Releases;
 
-/// <summary>Anmeldung, Zugangskonfiguration und der dazu passende Anbieter (Entra über MSAL/WAM oder simuliert).</summary>
+/// <summary>Anmeldung, Zugangskonfiguration und der dazu passende Anbieter (Entra über MSAL im Systembrowser oder simuliert).</summary>
 public sealed class IdentityServices
 {
     private readonly Func<AccessConfig?, IIdentityProvider> _providerFactory;

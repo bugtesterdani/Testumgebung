@@ -1,6 +1,6 @@
 # Entra-Registrierung und Zugang einrichten
 
-Die Anmeldung läuft über Microsoft Entra ID mit MSAL und dem Windows-Kontomanager (WAM). Die Anwendung sieht nie ein
+Die Anmeldung läuft über Microsoft Entra ID mit MSAL im Systembrowser. Die Anwendung sieht nie ein
 Passwort. Solange keine Zugangsdatei existiert, läuft sie im **Entwicklungsmodus**: simulierte Anmeldung, jede
 angemeldete Person hat alle Rechte.
 
@@ -10,11 +10,12 @@ angemeldete Person hat alle Rechte.
    * Name: `Testumgebung Prüfplatz`
    * Unterstützte Kontotypen: **Nur Konten in diesem Organisationsverzeichnis** (ein Mandant)
 2. *Authentifizierung* → **Plattform hinzufügen** → *Mobile Anwendungen und Desktopanwendungen*.
-   * Umleitungs-URI: `ms-appx-web://microsoft.aad.brokerplugin/<Anwendungs-ID>` (WAM)
-   * zusätzlich `https://login.microsoftonline.com/common/oauth2/nativeclient`
+   * Umleitungs-URI: `http://localhost` (Systembrowser; MSAL verwendet einen freien lokalen Port)
    * *Öffentliche Clientflows zulassen*: **Ja**
 3. *API-Berechtigungen*: `Microsoft Graph → User.Read` (delegiert) genügt; ggf. Administratorzustimmung erteilen.
 4. Notieren: **Anwendungs-ID (Client-ID)** und **Verzeichnis-ID (Mandanten-ID)**.
+
+**Bestehende Registrierungen:** Für die Browser-Anmeldung http://localhost ergänzen. Eine frühere WAM-Umleitungs-URI allein reicht nicht aus. Client-ID, Mandanten-ID und lokale Rechte bleiben gleich. Die Anmeldung zeigt weiterhin die Kontoauswahl; nach erfolgreicher Anmeldung kann der Browser-Tab geschlossen werden.
 
 App-Rollen sind nicht nötig: Die Rechte werden je Prüfplatz lokal vergeben (Entscheidung Etappe 7).
 

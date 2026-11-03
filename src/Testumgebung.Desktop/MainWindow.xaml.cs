@@ -95,7 +95,7 @@ public partial class MainWindow : Window
         var accessStore = startup?.AccessStore ?? new AccessConfigStore(AccessConfigStore.DefaultPath);
         var access = accessStore.Load();
         IIdentityProvider Provider(AccessConfig? c) => c is { UsesEntra: true }
-            ? new MsalIdentityProvider(c.ClientId!, c.TenantId!, () => new WindowInteropHelper(this).Handle)
+            ? new MsalIdentityProvider(c.ClientId!, c.TenantId!)
             : new SimulatedIdentityProvider(() => Shell?.LoginName ?? "");
         return new IdentityServices(new SessionService(Provider(access), access, allowDevelopmentMode: developmentMode), accessStore, Provider);
     }

@@ -30,7 +30,7 @@ public sealed class OpcUaConnectionContractTests
         internal override Task<ISession> CreateAsync(ApplicationConfiguration configuration, ConfiguredEndpoint endpoint, string name, IUserIdentity identity)
         {
             Connections++; Identity = identity; SessionName = name;
-            Assert.Equal("opc.tcp://fixture:4840/", endpoint.EndpointUrl.ToString());
+            Assert.Equal("opc.tcp://fixture:4840/", endpoint.EndpointUrl!.ToString());
             if (Failure == "session") throw new IOException("session unavailable");
             var session = DispatchProxy.Create<ISession, OpcUaSessionContractTests.SessionPeer>();
             Peers.Add((OpcUaSessionContractTests.SessionPeer)(object)session); return Task.FromResult(session);
@@ -92,13 +92,13 @@ public sealed class OpcUaConnectionContractTests
 
     private static void AssertConfig(Factory factory, string directory, bool security, string? user)
     {
-        var config = factory.Config!; Assert.Equal(ApplicationType.Client, config.ApplicationType); Assert.Equal(1234, config.TransportQuotas.OperationTimeout);
-        Assert.Equal(60_000, config.ClientConfiguration.DefaultSessionTimeout); Assert.True(config.SecurityConfiguration.AutoAcceptUntrustedCertificates);
-        Assert.Equal(Path.Combine(directory, "own"), config.SecurityConfiguration.ApplicationCertificate.StorePath);
-        Assert.Equal(Path.Combine(directory, "trusted"), config.SecurityConfiguration.TrustedPeerCertificates.StorePath);
-        Assert.Equal(Path.Combine(directory, "issuer"), config.SecurityConfiguration.TrustedIssuerCertificates.StorePath);
-        Assert.Equal(Path.Combine(directory, "rejected"), config.SecurityConfiguration.RejectedCertificateStore.StorePath);
-        Assert.Equal(security ? 1 : 0, factory.Certificates);
+        var config = factory.Config!; Assert.Equal(ApplicationType.Client, config.ApplicationType); Assert.Equal(1234, config.TransportQuotas!.OperationTimeout);
+        Assert.Equal(60_000, config.ClientConfiguration!.DefaultSessionTimeout); Assert.True(config.SecurityConfiguration!.AutoAcceptUntrustedCertificates);
+        Assert.Equal(Path.Combine(directory, "own"), config.SecurityConfiguration!.ApplicationCertificate!.StorePath);
+        Assert.Equal(Path.Combine(directory, "trusted"), config.SecurityConfiguration!.TrustedPeerCertificates!.StorePath);
+        Assert.Equal(Path.Combine(directory, "issuer"), config.SecurityConfiguration!.TrustedIssuerCertificates!.StorePath);
+        Assert.Equal(Path.Combine(directory, "rejected"), config.SecurityConfiguration!.RejectedCertificateStore!.StorePath);
+        Assert.Equal(1, factory.Certificates);
         Assert.Equal(user is null ? UserTokenType.Anonymous : UserTokenType.UserName, factory.Identity!.TokenType);
     }
     private static Task Send(OpcUaNotifier notifier)

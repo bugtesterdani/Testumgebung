@@ -47,7 +47,7 @@ public enum ShellPage
 
 /// <summary>
 /// Hauptfenster: Prüfplätze, Werker-/Entwickleransicht innerhalb derselben Anwendung.
-/// Anmeldung über <see cref="SessionService"/> (Entra ID über MSAL/WAM oder simuliert); Rechte „Entwickeln“ und „Freigeben“
+/// Anmeldung über <see cref="SessionService"/> (Entra ID über MSAL im Systembrowser oder simuliert); Rechte „Entwickeln“ und „Freigeben“
 /// getrennt. Abmelden entfernt die erweiterten Rechte, laufende Tests laufen weiter.
 /// </summary>
 public sealed class ShellViewModel : ObservableObject

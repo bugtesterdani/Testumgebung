@@ -6,19 +6,19 @@
 
   <!-- Standard: xUnit über NuGet -->
   <ItemGroup Condition="'$(XunitShimProject)' == ''">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="coverlet.collector" Version="10.1.0" PrivateAssets="all" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
     <!-- Datenbanktreiber für die Provider-Tests (laufen nur mit gesetztem Verbindungsstring) -->
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <!-- Managed networking only: native SNI has separate redistribution terms. -->
-    <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="6.0.2" ExcludeAssets="all" PrivateAssets="all" />
-    <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="MySqlConnector" Version="2.6.1" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Data.SqlClient.SNI.runtime" Version="7.1.0" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <!-- Security override for the SQL client test dependency; production uses the .NET runtime implementation. -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
   <PropertyGroup Condition="'$(XunitShimProject)' == ''">
     <DefineConstants>$(DefineConstants);DB_PROVIDERS</DefineConstants>

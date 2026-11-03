@@ -23,12 +23,12 @@ public sealed class SignInException(string message, Exception? inner = null) : E
 
 public sealed class SignInCanceledException() : Exception("Anmeldung abgebrochen.");
 
-/// <summary>Anmeldung über einen externen Anbieter (Entra ID über MSAL/WAM) oder simuliert.</summary>
+/// <summary>Anmeldung über einen externen Anbieter (Entra ID über MSAL im Systembrowser) oder simuliert.</summary>
 public interface IIdentityProvider
 {
     string Name { get; }
 
-    /// <summary>Anmelden; zeigt ggf. den Kontodialog des Betriebssystems (WAM). Blockiert die Prüfengine nicht.</summary>
+    /// <summary>Anmelden; zeigt ggf. den Anmeldedialog im Systembrowser. Blockiert die Prüfengine nicht.</summary>
     Task<UserIdentity> SignInAsync(bool selectAccount, CancellationToken cancellationToken);
 
     Task SignOutAsync(UserIdentity identity, CancellationToken cancellationToken);

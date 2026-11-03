@@ -75,8 +75,13 @@ if (-not $UsePreparedLayout) {
 $layout = Join-Path $root 'artifacts\publish\Testumgebung'
 # Jeder .NET-Worker bekommt seine eigene Laufzeit, unabhängig von installierten Frameworks.
 foreach ($worker in @(@('CSharp','csharp'), @('Native','native'))) {
+    # Desktop publish copies build outputs first. Replace them with a clean,
+    # self-contained worker publish instead of retaining obsolete dependencies.
+    $workerOutput = [IO.Path]::GetFullPath((Join-Path $layout "workers\$($worker[1])"))
+    if (-not $workerOutput.StartsWith([IO.Path]::GetFullPath($layout) + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Worker-Ausgabepfad außerhalb des Publish-Layouts.' }
+    if (Test-Path -LiteralPath $workerOutput) { Remove-Item -LiteralPath $workerOutput -Recurse -Force }
     & dotnet publish (Join-Path $root "src\Testumgebung.Workers.$($worker[0])\Testumgebung.Workers.$($worker[0]).csproj") `
-        -c Release -r win-x64 --self-contained true -o (Join-Path $layout "workers\$($worker[1])") `
+        -c Release -r win-x64 --self-contained true -o $workerOutput `
         -p:Version=$Version -p:FileVersion=$Version -p:InformationalVersion=$Version -m:1 -nr:false --nologo
     if ($LASTEXITCODE) { throw "Worker-Publish fehlgeschlagen: $($worker[0])" }
 }

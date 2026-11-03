@@ -8,8 +8,12 @@ try {
     $toolDir = Join-Path $root 'artifacts/tools/reportgenerator'
     $tool = Join-Path $toolDir 'reportgenerator.exe'
     if (-not (Test-Path $tool)) {
-        & dotnet tool install dotnet-reportgenerator-globaltool --tool-path $toolDir --version 5.5.11
+        & dotnet tool install dotnet-reportgenerator-globaltool --tool-path $toolDir --version 5.5.12
         if ($LASTEXITCODE -ne 0) { throw 'ReportGenerator konnte nicht installiert werden.' }
+    }
+    else {
+        & dotnet tool update dotnet-reportgenerator-globaltool --tool-path $toolDir --version 5.5.12
+        if ($LASTEXITCODE -ne 0) { throw 'ReportGenerator konnte nicht auf den festgelegten Stand gebracht werden.' }
     }
     $oldPython = $env:TESTUMGEBUNG_SSH_TEST_PYTHON
     try {

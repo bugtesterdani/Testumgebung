@@ -25,5 +25,5 @@ internal class OpcUaSessionFactory
             ?? throw new ServiceResultException(StatusCodes.BadConfigurationError, "Kein passender OPC-UA-Endpunkt verfügbar.");
 
     internal virtual async Task<ISession> CreateAsync(ApplicationConfiguration configuration, ConfiguredEndpoint endpoint, string name, IUserIdentity identity)
-        => await new DefaultSessionFactory(Telemetry).CreateAsync(configuration, endpoint, false, name, 60_000, identity, null).ConfigureAwait(false);
+        => await new DefaultSessionFactory(Telemetry).CreateAsync(configuration, endpoint, false, name, 60_000, identity, []).ConfigureAwait(false);
 }

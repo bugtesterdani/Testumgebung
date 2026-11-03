@@ -2,8 +2,8 @@
 # Offizielles, fest versioniertes Python-Embed-Paket; keine globale Installation.
 param()
 $ErrorActionPreference = 'Stop'
-$version = '3.14.8'
-$expected = 'a93abe456ab01bd96d7a085b3cdb6566b3063f4241360d114142fbdb07f0a310'
+$version = '3.15.2'
+$expected = 'd012f3aa29cf07436dae8aea1fec0fd195c2612a0b059b1f915ae0afb9ad1f62'
 $toolRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../toolchains'))
 $destination = Join-Path $toolRoot 'python'
 # Not used by the supported embedded standard library (no Tcl/Tk distribution).
@@ -16,7 +16,7 @@ function Remove-UnverifiedPythonExtra([string]$runtime) {
 if (Test-Path (Join-Path $destination 'runtime.json')) {
     $metadata = Get-Content (Join-Path $destination 'runtime.json') -Raw | ConvertFrom-Json
     if ($metadata.version -ne $version -or $metadata.archiveSha256 -ne $expected) { throw 'Vorhandene Python-Version stimmt nicht mit der Build-Vorgabe überein.' }
-    foreach ($file in @('python.exe','python314.dll','python314.zip','python314._pth','LICENSE.txt')) {
+    foreach ($file in @('python.exe','python315.dll','python315.zip','python315._pth','LICENSE.txt')) {
         if (-not (Test-Path (Join-Path $destination $file))) { throw "Python-Laufzeit unvollständig: $file" }
     }
     Remove-UnverifiedPythonExtra $destination
@@ -36,9 +36,9 @@ $extracted = Join-Path $stage 'runtime'
 Expand-Archive -LiteralPath $archive -DestinationPath $extracted
 Remove-UnverifiedPythonExtra $extracted
 # Isoliert von globalem PYTHONPATH und Benutzerpaketen; optionale Pakete neben der Laufzeit.
-@('python314.zip', '.', 'Lib/site-packages', '..') | Set-Content (Join-Path $extracted 'python314._pth') -Encoding ascii
+@('python315.zip', '.', 'Lib/site-packages', '..') | Set-Content (Join-Path $extracted 'python315._pth') -Encoding ascii
 New-Item -ItemType Directory -Path (Join-Path $extracted 'Lib/site-packages') -Force | Out-Null
-& (Join-Path $extracted 'python.exe') -c 'import sys,json,ssl,ctypes,sqlite3,importlib.metadata; assert sys.version_info[:3] == (3,14,8); print(sys.version)'
+& (Join-Path $extracted 'python.exe') -c 'import sys,json,ssl,ctypes,sqlite3,importlib.metadata; assert sys.version_info[:3] == (3,15,2); print(sys.version)'
 if ($LASTEXITCODE) { throw 'Portable Python-Laufzeit konnte nicht geprüft werden.' }
 @{ distribution='CPython embeddable'; version=$version; architecture='x64'; archiveSha256=$expected; archiveUrl=$url } |
     ConvertTo-Json | Set-Content (Join-Path $extracted 'runtime.json') -Encoding utf8

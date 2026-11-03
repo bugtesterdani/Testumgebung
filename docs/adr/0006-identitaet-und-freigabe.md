@@ -4,8 +4,7 @@ Stand: 02.10.2026 · Status: angenommen für Etappe 7
 
 ## Anmeldung
 
-* `IIdentityProvider` mit zwei Umsetzungen: `MsalIdentityProvider` (Desktop, MSAL + WAM, Microsoft.Identity.Client
-  und .Broker) und `SimulatedIdentityProvider` (Entwicklungsmodus, Tests). Der Produktcode prüft keine Passwörter.
+* `IIdentityProvider` mit zwei Umsetzungen: `MsalIdentityProvider` (Desktop, MSAL im Systembrowser, Microsoft.Identity.Client) und `SimulatedIdentityProvider` (Entwicklungsmodus, Tests). Der Produktcode prüft keine Passwörter.
 * Interaktiv mit **Kontoauswahl**, nie still mit dem Windows-Konto: Der Prüfplatz läuft unter der Sitzung des Werkers;
   die Rechte sollen der Person gehören, die sich ausdrücklich anmeldet (A01).
 * `SessionService`: Rechte entstehen erst nach Bestätigung; während der Anmeldung und beim Kontowechsel gelten keine
