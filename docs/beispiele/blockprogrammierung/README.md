@@ -14,3 +14,6 @@ Die Bedingung direkt im äußeren **Wenn / Sonst**-Block bearbeiten; für den
 Baukasten **◈ Wert aus Blöcken** öffnen. Im klassischen Editor liegt derselbe
 Ausdruck am Schritt **Bedingung einmal prüfen**.
 Weitere Bedienung: [visuelle Blockprogrammierung](../../visuelle-blockprogrammierung.md).
+
+Dasselbe Beispiel lässt sich über **Knotenansicht** mit Verbindungslinien, Zoom
+und Debugwerten ansehen. [Anschlüsse und Debuggen](../../knotenansicht.md).

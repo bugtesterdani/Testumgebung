@@ -546,6 +546,8 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void Load(TestProject project, string? path = null)
     {
+        GraphWorkspaceId = Guid.NewGuid();
+        OnPropertyChanged(nameof(GraphWorkspaceId));
         Project = project;
         FilePath = path;
         IsDirty = false;

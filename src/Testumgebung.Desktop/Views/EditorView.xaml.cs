@@ -41,10 +41,10 @@ public partial class EditorView : UserControl
         ApplyBlockLayout();
     }
     private void OnBlockLayoutChanged(object? sender, PropertyChangedEventArgs e)
-    { if (e.PropertyName is nameof(EditorViewModel.VisualBlocks) or nameof(EditorViewModel.Project)) ApplyBlockLayout(); }
+    { if (e.PropertyName is nameof(EditorViewModel.VisualBlocks) or nameof(EditorViewModel.GraphView) or nameof(EditorViewModel.Project)) ApplyBlockLayout(); }
     private void ApplyBlockLayout()
     {
-        var visibility = Editor?.VisualBlocks == true ? Visibility.Collapsed : Visibility.Visible;
+        var visibility = Editor is { VisualBlocks: true } or { GraphView: true } ? Visibility.Collapsed : Visibility.Visible;
         foreach (var panel in new FrameworkElement[] { PalettePanel, PropertiesPanel, PaletteSplitter, PropertiesSplitter }) panel.Visibility = visibility;
         ProjectInline.Content = null;
     }

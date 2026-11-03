@@ -146,6 +146,10 @@ Bei ausgeschaltetem Auftragsmodus kann die Software stattdessen eine Kennung zuo
 
 ## 5. Prüfprogramm im Ablaufeditor erstellen
 
+Für einen Ablauf aus verbundenen, frei platzierbaren Blöcken **Knotenansicht** wählen.
+Die [Knoten-Anleitung](../knotenansicht.md) erklärt Anschlüsse, Zoom, Schieben und
+Debuggen mit seitlicher Werteansicht.
+
 Ab Version 1.2.0 kann **Blockansicht** eingeschaltet werden. Ablaufblöcke lassen sich
 verschachtelt zusammenstellen und direkt in den Blöcken bearbeiten. **+ Schritt**
 fügt hinzu; **◈ Wert aus Blöcken** öffnet den eingebetteten Baukasten für

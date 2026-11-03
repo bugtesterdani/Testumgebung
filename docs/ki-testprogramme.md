@@ -372,3 +372,7 @@ Wenn/Dann/Sonst-Vorlage speichert eine lokale Entscheidung über einen
 Eingang im Dann-Zweig dürfen nicht den Sonst-Zweig nachträglich aktivieren.
 [Beispiel im Projektformat](beispiele/blockprogrammierung/bloecke.tproj.json)
 und [Bedienung](visuelle-blockprogrammierung.md).
+
+Die [Knotenansicht](knotenansicht.md) verwendet dieselben strukturierten Gruppen
+und Bausteine. Manuelles Verbinden verschiebt bestehende Knoten im Modell;
+Bildschirmpositionen und Zoom sind kein Bestandteil der Projektdatei.

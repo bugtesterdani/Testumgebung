@@ -223,3 +223,6 @@ Baukasten für Berechnungen, Vergleiche und Logik. Seitliche Einstellungen und
 Palette entfallen. Spezialoptionen bleiben innerhalb der Karte aufklappbar.
 Beide Ansichten bearbeiten denselben Projektstand.
 [Bedienung mit Bildern und Beispielprogramm](../visuelle-blockprogrammierung.md).
+
+Die [Knotenansicht](../knotenansicht.md) ergänzt manuelle Verbindungen, Zoom,
+Verschieben und Debugwerte am bisherigen Haltepunkt vor der Ergebnisweitergabe.

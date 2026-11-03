@@ -103,3 +103,9 @@ Ausdrucksdialog.
 
 Ein ausführbares Beispiel ohne Hardware liegt unter
 [Beispielprogramm](beispiele/blockprogrammierung/README.md).
+
+## Verbundene Knoten statt gestapelter Karten
+
+**Knotenansicht** ergänzt eine Arbeitsfläche mit manuell verbindbaren Anschlüssen,
+Zoom und freiem Verschieben. Beim Debuggen erscheinen die aktuellen Variablenwerte
+des bisherigen Haltepunkts daneben. [Bedienung der Knotenansicht](knotenansicht.md).

@@ -23,3 +23,11 @@ Beispielprogramm ohne Hardware und ohne Produktionsdaten. Die Testbilder werden
 unter `artifacts/verification/visual-flow.png` und `visual-inline-expression.png`
 erzeugt. Der Testprozess rendert Bitmaps auch ohne angeschlossenen Bildschirm;
 diese Testeinstellung verändert nicht die Darstellung der installierten Software.
+
+`18-knotenansicht.png` und `19-knoten-debugger.png`: echte WPF-Aufnahmen der
+Knotenansicht vom 03.11.2026 für Version 1.2.0. Reproduktion über den Test
+`VerifyGraphWorkspace` in `DevelopmentWorkspaceTests`: Arbeitsfläche mit
+manuellen Anschlüssen sowie ein tatsächlich pausierter Simulationslauf mit
+`Spannung = 12,5` nach der Zuweisung, vor Ergebnisweitergabe. Die Quelldateien
+liegen unter `artifacts/verification/graph-overview.png` und `graph-debug.png`.
+Es wurden keine realen Geräte angesprochen.
