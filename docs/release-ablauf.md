@@ -121,6 +121,20 @@ Builds nicht erneut erstellt. Mehrere offene Release-Issues sind ein Fehler, wei
 sonst die gemeinsame Versionsquelle unklar wäre. Ohne erfolgreiches MSIX-Bundle
 wird keine nächste Planung begonnen.
 
+## Release 1.2.1 und Folgeversion 1.2.2
+
+Der Abschluss-PR für **1.2.1** schließt das Planungs-Issue **#53** mit
+`Closes #53`. Das Sicherheitsupdate aus PR #54 ist gemerged und hat die
+erforderlichen PR-Prüfungen bestanden. Nach bestandenem Release-PR-Build und
+Merge nach `main` erzeugt die bestehende Automatik **v1.2.1** am Merge-Commit
+und den signierten Release-Entwurf mit fortlaufender Buildrevision, Paketen,
+Dokumentation, KI-Paket, Quellen, Lizenznachweisen und Release Notes auf GitHub.
+
+Im Issue #53 ist **1.2.2** als Folgeversion vorgemerkt
+(`next-release-version:1.2.2`). Erst nach erfolgreichem offiziellen Paket-Build
+entstehen dafür das nächste bearbeitbare Release-Issue und der passende
+Milestone. Der Release-Entwurf wird anschließend bewusst veröffentlicht.
+
 ## Inhalt der automatisch erzeugten Notes
 
 Die Notes nennen alle gemergten PRs, die zu den Commits seit dem vorherigen
