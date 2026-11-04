@@ -1,8 +1,29 @@
 # Knotenansicht: Verbinden, Zoomen und Debuggen
 
 Ab Version 1.2.0 im Ablaufeditor **Knotenansicht** einschalten. Das Prüfprogramm
-wird als verbundener Graph dargestellt. Parameter, Variablen, Ausdrücke und
-Bibliotheksanschlüsse bleiben direkt in den Blöcken bearbeitbar.
+wird als verbundener Graph dargestellt. Die kompakte Darstellung zeigt pro Block
+nur die wichtigsten Eingaben, beispielsweise Gerät und Zielvariable. Weitere
+Einstellungen bleiben in der normalen Ansicht verfügbar.
+
+## Einfach bearbeiten, Details bei Bedarf öffnen
+
+- Den Namen direkt im Kopf des Blocks ändern. **+ Block** fügt am ausgewählten
+  Block ein; das kleine **+** im Kopf fügt direkt an diesem Block hinzu.
+- Wichtige Werte, Geräte und Zielvariablen direkt im Block eingeben oder auswählen.
+- Der kleine **…**-Knopf neben einem Ausdruck öffnet den Bedingungs-/Ausdruckseditor.
+  Bei Wenn/Sonst wird die eigentliche Entscheidung bearbeitet, mit den Variablen
+  ihres gültigen Kontexts. **Übernehmen** und **Rückgängig** funktionieren wie bisher.
+- **⋯** im Blockkopf oder **Normale Ansicht** öffnet alle Eigenschaften am
+  ausgewählten Block. Dort stehen unter anderem Ressourcen, Wiederholungsregeln,
+  Kommentare, Haltebedingungen, Code und Bibliotheksanschlüsse zur Verfügung.
+- Rechtsklick auf eine freie Stelle des Blocks öffnet Aktionen wie Duplizieren,
+  Verschieben, Aktivieren/Deaktivieren und Löschen.
+
+Dann und Sonst sowie parallele Zweige stehen nebeneinander. Leere Zweige bleiben
+als Einfügeplatz sichtbar; gefüllte Zweige beginnen direkt mit ihrem ersten Block.
+Nach parallelen Zweigen zeigt ein gemeinsamer Knoten das Warten auf alle Zweige.
+Zusammenführungen liegen unter dem längsten Zweig. Das vereinfacht die Darstellung,
+ohne die Gruppen, Variablenbereiche oder Ausführungsregeln des Programms zu verändern.
 
 ![Verbundene Blöcke auf der Arbeitsfläche](handbuch/bilder/18-knotenansicht.png)
 
@@ -13,10 +34,10 @@ Bibliotheksanschlüsse bleiben direkt in den Blöcken bearbeitbar.
 - Eine freie Fläche mit links ziehen oder die **mittlere Maustaste** halten,
   um die Ansicht nach oben, unten, links oder rechts zu schieben.
 - **+**, **−** und **100 %** steuern den Zoom auch ohne Mausrad.
-- **Alles anzeigen** zeigt den gesamten Ablauf als Übersicht.
-- Am Griff **Ziehen zum Verschieben** einen Knoten frei platzieren.
+- **Ansicht → Alles anzeigen** zeigt den gesamten Ablauf als Übersicht.
+- Am kleinen Griff **⋮** einen Knoten frei platzieren.
   Seine Position verändert die Ausführungsreihenfolge nicht.
-- **Automatisch anordnen** stellt eine übersichtliche Anordnung wieder her.
+- **Ansicht → Automatisch anordnen** stellt eine übersichtliche Anordnung wieder her.
 
 Knotenpositionen und Zoom sind Zustand der geöffneten Ansicht. Speichern und
 Rückgängig setzen den Bildausschnitt nicht zurück. Die Projektdatei
@@ -37,7 +58,7 @@ wird entsprechend ersetzt. **Rückgängig** nimmt diese Änderung zurück.
 | Parallelzweig | Ziel als weiteren gleichzeitigen Zweig in die Parallelgruppe aufnehmen |
 | Weiter am Gruppenende | Ziel nach Abschluss dieser Gruppe ausführen |
 
-Neue Blöcke über **+ Schritt** an einem bestehenden Block hinzufügen. Eine
+Neue Blöcke über **+** an einem bestehenden Block hinzufügen. Eine
 Wenn/Sonst-Vorlage hat getrennte Ausgänge. Parallele Gruppen starten ihre
 Kinder gemeinsam; ein eigener Knoten stellt das Warten auf alle Zweige dar.
 Wiederholungen sind als Rücklinie gekennzeichnet. Exit-Gruppen werden als

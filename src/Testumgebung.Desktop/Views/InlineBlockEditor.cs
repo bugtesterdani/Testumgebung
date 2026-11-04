@@ -10,8 +10,9 @@ using Testumgebung.Presentation.ViewModels;
 namespace Testumgebung.Desktop.Views;
 
 /// <summary>Direkte Eingaben an genau einer Ablaufkarte; alle Änderungen laufen über die vorhandenen Undo-Modelle.</summary>
-public sealed class InlineBlockEditor : UserControl
+public sealed partial class InlineBlockEditor : UserControl
 {
+    public bool Compact { get; init; }
     private NodeViewModel? Node => DataContext as NodeViewModel;
     private EditorViewModel? Editor => Host?.DataContext is ShellViewModel shell ? shell.Editor : null;
     private EditorView? Host
@@ -26,6 +27,7 @@ public sealed class InlineBlockEditor : UserControl
     private void Build()
     {
         if (Node is not { InlineProperties: { } properties } node || Editor is not { } editor) return;
+        if (Compact) { BuildCompact(properties); return; }
         var panel = new StackPanel();
         var heading = new DockPanel();
         var actions = new StackPanel { Orientation = Orientation.Horizontal };
@@ -138,9 +140,9 @@ public sealed class InlineBlockEditor : UserControl
     }
     internal NodeViewModel? EditedNode => Node;
     private IReadOnlyList<string> Variables(bool writable) => ExpressionVariableChoices.ForNode(Editor!.Project.Definition, Node!.Id, writable).Select(v => v.Path).ToArray();
-    private void ChooseBlock()
+    private void ChooseBlock(NodeViewModel? target = null)
     {
-        if (Node is not { } node || Editor is not { } editor) return;
+        if ((target ?? Node) is not { } node || Editor is not { } editor) return;
         var menu = new ContextMenu();
         foreach (var category in editor.Palette)
         {

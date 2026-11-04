@@ -658,7 +658,7 @@
                       Background="{StaticResource BorderBrush}" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
 
         <!-- ============================== Projektleiste -->
-        <WrapPanel Grid.ColumnSpan="5" Margin="0,0,0,12">
+        <WrapPanel Grid.ColumnSpan="5" Margin="0,0,0,12" Visibility="{Binding GraphView, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Style="{StaticResource PageTitle}" FontSize="26" Text="Ablaufeditor" />
                 <CheckBox Content="Knotenansicht" IsChecked="{Binding GraphView}" Margin="14,0,0,0" VerticalAlignment="Center" ToolTip="Verbundene Blöcke auf einer frei verschiebbaren Arbeitsfläche"/>

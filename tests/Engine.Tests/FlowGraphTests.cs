@@ -7,6 +7,39 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class FlowGraphTests
 {
+    [Fact]
+    public void Nested_branches_share_a_row_have_disjoint_lanes_and_join_below_the_longest_branch()
+    {
+        var editor = Editor();
+        var parallelId = editor.InsertAt(EditorViewModel.ControlBlocks.Single(p => p.Preset == "parallel"), editor.FindNode("loop")!, 0).Id;
+        var decisionId = editor.InsertAt(EditorViewModel.ControlBlocks.Single(p => p.Preset == "ifelse"), editor.FindNode(parallelId)!, 0).Id;
+        var decision = editor.FindNode(decisionId)!;
+        var then = decision.Children[1].Group!;
+        var otherwise = decision.Children[2].Group!;
+        then.Children.Add(BlockCatalog.Default.Create(BlockCatalog.Wait, "long-first"));
+        then.Children.Add(BlockCatalog.Default.Create(BlockCatalog.Wait, "long-last"));
+        otherwise.Children.Add(BlockCatalog.Default.Create(BlockCatalog.Wait, "short"));
+        editor.FindNode(parallelId)!.Group!.Children.Add(BlockCatalog.Default.Create(BlockCatalog.Wait, "parallel-sibling"));
+        editor.RebuildTree();
+        var before = new ProjectSerializer().Serialize(editor.Project);
+        var graph = new FlowGraphLayout(new Dictionary<string, double> { ["long-first"] = 260 }).Build(editor.Nodes);
+        GraphCard Card(string id) => graph.Cards.Single(c => c.Id == id);
+
+        Assert.Equal(Card("node:" + decisionId).Y, Card("node:parallel-sibling").Y);
+        Assert.Equal(Card("node:long-first").Y, Card("node:short").Y);
+        Assert.NotEqual(Card("node:long-first").X, Card("node:short").X);
+        Assert.True(Card("end:" + decisionId).Y > Card("node:long-last").Y + Card("node:long-last").Height);
+        Assert.Contains(graph.Links, l => l.From == "node:long-last" && l.To == "end:" + decisionId);
+        Assert.DoesNotContain(graph.Cards, c => c.Id == "end:" + then.Id || c.Id == "end:" + otherwise.Id);
+        Assert.DoesNotContain(graph.Cards, c => c.Id == "node:" + then.Id || c.Id == "node:" + otherwise.Id);
+        foreach (var left in graph.Cards)
+        foreach (var right in graph.Cards.Where(c => c.Id != left.Id))
+            Assert.False(left.X < right.X + right.Width && right.X < left.X + left.Width && left.Y < right.Y + right.Height && right.Y < left.Y + left.Height,
+                $"Cards {left.Id} and {right.Id} overlap.");
+        Assert.Equal(before, new ProjectSerializer().Serialize(editor.Project));
+        Assert.Equal(360, FlowGraphLayout.CardWidth);
+    }
+
     private static EditorViewModel Editor()
     {
         var loop = new GroupDefinition("loop", "Loop");
@@ -38,7 +71,8 @@ public sealed class FlowGraphTests
         Assert.Equal(before, serializer.Serialize(editor.Project));
         Assert.Equal(400, graph.Cards.Single(n => n.Id == "node:a").Height);
         Assert.Contains(graph.Links, l => l.From == "node:a" && l.To == "node:b");
-        Assert.Contains(graph.Links, l => l.From == "end:start" && l.To == "node:loop");
+        Assert.Contains(graph.Links, l => l.From == "node:start" && l.To == "node:loop");
+        Assert.DoesNotContain(graph.Cards, c => c.Id == "end:start" || c.Id == "end:end");
         Assert.Equal(graph.Cards.Count, graph.Cards.Select(n => n.Id).Distinct().Count());
         Assert.All(graph.Links, l => { Assert.Contains(graph.Cards, n => n.Id == l.From); Assert.Contains(graph.Cards, n => n.Id == l.To); });
         Assert.All(graph.Cards, n => { Assert.True(n.X >= 0); Assert.True(n.Y >= 0); Assert.True(n.Height > 0); });
