@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Speichert Release-Pakete, Zustandswechsel und Audit-Einträge in der Prüfdatenbank.
  */
@@ -16,6 +16,7 @@ namespace Testumgebung.DatabaseAdapters;
 /// </summary>
 public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
 {
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Hash, Testumgebung.Persistence.Programs.SourceVersion? Source)> _sources = new();
     private const string Columns = "release_id, project_name, version, state, package_sha256, package_size, created_by, created_utc, " +
                                    "reviewed_by, reviewed_utc, released_by, released_utc, archived_utc, review_report";
 
@@ -32,6 +33,17 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
             list.Add(new ReleaseInfo(
                 Str(r, 0)!, Str(r, 1)!, Str(r, 2)!, ReleaseStateText.Parse(Str(r, 3)!), Str(r, 4)!, Lng(r, 5) ?? 0,
                 Str(r, 6)!, Time(Lng(r, 7))!.Value, Str(r, 8), Time(Lng(r, 9)), Str(r, 10), Time(Lng(r, 11)), Time(Lng(r, 12)), Str(r, 13)));
+        }
+        await r.DisposeAsync().ConfigureAwait(false);
+        for (var i = 0; i < list.Count; i++)
+        {
+            var info = list[i];
+            if (!_sources.TryGetValue(info.ReleaseId, out var cached) || cached.Hash != info.PackageSha256)
+            {
+                var bytes = await GetPackageAsync(info.ReleaseId, cancellationToken).ConfigureAwait(false);
+                cached = (info.PackageSha256, ReleasePackage.ReadSource(bytes)); _sources[info.ReleaseId] = cached;
+            }
+            list[i] = info with { Source = cached.Source };
         }
         return list.OrderByDescending(x => x.CreatedAt).ToList();
     }

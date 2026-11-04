@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Stellt Release-Lebenszyklus, Entwicklungsprüfung, Freigabe und Prüfplatzversionen dar.
  */
@@ -67,9 +67,12 @@ public sealed partial class ReleasesViewModel : ObservableObject
                 if (e.PropertyName == nameof(StationViewModel.AvailablePrograms)) _ui.Post(Rebuild);
                 if (e.PropertyName is nameof(StationViewModel.RunningVersionText) or nameof(StationViewModel.IsRunning)) _ui.Post(RebuildStations);
             };
+        Sources = new ProgramSourcesViewModel(hub, editor, session, ui, stations);
         Rebuild();
         RebuildStations();
     }
+
+    public ProgramSourcesViewModel Sources { get; }
 
     public RelayCommand CreateDraftCommand { get; }
     public RelayCommand ReviewCommand { get; }
@@ -118,11 +121,15 @@ public sealed partial class ReleasesViewModel : ObservableObject
             BuildStages();
             _ = LoadPackageAsync(value);
             RaiseCommands();
-            OnPropertiesChanged(nameof(SelectedTitle), nameof(ReviewReport), nameof(CanConfirm), nameof(ReleaseByText), nameof(CompareTargets));
+            OnPropertiesChanged(nameof(SelectedTitle), nameof(SelectedSourceText), nameof(ReviewReport), nameof(CanConfirm), nameof(ReleaseByText), nameof(CompareTargets));
         }
     }
 
     public string SelectedTitle => _selected is null ? "Kein Release gewählt" : $"Paket-Inhalt – v{_selected.Version} ({_selected.StateText})";
+
+    public string SelectedSourceText => _selected?.Source is { } source
+        ? $"{source.Source.Provider} · {source.Source.Repository} · {source.Source.Line} · {source.Source.ProjectPath}\nRevision: {source.Revision} · Repository-Identität: {source.RepositoryIdentity}"
+        : "Lokaler Entwurf / ältere Freigabe ohne Remote-Quellnachweis";
 
     public string? ReviewReport => _selected?.ReviewReport;
 
@@ -184,6 +191,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
     {
         await _hub.RefreshAsync().ConfigureAwait(false);
         await LoadAuditAsync().ConfigureAwait(false);
+        _ui.Post(() => _ = Sources.RefreshAsync());
     }
 
     public async Task<ReleaseInfo?> CreateDraftAsync()

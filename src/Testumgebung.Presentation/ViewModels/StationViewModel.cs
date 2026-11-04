@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Vermittelt zwischen Engine-Ereignissen, Werkerinteraktion und UI-Zustand eines Prüfplatzes.
  */
@@ -207,7 +207,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         _projectSource = projectSource;
         _resources = resources;
         _ui = ui ?? ImmediateDispatcher.Instance;
-        if (releases is not null) releases.Changed += () => _ui.Post(() => OnPropertiesChanged(nameof(ReleasedVersionText), nameof(HasRelease), nameof(AvailablePrograms)));
+        if (releases is not null) releases.Changed += () => _ui.Post(() => { OnPropertiesChanged(nameof(ReleasedVersionText), nameof(HasRelease), nameof(AvailablePrograms)); UpdateProgramVersionWarning(); });
         if (coordinator is not null) coordinator.SetupChanged += () => _ui.Post(RefreshAvailablePrograms);
         _serializer = serializer ?? new ProjectSerializer();
         _clock = clock ?? SystemClock.Instance;
@@ -317,6 +317,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     TestDefinition? IVersionSource.NextDefinition(TestDefinition current)
     {
         if (_releases is null || _runIsDraft || _runningProject is null) return null;
+        // Central source releases are bound to the whole order session, never swapped between serial numbers.
+        if (_releases.Catalog is not null) return null;
         var info = _releases.CurrentInfo(current.Name);
         if (info is null || info.ReleaseId == _runningReleaseId || info.ReleaseId == _rejectedReleaseId) return null;
         if (_releases.GetReleased(current.Name) is not { } next) return null;
@@ -377,6 +379,9 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void QueueStorage(ResultRun recorded, StorageResolver resolver)
     {
+        if (ActiveRelease is { } release)
+            recorded.Application += $" · Release-ID={release.ReleaseId} · Paket-SHA256={release.PackageSha256}" +
+                (release.Source is { } source ? $" · {source.Source.Provider}={source.Revision} · Repository={source.RepositoryIdentity} · Linie={source.Source.Line}" : "");
         var task = StoreResultAsync(recorded, resolver);
         lock (_storageGate) _storageTasks.Add(task);
         _ = task.ContinueWith(t => { lock (_storageGate) _storageTasks.Remove(t); },
@@ -533,23 +538,22 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             }
             else
             {
+                await _releases.RefreshAsync().ConfigureAwait(true);
                 var name = _projectSource().Definition.Name;
-                if (_releases.GetReleased(name) is not { } released)
+                var resolved = _releases.ResolveStation(ProgramStationId, name);
+                if (resolved is not null)
                 {
-                    await _releases.RefreshAsync().ConfigureAwait(true);
-                    if (_releases.GetReleased(name) is not { } again)
-                    {
-                        Error = $"Keine freigegebene Version von „{name}“. Im Werkerbetrieb laufen nur freigegebene Versionen" +
-                                " – Entwickler: Releases → Entwurf erstellen, prüfen, freigeben (oder „Entwurf testen“)."
-                                + (_releases.Error is { } e ? " " + e : "");
-                        return;
-                    }
-                    released = again;
+                    ProgramVersionWarning = resolved.Warning;
+                    (release, project) = await _releases.OpenResolvedAsync(resolved.Release).ConfigureAwait(true);
                 }
-                (release, project) = released;
+                else
+                {
+                    var released = _releases.GetReleased(name) ?? throw new ReleasePackageException($"Keine freigegebene Version von „{name}“. Zentrales Standardprogramm oder Platzzuordnung in Releases einrichten.");
+                    (release, project) = released;
+                }
             }
         }
-        catch (Exception ex) when (ex is ProjectFormatException or ReleasePackageException)
+        catch (Exception ex) when (ex is ProjectFormatException or ReleasePackageException or InvalidOperationException)
         {
             Error = ex.Message;
             return;

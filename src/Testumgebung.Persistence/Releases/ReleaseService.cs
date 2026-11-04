@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Prüft Akteur, Rechte und Zustandsübergänge vor Erstellung und Freigabe von Releases.
  */
@@ -24,8 +24,9 @@ public sealed record ReviewCheck(string Name, bool Passed, string Detail);
 /// die Freigabe erfordert „Freigeben“ und eine ausdrückliche Bestätigung. Beim Freigeben wird der Hash des gespeicherten
 /// Pakets nochmals geprüft; die bisher freigegebene Version desselben Ablaufs wird archiviert. Alles wird auditiert.
 /// </summary>
-public sealed class ReleaseService(IReleaseStore store, IClock? clock = null, ProjectSerializer? serializer = null)
+public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = null, ProjectSerializer? serializer = null)
 {
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> _verifiedPackages = new();
     private readonly IClock _clock = clock ?? SystemClock.Instance;
     private readonly ProjectSerializer _serializer = serializer ?? new ProjectSerializer();
 
@@ -65,10 +66,11 @@ public sealed class ReleaseService(IReleaseStore store, IClock? clock = null, Pr
     /// <summary>Paket laden und vollständig prüfen (Paket-Hash und alle Bereichshashes).</summary>
     public async Task<OpenedPackage> OpenAsync(ReleaseInfo info, CancellationToken ct = default)
     {
-        var bytes = await Store.GetPackageAsync(info.ReleaseId, ct).ConfigureAwait(false);
+        var bytes = await PackageBytesAsync(info, ct).ConfigureAwait(false);
         var opened = ReleasePackage.Open(bytes, _serializer);
         if (ReleasePackage.Sha256(bytes) != info.PackageSha256)
             return opened with { Problems = [.. opened.Problems, "Paket-Hash stimmt nicht mit dem Release überein – Paket verändert."] };
+        if (opened.IsIntact) _verifiedPackages[Store.Name + "\n" + info.PackageSha256] = bytes;
         return opened;
     }
 
@@ -81,7 +83,11 @@ public sealed class ReleaseService(IReleaseStore store, IClock? clock = null, Pr
         return (info, opened.Project);
     }
 
-    public async Task<ReleaseInfo> CreateDraftAsync(TestProject project, string version, Actor actor, CancellationToken ct = default)
+    public Task<ReleaseInfo> CreateDraftAsync(TestProject project, string version, Actor actor, CancellationToken ct = default)
+        => CreateDraftCoreAsync(project, version, actor, null, null, ct);
+
+    private async Task<ReleaseInfo> CreateDraftCoreAsync(TestProject project, string version, Actor actor,
+        Programs.SourceVersion? source, byte[]? archive, CancellationToken ct)
     {
         Require(actor, UserRights.Develop, "Einen Entwurf anlegen");
         version = version.Trim();
@@ -96,9 +102,9 @@ public sealed class ReleaseService(IReleaseStore store, IClock? clock = null, Pr
         copy.Definition.Version = version;
         var now = _clock.Now;
         var environment = RequireRuntimeSnapshot ? await RuntimeSnapshot.CaptureAsync(copy, CodeRuntime, ct).ConfigureAwait(false) : null;
-        var (bytes, manifest) = ReleasePackage.Build(copy, actor.User, now, _serializer, environment);
+        var (bytes, manifest) = ReleasePackage.Build(copy, actor.User, now, _serializer, environment, source, archive);
         var info = new ReleaseInfo(Guid.NewGuid().ToString("N"), copy.Definition.Name, version, ReleaseState.Draft,
-            ReleasePackage.Sha256(bytes), bytes.Length, actor.User, now);
+            ReleasePackage.Sha256(bytes), bytes.Length, actor.User, now, Source: source);
         await Store.CreateAsync(info, bytes, new AuditDraft(now, actor.User, "Entwurf erstellt",
             $"{info.ProjectName} v{version} · Paket {info.ShortHash} · {manifest.Entries.Count} Bestandteile", info.ReleaseId), ct).ConfigureAwait(false);
         Changed?.Invoke();
@@ -152,6 +158,7 @@ public sealed class ReleaseService(IReleaseStore store, IClock? clock = null, Pr
         if (info.State != ReleaseState.Review) throw new ReleaseRuleException($"Nur geprüfte Pakete können freigegeben werden (Zustand: {info.StateText}).");
         var opened = await OpenAsync(info, ct).ConfigureAwait(false);
         if (!opened.IsIntact) throw new ReleaseRuleException("Paket ist nicht unversehrt: " + string.Join("; ", opened.Problems));
+        await VerifyRemoteReleaseAsync(info, opened, ct).ConfigureAwait(false);
         if (RequireRuntimeSnapshot || opened.Environment is not null)
         {
             var differences = await VerifyEnvironmentAsync(info, ct).ConfigureAwait(false);

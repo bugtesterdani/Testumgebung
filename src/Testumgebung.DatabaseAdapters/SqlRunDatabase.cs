@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Schreibt einen Prüflingslauf transaktional; Run-ID, Messwerte und Kurven gehören zu derselben Speicherung.
  */
@@ -485,7 +485,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
         }
     }
 
-    private async Task<DbConnection> OpenAsync(CancellationToken cancellationToken)
+    internal async Task<DbConnection> OpenAsync(CancellationToken cancellationToken)
     {
         var connection = _factory.CreateConnection() ?? throw new InvalidOperationException("Provider liefert keine Verbindung.");
         connection.ConnectionString = _connectionString;

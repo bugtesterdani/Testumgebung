@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Kapselt providerspezifisches SQL und Migrationen hinter einem gemeinsamen logischen Datenmodell.
  */
@@ -56,6 +56,11 @@ public abstract class SqlDialect
         (2, Version2()),
         (3, [$"ALTER TABLE tu_runs ADD order_id {Key}", "CREATE INDEX ix_tu_runs_order ON tu_runs (order_id)"]),
     ];
+
+    /// <summary>Separate opt-in schema, additive to the existing result schema.</summary>
+    public string CreateProgramCatalog => Provider == DatabaseProvider.SqlServer
+        ? $"IF OBJECT_ID(N'tu_program_catalog', N'U') IS NULL CREATE TABLE tu_program_catalog (version {Big} NOT NULL PRIMARY KEY, generation {Big} NOT NULL, payload {Text} NOT NULL)"
+        : $"CREATE TABLE IF NOT EXISTS tu_program_catalog (version {Big} NOT NULL PRIMARY KEY, generation {Big} NOT NULL, payload {Text} NOT NULL){TableSuffix}";
 
     public int LatestVersion => Migrations[^1].Version;
 

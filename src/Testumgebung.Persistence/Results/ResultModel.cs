@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Beschreibt gespeicherte Läufe, Ereignisse, Kurven und Anhänge unabhängig von Dateiformat und Anzeige.
  */
@@ -68,7 +68,7 @@ public sealed class ResultRun
     /// <summary>Für welches Ziel gefiltert wurde („Ergebnisdatei“, „Datenbank“, leer = ungefiltert).</summary>
     public string FilteredFor { get; init; } = "";
 
-    public string Application { get; init; } = "Testumgebung";
+    public string Application { get; set; } = "Testumgebung";
 
     public RunStatus Status => new(Rating, OperatorAbort);
 

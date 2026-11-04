@@ -1,4 +1,4 @@
-# Testumgebung (Etappen 0–10, Pilotvorbereitung, Ausbau)
+﻿# Testumgebung (Etappen 0–10, Pilotvorbereitung, Ausbau)
 
 GitHub-Einrichtung, automatische Wiki-Dokumentation und signierte MSIX-Releases: [GitHub-Anleitung](docs/github.md). Die Dokumentation wird aus `docs/` erzeugt; das Repository bleibt zunächst privat.
 
@@ -343,6 +343,8 @@ C++-Zeilen-Stepping mit Variablen – C++ bei vorhandener Toolchain, „bei Eint
 Installierbares MSIX-Bundle: `Release-MSIX.cmd` starten und eine neue Version eingeben. Anleitung: [MSIX-Release](docs/msix-release.md).
 
 Eigene C#-Bibliotheken: [Handbuch zur DLL-Schnittstelle, Auftragsauswertung und Prüffunktionen](docs/handbuch-csharp-dll.md).
+
+Versionierte Prüfprogramme: [Git/SVN, zentrale Freigaben und Platzzuordnung](docs/versionierte-pruefprogramme.md).
 
 Ausführliche Bedienung mit Bildern: [Benutzerhandbuch](docs/handbuch/benutzerhandbuch.md).
 

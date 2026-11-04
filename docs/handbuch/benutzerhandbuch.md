@@ -1,4 +1,4 @@
-# Benutzerhandbuch Testumgebung
+﻿# Benutzerhandbuch Testumgebung
 
 Eigene Geräte lassen sich im Projekt definieren: [Anleitung und Beispiel](../eigene-geraete.md).
 
@@ -578,3 +578,8 @@ Für eine Fehleranalyse festhalten: Softwareversion, Prüfplatz, Projekt und Rel
 
 Das Handbuch benötigt den zugehörigen Ordner **bilder**. Beim Weitergeben die Markdown-Datei und diesen Ordner zusammen kopieren. Relative Bild- und Dokumentlinks sind für die Projektablage ausgelegt; die vollständige Dokumentation wird am einfachsten als gemeinsamer docs-Ordner verteilt.
 
+
+
+## Versionierte Prüfprogramme mit Git/SVN
+
+Unter **Releases → Programmquellen & Versionen …** werden zentrale Quellen, das Standardprogramm und lokale Platzfestsetzungen eingerichtet. Der Programmkatalog wird ausdrücklich über den Datenbank-Upgrade-Button aktiviert. Lokale Entwicklung bleibt von der zentralen Freigabe getrennt; endgültige neue Freigaben benötigen danach einen Remote-Commit beziehungsweise eine SVN-Revision. Die vollständige Einrichtung, Migration und Bedienung beschreibt [Versionierte Prüfprogramme](../versionierte-pruefprogramme.md).
