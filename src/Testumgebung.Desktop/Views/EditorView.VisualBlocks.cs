@@ -16,6 +16,17 @@ public partial class EditorView
     private PaletteItem? _paletteDrag;
     private sealed record ExpressionField(string Label, Func<string> Read, Action<string> Write, VarType? Expected, bool VariableOnly, bool AllowEmpty);
 
+    internal void OpenGraphExpression(FrameworkElement field) => OnExpressionBuilder(field, new RoutedEventArgs());
+
+    internal void ShowGraphDetails(NodeViewModel node)
+    {
+        FlushPendingInputs(this);
+        if (Editor is not { } editor || editor.FindNode(node.Id) is not { } current) return;
+        editor.SelectedNode = current;
+        editor.VisualBlocks = false;
+        editor.GraphView = false;
+    }
+
     internal void OpenInlineExpression(InlineBlockEditor block, Expander slot)
     {
         FlushPendingInputs(block);

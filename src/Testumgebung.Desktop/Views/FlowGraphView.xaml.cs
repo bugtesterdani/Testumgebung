@@ -22,6 +22,7 @@ public partial class FlowGraphView : UserControl
     private readonly Dictionary<string, Border> _cards = [];
     private readonly Dictionary<string, StackPanel> _ports = [];
     private readonly Dictionary<string, InlineBlockEditor> _fields = [];
+    private readonly Dictionary<string, TextBox> _titles = [];
     private readonly Dictionary<string, TextBlock> _junctionLabels = [];
     private readonly Dictionary<string, Point> _positions = [];
     private readonly Dictionary<string, double> _heights = [];
@@ -90,7 +91,7 @@ public partial class FlowGraphView : UserControl
         { _project = projectKey; _positions.Clear(); _heights.Clear(); Camera.Reset(); _lastPause = null; _initialView = true; }
         var nodes = editor.AllNodes().ToArray();
         if (!_nodes.SequenceEqual(nodes))
-        { _nodes = nodes; foreach (var card in _cards.Values) World.Children.Remove(card); _cards.Clear(); _ports.Clear(); _fields.Clear(); _junctionLabels.Clear(); _highlighted = null; _lastPause = null; }
+        { _nodes = nodes; foreach (var card in _cards.Values) World.Children.Remove(card); _cards.Clear(); _ports.Clear(); _fields.Clear(); _titles.Clear(); _junctionLabels.Clear(); _highlighted = null; _lastPause = null; }
         Reflow();
         if (_initialView && Scene?.Cards.FirstOrDefault() is { } first && Viewport.ActualWidth > 0)
         {
@@ -115,8 +116,9 @@ public partial class FlowGraphView : UserControl
                 var position = _positions.GetValueOrDefault(item.Id, new Point(item.X + 40, item.Y + 40));
                 Canvas.SetLeft(border, position.X); Canvas.SetTop(border, position.Y);
                 border.IsEnabled = true;
-                border.Background = (Brush)new BrushConverter().ConvertFromString(item.Owner.Group?.Parallel == true ? "#EBDFFF" : item.Owner.BlockColor)!;
+                border.Background = CardBrush(item.Owner);
                 if (_fields.TryGetValue(item.Id, out var fields)) fields.IsEnabled = !IsRunning;
+                if (_titles.TryGetValue(item.Id, out var title)) title.IsReadOnly = IsRunning;
                 RenderPorts(item);
             }
             World.Width = Scene.Width + 100; World.Height = Scene.Height + 100;
@@ -127,27 +129,32 @@ public partial class FlowGraphView : UserControl
     private Border MakeCard(GraphCard item)
     {
         var panel = new StackPanel();
-        panel.Children.Add(MakeHeading(item));
+        if (!item.Junction) panel.Children.Add(MakeHeading(item));
         if (item.Owner.Note is { } note) panel.Children.Add(new TextBlock { Text = "Definition · " + note, FontSize = 11, Margin = new Thickness(10, 4, 10, 4), TextWrapping = TextWrapping.Wrap });
         if (item.Junction)
         {
-            var label = new TextBlock { Text = item.Label, FontWeight = FontWeights.SemiBold, Margin = new Thickness(10), TextWrapping = TextWrapping.Wrap };
+            var label = new TextBlock { Text = item.Label, FontWeight = FontWeights.SemiBold, FontSize = 12, Margin = new Thickness(8, 4, 8, 2), TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
             _junctionLabels[item.Id] = label; panel.Children.Add(label);
         }
         else
         {
-            var fields = new InlineBlockEditor { DataContext = item.Owner, Margin = new Thickness(10, 4, 10, 0) }; _fields[item.Id] = fields; panel.Children.Add(fields);
+            var fields = new InlineBlockEditor { Compact = true, DataContext = item.Owner, Margin = new Thickness(9, 2, 9, 0) }; _fields[item.Id] = fields; panel.Children.Add(fields);
             var error = new TextBlock { Foreground = Brushes.Firebrick, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(10, 0, 10, 0) };
             error.SetBinding(TextBlock.TextProperty, new Binding("Diagnostic") { Source = item.Owner }); panel.Children.Add(error);
         }
         var ports = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 6, 0, -8) };
         panel.Children.Add(ports); _ports[item.Id] = ports;
-        var border = new Border { Width = item.Width, Background = (Brush)new BrushConverter().ConvertFromString(item.Owner.Group?.Parallel == true ? "#EBDFFF" : item.Owner.BlockColor)!, BorderBrush = Brushes.SlateGray,
+        var border = new Border { Width = item.Width, Background = CardBrush(item.Owner), BorderBrush = Brushes.SlateGray,
             BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(10), Child = panel, Tag = item, DataContext = item.Owner };
         var appearance = new Style(typeof(Border));
         var inactive = new DataTrigger { Binding = new Binding("IsInactive"), Value = true };
         inactive.Setters.Add(new Setter(OpacityProperty, .5)); appearance.Triggers.Add(inactive); border.Style = appearance;
         border.PreviewMouseLeftButtonDown += (_, _) => { if (Editor is { } editor) editor.SelectedNode = item.Owner; };
+        border.MouseRightButtonUp += (_, e) =>
+        {
+            if (IsRunning || IsInput(e.OriginalSource as DependencyObject) || !_fields.TryGetValue(item.Id, out var fields)) return;
+            fields.ShowGraphActions(); e.Handled = true;
+        };
         border.SetBinding(Border.BorderBrushProperty, new Binding("RunMarker") { Converter = new GraphMarkerBrush() });
         border.SizeChanged += (_, _) =>
         {
@@ -168,7 +175,7 @@ public partial class FlowGraphView : UserControl
     }
     private UIElement MakeHeading(GraphCard item)
     {
-        var grip = new Thumb { Height = 25, Cursor = Cursors.SizeAll, ToolTip = "Knoten verschieben (ändert keine Reihenfolge)", DataContext = item.Owner };
+        var grip = new Thumb { Height = 26, Width = 16, Cursor = Cursors.SizeAll, ToolTip = "Knoten verschieben (ändert keine Reihenfolge)", DataContext = item.Owner };
         grip.Template = GripTemplate();
         grip.DragStarted += (_, _) => _nodeDragPoint = Mouse.GetPosition(Viewport);
         grip.DragDelta += (_, _) =>
@@ -178,19 +185,30 @@ public partial class FlowGraphView : UserControl
             _nodeDragPoint = point;
         };
         grip.PreviewMouseLeftButtonDown += (_, _) => { if (Editor is { } editor) editor.SelectedNode = item.Owner; };
-        var heading = new DockPanel();
+        var heading = new DockPanel { Margin = new Thickness(3, 3, 3, 0) };
         var breakpoint = new Button { Command = Editor!.ToggleBreakpointCommand, CommandParameter = item.Owner, DataContext = item.Owner,
-            ToolTip = "Nach diesem Block halten, vor Ergebnisweitergabe (F9)", Padding = new Thickness(7, 1, 7, 1), Height = 25 };
+            ToolTip = "Nach diesem Block halten, vor Ergebnisweitergabe (F9)", Padding = new Thickness(3, 0, 3, 0), Height = 24 };
         var style = new Style(typeof(Button), (Style)FindResource("ToolButton")); style.Setters.Add(new Setter(ContentControl.ContentProperty, "○"));
         var active = new DataTrigger { Binding = new Binding("HasBreakpoint"), Value = true };
         active.Setters.Add(new Setter(ContentControl.ContentProperty, "●")); active.Setters.Add(new Setter(Control.ForegroundProperty, Brushes.Firebrick)); style.Triggers.Add(active);
         breakpoint.Style = style;
-        DockPanel.SetDock(breakpoint, Dock.Right); heading.Children.Add(breakpoint); heading.Children.Add(grip); return heading;
+        DockPanel.SetDock(breakpoint, Dock.Right); heading.Children.Add(breakpoint);
+        AddHeadingButton(heading, "⋯", "Details in normaler Ansicht öffnen", () => FindEditorHost()?.ShowGraphDetails(item.Owner));
+        AddHeadingButton(heading, "+", "Block hinzufügen", () => { if (!IsRunning && _fields.TryGetValue(item.Id, out var fields)) fields.AddGraphBlock(); });
+        DockPanel.SetDock(grip, Dock.Left); heading.Children.Add(grip);
+        var icon = new TextBlock { Style = (Style)FindResource("Icon"), FontSize = 15, Width = 23, VerticalAlignment = VerticalAlignment.Center };
+        icon.SetBinding(TextBlock.TextProperty, new Binding("Icon") { Source = item.Owner, Converter = (IValueConverter)FindResource("NodeGlyph") });
+        DockPanel.SetDock(icon, Dock.Left); heading.Children.Add(icon);
+        var title = new TextBox { FontSize = 15, FontWeight = FontWeights.SemiBold, Background = Brushes.Transparent, BorderThickness = new Thickness(0), Padding = new Thickness(2), MinWidth = 50 };
+        title.SetBinding(TextBox.TextProperty, new Binding("InlineProperties.Name") { Source = item.Owner, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.LostFocus });
+        System.Windows.Automation.AutomationProperties.SetName(title, "Blockname");
+        _titles[item.Id] = title;
+        heading.Children.Add(title); return heading;
     }
     private ControlTemplate GripTemplate()
     {
         var root = new FrameworkElementFactory(typeof(Border)); root.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromArgb(18, 30, 60, 100)));
-        var label = new FrameworkElementFactory(typeof(TextBlock)); label.SetValue(TextBlock.TextProperty, "⋮⋮   Ziehen zum Verschieben"); label.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Center); label.SetValue(TextBlock.FontSizeProperty, 11d); root.AppendChild(label);
+        var label = new FrameworkElementFactory(typeof(TextBlock)); label.SetValue(TextBlock.TextProperty, "⋮"); label.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Center); label.SetValue(TextBlock.FontSizeProperty, 16d); root.AppendChild(label);
         return new ControlTemplate(typeof(Thumb)) { VisualTree = root };
     }
     internal void MoveCard(string id, double dx, double dy)
@@ -210,7 +228,8 @@ public partial class FlowGraphView : UserControl
         {
             var socket = new GraphSocket(item.Owner, kind);
             var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(8, 0, 8, 0) };
-            row.Children.Add(new TextBlock { Text = SocketLabel(kind), FontSize = 11, Margin = new Thickness(0, 0, 5, 0), VerticalAlignment = VerticalAlignment.Center });
+            if (kind is GraphSocketKind.Then or GraphSocketKind.Else)
+                row.Children.Add(new TextBlock { Text = SocketLabel(kind), FontSize = 11, Margin = new Thickness(0, 0, 5, 0), VerticalAlignment = VerticalAlignment.Center });
             var circle = SocketCircle(socket, "Ausgang zum Eingang eines Blocks ziehen");
             circle.MouseLeftButtonDown += OnOutputDown; row.Children.Add(circle); panel.Children.Add(row);
         }
@@ -231,7 +250,7 @@ public partial class FlowGraphView : UserControl
     { GraphSocketKind.Inside => "In Gruppe", GraphSocketKind.Then => "Dann", GraphSocketKind.Else => "Sonst", GraphSocketKind.Parallel => "Parallelzweig", _ => "Weiter" };
     private static Ellipse SocketCircle(object tag, string hint) => new() { Width = 16, Height = 16, Fill = Brushes.White, Stroke = Brushes.RoyalBlue, StrokeThickness = 2, Tag = tag, ToolTip = hint, Cursor = Cursors.Cross };
     private void ApplyCamera()
-    { World.RenderTransform = new MatrixTransform(Camera.Zoom, 0, 0, Camera.Zoom, Camera.X, Camera.Y); ZoomText.Text = $"{Camera.Zoom * 100:0} %"; }
+    { World.RenderTransform = new MatrixTransform(Camera.Zoom, 0, 0, Camera.Zoom, Camera.X, Camera.Y); ZoomText.Content = $"{Camera.Zoom * 100:0} %"; }
     private void OnZoomIn(object sender, RoutedEventArgs e) => Zoom(Camera.Zoom * 1.2, new(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
     private void OnZoomOut(object sender, RoutedEventArgs e) => Zoom(Camera.Zoom / 1.2, new(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
     private void OnReset(object sender, RoutedEventArgs e) => Zoom(1, new Point(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
@@ -259,8 +278,6 @@ public partial class FlowGraphView : UserControl
         if (e.Key != Key.F9 || IsInput(e.OriginalSource as DependencyObject) || Editor?.SelectedNode is not { } node) return;
         Editor.ToggleBreakpointCommand.Execute(node); e.Handled = true;
     }
-    private void OnProjectExpanded(object sender, RoutedEventArgs e)
-    { if (ReferenceEquals(e.OriginalSource, sender) && Editor is { } editor) ProjectOptions.Content = new ProjectPropertiesViewModel(editor); }
 }
 
 internal sealed class GraphMarkerBrush : IValueConverter

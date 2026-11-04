@@ -8,21 +8,24 @@
  </UserControl.InputBindings>
  <DockPanel>
   <WrapPanel DockPanel.Dock="Top" Margin="4,0,4,8">
-   <ComboBox ItemsSource="{Binding Stations}" SelectedItem="{Binding SelectedStation}" DisplayMemberPath="Name" Width="150" ToolTip="Prüfplatz für Debugwerte"/>
+   <Button Content="+ Block" Click="OnAddBlock" Style="{StaticResource ToolButton}"/>
+   <Button Content="Rückgängig" Command="{Binding Editor.UndoCommand}" Style="{StaticResource ToolButton}"/>
+   <Button Content="Speichern" Command="{Binding Editor.SaveCommand}" Style="{StaticResource ToolButton}"/>
+   <Button Content="Simulation starten" Command="{Binding StartSimulationCommand}" Style="{StaticResource PrimaryButton}" Margin="8,0"/>
+   <ComboBox ItemsSource="{Binding Stations}" SelectedItem="{Binding SelectedStation}" DisplayMemberPath="Name" Width="120" ToolTip="Prüfplatz für Simulation und Debugwerte"/>
    <Button Content="−" Click="OnZoomOut" Style="{StaticResource ToolButton}" ToolTip="Herauszoomen"/>
-   <TextBlock x:Name="ZoomText" Text="100 %" VerticalAlignment="Center" Margin="8,0"/>
+   <Button x:Name="ZoomText" Content="100 %" Click="OnReset" Style="{StaticResource ToolButton}" ToolTip="Zoom auf 100 % zurücksetzen"/>
    <Button Content="+" Click="OnZoomIn" Style="{StaticResource ToolButton}" ToolTip="Hineinzoomen"/>
-   <Button Content="100 %" Click="OnReset" Style="{StaticResource ToolButton}"/>
-   <Button Content="Alles anzeigen" Click="OnFit" Style="{StaticResource ToolButton}"/>
-   <Button Content="Automatisch anordnen" Click="OnArrange" Style="{StaticResource ToolButton}"/>
-   <Button Content="Simulation starten" Command="{Binding StartSimulationCommand}" Style="{StaticResource PrimaryButton}" Margin="12,0,4,0"/>
+   <Button Content="Ansicht ▾" Click="OnViewMenu" Style="{StaticResource ToolButton}"/>
+   <Button Content="Normale Ansicht" Click="OnNormalView" Style="{StaticResource ToolButton}" ToolTip="Ausgewählten Block mit allen Detailoptionen bearbeiten"/>
+  </WrapPanel>
+  <WrapPanel DockPanel.Dock="Top" Margin="4,0,4,6" Visibility="{Binding SelectedStation.IsRunning, Converter={StaticResource BoolVis}}">
    <Button Content="Fortsetzen · F5" Command="{Binding SelectedStation.Debug.ContinueCommand}" Style="{StaticResource ToolButton}"/>
    <Button Content="Schritt · F11" Command="{Binding SelectedStation.Debug.StepIntoCommand}" Style="{StaticResource ToolButton}"/>
    <Button Content="Über Gruppe · F10" Command="{Binding SelectedStation.Debug.StepOverCommand}" Style="{StaticResource ToolButton}"/>
    <Button Content="Abbruch" Command="{Binding SelectedStation.AbortCommand}" Style="{StaticResource ToolButton}"/>
   </WrapPanel>
-  <Expander DockPanel.Dock="Top" Header="Programm &amp; gemeinsame Variablen" Margin="6,0,6,8" Expanded="OnProjectExpanded"><ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto"><ContentControl x:Name="ProjectOptions"/></ScrollViewer></Expander>
-  <TextBlock DockPanel.Dock="Bottom" x:Name="Status" Text="Mausrad: Zoom · freie Fläche / mittlere Maustaste: schieben · Griff: Knoten verschieben · Ausgang zum Eingang ziehen: verbinden" TextWrapping="Wrap" Foreground="#52647E" Margin="4,6"/>
+  <TextBlock DockPanel.Dock="Bottom" x:Name="Status" Text="Mausrad: Zoom · freie Fläche: schieben · Griff: Block bewegen · Anschlüsse ziehen: verbinden · ⋯: Details" TextWrapping="Wrap" Foreground="#52647E" FontSize="11" Margin="4,6"/>
   <Grid>
    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition>
     <ColumnDefinition.Style><Style TargetType="ColumnDefinition"><Setter Property="Width" Value="0"/>
@@ -39,7 +42,7 @@
      <GeometryDrawing Brush="#F5F8FD"><GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,24,24"/></GeometryDrawing.Geometry></GeometryDrawing>
      <GeometryDrawing Brush="#B9CBE3"><GeometryDrawing.Geometry><EllipseGeometry Center="12,12" RadiusX="1" RadiusY="1"/></GeometryDrawing.Geometry></GeometryDrawing>
     </DrawingGroup></DrawingBrush.Drawing></DrawingBrush></Border.Background>
-    <Canvas x:Name="World" Background="Transparent"><Canvas x:Name="Wires" IsHitTestVisible="False"/></Canvas>
+    <Canvas x:Name="World" Background="Transparent" HorizontalAlignment="Left" VerticalAlignment="Top"><Canvas x:Name="Wires" IsHitTestVisible="False"/></Canvas>
    </Border>
    <Border Grid.Column="1" Background="#FFFFFF" BorderBrush="#C5D4E7" BorderThickness="1" Padding="10" Margin="8,0,0,0" ClipToBounds="True">
     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel DataContext="{Binding SelectedStation.Debug}">

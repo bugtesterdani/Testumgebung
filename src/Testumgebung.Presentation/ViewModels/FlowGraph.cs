@@ -1,4 +1,4 @@
-using Testumgebung.Domain.Definitions;
+﻿using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Presentation.ViewModels;
 
@@ -11,7 +11,7 @@ public sealed class GraphCard(string id, NodeViewModel owner, bool junction, str
     public string Label { get; } = label;
     public double X { get; internal set; }
     public double Y { get; internal set; }
-    public double Width => Junction ? 280 : FlowGraphLayout.CardWidth;
+    public double Width => Junction ? 230 : FlowGraphLayout.CardWidth;
     public double Height { get; internal set; }
 }
 public sealed record GraphLink(string From, string To, GraphLinkKind Kind, string Label);
@@ -20,8 +20,8 @@ public sealed record FlowGraph(IReadOnlyList<GraphCard> Cards, IReadOnlyList<Gra
 /// <summary>Projiziert die ausführbare Gruppenstruktur in einen Graphen. Verzweigungen und Zusammenführungen bleiben explizit.</summary>
 public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measuredHeights = null)
 {
-    public const double CardWidth = 560;
-    private const double Gap = 90, LaneGap = 110;
+    public const double CardWidth = 360;
+    private const double Gap = 36, LaneGap = 84;
     private sealed record Fragment(List<GraphCard> Cards, List<GraphLink> Links, string First, string Last, double Width, double Height);
     public FlowGraph Build(IEnumerable<NodeViewModel> roots)
     {
@@ -41,22 +41,36 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
     private Fragment BuildNode(NodeViewModel node)
     {
         var card = new GraphCard("node:" + node.Id, node, false, node.Name)
-        { Height = measuredHeights?.GetValueOrDefault(node.Id, 220) ?? 220 };
+        { Height = CardHeight(node) };
         var result = new Fragment([card], [], card.Id, card.Id, CardWidth, card.Height);
         if (node.Group is not { } group) return result;
         var children = node.Children.Where(c => !c.IsExit && !c.IsTemplateDecision).ToList();
         var decision = node.Children.FirstOrDefault()?.IsTemplateDecision == true;
+        // Empty phases are a single terminal, not an empty group plus a duplicate end marker.
+        if (node.IsSection && children.Count == 0 && group.Repetition.Mode == RepeatMode.Once && group.ExitGroup is null) return result;
         var branches = children.Select(BuildNode).ToList();
+        if (SimpleDecisionBranch(node) && branches.Count > 0) return Sequence(branches);
         if (branches.Count > 0)
         {
             var body = group.Parallel || decision ? Parallel(branches, decision) : Sequence(branches);
             result = AttachBody(result, body, group.Parallel ? GraphLinkKind.Parallel : GraphLinkKind.Flow, decision);
         }
+        // Dann/Sonst wrappers are branch entries; the enclosing decision already owns their shared join.
+        if (SimpleDecisionBranch(node))
+            return result;
         result = FinishGroup(result, node, decision);
         if (node.Children.FirstOrDefault(c => c.IsExit) is { } exit)
             result = Append(result, BuildNode(exit), GraphLinkKind.Exit, "Exit / Aufräumen");
         return result;
     }
+    private double CardHeight(NodeViewModel node)
+    {
+        var defaultHeight = node.IsGroup ? 64 : 120;
+        return measuredHeights?.GetValueOrDefault(node.Id, defaultHeight) ?? defaultHeight;
+    }
+    private static bool SimpleDecisionBranch(NodeViewModel node)
+        => node.Parent?.Children.FirstOrDefault()?.IsTemplateDecision == true
+            && node.Group?.Repetition.Mode == RepeatMode.Once && node.Group.ExitGroup is null;
     private static Fragment AttachBody(Fragment header, Fragment body, GraphLinkKind kind, bool decision)
     {
         var width = Math.Max(header.Width, body.Width);
@@ -88,7 +102,7 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
     private Fragment FinishGroup(Fragment body, NodeViewModel node, bool decision)
     {
         var join = new GraphCard("end:" + node.Id, node, true, node.Group!.Parallel ? "Auf alle Zweige warten" : decision ? "Zweige zusammenführen" : node.Name + " · Ende")
-        { X = (body.Width - 280) / 2, Y = body.Height + Gap, Height = measuredHeights?.GetValueOrDefault("end:" + node.Id, 90) ?? 90 };
+        { X = (body.Width - 230) / 2, Y = body.Height + Gap, Height = measuredHeights?.GetValueOrDefault("end:" + node.Id, 42) ?? 42 };
         var outgoing = body.Cards.Where(c => !body.Links.Any(l => l.From == c.Id && l.Kind != GraphLinkKind.Repeat)).ToList();
         foreach (var last in outgoing) body.Links.Add(new(last.Id, join.Id, node.Group!.Parallel ? GraphLinkKind.Parallel : GraphLinkKind.Flow, ""));
         // A conditional group can skip its body; the branch line makes that path visible.

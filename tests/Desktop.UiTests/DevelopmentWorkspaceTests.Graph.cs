@@ -49,14 +49,17 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Contains(graph.Scene.Links, l => l.Kind == GraphLinkKind.Parallel);
             Assert.False(((FrameworkElement)view.FindName("PalettePanel")).IsVisible);
             var oldZoom = graph.Camera.Zoom; Click(graph, "−"); Assert.True(graph.Camera.Zoom < oldZoom);
-            Click(graph, "+"); Click(graph, "100 %"); Assert.Equal(1, graph.Camera.Zoom);
+            var zoomIn = Descendants(graph).OfType<Button>().Single(b => Equals(b.ToolTip, "Hineinzoomen"));
+            typeof(Button).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(zoomIn, []);
+            Click(graph, "100 %"); Assert.Equal(1, graph.Camera.Zoom);
             graph.Camera.Pan(-200, 120); graph.Zoom(.7, new Point(300, 200));
             var canvas = (Canvas)graph.FindName("World");
             var card = canvas.Children.OfType<Border>().Single(b => b.Tag is GraphCard c && c.Id == "node:graph-set");
             var oldX = Canvas.GetLeft(card); graph.MoveCard("node:graph-set", -50, 40);
             Assert.Equal(oldX - 50, Canvas.GetLeft(card));
             Assert.Equal(before, new ProjectSerializer().Serialize(editor.Project));
-            Click(graph, "Automatisch anordnen"); Click(graph, "Alles anzeigen");
+            GraphViewOption(graph, "Automatisch anordnen"); GraphViewOption(graph, "Alles anzeigen");
+            VerifyCompactGraph(view, graph, editor, dispatcher);
             VerifyGraphPointers(graph, editor, dispatcher);
             CaptureVisual(host, "graph-overview.png");
             var breakpoint = Descendants(graph).OfType<Button>().Single(b => b.DataContext is NodeViewModel { Id: "graph-set" } && b.ToolTip?.ToString()?.StartsWith("Nach diesem Block") == true);
@@ -84,8 +87,10 @@ public sealed partial class DevelopmentWorkspaceTests
             Click(graph, "Fortsetzen · F5"); PumpGraph(dispatcher, () => task.IsCompleted);
             Assert.True(task.IsCompletedSuccessfully); graph.RefreshScene(); Sta.Flush(dispatcher);
             Assert.Empty(station.Debug.Variables);
+            VerifyGraphDetails(view, graph, editor, dispatcher);
         }
         finally { shell.SelectedStation.RequestAbort(); host.Close(); Sta.Flush(dispatcher); }
+        VerifyCompactReference(dispatcher);
     }
     private static void VerifyGraphKeys(FlowGraphView graph, EditorViewModel editor)
     {

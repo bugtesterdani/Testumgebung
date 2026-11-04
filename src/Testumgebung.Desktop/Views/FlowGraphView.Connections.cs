@@ -24,7 +24,8 @@ public partial class FlowGraphView
             var repeat = link.Kind == GraphLinkKind.Repeat;
             var bypass = link.Kind == GraphLinkKind.Else && ReferenceEquals(from.Owner, to.Owner) && to.Junction;
             double? rail = repeat || bypass ? OutsideGroup(from.Owner) : null;
-            DrawWire(start, end, LinkBrush(link.Kind), link.Label, repeat, bypass, rail);
+            var label = link.Kind is GraphLinkKind.Then or GraphLinkKind.Parallel || link.Kind == GraphLinkKind.Else && !bypass ? "" : link.Label;
+            DrawWire(start, end, LinkBrush(link.Kind), label, repeat, bypass, rail, to.Junction ? end.Y - 18 : null);
         }
     }
     private double OutsideGroup(NodeViewModel owner)
@@ -45,9 +46,10 @@ public partial class FlowGraphView
         var card = _cards[from.Id];
         return new Point(Canvas.GetLeft(card) + from.Width / 2, Canvas.GetTop(card) + Math.Max(card.ActualHeight, from.Height));
     }
-    private void DrawWire(Point start, Point end, Brush color, string label, bool repeat = false, bool bypass = false, double? rail = null)
+    private void DrawWire(Point start, Point end, Brush color, string label, bool repeat = false, bool bypass = false, double? rail = null, double? bendY = null)
     {
-        var mid = (start.Y + end.Y) / 2;
+        // Join at a shared rail below the longest branch, never through a neighbouring branch's cards.
+        var mid = bendY ?? (start.Y + end.Y) / 2;
         var outside = rail ?? Math.Max(start.X, end.X) + 360;
         var points = repeat || bypass
             ? new[] { start, new Point(outside, start.Y), new Point(outside, end.Y - 30), new Point(end.X, end.Y - 30), end }
@@ -130,8 +132,14 @@ public partial class FlowGraphView
         old.BorderThickness = new Thickness(2); _highlighted = null;
     }
     private GraphCard? PausedCard(string id, bool group)
-        => Scene!.Cards.FirstOrDefault(c => c.Owner.Id == id && c.Junction == group)
+    {
+        var direct = Scene!.Cards.FirstOrDefault(c => c.Owner.Id == id && c.Junction == group)
+            ?? Scene.Cards.FirstOrDefault(c => c.Owner.Id == id)
             ?? Scene.Cards.FirstOrDefault(c => c.Owner.Children.Any(n => n.Id == id && n.IsTemplateDecision));
+        if (direct is not null) return direct;
+        var branch = Editor?.FindNode(id)?.SelfAndDescendants().ToHashSet();
+        return Scene.Cards.LastOrDefault(c => branch?.Contains(c.Owner) == true);
+    }
     private void FocusCard(GraphCard card)
     {
         Camera.ZoomAt(Math.Max(1, Camera.Zoom), Viewport.ActualWidth / 2, Viewport.ActualHeight / 2);
