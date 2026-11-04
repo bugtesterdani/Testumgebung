@@ -471,7 +471,8 @@ public sealed class BlockCatalog
             "Anweisung, Bild mit Bestätigung, Eingabe oder Auswahl. Ausgang: Antwort bzw. Eingabewert.",
             [
                 new("Art", "Art", ParameterKind.Choice, "Anweisung", Choices: OperatorKinds),
-                new("Text", "Anweisungstext", ParameterKind.Text, "Bitte bestätigen", Required: true),
+                new("Text", "Anweisungstext", ParameterKind.Text, "Bitte bestätigen", Required: true,
+                    Hint: "Aktuelle Werte mit {Variable} oder {Ausdruck} einsetzen. Literale Klammern: {{ und }}."),
                 new("Bild", "Bild (optional)", ParameterKind.Image),
                 new("Datentyp", "Datentyp", ParameterKind.Choice, "Zahl", Choices: InputTypes),
                 new("Pflicht", "Pflichtfeld", ParameterKind.Bool, "true"),
@@ -579,7 +580,9 @@ public sealed class BlockCatalog
                     return new StepOutcome(ResultRating.NResult, value, prompt.Unit);
                 }
             }
-            var answer = await ctx.AskOperatorAsync(prompt).ConfigureAwait(false);
+            // Pro Ausführung eine neue Anzeige erzeugen: Vorlage und frühere Anzeigen bleiben unverändert.
+            var displayPrompt = prompt with { Text = CommunicationBlocks.Interpolate(prompt.Text, ctx) };
+            var answer = await ctx.AskOperatorAsync(displayPrompt).ConfigureAwait(false);
             if (target is not null && answer is not null && prompt.ExpectsValue) ctx.Set(target, answer);
             return new StepOutcome(ResultRating.NResult, answer, prompt.Unit);
         });
