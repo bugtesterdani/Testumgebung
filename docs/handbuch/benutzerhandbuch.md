@@ -195,6 +195,10 @@ Die Palette ist scrollbar. **CodeBlock**, **Baustein** und **Gruppenbaustein** s
 
 Variablen besitzen einen Namen, Typ und Anfangswert. Namen sind groß-/kleinschreibungsabhängig: `Auftrag` und `auftrag` sind unterschiedlich. Untergruppen können äußere Variablen verwenden; `../Name` beginnt die Suche in der Elterngruppe.
 
+Im **Anweisungstext** einer **Werkerinteraktion** setzen `{Variable}` und `{Ausdruck}` die aktuellen Werte ein. Beispiel: `STM-Zielversion {ZielVersion}; STM sichtbar {ModulAnzahl}/5. {GewaehltesZip}`. Die Variablen müssen im Ordner des Schritts oder einer übergeordneten Gruppe erreichbar sein. Die Auswertung erfolgt bei jeder Anzeige erneut, auch in Wiederholungen und bei **Auf Antwort warten = aus**. Das gilt für Anweisung, Bild mit Bestätigung, Eingabe und Auswahl. Der gespeicherte Vorlagentext bleibt erhalten.
+
+Für sichtbare geschweifte Klammern `{{` und `}}` schreiben: `{{ZielVersion}}` zeigt wörtlich `{ZielVersion}`. Unbekannte Variablen oder ungültige Ausdrücke ergeben **ERROR**, bevor eine Aufforderung zur Bestätigung angezeigt wird. Vorhandene Texte mit wörtlichen Klammern entsprechend anpassen.
+
 Für das Bearbeiten dieser Variablen mindestens Version 1.0.4.0 verwenden. Dort werden Name, Typ und Startwert unmittelbar übernommen. Frühere Versionen konnten die Standardwerte behalten. Ungültige oder doppelte Namen und ein zum Typ unpassender Startwert werden weiterhin als Fehler angezeigt.
 
 Eine Gruppe kann Bedingungen, Wiederholungen, Ergebnisregeln und Ressourcenreservierungen besitzen. Die Exit-Gruppe ist für Aufräumschritte vorgesehen und wird auch beim Abbruch berücksichtigt. Nicht jede wichtige Abschaltung ausschließlich in einen gewöhnlichen letzten Prüfschritt legen.

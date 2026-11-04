@@ -4053,7 +4053,7 @@
           "default": "Bitte best\u00E4tigen",
           "required": true,
           "choices": null,
-          "hint": null
+          "hint": "Aktuelle Werte mit {Variable} oder {Ausdruck} einsetzen. Literale Klammern: {{ und }}."
         },
         {
           "name": "Bild",
