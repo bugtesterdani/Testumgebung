@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verdrahtet Anwendungsstart und Hauptfenster; Prüfablauf und Werkerzustand werden von ViewModels verwaltet.
  */
@@ -72,6 +72,7 @@ public partial class MainWindow : Window
         Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), new FileDialogService(), project: exampleProject, codeRuntime: _codeRuntime,
             services: _services, settingsStore: store, identity: identity, releases: _releases,
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
+        Shell.ReleasesPage?.Sources.ConfigureAuthentication(new SourceCredentialStore(SourceCredentialStore.DefaultFile, new RepositorySecretProtector()));
         ConfigureExampleMode(exampleMode);
         DataContext = Shell;
         Shell.Session.Changed += () => Dispatcher.BeginInvoke(new Action(() => { if (!Shell.Session.IsSigningIn) LocalLoginPassword.Clear(); }));

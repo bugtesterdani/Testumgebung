@@ -1,0 +1,22 @@
+<Window x:Class="Testumgebung.Desktop.Views.SourceAuthenticationWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="Repository-Anmeldung" Width="600" SizeToContent="Height" ResizeMode="CanResize" WindowStartupLocation="CenterOwner" Background="White">
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20">
+  <TextBlock Text="Repository-Anmeldung" Style="{StaticResource SectionTitle}"/>
+  <TextBlock Text="{Binding Selected.Repository}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+  <TextBlock Text="Zugangsmethode"/>
+  <ComboBox ItemsSource="{Binding LoginChoices}" DisplayMemberPath="Title" SelectedValuePath="Mode" SelectedValue="{Binding LoginMode}" AutomationProperties.Name="Zugangsmethode"/>
+  <TextBlock Text="Benutzername (wie vom Repository-Server vorgegeben)" Margin="0,10,0,0"/>
+  <TextBox Text="{Binding LoginUsername, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding LoginNeedsSecret}" AutomationProperties.Name="Repository-Benutzername"/>
+  <TextBlock Text="Access-/Deploy-Token oder SVN-Passwort" Margin="0,10,0,0"/>
+  <PasswordBox x:Name="Secret" IsEnabled="{Binding LoginNeedsSecret}" MaxLength="4096" Margin="0,4,0,8" MinHeight="30" AutomationProperties.Name="Repository-Token oder Passwort"/>
+  <TextBlock Text="Leer lassen, um das vorhandene Geheimnis für dieselbe Methode und denselben Benutzer weiterzuverwenden. Für Git-Token wird HTTPS mit Benutzername/Token (HTTP Basic) verwendet; der Server muss dieses Verfahren unterstützen." TextWrapping="Wrap" Style="{StaticResource Caption}"/>
+  <CheckBox IsChecked="{Binding RememberLogin}" Margin="0,12"><TextBlock Text="Für dieses Windows-Konto geschützt speichern (sonst nur diese Sitzung)" TextWrapping="Wrap"/></CheckBox>
+  <TextBlock Text="Windows-Anmeldung setzt einen SVN-Client und HTTPS-Server mit Negotiate/SSPI voraus. Es werden keine Anmeldeinformationen in Projekt, Datenbank oder Freigabepaket geschrieben." TextWrapping="Wrap" Style="{StaticResource Caption}"/>
+  <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,10"/>
+  <WrapPanel HorizontalAlignment="Right">
+   <Button Content="Abbrechen" IsCancel="True" Margin="0,0,8,0"/>
+   <Button Content="Übernehmen" IsDefault="True" Click="OnApply"/>
+  </WrapPanel>
+ </StackPanel></ScrollViewer>
+</Window>

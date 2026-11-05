@@ -7,6 +7,26 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (args[0] == "clone" && System.Environment.GetEnvironmentVariable("GIT_CONFIG_COUNT") == "4")
+        {
+            var header = System.Environment.GetEnvironmentVariable("GIT_CONFIG_VALUE_2")!;
+            var encoded = header["Authorization: Basic ".Length..];
+            var pair = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            var secret = pair[(pair.IndexOf(':') + 1)..];
+            Console.Error.Write(secret == "auth-failure" ? "Authentication failed" : "fixture rejected " + secret + " " + encoded);
+            return 1;
+        }
+        if (args[0] is "info" or "export" && args.Contains("--password-from-stdin"))
+        {
+            var config = Array.IndexOf(args, "--config-dir");
+            if (config < 0 || !Directory.Exists(args[config + 1])) return 2;
+            var password = await Console.In.ReadLineAsync();
+            if (password != "svn-fixture-secret" || args.Any(a => a.Contains(password, StringComparison.Ordinal)))
+            { Console.Error.Write("E170001: Authentication failed"); return 1; }
+            if (args[0] == "info") Console.Write("<info><entry revision='42'><repository><uuid>fixture-uuid</uuid></repository></entry></info>");
+            else { Directory.CreateDirectory(args[6]); await File.WriteAllTextAsync(Path.Combine(args[6], "project.json"), "fixture project"); }
+            return 0;
+        }
         if (args[0] is "-X" or "-u") { Console.Write(JsonSerializer.Serialize(args)); return 0; }
         if (args[0] == "flood") { Console.Write(new string('X', 1048577)); return 0; }
         if (args[0] == "dialog")
