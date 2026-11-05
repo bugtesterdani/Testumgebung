@@ -1,4 +1,4 @@
-<UserControl x:Class="Testumgebung.Desktop.Views.ResultsView"
+﻿<UserControl x:Class="Testumgebung.Desktop.Views.ResultsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
@@ -91,8 +91,8 @@
                 <DockPanel DataContext="{Binding Document}" Visibility="{Binding Converter={StaticResource NullVis}}">
                     <StackPanel DockPanel.Dock="Top">
                         <DockPanel>
-                            <Border DockPanel.Dock="Right" CornerRadius="4" Padding="10,4" Background="{Binding Rating, Converter={StaticResource RatingBrush}}">
-                                <TextBlock Text="{Binding Rating, Converter={StaticResource RatingText}}" Foreground="White" FontWeight="SemiBold" />
+                            <Border DockPanel.Dock="Right" CornerRadius="4" Padding="10,4" Background="{Binding OutcomeRating, Converter={StaticResource RatingBrush}}">
+                                <TextBlock Text="{Binding Outcome}" Foreground="White" FontWeight="SemiBold" />
                             </Border>
                             <TextBlock Text="{Binding FileName}" Style="{StaticResource PageTitle}" TextTrimming="CharacterEllipsis" />
                         </DockPanel>

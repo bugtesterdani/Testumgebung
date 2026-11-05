@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Szenario-Datei (*.tsim.json): Werkereingaben, Simulationswerte und erwartetes Ergebnis eines simulierten Laufs.
  */
@@ -120,14 +120,17 @@ public sealed class Scenario
     private void CheckExpectations(List<string> problems)
     {
         foreach (var step in Expect.Steps) CheckStepExpectation(step, problems);
-        foreach (var rating in Expect.Duts.Select(d => d.Rating).Append(Expect.Status?.Split('+')[0]).Concat(Expect.Steps.Select(s => s.Rating)))
+        foreach (var rating in Expect.Steps.Select(s => s.Rating))
             if (rating is not null && Ratings.Parse(rating.Trim()) is null) problems.Add($"Unbekannte Bewertung „{rating}“ (PASS, FAIL, ERROR, NRESULT).");
-        if (Expect.Status is { } status)
-        {
-            var parts = status.Split('+', StringSplitOptions.TrimEntries);
-            if (parts.Length > 2 || (parts.Length == 2 && parts[1] != "WERROR"))
-                problems.Add("Gesamtstatus erlaubt nur den Zusatz + WERROR.");
-        }
+        foreach (var outcome in Expect.Duts.Select(d => d.Rating).Append(Expect.Status))
+            if (outcome is not null && !IsOutcome(outcome)) problems.Add($"Unbekannter Gesamtstatus „{outcome}“ (PASS, FAIL, ERROR, NRESULT, ABORT; bisheriger Zusatz + WERROR wird weiterhin unterstützt).");
+    }
+
+    private static bool IsOutcome(string outcome)
+    {
+        var parts = outcome.Split('+', StringSplitOptions.TrimEntries);
+        if (parts.Length == 1) return parts[0].Equals("ABORT", StringComparison.OrdinalIgnoreCase) || Ratings.Parse(parts[0]) is not null;
+        return parts.Length == 2 && Ratings.Parse(parts[0]) is not null && parts[1] == "WERROR";
     }
 
     private static void CheckStepExpectation(StepExpectation s, List<string> problems)
@@ -186,7 +189,7 @@ public sealed class ScenarioAbort
 
 public sealed class ScenarioExpectation
 {
-    /// <summary>Gesamtergebnis, z. B. „PASS“, „FAIL“ oder „PASS + WERROR“.</summary>
+    /// <summary>Gesamtergebnis, z. B. „PASS“, „FAIL“ oder „ABORT“ (bisheriger Zusatz + WERROR bleibt lesbar).</summary>
     public string? Status { get; set; }
     public List<DutExpectation> Duts { get; set; } = [];
     public List<StepExpectation> Steps { get; set; } = [];

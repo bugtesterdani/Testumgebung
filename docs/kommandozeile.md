@@ -1,4 +1,4 @@
-# Kommandozeile: Prüfprogramme ohne Oberfläche prüfen, bauen und simulieren
+﻿# Kommandozeile: Prüfprogramme ohne Oberfläche prüfen, bauen und simulieren
 
 `testumgebung-cli` führt dieselben Prüfungen wie die Anwendung aus, aber ohne Oberfläche: für CI, für Skripte und für
 KI-Agenten, die Prüfprogramme schreiben und in einer abgeschotteten VM testen. Es nutzt den echten `ProjectSerializer`,
@@ -60,7 +60,7 @@ und knapp über der Grenze, FAIL, fehlerhafte Eingabe, Werkerabbruch.
 | `simulation` | Eingangswerte je Ressourcenname aus `simulation` des Projekts: Zahl (fester Wert) oder Liste (je Lesezugriff der nächste Wert, danach bleibt der letzte) |
 | `answers` | Werkereingaben je Schritt-ID (oder Schrittname): `value` (bei jeder Abfrage) oder `values` (der Reihe nach). Text, Zahl oder Bool |
 | `abort` | `{ "atStep": "<Schritt-ID>", "occurrence": 1 }`: Werkerabbruch, sobald dieser Schritt zum n-ten Mal startet |
-| `expect.status` | Gesamtergebnis: `PASS`, `FAIL`, `ERROR`, `NRESULT`, mit Werkerabbruch z. B. `PASS + WERROR` |
+| `expect.status` | Gesamtergebnis: `PASS`, `FAIL`, `ERROR`, `NRESULT`, bei Werkerabbruch `ABORT`; ältere Erwartungen wie `PASS + WERROR` bleiben unterstützt |
 | `expect.duts` | abgeschlossene Prüflinge der Reihe nach: `dutId` und/oder `rating`. Die Anzahl muss stimmen |
 | `expect.steps` | je Schritt-ID: `rating`, `value` (mit `tolerance`), `count` (Anzahl Ausführungen, auch `0`), optional `occurrence` (nur die n-te Ausführung) |
 

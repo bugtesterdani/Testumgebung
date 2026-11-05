@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Liest und schreibt das Chunk-basierte Ergebnisformat; beschädigte Teilinhalte werden getrennt diagnostiziert.
  */
@@ -128,7 +128,7 @@ public static class ResultFile
 
     private static byte[] EncodeHeader(ResultRun r)
     {
-        var w = new MsgPackWriter().Map(16);
+        var w = new MsgPackWriter().Map(17);
         w.Key("runId").Str(r.RunId);
         w.Key("stationRunId").Str(r.StationRunId);
         w.Key("station").Str(r.Station);
@@ -141,6 +141,7 @@ public static class ResultFile
         w.Key("utcOffsetMin").Int((long)r.Started.Offset.TotalMinutes);
         w.Key("rating").Str(RatingText(r.Rating));
         w.Key("werror").Bool(r.OperatorAbort);
+        w.Key("status").Str(r.Status.ToString());
         w.Key("development").Bool(r.IsDevelopmentRun);
         w.Key("filteredFor").Str(r.FilteredFor);
         w.Key("application").Str(r.Application);
@@ -588,7 +589,7 @@ public static class ResultFile
                 Started = Time(head.L("started") ?? 0),
                 Ended = Time(head.L("ended") ?? 0),
                 Rating = ParseRating(head.S("rating")),
-                OperatorAbort = head.B("werror"),
+                OperatorAbort = head.B("werror") || head.S("status") == "ABORT",
                 IsDevelopmentRun = head.B("development"),
                 FilteredFor = head.S("filteredFor") ?? "",
                 Application = head.S("application") ?? "",

@@ -588,3 +588,8 @@ Unter **Releases → Programmquellen & Versionen …** werden zentrale Quellen, 
 ## Lokaler Benutzerlogin mit Passwort
 
 Als Übergang bis zur Entra-Einrichtung lässt sich unter **Einstellungen → Zugang** ein lokaler Passwortzugang aktivieren. Für jedes Konto ein Passwort über **Setzen / ändern** hinterlegen, die Option aktivieren und **Zugang speichern**. Danach werden beim lokalen Login Benutzername und Passwort abgefragt. Entra hat bei vollständiger Einrichtung Vorrang. Die [ausführliche Anleitung](../lokaler-passwortzugang.md) beschreibt Ersteinrichtung, Passwortwechsel und das Deaktivieren.
+
+
+## Ergebnis bei Werkerabbruch
+
+Ein vom Werker abgebrochener Prüflingstest erhält den Gesamtstatus **ABORT**, auch wenn zuvor bereits Schritte bestanden wurden. Bereits abgeschlossene Prüflinge bleiben unverändert. Messwerte und Schrittbewertungen bleiben zur Diagnose erhalten; die Auswertung zählt den Lauf als ABORT. [Details zu Speicherung und älteren Ergebnissen](../werkerabbruch-und-ergebnis.md).

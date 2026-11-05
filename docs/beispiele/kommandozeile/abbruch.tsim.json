@@ -15,7 +15,7 @@
     "occurrence": 1
   },
   "expect": {
-    "status": "PASS + WERROR",
+    "status": "ABORT",
     "steps": [
       {
         "step": "p",

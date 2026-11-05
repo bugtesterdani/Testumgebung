@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
@@ -300,7 +300,7 @@ public class StationViewModelTests
         Assert.True(s.LastStatus!.Value.OperatorAbort);
         Assert.Equal(["Exit Prüfling (Prüfling)", "Hauptablauf Finalization"], s.ExitSequence.Select(x => x.Name));
         Assert.All(s.ExitSequence, x => Assert.Equal(ItemState.Done, x.State));
-        Assert.Contains(s.Protocol, p => p.Kind == ProtocolKind.Abort && p.Status == "WERROR");
+        Assert.Contains(s.Protocol, p => p.Kind == ProtocolKind.Abort && p.Status == "ABORT");
         Assert.Empty(s.Contents);
         Assert.Equal("Bereit", s.StatusText);
         Assert.True(s.StartCommand.CanExecute(null));

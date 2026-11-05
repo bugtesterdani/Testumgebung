@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Wählt Prüfläufe für statistische Auswertung und PDF-Berichte in der Oberfläche aus.
  */
@@ -254,7 +254,7 @@ public sealed class ReportsViewModel : ObservableObject
         var max = _stats.Daily.Count == 0 ? 1 : _stats.Daily.Max(d => d.Total);
         foreach (var d in _stats.Daily.TakeLast(31))
             Daily.Add(new BarItem(d.Day.ToString("dd.MM", De), (double)d.Total / max,
-                $"{d.Day:dd.MM.yyyy}: {d.Total} Läufe, PASS {d.Pass}, FAIL {d.Fail}, ERROR {d.Error}", d.Fail + d.Error > 0));
+                $"{d.Day:dd.MM.yyyy}: {d.Total} Läufe, PASS {d.Pass}, FAIL {d.Fail}, ERROR {d.Error}, ABORT {d.Abort}", d.Fail + d.Error > 0));
         SelectedMeasurement = Measurements.FirstOrDefault(m => m.Cpk is not null) ?? Measurements.FirstOrDefault();
         OnPropertiesChanged(nameof(Statistics), nameof(HasStatistics), nameof(RunsText), nameof(YieldText), nameof(FpyText), nameof(FinalYieldText),
             nameof(DutsText), nameof(DurationText), nameof(FilterText), nameof(ProblemCount));
@@ -268,7 +268,7 @@ public sealed class ReportsViewModel : ObservableObject
 
     private static string Percent(double? v) => v is { } d ? d.ToString("0.0 %", De) : "–";
 
-    public string RunsText => _stats is null ? "–" : $"{_stats.Runs} · PASS {_stats.Pass} · FAIL {_stats.Fail} · ERROR {_stats.Error}";
+    public string RunsText => _stats is null ? "–" : $"{_stats.Runs} · PASS {_stats.Pass} · FAIL {_stats.Fail} · ERROR {_stats.Error} · ABORT {_stats.OperatorAborts}";
     public string YieldText => Percent(_stats?.Yield);
     public string FpyText => Percent(_stats?.FirstPassYield);
     public string FinalYieldText => Percent(_stats?.FinalYield);
