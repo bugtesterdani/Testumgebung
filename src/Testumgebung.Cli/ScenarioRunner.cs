@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Führt ein Prüfprogramm mit einem Szenario in der Projektsimulation aus und vergleicht mit den Erwartungen.
  */
@@ -102,7 +102,7 @@ public static class ScenarioRunner
         if (expect.Status is { } wanted)
         {
             var actual = status?.ToString() ?? "kein Ergebnis";
-            if (Normalize(actual) == Normalize(wanted)) report.Pass(suite, "Gesamtergebnis", actual);
+            if (StatusMatches(wanted, status)) report.Pass(suite, "Gesamtergebnis", actual);
             else report.Fail(suite, "Gesamtergebnis", $"erwartet {wanted}, erhalten {actual}");
         }
 
@@ -123,7 +123,7 @@ public static class ScenarioRunner
                 var a = duts[i];
                 var wrong = new List<string>();
                 if (e.DutId is not null && e.DutId != a.DutId) wrong.Add($"Kennung erwartet „{e.DutId}“, erhalten „{a.DutId}“");
-                if (e.Rating is not null && Normalize(e.Rating) != Normalize(a.Status.ToString())) wrong.Add($"Ergebnis erwartet {e.Rating}, erhalten {a.Status}");
+                if (e.Rating is not null && !StatusMatches(e.Rating, a.Status)) wrong.Add($"Ergebnis erwartet {e.Rating}, erhalten {a.Status}");
                 var name = $"Prüfling {i + 1}";
                 if (wrong.Count == 0) report.Pass(suite, name, $"{a.DutId}: {a.Status}");
                 else report.Fail(suite, name, string.Join("; ", wrong));
@@ -193,6 +193,15 @@ public static class ScenarioRunner
         IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
         _ => value.ToString() ?? "",
     };
+
+    private static bool StatusMatches(string wanted, RunStatus? status)
+    {
+        if (status is not { } actual) return false;
+        if (Normalize(wanted) == Normalize(actual.Outcome)) return true;
+        // Old scenarios may additionally assert the diagnostic rating that preceded the abort.
+        var parts = wanted.Split('+', StringSplitOptions.TrimEntries);
+        return actual.OperatorAbort && parts.Length == 2 && parts[1] == "WERROR" && Normalize(parts[0]) == actual.Rating.ToDisplay();
+    }
 
     private static string Normalize(string text) => string.Join(" ", text.ToUpperInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries));
 

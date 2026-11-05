@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Legt die Rangfolge der Bewertungen fest und trennt fachliches Prüfergebnis vom Ausführungszustand.
  */
@@ -56,10 +56,10 @@ public enum EngineState
 
 /// <summary>
 /// Gesamtstatus eines Laufs bzw. Prüflingstests: Bewertung plus separates WERROR-Kennzeichen.
-/// Ein Lauf kann z. B. FAIL und WERROR zugleich besitzen.
+/// Bei Werkerabbruch lautet der Gesamtstatus ABORT; die bis dahin ermittelte Bewertung bleibt zur Diagnose erhalten.
 /// </summary>
 public readonly record struct RunStatus(ResultRating Rating, bool OperatorAbort)
 {
-    public override string ToString()
-        => OperatorAbort ? $"{Rating.ToDisplay()} + WERROR" : Rating.ToDisplay();
+    public string Outcome => OperatorAbort ? "ABORT" : Rating.ToDisplay();
+    public override string ToString() => Outcome;
 }

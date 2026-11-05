@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using Testumgebung.Cli;
@@ -7,7 +7,7 @@ namespace Testumgebung.Engine.Tests;
 
 /// <summary>Kommandozeile ohne Oberfläche: prüfen, bauen, Szenarien simulieren, JUnit-Bericht (docs/kommandozeile.md).</summary>
 [Collection("Konsole")]
-public sealed class CommandLineTests : IDisposable
+public sealed partial class CommandLineTests : IDisposable
 {
     private readonly string _dir = Directory.CreateTempSubdirectory("tu-cli-").FullName;
 

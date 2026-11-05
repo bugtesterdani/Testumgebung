@@ -467,16 +467,18 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         private set => SetProperty(ref _hint, value);
     }
 
+    public string DutResultText => new RunStatus(DutRating, DutWerror).ToString();
+
     public ResultRating DutRating
     {
         get => _dutRating;
-        private set => SetProperty(ref _dutRating, value);
+        private set { if (SetProperty(ref _dutRating, value)) OnPropertyChanged(nameof(DutResultText)); }
     }
 
     public bool DutWerror
     {
         get => _dutWerror;
-        private set => SetProperty(ref _dutWerror, value);
+        private set { if (SetProperty(ref _dutWerror, value)) OnPropertyChanged(nameof(DutResultText)); }
     }
 
     public RunStatus? LastStatus
@@ -1078,7 +1080,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         Hint = a.Number == 1
             ? "Werkerabbruch: reguläre Schritte gestoppt, Abschlussgruppen laufen von innen nach außen."
             : $"Erneuter Abbruch ({a.Number}): {a.Effect}";
-        AddProtocol(new ProtocolEntry(a.Time, ProtocolKind.Abort, $"Werkerabbruch angefordert ({a.Number})", "—", "", "", null, "WERROR"));
+        AddProtocol(new ProtocolEntry(a.Time, ProtocolKind.Abort, $"Werkerabbruch angefordert ({a.Number})", "—", "", "", null, "ABORT"));
         UpdateStatus();
     }
 
@@ -1123,7 +1125,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         DutWerror = dc.Status.OperatorAbort;
         if (!string.IsNullOrEmpty(dc.DutId)) CurrentDutId = dc.DutId;
         AddProtocol(new ProtocolEntry(dc.Time, ProtocolKind.Run, $"Prüfling {(dc.DutId == "" ? "ohne Kennung" : dc.DutId)} abgeschlossen", "—", "", "",
-            dc.Status.Rating, dc.Status.OperatorAbort ? "WERROR" : "Abgeschlossen", IsHeader: true));
+            dc.Status.OperatorAbort ? null : dc.Status.Rating, dc.Status.OperatorAbort ? "ABORT" : "Abgeschlossen", IsHeader: true));
     }
 
     private void OnStepCompleted(StepCompleted sc)

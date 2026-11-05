@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Lädt gespeicherte Prüfläufe für Detailansicht, Kurvenanzeige und Wiederherstellung unvollständiger Ergebnisse.
  */
@@ -90,6 +90,8 @@ public sealed class ResultDocumentViewModel : ObservableObject
     public bool IsIntact => Problems.Count == 0;
     public string IntegrityText => IsIntact ? "Integrität geprüft (CRC aller Chunks)" : $"{Problems.Count} Problem(e) – beschädigte Teile übersprungen";
     public ResultRating Rating => Content.Run.Rating;
+    public string Outcome => Content.Run.Status.ToString();
+    public ResultRating OutcomeRating => Content.Run.OperatorAbort ? ResultRating.Error : Rating;
     public ObservableCollection<ResultEventRow> Events { get; } = [];
     public ObservableCollection<WaveformGroup> WaveformGroups { get; } = [];
     public ObservableCollection<PlotSeries> Plot { get; } = [];

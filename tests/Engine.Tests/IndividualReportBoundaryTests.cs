@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Testumgebung.Contracts;
 using Testumgebung.Persistence.Reports;
 using Testumgebung.Persistence.Results;
@@ -30,7 +30,7 @@ public sealed class IndividualReportBoundaryTests
             Assert.StartsWith("%PDF-", pdf); Assert.EndsWith("%%EOF\n", pdf);
             Assert.Contains("report-run", pdf); Assert.Contains("Report fixture", pdf); Assert.Contains("Werkereingaben", pdf);
             Assert.Contains("Abweichungen", pdf); Assert.Contains("Alle Schritte", pdf);
-            if (abort) Assert.Contains("WERROR", pdf);
+            if (abort) Assert.Contains("ABORT", pdf);
             if (source is not null) Assert.Contains("run.tres", pdf);
         }
     }

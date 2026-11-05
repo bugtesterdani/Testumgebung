@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verbindet gespeicherte Ergebnisse und Statistik mit der Ausgabe von Prüf- und Auswertungsberichten.
  */
@@ -45,7 +45,7 @@ public static class Reports
             writer.Title("Prüfbericht", $"Prüfling {(string.IsNullOrWhiteSpace(run.DutId) ? "ohne Kennung" : run.DutId)}");
             writer.KeyValues(
             [
-                ("Ergebnis", run.Status.Rating.ToDisplay() + (run.OperatorAbort ? " (Werkerabbruch – WERROR)" : ""), ColorOf(run.Rating) ?? PdfColor.Black),
+                ("Ergebnis", run.Status.ToString(), run.OperatorAbort ? PdfColor.Warn : ColorOf(run.Rating) ?? PdfColor.Black),
             ("Prüfling", string.IsNullOrWhiteSpace(run.DutId) ? "ohne Kennung" : run.DutId, null),
             ("Prüfvorschrift", $"{run.TestName} v{run.TestVersion}", null),
             ("Prüfplatz", run.Station, null),
@@ -186,7 +186,7 @@ public static class Reports
         writer.KeyValues(
         [
             ("Zeitraum", s.First is null ? "keine Prüfläufe" : $"{s.First.Value.LocalDateTime:dd.MM.yyyy HH:mm} – {s.Last!.Value.LocalDateTime:dd.MM.yyyy HH:mm}", null),
-            ("Prüfläufe", $"{s.Runs} (PASS {s.Pass}, FAIL {s.Fail}, ERROR {s.Error}, NRESULT {s.NResult})", null),
+            ("Prüfläufe", $"{s.Runs} (PASS {s.Pass}, FAIL {s.Fail}, ERROR {s.Error}, NRESULT {s.NResult}, ABORT {s.OperatorAborts})", null),
             ("Ausbeute je Lauf", P(s.Yield), s.Yield is >= 0.95 ? PdfColor.Pass : s.Yield is null ? null : PdfColor.Fail),
             ("Prüflinge", $"{s.Duts} mit Kennung, {s.Retests} Wiederholprüfung(en)", null),
             ("First Pass Yield", P(s.FirstPassYield), null),
@@ -229,11 +229,11 @@ public static class Reports
         if (s.Daily.Count > 0)
         {
             writer.Heading("Verlauf je Tag");
-            writer.Table([("Tag", 1.5), ("Läufe", 1), ("PASS", 1), ("FAIL", 1), ("ERROR", 1), ("Ausbeute", 1.2)],
+            writer.Table([("Tag", 1.5), ("Läufe", 1), ("PASS", 1), ("FAIL", 1), ("ERROR", 1), ("ABORT", 1), ("Ausbeute", 1.2)],
                 s.Daily.Select(d => (IReadOnlyList<(string, PdfColor?)>)
                 [
                     (d.Day.ToString("ddd dd.MM.yyyy", De), null), (d.Total.ToString(De), null), (d.Pass.ToString(De), null),
-                    (d.Fail.ToString(De), d.Fail > 0 ? PdfColor.Fail : null), (d.Error.ToString(De), d.Error > 0 ? PdfColor.Warn : null), (P((double)d.Pass / d.Total), null),
+                    (d.Fail.ToString(De), d.Fail > 0 ? PdfColor.Fail : null), (d.Error.ToString(De), d.Error > 0 ? PdfColor.Warn : null), (d.Abort.ToString(De), d.Abort > 0 ? PdfColor.Warn : null), (P((double)d.Pass / d.Total), null),
                 ]));
         }
 

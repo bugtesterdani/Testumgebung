@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Filtert Prüfläufe und berechnet Messwertstatistik, Fehlerhäufigkeit und Berichtszellen.
  */
@@ -88,9 +88,9 @@ public sealed record FailureItem(string NodeId, string Name, int Fail, int Error
     public int Total => Fail + Error;
 }
 
-public sealed record DailyCount(DateOnly Day, int Pass, int Fail, int Error, int Other)
+public sealed record DailyCount(DateOnly Day, int Pass, int Fail, int Error, int Other, int Abort = 0)
 {
-    public int Total => Pass + Fail + Error + Other;
+    public int Total => Pass + Fail + Error + Other + Abort;
 }
 
 public sealed record StationCount(string Station, int Runs, int Pass, double Yield);
@@ -166,28 +166,30 @@ public static class ResultAnalysis
         {
             Filter = filter,
             Runs = runs.Count,
-            Pass = runs.Count(r => r.Rating == ResultRating.Pass),
-            Fail = runs.Count(r => r.Rating == ResultRating.Fail),
-            Error = runs.Count(r => r.Rating == ResultRating.Error),
-            NResult = runs.Count(r => r.Rating == ResultRating.NResult),
+            Pass = runs.Count(r => HasOutcome(r, ResultRating.Pass)),
+            Fail = runs.Count(r => HasOutcome(r, ResultRating.Fail)),
+            Error = runs.Count(r => HasOutcome(r, ResultRating.Error)),
+            NResult = runs.Count(r => HasOutcome(r, ResultRating.NResult)),
             OperatorAborts = runs.Count(r => r.OperatorAbort),
             DevelopmentRuns = runs.Count(r => r.IsDevelopmentRun),
             Duts = withId.Count,
             Retests = withId.Sum(g => g.Count() - 1),
-            FirstPassYield = withId.Count == 0 ? null : (double)withId.Count(g => g.First().Rating == ResultRating.Pass) / withId.Count,
-            FinalYield = withId.Count == 0 ? null : (double)withId.Count(g => g.Last().Rating == ResultRating.Pass) / withId.Count,
+            FirstPassYield = withId.Count == 0 ? null : (double)withId.Count(g => HasOutcome(g.First(), ResultRating.Pass)) / withId.Count,
+            FinalYield = withId.Count == 0 ? null : (double)withId.Count(g => HasOutcome(g.Last(), ResultRating.Pass)) / withId.Count,
             MeanDuration = durations.Count == 0 ? null : TimeSpan.FromSeconds(durations.Average()),
             First = runs.FirstOrDefault()?.Started,
             Last = runs.LastOrDefault()?.Started,
             Measurements = MeasurementsOf(runs),
             Failures = FailuresOf(runs),
             Daily = runs.GroupBy(r => DateOnly.FromDateTime(r.Started.LocalDateTime)).OrderBy(g => g.Key)
-                .Select(g => new DailyCount(g.Key, g.Count(r => r.Rating == ResultRating.Pass), g.Count(r => r.Rating == ResultRating.Fail),
-                    g.Count(r => r.Rating == ResultRating.Error), g.Count(r => r.Rating == ResultRating.NResult))).ToList(),
+                .Select(g => new DailyCount(g.Key, g.Count(r => HasOutcome(r, ResultRating.Pass)), g.Count(r => HasOutcome(r, ResultRating.Fail)),
+                    g.Count(r => HasOutcome(r, ResultRating.Error)), g.Count(r => HasOutcome(r, ResultRating.NResult)), g.Count(r => r.OperatorAbort))).ToList(),
             Stations = runs.GroupBy(r => r.Station).OrderBy(g => g.Key, StringComparer.Ordinal)
-                .Select(g => new StationCount(g.Key, g.Count(), g.Count(r => r.Rating == ResultRating.Pass), (double)g.Count(r => r.Rating == ResultRating.Pass) / g.Count())).ToList(),
+                .Select(g => new StationCount(g.Key, g.Count(), g.Count(r => HasOutcome(r, ResultRating.Pass)), (double)g.Count(r => HasOutcome(r, ResultRating.Pass)) / g.Count())).ToList(),
         };
     }
+
+    private static bool HasOutcome(ResultRun run, ResultRating rating) => !run.OperatorAbort && run.Rating == rating;
 
     public static string NameOf(ResultRun run, ResultEvent e)
         => run.Structure.FirstOrDefault(n => n.Id == e.NodeId)?.Name ?? (e.Path.LastIndexOf(" > ", StringComparison.Ordinal) is var i and >= 0 ? e.Path[(i + 3)..] : e.Path);
@@ -296,7 +298,7 @@ public static class ResultAnalysis
         var rows = new List<IEnumerable<object?>>
         {
             new object?[] { "Auswertung", s.Filter.Describe() },
-            new object?[] { "Prüfläufe", s.Runs, "PASS", s.Pass, "FAIL", s.Fail, "ERROR", s.Error, "Werkerabbruch", s.OperatorAborts },
+            new object?[] { "Prüfläufe", s.Runs, "PASS", s.Pass, "FAIL", s.Fail, "ERROR", s.Error, "ABORT", s.OperatorAborts },
             new object?[] { "Prüflinge", s.Duts, "Wiederholprüfungen", s.Retests, "FPY", s.FirstPassYield, "Endausbeute", s.FinalYield },
             Array.Empty<object?>(),
             new object?[] { "Messwert", "Einheit", "Anzahl", "Min", "Max", "Mittelwert", "Standardabweichung", "Untergrenze", "Obergrenze", "außerhalb", "Cp", "Cpk", "Bewertung" },
@@ -306,8 +308,8 @@ public static class ResultAnalysis
         rows.Add(["Schritt", "FAIL", "ERROR", "betroffene Prüfläufe", "häufigste Meldung"]);
         rows.AddRange(s.Failures.Select(f => new object?[] { f.Name, f.Fail, f.Error, f.Runs, f.TypicalMessage }));
         rows.Add(Array.Empty<object?>());
-        rows.Add(["Tag", "PASS", "FAIL", "ERROR", "NRESULT"]);
-        rows.AddRange(s.Daily.Select(d => new object?[] { d.Day.ToString("dd.MM.yyyy", De), d.Pass, d.Fail, d.Error, d.Other }));
+        rows.Add(["Tag", "PASS", "FAIL", "ERROR", "NRESULT", "ABORT"]);
+        rows.AddRange(s.Daily.Select(d => new object?[] { d.Day.ToString("dd.MM.yyyy", De), d.Pass, d.Fail, d.Error, d.Other, d.Abort }));
         return Csv(rows);
     }
 
@@ -316,7 +318,7 @@ public static class ResultAnalysis
     {
         var rows = new List<IEnumerable<object?>>
         {
-            new object?[] { "Prüfling", run.DutId, "Test", run.TestName, "Version", run.TestVersion, "Prüfplatz", run.Station, "Bewertung", run.Rating, "Start", run.Started, "Ende", run.Ended },
+            new object?[] { "Prüfling", run.DutId, "Test", run.TestName, "Version", run.TestVersion, "Prüfplatz", run.Station, "Bewertung", run.Status.ToString(), "Start", run.Started, "Ende", run.Ended },
             Array.Empty<object?>(),
             new object?[] { "Nr", "Zeit", "Art", "Schritt", "Pfad", "Iteration", "Wert", "Einheit", "Untergrenze", "Obergrenze", "Bewertung", "Meldung" },
         };
