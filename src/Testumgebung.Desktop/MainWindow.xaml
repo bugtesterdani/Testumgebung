@@ -40,12 +40,14 @@
                             <StackPanel Visibility="{Binding IsSignedIn, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
                                 <TextBlock Style="{StaticResource SectionTitle}" Text="Anmelden" />
                                 <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
-                                           Visibility="{Binding IsSimulatedLogin, Converter={StaticResource BoolVis}, ConverterParameter=invert}"
+                                           Visibility="{Binding ShowsLoginName, Converter={StaticResource BoolVis}, ConverterParameter=invert}"
                                            Text="Persönliches Firmenkonto (Microsoft Entra ID). Windows zeigt den Kontodialog; die Anwendung sieht kein Passwort." />
-                                <StackPanel Visibility="{Binding IsSimulatedLogin, Converter={StaticResource BoolVis}}">
+                                <StackPanel Visibility="{Binding ShowsLoginName, Converter={StaticResource BoolVis}}">
                                     <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6"
-                                               Text="Simulierte Anmeldung – keine Entra-App konfiguriert (Einstellungen → Zugang)." />
-                                    <TextBox Text="{Binding LoginName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" />
+                                               Text="{Binding LoginExplanation}" />
+                                    <TextBox Text="{Binding LoginName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8" AutomationProperties.Name="Benutzername"/>
+                                    <PasswordBox x:Name="LocalLoginPassword" MaxLength="1024" Margin="0,0,0,8" KeyDown="OnLocalPasswordKey" AutomationProperties.Name="Passwort"
+                                                 Visibility="{Binding IsLocalPasswordLogin, Converter={StaticResource BoolVis}}"/>
                                 </StackPanel>
                                 <Button Style="{StaticResource PrimaryButton}" Content="Anmelden" Command="{Binding LoginCommand}"
                                         Visibility="{Binding CanEnableDevelopmentLogin, Converter={StaticResource BoolVis}, ConverterParameter=invert}" />
@@ -61,7 +63,7 @@
                                 <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
                                            Text="Abmelden entfernt die erweiterten Rechte. Laufende Prüfungen laufen weiter." />
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Style="{StaticResource OutlineButton}" Content="Firmenkonto wechseln" Command="{Binding SwitchAccountCommand}" Click="ClosePopup" Margin="0,0,8,0" />
+                                    <Button Style="{StaticResource OutlineButton}" Content="{Binding AccountSwitchLabel}" Command="{Binding SwitchAccountCommand}" Click="ClosePopup" Margin="0,0,8,0" />
                                     <Button Style="{StaticResource OutlineButton}" Content="Abmelden" Command="{Binding LogoutCommand}" Click="ClosePopup" />
                                 </StackPanel>
                             </StackPanel>

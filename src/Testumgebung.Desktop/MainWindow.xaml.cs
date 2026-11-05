@@ -74,6 +74,7 @@ public partial class MainWindow : Window
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
         ConfigureExampleMode(exampleMode);
         DataContext = Shell;
+        Shell.Session.Changed += () => Dispatcher.BeginInvoke(new Action(() => { if (!Shell.Session.IsSigningIn) LocalLoginPassword.Clear(); }));
         _programStartupLoader = new(_releases, Shell.Editor, () => Shell.SelectedStation, () => Shell.Stations.Any(s => s.IsRunning));
         _releases.Changed += () => Dispatcher.BeginInvoke(new Action(() => _ = _programStartupLoader.TryLoadAsync()));
         _ = _releases.RefreshAsync();
@@ -92,15 +93,24 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Keeps account configuration and provider selection together during startup.</summary>
+    private void OnLocalPasswordKey(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Enter || !Shell.LoginCommand.CanExecute(null)) return;
+        Shell.LoginCommand.Execute(null); e.Handled = true;
+    }
+
     private IdentityServices CreateIdentityServices(MainWindowStartup? startup, bool developmentMode)
     {
         // Zugang je Prüfplatz: %ProgramData%\Testumgebung\zugang.json (Entra-App, Rechte je Konto).
         // Entwicklungsmodus muss ausdrücklich beim Start eingeschaltet werden.
         var accessStore = startup?.AccessStore ?? new AccessConfigStore(AccessConfigStore.DefaultPath);
         var access = accessStore.Load();
-        IIdentityProvider Provider(AccessConfig? c) => c is { UsesEntra: true }
-            ? new MsalIdentityProvider(c.ClientId!, c.TenantId!)
-            : new SimulatedIdentityProvider(() => Shell?.LoginName ?? "");
+        IIdentityProvider Provider(AccessConfig? c) => c switch
+        {
+            { UsesEntra: true } => new MsalIdentityProvider(c.ClientId!, c.TenantId!),
+            { UsesLocalPasswords: true } => new LocalPasswordIdentityProvider(c, () => (Shell?.LoginName ?? "", LocalLoginPassword.Password)),
+            _ => new SimulatedIdentityProvider(() => Shell?.LoginName ?? "")
+        };
         return new IdentityServices(new SessionService(Provider(access), access, allowDevelopmentMode: developmentMode), accessStore, Provider);
     }
 

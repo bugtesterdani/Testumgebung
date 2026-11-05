@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief WPF-Anbindung für Anwendungseinstellungen. Ereignisse und Bindings verbinden diese Ansicht mit ihrem Datenkontext.
  */
@@ -12,6 +12,12 @@ namespace Testumgebung.Desktop.Views;
 
 public partial class SettingsView : UserControl
 {
+    private void OnSetLocalPassword(object sender, RoutedEventArgs e)
+    {
+        if ((DataContext as ShellViewModel)?.Session.CanDevelop != true || sender is not FrameworkElement { DataContext: RightsEditRow row }) return;
+        new LocalPasswordWindow(row) { Owner = Window.GetWindow(this) }.ShowDialog();
+    }
+
     private bool _syncing;
     private SettingsViewModel? _attached;
 

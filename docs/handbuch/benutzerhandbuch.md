@@ -583,3 +583,8 @@ Das Handbuch benötigt den zugehörigen Ordner **bilder**. Beim Weitergeben die 
 ## Versionierte Prüfprogramme mit Git/SVN
 
 Unter **Releases → Programmquellen & Versionen …** werden zentrale Quellen, das Standardprogramm und lokale Platzfestsetzungen eingerichtet. Der Programmkatalog wird ausdrücklich über den Datenbank-Upgrade-Button aktiviert. Lokale Entwicklung bleibt von der zentralen Freigabe getrennt; endgültige neue Freigaben benötigen danach einen Remote-Commit beziehungsweise eine SVN-Revision. Die vollständige Einrichtung, Migration und Bedienung beschreibt [Versionierte Prüfprogramme](../versionierte-pruefprogramme.md).
+
+
+## Lokaler Benutzerlogin mit Passwort
+
+Als Übergang bis zur Entra-Einrichtung lässt sich unter **Einstellungen → Zugang** ein lokaler Passwortzugang aktivieren. Für jedes Konto ein Passwort über **Setzen / ändern** hinterlegen, die Option aktivieren und **Zugang speichern**. Danach werden beim lokalen Login Benutzername und Passwort abgefragt. Entra hat bei vollständiger Einrichtung Vorrang. Die [ausführliche Anleitung](../lokaler-passwortzugang.md) beschreibt Ersteinrichtung, Passwortwechsel und das Deaktivieren.

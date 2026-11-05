@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verwaltet Anmeldung, Rechteprüfung und Inaktivität; überholte Anmeldeantworten dürfen neue Sitzungen nicht überschreiben.
  */
@@ -43,7 +43,7 @@ public sealed class SessionService
         LastError = null;
         Changed?.Invoke();
     }
-    public bool IsDevelopmentMode => AllowDevelopmentMode && Config is not { UsesEntra: true };
+    public bool IsDevelopmentMode => AllowDevelopmentMode && Config is not { UsesEntra: true } && Config is not { UsesLocalPasswords: true };
 
     public UserIdentity? User { get; private set; }
     public UserRights Rights { get; private set; }
@@ -62,14 +62,17 @@ public sealed class SessionService
     /// <summary>Andere Zugangskonfiguration übernehmen (z. B. nach Bearbeitung durch einen Administrator).</summary>
     public void Reconfigure(IIdentityProvider provider, AccessConfig? config)
     {
+        _signInGeneration++; IsSigningIn = false;
         var wasSigned = User;
+        var wasPasswordProvider = Provider is LocalPasswordIdentityProvider;
         Provider = provider;
         Config = config;
         if (wasSigned is not null)
         {
             // Rechte neu bewerten; passt die Anmeldung nicht mehr zur Konfiguration, abmelden.
             var (rights, error) = Evaluate(wasSigned);
-            if (error is not null || rights == UserRights.None) Clear("Zugangskonfiguration geändert");
+            if (wasPasswordProvider && provider is not LocalPasswordIdentityProvider) error = "Anmeldeart geändert";
+            if (error is not null || (rights == UserRights.None && !IsLocalPasswordIdentity(wasSigned))) Clear("Zugangskonfiguration geändert");
             else Rights = rights;
         }
         Changed?.Invoke();
@@ -93,24 +96,7 @@ public sealed class SessionService
         {
             var identity = await Provider.SignInAsync(selectAccount, cancellationToken).ConfigureAwait(false);
             if (generation != _signInGeneration) return false; // überholt (z. B. Abmelden während des Dialogs)
-            var (rights, error) = Evaluate(identity);
-            if (error is not null)
-            {
-                LastError = error;
-                Audited?.Invoke(identity.Upn, "Anmeldung abgelehnt", error);
-                return false;
-            }
-            if (rights == UserRights.None)
-            {
-                LastError = $"{identity.Upn} hat auf diesem Prüfplatz keine Rechte (Entwickeln/Freigeben).";
-                Audited?.Invoke(identity.Upn, "Anmeldung ohne Rechte", "Keine Zuordnung in der Zugangskonfiguration");
-                return false;
-            }
-            User = identity;
-            Rights = rights;
-            _lastActivity = _clock.Now;
-            Audited?.Invoke(identity.Upn, "Anmeldung", $"{identity.Source}{(identity.IsConfirmed ? " (bestätigt)" : " (simuliert)")} · Rechte: {RightsText(rights)}");
-            return true;
+            return AcceptIdentity(identity);
         }
         catch (SignInCanceledException)
         {
@@ -127,6 +113,29 @@ public sealed class SessionService
             if (generation == _signInGeneration) IsSigningIn = false;
             Changed?.Invoke();
         }
+    }
+
+    /// <summary>Authorization is applied only after an authentication result is current.</summary>
+    private bool AcceptIdentity(UserIdentity identity)
+    {
+        var (rights, error) = Evaluate(identity);
+        if (error is not null)
+        {
+            LastError = error;
+            Audited?.Invoke(identity.Upn, "Anmeldung abgelehnt", error);
+            return false;
+        }
+        if (rights == UserRights.None && !IsLocalPasswordIdentity(identity))
+        {
+            LastError = $"{identity.Upn} hat auf diesem Prüfplatz keine Rechte (Entwickeln/Freigeben).";
+            Audited?.Invoke(identity.Upn, "Anmeldung ohne Rechte", "Keine Zuordnung in der Zugangskonfiguration");
+            return false;
+        }
+        User = identity;
+        Rights = rights;
+        _lastActivity = _clock.Now;
+        Audited?.Invoke(identity.Upn, "Anmeldung", $"{identity.Source}{(identity.IsConfirmed ? " (bestätigt)" : IsLocalPasswordIdentity(identity) ? " (lokal)" : " (simuliert)")} · Rechte: {RightsText(rights)}");
+        return true;
     }
 
     public async Task SignOutAsync(string reason = "Abmeldung")
@@ -167,6 +176,8 @@ public sealed class SessionService
             ? (UserRights.Develop | UserRights.Release, null)
             : (UserRights.None, "Zugangskonfiguration fehlt. Im Produktivbetrieb werden keine erweiterten Rechte vergeben.");
         if (Config.LoadError is not null) return (UserRights.None, "Zugangskonfiguration beschädigt: " + Config.LoadError);
+        if (Config.UsesLocalPasswords)
+            return IsLocalPasswordIdentity(identity) ? (Config.RightsFor(identity.Upn), null) : (UserRights.None, "Lokale Anmeldung mit Passwort erforderlich.");
         if (!AllowDevelopmentMode && !Config.UsesEntra)
             return (UserRights.None, "Im Produktivbetrieb ist eine bestätigte Entra-Anmeldung erforderlich.");
         if (Config.UsesEntra)
@@ -177,6 +188,9 @@ public sealed class SessionService
         }
         return (Config.RightsFor(identity), null);
     }
+
+    private bool IsLocalPasswordIdentity(UserIdentity identity)
+        => Config is { UsesLocalPasswords: true } && Provider is LocalPasswordIdentityProvider && LocalPasswordIdentityProvider.Matches(identity, Config);
 
     private void Clear(string? reason)
     {
