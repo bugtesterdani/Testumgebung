@@ -1,4 +1,4 @@
-# Releases über GitHub-Issues und Pull Requests
+﻿# Releases über GitHub-Issues und Pull Requests
 
 Release Notes stehen ausschließlich im jeweiligen GitHub-Release. Es gibt
 keine eingecheckte Release-Notes-Datei oder CHANGELOG im Projekt.
@@ -134,6 +134,21 @@ Im Issue #53 ist **1.2.2** als Folgeversion vorgemerkt
 (`next-release-version:1.2.2`). Erst nach erfolgreichem offiziellen Paket-Build
 entstehen dafür das nächste bearbeitbare Release-Issue und der passende
 Milestone. Der Release-Entwurf wird anschließend bewusst veröffentlicht.
+
+## Release 1.2.2 und Folgeversion 1.2.3
+
+Der Abschluss-PR für **1.2.2** schließt das Planungs-Issue **#56** mit
+`Closes #56`. Die vorgesehenen Änderungen sind nach `main` gemerged.
+Nach bestandenem PR-Build und Merge erzeugt die bestehende Automatik den Tag
+**v1.2.2** am Merge-Commit und den signierten Release-Entwurf mit fortlaufender
+Buildrevision, MSIX-Bundle, Kommandozeile, Dokumentation, KI-Paket, Quellen,
+Lizenznachweisen und den direkt auf GitHub erzeugten Release Notes.
+
+Im Issue #56 ist **1.2.3** ausdrücklich als Folgeversion vorgemerkt
+(`next-release-version:1.2.3`). Erst nach erfolgreichem offiziellen Paket-Build
+legt die Automatik dafür das nächste bearbeitbare Release-Issue samt Milestone an.
+Bis dahin bleibt 1.2.2 die gemeinsame Versionsquelle. Der fertige Release-Entwurf
+wird anschließend geprüft und bewusst veröffentlicht.
 
 ## Inhalt der automatisch erzeugten Notes
 
