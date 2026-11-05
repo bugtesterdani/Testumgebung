@@ -105,6 +105,7 @@ public sealed partial class ProgramSourcesTests
         setup.Stations[0].Selection = new SelectionConfig
         {
             OrderSession = orderSession,
+            UseManual = false,
             Rules = [new SelectionRule { Pattern = "*", Test = source.Name }],
         };
         var ui = new QueueDispatcher();
