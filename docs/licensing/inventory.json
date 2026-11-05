@@ -54560,6 +54560,13 @@
       "license": "MIT",
       "location": "GitHub runner action",
       "used_by": "Both GitHub workflows; not redistributed"
+    },
+    {
+      "name": "Apache Subversion (integration tests)",
+      "version": "1.15.0",
+      "license": "Apache-2.0 and included dependency notices",
+      "location": "artifacts/tools/svn-tests/1.15.0",
+      "used_by": "build/prepare-svn-tests.ps1; build/coverage.ps1; test/CI only; not bundled"
     }
   ],
   "external": [

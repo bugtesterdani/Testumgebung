@@ -1,4 +1,4 @@
-﻿path,size,sha256
+path,size,sha256
 licenses/third-party/build-tools/actions-checkout/LICENSE,1097,3e855ffa704114a51628ef8f0bf3aeb41728adf9d9070e263bf58aa5640b0eb5
 licenses/third-party/build-tools/actions-setup-dotnet/LICENSE,1096,7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32
 licenses/third-party/build-tools/actions-setup-python/LICENSE,1096,7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32
@@ -847,3 +847,16 @@ licenses/third-party/w64devkit/zstd-1.5.7.tar.gz/zstd-1.5.7/build/LICENSE,0,e3b0
 licenses/third-party/w64devkit/zstd-1.5.7.tar.gz/zstd-1.5.7/COPYING,18091,f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505
 licenses/third-party/w64devkit/zstd-1.5.7.tar.gz/zstd-1.5.7/LICENSE,1549,7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8
 licenses/third-party/w64devkit/zstd-1.5.7.tar.gz/zstd-1.5.7/README.md,11487,c97c5752f0cf8e235e5834726968708ff1f4b3bf6bfbfcf59db0229b5889ac35
+licenses/third-party/svn-tests/1.15.0/Apache Portable Runtime License.txt,18320,75c315a4677f11e59fed377e9f5b7a06aa5af8a897af063883d56e24c19c38f7
+licenses/third-party/svn-tests/1.15.0/Apache Portable Runtime Notice.txt,533,71e92c4f3d1d3ab5a68948636b26ea5a375add248997c626a2683f609456e3de
+licenses/third-party/svn-tests/1.15.0/Apache Portable Runtime Utility License.txt,22313,d35cc835890954c6361e100e400f8a8987844c6f912e926a77396fcd7c88f984
+licenses/third-party/svn-tests/1.15.0/Apache Portable Runtime Utility Notice.txt,585,31340f32aba51a405240a2293e43a9c97e1c6fed3ccc3747c41a2fa9793d292b
+licenses/third-party/svn-tests/1.15.0/Apache Serf License.txt,11357,c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+licenses/third-party/svn-tests/1.15.0/Apache Serf Notice.txt,287,015a541e5321866eabace13cb71957b7a80257cb6d298c6339ab25dea731595e
+licenses/third-party/svn-tests/1.15.0/Apache Subversion License.txt,22511,e78be5e9a2ba06feda759faed4ac87614f7d1b6a88d07b6f0b50f753264bda2b
+licenses/third-party/svn-tests/1.15.0/Apache Subversion Notice.txt,1433,f4c504b939c2d0c2850d2725545ec8e8f44e7a2e1259d694139513cc433d2792
+licenses/third-party/svn-tests/1.15.0/Expat License.txt,1144,31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87
+licenses/third-party/svn-tests/1.15.0/NOTICE.md,1172,aef4664dccc8bdcbdcc2f169e16a0778d3d66872d9da46e5ff4c69b462ef0d9e
+licenses/third-party/svn-tests/1.15.0/OpenSSL License.txt,10175,7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a
+licenses/third-party/svn-tests/1.15.0/SQLite License Information.txt,678,25fb17f684b783a8004cf935e0c225dc1c9c2b6abcb2fe93fbe72e8351c5af64
+licenses/third-party/svn-tests/1.15.0/zlib License.txt,1002,e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2

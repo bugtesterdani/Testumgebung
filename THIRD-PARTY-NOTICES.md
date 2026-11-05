@@ -677,3 +677,8 @@ NI-DAQmx/VISA, PEAK, Kvaser, Vector und benutzerdefinierte DLLs sind nicht Besta
 Doxygen wird ausschließlich zur Quellcode-Dokumentation verwendet, nicht im MSIX gebündelt. Werkzeuglizenz: GNU GPL Version 2. Der Hersteller nimmt die erzeugten Dokumente ausdrücklich von der Werkzeuglizenz aus; eigener Code bleibt MIT.
 
 [Lizenztext](licenses/third-party/doxygen/1.18.0/LICENSE), [Herkunft und Verwendung](licenses/third-party/doxygen/1.18.0/NOTICE.md). Hinweise der erzeugten HTML-Assets bleiben erhalten.
+
+
+## SVN-Integrationstestclient 1.15.0
+
+Der Qualitätslauf verwendet einen per SHA-256 gepinnten Windows-Testclient. Er wird nicht mit dem MSIX oder als Werkzeug-Download weitergegeben. Die Originalhinweise für Subversion und sämtliche enthaltenen Bibliotheken stehen unter [Herkunft und Lizenzen](licenses/third-party/svn-tests/1.15.0/NOTICE.md).

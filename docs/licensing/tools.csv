@@ -1,4 +1,4 @@
-﻿name,version,license,location,used_by
+name,version,license,location,used_by
 w64devkit,2.11.0,Unlicense for kit glue; component licenses separately,toolchains/w64devkit,build/acquire-toolchain.ps1; build/CodeWorkers.targets
 GCC,16.2.0,GPL-3.0-or-later; runtime exception for eligible runtime use,toolchains/w64devkit/bin/g++.exe,src/Testumgebung.Workers.Native/Toolchain.cs
 NSIS,3.13,zlib/libpng; bzip2 and CPL-1.0 compression modules; see COPYING,toolchains/w64devkit/bin/makensis.exe,Kit installer compiler; corresponding sources included
@@ -56,3 +56,4 @@ actions/checkout,v7.0.1 / 3d3c42e5aac5ba805825da76410c181273ba90b1,MIT,GitHub ru
 actions/setup-dotnet,v6.1.0 / 0f4a354dd5547a28c70b7853dbd95d5b67886e73,MIT,GitHub runner action,MSIX workflow; not redistributed
 actions/setup-python,v7.1.0 / 6d4fd22b20465ccc0f7354476588e8df7c9ca0e0,MIT,GitHub runner action,Both GitHub workflows; not redistributed
 actions/upload-artifact,v7.0.2 / cf430e030ddbb5b0abf93d22962f4752f3646cd9,MIT,GitHub runner action,Both GitHub workflows; not redistributed
+Apache Subversion (integration tests),1.15.0,Apache-2.0 and included dependency notices,artifacts/tools/svn-tests/1.15.0,build/prepare-svn-tests.ps1; build/coverage.ps1; test/CI only; not bundled

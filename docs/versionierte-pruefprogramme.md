@@ -98,3 +98,10 @@ Diese Erweiterung fügt keine NuGet-Pakete und keine ausgelieferten Fremdbinärd
 - [Apache: SVN-Binäranbieter](https://subversion.apache.org/packages)
 
 Reale Datenbankserver und betriebliche Repository-Anmeldung müssen zusätzlich in der Zielinstallation geprüft werden. Lokale Integrationsprüfungen ersetzen keine Freigabe an produktiver Hardware.
+
+
+## Wiederholbare Qualitätsprüfung
+
+`build/coverage.ps1` richtet bei fehlendem `TESTUMGEBUNG_SVN_TEST_CLIENT` automatisch den Testclient SVN 1.15.0 unter `artifacts/tools/svn-tests/1.15.0` ein. Das Archiv wird vor dem Entpacken gegen die fest hinterlegte SHA-256-Prüfsumme geprüft. Auch bei vorhandenem Cache werden die Programme aus dem verifizierten Archiv neu entpackt und ihre Versionen geprüft. Download- oder Prüffehler brechen den Qualitätslauf ab; der SVN-Test wird dort nicht stillschweigend ausgelassen.
+
+Ein ausdrücklich gesetzter Testclient bleibt verwendbar. Direkte `dotnet test`-Aufrufe ohne Clientvariable überspringen weiterhin den SVN-Integrationstest mit ausgewiesenem Grund. Die Variable wird nach dem Qualitätslauf auf ihren ursprünglichen Wert zurückgesetzt. Das Testwerkzeug ist kein Bestandteil der produktiven Installation; seine Original-Lizenzhinweise sind im [Lizenzverzeichnis](../licenses/third-party/svn-tests/1.15.0/NOTICE.md) hinterlegt.
