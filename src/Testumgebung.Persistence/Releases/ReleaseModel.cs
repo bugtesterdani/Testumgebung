@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Definiert Release-Zustände und Audit-Daten unabhängig vom Speicheradapter.
  */
@@ -60,8 +60,11 @@ public sealed record ReleaseInfo(
     string? ReleasedBy = null,
     DateTimeOffset? ReleasedAt = null,
     DateTimeOffset? ArchivedAt = null,
-    string? ReviewReport = null)
+    string? ReviewReport = null,
+    Programs.SourceVersion? Source = null)
 {
+    public string SourceTitle => $"{ProjectName} v{Version}" + (Source is null ? "" : $" · {Source.Source.Line} · {Source.Revision}");
+
     public string StateText => ReleaseStateText.Of(State);
 
     public string ShortHash => PackageSha256.Length > 12 ? PackageSha256[..12] + "…" : PackageSha256;

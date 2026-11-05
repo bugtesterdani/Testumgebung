@@ -1,4 +1,4 @@
-# Bildnachweis
+﻿# Bildnachweis
 
 `14-zwei-pruefplaetze.png`: Ergänzung vom 12.10.2026 für Version 1.0.10.0, WPF-Doppelansicht mit zwei Beispielaufforderungen bei 1280 × 900. Der Oberflächentest erzeugt zusätzlich eine 1920 × 1080-Version unter `artifacts/verification/paired-stations-1920.png`. Die Antworten beider Seiten wurden im Test getrennt bestätigt; die Messwerte im Bild sind Beispieldaten.
 
@@ -31,3 +31,6 @@ manuellen Anschlüssen sowie ein tatsächlich pausierter Simulationslauf mit
 `Spannung = 12,5` nach der Zuweisung, vor Ergebnisweitergabe. Die Quelldateien
 liegen unter `artifacts/verification/graph-overview.png` und `graph-debug.png`.
 Es wurden keine realen Geräte angesprochen.
+
+
+`20-programmquellen.png` und `21-programmzuordnung.png`: Tatsächliches WPF-Fenster „Programmquellen & Versionen“ mit lokalem Testkatalog und Beispiel-URL `example.invalid`, erzeugt durch `DevelopmentWorkspaceTests.VerifyProgramSources`. Kein produktives Repository und keine produktive Datenbank wurden verwendet.

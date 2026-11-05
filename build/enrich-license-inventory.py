@@ -64,6 +64,7 @@ TOOLS=[
 ('pip','26.3','MIT plus vendor licenses','workers/python/runtime/pip-bootstrap/pip.whl','build/acquire-pip.ps1; PythonEnvironments.cs'),
 ('ReportGenerator','5.5.12','Apache-2.0','artifacts/tools/reportgenerator','build/coverage.ps1; development only'),
 ('Doxygen','1.18.0','GPL-2.0; generated documents exempt per upstream','artifacts/tools/doxygen/1.18.0','build/doxygen.ps1; development/CI only; not bundled'),
+('Apache Subversion (integration tests)','1.15.0','Apache-2.0 and included dependency notices','artifacts/tools/svn-tests/1.15.0','build/prepare-svn-tests.ps1; build/coverage.ps1; test/CI only; not bundled'),
 ('ReportLab','5.1.0','BSD-3-Clause','Documentation workflow Python environment','build/create-complete-manual.py; documentation only'),
 ('Pillow (CI documentation)','13.0.0 in local dependency review','HPND/Pillow license plus codec notices','GitHub runner Python environment','ReportLab 5.1.0 dependency; locally resolved on 2026-11-03'),
 ('charset-normalizer (CI documentation)','3.5.2 in audited Actions run','MIT','GitHub runner Python environment','ReportLab 5.1.0 dependency; locally resolved on 2026-11-03'),
@@ -244,6 +245,8 @@ def write_notices(data):
     lines += ['## Entwicklungswerkzeug Doxygen 1.18.0', '',
               'Doxygen wird ausschließlich zur Quellcode-Dokumentation verwendet, nicht im MSIX gebündelt. Werkzeuglizenz: GNU GPL Version 2. Der Hersteller nimmt die erzeugten Dokumente ausdrücklich von der Werkzeuglizenz aus; eigener Code bleibt MIT.', '',
               '[Lizenztext](licenses/third-party/doxygen/1.18.0/LICENSE), [Herkunft und Verwendung](licenses/third-party/doxygen/1.18.0/NOTICE.md). Hinweise der erzeugten HTML-Assets bleiben erhalten.', '']
+    lines += ['## SVN-Integrationstestclient 1.15.0', '',
+              'Der Qualitätslauf bezieht einen gepinnten Windows-Testclient; er wird nicht im MSIX gebündelt. Originalhinweise für Subversion und sämtliche im Testpaket enthaltenen Bibliotheken: [Herkunft und Lizenzen](licenses/third-party/svn-tests/1.15.0/NOTICE.md).', '']
     (ROOT/'THIRD-PARTY-NOTICES.md').write_text('\n'.join(lines),encoding='utf-8')
 
 def write_inventory(data):

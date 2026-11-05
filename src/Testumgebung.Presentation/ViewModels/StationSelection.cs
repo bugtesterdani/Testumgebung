@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verwaltet Scan, Auftragsauswertung und Programmauswahl vor dem Start eines einzelnen Prüfplatzes.
  */
@@ -49,7 +49,7 @@ public sealed partial class StationViewModel
         if (_coordinator?.Setup.ExampleProjects is { Count: > 0 } examples)
             return examples.Select(p => new AvailableTest(p.Definition.Name, p.Definition.Version, true, "Simulation / Beispiel")).ToList();
         if (_releases is not null && !UseDraft)
-            return _releases.All.Where(r => r.State is ReleaseState.Released or ReleaseState.Archived)
+            return _releases.ForStation(ProgramStationId).Where(r => r.State is ReleaseState.Released or ReleaseState.Archived)
                 .OrderBy(r => r.ProjectName, StringComparer.OrdinalIgnoreCase).ThenByDescending(r => r.ReleasedAt)
                 .Select(r => new AvailableTest(r.ProjectName, r.Version, r.State == ReleaseState.Released,
                     r.State == ReleaseState.Released ? "freigegeben" : "früher freigegeben"))
@@ -68,6 +68,8 @@ public sealed partial class StationViewModel
         }
         if (_releases is not null && !UseDraft)
         {
+            await _releases.RefreshAsync().ConfigureAwait(true);
+            if (_releases.Catalog is not null) return await LoadCatalogTestAsync(test).ConfigureAwait(true);
             if (test.IsCurrent && _releases.GetReleased(test.Name) is { } current && current.Info.Version == test.Version)
                 return (current.Project, current.Info);
             var info = _releases.All.FirstOrDefault(r => r.ProjectName == test.Name && r.Version == test.Version
@@ -293,6 +295,7 @@ public sealed class StationSelectionViewModel : ObservableObject
         AssignCommand.RaiseCanExecuteChanged();
         try
         {
+            await _station.RefreshProgramSourcesAsync().ConfigureAwait(true);
             var tests = _station.AvailableTests();
             var (custom, customError) = await RunCustomSelectionAsync(config, id, cancellation.Token).ConfigureAwait(true);
             if (cancellation.IsCancellationRequested || !_isActive) return;

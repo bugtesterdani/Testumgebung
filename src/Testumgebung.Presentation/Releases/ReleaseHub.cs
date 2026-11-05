@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Ermittelt gültige Freigaben und lädt geprüfte Pakete für die Prüfprogrammauswahl.
  */
@@ -13,7 +13,7 @@ namespace Testumgebung.Presentation.Releases;
 /// meldet neue Freigaben und fragt die Ablage regelmäßig ab (andere Prüfplätze, gemeinsame Datenbank).
 /// Jeder Abruf liefert eine eigene Kopie – laufende Prüflinge behalten ihre Version.
 /// </summary>
-public sealed class ReleaseHub : IAsyncDisposable
+public sealed partial class ReleaseHub : IAsyncDisposable
 {
     private readonly object _gate = new();
     private readonly Dictionary<string, (ReleaseInfo Info, string Json)> _released = new(StringComparer.Ordinal);
@@ -46,8 +46,10 @@ public sealed class ReleaseHub : IAsyncDisposable
     {
         try
         {
+            CheckProgramStore();
             string? rejected = null;
             var all = await Service.ListAsync(ct).ConfigureAwait(false);
+            await RefreshCatalogAsync(ct).ConfigureAwait(false);
             foreach (var current in all.Where(r => r.State == ReleaseState.Released).GroupBy(r => r.ProjectName)
                          .Select(g => g.OrderByDescending(r => r.ReleasedAt).First()))
             {

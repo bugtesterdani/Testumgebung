@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verpackt Projekt und Abhängigkeiten mit Manifest und Prüfsummen zur späteren Integritätsprüfung.
  */
@@ -23,7 +23,8 @@ public sealed record ReleaseManifest(
     string CreatedBy,
     DateTimeOffset CreatedAt,
     string Application,
-    IReadOnlyList<ManifestEntry> Entries);
+    IReadOnlyList<ManifestEntry> Entries,
+    Programs.SourceVersion? Source = null);
 
 /// <summary>Geöffnetes, geprüftes Paket.</summary>
 public sealed record OpenedPackage(ReleaseManifest Manifest, TestProject Project, string ProjectJson, IReadOnlyList<string> Problems)
@@ -59,15 +60,17 @@ public static class ReleasePackage
 
     /// <summary>Paket bauen. Die Version des Projekts muss bereits gesetzt sein.</summary>
     public static (byte[] Bytes, ReleaseManifest Manifest) Build(TestProject project, string createdBy, DateTimeOffset createdAt, ProjectSerializer? serializer = null,
-        RuntimeSnapshot? environment = null)
+        RuntimeSnapshot? environment = null, Programs.SourceVersion? source = null, byte[]? sourceArchive = null)
     {
         serializer ??= new ProjectSerializer();
         var json = serializer.Serialize(project);
         var environmentJson = environment is null ? null : JsonSerializer.Serialize(environment, Json);
         var entries = ComputeEntries(json, project).ToList();
         if (environmentJson is not null) entries.Add(new("Laufzeitumgebung", "runtime.json", "1", Sha256(environmentJson)));
+        if (source is not null && sourceArchive is null) throw new ArgumentException("Remote-Quellarchiv fehlt.");
+        if (sourceArchive is not null) entries.Add(new("Programmquelle", "source.zip", "1", Sha256(sourceArchive)));
         var manifest = new ReleaseManifest(Format, project.Definition.Name, project.Definition.Version, createdBy, createdAt,
-            "Testumgebung " + (typeof(ReleasePackage).Assembly.GetName().Version?.ToString(3) ?? "?"), entries);
+            "Testumgebung " + (typeof(ReleasePackage).Assembly.GetName().Version?.ToString(3) ?? "?"), entries, source);
 
         using var ms = new MemoryStream();
         using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
@@ -81,8 +84,13 @@ public static class ReleasePackage
             }
             Add("manifest.json", JsonSerializer.Serialize(manifest, Json));
             Add("projekt.tproj.json", json);
+            if (sourceArchive is not null)
+            {
+                var entry = zip.CreateEntry("source.zip", CompressionLevel.NoCompression); entry.LastWriteTime = ZipTime;
+                using var output = entry.Open(); output.Write(sourceArchive);
+            }
             if (environmentJson is not null) Add("runtime.json", environmentJson);
-            foreach (var (path, source) in CodeFiles(project.Definition)) Add(path, source);
+            foreach (var (path, code) in CodeFiles(project.Definition)) Add(path, code);
         }
         return (ms.ToArray(), manifest);
     }
@@ -93,11 +101,13 @@ public static class ReleasePackage
         serializer ??= new ProjectSerializer();
         string manifestJson, projectJson;
         string? environmentJson;
+        byte[]? sourceArchive;
         try
         {
             using var zip = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
             manifestJson = Read(zip, "manifest.json");
             projectJson = Read(zip, "projekt.tproj.json");
+            sourceArchive = ReadSourceArchive(zip);
             environmentJson = zip.GetEntry("runtime.json") is null ? null : Read(zip, "runtime.json");
         }
         catch (InvalidDataException ex)
@@ -119,6 +129,8 @@ public static class ReleasePackage
         var problems = new List<string>();
         var actual = ComputeEntries(projectJson, project).ToList();
         if (environmentJson is not null) actual.Add(new("Laufzeitumgebung", "runtime.json", "1", Sha256(environmentJson)));
+        if (sourceArchive is not null) actual.Add(new("Programmquelle", "source.zip", "1", Sha256(sourceArchive)));
+        if (manifest.Source is not null && sourceArchive is null) problems.Add("Remote-Quellarchiv fehlt.");
         ValidateEntries(manifest, actual, problems);
         if (project.Definition.Version != manifest.Version) problems.Add("Version im Ablauf weicht vom Manifest ab.");
         RuntimeSnapshot? environment = null;
@@ -129,6 +141,22 @@ public static class ReleasePackage
             if (environment is null || environment.Components is null) problems.Add("Laufzeitumgebung fehlt oder ist ungültig.");
         }
         return new OpenedPackage(manifest, project, projectJson, problems) { Environment = environment };
+    }
+
+    /// <summary>Read-only provenance for database list views; integrity is checked before use.</summary>
+    public static Programs.SourceVersion? ReadSource(byte[] bytes)
+    {
+        try
+        {
+            using var zip = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
+            return JsonSerializer.Deserialize<ReleaseManifest>(Read(zip, "manifest.json"), Json)?.Source;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or JsonException or ReleasePackageException) { return null; }
+    }
+    private static byte[]? ReadSourceArchive(ZipArchive zip)
+    {
+        if (zip.GetEntry("source.zip") is not { } entry) return null;
+        using var input = entry.Open(); using var output = new MemoryStream(); input.CopyTo(output); return output.ToArray();
     }
 
     private static void ValidateEntries(ReleaseManifest manifest, List<ManifestEntry> actual, List<string> problems)

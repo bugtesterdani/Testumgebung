@@ -1,0 +1,54 @@
+﻿<UserControl x:Class="Testumgebung.Desktop.Views.ProgramSourcesView" Background="White"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <DockPanel>
+  <TextBox DockPanel.Dock="Bottom" Text="{Binding Status, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="100" VerticalScrollBarVisibility="Auto" Margin="8" AutomationProperties.Name="Ergebnis der Programmquellen-Aktion"/>
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="8">
+  <TextBlock Text="Programmquellen &amp; Versionen" Style="{StaticResource SectionTitle}"/>
+  <TextBlock Text="{Binding SchemaText}" TextWrapping="Wrap"/>
+  <WrapPanel><Button Content="Neu laden" Command="{Binding RefreshCommand}" Style="{StaticResource ToolButton}"/>
+   <Button Content="Datenbank auf Programmkatalog v1 aktualisieren" Command="{Binding UpgradeCommand}" Style="{StaticResource ToolButton}"/></WrapPanel>
+  <CheckBox Content="Alle verbundenen Plätze sind in Wartung; kompatible Software ist ausgerollt." IsChecked="{Binding MaintenanceConfirmed}"/>
+  <CheckBox Content="Aktuelle Datenbanksicherung ist vorhanden." IsChecked="{Binding BackupConfirmed}"/>
+  <TextBlock Text="Die Aktualisierung ergänzt ausschließlich den Programmkatalog. Verbundene Fremdrechner können hier nicht automatisch auf laufende Prüfungen geprüft werden." TextWrapping="Wrap" Style="{StaticResource Caption}"/>
+  <Separator Margin="0,8"/>
+  <ComboBox ItemsSource="{Binding Sources}" DisplayMemberPath="Title" SelectedItem="{Binding Selected}" ToolTip="Gespeicherte Programmquelle"/>
+  <Button Content="Neue Quelle" Command="{Binding NewSourceCommand}" Style="{StaticResource ToolButton}" HorizontalAlignment="Left"/>
+  <Expander Header="Lokale Git-/SVN-Clients"><StackPanel>
+   <TextBlock Text="git.exe"/><TextBox Text="{Binding GitClient, UpdateSourceTrigger=PropertyChanged}"/>
+   <TextBlock Text="svn.exe"/><TextBox Text="{Binding SvnClient, UpdateSourceTrigger=PropertyChanged}"/>
+   <Button Content="Clientpfade lokal speichern" Command="{Binding SaveClientsCommand}"/>
+  </StackPanel></Expander>
+  <TextBlock Text="Versionsverwaltung"/><ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding Provider}"/>
+  <TextBlock Text="Programmname (wie in der Projektdatei)"/><TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+  <TextBlock Text="Repository-URL ohne Zugangsdaten"/><TextBox Text="{Binding Repository, UpdateSourceTrigger=PropertyChanged}"/>
+  <TextBlock Text="Git-Branch / relativer SVN-Pfad (z. B. trunk)"/><TextBox Text="{Binding Line, UpdateSourceTrigger=PropertyChanged}"/>
+  <TextBlock Text="Relativer Pfad zur .tproj.json"/><TextBox Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}"/>
+  <Button Content="Quelle speichern" Command="{Binding SaveSourceCommand}" Style="{StaticResource ToolButton}" HorizontalAlignment="Left"/>
+  <TextBlock Text="Git-Commit / SVN-Revision (leer: aktueller Remote-Stand)"/><TextBox Text="{Binding Revision, UpdateSourceTrigger=PropertyChanged}"/>
+  <TextBlock Text="Neue Freigabeversion"/><TextBox Text="{Binding NewVersion, UpdateSourceTrigger=PropertyChanged}"/>
+  <Button Content="Entwurf aus Remote-Version erstellen" Command="{Binding RemoteDraftCommand}" Style="{StaticResource ToolButton}" HorizontalAlignment="Left"/>
+  <TextBlock Text="Danach den Entwurf in Releases prüfen und ausdrücklich freigeben. Git/SVN müssen auf diesem Entwicklungsrechner verfügbar und bereits angemeldet sein. Produktivplätze benötigen diese Clients nicht." TextWrapping="Wrap" Style="{StaticResource Caption}"/>
+  <Separator Margin="0,8"/>
+  <TextBlock Text="Platzzuordnung &amp; Standardprogramm" FontWeight="SemiBold"/>
+  <TextBlock Text="{Binding ComputerName}"/>
+  <ComboBox ItemsSource="{Binding StationNames}" SelectedItem="{Binding StationName}" ToolTip="Prüfplatz"/>
+  <CheckBox Content="Neueste Freigabe der ausgewählten Quelle automatisch übernehmen" IsChecked="{Binding AutoUpdate}"/>
+  <TextBlock Text="Freigegebene Version (für Festsetzung oder Standard)"/>
+  <ComboBox ItemsSource="{Binding Versions}" DisplayMemberPath="SourceTitle" SelectedItem="{Binding SelectedVersion}"/>
+  <WrapPanel>
+   <Button Content="Platzzuordnung speichern" Command="{Binding SaveAssignmentCommand}" Style="{StaticResource ToolButton}"/>
+   <Button Content="Platzzuordnung entfernen" Command="{Binding ClearAssignmentCommand}" Style="{StaticResource ToolButton}"/>
+   <Button Content="Als zentralen Standard festlegen" Command="{Binding SetDefaultCommand}" Style="{StaticResource ToolButton}"/>
+  </WrapPanel>
+  <TextBlock Text="{Binding DefaultText}" TextWrapping="Wrap"/>
+  <TextBlock Text="{Binding AssignmentText}" TextWrapping="Wrap"/>
+  <Separator Margin="0,8"/>
+  <TextBlock Text="Lokale Entwicklung – keine Veröffentlichung" FontWeight="SemiBold"/>
+  <TextBlock Text="Pfad zur Projektdatei in deiner lokalen Arbeitskopie"/>
+  <TextBox Text="{Binding LocalProject, UpdateSourceTrigger=PropertyChanged}"/>
+  <Button Content="Lokal im Editor öffnen und an diesem Platz als Entwurf testen" Command="{Binding OpenLocalCommand}" Style="{StaticResource ToolButton}" HorizontalAlignment="Left"/>
+  <TextBlock Text="Commit und Push erfolgen mit deinem Versionsverwaltungsclient. Eine lokale Arbeitskopie wird niemals automatisch produktiv freigegeben." TextWrapping="Wrap" Style="{StaticResource Caption}"/>
+
+ </StackPanel></ScrollViewer>
+ </DockPanel>
+</UserControl>

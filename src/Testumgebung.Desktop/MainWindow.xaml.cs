@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verdrahtet Anwendungsstart und Hauptfenster; Prüfablauf und Werkerzustand werden von ViewModels verwaltet.
  */
@@ -32,6 +32,8 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _inactivity = new() { Interval = TimeSpan.FromSeconds(30) };
     private readonly StationCoordinator _coordinator;
 
+    private readonly Testumgebung.Presentation.Releases.ProgramStartupLoader _programStartupLoader;
+
     public MainWindow() : this(null) { }
 
     internal MainWindow(MainWindowStartup? startup)
@@ -54,7 +56,7 @@ public partial class MainWindow : Window
         var identity = CreateIdentityServices(startup, developmentMode);
 
         // Release-Pakete und Audit-Log: in der Prüfdatenbank (falls SQL-Datenbank eingestellt), sonst lokal.
-        _releases = new ReleaseHub(new ReleaseService(_services.ReleaseStore) { CodeRuntime = _codeRuntime, RequireRuntimeSnapshot = true });
+        _releases = new ReleaseHub(new ReleaseService(_services.ReleaseStore) { CodeRuntime = _codeRuntime, RequireRuntimeSnapshot = true, ProgramCatalog = _services.ProgramCatalog });
         _services.Applied += () => _ = _releases.RefreshAsync();
 
         // Prüfplatzkonfiguration des Rechners: %ProgramData%\Testumgebung\pruefplaetze.json (Geräte, Prüfplätze, Zuordnung).
@@ -72,6 +74,8 @@ public partial class MainWindow : Window
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
         ConfigureExampleMode(exampleMode);
         DataContext = Shell;
+        _programStartupLoader = new(_releases, Shell.Editor, () => Shell.SelectedStation, () => Shell.Stations.Any(s => s.IsRunning));
+        _releases.Changed += () => Dispatcher.BeginInvoke(new Action(() => _ = _programStartupLoader.TryLoadAsync()));
         _ = _releases.RefreshAsync();
         _releases.StartPolling(TimeSpan.FromSeconds(30)); // Freigaben anderer Prüfplätze (gemeinsame Datenbank)
 

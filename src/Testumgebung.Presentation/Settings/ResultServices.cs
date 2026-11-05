@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verdrahtet Ergebnisablage, Datenbank und Meldewege mit den aktuellen Anwendungseinstellungen.
  */
@@ -63,6 +63,7 @@ public sealed class ResultServices : IAsyncDisposable
 
     /// <summary>Release-Pakete und Audit-Log: in der Prüfdatenbank, ohne SQL-Datenbank im Ordner <see cref="ReleaseFolder"/>.</summary>
     public SwitchableReleaseStore ReleaseStore { get; }
+    public Testumgebung.Persistence.Programs.SwitchableProgramCatalogStore ProgramCatalog { get; } = new(new Testumgebung.Persistence.Programs.FolderProgramCatalogStore(Path.Combine(FolderReleaseStore.DefaultFolder, "Quellen")));
 
     public string ReleaseFolder { get; }
     public AppSettings Current { get; private set; } = new();
@@ -99,6 +100,8 @@ public sealed class ResultServices : IAsyncDisposable
 
         Database.Inner = CreateDatabase(settings.Database, out var warning);
         ReleaseStore.Inner = Database.Inner is SqlRunDatabase sql ? new SqlReleaseStore(sql) : new FolderReleaseStore(ReleaseFolder);
+        ProgramCatalog.Inner = Database.Inner is SqlRunDatabase programDb ? new SqlProgramCatalogStore(programDb)
+            : new Testumgebung.Persistence.Programs.FolderProgramCatalogStore(Path.Combine(ReleaseFolder, "Quellen"));
         ApplyWarning = warning;
         Pipeline.DatabaseEnabled = settings.Database.Provider != DatabaseChoice.None;
 

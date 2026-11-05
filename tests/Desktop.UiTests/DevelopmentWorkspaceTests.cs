@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -28,6 +28,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyGraphWorkspace(dispatcher);
             VerifySettingsPasswords();
             VerifyReleaseErrorLayout(dispatcher);
+            VerifyProgramSources(dispatcher);
             var view = new DevelopmentWorkspace { DataContext = new ShellViewModel() };
             var root = new DirectoryInfo(AppContext.BaseDirectory);
             while (root.Parent is not null && !File.Exists(Path.Combine(root.FullName, "Testumgebung.sln"))) root = root.Parent;
