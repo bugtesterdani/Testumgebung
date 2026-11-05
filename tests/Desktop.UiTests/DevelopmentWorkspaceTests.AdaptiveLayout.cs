@@ -82,6 +82,8 @@ public sealed partial class DevelopmentWorkspaceTests
         foreach (var size in new[] { new Size(1280, 720), new Size(1920, 1080) })
         {
             var view = new Testumgebung.Desktop.Views.ReleasesView { DataContext = new Testumgebung.Presentation.ViewModels.ShellViewModel() };
+            var source = (TextBox)view.FindName("ReleaseSourceDetails");
+            source.Text = "Git: https://example.invalid/" + new string('r', 1500) + " / branch: main / commit: " + new string('a', 40);
             var factor = AdaptiveWindowLayout.Calculate(size, size);
             view.Width = size.Width / factor; view.Height = size.Height / factor;
             view.LayoutTransform = new ScaleTransform(factor, factor);
@@ -93,6 +95,11 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.InRange(bounds.Right, 1, size.Width + 0.5);
             Assert.InRange(bounds.Bottom, 1, size.Height + 0.5);
             Assert.True(((ComboBox)view.FindName("ReleaseProgramsList")).ActualWidth > 0);
+            var package = (DataGrid)view.FindName("ReleasePackageList");
+            Assert.True(package.ActualWidth > 200, "Repository text must not consume the package column.");
+            var metadataBounds = source.TransformToAncestor(view).TransformBounds(new Rect(source.RenderSize));
+            var packageBounds = package.TransformToAncestor(view).TransformBounds(new Rect(package.RenderSize));
+            Assert.True(metadataBounds.Bottom <= packageBounds.Top + 1, "Repository metadata belongs above the package.");
         }
     }
 }

@@ -8,8 +8,13 @@ Push-Location $root
 try {
     # Includes transitive packages; do not equate a successful restore with a clean audit.
     $json = & dotnet list Testumgebung.sln package --vulnerable --include-transitive --format json
-    if ($LASTEXITCODE) { throw 'NuGet-Sicherheitsprüfung fehlgeschlagen.' }
+    $auditExitCode = $LASTEXITCODE
+    # Persist diagnostics even when NuGet cannot complete the audit (for example, an unavailable feed).
     Set-Content -LiteralPath $output -Value ($json -join "`n") -Encoding utf8
+    if ($auditExitCode) {
+        Write-Host ($json -join "`n")
+        throw "NuGet-Sicherheitsprüfung fehlgeschlagen (Exitcode $auditExitCode). Bericht: $output"
+    }
     $audit = ($json -join "`n") | ConvertFrom-Json
     if (-not $audit.projects -or @($audit.logs | Where-Object level -EQ 'error').Count) {
         throw 'NuGet-Audit liefert keine verlässliche Projektauswertung.'
