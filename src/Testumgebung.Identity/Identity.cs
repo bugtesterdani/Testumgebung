@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Definiert anbieterunabhängige Identitäten, Rechte und die Konfiguration der Anmeldung.
  */
@@ -9,9 +9,9 @@ using Testumgebung.Contracts;
 
 namespace Testumgebung.Identity;
 
-/// <summary>Von einem Identitätsanbieter bestätigte Person. Die Anwendung prüft nie Passwörter selbst.</summary>
+/// <summary>Von einem Identitätsanbieter bestätigte Person. Entra und optionaler lokaler Passwortzugang bleiben unterscheidbar.</summary>
 /// <param name="Upn">Anmeldename (z. B. m.weber@firma.example) – Schlüssel für die Rechte.</param>
-/// <param name="IsConfirmed">true = von Microsoft Entra ID bestätigt; false = simulierte Anmeldung (Entwicklungsmodus).</param>
+/// <param name="IsConfirmed">true = von Microsoft Entra ID bestätigt; false = lokale Passwortanmeldung oder simulierte Entwicklung.</param>
 /// <param name="Roles">App-Rollen aus dem Entra-Token (Claim „roles“), z. B. „Testumgebung.Entwickeln“.</param>
 public sealed record UserIdentity(string Upn, string DisplayName, string Source, bool IsConfirmed, string? TenantId = null, string? ObjectId = null,
     IReadOnlyList<string>? Roles = null)
@@ -65,6 +65,7 @@ public sealed class RightsEntry
     public string? Name { get; set; }
     public bool Develop { get; set; }
     public bool Release { get; set; }
+    public string? PasswordHash { get; set; }
 
     [JsonIgnore]
     public UserRights Rights => (Develop ? UserRights.Develop : UserRights.None) | (Release ? UserRights.Release : UserRights.None);
@@ -92,9 +93,11 @@ public sealed class AccessConfig
 
     /// <summary>Explicitly configured local simulation; never a confirmed production identity.</summary>
     public bool AllowLocalDevelopment { get; set; }
+    public bool AllowLocalPasswords { get; set; }
+    [JsonIgnore] public bool UsesLocalPasswords => AllowLocalPasswords && !UsesEntra;
 
     [JsonIgnore]
-    public bool SupportsLocalDevelopment => AllowLocalDevelopment && LoadError is null
+    public bool SupportsLocalDevelopment => AllowLocalDevelopment && !AllowLocalPasswords && LoadError is null
         && string.IsNullOrWhiteSpace(ClientId) && string.IsNullOrWhiteSpace(TenantId)
         && RightsSource.Equals("Lokal", StringComparison.OrdinalIgnoreCase) && Users.Any(u => u.Develop);
 

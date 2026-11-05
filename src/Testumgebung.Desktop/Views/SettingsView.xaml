@@ -1,4 +1,4 @@
-<UserControl x:Class="Testumgebung.Desktop.Views.SettingsView"
+﻿<UserControl x:Class="Testumgebung.Desktop.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
@@ -168,7 +168,7 @@
                                 </StackPanel>
                             </Grid>
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,8"
-                                       Text="Leer = simulierte Anmeldung. Registrierung der App: docs/entra-registrierung.md." />
+                                       Text="Ohne Entra kann ein optionaler lokaler Passwortzugang eingerichtet werden. Entra hat bei vollständiger Konfiguration Vorrang." />
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Automatisch abmelden nach Inaktivität [min] (0 = aus)" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                 <TextBox Text="{Binding InactivityMinutes}" Width="60" HorizontalAlignment="Left" />
@@ -196,6 +196,8 @@
                             </Grid>
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
                                        Text="Lokal = Liste unten je Prüfplatz; AppRollen = zentral über die App-Rollen der Entra-App (Claim „roles“); Beide = Vereinigung." />
+                            <CheckBox Content="Lokalen Benutzer-/Passwortzugang als Übergang aktivieren" IsChecked="{Binding AllowLocalPasswords}" Margin="0,8"/>
+                            <TextBlock Text="Vor dem Aktivieren für jedes Konto ein Passwort setzen. Passwörter werden gesalzen gehasht in zugang.json gespeichert. Werkerbetrieb ohne Anmeldung bleibt möglich; für zentrale Firmenidentitäten Entra verwenden." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             <TextBlock Text="Rechte je Konto" FontWeight="SemiBold" Margin="0,4,0,4" />
                             <DataGrid ItemsSource="{Binding Users}" AutoGenerateColumns="False" CanUserAddRows="False" HeadersVisibility="Column" RowHeight="30" MaxHeight="220">
                                 <DataGrid.Columns>
@@ -203,6 +205,10 @@
                                     <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="*" />
                                     <DataGridCheckBoxColumn Header="Entwickeln" Binding="{Binding Develop, UpdateSourceTrigger=PropertyChanged}" Width="85" />
                                     <DataGridCheckBoxColumn Header="Freigeben" Binding="{Binding Release, UpdateSourceTrigger=PropertyChanged}" Width="85" />
+                                    <DataGridTextColumn Header="Passwort" Binding="{Binding PasswordStatus}" IsReadOnly="True" Width="100"/>
+                                    <DataGridTemplateColumn Header="Lokales Passwort" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                        <Button Content="Setzen / ändern" Click="OnSetLocalPassword" Style="{StaticResource ToolButton}"/>
+                                    </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="40">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>

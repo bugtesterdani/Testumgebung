@@ -175,7 +175,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
 
     public string UserName => _session.User?.DisplayName ?? "Nicht angemeldet";
     public string UserUpn => _session.User?.Upn ?? "";
-    public string IdentitySource => _session.User is not { } u ? "" : u.IsConfirmed ? "Firmenkonto bestätigt · Microsoft Entra ID" : "Simulierte Anmeldung (nicht bestätigt)";
+    public string IdentitySource => _session.User is not { } u ? "" : u.IsConfirmed ? "Firmenkonto bestätigt · Microsoft Entra ID" : _session.Provider is LocalPasswordIdentityProvider ? "Lokaler Passwortzugang (keine Entra-Bestätigung)" : "Simulierte Anmeldung (nicht bestätigt)";
     public bool IsConfirmed => _session.User?.IsConfirmed == true;
     public bool IsDevelopmentMode => _session.IsDevelopmentMode;
 

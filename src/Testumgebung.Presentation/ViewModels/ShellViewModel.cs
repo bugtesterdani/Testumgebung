@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file
  * @brief Verdrahtet Seiten und Prüfplätze und steuert Navigation sowie angemeldete Benutzerrechte.
  */
@@ -102,7 +102,7 @@ public sealed class ShellViewModel : ObservableObject
         NavigateCommand = CreateNavigationCommand();
         LoginCommand = new RelayCommand(() => _ = LoginAsync(false), () => !IsSignedIn && !Session.IsSigningIn);
         DevelopmentLoginCommand = new RelayCommand(() => _ = LoginDevelopmentAsync(), () => CanEnableDevelopmentLogin);
-        SwitchAccountCommand = new RelayCommand(() => _ = LoginAsync(true), () => !Session.IsSigningIn);
+        SwitchAccountCommand = new RelayCommand(() => { if (IsLocalPasswordLogin) Logout(); else _ = LoginAsync(true); }, () => !Session.IsSigningIn);
         LogoutCommand = new RelayCommand(() => _ = LogoutAsync(), () => IsSignedIn || Session.IsSigningIn);
         ExecuteSelectedCommand = new RelayCommand(
             () => _ = SelectedStation.Debug.ExecuteTargetedAsync(Editor.SelectedNode!.Id, SelectedStation.CreateTargetedRun),
@@ -450,9 +450,13 @@ public sealed class ShellViewModel : ObservableObject
     public bool IsSignedIn => Session.IsSignedIn;
     public bool IsSigningIn => Session.IsSigningIn;
     public string? LoginError => Session.LastError;
+    public bool IsLocalPasswordLogin => Session.Provider is LocalPasswordIdentityProvider;
+    public bool ShowsLoginName => IsSimulatedLogin || IsLocalPasswordLogin;
+    public string LoginExplanation => IsLocalPasswordLogin ? "Lokaler Übergangszugang: Benutzername und Passwort eingeben." : "Simulierte Entwicklung: keine Passwortprüfung.";
+    public string AccountSwitchLabel => IsLocalPasswordLogin ? "Konto wechseln" : "Firmenkonto wechseln";
     public bool IsSimulatedLogin => Session.Provider is SimulatedIdentityProvider;
     public string UserText => Session.User?.DisplayName ?? (Session.IsSigningIn ? "Anmeldung läuft …" : "Anmelden");
-    public string UserDetail => Session.User is { } u ? $"{u.Upn} · {SessionService.RightsText(Session.Rights)}{(u.IsConfirmed ? "" : " · simuliert")}" : "";
+    public string UserDetail => Session.User is { } u ? $"{u.Upn} · {SessionService.RightsText(Session.Rights)}{(u.IsConfirmed ? "" : IsLocalPasswordLogin ? " · lokaler Passwortzugang" : " · simuliert")}" : "";
     public string ViewTitle => IsSignedIn && Page is not (ShellPage.Operator or ShellPage.Protocol) ? "ENTWICKLERANSICHT" : "WERKERANSICHT";
 
     /// <summary>Kopfzeile „Aktive Prüfsoftware“.</summary>
@@ -548,7 +552,7 @@ public sealed class ShellViewModel : ObservableObject
         HandlePausedOnSignOut();
         if (!Allowed(Page)) Page = ShellPage.Operator;
         OnPropertiesChanged(nameof(IsDeveloper), nameof(CanRelease), nameof(IsSignedIn), nameof(IsSigningIn), nameof(LoginError),
-            nameof(UserText), nameof(UserDetail), nameof(ViewTitle), nameof(IsSimulatedLogin), nameof(ShowReleasesNav), nameof(CanSeeReports), nameof(CanEnableDevelopmentLogin));
+            nameof(UserText), nameof(UserDetail), nameof(ViewTitle), nameof(IsSimulatedLogin), nameof(IsLocalPasswordLogin), nameof(ShowsLoginName), nameof(LoginExplanation), nameof(AccountSwitchLabel), nameof(ShowReleasesNav), nameof(CanSeeReports), nameof(CanEnableDevelopmentLogin));
         LoginCommand.RaiseCanExecuteChanged();
         DevelopmentLoginCommand.RaiseCanExecuteChanged();
         LogoutCommand.RaiseCanExecuteChanged();
