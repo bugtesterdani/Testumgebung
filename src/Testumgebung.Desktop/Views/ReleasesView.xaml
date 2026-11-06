@@ -87,6 +87,9 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding SelectedTitle}" TextWrapping="Wrap"/>
+                            <Button x:Name="LoadReleaseInEditorButton" Content="In Ablaufeditor laden" Command="{Binding LoadInEditorCommand}"
+                                    Style="{StaticResource OutlineButton}" HorizontalAlignment="Left" Margin="0,0,0,6"
+                                    ToolTip="Gewählte Version als lokale Bearbeitungsfassung öffnen. Gespeicherte Freigaben bleiben erhalten."/>
                             <TextBox x:Name="ReleaseSourceDetails" Text="{Binding SelectedSourceText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="90" VerticalScrollBarVisibility="Auto" Margin="0,4,0,8"/>
                             <DataGrid x:Name="ReleasePackageList" ItemsSource="{Binding Package}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" RowHeight="30" Height="210">
                                 <DataGrid.Columns>

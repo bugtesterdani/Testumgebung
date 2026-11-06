@@ -544,6 +544,18 @@ public sealed partial class EditorViewModel : ObservableObject
 
     // ------------------------------------------------------------------ Dateien
 
+    /// <summary>Preserve unsaved work before another source replaces the editor contents.</summary>
+    public bool PrepareProjectReplacement()
+    {
+        if (!IsDirty) return true;
+        return _dialogs?.AskSaveProjectChanges() switch
+        {
+            UnsavedProjectDecision.Discard => true,
+            UnsavedProjectDecision.Save => Save(FilePath),
+            _ => false,
+        };
+    }
+
     public void Load(TestProject project, string? path = null)
     {
         GraphWorkspaceId = Guid.NewGuid();

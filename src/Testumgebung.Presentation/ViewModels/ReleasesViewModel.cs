@@ -63,6 +63,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
         ReviewCommand = new RelayCommand(() => _ = ReviewAsync(), () => !_busy && _session.CanDevelop && _selected?.State == ReleaseState.Draft);
         ReleaseCommand = new RelayCommand(() => _ = ReleaseAsync(), () => !_busy && _session.CanRelease && _confirmed && _selected?.State == ReleaseState.Review);
         RefreshCommand = new RelayCommand(() => _ = RefreshAsync());
+        LoadInEditorCommand = new RelayCommand(() => _ = LoadInEditorAsync(), () => CanLoadInEditor);
         hub.Changed += () => _ui.Post(Rebuild);
         session.Changed += () => _ui.Post(RaiseIdentity);
         editor.ProjectReplaced += () => _ui.Post(Rebuild);
@@ -393,6 +394,8 @@ public sealed partial class ReleasesViewModel : ObservableObject
         OnPropertiesChanged(nameof(Programs), nameof(SelectedProgramName), nameof(SelectedProgram), nameof(ProgramStatus));
         OnPropertiesChanged(nameof(StoreError), nameof(StoreName), nameof(ProjectName), nameof(CompareTargets));
         RebuildStations();
+        LoadInEditorCommand.RaiseCanExecuteChanged();
+        OnPropertyChanged(nameof(CanLoadInEditor));
     }
 
     private void RebuildPrograms()
@@ -474,6 +477,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
         CreateDraftCommand.RaiseCanExecuteChanged();
         ReviewCommand.RaiseCanExecuteChanged();
         ReleaseCommand.RaiseCanExecuteChanged();
-        OnPropertyChanged(nameof(CanConfirm));
+        LoadInEditorCommand.RaiseCanExecuteChanged();
+        OnPropertiesChanged(nameof(CanConfirm), nameof(CanLoadInEditor));
     }
 }

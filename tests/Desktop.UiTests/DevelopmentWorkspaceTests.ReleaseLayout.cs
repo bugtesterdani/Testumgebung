@@ -60,6 +60,12 @@ public sealed partial class DevelopmentWorkspaceTests
                 Assert.True(bounds.Top >= -1 && bounds.Bottom <= scroll.ActualHeight + 1, "Freigabe muss per Scrollen erreichbar sein.");
                 CaptureVisual(window, $"releases-workflow-{size.Width}.png");
             }
+            var loadButton = (Button)view.FindName("LoadReleaseInEditorButton");
+            Assert.Same(page.LoadInEditorCommand, loadButton.Command); Assert.True(loadButton.IsEnabled);
+            shell.Page = ShellPage.Releases;
+            var previous = shell.Editor.Project; loadButton.Command.Execute(null);
+            Assert.True(SpinWait.SpinUntil(() => { Sta.Flush(dispatcher); return !ReferenceEquals(previous, shell.Editor.Project); }, TimeSpan.FromSeconds(5)));
+            Assert.Equal(ShellPage.Editor, shell.Page); Assert.True(shell.Editor.IsDirty); Assert.Null(shell.Editor.FilePath);
             void Layout() { Sta.Flush(dispatcher); window.UpdateLayout(); Sta.Flush(dispatcher); }
         }
         finally { window.Close(); hub.DisposeAsync().AsTask().GetAwaiter().GetResult(); }
