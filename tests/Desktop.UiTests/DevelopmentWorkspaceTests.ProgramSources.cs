@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -43,6 +43,35 @@ public sealed partial class DevelopmentWorkspaceTests
                 line.Text = "integration"; line.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
                 Assert.Equal("integration", model.Line);
                 await model.SaveSourceAsync(); Assert.Equal("integration", model.Selected!.Line);
+                var credentialsFile = Path.Combine(directory, "local-credentials.json");
+                var credentials = new SourceCredentialStore(credentialsFile, new RepositorySecretProtector());
+                model.ConfigureAuthentication(credentials);
+                Assert.Null(new RepositorySecretProtector().Unprotect("klar:must-not-be-accepted"));
+                Descendants(panel).OfType<Expander>().Single(e => e.Header?.ToString() == "Lokale Repository-Anmeldung").IsExpanded = true;
+                Sta.Flush(dispatcher);
+                Exception? loginFailure = null;
+                _ = dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+                {
+                    var login = Application.Current.Windows.OfType<SourceAuthenticationWindow>().Single();
+                    try
+                    {
+                        Descendants(login).OfType<ComboBox>().Single().SelectedValue = Testumgebung.Persistence.Programs.SourceLoginMode.GitAccessToken;
+                        var username = Descendants(login).OfType<TextBox>().Single();
+                        username.Text = "fixture-user"; username.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                        Descendants(login).OfType<CheckBox>().Single().IsChecked = true;
+                        ((PasswordBox)login.FindName("Secret")).Password = "fixture-token";
+                        login.UpdateLayout(); CaptureVisual(login, "repository-anmeldung.png");
+                        Click(login, "Übernehmen");
+                        Assert.Equal("", ((PasswordBox)login.FindName("Secret")).Password);
+                    }
+                    catch (Exception ex) { loginFailure = ex; login.Close(); }
+                }));
+                Click(panel, "Anmeldung einstellen …");
+                Assert.Null(loginFailure);
+                Assert.DoesNotContain("fixture-token", File.ReadAllText(credentialsFile));
+                Assert.Equal("fixture-token", new SourceCredentialStore(credentialsFile, new RepositorySecretProtector()).Get(model.Selected!)!.Secret);
+                model.RemoveAuthentication();
+                Assert.Null(credentials.Get(model.Selected!));
                 window.UpdateLayout(); CaptureVisual(window, "programmquellen.png");
                 var scroll = Descendants(panel).OfType<ScrollViewer>().Single(v => v.Content is StackPanel); scroll.ScrollToEnd(); Sta.Flush(dispatcher); window.UpdateLayout();
                 Assert.True(scroll.VerticalOffset > 0);

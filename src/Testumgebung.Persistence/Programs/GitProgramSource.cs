@@ -1,9 +1,9 @@
-﻿using System.IO.Compression;
+using System.IO.Compression;
 
 namespace Testumgebung.Persistence.Programs;
 
 /// <summary>Frischer Bare-Clone der konfigurierten Remote-Linie. Keine Hooks, kein Checkout und kein Vertrauen in lokale Commits.</summary>
-public sealed class GitProgramSource(string executable = "git", bool allowLocalRepositories = false) : IProgramSourceProvider
+public sealed class GitProgramSource(string executable = "git", bool allowLocalRepositories = false, Func<ProgramSource, SourceCredentials?>? credentials = null) : IProgramSourceProvider
 {
     public string Id => "Git";
     public async Task<SourceSnapshot> ExportAsync(ProgramSource source, string? revision, CancellationToken ct = default)
@@ -15,17 +15,17 @@ public sealed class GitProgramSource(string executable = "git", bool allowLocalR
         try
         {
             var repository = Path.Combine(directory, "repository.git"); var export = Path.Combine(directory, "export");
-            await Run(["clone", "--bare", "--no-local", "--single-branch", "--branch", source.Line, "--", source.Repository, repository], ct);
-            var head = await Run(["--git-dir", repository, "rev-parse", "refs/heads/" + source.Line], ct);
+            await Run(source, ["clone", "--bare", "--no-local", "--single-branch", "--branch", source.Line, "--", source.Repository, repository], ct);
+            var head = await Run(source, ["--git-dir", repository, "rev-parse", "refs/heads/" + source.Line], ct);
             var commit = string.IsNullOrEmpty(revision) ? head : revision.ToLowerInvariant();
-            await Run(["--git-dir", repository, "merge-base", "--is-ancestor", commit, head], ct);
+            await Run(source, ["--git-dir", repository, "merge-base", "--is-ancestor", commit, head], ct);
             var archive = Path.Combine(directory, "source.zip");
-            await Run(["--git-dir", repository, "archive", "--format=zip", "--output=" + archive, commit], ct);
+            await Run(source, ["--git-dir", repository, "archive", "--format=zip", "--output=" + archive, commit], ct);
             ZipFile.ExtractToDirectory(archive, export);
             var file = SourcePaths.ProjectFile(export, source.ProjectPath);
             return new(new(source, commit, source.Repository, SourcePaths.Hash(file)), file, directory);
         }
         catch { SourcePaths.Remove(directory); throw; }
     }
-    private Task<string> Run(string[] arguments, CancellationToken ct) => SourceCommand.Run(executable, arguments, ct);
+    private Task<string> Run(ProgramSource source, string[] arguments, CancellationToken ct) => SourceCommand.Run(executable, arguments, ct, source, credentials?.Invoke(source));
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Testumgebung.Contracts;
 using Testumgebung.Identity;
 using Testumgebung.Persistence;
@@ -28,7 +28,7 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
         _clientSettingsFile = clientSettingsFile;
         _hub = hub; _editor = editor; _session = session; _ui = ui; _stations = stations;
         StationName = stations.FirstOrDefault()?.Name ?? "";
-        try { var clients = ProgramSourceClientSettings.Load(_clientSettingsFile); GitClient = clients.Git; SvnClient = clients.Svn; _hub.Service.SourceProviders = clients.Providers(); }
+        try { var clients = ProgramSourceClientSettings.Load(_clientSettingsFile); GitClient = clients.Git; SvnClient = clients.Svn; ApplySourceClients(); }
         catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException) { _status = "Lokale Clientkonfiguration: " + ex.Message; }
         SaveClientsCommand = new(SaveClients, () => !_busy && _session.CanDevelop);
         RefreshCommand = new(() => _ = RefreshAsync());
@@ -86,7 +86,7 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
         {
             if (!SetProperty(ref _selected, value)) return;
             if (value is not null) { Name = value.Name; Provider = value.Provider; Repository = value.Repository; Line = value.Line; ProjectPath = value.ProjectPath; }
-            NotifyFields(); RebuildVersions();
+            NotifyFields(); RebuildVersions(); LoadAuthentication();
         }
     }
     public RelayCommand SaveClientsCommand { get; }
@@ -121,7 +121,18 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     private async Task Execute(Func<Task> work)
     {
         if (_busy) return; _busy = true; RaiseCommands();
-        try { await work(); }
+        try
+        {
+            try { await work(); }
+            catch (SourceAuthenticationException ex) when (RequestAuthentication is not null && Selected?.Id == ex.ProgramSource.Id)
+            {
+                bool retry; _waitingForLogin = true;
+                try { retry = await RequestAuthentication(); } finally { _waitingForLogin = false; }
+                if (retry) { Require(); await work(); }
+                else Status = "Repository-Anmeldung abgebrochen.";
+            }
+        }
+        catch (OperationCanceledException) { Status = "Repository-Abruf abgebrochen oder Zeitlimit erreicht."; }
         catch (Exception ex) when (ex is not OperationCanceledException) { Status = ex.Message; }
         finally { _busy = false; RaiseCommands(); }
     }
@@ -170,15 +181,15 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
         if (release.ReleasedAt is null) throw new InvalidOperationException("Standard muss freigegeben sein.");
         await Save(_catalog with { DefaultReleaseId = release.ReleaseId }, "Zentrales Standardprogramm gespeichert");
     });
-    public Task CreateRemoteDraftAsync() => Execute(async () =>
+    public Task CreateRemoteDraftAsync() => Execute(() => RunSourceAsync(async token =>
     {
         Require(); var source = Selected ?? throw new InvalidOperationException("Quelle auswählen und speichern.");
-        var draft = await _hub.Service.CreateRemoteDraftAsync(source, Revision.Trim(), NewVersion, Actor());
+        var draft = await _hub.Service.CreateRemoteDraftAsync(source, Revision.Trim(), NewVersion, Actor(), token);
         await _hub.RefreshAsync(); RebuildVersions(); Status = $"Remote-Entwurf v{draft.Version} erstellt. In Releases Entwicklungsprüfung und Freigabe durchführen. Quelle: {draft.Source!.Revision}";
-    });
+    }));
     private void SaveClients()
     {
-        try { Require(); var clients = new ProgramSourceClientSettings(GitClient.Trim(), SvnClient.Trim()); clients.Save(_clientSettingsFile); _hub.Service.SourceProviders = clients.Providers(); Status = "Clientpfade nur für dieses Windows-Benutzerkonto gespeichert."; }
+        try { Require(); var clients = new ProgramSourceClientSettings(GitClient.Trim(), SvnClient.Trim()); clients.Save(_clientSettingsFile); ApplySourceClients(); Status = "Clientpfade nur für dieses Windows-Benutzerkonto gespeichert."; }
         catch (Exception ex) when (ex is not OperationCanceledException) { Status = ex.Message; }
     }
     private void OpenLocal()

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 namespace Testumgebung.Persistence.Programs;
 
@@ -13,5 +13,5 @@ public sealed record ProgramSourceClientSettings(string Git = "git", string Svn 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(file))!);
         File.WriteAllText(file, JsonSerializer.Serialize(this));
     }
-    public ProgramSourceProviders Providers() => new([new GitProgramSource(Git), new SvnProgramSource(Svn)]);
+    public ProgramSourceProviders Providers(Func<ProgramSource, SourceCredentials?>? credentials = null) => new([new GitProgramSource(Git, credentials: credentials), new SvnProgramSource(Svn, credentials: credentials)]);
 }
