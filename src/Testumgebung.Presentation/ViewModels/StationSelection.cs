@@ -149,7 +149,13 @@ public sealed class StationSelectionViewModel : ObservableObject
     public async Task ProcessScanAsync()
     {
         if (!CanEditScan || ScanText.Trim().Length == 0) return;
-        if (!IsActive) Activate();
+        if (!IsActive)
+        {
+            // Activate resets the previous DUT. The scan that opened the selection belongs to the new one.
+            var scan = ScanText;
+            Activate();
+            ScanText = scan;
+        }
         await AssignAsync().ConfigureAwait(true);
         if (OrderSession && CanStart) await StartSelectedAsync().ConfigureAwait(true);
     }
