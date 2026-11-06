@@ -291,7 +291,7 @@ public sealed class CurvesViewModel : ObservableObject
 
     private void AddTraceUsage(List<(string Key, string Step)> list)
     {
-        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType == TraceBlocks.Start))
+        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType is TraceBlocks.Start or TraceBlocks.Record))
             foreach (var key in (step.Parameters.GetValueOrDefault("Grenzkurven") ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
             {
                 var separator = key.LastIndexOf('@');

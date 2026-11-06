@@ -176,38 +176,25 @@ public sealed class EnvelopeTraceTests
     }
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public async Task Automatic_fail_stops_regular_steps_preserves_data_and_runs_cleanup_without_operator_abort(bool parallel)
+    public async Task Early_fail_ends_only_its_recording_preserves_data_and_continues_following_steps(bool parallel)
     {
-        var cleanup = false; var finalization = false; var nextRan = false;
+        var nextRan = false; var siblingRan = false;
         var dut = Group("dut").Var("Kennung", VarType.String, "SN-EARLY"); dut.IsDutRun = true;
         dut.Add(Block(TraceBlocks.Start, "begin", ("Grenzkurven", "band@1"), ("FailAbbruch", "true"), ("AbweichungProzent", "10")));
-        dut.Add(Block(TraceBlocks.Start, "other", ("Aufnahme", "Other"), ("Grenzkurven", "band@1")));
         dut.Add(Block(TraceBlocks.Point, "initial", ("Werte", "5"), ("Zeit", "0")));
         var points = Group("points"); points.Parallel = parallel;
-        var trip = Block(TraceBlocks.Point, "trip", ("Werte", "11.1"), ("Zeit", "0.5"));
-        if (parallel)
-        {
-            var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            points.Add(Steps.Code("waiting", "Cancellable sibling", async ctx =>
-            {
-                started.SetResult();
-                await Task.Delay(System.Threading.Timeout.Infinite, ctx.CancellationToken);
-                return StepOutcome.Pass();
-            }));
-            var action = trip.Action;
-            trip.Action = new DelegateAction(async ctx => { await started.Task.Within(); return await action.ExecuteAsync(ctx); });
-        }
-        points.Add(trip);
-        dut.Add(points, Steps.Code("next", "Must not run", _ => { nextRan = true; return StepOutcome.Pass(); }));
-        dut.ExitGroup = Group("cleanup").Add(Block(TraceBlocks.Stop, "evaluate-again"), Steps.Code("safe", "Safe", _ => { cleanup = true; return StepOutcome.Unrated(); }));
+        points.Add(Block(TraceBlocks.Point, "trip", ("Werte", "11.1"), ("Zeit", "0.5")),
+            Steps.Code("sibling", "Sibling continues", _ => { siblingRan = true; return StepOutcome.Pass(); }));
+        dut.Add(points, Block(TraceBlocks.Point, "ignored", ("Werte", "missingVariable"), ("Zeit", "1")),
+            Steps.Code("next", "Continue", _ => { nextRan = true; return StepOutcome.Pass(); }));
+        dut.ExitGroup = Group("cleanup").Add(Block(TraceBlocks.Stop, "evaluate-again"));
         var definition = Test(Group("loop").Add(dut)); definition.Curves.Add(Band());
-        definition.Finalization.Add(Steps.Code("final", "Final", _ => { finalization = true; return StepOutcome.Unrated(); }));
-        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock(), ContinuousLoop = true });
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
         var recorder = new Testumgebung.Persistence.Results.ResultRecorder(run);
         Testumgebung.Persistence.Results.ResultRun? saved = null; recorder.RunRecorded += value => saved = value;
         var status = await run.RunAsync().Within();
         Assert.Equal(ResultRating.Fail, status.Rating); Assert.False(status.OperatorAbort);
-        Assert.True(cleanup); Assert.True(finalization); Assert.False(nextRan);
+        Assert.True(nextRan); Assert.True(siblingRan);
         Assert.NotNull(saved); Assert.Equal(ResultRating.Fail, saved.Rating); Assert.False(saved.OperatorAbort);
         Assert.Equal(3, saved.Waveforms.Count);
         var reopened = Testumgebung.Persistence.Results.ResultFile.Read(Testumgebung.Persistence.Results.ResultFile.ToBytes(saved));

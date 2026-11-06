@@ -2,103 +2,87 @@ using System.Text.Json;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Curves;
 using Testumgebung.Domain.Definitions;
-using Testumgebung.Domain.Expressions;
 
 namespace Testumgebung.Engine.Blocks;
 
 public static class TraceBlocks
 {
-    public const string Start = "verlauf.start", Point = "verlauf.punkt", Stop = "verlauf.bewerten";
+    public const string Start = "verlauf.start", Point = "verlauf.punkt", Stop = "verlauf.bewerten", Record = "verlauf.aufnehmen";
     public static void Register(BlockCatalog catalog)
     {
-        catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Grenzkurven haben Kanäle Untergrenze und Obergrenze mit derselben Einheit wie der Messkanal.",
-        [Name(), new("Kanaele", "Kanalnamen (Komma)", ParameterKind.Text, "Spannung", Required: true),
-         new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
-         new("Grenzkurven", "Grenzkurven: ID@Version (Komma)", ParameterKind.Text, Required: true),
-         new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
-         new("MaxLuecke", "Maximale Messlücke [s]", ParameterKind.Number, "1"),
-         new("MinDauer", "Mindestdauer der Aufnahme [s]", ParameterKind.Number, "0"),
-         new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
-         new("FailAbbruch", "Prüfablauf bei zusätzlicher Abweichung sofort mit FAIL beenden", ParameterKind.Bool, "false"),
-         new("AbweichungProzent", "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10")], CreateStart));
-        catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle mit gemeinsamer Empfangszeit. Geräte werden nacheinander abgefragt; keine zugesicherte simultane Abtastung.",
-        [Name(), new("Quelle", "Datenquelle", ParameterKind.Choice, "Ausdrücke", Choices: ["Ausdrücke", "Geräte"]),
-         new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"),
-         new("Ressourcen", "Gerätenamen (Komma)", ParameterKind.Text),
-         new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression)], CreatePoint));
-        catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Prüft die gesamte stückweise lineare Messkurve und speichert Messung, Grenzlinien und Herkunft. Unvollständig/abgebrochen ergibt ERROR, niemals PASS.",
-        [Name(), new("ErgebnisZiel", "Auswertungsdetails → Stringvariable (JSON)", ParameterKind.Variable)], p => new DelegateAction(ctx =>
-        {
-            var target = p.Optional("ErgebnisZiel");
-            if (target is not null && ctx.Get(target) is not string) throw new BlockConfigurationException("ErgebnisZiel muss eine Stringvariable sein.");
-            var result = ctx.Recordings.Stop(ctx.ProcessOwner, p.Text("Aufnahme"), !ctx.IsOperatorAborted);
-            if (target is not null) ctx.Set(target, JsonSerializer.Serialize(result.Channels));
-            if (result.EarlyStop is { } early) return Task.FromResult(StepOutcome.Fail(EarlyStopMessage(early)));
-            var message = !result.Complete ? "Aufnahme unvollständig, ungültig oder abgebrochen."
-                : result.Passed ? "Alle Messverläufe innerhalb des Grenzbandes." : $"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e). Details je Kanal in den Kurvendaten und der Ergebnisvariable.";
-            return Task.FromResult(new StepOutcome(!result.Complete ? ResultRating.Error : result.Passed ? ResultRating.Pass : ResultRating.Fail, result.Data, Message: message));
-        })));
+        catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
+            RecordingParameters(false), p =>
+            {
+                var settings = new TraceRecordingSettings(p);
+                return new DelegateAction(ctx => { settings.Begin(ctx); return Task.FromResult(StepOutcome.Unrated(message: "Messwertaufzeichnung begonnen.")); });
+            }));
+        catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
+            new[] { Name() }.Concat(ReaderParameters()).Append(new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression)).ToArray(), CreatePoint));
+        catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
+            [Name(), ResultTarget()], p => new DelegateAction(ctx =>
+            {
+                ValidateTarget(ctx, p.Optional("ErgebnisZiel"));
+                var result = ctx.Recordings.Stop(ctx.ProcessOwner, p.Text("Aufnahme"), !ctx.IsOperatorAborted);
+                WriteDetails(ctx, p.Optional("ErgebnisZiel"), result);
+                return Task.FromResult(Outcome(result, !result.Finished));
+            })));
+        catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
+            RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget()]).ToArray(),
+            p => new TimedTraceAction(new(p), new(p), p.Number("Intervall") ?? 0, p.Optional("ErgebnisZiel"))));
     }
-    private static string EarlyStopMessage(EnvelopeEarlyStop early)
-        => $"FAIL-Abbruchgrenze überschritten: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %. Aufnahme beendet; Exit/Finalization werden ausgeführt.";
     private static ParameterDescriptor Name() => new("Aufnahme", "Aufnahmekennung", ParameterKind.Text, "Verlauf", Required: true);
-    private static string[] Split(string value, char separator) => value.Split(separator, StringSplitOptions.TrimEntries);
-    private static IStepAction CreateStart(BlockParameters p)
-    {
-        var names = Split(p.Text("Kanaele"), ','); var units = Split(p.Text("Einheiten"), ','); var curves = Split(p.Text("Grenzkurven"), ',');
-        if (names.Length != units.Length || names.Length != curves.Length) throw new BlockConfigurationException("Je Messkanal eine Einheit und eine Grenzkurve angeben.");
-        var maximum = p.Number("MaxPunkte") ?? 0;
-        if (maximum != Math.Truncate(maximum) || maximum is < 2 or > 100000) throw new BlockConfigurationException("Ganzzahliges Punktlimit 2..100000 angeben.");
-        return new DelegateAction(ctx =>
-        {
-            if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
-            var channels = names.Select((name, i) => new TraceChannelDefinition(name, units[i], Resolve(ctx, curves[i]))).ToArray();
-            ctx.Recordings.Start(ctx.ProcessOwner, p.Text("Aufnahme"), channels, ctx.Clock.Now, (int)maximum, p.Number("MaxLuecke") ?? 0, p.Number("MinDauer") ?? 0, p.Bool("Beruehren"), p.Bool("FailAbbruch") ? p.Number("AbweichungProzent") ?? 0 : null);
-            return Task.FromResult(StepOutcome.Unrated(message: "Messwertaufzeichnung begonnen; Bewertung erst beim Beenden."));
-        });
-    }
-    private static CurveDefinition Resolve(IStepContext ctx, string key)
-    {
-        var separator = key.LastIndexOf('@'); var id = separator < 0 ? key : key[..separator]; var version = separator < 0 ? null : key[(separator + 1)..];
-        return ctx.FindCurve(id, version) ?? throw new BlockConfigurationException($"Grenzkurve {key} fehlt im Prüfprogramm.");
-    }
-    private static Expression[] ParseValues(string text)
-    {
-        try { return Split(text, ';').Select(Expression.Parse).ToArray(); }
-        catch (ExpressionException ex) { throw new BlockConfigurationException("Wertausdrücke: " + ex.Message); }
-    }
+    private static ParameterDescriptor ResultTarget() => new("ErgebnisZiel", "Auswertungsdetails → Stringvariable (JSON)", ParameterKind.Variable);
+    private static ParameterDescriptor[] ReaderParameters() =>
+    [new("Quelle", "Datenquelle", ParameterKind.Choice, "Ausdrücke", Choices: ["Ausdrücke", "Geräte"]),
+     new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"), new("Ressourcen", "Gerätenamen (Komma)", ParameterKind.Text)];
+    private static ParameterDescriptor[] RecordingParameters(bool timed) =>
+    [Name(), new("Kanaele", "Kanalnamen (Komma)", ParameterKind.Text, "Spannung", Required: true),
+     new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
+     new("Grenzkurven", "Grenzkurven: ID@Version (Komma)", ParameterKind.Text, Required: true),
+     new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
+     new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
+     new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),
+     new("MinDauer", "Mindestdauer der Aufnahme [s]", ParameterKind.Number, "0"),
+     new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
+     new("FailAbbruch", "Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)", ParameterKind.Bool, "false"),
+     new("AbweichungProzent", "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10")];
     private static IStepAction CreatePoint(BlockParameters p)
     {
-        var devices = p.Choice("Quelle") == "Geräte";
-        var resources = Split(p.Text("Ressourcen"), ',');
-        var expressions = devices ? [] : ParseValues(p.Text("Werte"));
-        var time = p.Expr("Zeit");
+        var reader = new TraceSampleReader(p); var time = p.Expr("Zeit"); var name = p.Text("Aufnahme");
         return new DelegateAction(async ctx =>
         {
+            if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
             try
             {
-                var resolver = new ContextResolver(ctx); var values = new List<double>();
-                if (devices)
+                double? x = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(new ContextResolver(ctx)), "Zeit");
+                var preview = await reader.AppendAsync(ctx, name, x).ConfigureAwait(false);
+                if (preview is not null)
                 {
-                    var units = new List<string>();
-                    foreach (var resource in resources)
-                    {
-                        var reading = await ctx.UseDeviceAsync(resource, "Verlauf lesen", async (adapter, channel, token) =>
-                            (Value: await adapter.ReadAsync(channel, token).ConfigureAwait(false), Unit: adapter.GetCapabilities(channel).Unit)).ConfigureAwait(false);
-                        values.Add(reading.Value); units.Add(reading.Unit);
-                    }
-                    ctx.Recordings.CheckUnits(ctx.ProcessOwner, p.Text("Aufnahme"), units);
+                    if (preview.Finished) return Outcome(preview, true);
+                    ctx.ReportTrace(preview.Data);
                 }
-                else foreach (var expression in expressions) values.Add(BlockCatalog.ToDouble(expression.Evaluate(resolver), "Messwert"));
-                ctx.CancellationToken.ThrowIfCancellationRequested();
-                double? x = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(resolver), "Zeit");
-                var preview = ctx.Recordings.Add(ctx.ProcessOwner, p.Text("Aufnahme"), x, values, ctx.Clock.Now);
-                if (preview?.EarlyStop is { } early)
-                    return StepOutcome.Fail(EarlyStopMessage(early), preview.Data) with { StopRunOnFailure = true };
-                if (preview is not null) ctx.ReportTrace(preview.Data);
-                return StepOutcome.Unrated(message: "Messpunkt aufgezeichnet.");
+                return ctx.Recordings.HasViolation(ctx.ProcessOwner, name)
+                    ? StepOutcome.Fail("Grenzband verletzt; FAIL bleibt bestehen. Aufnahme läuft bis Dauer/Abbruchgrenze weiter.")
+                    : StepOutcome.Unrated(message: "Messpunkt aufgezeichnet; noch keine abschließende PASS-Bewertung.");
             }
-            catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, p.Text("Aufnahme")); throw; }
+            catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, name); throw; }
         });
+    }
+    internal static void ValidateTarget(IStepContext ctx, string? target)
+    {
+        if (target is not null && ctx.Get(target) is not string) throw new BlockConfigurationException("ErgebnisZiel muss eine Stringvariable sein.");
+    }
+    internal static void WriteDetails(IStepContext ctx, string? target, TraceEvaluation result)
+    {
+        if (target is not null) ctx.Set(target, JsonSerializer.Serialize(result.Channels));
+    }
+    internal static StepOutcome Outcome(TraceEvaluation result, bool includeData)
+    {
+        var value = includeData ? result.Data : null;
+        if (result.EarlyStop is { } early)
+            return StepOutcome.Fail($"Aufnahme vorzeitig mit FAIL beendet: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %. Nächste Prüfschritte werden ausgeführt.", value);
+        if (!result.Complete) return new(ResultRating.Error, value, Message: "Aufnahme unvollständig, ungültig oder abgebrochen; vollständigen Zeitraum prüfen.");
+        return result.Passed ? new(ResultRating.Pass, value, Message: "Vollständiger Messverlauf innerhalb des Grenzbandes.")
+            : StepOutcome.Fail($"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e).", value);
     }
 }

@@ -102,7 +102,6 @@ public sealed class TestRun
     private readonly AbortCoordinator _abort = new();
     private long _sequence;
     private int _started;
-    private int _failureStopRequested;
     private EngineState _lastPublishedState = EngineState.Idle;
     private bool _completed;
     private readonly RunPatcher _patcher;
@@ -411,8 +410,8 @@ public sealed class TestRun
         }
         catch (OperationCanceledException) when (phase.IsCancelled)
         {
-            outcome = StepOutcome.Unrated(message: OperatorAborted ? "Durch Werkerabbruch abgebrochen" : "Durch automatischen Prüfungsabschluss beendet");
-            cancelled = OperatorAborted;
+            outcome = StepOutcome.Unrated(message: "Durch Werkerabbruch abgebrochen");
+            cancelled = true;
         }
         catch (Exception ex)
         {
@@ -431,12 +430,6 @@ public sealed class TestRun
             Path = path,
             Iteration = iteration,
         });
-        if (outcome.StopRunOnFailure && outcome.Rating == ResultRating.Fail)
-        {
-            Interlocked.Exchange(ref _failureStopRequested, 1);
-            _abort.Regular.Cancel();
-            phase.Cancel();
-        }
         return outcome.Rating;
     }
 
@@ -810,9 +803,8 @@ public sealed class TestRun
         var owner = group.IsDutRun ? scopeId : RunId;
         foreach (var unfinished in Recordings.CloseOwner(owner))
         {
-            var rating = Volatile.Read(ref _failureStopRequested) != 0 ? ResultRating.Fail : ResultRating.Error;
-            accumulator.Merge(rating);
-            Emit(new StepCompleted(rating, unfinished.Data, null, null, null, "Aufzeichnung ohne abschließende Bewertung beendet; unvollständig.", OperatorAborted)
+            accumulator.Merge(ResultRating.Error);
+            Emit(new StepCompleted(ResultRating.Error, unfinished.Data, null, null, null, "Aufzeichnung ohne abschließende Bewertung beendet; unvollständig.", OperatorAborted)
                 { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = iteration });
         }
     }

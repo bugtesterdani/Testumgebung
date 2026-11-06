@@ -6,6 +6,7 @@ public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Cha
 {
     public IReadOnlyList<EnvelopeViolation> Details { get; init; } = [];
     public EnvelopeEarlyStop? EarlyStop { get; init; }
+    public double? PlannedDuration { get; init; }
     public const string Prefix = "Grenzband:";
     public string Encode() => Prefix + JsonSerializer.Serialize(this);
     public static EnvelopeTraceMetadata? Decode(string? text)

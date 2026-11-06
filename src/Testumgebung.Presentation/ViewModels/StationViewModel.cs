@@ -936,7 +936,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         switch (e)
         {
             case TraceUpdated trace:
-                LiveWaveform.SetData(trace.Data); LiveWaveformTitle = "Messwertverlauf · Aufnahme läuft";
+                LiveWaveform.SetData(trace.Data);
+                LiveWaveformTitle = LiveWaveform.HasEnvelopeViolation ? "Messwertverlauf · FAIL festgestellt · Aufnahme läuft" : "Messwertverlauf · Aufnahme läuft";
                 break;
             case StateChanged s:
                 HandleStateChanged(s);

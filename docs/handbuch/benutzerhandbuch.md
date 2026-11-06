@@ -596,4 +596,4 @@ Ein vom Werker abgebrochener Prüflingstest erhält den Gesamtstatus **ABORT**, 
 
 ## Messwertverläufe mit Grenzbandprüfung
 
-Die Ablaufbausteine **Messwertverlauf beginnen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten** zeichnen Geräte-/Variablenwerte auf und prüfen sie gegen versionierte Unter-/Obergrenzen. Einrichtung, Beispiele, Zeitbasis, Fehlerbehandlung und Speicherung: [Messwertverläufe und Grenzbandprüfung](../messwertverlaeufe.md).
+Der zeitgesteuerte Baustein **Messwertverlauf aufnehmen** sowie die manuellen Bausteine **Messwertverlauf beginnen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten** zeichnen Geräte-/Variablenwerte auf und prüfen sie gegen versionierte Unter-/Obergrenzen. Einrichtung, Beispiele, Zeitbasis, Fehlerbehandlung und Speicherung: [Messwertverläufe und Grenzbandprüfung](../messwertverlaeufe.md).

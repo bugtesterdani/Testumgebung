@@ -110,6 +110,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public RelayCommand PanRightCommand { get; }
     public RelayCommand ClearCursorCommand { get; }
 
+    public bool HasEnvelopeViolation => _violations.Values.Any(times => times.Length > 0);
     public bool HasData => _sources.Count > 0 && Count > 0;
     public int Count => _sources.Count == 0 ? 0 : _sources[0].Samples.Length;
 
