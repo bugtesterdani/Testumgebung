@@ -92,6 +92,25 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <!-- Only received measurements get dots; interpolated grid points remain lines. -->
+                            <ItemsControl ItemsSource="{Binding SampleMarkers}" IsHitTestVisible="False">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter">
+                                    <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                </Style></ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Ellipse Width="6" Height="6" Fill="{Binding ColorIndex, Converter={StaticResource SeriesBrush}}" Stroke="White" StrokeThickness="0.7">
+                                        <Ellipse.RenderTransform><TranslateTransform X="-3" Y="-3"/></Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding ViolationMarkers}" IsHitTestVisible="False">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Grid/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Line X1="{Binding X}" X2="{Binding X}" Y1="0" Y2="260" Stroke="Firebrick" StrokeThickness="2" StrokeDashArray="3 3" Opacity="0.7"/>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <Line X1="{Binding CursorX}" X2="{Binding CursorX}" Y1="0" Y2="260" Stroke="{StaticResource TextBrush}" StrokeThickness="1.5"
                                   StrokeDashArray="4 3" IsHitTestVisible="False" Visibility="{Binding HasCursor, Converter={StaticResource BoolVis}}" />
                             <Canvas IsHitTestVisible="False">

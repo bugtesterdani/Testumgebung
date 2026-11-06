@@ -4048,6 +4048,350 @@
       ]
     },
     {
+      "type": "verlauf.aufnehmen",
+      "displayName": "Messwertverlauf aufnehmen",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Misst \u00FCber die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zus\u00E4tzliche Abweichung beendet diese Aufnahme fr\u00FCher. Danach folgen die n\u00E4chsten Schritte.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kanaele",
+          "label": "Kanalnamen (Komma)",
+          "kind": "Text",
+          "default": "Spannung",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheiten",
+          "label": "Einheiten (Komma, gleiche Reihenfolge)",
+          "kind": "Text",
+          "default": "V",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Grenzkurven",
+          "label": "Grenzkurven: ID@Version (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Dauer",
+          "label": "Messdauer [s]",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MaxPunkte",
+          "label": "Punktlimit je Kanal (2..100000)",
+          "kind": "Number",
+          "default": "10000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MaxLuecke",
+          "label": "Maximale Messl\u00FCcke / Abfragedauer [s]",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MinDauer",
+          "label": "Mindestdauer der Aufnahme [s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Beruehren",
+          "label": "Ber\u00FChren einer Grenzlinie zul\u00E4ssig",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FailAbbruch",
+          "label": "Aufnahme bei zus\u00E4tzlicher Abweichung vorzeitig beenden (FAIL)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AbweichungProzent",
+          "label": "Zus\u00E4tzliche Abweichung [% vom Betrag des Grenzwerts]",
+          "kind": "Number",
+          "default": "10",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Quelle",
+          "label": "Datenquelle",
+          "kind": "Choice",
+          "default": "Ausdr\u00FCcke",
+          "required": false,
+          "choices": [
+            "Ausdr\u00FCcke",
+            "Ger\u00E4te"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Werte",
+          "label": "Wertausdr\u00FCcke (Semikolon)",
+          "kind": "Text",
+          "default": "Spannung",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ressourcen",
+          "label": "Ger\u00E4tenamen (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Intervall",
+          "label": "Abfrageintervall [s]",
+          "kind": "Number",
+          "default": "0.1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErgebnisZiel",
+          "label": "Auswertungsdetails \u2192 Stringvariable (JSON)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "verlauf.bewerten",
+      "displayName": "Verlauf beenden und bewerten",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollst\u00E4ndige Daten ergeben ERROR.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErgebnisZiel",
+          "label": "Auswertungsdetails \u2192 Stringvariable (JSON)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "verlauf.punkt",
+      "displayName": "Messpunkt erg\u00E4nzen",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Erg\u00E4nzt alle Kan\u00E4le. Eine Grenzverletzung bleibt FAIL; die zus\u00E4tzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Quelle",
+          "label": "Datenquelle",
+          "kind": "Choice",
+          "default": "Ausdr\u00FCcke",
+          "required": false,
+          "choices": [
+            "Ausdr\u00FCcke",
+            "Ger\u00E4te"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Werte",
+          "label": "Wertausdr\u00FCcke (Semikolon)",
+          "kind": "Text",
+          "default": "Spannung",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ressourcen",
+          "label": "Ger\u00E4tenamen (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeit",
+          "label": "Zeit [s], leer = seit Aufnahmebeginn",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "verlauf.start",
+      "displayName": "Messwertverlauf beginnen",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kanaele",
+          "label": "Kanalnamen (Komma)",
+          "kind": "Text",
+          "default": "Spannung",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheiten",
+          "label": "Einheiten (Komma, gleiche Reihenfolge)",
+          "kind": "Text",
+          "default": "V",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Grenzkurven",
+          "label": "Grenzkurven: ID@Version (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Dauer",
+          "label": "Messdauer [s], 0 = manuelles Ende",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MaxPunkte",
+          "label": "Punktlimit je Kanal (2..100000)",
+          "kind": "Number",
+          "default": "10000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MaxLuecke",
+          "label": "Maximale Messl\u00FCcke / Abfragedauer [s]",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MinDauer",
+          "label": "Mindestdauer der Aufnahme [s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Beruehren",
+          "label": "Ber\u00FChren einer Grenzlinie zul\u00E4ssig",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FailAbbruch",
+          "label": "Aufnahme bei zus\u00E4tzlicher Abweichung vorzeitig beenden (FAIL)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AbweichungProzent",
+          "label": "Zus\u00E4tzliche Abweichung [% vom Betrag des Grenzwerts]",
+          "kind": "Number",
+          "default": "10",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "warten",
       "displayName": "Warten",
       "category": "Ablauf",

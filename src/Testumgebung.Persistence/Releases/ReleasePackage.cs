@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verpackt Projekt und Abhängigkeiten mit Manifest und Prüfsummen zur späteren Integritätsprüfung.
  */
@@ -355,6 +355,8 @@ public static class DefinitionCompatibility
         }
         void CollectReferences(JsonObject o)
         {
+            if (((string?)o["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && o["parameters"] is JsonObject trace && (string?)trace["Grenzkurven"] is { } limits)
+                foreach (var key in limits.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) curves.Add(key.Contains('@') ? key : key + "@");
             if (o["parameters"] is JsonObject p && (string?)p["Baustein"] is { Length: > 0 } b) used.Add(b);
             if (o["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
         }

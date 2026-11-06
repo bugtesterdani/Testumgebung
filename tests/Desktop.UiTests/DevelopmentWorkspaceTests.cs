@@ -23,6 +23,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyReleaseSelectionAndWorkflow(dispatcher);
             VerifyLiveOutputPanel(dispatcher);
             InteractionBoundaryTests.VerifyPlotGestures();
+            VerifyEnvelopePlot(dispatcher);
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();
             VerifyVisualBlockProgramming(dispatcher);
@@ -376,6 +377,18 @@ public sealed partial class DevelopmentWorkspaceTests
             { DisplayId = station.Name, StepName = "Seriennummer erfassen", Required = true }, stop.Token);
         var answerFirst = Ask(first, "Seriennummer für Seite 1 scannen");
         var answerSecond = Ask(second, "Seriennummer für Seite 2 scannen");
+        var band = new Testumgebung.Domain.Curves.CurveDefinition { Id = "live", Name = "Live", Version = "1", SampleRate = 1, Times = [0, 1],
+            Channels = [new("Untergrenze", "V", [4, 4]), new("Obergrenze", "V", [6, 6])] };
+        foreach (var station in new[] { first, second })
+        {
+            var recording = new Testumgebung.Domain.Curves.EnvelopeRecordings();
+            recording.Start("owner", "capture", [new("Spannung", "V", band)], DateTimeOffset.UnixEpoch);
+            recording.Add("owner", "capture", 0, [5], DateTimeOffset.UnixEpoch);
+            var live = recording.Add("owner", "capture", 0.5, [ReferenceEquals(station, first) ? 5.5 : 4.5], DateTimeOffset.UnixEpoch.AddSeconds(1))!;
+            typeof(StationViewModel).GetMethod("Handle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .Invoke(station, [new Testumgebung.Engine.TraceUpdated(live.Data) { Time = DateTimeOffset.UnixEpoch, RunId = "paired-preview" }]);
+            Assert.True(station.HasLiveWaveform);
+        }
         first.ActiveContent!.Input = "SN-001"; second.ActiveContent!.Input = "SN-002";
         first.Measurements.Add(new MeasurementRow("Spannung", "230", "V", "220 – 240", Testumgebung.Contracts.ResultRating.Pass));
         second.Measurements.Add(new MeasurementRow("Spannung", "229", "V", "220 – 240", Testumgebung.Contracts.ResultRating.Pass));
@@ -385,6 +398,11 @@ public sealed partial class DevelopmentWorkspaceTests
             view.Width = size.Width; view.Height = size.Height;
             view.Measure(size); view.Arrange(new Rect(size)); view.UpdateLayout(); Sta.Flush(dispatcher);
             Assert.Equal(2, Descendants(view).OfType<PairedStationPane>().Count());
+            var plots = Descendants(view).OfType<WaveformPlot>().ToArray();
+            Assert.Equal(2, plots.Length);
+            Assert.All(plots, plot => { Assert.Equal(Visibility.Visible, plot.Visibility); Assert.True(plot.ActualHeight > 0); });
+            Assert.Contains(plots, plot => ReferenceEquals(plot.DataContext, first.LiveWaveform));
+            Assert.Contains(plots, plot => ReferenceEquals(plot.DataContext, second.LiveWaveform));
             Assert.Equal(2, Descendants(view).OfType<TextBox>().Count(t => t.IsEnabled
                 && t.GetBindingExpression(TextBox.TextProperty)?.ParentBinding.Path.Path == "Input"));
             var bitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96, 96, PixelFormats.Pbgra32);

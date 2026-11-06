@@ -130,6 +130,9 @@ public sealed record OperatorPrompt(
 public interface IStepContext
 {
     Processes.IProcessSession Processes => throw new NotSupportedException("Prozessaufrufe werden hier nicht unterstützt.");
+    Curves.EnvelopeRecordings Recordings => throw new NotSupportedException("Messwertaufzeichnung wird hier nicht unterstützt.");
+    bool IsOperatorAborted => false;
+    void ReportTrace(WaveformSet data) { }
     string ProcessOwner => RunId;
     string RunId { get; }
     string StepId { get; }

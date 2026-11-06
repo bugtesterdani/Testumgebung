@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Vermittelt zwischen Engine-Ereignissen, Werkerinteraktion und UI-Zustand eines Prüfplatzes.
  */
@@ -935,6 +935,10 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     {
         switch (e)
         {
+            case TraceUpdated trace:
+                LiveWaveform.SetData(trace.Data);
+                LiveWaveformTitle = LiveWaveform.HasEnvelopeViolation ? "Messwertverlauf · FAIL festgestellt · Aufnahme läuft" : "Messwertverlauf · Aufnahme läuft";
+                break;
             case StateChanged s:
                 HandleStateChanged(s);
                 break;

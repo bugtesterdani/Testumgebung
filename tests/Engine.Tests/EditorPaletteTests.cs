@@ -76,4 +76,3 @@ public sealed class EditorPaletteTests
         editor.RedoCommand.Execute(null); Assert.Equal(before, serializer.Serialize(editor.Project));
     }
 }
-
