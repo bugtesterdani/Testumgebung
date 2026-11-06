@@ -17,7 +17,7 @@ public sealed class EditorPaletteTests
         Assert.DoesNotContain(editor.Palette, category => category.Name == "Steuerung");
         Assert.Single(items, item => item.BlockType is null);
         Assert.DoesNotContain(items, item => item.Preset is not null);
-        Assert.Equal(editor.Catalog.All.Select(block => block.Type).Order(), items.Where(item => item.BlockType is not null).Select(item => item.BlockType!).Order());
+        Assert.Equal(editor.Catalog.All.Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download)).Select(block => block.Type).Order(), items.Where(item => item.BlockType is not null).Select(item => item.BlockType!).Order());
         Assert.All(editor.Palette.Where(category => category.Name == "Kommunikation"), category => Assert.False(category.IsExpanded));
     }
 

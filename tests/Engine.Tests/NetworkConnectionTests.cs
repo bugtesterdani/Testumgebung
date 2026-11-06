@@ -181,6 +181,23 @@ public sealed class NetworkConnectionTests
         Assert.Equal(new byte[] { 65, 255, 255, 66 }, inner.Sent.ToArray());
     }
 
+    [Theory]
+    [InlineData(NetworkBlocks.Upload, "Hochladen", "sftp.upload")]
+    [InlineData(NetworkBlocks.Upload, "Herunterladen", "sftp.download")]
+    [InlineData(NetworkBlocks.Upload, null, "sftp.upload")]
+    [InlineData(NetworkBlocks.Download, null, "sftp.download")]
+    public async Task Sftp_direction_and_legacy_blocks_execute_the_expected_operation(string type, string? direction, string operation)
+    {
+        var device = new RecordingConnection();
+        var step = S(type, "transfer", ("Ressource", "DUT"), ("Lokal", "local.bin"), ("Remote", "/remote.bin"));
+        if (direction is null) step.Parameters.Remove("Richtung"); else step.Parameters["Richtung"] = direction;
+        var project = new Testumgebung.Persistence.ProjectSerializer().Clone(new Testumgebung.Persistence.TestProject(Test(Group("loop").Add(step))));
+        var run = new TestRun(project.Definition, new TestRunOptions { Hardware = new HardwareRegistry().Bind("DUT", device, "") });
+        await run.RunAsync().Within();
+        Assert.Equal(operation, Assert.Single(device.Operations));
+        Assert.Equal(ResultRating.Pass, Assert.Single(run.Steps("transfer")).Rating);
+    }
+
     private sealed class RecordingConnection : IHardwareAdapter, IConfigurableConnection, IByteStreamAdapter, IRemoteConnection
     {
         public string Name => "test";

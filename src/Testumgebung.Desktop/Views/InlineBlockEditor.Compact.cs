@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,8 +19,9 @@ public sealed partial class InlineBlockEditor
         [BlockCatalog.DigitalRead] = ["Ressource", "Ziel"],
         [BlockCatalog.DigitalWrite] = ["Ressource", "Wert"],
         [BlockCatalog.SetValue] = ["Ziel", "Ausdruck"],
-        [BlockCatalog.Evaluate] = ["Bedingung"],
+        [BlockCatalog.Evaluate] = ["Art", "Bedingung", "Bewertung"],
         [BlockCatalog.SetRating] = ["Bewertung"],
+        [NetworkBlocks.Upload] = ["Richtung", "Ressource"],
         [BlockCatalog.Wait] = ["Dauer"],
         [BlockCatalog.RaiseError] = ["Meldung"],
         [BlockCatalog.Operator] = ["Text", "Ziel"],
@@ -40,8 +41,12 @@ public sealed partial class InlineBlockEditor
         var names = QuickFieldNames(step);
         foreach (var name in names)
         {
-            var row = step.Parameters.FirstOrDefault(p => p.Descriptor.Name == name && !p.IsHidden);
-            if (row is not null && UsefulQuickField(step, row)) CompactRow(panel, row.Label, CompactInput(row), row.Hint);
+            var row = step.Parameters.FirstOrDefault(p => p.Descriptor.Name == name);
+            if (row is null || !UsefulQuickField(step, row)) continue;
+            var field = new StackPanel();
+            BindParameterVisibility(field, row);
+            CompactRow(field, row.Label, CompactInput(row), row.Hint);
+            panel.Children.Add(field);
         }
         if (step.Bindings is not { } bindings) return;
         var choice = new ComboBox { ItemsSource = bindings.Blocks, DisplayMemberPath = "Name" };

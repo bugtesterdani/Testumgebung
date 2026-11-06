@@ -163,6 +163,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyInlineBlocks(dispatcher, view, editor);
             view.UpdateLayout(); Sta.Flush(dispatcher);
             CaptureVisual(host, "visual-flow.png");
+            VerifyEvaluationOptions(view, editor, dispatcher);
         }
         finally { host.Close(); }
     }

@@ -118,3 +118,6 @@ Die normale Ansicht bietet **Gruppe** als gemeinsamen Strukturbaustein. Eintritt
 Die Bausteinkategorien links lassen sich auf- und zuklappen. Struktur, Variablen, Ablauf und Werkerinteraktion sind anfangs geöffnet. Geräte-, Protokoll- und weitere Fachkategorien öffnen sich bei Bedarf. Mit **Bausteine suchen** kann nach Namen, Funktion, Protokoll oder interner Bausteinkennung gesucht werden. Alle eingegebenen Wörter müssen vorkommen. Trefferkategorien öffnen sich automatisch; ein leeres Suchfeld stellt die vollständige normale Auswahl wieder her.
 
 In Block- und Knotenansicht bleiben alle Steuerungsvarianten im Einfügemenü verfügbar: Bedingung, Wenn/Dann/Sonst, feste Wiederholung, Solange/Bis und Parallel. Die Suche der normalen Seitenleiste schränkt diese visuellen Einfügemenüs nicht ein. Der Ansichtswechsel verändert weder den Ablauf noch den Undo-Verlauf.
+
+
+Die fachlich gleichen Varianten werden auch in den visuellen Ansichten gemeinsam angeboten: **Bewertung → Art** für Bedingungsprüfung oder festes Ergebnis (einschließlich ERROR); **SFTP-Dateitransfer → Richtung** für Hoch- oder Herunterladen. Eigene sichtbare Steuerungsvorlagen bleiben dagegen erhalten, weil sie den Aufbau der Verzweigungen und Schleifen verdeutlichen.

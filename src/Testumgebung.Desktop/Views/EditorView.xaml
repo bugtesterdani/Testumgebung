@@ -492,7 +492,7 @@
                 <ItemsControl ItemsSource="{Binding Parameters}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,3" Visibility="{Binding IsHidden, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150" />
                                     <ColumnDefinition Width="*" />
@@ -608,7 +608,7 @@
                     <ItemsControl ItemsSource="{Binding Rows}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,3">
+                                <Grid Margin="0,3" Visibility="{Binding IsHidden, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="*" />

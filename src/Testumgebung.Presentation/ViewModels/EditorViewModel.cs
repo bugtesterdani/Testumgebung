@@ -43,6 +43,7 @@ public sealed partial class EditorViewModel : ObservableObject
         Project = project;
 
         _palette = Catalog.All
+            .Where(b => b.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download))
             .GroupBy(b => b.Category)
             .Select(g => new PaletteCategory(g.Key, g.Select(b => new PaletteItem(b.Type, b.DisplayName, b.Description, IconFor(b.Type))).ToList()))
             .Append(new PaletteCategory("Struktur", [new PaletteItem(null, "Gruppe", "Untergruppe mit Variablen, Bedingung, Wiederholung und Exit-Gruppe.", NodeIcon.Group)]))

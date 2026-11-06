@@ -54,11 +54,11 @@ public static class NetworkBlocks
             "Führt einen Befehl über SSH aus. Passwort oder Schlüsseldatei; HostKeySHA256 oder ausdrücklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
             [.. Common(), .. HostKeyTargets(), new("Befehl", "Befehl", ParameterKind.Text, "uname -a", Required: true)], p => Create(p, "ssh", "Befehl")));
         foreach (var upload in new[] { true, false })
-            c.Register(new(upload ? Upload : Download, upload ? "SFTP-Datei hochladen" : "SFTP-Datei herunterladen", CommunicationBlocks.Category, "arrow",
+            c.Register(new(upload ? Upload : Download, upload ? "SFTP-Dateitransfer" : "SFTP-Datei herunterladen", CommunicationBlocks.Category, "arrow",
                 "Überträgt eine Datei über SSH/SFTP. Pfade unterstützen Variablen. Überschreiben ist ausdrücklich wählbar.",
-                [.. Common(), .. HostKeyTargets(), new("Lokal", "Lokale Datei", ParameterKind.Text, Required: true), new("Remote", "Datei auf Gegenstelle", ParameterKind.Text, Required: true),
+                [.. Common(), .. HostKeyTargets(), .. (upload ? new ParameterDescriptor[] { new("Richtung", "Richtung", ParameterKind.Choice, "Hochladen", Choices: ["Hochladen", "Herunterladen"]) } : []), new("Lokal", "Lokale Datei", ParameterKind.Text, Required: true), new("Remote", "Datei auf Gegenstelle", ParameterKind.Text, Required: true),
                     new("Ueberschreiben", "Bestehende Datei überschreiben", ParameterKind.Bool, "false")],
-                p => Create(p, upload ? "sftp.upload" : "sftp.download", "Remote")));
+                p => Create(p, upload && p.Choice("Richtung") == "Hochladen" ? "sftp.upload" : "sftp.download", "Remote")));
     }
     private static RemoteAction Create(BlockParameters p, string operation, string argument)
     {
