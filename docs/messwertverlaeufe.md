@@ -68,3 +68,8 @@ Der erste Wert erscheint sofort als farbiger Punkt. Weitere tatsächlich geliefe
 Die Anzeige nennt bereits während der Aufnahme **FAIL festgestellt**, sobald eine normale Grenzverletzung bekannt ist. Dies beendet die Aufnahme ohne zusätzliche Abweichung noch nicht. Messung, Unter-/Obergrenze und rote Verletzungsmarkierungen bleiben sichtbar. Bis zu 1.000 sichtbare Originalpunkte je Kanal werden als Punkte dargestellt, bei größeren Mengen einschließlich erstem und neuestem Punkt reduziert. Zusätzlich interpolierte Stützpunkte erhalten keine Punktmarkierung. Die Bewertung verwendet weiterhin sämtliche Daten.
 
 Die vorhandenen Kurven-Speicheroptionen führen Messung und Grenzen zu Ergebnisdatei und Datenbank; bei ausgeschalteten Speicherzielen werden sie dort nicht abgelegt. Zum Wiederöffnen die Ergebnisnachschau nutzen. Je Messkanal enthält `Waveform.Quality` nach `Grenzband:` ein JSON mit Grenzkurvenkennung, Hash, Originalmesszeiten, `PlannedDuration`, Vollständigkeit und Verletzungsdetails. `EarlyStop` enthält bei vorzeitigem FAIL Prozentsatz, Kanal, Zeit, Wert und Grenzen. `ErgebnisZiel` liefert dieselben kanalweisen Details. Daten und Herkunft bleiben auch beim vorzeitigen Ende erhalten.
+
+
+## Direkt ladbares Beispiel
+
+[Grenzband-Demo ohne Hardware](beispiele/README-grenzband-demo.md) enthält vier auswählbare Fälle einschließlich 3,999 V, vorzeitigem Ende bei 3,599 V und einer Live-Kurve aus sechs Einzelpunkten. [Projektdatei öffnen/herunterladen](beispiele/grenzband-demo.tproj.json).

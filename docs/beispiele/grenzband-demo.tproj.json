@@ -1,0 +1,451 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Grenzband-Demo ohne Hardware",
+  "version": "1.0",
+  "description": "Hardwarefreies Beispiel zu PR #76. Szenarien PASS, FAIL, vorzeitiges FAIL-Ende und manuelle Live-Kurve. Ein Durchlauf, danach erneut starten.",
+  "variables": [],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Vorbereitung"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Szenario",
+            "type": "String",
+            "initial": "PASS"
+          },
+          {
+            "name": "Messwert",
+            "type": "Double",
+            "initial": "5"
+          },
+          {
+            "name": "Details",
+            "type": "String",
+            "initial": ""
+          },
+          {
+            "name": "NaechsterSchrittErreicht",
+            "type": "Bool",
+            "initial": "false"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Demo-Seriennummer eingeben (z. B. DEMO-001). Es wird keine Hardware angesteuert.",
+              "Bild": "",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Standardwert": "DEMO-001",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "",
+              "Warten": "true",
+              "Ziel": "Kennung",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "demo-serial",
+            "name": "Demo-Seriennummer erfassen"
+          },
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Auswahl",
+              "Text": "PASS: 5 V / 5 s. FAIL: 3,999 V / 5 s. Fruehes Ende: 3,599 V / sofort. Kurve: sechs Messpunkte / 5 s.",
+              "Bild": "",
+              "Datentyp": "Zahl",
+              "Pflicht": "true",
+              "Standardwert": "PASS",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "PASS;FAIL;Fruehes Ende;Kurve",
+              "Warten": "true",
+              "Ziel": "Szenario",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "demo-scenario",
+            "name": "Beispiel auswählen"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"PASS\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Messwert",
+                  "Ausdruck": "5"
+                },
+                "id": "demo-pass-value",
+                "name": "Beispielwert einstellen"
+              }
+            ],
+            "id": "demo-pass",
+            "name": "PASS"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"FAIL\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Messwert",
+                  "Ausdruck": "3.999"
+                },
+                "id": "demo-fail-value",
+                "name": "Beispielwert einstellen"
+              }
+            ],
+            "id": "demo-fail",
+            "name": "FAIL"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"Fruehes Ende\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Messwert",
+                  "Ausdruck": "3.599"
+                },
+                "id": "demo-early-value",
+                "name": "Beispielwert einstellen"
+              }
+            ],
+            "id": "demo-early",
+            "name": "Fruehes Ende"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario != \"Kurve\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "verlauf.aufnehmen",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Kanaele": "Spannung",
+                  "Einheiten": "V",
+                  "Grenzkurven": "demo-spannungsband@1",
+                  "Dauer": "5",
+                  "MaxPunkte": "100",
+                  "MaxLuecke": "1",
+                  "MinDauer": "0",
+                  "Beruehren": "true",
+                  "FailAbbruch": "true",
+                  "AbweichungProzent": "10",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "Messwert",
+                  "Ressourcen": "",
+                  "Intervall": "0.5",
+                  "ErgebnisZiel": "Details"
+                },
+                "id": "demo-capture",
+                "name": "5 Sekunden messen – 4 bis 6 V, Zusatzgrenze 10 %"
+              }
+            ],
+            "id": "demo-timed",
+            "name": "Zeitgesteuerte Aufnahme",
+            "description": "Normale Grenzverletzungen bleiben FAIL. Die Zusatzabweichung beendet nur diese Aufnahme, nicht die folgenden Schritte."
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"Kurve\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "verlauf.start",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Kanaele": "Spannung",
+                  "Einheiten": "V",
+                  "Grenzkurven": "demo-spannungsband@1",
+                  "Dauer": "5",
+                  "MaxPunkte": "100",
+                  "MaxLuecke": "1.5",
+                  "MinDauer": "0",
+                  "Beruehren": "true",
+                  "FailAbbruch": "false",
+                  "AbweichungProzent": "10"
+                },
+                "id": "demo-begin",
+                "name": "Manuelle Kurve beginnen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "5",
+                  "Ressourcen": "",
+                  "Zeit": "0"
+                },
+                "id": "demo-point-0",
+                "name": "Messpunkt 0 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-1",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "5.4",
+                  "Ressourcen": "",
+                  "Zeit": "1"
+                },
+                "id": "demo-point-1",
+                "name": "Messpunkt 1 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-2",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "4.7",
+                  "Ressourcen": "",
+                  "Zeit": "2"
+                },
+                "id": "demo-point-2",
+                "name": "Messpunkt 2 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-3",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "5.8",
+                  "Ressourcen": "",
+                  "Zeit": "3"
+                },
+                "id": "demo-point-3",
+                "name": "Messpunkt 3 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-4",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "5.1",
+                  "Ressourcen": "",
+                  "Zeit": "4"
+                },
+                "id": "demo-point-4",
+                "name": "Messpunkt 4 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-5",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Ausdrücke",
+                  "Werte": "5.4",
+                  "Ressourcen": "",
+                  "Zeit": "5"
+                },
+                "id": "demo-point-5",
+                "name": "Messpunkt 5 s"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.bewerten",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "ErgebnisZiel": "Details"
+                },
+                "id": "demo-evaluate",
+                "name": "Kurve abschließen und Details übernehmen"
+              }
+            ],
+            "id": "demo-manual",
+            "name": "Sichtbarer Kurvenverlauf aus Einzelpunkten"
+          },
+          {
+            "art": "schritt",
+            "block": "wert.setzen",
+            "parameters": {
+              "Ziel": "NaechsterSchrittErreicht",
+              "Ausdruck": "true"
+            },
+            "id": "demo-next",
+            "name": "Folgeschritt – auch nach frühem FAIL"
+          },
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Anweisung",
+              "Text": "Szenario {Szenario}: Der Folgeschritt wurde erreicht ({NaechsterSchrittErreicht}). Kurve und Protokoll ansehen, danach bestätigen. Ein vorheriges FAIL bleibt FAIL.",
+              "Bild": "",
+              "Datentyp": "Zahl",
+              "Pflicht": "true",
+              "Standardwert": "",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "",
+              "Warten": "true",
+              "Ziel": "",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "demo-finished",
+            "name": "Aufnahme beendet – Kurve ansehen"
+          }
+        ],
+        "id": "demo-dut",
+        "name": "Grenzband-Demoprüfling"
+      }
+    ],
+    "id": "loop",
+    "name": "Ein Demodurchlauf"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Abschluss"
+  },
+  "simulation": [],
+  "curves": [
+    {
+      "id": "demo-spannungsband",
+      "name": "4–6 V für vollständige 5 Sekunden",
+      "version": "1",
+      "description": "Grenzband deckt 0..5 s vollständig ab. Zusätzliche 10-%-Abbruchgrenzen sind 3,6 V und 6,6 V.",
+      "sampleRate": 1,
+      "times": "AAAAAAAAAAAAAAAAAAAUQA==",
+      "channels": [
+        {
+          "id": "Untergrenze",
+          "unit": "V",
+          "samples": "AAAAAAAAEEAAAAAAAAAQQA=="
+        },
+        {
+          "id": "Obergrenze",
+          "unit": "V",
+          "samples": "AAAAAAAAGEAAAAAAAAAYQA=="
+        }
+      ],
+      "origin": "Generator",
+      "source": "",
+      "createdBy": "",
+      "createdAt": "0001-01-01T00:00:00+00:00",
+      "sha256": "5930157d1e4c4a0fff780901fb938213edacbf3ba2ce27c3ed8389ee92beb7a7"
+    }
+  ]
+}
