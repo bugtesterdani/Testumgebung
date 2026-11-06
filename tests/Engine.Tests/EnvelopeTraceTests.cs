@@ -126,6 +126,94 @@ public sealed class EnvelopeTraceTests
         var curves = new CurvesViewModel(editor, null, () => "fixture", () => null, Testumgebung.Presentation.Mvvm.ImmediateDispatcher.Instance);
         Assert.Contains("used", Assert.Single(curves.Curves).Usage); Assert.Contains("latest", curves.Curves[0].Usage);
     }
+    [Theory]
+    [InlineData(3.6, false)] [InlineData(6.6, false)]
+    [InlineData(3.59, true)] [InlineData(6.61, true)]
+    public void Early_stop_uses_each_absolute_limit_and_strictly_exceeds_the_percentage(double value, bool stops)
+    {
+        var r = new EnvelopeRecordings();
+        r.Start("owner", "trace", [new("U", "V", Band(lower: [4, 4, 4], upper: [6, 6, 6]))], Now, stopPercent: 10);
+        var preview = r.Add("owner", "trace", 0, [value], Now);
+        Assert.Equal(stops, preview?.EarlyStop is not null);
+        var result = r.Stop("owner", "trace"); Assert.False(result.Passed);
+        Assert.Equal(stops, result.EarlyStop is not null);
+        if (stops)
+        {
+            Assert.False(result.Complete); Assert.Single(result.Channels[0].OriginalTimes);
+            Assert.Equal(10, EnvelopeTraceMetadata.Decode(result.Data.Channels[0].Quality)!.EarlyStop!.Percent);
+        }
+    }
+    [Theory]
+    [InlineData(-6.61, -6, -4)] [InlineData(-3.59, -6, -4)] [InlineData(-0.01, 0, 6)] [InlineData(-0.01, 0, 1e12)]
+    public void Negative_and_zero_limits_use_absolute_percentage_without_reversing_the_margin(double value, double low, double high)
+    {
+        var r = new EnvelopeRecordings();
+        r.Start("owner", "trace", [new("U", "V", Band(lower: [low, low, low], upper: [high, high, high]))], Now, stopPercent: 10);
+        Assert.NotNull(r.Add("owner", "trace", 0, [value], Now)!.EarlyStop);
+        Assert.Throws<InvalidOperationException>(() => r.Add("owner", "trace", 1, [5], Now));
+        Assert.Empty(r.CloseOwner("owner"));
+    }
+    [Fact]
+    public void Early_stop_is_optional_validated_and_checks_interpolated_multichannel_limits_without_preview_throttle()
+    {
+        var r = Start(); r.Add("owner", "trace", 0, [99], Now); Assert.Null(r.Stop("owner", "trace").EarlyStop);
+        foreach (var percent in new[] { -1d, double.NaN, double.PositiveInfinity })
+            Assert.Throws<ArgumentException>(() => r.Start("owner", "bad", [new("U", "V", Band())], Now, stopPercent: percent));
+        r.Start("owner", "trace", [new("U", "V", Band()), new("I", "A", Band(upper: [10, 1, 10], unit: "A"))], Now, maxGap: 2, minimumDuration: 10, stopPercent: 10);
+        r.Add("owner", "trace", 0, [5, 5], Now);
+        var result = r.Add("owner", "trace", 2, [5, 5], Now)!;
+        Assert.Equal("I", result.EarlyStop!.Channel); Assert.Equal(1, result.EarlyStop.Time);
+        Assert.False(result.Passed); Assert.False(result.Complete);
+        r.Start("owner", "zero", [new("U", "V", Band(lower: [-6, 6, 6]))], Now, stopPercent: 200);
+        Assert.Null(r.Add("owner", "zero", 0, [-1], Now));
+        var zero = r.Add("owner", "zero", 1, [-1], Now)!;
+        Assert.Equal(0.5, zero.EarlyStop!.Time);
+        Assert.Contains(0.5, zero.Channels[0].Violations);
+        // Once a preview was emitted, a third point must still trip inside its 250 ms throttle window.
+        r.Start("owner", "throttle", [new("U", "V", Band())], Now, stopPercent: 0);
+        r.Add("owner", "throttle", 0, [5], Now); r.Add("owner", "throttle", 0.1, [5], Now);
+        Assert.NotNull(r.Add("owner", "throttle", 0.2, [11], Now)!.EarlyStop);
+    }
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public async Task Automatic_fail_stops_regular_steps_preserves_data_and_runs_cleanup_without_operator_abort(bool parallel)
+    {
+        var cleanup = false; var finalization = false; var nextRan = false;
+        var dut = Group("dut").Var("Kennung", VarType.String, "SN-EARLY"); dut.IsDutRun = true;
+        dut.Add(Block(TraceBlocks.Start, "begin", ("Grenzkurven", "band@1"), ("FailAbbruch", "true"), ("AbweichungProzent", "10")));
+        dut.Add(Block(TraceBlocks.Start, "other", ("Aufnahme", "Other"), ("Grenzkurven", "band@1")));
+        dut.Add(Block(TraceBlocks.Point, "initial", ("Werte", "5"), ("Zeit", "0")));
+        var points = Group("points"); points.Parallel = parallel;
+        var trip = Block(TraceBlocks.Point, "trip", ("Werte", "11.1"), ("Zeit", "0.5"));
+        if (parallel)
+        {
+            var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            points.Add(Steps.Code("waiting", "Cancellable sibling", async ctx =>
+            {
+                started.SetResult();
+                await Task.Delay(System.Threading.Timeout.Infinite, ctx.CancellationToken);
+                return StepOutcome.Pass();
+            }));
+            var action = trip.Action;
+            trip.Action = new DelegateAction(async ctx => { await started.Task.Within(); return await action.ExecuteAsync(ctx); });
+        }
+        points.Add(trip);
+        dut.Add(points, Steps.Code("next", "Must not run", _ => { nextRan = true; return StepOutcome.Pass(); }));
+        dut.ExitGroup = Group("cleanup").Add(Block(TraceBlocks.Stop, "evaluate-again"), Steps.Code("safe", "Safe", _ => { cleanup = true; return StepOutcome.Unrated(); }));
+        var definition = Test(Group("loop").Add(dut)); definition.Curves.Add(Band());
+        definition.Finalization.Add(Steps.Code("final", "Final", _ => { finalization = true; return StepOutcome.Unrated(); }));
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock(), ContinuousLoop = true });
+        var recorder = new Testumgebung.Persistence.Results.ResultRecorder(run);
+        Testumgebung.Persistence.Results.ResultRun? saved = null; recorder.RunRecorded += value => saved = value;
+        var status = await run.RunAsync().Within();
+        Assert.Equal(ResultRating.Fail, status.Rating); Assert.False(status.OperatorAbort);
+        Assert.True(cleanup); Assert.True(finalization); Assert.False(nextRan);
+        Assert.NotNull(saved); Assert.Equal(ResultRating.Fail, saved.Rating); Assert.False(saved.OperatorAbort);
+        Assert.Equal(3, saved.Waveforms.Count);
+        var reopened = Testumgebung.Persistence.Results.ResultFile.Read(Testumgebung.Persistence.Results.ResultFile.ToBytes(saved));
+        Assert.Empty(reopened.Problems);
+        Assert.Equal(10, EnvelopeTraceMetadata.Decode(reopened.Run.Waveforms[0].Data.Quality)!.EarlyStop!.Percent);
+    }
     private sealed class Meter(string unit = "V") : IHardwareAdapter
     {
         public string Name => "Fixture";

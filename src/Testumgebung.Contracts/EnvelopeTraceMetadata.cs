@@ -5,6 +5,7 @@ namespace Testumgebung.Contracts;
 public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Channel, double[] OriginalTimes, double[] Violations, int ViolationCount, double MaximumDeviation, bool Complete)
 {
     public IReadOnlyList<EnvelopeViolation> Details { get; init; } = [];
+    public EnvelopeEarlyStop? EarlyStop { get; init; }
     public const string Prefix = "Grenzband:";
     public string Encode() => Prefix + JsonSerializer.Serialize(this);
     public static EnvelopeTraceMetadata? Decode(string? text)
@@ -15,3 +16,6 @@ public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Cha
     }
 }
 public sealed record EnvelopeViolation(double Time, double Value, double Lower, double Upper, double Deviation);
+
+/// <summary>Automatic FAIL trigger, distinct from operator cancellation. Percent refers to the absolute limit value.</summary>
+public sealed record EnvelopeEarlyStop(double Percent, string Channel, double Time, double Value, double Lower, double Upper);

@@ -45,6 +45,26 @@ public sealed class CurveEnvelope
         if (!double.IsFinite(time) || time < _times[0] || time > _times[^1]) throw new ArgumentException("Messpunkt außerhalb des definierten Grenzkurvenbereichs; keine Extrapolation.");
         return (Interpolate(_times, _lower, time), Interpolate(_times, _upper, time));
     }
+    public IEnumerable<double> Checkpoints(double start, double end)
+    {
+        yield return start;
+        var found = Array.BinarySearch(_times, start);
+        var first = Math.Max(1, found >= 0 ? found : ~found);
+        for (var i = first; i < _times.Length && _times[i - 1] <= end; i++)
+        {
+            if (_times[i] > start && _times[i] < end) yield return _times[i];
+            foreach (var values in new[] { _lower, _upper })
+            {
+                if (Math.Sign(values[i - 1]) == Math.Sign(values[i])) continue;
+                // Scaled weights avoid overflow when limits have opposite signs.
+                var scale = Math.Max(Math.Abs(values[i - 1]), Math.Abs(values[i]));
+                var left = Math.Abs(values[i - 1]) / scale; var right = Math.Abs(values[i]) / scale;
+                var zero = _times[i - 1] + (_times[i] - _times[i - 1]) * (left / (left + right));
+                if (zero > start && zero < end) yield return zero;
+            }
+        }
+        yield return end;
+    }
     public static double Interpolate(IReadOnlyList<double> times, IReadOnlyList<double> values, double time)
     {
         var low = 0; var high = times.Count - 1;
@@ -57,7 +77,8 @@ public sealed class CurveEnvelope
 public sealed record TraceChannelDefinition(string Name, string Unit, CurveDefinition Limits);
 public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTraceMetadata> Channels, bool Complete)
 {
-    public bool Passed => Complete && Channels.All(c => c.ViolationCount == 0);
+    public EnvelopeEarlyStop? EarlyStop { get; init; }
+    public bool Passed => EarlyStop is null && Complete && Channels.All(c => c.ViolationCount == 0);
     public int Violations => Channels.Sum(c => c.ViolationCount);
 }
 
@@ -73,16 +94,28 @@ internal sealed class EnvelopeRecording
     private readonly double _maxGap, _minimumDuration;
     private readonly bool _touchAllowed;
     private bool _faulted;
+    private readonly double? _stopPercent;
+    public EnvelopeEarlyStop? EarlyStop { get; private set; }
     private DateTimeOffset _lastPreview;
-    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed)
+    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent)
     {
-        if (channels.Count is < 1 or > 8 || channels.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(c => string.IsNullOrWhiteSpace(c.Name) || c.Name.Contains(" · ", StringComparison.Ordinal)))
-            throw new ArgumentException("1 bis 8 eindeutig benannte Messkanäle erforderlich.");
-        if (maxPoints is < 2 or > 100000 || !double.IsFinite(maxGap) || maxGap <= 0 || !double.IsFinite(minimumDuration) || minimumDuration < 0)
-            throw new ArgumentException("Punktlimit 2..100000, maximale Lücke > 0 und Mindestdauer >= 0 angeben.");
+        ValidateChannels(channels);
+        ValidateAcquisition(maxPoints, maxGap, minimumDuration);
+        if (stopPercent is { } percent && (!double.IsFinite(percent) || percent < 0)) throw new ArgumentException("FAIL-Abbruchabweichung muss endlich und >= 0 sein.");
+        _stopPercent = stopPercent;
         _channels = channels.ToArray(); _envelopes = channels.Select(c => new CurveEnvelope(c.Limits, c.Unit)).ToArray();
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
         _maxPoints = maxPoints; _maxGap = maxGap; _minimumDuration = minimumDuration; _touchAllowed = touchAllowed;
+    }
+    private static void ValidateChannels(IReadOnlyList<TraceChannelDefinition> channels)
+    {
+        if (channels.Count is < 1 or > 8 || channels.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(c => string.IsNullOrWhiteSpace(c.Name) || c.Name.Contains(" · ", StringComparison.Ordinal)))
+            throw new ArgumentException("1 bis 8 eindeutig benannte Messkanäle erforderlich.");
+    }
+    private static void ValidateAcquisition(int maxPoints, double maxGap, double minimumDuration)
+    {
+        if (maxPoints is < 2 or > 100000 || !double.IsFinite(maxGap) || maxGap <= 0 || !double.IsFinite(minimumDuration) || minimumDuration < 0)
+            throw new ArgumentException("Punktlimit 2..100000, maximale Lücke > 0 und Mindestdauer >= 0 angeben.");
     }
     public void CheckUnits(IReadOnlyList<string> units)
     {
@@ -95,11 +128,14 @@ internal sealed class EnvelopeRecording
         try { Validate(time, values); }
         catch { _faulted = true; throw; }
         _times.Add(time); for (var i = 0; i < values.Count; i++) _values[i].Add(values[i]);
+        CheckEarlyStop();
+        if (EarlyStop is not null) return true;
         if (_times.Count < 2 || (_times.Count > 2 && now - _lastPreview < TimeSpan.FromMilliseconds(250))) return false;
         _lastPreview = now; return true;
     }
     private void Validate(double time, IReadOnlyList<double> values)
     {
+        if (EarlyStop is not null) throw new InvalidOperationException("Aufnahme wurde durch die FAIL-Abbruchgrenze beendet.");
         if (_faulted) throw new InvalidOperationException("Aufnahme ist nach einem Datenfehler ungültig; neu starten.");
         if (_times.Count >= _maxPoints) throw new InvalidOperationException("Maximale Messpunktzahl erreicht.");
         if (values.Count != _channels.Length || values.Any(v => !double.IsFinite(v)) || !double.IsFinite(time) || time < 0)
@@ -109,12 +145,12 @@ internal sealed class EnvelopeRecording
     }
     public TraceEvaluation Evaluate(bool stopped)
     {
-        var complete = stopped && !_faulted && _times.Count >= 2 && _times[^1] - _times[0] + Math.Max(1, _minimumDuration) * 1e-12 >= _minimumDuration;
+        var complete = stopped && EarlyStop is null && !_faulted && _times.Count >= 2 && _times[^1] - _times[0] + Math.Max(1, _minimumDuration) * 1e-12 >= _minimumDuration;
         if (_times.Count == 0) return new(new([]), [], false);
-        var grid = _envelopes.SelectMany(e => e.Times).Where(t => t >= _times[0] && t <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
+        var grid = _envelopes.SelectMany(e => e.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(t => t >= _times[0] && t <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
         var waves = new List<Waveform>(); var metadata = new List<EnvelopeTraceMetadata>();
         for (var channel = 0; channel < _channels.Length; channel++) EvaluateChannel(channel, grid, complete, waves, metadata);
-        return new(new(waves), metadata, complete);
+        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop };
     }
     private void EvaluateChannel(int channel, double[] grid, bool complete, List<Waveform> waves, List<EnvelopeTraceMetadata> metadata)
     {
@@ -132,11 +168,37 @@ internal sealed class EnvelopeRecording
             maximum = Math.Max(maximum, Math.Max(lower[i] - measured[i], measured[i] - upper[i]));
         }
         if (measured.Any(v => !double.IsFinite(v)) || !double.IsFinite(maximum)) throw new ArgumentException("Wertebereich der Kurvenauswertung überschritten.");
-        var info = new EnvelopeTraceMetadata(envelope.Key, envelope.Hash, definition.Name, _times.ToArray(), violations.ToArray(), violations.Count, maximum, complete) { Details = details };
+        var info = new EnvelopeTraceMetadata(envelope.Key, envelope.Hash, definition.Name, _times.ToArray(), violations.ToArray(), violations.Count, maximum, complete) { Details = details, EarlyStop = EarlyStop };
         metadata.Add(info);
         waves.Add(new(definition.Name, definition.Unit, 0, _start, measured, grid, info.Encode()));
         waves.Add(new(definition.Name + " · Untergrenze (" + envelope.Key + ")", definition.Unit, 0, _start, lower, grid));
         waves.Add(new(definition.Name + " · Obergrenze (" + envelope.Key + ")", definition.Unit, 0, _start, upper, grid));
+    }
+    /// <summary>Inspect only the newly received segment, including hidden violations between samples.</summary>
+    private void CheckEarlyStop()
+    {
+        if (_stopPercent is not { } percent) return;
+        var start = _times.Count > 1 ? _times[^2] : _times[0]; var end = _times[^1];
+        for (var channel = 0; channel < _channels.Length; channel++)
+        {
+            foreach (var time in _envelopes[channel].Checkpoints(start, end).Distinct().Order())
+            {
+                var value = _times.Count == 1 ? _values[channel][0] : CurveEnvelope.Interpolate(_times, _values[channel], time);
+                var (lower, upper) = _envelopes[channel].At(time);
+                if (!BeyondStopLimit(value, lower, upper, percent)) continue;
+                EarlyStop = new(percent, _channels[channel].Name, time, value, lower, upper);
+                return;
+            }
+        }
+    }
+    private static bool BeyondStopLimit(double value, double lower, double upper, double percent)
+    {
+        // Decimal configuration and interpolation may differ by a few binary rounding bits.
+        var low = lower - Math.Abs(lower) * (percent / 100);
+        var high = upper + Math.Abs(upper) * (percent / 100);
+        var lowTolerance = Math.Max(Math.Abs(value), Math.Abs(lower)) * 1e-12;
+        var highTolerance = Math.Max(Math.Abs(value), Math.Abs(upper)) * 1e-12;
+        return value < low - lowTolerance || value > high + highTolerance;
     }
     private bool Inside(double value, double low, double high) => _touchAllowed ? value >= low && value <= high : value > low && value < high;
 }
@@ -146,13 +208,13 @@ public sealed class EnvelopeRecordings
 {
     private readonly object _gate = new();
     private readonly Dictionary<(string Owner, string Name), EnvelopeRecording> _recordings = [];
-    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true)
+    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null)
     {
         lock (_gate)
         {
             if (string.IsNullOrWhiteSpace(name) || _recordings.ContainsKey((owner, name))) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
             if (_recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
-            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed));
+            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent));
         }
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)
@@ -175,7 +237,7 @@ public sealed class EnvelopeRecordings
         lock (_gate)
         {
             var keys = _recordings.Keys.Where(k => k.Owner == owner).ToArray();
-            var results = keys.Select(k => Incomplete(_recordings[k])).ToArray();
+            var results = keys.Where(k => _recordings[k].EarlyStop is null).Select(k => Incomplete(_recordings[k])).ToArray();
             foreach (var key in keys) _recordings.Remove(key);
             return results;
         }

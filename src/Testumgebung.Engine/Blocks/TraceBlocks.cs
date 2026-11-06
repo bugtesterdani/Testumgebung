@@ -18,7 +18,9 @@ public static class TraceBlocks
          new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
          new("MaxLuecke", "Maximale Messlücke [s]", ParameterKind.Number, "1"),
          new("MinDauer", "Mindestdauer der Aufnahme [s]", ParameterKind.Number, "0"),
-         new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true")], CreateStart));
+         new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
+         new("FailAbbruch", "Prüfablauf bei zusätzlicher Abweichung sofort mit FAIL beenden", ParameterKind.Bool, "false"),
+         new("AbweichungProzent", "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10")], CreateStart));
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle mit gemeinsamer Empfangszeit. Geräte werden nacheinander abgefragt; keine zugesicherte simultane Abtastung.",
         [Name(), new("Quelle", "Datenquelle", ParameterKind.Choice, "Ausdrücke", Choices: ["Ausdrücke", "Geräte"]),
          new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"),
@@ -31,11 +33,14 @@ public static class TraceBlocks
             if (target is not null && ctx.Get(target) is not string) throw new BlockConfigurationException("ErgebnisZiel muss eine Stringvariable sein.");
             var result = ctx.Recordings.Stop(ctx.ProcessOwner, p.Text("Aufnahme"), !ctx.IsOperatorAborted);
             if (target is not null) ctx.Set(target, JsonSerializer.Serialize(result.Channels));
+            if (result.EarlyStop is { } early) return Task.FromResult(StepOutcome.Fail(EarlyStopMessage(early)));
             var message = !result.Complete ? "Aufnahme unvollständig, ungültig oder abgebrochen."
                 : result.Passed ? "Alle Messverläufe innerhalb des Grenzbandes." : $"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e). Details je Kanal in den Kurvendaten und der Ergebnisvariable.";
             return Task.FromResult(new StepOutcome(!result.Complete ? ResultRating.Error : result.Passed ? ResultRating.Pass : ResultRating.Fail, result.Data, Message: message));
         })));
     }
+    private static string EarlyStopMessage(EnvelopeEarlyStop early)
+        => $"FAIL-Abbruchgrenze überschritten: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %. Aufnahme beendet; Exit/Finalization werden ausgeführt.";
     private static ParameterDescriptor Name() => new("Aufnahme", "Aufnahmekennung", ParameterKind.Text, "Verlauf", Required: true);
     private static string[] Split(string value, char separator) => value.Split(separator, StringSplitOptions.TrimEntries);
     private static IStepAction CreateStart(BlockParameters p)
@@ -48,7 +53,7 @@ public static class TraceBlocks
         {
             if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
             var channels = names.Select((name, i) => new TraceChannelDefinition(name, units[i], Resolve(ctx, curves[i]))).ToArray();
-            ctx.Recordings.Start(ctx.ProcessOwner, p.Text("Aufnahme"), channels, ctx.Clock.Now, (int)maximum, p.Number("MaxLuecke") ?? 0, p.Number("MinDauer") ?? 0, p.Bool("Beruehren"));
+            ctx.Recordings.Start(ctx.ProcessOwner, p.Text("Aufnahme"), channels, ctx.Clock.Now, (int)maximum, p.Number("MaxLuecke") ?? 0, p.Number("MinDauer") ?? 0, p.Bool("Beruehren"), p.Bool("FailAbbruch") ? p.Number("AbweichungProzent") ?? 0 : null);
             return Task.FromResult(StepOutcome.Unrated(message: "Messwertaufzeichnung begonnen; Bewertung erst beim Beenden."));
         });
     }
@@ -88,6 +93,8 @@ public static class TraceBlocks
                 ctx.CancellationToken.ThrowIfCancellationRequested();
                 double? x = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(resolver), "Zeit");
                 var preview = ctx.Recordings.Add(ctx.ProcessOwner, p.Text("Aufnahme"), x, values, ctx.Clock.Now);
+                if (preview?.EarlyStop is { } early)
+                    return StepOutcome.Fail(EarlyStopMessage(early), preview.Data) with { StopRunOnFailure = true };
                 if (preview is not null) ctx.ReportTrace(preview.Data);
                 return StepOutcome.Unrated(message: "Messpunkt aufgezeichnet.");
             }

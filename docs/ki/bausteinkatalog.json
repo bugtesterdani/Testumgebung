@@ -4168,6 +4168,24 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "FailAbbruch",
+          "label": "Pr\u00FCfablauf bei zus\u00E4tzlicher Abweichung sofort mit FAIL beenden",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "AbweichungProzent",
+          "label": "Zus\u00E4tzliche Abweichung [% vom Betrag des Grenzwerts]",
+          "kind": "Number",
+          "default": "10",
+          "required": false,
+          "choices": null,
+          "hint": null
         }
       ]
     },
