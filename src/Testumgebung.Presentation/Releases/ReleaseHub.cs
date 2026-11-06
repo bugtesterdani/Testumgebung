@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Ermittelt gültige Freigaben und lädt geprüfte Pakete für die Prüfprogrammauswahl.
  */
@@ -16,6 +16,7 @@ namespace Testumgebung.Presentation.Releases;
 public sealed partial class ReleaseHub : IAsyncDisposable
 {
     private readonly object _gate = new();
+    private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private readonly Dictionary<string, (ReleaseInfo Info, string Json)> _released = new(StringComparer.Ordinal);
     private readonly ProjectSerializer _serializer = new();
     private CancellationTokenSource? _poll;
@@ -43,6 +44,15 @@ public sealed partial class ReleaseHub : IAsyncDisposable
     public event Action? Changed;
 
     public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        // A late old snapshot must never overwrite a newer successful refresh.
+        await _refreshGate.WaitAsync(ct).ConfigureAwait(false);
+        try { await RefreshCoreAsync(ct).ConfigureAwait(false); }
+        finally { _refreshGate.Release(); }
+        Changed?.Invoke();
+    }
+
+    private async Task RefreshCoreAsync(CancellationToken ct)
     {
         try
         {
@@ -82,7 +92,6 @@ public sealed partial class ReleaseHub : IAsyncDisposable
         {
             Error = "Release-Ablage nicht erreichbar: " + ex.Message;
         }
-        Changed?.Invoke();
     }
 
     /// <summary>Eigene Kopie der freigegebenen Version (null = keine).</summary>

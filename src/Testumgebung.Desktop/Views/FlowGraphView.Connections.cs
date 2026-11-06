@@ -16,17 +16,25 @@ public partial class FlowGraphView
         Wires.Children.Clear();
         if (Scene is null) return;
         var byId = Scene.Cards.ToDictionary(c => c.Id);
-        foreach (var link in Scene.Links)
-        {
-            if (!byId.TryGetValue(link.From, out var from) || !byId.TryGetValue(link.To, out var to)) continue;
-            var start = OutputPoint(from, link.Kind);
-            var end = new Point(Canvas.GetLeft(_cards[to.Id]) + to.Width / 2, Canvas.GetTop(_cards[to.Id]) - (to.Junction ? 0 : 6));
-            var repeat = link.Kind == GraphLinkKind.Repeat;
-            var bypass = link.Kind == GraphLinkKind.Else && ReferenceEquals(from.Owner, to.Owner) && to.Junction;
-            double? rail = repeat || bypass ? OutsideGroup(from.Owner) : null;
-            var label = link.Kind is GraphLinkKind.Then or GraphLinkKind.Parallel || link.Kind == GraphLinkKind.Else && !bypass ? "" : link.Label;
-            DrawWire(start, end, LinkBrush(link.Kind), label, repeat, bypass, rail, to.Junction ? end.Y - 18 : null);
-        }
+        var rails = new GraphRailLayout();
+        foreach (var link in Scene.Links) DrawLink(link, byId, rails);
+    }
+    private void DrawLink(GraphLink link, IReadOnlyDictionary<string, GraphCard> byId, GraphRailLayout rails)
+    {
+        if (!byId.TryGetValue(link.From, out var from) || !byId.TryGetValue(link.To, out var to)) return;
+        var start = OutputPoint(from, link.Kind);
+        var end = new Point(Canvas.GetLeft(_cards[to.Id]) + to.Width / 2, Canvas.GetTop(_cards[to.Id]) - (to.Junction ? 0 : 6));
+        var repeat = link.Kind == GraphLinkKind.Repeat;
+        var bypass = link.Kind == GraphLinkKind.Else && ReferenceEquals(from.Owner, to.Owner) && to.Junction;
+        double? rail = repeat || bypass ? rails.Allocate(OutsideGroup(from.Owner), start.Y, end.Y) : null;
+        if (link.Label == "Nächste Bedingung") rail = BeforeGroup(to.Owner);
+        var label = link.Kind is GraphLinkKind.Then or GraphLinkKind.Parallel || link.Kind == GraphLinkKind.Else && !bypass ? "" : link.Label;
+        DrawWire(start, end, LinkBrush(link.Kind), label, repeat, bypass, rail, end.Y > start.Y ? end.Y - 18 : null);
+    }
+    private double BeforeGroup(NodeViewModel owner)
+    {
+        var descendants = owner.SelfAndDescendants().ToHashSet();
+        return Scene!.Cards.Where(card => descendants.Contains(card.Owner)).Min(card => Canvas.GetLeft(_cards[card.Id])) - 28;
     }
     private double OutsideGroup(NodeViewModel owner)
     {
@@ -51,7 +59,10 @@ public partial class FlowGraphView
         // Join at a shared rail below the longest branch, never through a neighbouring branch's cards.
         var mid = bendY ?? (start.Y + end.Y) / 2;
         var outside = rail ?? Math.Max(start.X, end.X) + 360;
-        var points = repeat || bypass
+        var nextCondition = label == "Nächste Bedingung";
+        var points = nextCondition
+            ? new[] { start, new Point(start.X, start.Y + 18), new Point(outside, start.Y + 18), new Point(outside, end.Y - 24), new Point(end.X, end.Y - 24), end }
+            : repeat || bypass
             ? new[] { start, new Point(outside, start.Y), new Point(outside, end.Y - 30), new Point(end.X, end.Y - 30), end }
             : new[] { start, new Point(start.X, mid), new Point(end.X, mid), end };
         var geometry = new StreamGeometry();

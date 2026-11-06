@@ -382,29 +382,7 @@ public sealed class BlockCatalog
             ],
             p => new SetValueAction(p.Text("Ziel"), p.Expr("Ausdruck")!)));
 
-        c.Register(new(Evaluate, "Bewertung", rating, "check",
-            "PASS, wenn die Bedingung erfüllt ist, sonst FAIL.",
-            [
-                new("Bedingung", "Bedingung", ParameterKind.Expression, "true", Required: true,
-                    Hint: "z. B. Spannung >= GrenzwertMin && Spannung <= GrenzwertMax"),
-                new("Wert", "Angezeigter Wert", ParameterKind.Expression),
-                new("Einheit", "Einheit", ParameterKind.Text),
-                new("Meldung", "Meldung bei FAIL", ParameterKind.Text),
-            ],
-            p =>
-            {
-                var condition = p.Expr("Bedingung")!;
-                var shown = p.Expr("Wert");
-                var unit = p.Optional("Einheit");
-                var message = p.Optional("Meldung");
-                return new DelegateAction(ctx =>
-                {
-                    var resolver = new ContextResolver(ctx);
-                    var ok = condition.EvaluateBool(resolver);
-                    var value = shown?.Evaluate(resolver);
-                    return Task.FromResult(new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, value, unit, Message: ok ? null : message));
-                });
-            }));
+        EvaluationBlocks.Register(c);
 
         RegisterHandover(c);
         c.Register(new(SelectTest, "Test auswählen", "Auswahl & Auftrag", "flow",

@@ -1,4 +1,4 @@
-﻿# Versionierte Prüfprogramme mit Git und SVN
+# Versionierte Prüfprogramme mit Git und SVN
 
 ## Einrichtung und Datenbank-Upgrade
 
@@ -21,9 +21,35 @@ Nach Aktivierung des Katalogs benötigt jede neue endgültige Freigabe einen Rem
 
 Nur Entwicklungs- und Freigaberechner benötigen `git.exe` bzw. `svn.exe`. Die Software ruft diese Werkzeuge direkt mit getrennten Argumenten auf. Sie werden nicht mit dem MSIX ausgeliefert. Unter **Lokale Git-/SVN-Clients** können vorhandene ausführbare Dateien ausgewählt werden, indem ihr vollständiger Pfad eingegeben wird. Diese Einstellung bleibt im lokalen Windows-Benutzerprofil (`versionsverwaltungsclients.json`).
 
-Der Zugriff muss zuvor mit dem jeweiligen Client eingerichtet sein. Verwendet dessen Credential Helper, Windows-Anmeldespeicher beziehungsweise SSH-Konfiguration. Zugangsdaten gehören weder in die Repository-URL noch in das Projekt oder den zentralen Katalog. Es gibt keinen Passwortparameter in der Oberfläche. Abrufe sind nicht interaktiv, brechen nach einem Zeitlimit ab und umgehen keine TLS-/SSH-Hostprüfung.
+Bei **Vorhandene Client-Anmeldung / SSH** muss der Zugriff zuvor mit dem jeweiligen Client eingerichtet sein. Verwendet dessen Credential Helper, Windows-Anmeldespeicher beziehungsweise SSH-Konfiguration. Zugangsdaten gehören weder in die Repository-URL noch in das Projekt oder den zentralen Katalog. Alternative Zugangsdaten werden ausschließlich im Bereich **Lokale Repository-Anmeldung** eingegeben. Die Clientprozesse laufen nicht interaktiv, brechen nach einem Zeitlimit ab und umgehen keine TLS-/SSH-Hostprüfung.
 
 Repositorys werden als HTTPS-, SSH-, SVN-/SVN+SSH-URL oder zentrale UNC-file-URL angegeben. Lokale file-Repositorys sind in der Anwendung als Produktionsquelle gesperrt: Ein nur lokaler Commit soll keine zentrale Freigabe ermöglichen. SSH ohne Benutzer im URI kann den Benutzer über die SSH-Konfiguration bestimmen.
+
+## Lokale Repository-Anmeldung
+
+Eine Quelle zuerst speichern und auswählen. Unter **Lokale Repository-Anmeldung → Anmeldung einstellen …** lässt sich die Zugangsmethode wählen:
+
+| Provider | Zugangsmethode | Voraussetzung |
+|---|---|---|
+| Git | Vorhandene Client-Anmeldung / SSH | Credential Helper, SSH-Agent oder SSH-Konfiguration außerhalb der Testumgebung eingerichtet |
+| Git | Access Token oder Deploy Token | HTTPS und ein Server, der Benutzername/Token über HTTP Basic unterstützt |
+| SVN | Vorhandene Client-Anmeldung | Extern eingerichteter SVN-Client |
+| SVN | Angemeldeter Windows-Benutzer | HTTPS-Server und SVN-Client mit Negotiate/SSPI-Unterstützung |
+| SVN | Benutzername und Passwort | HTTPS und ein Client mit `--password-from-stdin` |
+
+Den vom Server vorgeschriebenen Benutzernamen eintragen; bei Deploy Tokens ist das häufig ein eigener Token-Benutzername. Access Tokens sind keine beliebig austauschbaren Bearer Tokens: Die Implementierung unterstützt Benutzername/Token mit HTTP Basic. Für andere Verfahren weiterhin den Client/Credential Helper verwenden. Bei ausdrücklich gewählten Token-Verfahren werden HTTP-Weiterleitungen und ein unbemerkter Rückfall auf andere Zugangsdaten unterbunden; die endgültige HTTPS-Repository-URL verwenden.
+
+Ohne **Für dieses Windows-Konto geschützt speichern** gilt das Profil nur für die laufende Sitzung. Mit dieser Auswahl wird es benutzergebunden per Windows-DPAPI in `%LOCALAPPDATA%/Testumgebung/quellen-zugang.json` abgelegt. Ein Profil ist an Quellen-ID, Provider und Repository-Adresse gebunden. Es wird nicht in den zentralen Katalog oder das Freigabepaket übernommen. Tokens/Passwörter stehen nicht in Prozessargumenten oder Repository-URLs. Git erhält den HTTP-Header nur über die Umgebung seines Kindprozesses; SVN liest das Passwort über die Standardeingabe. SVN darf ausdrücklich eingegebene Zugangsdaten nicht zusätzlich in seinem Auth-Cache speichern. Die lokale Einstellung ersetzt keine zentrale Benutzerverwaltung.
+
+Ein leeres Geheimnisfeld übernimmt beim Speichern das vorhandene Geheimnis nur bei unveränderter Methode und unverändertem Benutzernamen. Zum Ersetzen einen neuen Wert eingeben. **Lokale Anmeldung entfernen** entfernt das Profil dieser Quelle aus Sitzung und geschütztem Speicher und stellt auf die externe Client-Anmeldung zurück.
+
+**Verbindung prüfen** ruft die konfigurierte Remote-Linie beziehungsweise Revision ab und prüft, ob sich die angegebene Projektdatei laden lässt. Dabei wird keine Freigabe erstellt. **Abruf abbrechen** beendet den laufenden Abruf; zusätzlich gilt je Clientprozess ein Zeitlimit. Meldet der Client einen erkennbaren Anmeldefehler, öffnet die Anwendung die Anmeldemaske und bietet nach ausdrücklichem Übernehmen genau einen erneuten Versuch an. Abbrechen startet keinen weiteren Versuch. Fehlende Branches, Projektdateien oder Netzverbindungen werden als Abruffehler gemeldet; Git-Server können fehlende Berechtigung aus Sicherheitsgründen auch als „Repository nicht gefunden“ melden.
+
+Die ausdrücklich gewählten SVN-Modi verwenden eine temporäre, isolierte Clientkonfiguration. Dadurch können vorhandene serverbezogene Anmelderegeln oder gespeicherte Konten die gewählte Methode nicht überschreiben. Individuelle SVN-Proxy- oder Zertifikatskonfigurationen werden in diesen Modi nicht aus dem bisherigen Clientprofil übernommen; falls diese erforderlich sind, die vorhandene Client-Anmeldung verwenden. Es werden keine Zertifikatsfehler übergangen.
+
+Die Windows-Anmeldung ist kein automatischer Wechsel zu einem anderen SVN-Benutzerkonto. Falls der Server keine integrierte Anmeldung akzeptiert, muss **SVN-Benutzername und Passwort** ausdrücklich ausgewählt werden. TLS- und SSH-Hostprüfungen bleiben aktiv. Produktivplätze benötigen weiterhin weder Repository-Clients noch diese Zugangsdaten, um bereits freigegebene Pakete aus der Ablage zu laden.
+
+Technische Referenzen: [Git: Laufzeitkonfiguration und HTTP-Header](https://git-scm.com/docs/git-config), [Subversion: Runtime-Konfiguration und Authentifizierung](https://subversion.apache.org/docs/api/latest/svn__config_8h.html).
 
 ## Quelle konfigurieren
 

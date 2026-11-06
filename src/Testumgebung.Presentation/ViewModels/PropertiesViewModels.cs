@@ -774,7 +774,13 @@ public sealed class ParameterRowViewModel : ObservableObject
     public bool IsMultiline => Descriptor.Name is "Verbindungsoptionen" or "Header" or "Body";
 
     /// <summary>Wird durch eine eigene Oberfläche ersetzt (z. B. Bausteinauswahl).</summary>
-    public bool IsHidden { get; init; }
+    private readonly bool _hidden;
+    public bool IsHidden { get => _hidden || !_owner.IsParameterActive(Descriptor.Name); init => _hidden = value; }
+    internal void RefreshVisibility()
+    {
+        OnPropertyChanged(nameof(IsHidden));
+        OnPropertyChanged(nameof(IsText));
+    }
     public bool IsExpression => Kind is ParameterKind.Expression;
     public bool IsVariable => Kind is ParameterKind.Variable;
     public bool HasVisualBuilder => IsExpression || IsVariable && !Value.StartsWith("_BlockZweig_", StringComparison.Ordinal);
@@ -869,8 +875,16 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     public bool HasDiagnostics => _diagnostics.Count > 0;
 
+    internal bool IsParameterActive(string name)
+    {
+        if (Step.BlockType != BlockCatalog.Evaluate) return true;
+        var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == "Festes Ergebnis";
+        return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
+    }
+
     internal void ParametersChanged()
     {
+        foreach (var parameter in Parameters) parameter.RefreshVisibility();
         Diagnostics = _editor.DiagnosticsFor(Step);
         _node.Diagnostic = Diagnostics.FirstOrDefault();
         _node.Refresh();

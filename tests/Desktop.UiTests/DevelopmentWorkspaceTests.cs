@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -20,12 +20,14 @@ public sealed partial class DevelopmentWorkspaceTests
         {
             var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown, LicenseTermsConsent = () => true };
             app.InitializeComponent();
+            VerifyReleaseSelectionAndWorkflow(dispatcher);
             VerifyLiveOutputPanel(dispatcher);
             InteractionBoundaryTests.VerifyPlotGestures();
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();
             VerifyVisualBlockProgramming(dispatcher);
             VerifyGraphWorkspace(dispatcher);
+            VerifyConditionalGroups(dispatcher);
             VerifySettingsPasswords();
             VerifyLocalPasswordLogin(dispatcher);
             VerifyReleaseErrorLayout(dispatcher);
