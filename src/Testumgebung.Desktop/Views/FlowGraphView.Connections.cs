@@ -17,18 +17,19 @@ public partial class FlowGraphView
         if (Scene is null) return;
         var byId = Scene.Cards.ToDictionary(c => c.Id);
         var rails = new GraphRailLayout();
-        foreach (var link in Scene.Links)
-        {
-            if (!byId.TryGetValue(link.From, out var from) || !byId.TryGetValue(link.To, out var to)) continue;
-            var start = OutputPoint(from, link.Kind);
-            var end = new Point(Canvas.GetLeft(_cards[to.Id]) + to.Width / 2, Canvas.GetTop(_cards[to.Id]) - (to.Junction ? 0 : 6));
-            var repeat = link.Kind == GraphLinkKind.Repeat;
-            var bypass = link.Kind == GraphLinkKind.Else && ReferenceEquals(from.Owner, to.Owner) && to.Junction;
-            double? rail = repeat || bypass ? rails.Allocate(OutsideGroup(from.Owner), start.Y, end.Y) : null;
-            if (link.Label == "Nächste Bedingung") rail = BeforeGroup(to.Owner);
-            var label = link.Kind is GraphLinkKind.Then or GraphLinkKind.Parallel || link.Kind == GraphLinkKind.Else && !bypass ? "" : link.Label;
-            DrawWire(start, end, LinkBrush(link.Kind), label, repeat, bypass, rail, to.Junction ? end.Y - 18 : null);
-        }
+        foreach (var link in Scene.Links) DrawLink(link, byId, rails);
+    }
+    private void DrawLink(GraphLink link, IReadOnlyDictionary<string, GraphCard> byId, GraphRailLayout rails)
+    {
+        if (!byId.TryGetValue(link.From, out var from) || !byId.TryGetValue(link.To, out var to)) return;
+        var start = OutputPoint(from, link.Kind);
+        var end = new Point(Canvas.GetLeft(_cards[to.Id]) + to.Width / 2, Canvas.GetTop(_cards[to.Id]) - (to.Junction ? 0 : 6));
+        var repeat = link.Kind == GraphLinkKind.Repeat;
+        var bypass = link.Kind == GraphLinkKind.Else && ReferenceEquals(from.Owner, to.Owner) && to.Junction;
+        double? rail = repeat || bypass ? rails.Allocate(OutsideGroup(from.Owner), start.Y, end.Y) : null;
+        if (link.Label == "Nächste Bedingung") rail = BeforeGroup(to.Owner);
+        var label = link.Kind is GraphLinkKind.Then or GraphLinkKind.Parallel || link.Kind == GraphLinkKind.Else && !bypass ? "" : link.Label;
+        DrawWire(start, end, LinkBrush(link.Kind), label, repeat, bypass, rail, end.Y > start.Y ? end.Y - 18 : null);
     }
     private double BeforeGroup(NodeViewModel owner)
     {

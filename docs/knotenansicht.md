@@ -110,3 +110,5 @@ Knotenansicht gesperrt. Zoom und Verschieben bleiben möglich. Änderungen an de
 Debugvariablen und Run-Patches stehen weiterhin im vollständigen Debugger zur
 Verfügung. Die Knotenansicht verändert weder Haltebedingungen noch die
 Auswertungs- und Abbruchregeln der Prüfengine.
+
+![Artikelgruppen nebeneinander und getrennte Überspringpfade](handbuch/bilder/knoten-artikelvarianten.png)

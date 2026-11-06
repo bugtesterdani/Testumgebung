@@ -19,7 +19,7 @@ public sealed partial class DevelopmentWorkspaceTests
         StepDefinition Measure(string id, string low, string high) => BlockCatalog.Default.Create(BlockCatalog.Measure, id, "Spannung prüfen", new Dictionary<string,string>
             { ["Ressource"] = "DMM", ["Untergrenze"] = low, ["Obergrenze"] = high, ["Einheit"] = "V" });
         var loop = new GroupDefinition("article-loop", "Artikelabhängige Prüfung");
-        loop.Add(new GroupDefinition("article-one", "Artikel 1: 4–6 V") { EntryCondition = "Artikel == \"1\"" }.Add(Measure("measure-one", "4", "6")),
+        loop.Add(new GroupDefinition("article-one", "Artikel 1: 4–6 V") { EntryCondition = "Artikel == \"1\"" }.Add(Measure("measure-one", "4", "6"), BlockCatalog.Default.Create(BlockCatalog.Wait, "article-one-wait", "Zusätzlicher Schritt für Artikel 1")),
             new GroupDefinition("article-two", "Artikel 2: 8–12 V") { EntryCondition = "Artikel == \"2\"" }.Add(Measure("measure-two", "8", "12")));
         var nested = new GroupDefinition("skip-outer", "Optionaler Abschnitt") { EntryCondition = "false" };
         nested.Add(new GroupDefinition("skip-middle", "Optionale Untergruppe") { EntryCondition = "false" }.Add(
