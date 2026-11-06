@@ -58,7 +58,7 @@ public sealed class PythonEnvironmentTests
             await vm.CreateAsync();
             Assert.Contains("konnte nicht", vm.Status);
         }
-        finally { Directory.Delete(root, true); }
+        finally { await DeleteTestDirectoryAsync(root); }
     }
 
     [Fact]
@@ -83,11 +83,8 @@ public sealed class PythonEnvironmentTests
             start.ArgumentList.Remove("-NoExit");
             using (var console = Process.Start(start)!)
             {
-                var consoleOutput = console.StandardOutput.ReadToEndAsync();
-                var consoleError = console.StandardError.ReadToEndAsync();
-                await console.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20));
-                Assert.True(console.ExitCode == 0, await consoleError);
-                Assert.Contains("26.3", await consoleOutput);
+                // A fresh CI runner may still scan/load the copied interpreter and PowerShell.
+                Assert.Contains("26.3", await CompleteTestProcessAsync(console, TimeSpan.FromSeconds(60)));
             }
             Assert.Contains("26.3", await Python(executable, "-m", "pip", "--version"));
             var wheel = Path.Combine(directory, "tu_console_probe-1.0-py3-none-any.whl");
@@ -113,7 +110,7 @@ public sealed class PythonEnvironmentTests
             runtime.SelectPython(null);
             Assert.Null(runtime.Options.PythonExecutable);
         }
-        finally { runtime.Dispose(); Directory.Delete(root, true); }
+        finally { runtime.Dispose(); await DeleteTestDirectoryAsync(root); }
     }
 
     [Fact]
@@ -146,7 +143,7 @@ public sealed class PythonEnvironmentTests
             vm.UseEnvironmentCommand.Execute(null); Assert.Contains("entfernt", vm.Status);
             vm.OpenConsole(); Assert.Contains("nicht geöffnet", vm.Status);
         }
-        finally { Directory.Delete(root, true); }
+        finally { await DeleteTestDirectoryAsync(root); }
     }
 
     [Fact]
@@ -214,7 +211,7 @@ public sealed class PythonEnvironmentTests
             }
             else Assert.Equal(service.LoadSelection(), runtime.Options.PythonExecutable);
         }
-        finally { Directory.Delete(root, true); }
+        finally { await DeleteTestDirectoryAsync(root); }
     }
 
     private static void Add(ZipArchive archive, string name, string content)
@@ -228,9 +225,83 @@ public sealed class PythonEnvironmentTests
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         start.Environment["PATH"] = "";
         using var process = Process.Start(start)!;
-        var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
-        Assert.True(process.ExitCode == 0, await error);
-        return await output;
+        return await CompleteTestProcessAsync(process, TimeSpan.FromSeconds(30));
     }
+
+    /// <summary>Every test-owned process is reaped, including the timeout path, before its working directory is removed.</summary>
+    private static async Task<string> CompleteTestProcessAsync(Process process, TimeSpan timeout)
+    {
+        var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();
+        try
+        {
+            await process.WaitForExitAsync().WaitAsync(timeout);
+            Assert.True(process.ExitCode == 0, await error);
+            return await output;
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                try { process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { }
+                await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            await Task.WhenAll(output, error).WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
+    private static async Task DeleteTestDirectoryAsync(string directory, TimeSpan? retryWindow = null)
+    {
+        var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
+        var parent = Path.GetDirectoryName(full);
+        if (!string.Equals(parent, Path.TrimEndingDirectorySeparator(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase)
+            || !Path.GetFileName(full).StartsWith("tu-python-env-tests-", StringComparison.Ordinal))
+            throw new InvalidOperationException("Nur den eigenen temporären Python-Testordner bereinigen.");
+        var timer = Stopwatch.StartNew(); var limit = retryWindow ?? TimeSpan.FromSeconds(5);
+        while (true)
+        {
+            try { Directory.Delete(full, true); return; }
+            catch (DirectoryNotFoundException) { return; }
+            // Retry only real Windows sharing/lock violations; timeout and unrelated IO errors stay visible.
+            catch (IOException ex) when ((ex.HResult & 0xffff) is 32 or 33 && timer.Elapsed < limit)
+            { await Task.Delay(25); }
+        }
+    }
+
+    [Fact]
+    public async Task Timed_out_test_process_is_dead_before_its_working_directory_is_removed()
+    {
+        var root = Temp(); Directory.CreateDirectory(root);
+        var executable = Path.Combine(AppContext.BaseDirectory, "workers", "python", "runtime", "python.exe");
+        var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true,
+            WorkingDirectory = root, RedirectStandardOutput = true, RedirectStandardError = true };
+        start.ArgumentList.Add("-c"); start.ArgumentList.Add("import time; time.sleep(60)");
+        try
+        {
+            using var process = Process.Start(start)!;
+            await Assert.ThrowsAsync<TimeoutException>(() => CompleteTestProcessAsync(process, TimeSpan.FromMilliseconds(100)));
+            Assert.True(process.HasExited);
+            await DeleteTestDirectoryAsync(root); Assert.False(Directory.Exists(root));
+        }
+        finally { await DeleteTestDirectoryAsync(root); }
+    }
+
+    [Fact]
+    public async Task Cleanup_waits_for_a_sharing_lock_and_does_not_hide_a_permanent_lock_or_delete_other_paths()
+    {
+        var root = Temp(); Directory.CreateDirectory(root);
+        try
+        {
+            Task cleanup;
+            using (var locked = new FileStream(Path.Combine(root, "locked"), FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            {
+                await Assert.ThrowsAsync<IOException>(() => DeleteTestDirectoryAsync(root, TimeSpan.Zero));
+                cleanup = DeleteTestDirectoryAsync(root); Assert.False(cleanup.IsCompleted);
+            }
+            await cleanup.Within(); Assert.False(Directory.Exists(root));
+            await DeleteTestDirectoryAsync(root);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => DeleteTestDirectoryAsync(Path.GetTempPath()));
+        }
+        finally { await DeleteTestDirectoryAsync(root); }
+    }
+
 }
