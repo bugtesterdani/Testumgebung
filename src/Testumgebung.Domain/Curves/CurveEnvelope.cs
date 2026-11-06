@@ -130,7 +130,7 @@ internal sealed class EnvelopeRecording
         _times.Add(time); for (var i = 0; i < values.Count; i++) _values[i].Add(values[i]);
         CheckEarlyStop();
         if (EarlyStop is not null) return true;
-        if (_times.Count < 2 || (_times.Count > 2 && now - _lastPreview < TimeSpan.FromMilliseconds(250))) return false;
+        if (_times.Count > 2 && now - _lastPreview < TimeSpan.FromMilliseconds(250)) return false;
         _lastPreview = now; return true;
     }
     private void Validate(double time, IReadOnlyList<double> values)

@@ -165,7 +165,7 @@ public sealed class EnvelopeTraceTests
         Assert.Equal("I", result.EarlyStop!.Channel); Assert.Equal(1, result.EarlyStop.Time);
         Assert.False(result.Passed); Assert.False(result.Complete);
         r.Start("owner", "zero", [new("U", "V", Band(lower: [-6, 6, 6]))], Now, stopPercent: 200);
-        Assert.Null(r.Add("owner", "zero", 0, [-1], Now));
+        Assert.Null(r.Add("owner", "zero", 0, [-1], Now)!.EarlyStop);
         var zero = r.Add("owner", "zero", 1, [-1], Now)!;
         Assert.Equal(0.5, zero.EarlyStop!.Time);
         Assert.Contains(0.5, zero.Channels[0].Violations);
@@ -213,6 +213,63 @@ public sealed class EnvelopeTraceTests
         var reopened = Testumgebung.Persistence.Results.ResultFile.Read(Testumgebung.Persistence.Results.ResultFile.ToBytes(saved));
         Assert.Empty(reopened.Problems);
         Assert.Equal(10, EnvelopeTraceMetadata.Decode(reopened.Run.Waveforms[0].Data.Quality)!.EarlyStop!.Percent);
+    }
+    [Fact]
+    public void Live_markers_show_original_irregular_measurements_starting_with_the_first_point()
+    {
+        var recording = Start(); var plot = new WaveformPlotViewModel();
+        plot.SetData(recording.Add("owner", "trace", 0, [5], Now)!.Data);
+        var first = Assert.Single(plot.SampleMarkers); Assert.Equal(0, first.X); Assert.True(double.IsFinite(first.Y));
+        plot.SetData(recording.Add("owner", "trace", 0.5, [7], Now.AddSeconds(1))!.Data);
+        plot.SetData(recording.Add("owner", "trace", 2, [5], Now.AddSeconds(2))!.Data);
+        Assert.Equal(new double[] { 0, 250, 1000 }, plot.SampleMarkers.Select(p => p.X));
+        Assert.Equal(4, plot.Count); // Interpolated boundary knot at t=1 has no measured-point dot.
+        plot.Channels[0].IsVisible = false; Assert.Empty(plot.SampleMarkers);
+        plot.Channels[0].IsVisible = true; Assert.Equal(3, plot.SampleMarkers.Count);
+        plot.Clear(); Assert.Empty(plot.SampleMarkers);
+        plot.SetData([new PlotSource("regular", "V", new double[] { 1, 2 })], 1, null); Assert.Empty(plot.SampleMarkers);
+    }
+    [Fact]
+    public void Dense_marker_display_is_bounded_but_keeps_first_and_latest_samples()
+    {
+        var recording = Start(max: 3000); var plot = new WaveformPlotViewModel();
+        for (var i = 0; i <= 2500; i++) recording.Add("owner", "trace", i / 1250d, [5], Now);
+        plot.SetData(recording.Stop("owner", "trace").Data);
+        Assert.Equal(1000, plot.SampleMarkers.Count); Assert.Equal(0, plot.SampleMarkers[0].X); Assert.Equal(1000, plot.SampleMarkers[^1].X);
+    }
+    [Fact]
+    public async Task Two_station_displays_update_independently_while_their_recordings_are_still_running()
+    {
+        var loop = Group("loop").Add(Block(TraceBlocks.Start, "start", ("Grenzkurven", "band@1")),
+            Block(TraceBlocks.Point, "first", ("Werte", "5"), ("Zeit", "0")),
+            Block(BlockCatalog.Operator, "wait1", ("Art", "Anweisung"), ("Text", "Weiter"), ("Warten", "true")),
+            Block(TraceBlocks.Point, "second", ("Werte", "7"), ("Zeit", "0.5")),
+            Block(BlockCatalog.Operator, "wait2", ("Art", "Anweisung"), ("Text", "Fertig"), ("Warten", "true")),
+            Block(TraceBlocks.Stop, "stop"));
+        var definition = Test(loop); definition.Curves.Add(Band()); var project = new TestProject(definition);
+        var ui = new QueueDispatcher();
+        var first = new StationViewModel("A", () => project, new Testumgebung.Hardware.ResourceManager(), ui);
+        var second = new StationViewModel("B", () => project, new Testumgebung.Hardware.ResourceManager(), ui);
+        var run1 = first.StartSimulationAsync(); var run2 = second.StartSimulationAsync();
+        try
+        {
+            await ui.Until(() => first.ActiveContent is { IsAwaiting: true } && second.ActiveContent is { IsAwaiting: true }, "live recordings paused for operator");
+            Assert.True(first.HasLiveWaveform); Assert.True(second.HasLiveWaveform);
+            Assert.Single(first.LiveWaveform.SampleMarkers); Assert.Single(second.LiveWaveform.SampleMarkers);
+            Assert.Contains("Aufnahme läuft", first.LiveWaveformTitle); Assert.False(run1.IsCompleted);
+            first.ActiveContent!.ConfirmCommand.Execute(null);
+            await ui.Until(() => first.LiveWaveform.SampleMarkers.Count == 2 && first.ActiveContent is { IsAwaiting: true }, "second live point");
+            Assert.Single(second.LiveWaveform.SampleMarkers); Assert.False(run2.IsCompleted);
+            first.ActiveContent!.ConfirmCommand.Execute(null);
+            await ui.Until(() => run1.IsCompleted, "first recording completed"); await run1;
+            Assert.Equal(ResultRating.Pass, first.LastStatus!.Value.Rating);
+        }
+        finally
+        {
+            second.RequestAbort(); first.RequestAbort();
+            await ui.Until(() => run1.IsCompleted && run2.IsCompleted, "recordings stopped");
+            await Task.WhenAll(run1, run2);
+        }
     }
     private sealed class Meter(string unit = "V") : IHardwareAdapter
     {

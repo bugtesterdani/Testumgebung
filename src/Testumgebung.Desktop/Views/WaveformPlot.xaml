@@ -92,6 +92,19 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <!-- Only received measurements get dots; interpolated grid points remain lines. -->
+                            <ItemsControl ItemsSource="{Binding SampleMarkers}" IsHitTestVisible="False">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter">
+                                    <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                </Style></ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Ellipse Width="6" Height="6" Fill="{Binding ColorIndex, Converter={StaticResource SeriesBrush}}" Stroke="White" StrokeThickness="0.7">
+                                        <Ellipse.RenderTransform><TranslateTransform X="-3" Y="-3"/></Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <ItemsControl ItemsSource="{Binding ViolationMarkers}" IsHitTestVisible="False">
                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Grid/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate><DataTemplate>

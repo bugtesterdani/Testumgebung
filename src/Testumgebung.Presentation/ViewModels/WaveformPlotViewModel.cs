@@ -61,6 +61,8 @@ public sealed class PlotChannel : ObservableObject
 /// <summary>Beschriftung der Y-Achse (Position in Plotkoordinaten).</summary>
 public sealed record PlotAxisLabel(double Y, string Text);
 public sealed record PlotViolationMarker(double X);
+/// <summary>An actual received measurement, excluding interpolated limit knots.</summary>
+public sealed record PlotSampleMarker(double X, double Y, int ColorIndex);
 
 /// <summary>
 /// Kurvenanzeige mit Kanalauswahl, Zoom, Verschieben und Cursor (Abschnitt 8). Zeichenfläche
@@ -76,6 +78,8 @@ public sealed class WaveformPlotViewModel : ObservableObject
     private IReadOnlyList<PlotSource> _sources = [];
     private IReadOnlyDictionary<string, double[]> _violations = new Dictionary<string, double[]>();
     public ObservableCollection<PlotViolationMarker> ViolationMarkers { get; } = [];
+    private IReadOnlyDictionary<string, double[]> _sampleTimes = new Dictionary<string, double[]>();
+    public ObservableCollection<PlotSampleMarker> SampleMarkers { get; } = [];
     private bool _pointTrace;
     private double _sampleRate = 1;
     private IReadOnlyList<double>? _times;
@@ -149,10 +153,11 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public void Clear() => SetData([], 1, null);
 
     /// <summary>Neue Daten. <paramref name="keepView"/> behält Zoom und Cursor, soweit noch im Bereich.</summary>
-    public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false)
+    public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false, IReadOnlyDictionary<string, double[]>? sampleTimes = null)
     {
         var wasFullView = _viewStart == 0 && Math.Abs(_viewEnd - Duration) < 1e-9;
         _pointTrace = pointTrace;
+        _sampleTimes = sampleTimes ?? new Dictionary<string, double[]>();
         var visible = Channels.ToDictionary(c => c.Id, c => c.IsVisible);
         _sources = sources;
         _violations = violations ?? new Dictionary<string, double[]>();
@@ -181,8 +186,11 @@ public sealed class WaveformPlotViewModel : ObservableObject
     {
         if (set.Channels.Count == 0) { Clear(); return; }
         var first = set.Channels[0];
-        var violations = set.Channels.ToDictionary(w => w.Channel, w => EnvelopeTraceMetadata.Decode(w.Quality)?.Violations ?? []);
-        SetData(set.Channels.Select(w => new PlotSource(w.Channel, w.Unit, w.Values)).ToList(), first.SampleRate, first.TimeValues, keepView: true, violations: violations, pointTrace: set.Channels.Any(w => EnvelopeTraceMetadata.Decode(w.Quality) is not null));
+        var metadata = set.Channels.ToDictionary(w => w.Channel, w => EnvelopeTraceMetadata.Decode(w.Quality));
+        var violations = metadata.ToDictionary(pair => pair.Key, pair => pair.Value?.Violations ?? []);
+        var samples = metadata.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value!.OriginalTimes);
+        SetData(set.Channels.Select(w => new PlotSource(w.Channel, w.Unit, w.Values)).ToList(), first.SampleRate, first.TimeValues,
+            keepView: true, violations: violations, pointTrace: samples.Count > 0, sampleTimes: samples);
     }
 
     public void SetView(double start, double end)
@@ -279,6 +287,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
     private void Render()
     {
         ViolationMarkers.Clear();
+        SampleMarkers.Clear();
         Series.Clear();
         YLabels.Clear();
         var visible = Channels.Where(c => c.IsVisible).ToList();
@@ -330,6 +339,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
                 Series.Add(new PlotSeries(c.Id, c.ColorIndex, points, $"{c.Id} [{c.Unit}]"));
             }
         }
+        UpdateSampleMarkers();
         UpdateViolationMarkers();
         UpdateRmsLabels();
         UpdateCursor();
@@ -337,6 +347,24 @@ public sealed class WaveformPlotViewModel : ObservableObject
             nameof(RangeText), nameof(ZeroY), nameof(ShowZero), nameof(YTopText), nameof(YMidText), nameof(YBottomText));
     }
 
+    /// <summary>Mark actual sample times, never synthetic interpolation points. Bound display work per channel.</summary>
+    private void UpdateSampleMarkers()
+    {
+        var span = Math.Max(_viewEnd - _viewStart, 1e-12);
+        foreach (var channel in Channels.Where(c => c.IsVisible))
+        {
+            if (!_sampleTimes.TryGetValue(channel.Id, out var original)) continue;
+            var times = original.Where(t => t >= _viewStart && t <= _viewEnd).ToArray();
+            var count = Math.Min(1000, times.Length);
+            for (var i = 0; i < count; i++)
+            {
+                // Preserve first and newest points when reducing a dense marker cloud.
+                var index = times.Length <= 1000 ? i : (int)((long)i * (times.Length - 1) / (count - 1));
+                var time = times[index]; var value = ValueAt(_sources[channel.ColorIndex].Samples, time);
+                SampleMarkers.Add(new((time - _viewStart) / span * PlotWidth, Y(value), channel.ColorIndex));
+            }
+        }
+    }
     private void UpdateViolationMarkers()
     {
         if (_viewEnd <= _viewStart) return;
