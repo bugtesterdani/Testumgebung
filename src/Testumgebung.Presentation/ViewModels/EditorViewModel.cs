@@ -16,7 +16,7 @@ namespace Testumgebung.Presentation.ViewModels;
 
 public sealed record PaletteItem(string? BlockType, string DisplayName, string Description, NodeIcon Icon, string? Preset = null);
 
-public sealed record PaletteCategory(string Name, IReadOnlyList<PaletteItem> Items);
+public sealed record PaletteCategory(string Name, IReadOnlyList<PaletteItem> Items, bool IsExpanded = false);
 
 /// <summary>
 /// Ablaufeditor (Abschnitt 2.1): hierarchische, eingerückte Liste grafischer Karten.
@@ -87,9 +87,6 @@ public sealed partial class EditorViewModel : ObservableObject
     public List<CodeBlockDefinition> Library => Project.Definition.Library;
     public TestProject Project { get; private set; }
     public ObservableCollection<NodeViewModel> Nodes { get; } = [];
-    public IReadOnlyList<PaletteCategory> Palette => VisualBlocks
-        ? _palette.OrderBy(p => PaletteRank(p.Name)).ToList() : _palette;
-    private static int PaletteRank(string name) => name switch { "Steuerung" => 0, "Struktur" => 1, "Variablen" => 2, "Bewertung" => 3, "Ablauf" => 4, _ => 5 };
     public ObservableCollection<string> Diagnostics { get; } = [];
 
     public RelayCommand InsertCommand { get; }

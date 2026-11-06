@@ -551,7 +551,7 @@ Diese Reihenfolge eignet sich als erste eigene Einrichtung:
 | DLL-Namespace nicht gefunden | Richtige kompilierte DLL im aktuellen Projekt importiert? Namespace und public-Typen korrekt? |
 | Keine eindeutige Testzuordnung | Auswahlprojekt, Scan und verfügbare Programmkennung prüfen |
 | Keine freigegebene Version | Passendes Programm unter Releases wählen, prüfen und ausdrücklich freigeben |
-| Baustein fehlt in der Palette | Im Ablaufeditor links scrollen; Kategorie CodeBlocks → Baustein. Bibliotheksseite erstellt den Baustein, fügt ihn nicht in den Ablauf ein |
+| Baustein fehlt in der Palette | Im Ablaufeditor unter „Bausteine suchen“ suchen oder Kategorie CodeBlocks aufklappen → Baustein. Bibliotheksseite erstellt den Baustein, fügt ihn nicht in den Ablauf ein |
 | Kein Bibliotheksbaustein gewählt | Den Aufrufschritt auswählen und rechts Baustein und Zuordnung ausfüllen |
 | Seriennummer wird nicht erneut abgefragt | Eigene lokale Kennung und Pflicht-Eingabe am Anfang der Prüflingsgruppe im Loop prüfen |
 | COM-Ziel ändert sich nicht | Adresse als `{ComPort}` gesetzt? Variable im verfügbaren Bereich? Unterstützter Byte-Strom-Adapter? |
