@@ -1,4 +1,4 @@
-﻿using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Definitions;
 
 namespace Testumgebung.Presentation.ViewModels;
 
@@ -48,11 +48,11 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
         var decision = node.Children.FirstOrDefault()?.IsTemplateDecision == true;
         // Empty phases are a single terminal, not an empty group plus a duplicate end marker.
         if (node.IsSection && children.Count == 0 && group.Repetition.Mode == RepeatMode.Once && group.ExitGroup is null) return result;
-        var branches = children.Select(BuildNode).ToList();
-        if (SimpleDecisionBranch(node) && branches.Count > 0) return Sequence(branches);
-        if (branches.Count > 0)
+        if (SimpleDecisionBranch(node) && children.Count > 0) return ConditionalSequence(children);
+        if (children.Count > 0)
         {
-            var body = group.Parallel || decision ? Parallel(branches, decision) : Sequence(branches);
+            var body = group.Parallel || decision
+                ? Parallel(children.Select(BuildNode).ToList(), decision) : ConditionalSequence(children);
             result = AttachBody(result, body, group.Parallel ? GraphLinkKind.Parallel : GraphLinkKind.Flow, decision);
         }
         // Dann/Sonst wrappers are branch entries; the enclosing decision already owns their shared join.
@@ -116,6 +116,38 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
     private static bool HasBypass(NodeViewModel node, bool decision)
         => !decision && node.Parent?.Children.FirstOrDefault()?.IsTemplateDecision != true
             && (!string.IsNullOrWhiteSpace(node.Group!.EntryCondition) || node.Group.Repetition.Mode == RepeatMode.While);
+    /// <summary>Consecutive conditional groups get neighbouring lanes without changing sequential control flow.</summary>
+    private Fragment ConditionalSequence(IReadOnlyList<NodeViewModel> children)
+    {
+        var parts = new List<Fragment>();
+        for (var index = 0; index < children.Count;)
+        {
+            var end = index + 1;
+            if (IsConditional(children[index]))
+                while (end < children.Count && IsConditional(children[end])) end++;
+            var row = children.Skip(index).Take(end - index).Select(BuildNode).ToList();
+            parts.Add(row.Count == 1 ? row[0] : ConditionalRow(row));
+            index = end;
+        }
+        return Sequence(parts);
+    }
+    private static bool IsConditional(NodeViewModel node)
+        => node.Group is { } group && !node.IsSection && !string.IsNullOrWhiteSpace(group.EntryCondition);
+
+    private static Fragment ConditionalRow(List<Fragment> groups)
+    {
+        var cards = new List<GraphCard>(); var links = new List<GraphLink>(); double x = 0;
+        for (var index = 0; index < groups.Count; index++)
+        {
+            var group = groups[index]; Shift(group, x, 0);
+            cards.AddRange(group.Cards); links.AddRange(group.Links);
+            // These are ordinary fall-through links, not a parallel split or an inferred if/else.
+            if (index > 0) links.Add(new(groups[index - 1].Last, group.First, GraphLinkKind.Flow, "Nächste Bedingung"));
+            x += group.Width + LaneGap;
+        }
+        return new(cards, links, groups[0].First, groups[^1].Last, x - LaneGap, groups.Max(group => group.Height));
+    }
+
     private static Fragment Sequence(List<Fragment> items)
     {
         if (items.Count == 0) return new([], [], "", "", CardWidth, 0);
