@@ -1,4 +1,4 @@
-﻿# Benutzerhandbuch Testumgebung
+# Benutzerhandbuch Testumgebung
 
 Eigene Geräte lassen sich im Projekt definieren: [Anleitung und Beispiel](../eigene-geraete.md).
 
@@ -593,3 +593,8 @@ Als Übergang bis zur Entra-Einrichtung lässt sich unter **Einstellungen → Zu
 ## Ergebnis bei Werkerabbruch
 
 Ein vom Werker abgebrochener Prüflingstest erhält den Gesamtstatus **ABORT**, auch wenn zuvor bereits Schritte bestanden wurden. Bereits abgeschlossene Prüflinge bleiben unverändert. Messwerte und Schrittbewertungen bleiben zur Diagnose erhalten; die Auswertung zählt den Lauf als ABORT. [Details zu Speicherung und älteren Ergebnissen](../werkerabbruch-und-ergebnis.md).
+
+
+## Prüfprogramme aus Releases bearbeiten
+
+Unter **Releases** ein Testprogramm und eine Version auswählen und **In Ablaufeditor laden** wählen. Mit dem Recht **Entwickeln** entsteht eine lokale Bearbeitungskopie; ungespeicherte Editoränderungen werden vorher abgefragt. Die Freigabe bleibt erhalten. [Ausführliche Anleitung](../pruefprogramm-aus-releases-laden.md).

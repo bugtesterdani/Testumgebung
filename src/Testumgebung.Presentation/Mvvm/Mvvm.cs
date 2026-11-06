@@ -79,9 +79,14 @@ public sealed class SynchronizationContextDispatcher(SynchronizationContext cont
     public void Post(Action action) => context.Post(_ => action(), null);
 }
 
-/// <summary>Dateiauswahl – in WPF über Standarddialoge, in Tests ersetzt.</summary>
+/// <summary>Choice made before unsaved editor contents are replaced.</summary>
+public enum UnsavedProjectDecision { Save, Discard, Cancel }
+
+/// <summary>Dateiauswahl und Projektbestätigung – in WPF über Standarddialoge, in Tests ersetzt.</summary>
 public interface IFileDialogService
 {
+    /// <summary>Ask before replacing a dirty editor project. Missing UI defaults to preserving the project.</summary>
+    UnsavedProjectDecision AskSaveProjectChanges() => UnsavedProjectDecision.Cancel;
     string? OpenProject();
     string? SaveProject(string suggestedName);
     void ShowError(string message);
