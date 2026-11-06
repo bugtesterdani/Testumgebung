@@ -1,0 +1,476 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Kondensatorladung mit Simulationsgeräten",
+  "version": "1.0",
+  "description": "Hardwarefreie CC/CV-Kondensatorsimulation. Explizite Modellschritte treiben einen separaten simulierten DMM-Kanal. 41 Messpunkte in 8 Sekunden. Kein physikalisch autonomer Gerätetreiber; Modellschritte niemals für reale Geräte verwenden.",
+  "variables": [],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Vorbereitung"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Zeit",
+            "type": "Double",
+            "initial": "0"
+          },
+          {
+            "name": "Kapazitaet",
+            "type": "Double",
+            "initial": "0.1"
+          },
+          {
+            "name": "ZeitIndex",
+            "type": "Double",
+            "initial": "0"
+          },
+          {
+            "name": "Sollspannung",
+            "type": "Double",
+            "initial": "5"
+          },
+          {
+            "name": "Ladestrom",
+            "type": "Double",
+            "initial": "0.1"
+          },
+          {
+            "name": "AusgangAktiv",
+            "type": "Double",
+            "initial": "0"
+          },
+          {
+            "name": "Modellspannung",
+            "type": "Double",
+            "initial": "0"
+          },
+          {
+            "name": "Details",
+            "type": "String",
+            "initial": ""
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Simulation: Seriennummer eingeben, z. B. CAP-001.",
+              "Bild": "",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Standardwert": "CAP-001",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "",
+              "Warten": "true",
+              "Ziel": "Kennung",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "cap-serial",
+            "name": "Seriennummer erfassen"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "Netzteil_Ausgang",
+              "Wert": "0"
+            },
+            "id": "cap-off",
+            "name": "Netzteil zunächst ausschalten"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "Netzteil_Spannung",
+              "Wert": "Sollspannung"
+            },
+            "id": "cap-voltage",
+            "name": "Netzteil auf 5 V einstellen"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "Netzteil_Strom",
+              "Wert": "Ladestrom"
+            },
+            "id": "cap-current",
+            "name": "Strombegrenzung auf 0,1 A einstellen"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "DMM_Spannung",
+              "Wert": "0"
+            },
+            "id": "cap-reset",
+            "name": "SIMULATION: entladenen Kondensator vorgeben"
+          },
+          {
+            "art": "schritt",
+            "block": "verlauf.start",
+            "parameters": {
+              "Aufnahme": "Kondensator",
+              "Kanaele": "Kondensatorspannung",
+              "Einheiten": "V",
+              "Grenzkurven": "cap-grenzen@1",
+              "Dauer": "8",
+              "MaxPunkte": "100",
+              "MaxLuecke": "0.5",
+              "MinDauer": "0",
+              "Beruehren": "true",
+              "FailAbbruch": "false",
+              "AbweichungProzent": "10"
+            },
+            "id": "cap-start",
+            "name": "Aufzeichnung vorbereiten – Grenzband 0 bis 8 s"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "Netzteil_Ausgang",
+              "Wert": "1"
+            },
+            "id": "cap-on",
+            "name": "Netzteil einschalten – t = 0"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "repeat": {
+              "mode": "Count",
+              "count": 41
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "analog.messen",
+                "parameters": {
+                  "Ressource": "Netzteil_Spannung",
+                  "Ziel": "Sollspannung",
+                  "Untergrenze": "",
+                  "Obergrenze": "",
+                  "Einheit": "V"
+                },
+                "id": "cap-read-Sollspannung",
+                "name": "SIMULATION: Netzteilzustand lesen"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.messen",
+                "parameters": {
+                  "Ressource": "Netzteil_Strom",
+                  "Ziel": "Ladestrom",
+                  "Untergrenze": "",
+                  "Obergrenze": "",
+                  "Einheit": "V"
+                },
+                "id": "cap-read-Ladestrom",
+                "name": "SIMULATION: Netzteilzustand lesen"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.messen",
+                "parameters": {
+                  "Ressource": "Netzteil_Ausgang",
+                  "Ziel": "AusgangAktiv",
+                  "Untergrenze": "",
+                  "Obergrenze": "",
+                  "Einheit": "V"
+                },
+                "id": "cap-read-AusgangAktiv",
+                "name": "SIMULATION: Netzteilzustand lesen"
+              },
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Modellspannung",
+                  "Ausdruck": "AusgangAktiv * Ladestrom * Zeit / Kapazitaet"
+                },
+                "id": "cap-model",
+                "name": "SIMULATION: U = I × t / C"
+              },
+              {
+                "art": "gruppe",
+                "variables": [],
+                "condition": "Modellspannung > Sollspannung",
+                "repeat": {
+                  "mode": "Once"
+                },
+                "resultBeforeRepeat": "Keep",
+                "children": [
+                  {
+                    "art": "schritt",
+                    "block": "wert.setzen",
+                    "parameters": {
+                      "Ziel": "Modellspannung",
+                      "Ausdruck": "Sollspannung"
+                    },
+                    "id": "cap-limit",
+                    "name": "Auf Netzteilspannung begrenzen"
+                  }
+                ],
+                "id": "cap-clamp",
+                "name": "SIMULATION: Spannungsbegrenzung"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "DMM_Spannung",
+                  "Wert": "Modellspannung"
+                },
+                "id": "cap-model-output",
+                "name": "SIMULATION: Modellspannung am separaten DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "Kondensator",
+                  "Quelle": "Geräte",
+                  "Werte": "Spannung",
+                  "Ressourcen": "DMM_Spannung",
+                  "Zeit": "Zeit"
+                },
+                "id": "cap-point",
+                "name": "Spannung vom DMM lesen und live aufzeichnen"
+              },
+              {
+                "art": "gruppe",
+                "variables": [],
+                "condition": "Zeit < 8",
+                "repeat": {
+                  "mode": "Once"
+                },
+                "resultBeforeRepeat": "Keep",
+                "children": [
+                  {
+                    "art": "schritt",
+                    "block": "warten",
+                    "parameters": {
+                      "Dauer": "200"
+                    },
+                    "id": "cap-wait",
+                    "name": "200 ms warten"
+                  }
+                ],
+                "id": "cap-delay",
+                "name": "Bis zum nächsten Messpunkt warten"
+              },
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Zeit",
+                  "Ausdruck": "(ZeitIndex + 1) / 5"
+                },
+                "id": "cap-time",
+                "name": "Nächste Messzeit"
+              },
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "ZeitIndex",
+                  "Ausdruck": "ZeitIndex + 1"
+                },
+                "id": "cap-index",
+                "name": "Messpunktzähler erhöhen"
+              }
+            ],
+            "id": "cap-samples",
+            "name": "41 Messpunkte, alle 200 ms"
+          },
+          {
+            "art": "schritt",
+            "block": "verlauf.bewerten",
+            "parameters": {
+              "Aufnahme": "Kondensator",
+              "ErgebnisZiel": "Details"
+            },
+            "id": "cap-result",
+            "name": "Ladekurve bewerten"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "Netzteil_Ausgang",
+              "Wert": "0"
+            },
+            "id": "cap-done-off",
+            "name": "Netzteil nach Messung ausschalten"
+          },
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Anweisung",
+              "Text": "Simulation beendet. Erwartet: 0 V → 5 V in 5 s, danach 5 V bis 8 s. Grenzband ±0,15 V. Netzteil ist aus. Kurve ansehen und bestätigen.",
+              "Bild": "",
+              "Datentyp": "Zahl",
+              "Pflicht": "true",
+              "Standardwert": "",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "",
+              "Warten": "true",
+              "Ziel": "",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "cap-view",
+            "name": "Ladekurve ansehen"
+          }
+        ],
+        "exit": {
+          "variables": [],
+          "repeat": {
+            "mode": "Once"
+          },
+          "resultBeforeRepeat": "Keep",
+          "children": [
+            {
+              "art": "schritt",
+              "block": "analog.ausgeben",
+              "parameters": {
+                "Ressource": "Netzteil_Ausgang",
+                "Wert": "0"
+              },
+              "id": "cap-exit-off",
+              "name": "Netzteil sicher ausschalten"
+            }
+          ],
+          "id": "cap-cleanup",
+          "name": "Netzteil auch bei Abbruch ausschalten"
+        },
+        "id": "cap-dut",
+        "name": "Kondensator laden und Spannung messen"
+      }
+    ],
+    "id": "loop",
+    "name": "Ein Prüfling"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Abschluss"
+  },
+  "simulation": [
+    {
+      "name": "Netzteil_Spannung",
+      "channel": "cap_psu_v",
+      "unit": "V",
+      "value": 0,
+      "requiresLock": false,
+      "min": 0,
+      "max": 10,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    },
+    {
+      "name": "Netzteil_Strom",
+      "channel": "cap_psu_i",
+      "unit": "A",
+      "value": 0,
+      "requiresLock": false,
+      "min": 0,
+      "max": 1,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    },
+    {
+      "name": "Netzteil_Ausgang",
+      "channel": "cap_psu_on",
+      "unit": "",
+      "value": 0,
+      "requiresLock": false,
+      "min": 0,
+      "max": 1,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    },
+    {
+      "name": "DMM_Spannung",
+      "channel": "cap_dmm_v",
+      "unit": "V",
+      "value": 0,
+      "requiresLock": false,
+      "min": 0,
+      "max": 10,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    }
+  ],
+  "curves": [
+    {
+      "id": "cap-grenzen",
+      "name": "Ladekurve: 0,1 F / 0,1 A / 5 V",
+      "version": "1",
+      "sampleRate": 5,
+      "times": "AAAAAAAAAAAAAAAAAAAUQAAAAAAAACBA",
+      "channels": [
+        {
+          "id": "Untergrenze",
+          "unit": "V",
+          "samples": "MzMzMzMzw79mZmZmZmYTQGZmZmZmZhNA"
+        },
+        {
+          "id": "Obergrenze",
+          "unit": "V",
+          "samples": "MzMzMzMzwz+amZmZmZkUQJqZmZmZmRRA"
+        }
+      ],
+      "origin": "Generator",
+      "source": "",
+      "createdBy": "",
+      "createdAt": "0001-01-01T00:00:00+00:00",
+      "sha256": "b0cd751a434fe64e1704a63902e28fd1633072b2a7aa3cfaf587b8fdf35d45b8"
+    }
+  ]
+}

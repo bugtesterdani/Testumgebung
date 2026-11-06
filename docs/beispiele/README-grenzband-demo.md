@@ -38,3 +38,7 @@ Die Messkurve wird dem Demoprüfling zugeordnet. Dauerhafte Ablage erfolgt gemä
 **Anpassung an echte Geräte:** Im zeitgesteuerten Aufnahmebaustein Quelle **Geräte** und die abstrakten Gerätenamen des eigenen Prüfplatzes wählen. Kanalnamen, Einheiten und Grenzkurven entsprechend anpassen. Erst danach reale Hardware verwenden.
 
 Weitere Einzelheiten: [Messwertverläufe und Grenzbandprüfung](../messwertverlaeufe.md).
+
+## Kondensatorladung mit simuliertem Netzteil und Spannungsmessgerät
+
+Ein weiteres [ausführbares Projekt](kondensatorladung-demo.tproj.json) zeigt die Ladung eines 0,1-F-Kondensators bei 0,1 A bis 5 V. Die Spannung wird alle 200 ms über einen separaten simulierten DMM-Kanal gelesen und gegen eine zeitabhängige Sollkurve bewertet. [Anleitung und Modellgrenzen](README-kondensatorladung.md).

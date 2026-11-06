@@ -44,4 +44,41 @@ public sealed class TraceExampleTests
         Assert.Equal("demo-spannungsband@1", metadata.Curve); Assert.Equal(scenario == "Fruehes Ende", metadata.EarlyStop is not null);
         Assert.Equal(scenario != "Fruehes Ende", metadata.Complete);
     }
+
+    [Theory]
+    [InlineData(0.1, ResultRating.Pass)]
+    [InlineData(0.2, ResultRating.Fail)]
+    public async Task Capacitor_example_reads_simulated_devices_and_switches_supply_off(double capacitance, ResultRating expected)
+    {
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root.Parent is not null && !File.Exists(Path.Combine(root.FullName, "Testumgebung.sln"))) root = root.Parent;
+        var project = new ProjectSerializer().Load(Path.Combine(root.FullName, "docs", "beispiele", "kondensatorladung-demo.tproj.json"));
+        Assert.Empty(project.Definition.Validate());
+        foreach (var step in project.Definition.AllNodes().OfType<StepDefinition>()) Assert.Empty(BlockCatalog.Default.Rebuild(step));
+        // Change only the test specimen. The shipped example retains the nominal 0.1 F.
+        var dut = (GroupDefinition)project.Definition.Loop.Children.Single();
+        var original = dut.Variables.Single(v => v.Name == "Kapazitaet");
+        dut.Variables.Remove(original);
+        dut.Var("Kapazitaet", VarType.Double, capacitance);
+        var (adapter, hardware) = SampleProjects.CreateSimulation(project);
+        var clock = new VirtualClock(); var started = clock.Now;
+        var run = new TestRun(project.Definition, new TestRunOptions { Hardware = hardware, Clock = clock, Operator = new Answers("PASS") });
+        var recorder = new Testumgebung.Persistence.Results.ResultRecorder(run);
+        Testumgebung.Persistence.Results.ResultRun? recorded = null; recorder.RunRecorded += result => recorded = result;
+        var status = await run.RunAsync().Within();
+        Assert.Equal(expected, status.Rating);
+        Assert.Equal(8, (clock.Now - started).TotalSeconds);
+        Assert.Equal(0d, adapter.GetOutput("cap_psu_on"));
+        Assert.Equal(41, run.Steps("cap-point").Count());
+        Assert.NotNull(recorded);
+        var waveform = recorded.Waveforms.Single(w => w.Data.Channel == "Kondensatorspannung").Data;
+        var metadata = EnvelopeTraceMetadata.Decode(waveform.Quality)!;
+        Assert.Equal(41, metadata.OriginalTimes.Length);
+        Assert.Equal(0, metadata.OriginalTimes[0]); Assert.Equal(8, metadata.OriginalTimes[^1]);
+        Assert.True(metadata.Complete); Assert.Null(metadata.EarlyStop);
+        var writes = adapter.WriteLog.Where(w => w.Channel == "cap_dmm_v").Select(w => w.Value).ToArray();
+        Assert.Equal(0d, writes[0]);
+        Assert.Equal(2.0 / capacitance * 0.1, writes[11], 8);
+        Assert.Equal(Math.Min(5, 0.1 * 8 / capacitance), writes[^1], 8);
+    }
 }
