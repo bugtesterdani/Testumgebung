@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Basisversion X.Y.Z (leer = aktuelle Version aus dem Release-Issue)'
+        description: 'Basisversion X.Y.Z (leer = festgelegte Zielversion oder bisherige Buildbasis)'
         required: false
         type: string
 permissions:
@@ -255,4 +255,4 @@ jobs:
           RELEASE_TAG: ${{ needs.plan.outputs.tag }}
         run: |
           python build/github-release.py next --tag "$env:RELEASE_TAG"
-          if ($LASTEXITCODE) { throw 'Release gebaut; nächste Versionsplanung konnte nicht angelegt werden.' }
+          if ($LASTEXITCODE) { throw 'Release gebaut; nächste Release-Planung konnte nicht angelegt werden.' }

@@ -1,216 +1,76 @@
-﻿# Releases über GitHub-Issues und Pull Requests
+# Releases über GitHub-Issues und Pull Requests
 
-Release Notes stehen ausschließlich im jeweiligen GitHub-Release. Es gibt
-keine eingecheckte Release-Notes-Datei oder CHANGELOG im Projekt.
+Release Notes werden ausschließlich direkt im GitHub-Release erzeugt. Eine Release-Notes-Datei oder ein CHANGELOG wird nicht eingecheckt.
 
-## Eine Version vorbereiten
+## Planung und Softwareversion getrennt halten
 
-Ein Issue mit Label `release` und Titel **Release 1.0.16** legt die gemeinsame
-Basisversion fest. Ordne ihm den Milestone **1.0.16** zu. Es darf nur ein offenes
-Release-Issue geben. Main- und PR-Builds lesen dieselbe Quelle; ohne offenes
-Issue bleibt die letzte Release-Version maßgeblich. Die Repository-Variable
-`RELEASE_VERSION` ist lediglich ein Fallback vor dem ersten Release-Issue.
+Ab dem erfolgreichen Release-Build von **1.2.3** heißt die nächste Planung **Release R1**, danach **Release R2** usw. Der Milestone trägt denselben Namen. Die Nummer bezeichnet den geplanten Lieferumfang und bleibt unabhängig davon, ob daraus später beispielsweise 1.2.4, 1.3.0 oder 2.0.0 wird.
 
-Tag und Release heißen `v1.0.16` beziehungsweise `1.0.16`. Die vierte
-MSIX-Versionsstelle ist die GitHub-`GITHUB_RUN_NUMBER` des Workflows `msix.yml`,
-beispielsweise `1.0.16.123`. PR-, Main-, manuelle und offizielle Release-Builds
-laufen in diesem einen Workflow und teilen dadurch denselben Zähler im Repository.
-Andere Workflows, etwa die Wiki-Aktualisierung, verbrauchen keine Buildnummern.
-Der Zähler läuft auch über Basisversionswechsel hinweg weiter; Lücken durch
-abgebrochene oder fehlgeschlagene Runs sind normal. Größere Buildnummern bedeuten
-später gestartete Runs, nicht zwingend neueren Quellcode oder spätere Fertigstellung.
-Eine Wiederholung desselben Runs behält die Nummer. `BUILD-INFO.json` enthält
-zusätzlich die vollständige Run-ID, Versuchszahl, Commit und den Link zum Run.
-Die vierte Stelle identifiziert den Run; Run-ID plus Versuch identifizieren den Versuch.
+Die Automatik legt die nächste Planung erst nach einem erfolgreichen offiziellen Paket-Build mit MSIX-Bundle an. Der Release-Entwurf muss dafür noch nicht öffentlich veröffentlicht sein. Es gibt weiterhin genau **ein offenes Issue mit Label `release`** als gemeinsame Planungsquelle. Beliebig viele Feature-PRs können vorher gesammelt und gemergt werden.
 
-Der vorhandene Workflow und sein Name/Pfad sollen deshalb nicht durch einen neuen
-Workflow ersetzt werden: Dessen Zähler könnte neu beginnen. GitHub-Zähler gelten je
-Workflow, nicht global über alle Workflows einer Organisation. Die vollständige
-Run-ID passt nicht in die MSIX-Versionsstelle und wird weder gekürzt noch gehasht.
-Ab Run-Nummer 65536 stoppt der Build ausdrücklich. Vor Erreichen dieser Grenze
-benötigt die Vergabe eine neue, dokumentierte Strategie.
+Issues und PRs dem Milestone **Release R1** zuordnen. Eine spätere Versionsentscheidung ändert diesen Milestone nicht; die bereits zugeordneten Arbeiten müssen nicht umsortiert werden.
 
-Die bisherige reservierte Release-Revision `.65535` entfällt für zukünftige Builds.
-Bereits veröffentlichte Versionen, insbesondere `1.0.15.65535`, bleiben erhalten.
-Neue Pakete benötigen daher eine höhere Basisversion (aktuell `1.0.16`), um diese
-Installation aktualisieren zu können. Die CLR-AssemblyVersion bleibt `X.Y.Z.0`;
-FileVersion und MSIX tragen die gemeinsame Buildrevision.
+## Zielversion erst zum Release-Abschluss auswählen
 
-## Mehrere Änderungen sammeln
-
-Erstelle und merge beliebig viele normale Pull Requests. Das erzeugt Tests
-und Entwicklungsartefakte, aber weder Tag noch Release. Die Issues der Version
-sollten dem entsprechenden Milestone zugeordnet sein. Ein abschließender
-Release-PR enthält im Beschreibungstext ausdrücklich **Closes #1**, wobei #1
-die tatsächliche ID des Release-Issues ist. Dieser PR muss die erforderlichen
-Buildprüfungen bestehen und nach main gemergt werden.
-
-Erst dieser Merge erzeugt den Tag am exakten Merge-Commit und führt den
-Release-Build im selben MSIX-Workflow aus. Tags, die der normale
-Actions-Token anlegt, lösen keine weitere Push-Automation aus; der Main-Run
-übernimmt deshalb auch das offizielle Paket und den Release-Entwurf. Das signierte
-Paket, Quellen, Hinweise und Prüfnachweise landen zunächst in einem
-**Release-Entwurf**. Prüfe ihn und veröffentliche ihn anschließend bewusst.
-Bei normalem PR-Build wird ein separates Entwicklungszertifikat verwendet;
-der produktive Signierschlüssel wird dafür nicht bereitgestellt.
-
-## Release 1.0.16 abschließen
-
-Die Planung erfolgt im Issue **#12 – Release 1.0.16** mit dem Milestone **1.0.16**.
-Die vorgesehenen Feature-PRs sind gemerged. Der abschließende Pull Request für
-Version 1.0.16 enthält **Closes #12** und muss vor dem Merge den erforderlichen
-Build bestehen. Er wird über den normalen Main-Schutz gemergt.
-
-Nach diesem Merge setzt die bestehende Automatik den Tag **v1.0.16** auf den
-Merge-Commit und erstellt das signierte MSIX-Bundle mit der fortlaufenden
-Buildnummer sowie den Release-Entwurf. Die Release Notes werden direkt auf
-GitHub aus den aufgenommenen Pull Requests und Issues erzeugt. Dort liegen
-auch KI-Paket, Dokumentation, Quellen und Lizenznachweise als Anlagen.
-
-Den fertigen Entwurf unter GitHub → Releases prüfen und anschließend bewusst
-veröffentlichen. Der erfolgreiche Paket-Build legt bereits die bearbeitbare
-Planung für **1.0.17** an. Das manuelle Schließen von #12 allein erzeugt keinen Tag.
-
-## Release 1.0.17 und Folgeversion 1.1.0
-
-Der Abschluss-PR für **1.0.17** schließt das Planungs-Issue **#24** mit
-`Closes #24`. Nach bestandenem Build und Merge nach `main` entstehen der Tag
-**v1.0.17**, die Pakete mit fortlaufender Buildrevision und der Release-Entwurf
-mit den auf GitHub erzeugten Notes und Anlagen, einschließlich des CLI-ZIP.
-
-Im Issue #24 ist **1.1.0** als anschließende Version vorgemerkt. Erst nach dem
-erfolgreichen offiziellen 1.0.17-Paket-Build legt die Automatik die offene Planung
-**Release 1.1.0** mit passendem Milestone an. Bis dahin bleibt 1.0.17 die
-Versionsquelle. Der 1.0.17-Entwurf kann anschließend geprüft und veröffentlicht
-werden; der Release-PR veröffentlicht ihn nicht automatisch.
-
-## Nächste Version automatisch planen und bearbeiten
-
-Nach erfolgreichem offiziellen Paket-Build, Release-Entwurf und Release Notes legt
-die Automatik ein Issue **Release 1.0.15** mit Label `release` und passendem Milestone
-an. Standardmäßig wird die dritte Versionsstelle erhöht. An der MSIX-Grenze erfolgt
-ein Übertrag in die nächste Stelle. Das neue Issue entsteht bereits beim fertigen
-Entwurf; die öffentliche Veröffentlichung bleibt eine bewusste Entscheidung.
-
-Eine Folgeversion kann schon im aktuellen Release-Issue festgelegt werden,
-beispielsweise mit genau einem Marker:
+Im automatisch angelegten Issue steht zunächst dieser HTML-Kommentar:
 
 ```html
-<!-- next-release-version:1.1.0 -->
+<!-- release-version: -->
 ```
 
-Die Angabe benötigt drei Versionsstellen und muss höher als die abzuschließende
-Version sein. Sie bestimmt nur das anschließend automatisch angelegte Issue;
-der aktuelle Issue-Titel und damit die aktuellen Builds bleiben unverändert.
-Ohne Marker gilt die normale Erhöhung der dritten Stelle. Ungültige oder
-mehrfache Angaben stoppen die Folgeplanung vor dem Anlegen eines Issues.
-Eine bereits offene spätere Planung behält weiterhin Vorrang.
+Erst wenn der Lieferumfang feststeht, dort die gewünschte Version mit drei Zahlen eintragen, zum Beispiel:
 
-Du kannst den Titel später beispielsweise in **Release 1.1.0** ändern. Drei
-Versionsstellen sind erforderlich. Die Issue-Automatik erstellt beziehungsweise
-verwendet den passenden Milestone und ordnet ihn dem Release-Issue zu. Feature-Issues
-und PRs werden nicht still verschoben; ändere deren Milestone bei Bedarf selbst.
-Main- und PR-Builds verwenden den aktuellen Issue-Titel; bereits gebaute Pakete und
-vorhandene Tags ändern sich dadurch nicht. Verwende eine höhere Version als die
-bereits ausgelieferten Versionen.
+```html
+<!-- release-version:1.3.0 -->
+```
 
-Wiederholte Builds desselben Tags erzeugen keine doppelten Planungs-Issues. Eine
-bereits vorhandene spätere offene Planung wird nicht überschrieben. Auch ein
-umbenanntes und später geschlossenes Folge-Issue wird beim Wiederholen des alten
-Builds nicht erneut erstellt. Mehrere offene Release-Issues sind ein Fehler, weil
-sonst die gemeinsame Versionsquelle unklar wäre. Ohne erfolgreiches MSIX-Bundle
-wird keine nächste Planung begonnen.
+Den vorhandenen Marker **ersetzen**, keinen zweiten hinzufügen. Der Issue-Titel **Release R1** und der gleichnamige Milestone bleiben bestehen. Nur einen höheren Versionsstand als die ausgelieferten Pakete wählen. Main- und PR-Builds verwenden ab dieser Festlegung dieselbe Basisversion. Bereits gebaute Pakete und vorhandene Tags werden nicht verändert.
 
-## Release 1.2.1 und Folgeversion 1.2.2
+Solange noch keine Zielversion festgelegt ist, verwenden Entwicklungsbuilds die zuletzt abgeschlossene Version mit einer neuen fortlaufenden Buildnummer. Die Automatik hält diese Basis im Marker `release-build-base` fest; diesen internen Herkunftsvermerk nicht als Zielversion bearbeiten. Ohne diesen Vermerk wird die letzte versionierte Planung beziehungsweise die Repository-Variable `RELEASE_VERSION` als Fallback verwendet.
 
-Der Abschluss-PR für **1.2.1** schließt das Planungs-Issue **#53** mit
-`Closes #53`. Das Sicherheitsupdate aus PR #54 ist gemerged und hat die
-erforderlichen PR-Prüfungen bestanden. Nach bestandenem Release-PR-Build und
-Merge nach `main` erzeugt die bestehende Automatik **v1.2.1** am Merge-Commit
-und den signierten Release-Entwurf mit fortlaufender Buildrevision, Paketen,
-Dokumentation, KI-Paket, Quellen, Lizenznachweisen und Release Notes auf GitHub.
+Ein offizielles Release ohne Zielversion wird abgelehnt, bevor ein Tag erzeugt wird. Ungültige Versionen, doppelte Versionsmarker und mehrere offene Release-Issues werden ebenfalls abgelehnt. Die Auswahl muss drei Zahlen zwischen 0 und 65535 enthalten.
 
-Im Issue #53 ist **1.2.2** als Folgeversion vorgemerkt
-(`next-release-version:1.2.2`). Erst nach erfolgreichem offiziellen Paket-Build
-entstehen dafür das nächste bearbeitbare Release-Issue und der passende
-Milestone. Der Release-Entwurf wird anschließend bewusst veröffentlicht.
+## Abschluss-PR, Tag und Release-Entwurf
 
-## Release 1.2.2 und Folgeversion 1.2.3
+1. Alle vorgesehenen Feature-PRs nach `main` mergen.
+2. Die Zielversion im Planungs-Issue festlegen.
+3. Einen Release-PR mit eindeutigem Namen wie **Release 1.3.0** erstellen. Er enthält ausdrücklich `Closes #<Planungs-Issue>` und kann die ausgewählte Version mit einem einzelnen Marker `release-version:1.3.0` bestätigen. Widerspricht dieser Marker der Issue-Version, wird der Tag nicht erzeugt.
+4. Die erforderlichen Prüfungen bestehen lassen und den PR nach `main` mergen.
+5. Die Automatik setzt **v1.3.0** am exakten Merge-Commit und erstellt signierte Pakete sowie einen **Release-Entwurf** mit Notes und Download-Anlagen.
+6. Paket, Dokumentation und Lizenznachweise prüfen, danach den Entwurf bewusst veröffentlichen.
 
-Der Abschluss-PR für **1.2.2** schließt das Planungs-Issue **#56** mit
-`Closes #56`. Die vorgesehenen Änderungen sind nach `main` gemerged.
-Nach bestandenem PR-Build und Merge erzeugt die bestehende Automatik den Tag
-**v1.2.2** am Merge-Commit und den signierten Release-Entwurf mit fortlaufender
-Buildrevision, MSIX-Bundle, Kommandozeile, Dokumentation, KI-Paket, Quellen,
-Lizenznachweisen und den direkt auf GitHub erzeugten Release Notes.
+Ein normaler Feature-Merge oder das alleinige Schließen des Planungs-Issues erzeugt kein Release. Der Main-Run übernimmt den offiziellen Build im bestehenden MSIX-Workflow; der vom Actions-Token erzeugte Tag benötigt keinen zusätzlichen Push-Workflow.
 
-Im Issue #56 ist **1.2.3** ausdrücklich als Folgeversion vorgemerkt
-(`next-release-version:1.2.3`). Erst nach erfolgreichem offiziellen Paket-Build
-legt die Automatik dafür das nächste bearbeitbare Release-Issue samt Milestone an.
-Bis dahin bleibt 1.2.2 die gemeinsame Versionsquelle. Der fertige Release-Entwurf
-wird anschließend geprüft und bewusst veröffentlicht.
+Nach dem erfolgreichen offiziellen Build wird die nächste nummerierte Planung ohne vorgegebene Zielversion angelegt. Wiederholte Builds desselben Tags erzeugen kein zweites Planungs-Issue. Bereits abgeschlossene Folgeplanungen werden bei einem alten Build-Rerun nicht neu angelegt. Eine vorhandene spätere offene Planung bleibt erhalten.
 
-## Inhalt der automatisch erzeugten Notes
+## Release 1.2.3 abschließen
 
-Die Notes nennen alle gemergten PRs, die zu den Commits seit dem vorherigen
-Release-Tag gehören. Hinzu kommen alle Issues des Versions-Milestones,
-deren verknüpfte Abschluss-Issues und im Zeitraum erstellte/geschlossene Issues
-ohne anderen Versions-Milestone. Das erste Release betrachtet die gesamte
-bisherige Historie. IDs und der Zustand öffentlicher Issues werden aufgeführt.
-Die Bodies und Kommentare werden nicht in Release Notes übernommen.
+Das bestehende Issue **#68 – Release 1.2.3** und sein Milestone **1.2.3** bleiben für diesen Abschluss gültig. Der Release-PR schließt **#68**. Nach seinem Merge und bestandenem Paket-Build entstehen **v1.2.3**, die Pakete mit fortlaufender Buildrevision und der Release-Entwurf.
 
-Labels `confidential`, `vertraulich`, `private`, `security` oder
-`security-sensitive` blenden Titel und Details aus; dann steht dort ausschließlich
-beispielsweise **PR #42: Vertraulicher Eintrag (Inhalt ausgeblendet)**.
-GitHub bietet damit keine echte Vertraulichkeit einzelner Issues: Ein Label
-verhindert nicht den Zugriff auf den Originaleintrag in einem öffentlichen
-Repository. Wirklich geheime Inhalte benötigen einen privaten Meldeweg.
+Danach legt die neue Automatik **Release R1** samt Milestone an. Eine Zielversion wie 1.2.4 wird ausdrücklich **noch nicht** festgelegt. Die Version wird erst beim nächsten Abschluss ausgewählt.
+
+Bisherige Planungen mit Titel **Release X.Y.Z** bleiben kompatibel. Bei ihnen ist weiterhin der Titel die Versionsquelle und X.Y.Z der Milestone. Eine zusätzliche Versionsangabe im Body muss damit übereinstimmen. Bereits veröffentlichte Tags, Versionen und historische Milestones werden nicht umbenannt.
+
+Für ältere Planungen wird ein vorhandener Marker `next-release-version:X.Y.Z` weiterhin berücksichtigt und die ausdrücklich vorgemerkte Folgeversion in die nächste nummerierte Planung übernommen. Ohne diese ausdrückliche Vorgabe gibt es keine automatische Erhöhung der Softwareversion mehr.
+
+## Fortlaufende Buildnummer und MSIX
+
+Tag und Release verwenden drei Versionsstellen, zum Beispiel **v1.3.0**. Die vierte MSIX-/FileVersion-Stelle ist weiterhin die `GITHUB_RUN_NUMBER` des bestehenden Workflows **msix.yml**, zum Beispiel **1.3.0.123**. PR-, Main-, manuelle und offizielle Builds teilen sich diesen Zähler im Repository. Andere Workflows, beispielsweise die Wiki-Aktualisierung, verbrauchen keine Buildnummern.
+
+Der Zähler läuft über Basisversionswechsel hinweg weiter. Lücken durch abgebrochene oder fehlgeschlagene Runs sind normal. Größere Nummern bedeuten später gestartete Runs, nicht zwingend neueren Quellcode oder spätere Fertigstellung. Eine Wiederholung desselben Runs behält seine Nummer. `BUILD-INFO.json` enthält zusätzlich Run-ID, Versuchszahl, Commit und den Link zum Run.
+
+Workflow-Name und -Pfad des MSIX-Builds bleiben erhalten, damit der Zähler nicht durch einen neuen Workflow neu beginnt. Die vollständige Run-ID wird nicht auf eine MSIX-Zahl gekürzt oder gehasht. Ab Run-Nummer 65536 stoppt der Build; vorher ist eine neue dokumentierte Vergabestrategie erforderlich. Die CLR-AssemblyVersion bleibt X.Y.Z.0.
+
+Historische Pakete wie **1.0.15.65535** bleiben erhalten. Neue Pakete benötigen zum Aktualisieren einen höheren gesamten MSIX-Versionsstand. Die frühere reservierte Release-Revision .65535 wird für neue Builds nicht mehr verwendet.
+
+## Release Notes und Anlagen
+
+Die Notes nennen die gemergten PRs der aufgenommenen Commits seit dem vorherigen veröffentlichten regulären Release-Tag. Dazu gehören Issues des zugehörigen Release-Milestones – auch bei neutralem Namen wie **Release R1** –, verknüpfte Abschluss-Issues sowie im Zeitraum erstellte oder geschlossene Issues ohne anderen Milestone. Das erste Release betrachtet die bisherige Git-Historie.
+
+Bodies und Kommentare werden nicht übernommen. Mit `confidential`, `vertraulich`, `private`, `security` oder `security-sensitive` markierte Einträge erscheinen ausschließlich mit ID und einem Hinweis auf ausgeblendeten Inhalt. Ein solches Label macht das Original-Issue im öffentlichen Repository nicht vertraulich; geheime Meldungen benötigen einen privaten Meldeweg.
+
+MSIX-Bundle, Kommandozeile, KI-Paket, Dokumentation, passende Quellen und Lizenznachweise liegen als Anlagen im Release-Entwurf. Ein veröffentlichter Release-Text wird von einem erneuten Lauf nicht überschrieben. Ohne erfolgreiches MSIX-Bundle beginnt keine neue Planung.
 
 ## Main-Schutz
 
-Nach der einmaligen Einrichtung erfolgen Änderungen nur über Pull Requests.
-Direkt- und Force-Pushes sowie das Löschen von main sind blockiert, auch für
-Administratoren ohne Änderung der Schutzkonfiguration. Vor Merge muss der
-Statuscheck `build` erfolgreich sein und die PR-Branch aktuell sein.
-Für dieses derzeit von einer Person betreute Repository wird keine zweite
-Person als Pflichtreviewer verlangt; offene Review-Diskussionen müssen jedoch
-abgeschlossen sein. Der Wiki-Schlüssel erhält keine Main-Ausnahme.
-
-## Release 1.1.0 und Folgeversion 1.1.1
-
-Der Abschluss-PR für **1.1.0** schließt das Planungs-Issue **#30** mit
-`Closes #30`. Nach bestandenem Build und Merge nach `main` erzeugt die
-bestehende Automatik den Tag **v1.1.0**, das signierte Paket mit fortlaufender
-Buildrevision sowie den Release-Entwurf mit Notes und Download-Anlagen.
-
-Als Folgeplanung ist im Issue #30 **1.1.1** vorgemerkt. Nach erfolgreichem
-Paket-Build wird dafür ein neues bearbeitbares Release-Issue mit dem Milestone
-**1.1.1** angelegt. Der aktuelle Build bleibt bis zum Abschluss bei 1.1.0.
-Der fertige Release-Entwurf wird nach Prüfung der Anlagen veröffentlicht.
-
-## Aktuelle Folgeplanung: 1.2.0
-
-Die zunächst angelegte Folgeplanung 1.1.1 wird übersprungen. Das bestehende
-[Release-Issue #44](https://github.com/bugtesterdani/Testumgebung/issues/44) und
-sein gemeinsamer Milestone heißen jetzt **1.2.0**. Bereits zugeordnete Issues und
-Pull Requests behalten ihre Zuordnung. Die neuen Funktionen einschließlich
-Live-Gruppenergebnis und visueller Blockprogrammierung erscheinen damit ab 1.2.0.
-
-Main- und PR-Builds lesen die Basisversion weiterhin aus dem Titel dieses
-Release-Issues und ergänzen die fortlaufende Buildnummer. Erst der abschließende
-Release-PR mit `Closes #44` erzeugt nach Merge und bestandenem Paket-Build den
-Tag **v1.2.0** und den Release-Entwurf. Die Umplanung selbst erstellt kein Release.
-
-## Release 1.2.0 und Folgeversion 1.2.1
-
-Der Abschluss-PR für **1.2.0** schließt das Planungs-Issue **#44** mit
-`Closes #44`. Die geplanten Feature-PRs sind gemerged. Nach bestandenem Build
-und Merge des Abschluss-PRs nach `main` setzt die bestehende Automatik den
-Tag **v1.2.0** am Merge-Commit und erstellt die signierten Pakete sowie den
-Release-Entwurf mit den auf GitHub erzeugten Notes und Anlagen.
-
-Im Issue #44 ist **1.2.1** als Folgeversion vorgemerkt. Nach erfolgreichem
-offiziellen 1.2.0-Paket-Build wird das bearbeitbare Issue **Release 1.2.1** mit
-passendem Milestone angelegt. Bis dahin bleibt 1.2.0 die Versionsquelle für
-Main- und PR-Builds. Den Release-Entwurf nach Prüfung der Anlagen bewusst
-veröffentlichen. Der Abschluss-PR veröffentlicht ihn nicht automatisch.
+Änderungen erfolgen über Pull Requests. Direkt- und Force-Pushes sowie das Löschen von `main` bleiben blockiert, auch für Administratoren ohne Änderung der Schutzkonfiguration. Vor dem Merge muss `build` erfolgreich und die Branch aktuell sein. Offene Review-Diskussionen müssen abgeschlossen sein; ein zweiter Pflichtreviewer ist für dieses von einer Person betreute Repository nicht vorgesehen. Der Wiki-Schlüssel erhält keine Main-Ausnahme.
