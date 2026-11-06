@@ -51,10 +51,13 @@ public sealed partial class InlineBlockEditor : UserControl
     }
     private void BuildStep(Panel fields, StepPropertiesViewModel step)
     {
-        foreach (var row in step.Parameters.Where(p => !p.IsHidden))
+        foreach (var row in step.Parameters)
         {
             if (row.IsVariable && row.Value.StartsWith("_BlockZweig_", StringComparison.Ordinal)) continue;
-            AddField(fields, row.Label, ParameterInput(row), row.Hint);
+            var field = new StackPanel();
+            BindParameterVisibility(field, row);
+            AddField(field, row.Label, ParameterInput(row), row.Hint);
+            fields.Children.Add(field);
         }
         if (step.Bindings is not { } bindings) return;
         var chooser = new ComboBox { ItemsSource = bindings.Blocks, DisplayMemberPath = "Name", MinWidth = 220 };
@@ -64,6 +67,10 @@ public sealed partial class InlineBlockEditor : UserControl
         ports.ItemTemplate = (DataTemplate)FindResource("InlinePortTemplate");
         fields.Children.Add(ports);
     }
+    private void BindParameterVisibility(FrameworkElement field, ParameterRowViewModel row)
+        => field.SetBinding(VisibilityProperty, new Binding(nameof(row.IsHidden))
+        { Source = row, Converter = (IValueConverter)FindResource("BoolVis"), ConverterParameter = "invert" });
+
     private FrameworkElement ParameterInput(ParameterRowViewModel row)
     {
         FrameworkElement input;

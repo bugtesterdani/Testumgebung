@@ -492,7 +492,7 @@
                 <ItemsControl ItemsSource="{Binding Parameters}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,3" Visibility="{Binding IsHidden, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150" />
                                     <ColumnDefinition Width="*" />
@@ -608,7 +608,7 @@
                     <ItemsControl ItemsSource="{Binding Rows}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,3">
+                                <Grid Margin="0,3" Visibility="{Binding IsHidden, Converter={StaticResource BoolVis}, ConverterParameter=invert}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="*" />
@@ -715,12 +715,22 @@
                 <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="4,0,0,8"
                            Text="Klicken oder ziehen: oben/unten davor/dahinter; Gruppenmitte = hinein." />
                 <Button Style="{StaticResource OutlineButton}" DockPanel.Dock="Top" Content="Variable anlegen …" Click="OnDeclareVariable" Margin="0,0,0,8"/>
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="4,0,0,8"
+                           Text="Bedingungen, Schleifen und parallele Ausführung unter Gruppe einstellen." />
+                <TextBlock DockPanel.Dock="Top" Text="Bausteine suchen" Style="{StaticResource Caption}" Margin="4,0,0,4" />
+                <TextBox DockPanel.Dock="Top" Text="{Binding PaletteSearch, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"
+                         ToolTip="Bausteine nach Name, Funktion oder Protokoll suchen" AutomationProperties.Name="Bausteine suchen" />
+                <TextBlock DockPanel.Dock="Top" Text="Keine passenden Bausteine gefunden." TextWrapping="Wrap" Margin="4,0,0,8">
+                    <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers><DataTrigger Binding="{Binding Palette.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                    </Style></TextBlock.Style>
+                </TextBlock>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Palette}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,0,0,8">
-                                    <TextBlock Text="{Binding Name}" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="4,4,0,2" />
+                                <Expander Header="{Binding Name}" IsExpanded="{Binding IsExpanded, Mode=OneWay}" Margin="0,0,0,8">
                                     <ItemsControl ItemsSource="{Binding Items}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -735,7 +745,7 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                </StackPanel>
+                                </Expander>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

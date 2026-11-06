@@ -58,6 +58,7 @@ public sealed partial class DevelopmentWorkspaceTests
         try
         {
             Sta.Flush(dispatcher); view.UpdateLayout();
+            VerifyCompactPalette(view, editor, host, dispatcher);
             var serializer = new ProjectSerializer(); var beforeMode = serializer.Serialize(editor.Project);
             var mode = Descendants(view).OfType<CheckBox>().Single(c => c.Content?.ToString() == "Blockansicht");
             mode.IsChecked = true; Sta.Flush(dispatcher); view.UpdateLayout();
@@ -162,6 +163,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyInlineBlocks(dispatcher, view, editor);
             view.UpdateLayout(); Sta.Flush(dispatcher);
             CaptureVisual(host, "visual-flow.png");
+            VerifyEvaluationOptions(view, editor, dispatcher);
         }
         finally { host.Close(); }
     }

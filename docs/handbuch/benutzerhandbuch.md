@@ -388,7 +388,7 @@ Im Ablauf **SSH-Befehl** einfügen. Befehl, Zeitlimit und optional Antwort-, Sta
 
 ### 10.3 SFTP-Dateien
 
-**SFTP-Datei hochladen** beziehungsweise **herunterladen** verwenden. Lokale Datei, Remote-Datei, Zeitlimit und Überschreibentscheidung setzen. Pfade können Variablen enthalten. Der lokale Zielordner für Downloads muss existieren. Downloads werden erst nach vollständigem Empfang übernommen; Uploads können bei Abbruch eine unvollständige Remote-Datei hinterlassen.
+**SFTP-Dateitransfer** verwenden und unter **Richtung** zwischen **Hochladen** und **Herunterladen** wählen. Lokale Datei, Remote-Datei, Zeitlimit und Überschreibentscheidung setzen. Pfade können Variablen enthalten. Der lokale Zielordner für Downloads muss existieren. Downloads werden erst nach vollständigem Empfang übernommen; Uploads können bei Abbruch eine unvollständige Remote-Datei hinterlassen.
 
 ### 10.4 HTTP GET, POST und weitere Methoden
 
@@ -551,7 +551,7 @@ Diese Reihenfolge eignet sich als erste eigene Einrichtung:
 | DLL-Namespace nicht gefunden | Richtige kompilierte DLL im aktuellen Projekt importiert? Namespace und public-Typen korrekt? |
 | Keine eindeutige Testzuordnung | Auswahlprojekt, Scan und verfügbare Programmkennung prüfen |
 | Keine freigegebene Version | Passendes Programm unter Releases wählen, prüfen und ausdrücklich freigeben |
-| Baustein fehlt in der Palette | Im Ablaufeditor links scrollen; Kategorie CodeBlocks → Baustein. Bibliotheksseite erstellt den Baustein, fügt ihn nicht in den Ablauf ein |
+| Baustein fehlt in der Palette | Im Ablaufeditor unter „Bausteine suchen“ suchen oder Kategorie CodeBlocks aufklappen → Baustein. Bibliotheksseite erstellt den Baustein, fügt ihn nicht in den Ablauf ein |
 | Kein Bibliotheksbaustein gewählt | Den Aufrufschritt auswählen und rechts Baustein und Zuordnung ausfüllen |
 | Seriennummer wird nicht erneut abgefragt | Eigene lokale Kennung und Pflicht-Eingabe am Anfang der Prüflingsgruppe im Loop prüfen |
 | COM-Ziel ändert sich nicht | Adresse als `{ComPort}` gesetzt? Variable im verfügbaren Bereich? Unterstützter Byte-Strom-Adapter? |
@@ -598,3 +598,15 @@ Ein vom Werker abgebrochener Prüflingstest erhält den Gesamtstatus **ABORT**, 
 ## Prüfprogramme aus Releases bearbeiten
 
 Unter **Releases** ein Testprogramm und eine Version auswählen und **In Ablaufeditor laden** wählen. Mit dem Recht **Entwickeln** entsteht eine lokale Bearbeitungskopie; ungespeicherte Editoränderungen werden vorher abgefragt. Die Freigabe bleibt erhalten. [Ausführliche Anleitung](../pruefprogramm-aus-releases-laden.md).
+
+
+### Gemeinsame Bewertung statt mehrerer Einträge
+
+Der Baustein **Bewertung** bietet unter **Art** zwei Möglichkeiten:
+
+- **Bedingung prüfen**: Bedingung auswerten, bei wahr PASS, sonst FAIL. Angezeigter Wert, Einheit und FAIL-Meldung sind optional.
+- **Festes Ergebnis**: NRESULT, PASS, FAIL oder ERROR direkt auswählen. Eine optionale Meldung beschreibt das Ergebnis. Damit lässt sich auch ein gezielter Fehler mit Erklärung erzeugen.
+
+Die Felder **Bedingung** und **Festes Ergebnis** erscheinen passend zur gewählten Art. Beim Umschalten bleiben eingegebene Werte erhalten. Nicht aktive Bedingungen werden nicht ausgewertet.
+
+**Bewertung setzen**, **Fehler erzeugen** und der separate **SFTP-Datei herunterladen**-Eintrag entfallen aus der Auswahl in allen Ansichten. Bereits gespeicherte Schritte dieser Typen funktionieren weiterhin unverändert. Alte Bewertungen ohne Art-Angabe bleiben Bedingungsprüfungen; alte Uploads ohne Richtungsangabe bleiben Uploads. Codefunktionen für SFTP-Upload und -Download bleiben ebenfalls erhalten.
