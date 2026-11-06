@@ -1,4 +1,4 @@
-name: Bearbeitbare Release-Version synchronisieren
+name: Release-Planung synchronisieren
 on:
   issues:
     types: [opened, edited, labeled, reopened]
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.15.2'
-      - name: Versions-Milestone zuordnen
+      - name: Planungs-Milestone zuordnen
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_ISSUE: ${{ github.event.issue.number }}

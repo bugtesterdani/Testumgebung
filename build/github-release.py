@@ -17,10 +17,34 @@ def version(value):
         raise ValueError("Release-Version muss drei Zahlen zwischen 0 und 65535 enthalten.")
     return value
 
-def release_version(issue):
-    title = re.fullmatch(r"Release\s+(\d+\.\d+\.\d+)", issue.get('title', ''), re.I)
-    if not title: raise ValueError("Release-Issue benötigt den Titel Release X.Y.Z.")
-    return version(title[1])
+PLANNING_TITLE = re.compile(r"Release\s+R([1-9]\d*)\Z", re.I)
+
+def marker_value(issue, name):
+    values = re.findall(r'<!--\s*' + re.escape(name) + r':(.*?)-->', issue.get('body') or '', re.S)
+    if len(values) > 1: raise ValueError(f'{name} ist mehrfach angegeben.')
+    return values[0].strip() if values else ''
+
+def release_version(issue, required=True):
+    title = issue.get('title', '')
+    legacy = re.fullmatch(r"Release\s+(\d+\.\d+\.\d+)", title, re.I)
+    selected = marker_value(issue, 'release-version')
+    if legacy:
+        base = version(legacy[1])
+        if selected and version(selected) != base: raise ValueError('Release-Version widerspricht dem bisherigen Issue-Titel.')
+        return base
+    if not PLANNING_TITLE.fullmatch(title): raise ValueError('Release-Issue benötigt Release R<Nummer> oder den bisherigen Titel Release X.Y.Z.')
+    if selected:
+        selected = version(selected)
+        previous = marker_value(issue, 'release-build-base')
+        if previous and tuple(map(int, selected.split('.'))) <= tuple(map(int, version(previous).split('.'))):
+            raise ValueError('Zielversion muss höher als die zuletzt abgeschlossene Version sein.')
+        return selected
+    if required: raise ValueError('Zielversion fehlt. Vor dem Release-Abschluss release-version:X.Y.Z im Planungs-Issue festlegen.')
+    return None
+
+def milestone_title(issue):
+    planning = PLANNING_TITLE.fullmatch(issue.get('title', ''))
+    return 'Release R' + planning[1] if planning else release_version(issue)
 
 def labels(item):
     return {x['name'].casefold() for x in item.get('labels', [])}
@@ -43,7 +67,7 @@ def body(base, previous, issues, pulls, package_version=None):
     lines += ['', '## Issues', '']
     lines += [item_line(i) + ('' if labels(i) & PRIVATE else f" ({i['state']})")
               for i in sorted(issues, key=lambda x: x['number'])] or ['Keine zugeordneten Issues.']
-    lines += ['', 'Enthalten sind alle PRs der aufgenommenen Commits sowie Issues des Versions-Milestones, verknüpfte Abschluss-Issues und im Zeitraum erstellte oder geschlossene Issues ohne anderen Versions-Milestone.',
+    lines += ['', 'Enthalten sind alle PRs der aufgenommenen Commits sowie Issues des Release-Milestones, verknüpfte Abschluss-Issues und im Zeitraum erstellte oder geschlossene Issues ohne anderen Versions-Milestone.',
               'Vertraulich gekennzeichnete Einträge erscheinen ausschließlich mit ihrer ID.', '',
               'Installation, passende Quellen und Lizenzbedingungen liegen als Release-Anlagen bei. Die Signatur verwendet derzeit das Entwicklungssignierzertifikat.']
     return '\n'.join(lines) + '\n'
@@ -87,8 +111,15 @@ def base_version(issues, fallback):
     releases = [i for i in issues if 'release' in labels(i)]
     active = [i for i in releases if i['state'] == 'open']
     if len(active) > 1: raise ValueError('Nur ein offenes Release-Issue ist als gemeinsame Versionsquelle erlaubt.')
-    chosen = active or sorted(releases, key=lambda x: x['number'], reverse=True)[:1]
-    return release_version(chosen[0]) if chosen else version(fallback)
+    if active:
+        selected = release_version(active[0], required=False)
+        if selected: return selected
+        previous = marker_value(active[0], 'release-build-base')
+        if previous: return version(previous)
+    for issue in sorted(releases, key=lambda x: x['number'], reverse=True):
+        selected = release_version(issue, required=False)
+        if selected: return selected
+    return version(fallback)
 
 def plan(api, args):
     if args.tag:
@@ -125,8 +156,10 @@ def trigger(api, args):
     issue = releases[0]; base = release_version(issue)
     if issue['state'] != 'closed': raise ValueError('Release-Issue ist noch nicht abgeschlossen; Tag wird nicht angelegt.')
     milestone = issue.get('milestone')
-    if not milestone or milestone['title'] != base:
-        raise ValueError('Release-Issue benötigt den gleichnamigen Versions-Milestone.')
+    if not milestone or milestone['title'] != milestone_title(issue):
+        raise ValueError('Release-Issue benötigt den zugehörigen Planungs-Milestone.')
+    requested = marker_value(pull, 'release-version')
+    if requested and version(requested) != base: raise ValueError('Zielversion des Release-PRs widerspricht dem Planungs-Issue.')
     sha = pull['merge_commit_sha']
     if not re.fullmatch(r'[0-9a-f]{40}', sha): raise ValueError('Ungültiger Merge-Commit.')
     existing = api.pages(f'repos/{api.repo}/git/matching-refs/tags/v{base}')
@@ -176,10 +209,15 @@ def publish(api, args):
     start = datetime.fromisoformat(git('show', '-s', '--format=%cI', previous)) if previous else datetime.min.replace(tzinfo=timezone.utc)
     end = datetime.now(timezone.utc)
     selected = []
-    for issue in api.issues():
+    all_issues = api.issues()
+    release_milestones = {base}
+    for plan in all_issues:
+        if 'release' in labels(plan) and release_version(plan, required=False) == base:
+            release_milestones.add(milestone_title(plan))
+    for issue in all_issues:
         times = [datetime.fromisoformat(issue[k].replace('Z', '+00:00')) for k in ('created_at', 'closed_at') if issue.get(k)]
         milestone = (issue.get('milestone') or {}).get('title')
-        if milestone == base or issue['number'] in linked or (not milestone and any(start < t <= end for t in times)):
+        if milestone in release_milestones or issue['number'] in linked or (not milestone and any(start < t <= end for t in times)):
             selected.append(issue)
     release = release_for_tag(api, args.tag)
     if not release.get('draft'): raise ValueError('Release Notes eines veröffentlichten Releases werden nicht überschrieben.')
@@ -191,29 +229,20 @@ def publish(api, args):
 
 def milestone_for(api, base):
     matches = [m for m in api.pages(f'repos/{api.repo}/milestones', state='all') if m['title'] == base]
-    if len(matches) > 1: raise ValueError('Versions-Milestone ist nicht eindeutig.')
+    if len(matches) > 1: raise ValueError('Release-Milestone ist nicht eindeutig.')
     if matches:
         if matches[0].get('state') == 'closed': raise ValueError('Der gewünschte Versions-Milestone ist bereits geschlossen.')
         return matches[0]['number']
-    return api.api(f'repos/{api.repo}/milestones', {'title': base, 'description': 'Geplante Änderungen dieser Version.'})['number']
-
-def next_version(base):
-    parts = [int(p) for p in version(base).split('.')]
-    for index in (2, 1, 0):
-        if parts[index] < 65535:
-            parts[index] += 1
-            return '.'.join(map(str, parts))
-        parts[index] = 0
-    raise ValueError('Keine höhere MSIX-Basisversion verfügbar.')
+    return api.api(f'repos/{api.repo}/milestones', {'title': base, 'description': 'Geplante Änderungen dieses Releases.'})['number']
 
 def planned_successor(issues, base):
     # Read the completed release's plan, not a second active release issue.
     plans = [i for i in issues if 'release' in labels(i)
-             and i.get('title', '').casefold() == f'Release {base}'.casefold()]
+             and release_version(i, required=False) == base]
     choices = []
     for plan in plans:
         choices.extend(re.findall(r'<!-- next-release-version:(.*?) -->', plan.get('body') or ''))
-    if not choices: return next_version(base)
+    if not choices: return None
     if len(choices) != 1: raise ValueError('Folgeversion ist mehrfach angegeben.')
     proposed = version(choices[0])
     if tuple(map(int, proposed.split('.'))) <= tuple(map(int, base.split('.'))):
@@ -235,33 +264,41 @@ def next_release(api, args):
     active = [i for i in issues if i['state'] == 'open' and 'release' in labels(i)]
     if len(active) > 1: raise ValueError('Mehrere offene Release-Issues; Planung nicht eindeutig.')
     if active:
-        planned = release_version(active[0])
-        if tuple(map(int, planned.split('.'))) <= tuple(map(int, base.split('.'))):
+        planned = release_version(active[0], required=False)
+        if planned and tuple(map(int, planned.split('.'))) <= tuple(map(int, base.split('.'))):
             raise ValueError('Offenes Release-Issue ist keine spätere Version.')
         print(f'Bestehendes Release-Issue #{active[0]["number"]} bleibt unverändert.')
         return
     proposed = planned_successor(issues, base)
-    # A closed planning issue must not be recreated, even on an old build rerun.
-    if any('release' in labels(i) and i.get('title', '').casefold() == f'Release {proposed}'.casefold() for i in issues):
+    if proposed and any('release' in labels(i) and release_version(i, required=False) == proposed for i in issues):
         raise ValueError('Planung dieser Folgeversion existiert bereits und ist geschlossen.')
-    milestone = milestone_for(api, proposed)
+    indices = [int(match[1]) for i in issues if 'release' in labels(i)
+               and (match := PLANNING_TITLE.fullmatch(i.get('title', '')))]
+    title = f'Release R{max(indices, default=0) + 1}'
+    milestone = milestone_for(api, title)
     issue = api.api(f'repos/{api.repo}/issues', {
-        'title': f'Release {proposed}', 'labels': ['release'], 'milestone': milestone,
-        'body': marker + f'\nNächste Planung nach erfolgreichem Build von **{args.tag}**.\n\n'
-                'Der Titel **Release X.Y.Z** ist die gemeinsame Versionsquelle für main und PR-Builds. '
-                'Du kannst den Titel später ändern; die Automatik ordnet diesem Issue den passenden Milestone zu. '
-                'Bereits zugeordnete Feature-Issues/PRs bei einer Versionsänderung selbst umordnen.\n\n'
+        'title': title, 'labels': ['release'], 'milestone': milestone,
+        'body': marker + f'\n<!-- release-build-base:{base} -->\n<!-- release-version:{proposed or ""} -->\n'
+                f'Planung **{title}** nach erfolgreichem Build von **{args.tag}**.\n\n'
+                'Die Release-Nummer bleibt unabhängig von der späteren Softwareversion. '
+                'Issues und PRs dem gleichnamigen Milestone zuordnen.\n\n'
+                'Erst zum Abschluss im Marker `release-version:` die Zielversion X.Y.Z eintragen, '
+                'zum Beispiel den Zielwert `1.3.0`. '
+                'Ohne Zielversion verwenden Entwicklungsbuilds weiterhin die zuletzt abgeschlossene Version mit neuer Buildnummer. '
+                'Ein offizielles Release ohne Zielversion wird abgelehnt.\n\n'
                 'Mehrere normale PRs sammeln. Erst ein abschließender Release-PR mit `Closes #<ID dieses Issues>` '
                 'erzeugt nach Merge Tag und Release-Entwurf.\n\n'
-                '- [ ] Geplante Änderungen abgeschlossen\n- [ ] Release-PR geprüft und gemerged\n'
-                '- [ ] Paket und Lizenznachweise geprüft\n- [ ] Release-Entwurf veröffentlicht\n\n'
-                'Anleitung: docs/release-ablauf.md.'})
-    print(f'Nächstes bearbeitbares Release-Issue #{issue["number"]}: {proposed}.')
+                '- [ ] Geplante Änderungen abgeschlossen\n- [ ] Zielversion festgelegt\n'
+                '- [ ] Release-PR geprüft und gemerged\n- [ ] Paket und Lizenznachweise geprüft\n'
+                '- [ ] Release-Entwurf veröffentlicht\n\nAnleitung: docs/release-ablauf.md.'})
+    print(f'Nächstes Planungs-Issue #{issue["number"]}: {title}; Zielversion {proposed or "noch offen"}.')
+
 
 def sync_release(api, args):
     issue = api.api(f'repos/{api.repo}/issues/{args.issue}')
     if issue['state'] != 'open' or 'release' not in labels(issue): return
-    base = release_version(issue)
+    release_version(issue, required=False)  # Validate a selected version without requiring one during planning.
+    base = milestone_title(issue)
     active = [i for i in api.issues() if i['state'] == 'open' and 'release' in labels(i)]
     if len(active) != 1: raise ValueError('Genau ein offenes Release-Issue erforderlich.')
     if (issue.get('milestone') or {}).get('title') == base: return

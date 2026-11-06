@@ -16,13 +16,14 @@ class API:
         self.milestones = []
         self.assets = [{'name': 'Testumgebung.msixbundle'}]
         self.writes = []
+        self.tag = 'v1.0.14'
 
     def issues(self):
         return self.items
 
     def pages(self, path, **query):
         if path.endswith('/milestones'): return self.milestones
-        if path.endswith('/releases'): return [{'id': 10, 'tag_name': 'v1.0.14', 'draft': True, 'assets': self.assets}]
+        if path.endswith('/releases'): return [{'id': 10, 'tag_name': self.tag, 'draft': True, 'assets': self.assets}]
         raise AssertionError(path)
 
     def api(self, path, data=None, method=None):
@@ -50,8 +51,9 @@ class NextReleaseTests(unittest.TestCase):
         release.next_release(api, SimpleNamespace(tag='v1.0.14'))
         release.next_release(api, SimpleNamespace(tag='v1.0.14'))
         self.assertEqual(1, len(api.items))
-        self.assertEqual('Release 1.0.15', api.items[0]['title'])
-        self.assertEqual('1.0.15', api.items[0]['milestone']['title'])
+        self.assertEqual('Release R1', api.items[0]['title'])
+        self.assertIsNone(release.release_version(api.items[0], required=False))
+        self.assertEqual('Release R1', api.items[0]['milestone']['title'])
 
     def test_edited_title_syncs_milestone_and_controls_builds(self):
         api = API()
@@ -102,8 +104,9 @@ class NextReleaseTests(unittest.TestCase):
         self.assertEqual('1.0.14', release.base_version(api.items, '1.0.0'))
         release.next_release(api, SimpleNamespace(tag='v1.0.14'))
         successor = api.items[-1]
-        self.assertEqual('Release 1.1.0', successor['title'])
-        self.assertEqual('1.1.0', successor['milestone']['title'])
+        self.assertEqual('Release R1', successor['title'])
+        self.assertEqual('1.1.0', release.release_version(successor))
+        self.assertEqual('Release R1', successor['milestone']['title'])
         self.assertEqual('1.1.0', release.base_version(api.items, '1.0.0'))
         count = len(api.writes)
         release.next_release(api, SimpleNamespace(tag='v1.0.14'))
@@ -121,11 +124,6 @@ class NextReleaseTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     release.next_release(api, SimpleNamespace(tag='v1.0.14'))
                 self.assertFalse(api.writes)
-
-    def test_version_rollover_and_exhaustion(self):
-        self.assertEqual('1.1.0', release.next_version('1.0.65535'))
-        self.assertEqual('2.0.0', release.next_version('1.65535.65535'))
-        with self.assertRaises(ValueError): release.next_version('65535.65535.65535')
 
     def test_draft_lookup_requires_an_exact_unique_tag(self):
         api = API()

@@ -125,7 +125,11 @@ class ReleaseTests(unittest.TestCase):
                 raise AssertionError(path)
             def issues(self):
                 return [{'number': 3, 'title': 'SECRET internal defect', 'state': 'closed', 'labels': [{'name': 'confidential'}],
-                         'created_at': '2025-01-01T00:00:00Z', 'closed_at': '2025-02-01T00:00:00Z', 'milestone': None}]
+                         'created_at': '2025-01-01T00:00:00Z', 'closed_at': '2025-02-01T00:00:00Z', 'milestone': None},
+                        {'number': 9, 'title': 'Planned earlier but included now', 'state': 'closed', 'labels': [],
+                         'created_at': '2025-01-01T00:00:00Z', 'milestone': {'title': 'Release R1'}},
+                        {'number': 10, 'title': 'Release R1', 'state': 'closed', 'labels': [{'name': 'release'}],
+                         'body': '<!-- release-version:1.0.14 -->', 'milestone': {'title': 'Release R1'}}]
             def api(self, path, data=None, method=None):
                 if path == 'graphql':
                     return {'data': {'repository': {'pullRequest': {'closingIssuesReferences': {
@@ -150,6 +154,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertTrue(api.updated['draft'])
         self.assertIn('PR #5', api.written)
         self.assertIn('Issue #3', api.written)
+        self.assertIn('Issue #9', api.written)
         self.assertNotIn('SECRET', api.written)
         self.assertIn('1.0.14.42', api.written)
 
