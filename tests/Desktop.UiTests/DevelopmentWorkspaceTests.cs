@@ -27,6 +27,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyEditorDragDrop();
             VerifyVisualBlockProgramming(dispatcher);
             VerifyGraphWorkspace(dispatcher);
+            VerifyConditionalGroups(dispatcher);
             VerifySettingsPasswords();
             VerifyLocalPasswordLogin(dispatcher);
             VerifyReleaseErrorLayout(dispatcher);

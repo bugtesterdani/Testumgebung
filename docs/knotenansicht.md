@@ -27,6 +27,14 @@ ohne die Gruppen, Variablenbereiche oder Ausführungsregeln des Programms zu ver
 
 ![Verbundene Blöcke auf der Arbeitsfläche](handbuch/bilder/18-knotenansicht.png)
 
+## Normale Gruppen mit Bedingungen
+
+Mehrere unmittelbar aufeinanderfolgende Gruppen mit Eintrittsbedingungen stehen ebenfalls nebeneinander. Beispiel: **Artikel == "1"** enthält die Prüfung mit Grenzen 4–6 V, **Artikel == "2"** die Prüfung mit Grenzen 8–12 V. Die sichtbare Verbindung **Nächste Bedingung** führt vom Ende einer Gruppe zur nächsten Bedingungsprüfung. Der folgende gemeinsame Schritt liegt unter der gesamten Reihe.
+
+Diese Anordnung verändert ausschließlich die Darstellung. Die Gruppen bleiben nacheinander ausgeführt; ihre Bedingungen werden weiterhin beim jeweiligen Eintritt geprüft. Treffen mehrere Bedingungen zu oder ändert eine Gruppe die Artikelvariable, können entsprechend mehrere Gruppen laufen. Eine echte parallele Ausführung entsteht ausschließlich durch die Einstellung **Parallel ausführen**.
+
+Eine einzelne bedingte Gruppe bleibt senkrecht angeordnet. Ein normaler Schritt zwischen bedingten Gruppen beendet die seitliche Reihe. Überspring- und Wiederholungslinien erhalten bei überlappenden Höhen getrennte seitliche Spuren; Kreuzungen mit anderen Verbindungen sind möglich. Nach manuellen Verschiebungen stellt **Ansicht → Automatisch anordnen** die neue Anordnung wieder her.
+
 ## Arbeitsfläche bewegen
 
 - **Mausrad** vergrößert oder verkleinert um den Mauszeiger. Über Textfeldern und
