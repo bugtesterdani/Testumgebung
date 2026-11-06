@@ -42,6 +42,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyAdaptiveLayout(dispatcher);
             VerifyPairedView(dispatcher, output);
             VerifyCustomDevices(dispatcher, output);
+            VerifyDaqDevices(dispatcher, output);
             foreach (var size in new[] { new Size(1280, 900), new Size(1920, 1080) })
             {
                 view.Width = size.Width;

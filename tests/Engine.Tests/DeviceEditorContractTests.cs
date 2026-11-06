@@ -32,7 +32,8 @@ public sealed class DeviceEditorContractTests
         if (row.IsReal) Assert.Contains("Modell", row.Text);
         row.OptionsText = "Baud=115200\nName=A=B;C\nignored\n=invalid";
         Assert.Equal("115200", config.Options!["Baud"]); Assert.Equal("A=B;C", config.Options["Name"]);
-        Assert.Equal(2, config.Options.Count);
+        Assert.Equal(2, config.Options.Keys.Count(key => key != "Verbindung"));
+        if (row.HasConnectionChoices) Assert.Contains(config.Options["Verbindung"], row.ConnectionChoices);
         row.TimeoutText = "2500"; Assert.Equal(2500, config.TimeoutMs); Assert.Equal("2500", row.TimeoutText);
         foreach (var invalid in new[] { "", "0", "-1", "abc", "1.5", "2147483648" })
         { row.TimeoutText = invalid; Assert.Null(config.TimeoutMs); Assert.Equal("", row.TimeoutText); }

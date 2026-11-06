@@ -376,3 +376,7 @@ und [Bedienung](visuelle-blockprogrammierung.md).
 Die [Knotenansicht](knotenansicht.md) verwendet dieselben strukturierten Gruppen
 und Bausteine. Manuelles Verbinden verschiebt bestehende Knoten im Modell;
 Bildschirmpositionen und Zoom sind kein Bestandteil der Projektdatei.
+
+## LabJack-/RedLab-Ressourcen
+
+Für DIO/AIO die bestehenden Analog-/Digital-/Messverlaufsblöcke verwenden. Adapter, Kanalnamen, modellabhängige Anschlüsse und die hardwarefreie DAQ-Nachbildung beschreibt [LabJack/RedLab](labjack-redlab.md). Das [DAQ-Beispiel](beispiele/daq-demo.tproj.json) enthält einen vollständigen Durchlauf. Keine Hardware-Streamfähigkeiten aus einem skalaren Kanal ableiten.

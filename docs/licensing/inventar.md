@@ -257,3 +257,14 @@ Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhan
 ## SVN-Integrationstestclient 1.15.0
 
 Der Qualitätslauf verwendet einen per SHA-256 gepinnten Windows-Testclient. Er wird nicht mit dem MSIX oder als Werkzeug-Download weitergegeben. Die Originalhinweise für Subversion und sämtliche enthaltenen Bibliotheken stehen unter [Herkunft und Lizenzen](../../licenses/third-party/svn-tests/1.15.0/NOTICE.md).
+
+## Ergänzung Geräteintegration, 06.11.2026
+
+Diese ergänzten externen Laufzeiten sind nicht Teil des zuvor vermessenen MSIX. Details: [Lizenzvorprüfung](labjack-redlab.md).
+
+| Komponente | Datei | Version / Verteilung | Verwendung |
+|---|---|---|---|
+| LabJack LJM | LabJackM.dll | extern, nicht festgelegt, nicht mitgeliefert | src/Testumgebung.Instruments/Daq/LjmIoSession.cs |
+| LabJack UD | LabJackUD.dll | extern, nicht festgelegt, nicht mitgeliefert | src/Testumgebung.Instruments/Daq/UdIoSession.cs |
+| LabJack U12 | ljackuw.dll | extern, nicht festgelegt, nicht mitgeliefert | src/Testumgebung.Instruments/Daq/U12IoSession.cs |
+| MCC Universal Library (RedLab) | cbw64.dll | extern, nicht festgelegt, nicht mitgeliefert | src/Testumgebung.Instruments/Daq/NativeUlApi.cs |

@@ -1,0 +1,272 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "DAQ DIO/AIO – Simulationsbeispiel",
+  "version": "1.0",
+  "description": "Adapter DAQ DIO / AIO (Nachbildung ohne Treiber), T7, DAQ-DEMO. Rueckkopplung=AIN0=DAC0; Zuordnung siehe README-daq-demo.md. Start im realen Modus mit diesem simulierten Gerät, nicht mit generischer Projektsimulation.",
+  "variables": [],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Vorbereitung"
+  },
+  "loop": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Spannung",
+            "type": "Double",
+            "initial": "0"
+          },
+          {
+            "name": "Digital",
+            "type": "Bool",
+            "initial": "false"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Simulationsprüfling: Seriennummer eingeben",
+              "Bild": "",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Standardwert": "DAQ-001",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "",
+              "Warten": "true",
+              "Ziel": "Kennung",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "daq-id",
+            "name": "Seriennummer erfassen"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "DAQ_Ausgang",
+              "Wert": "2.5"
+            },
+            "id": "daq-set",
+            "name": "2,5 V ausgeben"
+          },
+          {
+            "art": "schritt",
+            "block": "digital.setzen",
+            "parameters": {
+              "Ressource": "DAQ_Digital",
+              "Wert": "true"
+            },
+            "id": "daq-high",
+            "name": "Digitalausgang ein"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.messen",
+            "parameters": {
+              "Ressource": "DAQ_Eingang",
+              "Ziel": "Spannung",
+              "Untergrenze": "2.4",
+              "Obergrenze": "2.6",
+              "Einheit": "V"
+            },
+            "id": "daq-measure",
+            "name": "Rückgeführte Spannung messen"
+          },
+          {
+            "art": "schritt",
+            "block": "digital.lesen",
+            "parameters": {
+              "Ressource": "DAQ_Digital",
+              "Ziel": "Digital",
+              "Erwartet": "true"
+            },
+            "id": "daq-read",
+            "name": "Digitalzustand prüfen"
+          },
+          {
+            "art": "schritt",
+            "block": "verlauf.aufnehmen",
+            "parameters": {
+              "Aufnahme": "DaqSpannung",
+              "Kanaele": "Spannung",
+              "Einheiten": "V",
+              "Grenzkurven": "daq-band@1",
+              "Dauer": "1",
+              "MaxPunkte": "10000",
+              "MaxLuecke": "0.5",
+              "MinDauer": "0",
+              "Beruehren": "true",
+              "FailAbbruch": "false",
+              "AbweichungProzent": "10",
+              "Quelle": "Geräte",
+              "Werte": "Spannung",
+              "Ressourcen": "DAQ_Eingang",
+              "Intervall": "0.2",
+              "ErgebnisZiel": ""
+            },
+            "id": "daq-trace",
+            "name": "Spannungsverlauf für eine Sekunde"
+          },
+          {
+            "art": "schritt",
+            "block": "analog.ausgeben",
+            "parameters": {
+              "Ressource": "DAQ_Ausgang",
+              "Wert": "0"
+            },
+            "id": "daq-zero",
+            "name": "Analogausgang aus"
+          },
+          {
+            "art": "schritt",
+            "block": "digital.setzen",
+            "parameters": {
+              "Ressource": "DAQ_Digital",
+              "Wert": "false"
+            },
+            "id": "daq-low",
+            "name": "Digitalausgang aus"
+          }
+        ],
+        "exit": {
+          "variables": [],
+          "repeat": {
+            "mode": "Once"
+          },
+          "resultBeforeRepeat": "Keep",
+          "children": [
+            {
+              "art": "schritt",
+              "block": "analog.ausgeben",
+              "parameters": {
+                "Ressource": "DAQ_Ausgang",
+                "Wert": "0"
+              },
+              "id": "daq-safe-ao",
+              "name": "DAC0 auf null"
+            },
+            {
+              "art": "schritt",
+              "block": "digital.setzen",
+              "parameters": {
+                "Ressource": "DAQ_Digital",
+                "Wert": "false"
+              },
+              "id": "daq-safe-do",
+              "name": "DIO4 auf null"
+            }
+          ],
+          "id": "daq-safe",
+          "name": "Ausgänge auch beim Verlassen zurücksetzen"
+        },
+        "id": "daq-dut",
+        "name": "DAQ-Ein-/Ausgänge prüfen"
+      }
+    ],
+    "id": "loop",
+    "name": "Ein Durchlauf"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Abschluss"
+  },
+  "simulation": [
+    {
+      "name": "DAQ_Ausgang",
+      "channel": "DAC0",
+      "unit": "V",
+      "value": 0,
+      "requiresLock": false,
+      "min": -1000000000,
+      "max": 1000000000,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    },
+    {
+      "name": "DAQ_Eingang",
+      "channel": "AIN0",
+      "unit": "V",
+      "value": 2.5,
+      "requiresLock": false,
+      "min": -1000000000,
+      "max": 1000000000,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    },
+    {
+      "name": "DAQ_Digital",
+      "channel": "DIO4",
+      "unit": "bool",
+      "value": 1,
+      "requiresLock": false,
+      "min": -1000000000,
+      "max": 1000000000,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    }
+  ],
+  "curves": [
+    {
+      "id": "daq-band",
+      "name": "2,4–2,6 V über 1 s",
+      "version": "1",
+      "sampleRate": 0,
+      "times": "AAAAAAAAAAAAAAAAAADwPw==",
+      "channels": [
+        {
+          "id": "Untergrenze",
+          "unit": "V",
+          "samples": "MzMzMzMzA0AzMzMzMzMDQA=="
+        },
+        {
+          "id": "Obergrenze",
+          "unit": "V",
+          "samples": "zczMzMzMBEDNzMzMzMwEQA=="
+        }
+      ],
+      "origin": "Generator",
+      "source": "",
+      "createdBy": "",
+      "createdAt": "0001-01-01T00:00:00+00:00",
+      "sha256": "d1c584f7e4384e5bd1c857f2581c0807ba860b84b2a30cf24800c044991251d8"
+    }
+  ]
+}

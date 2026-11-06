@@ -1,4 +1,4 @@
-﻿name,file,version,used_in,license
+name,file,version,used_in,license
 NI-DAQmx,nicaiu.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Daqmx.cs,NI license; driver independently installed
 VISA,visa64.dll / nivisa64 / ktvisa64,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Io.cs,NI/Keysight implementation-specific license
 PEAK PCAN,PCANBasic.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Can.cs,PEAK SDK/driver license
@@ -8,3 +8,7 @@ PEAK LIN,PLinApi.dll,Externally installed; not pinned and not bundled,src/Testum
 LabVIEW VI DLL,User-selected .dll,Externally installed; not pinned and not bundled,src/Testumgebung.Workers/LabViewGlue.cs,User/vendor DLL and required LabVIEW runtime license
 User .NET DLLs,User-imported .dll,Externally installed; not pinned and not bundled,src/Testumgebung.Workers.CSharp/Program.cs,License checked by project owner for each imported DLL
 System Win32,kernel32.dll and OS libraries,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Communication/Transports.cs,Windows OS component; not separately redistributed
+LabJack LJM,LabJackM.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Daq/LjmIoSession.cs,MIT plus package-specific Boost/gRPC notices; externally installed; see docs/licensing/labjack-redlab.md
+LabJack UD,LabJackUD.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Daq/UdIoSession.cs,LabJack default MIT unless package states otherwise; externally installed
+LabJack U12,ljackuw.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Daq/U12IoSession.cs,LabJack default MIT unless package states otherwise; externally installed
+MCC Universal Library (RedLab),cbw64.dll,Externally installed; not pinned and not bundled,src/Testumgebung.Instruments/Daq/NativeUlApi.cs,Vendor runtime redistribution terms; SDK development files excluded; externally installed
