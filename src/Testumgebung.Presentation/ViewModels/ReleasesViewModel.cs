@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Stellt Release-Lebenszyklus, Entwicklungsprüfung, Freigabe und Prüfplatzversionen dar.
  */
@@ -22,7 +22,12 @@ public sealed record PackageRow(string Area, string Name, string Version, string
 public sealed record RightsRow(string Label, bool Granted);
 
 public sealed record StationVersionRow(string Station, string Text);
-public sealed record ReleaseProgramRow(string Name, string Status);
+public sealed class ReleaseProgramRow(string name, string status) : ObservableObject
+{
+    private string _status = status;
+    public string Name { get; } = name;
+    public string Status { get => _status; set => SetProperty(ref _status, value); }
+}
 
 /// <summary>Schritt der Fortschrittsanzeige Entwurf → Entwicklungsprüfung → Freigabe.</summary>
 public sealed record StageRow(int Number, string Title, string Detail, bool Done, bool Current);
@@ -103,6 +108,11 @@ public sealed partial class ReleasesViewModel : ObservableObject
             OnPropertyChanged();
         }
     }
+    public ReleaseProgramRow? SelectedProgram
+    {
+        get => Programs.FirstOrDefault(program => program.Name == ProjectName);
+        set { if (value is not null) SelectedProgramName = value.Name; }
+    }
     public string ProgramStatus => Programs.FirstOrDefault(p => p.Name == ProjectName)?.Status ?? "Kein Release vorhanden";
 
     private TestProject? DraftSource() => _editor.Project.Definition.Name == ProjectName ? _editor.Project
@@ -121,7 +131,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
             BuildStages();
             _ = LoadPackageAsync(value);
             RaiseCommands();
-            OnPropertiesChanged(nameof(SelectedTitle), nameof(SelectedSourceText), nameof(ReviewReport), nameof(CanConfirm), nameof(ReleaseByText), nameof(CompareTargets));
+            OnPropertiesChanged(nameof(SelectedTitle), nameof(SelectedSourceText), nameof(ReviewReport), nameof(CanConfirm), nameof(ReleaseByText), nameof(ReleaseInstruction), nameof(CompareTargets));
         }
     }
 
@@ -151,7 +161,16 @@ public sealed partial class ReleasesViewModel : ObservableObject
 
     public bool CanConfirm => _selected?.State == ReleaseState.Review && _session.CanRelease;
 
-    public string ReleaseByText => $"{_session.User?.DisplayName ?? "—"} · {DateTime.Now:dd.MM.yyyy HH:mm}";
+    public string ReleaseByText => _selected is { ReleasedAt: { } time, ReleasedBy: { Length: > 0 } by }
+        ? $"{by} · {time.ToLocalTime():dd.MM.yyyy HH:mm}" : "Noch nicht freigegeben";
+    public string ReleaseInstruction => _selected?.State switch
+    {
+        ReleaseState.Draft => "Zuerst die Entwicklungsprüfung durchführen. Danach kann diese Version ausdrücklich freigegeben werden.",
+        ReleaseState.Review => "Prüfbericht kontrollieren, Freigabe bestätigen und ausdrücklich freigeben. Dafür ist das Recht Freigeben erforderlich.",
+        ReleaseState.Released => "Diese Version ist freigegeben und steht den zugeordneten Prüfplätzen zur Verfügung.",
+        ReleaseState.Archived => "Diese frühere Freigabe ist archiviert. Für neue Prüfungen die aktuelle freigegebene Version wählen.",
+        _ => "Zuerst ein Testprogramm und eine Version auswählen.",
+    };
 
     public string? Status
     {
@@ -371,7 +390,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
     {
         RebuildPrograms();
         RebuildReleaseSelection();
-        OnPropertiesChanged(nameof(Programs), nameof(SelectedProgramName), nameof(ProgramStatus));
+        OnPropertiesChanged(nameof(Programs), nameof(SelectedProgramName), nameof(SelectedProgram), nameof(ProgramStatus));
         OnPropertiesChanged(nameof(StoreError), nameof(StoreName), nameof(ProjectName), nameof(CompareTargets));
         RebuildStations();
     }
@@ -381,13 +400,31 @@ public sealed partial class ReleasesViewModel : ObservableObject
         var names = _hub.All.Select(r => r.ProjectName)
             .Concat(_stations.SelectMany(s => s.Coordinator?.Setup.ExampleProjects ?? []).Select(p => p.Definition.Name))
             .Append(_editor.Project.Definition.Name).Distinct().OrderBy(n => n).ToList();
-        Programs.Clear();
+        var rows = new List<ReleaseProgramRow>();
         foreach (var name in names)
         {
             var latest = _hub.All.Where(r => r.ProjectName == name).OrderByDescending(r => r.CreatedAt).FirstOrDefault();
             var released = _hub.CurrentInfo(name);
-            Programs.Add(new(name, released is not null ? $"Freigegeben v{released.Version}" : latest is not null ? latest.StateText : "Entwurf · kein Release vorhanden"));
+            rows.Add(new(name, released is not null ? $"Freigegeben v{released.Version}" : latest is not null ? latest.StateText : "Entwurf · kein Release vorhanden"));
         }
+        UpdatePrograms(rows);
+    }
+
+    /// <summary>Do not clear a bound selector on polling: preserve rows and restore changed selections by item identity.</summary>
+    private void UpdatePrograms(IReadOnlyList<ReleaseProgramRow> rows)
+    {
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var existing = Programs.FirstOrDefault(program => program.Name == rows[i].Name);
+            if (existing is null) Programs.Insert(i, rows[i]);
+            else
+            {
+                var index = Programs.IndexOf(existing);
+                if (index != i) Programs.Move(index, i);
+                existing.Status = rows[i].Status;
+            }
+        }
+        while (Programs.Count > rows.Count) Programs.RemoveAt(Programs.Count - 1);
     }
 
     private void RebuildReleaseSelection()

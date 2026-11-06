@@ -35,11 +35,13 @@ public sealed class ReleasePageWorkflowTests
             var draft = await hub.Service.CreateDraftAsync(project, "1", actor); await page.RefreshAsync(); ui.Pump();
             page.Selected = page.Releases.Single(); await ui.Until(() => page.Package.Count > 0, "Paket-Inhalt");
             Assert.Contains("v1", page.SelectedTitle); Assert.Equal(3, page.Stages.Count); Assert.True(page.Stages[0].Current);
+            Assert.Equal("Noch nicht freigegeben", page.ReleaseByText); Assert.Contains("Zuerst die Entwicklungsprüfung", page.ReleaseInstruction);
             Assert.All(page.Package, row => Assert.True(row.Ok)); Assert.Equal(develop, page.ReviewCommand.CanExecute(null));
             var reviewed = await page.ReviewAsync(); ui.Pump(); Assert.Equal(develop, reviewed); Assert.Equal(!develop, page.StatusIsError);
             if (develop)
             {
                 Assert.Equal(ReleaseState.Review, page.Selected!.State); Assert.True(page.Stages[1].Current);
+                Assert.Equal("Noch nicht freigegeben", page.ReleaseByText); Assert.Contains("Prüfbericht kontrollieren", page.ReleaseInstruction);
                 Assert.Equal(release, page.CanConfirm); Assert.False(page.ReleaseCommand.CanExecute(null));
                 Assert.False(await page.ReleaseAsync()); ui.Pump(); Assert.True(page.StatusIsError);
                 page.Confirmed = true; page.Confirmed = true; Assert.Equal(release, page.ReleaseCommand.CanExecute(null));
@@ -47,6 +49,8 @@ public sealed class ReleasePageWorkflowTests
                 if (release)
                 {
                     Assert.Equal(ReleaseState.Released, page.Selected!.State); Assert.True(page.Stages[2].Current);
+                    Assert.Contains(page.Selected.ReleasedBy!, page.ReleaseByText);
+                    Assert.Contains(page.Selected.ReleasedAt!.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm"), page.ReleaseByText);
                     Assert.Contains("Freigegeben", page.ProgramStatus); Assert.Contains("startet mit v1", page.StationVersions[0].Text);
                 }
             }
@@ -64,6 +68,7 @@ public sealed class ReleasePageWorkflowTests
                     Assert.True(await page.ReleaseAsync()); ui.Pump();
                     page.Selected = page.Releases.Single(r => r.Version == "1");
                     Assert.Equal(ReleaseState.Archived, page.Selected.State); Assert.Equal("Archiviert", page.Stages[2].Title);
+                    Assert.Contains(page.Selected.ReleasedBy!, page.ReleaseByText); Assert.Contains("archiviert", page.ReleaseInstruction);
                     Assert.False(page.CanConfirm); Assert.False(page.ReleaseCommand.CanExecute(null));
                 }
                 page.NewVersion = ""; var suggested = await page.CreateDraftAsync(); ui.Pump(); Assert.NotNull(suggested); Assert.Equal("2.1", suggested!.Version);
