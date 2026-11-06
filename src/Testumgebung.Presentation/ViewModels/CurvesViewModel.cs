@@ -285,7 +285,19 @@ public sealed class CurvesViewModel : ObservableObject
             var version = s.Parameters.GetValueOrDefault("Version");
             if (Library.Find(id, version) is { } c) list.Add((c.Key, s.Name));
         }
+        AddTraceUsage(list);
         return list;
+    }
+
+    private void AddTraceUsage(List<(string Key, string Step)> list)
+    {
+        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType == TraceBlocks.Start))
+            foreach (var key in (step.Parameters.GetValueOrDefault("Grenzkurven") ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            {
+                var separator = key.LastIndexOf('@');
+                if (Library.Find(separator < 0 ? key : key[..separator], separator < 0 ? null : key[(separator + 1)..]) is { } limit)
+                    list.Add((limit.Key, step.Name));
+            }
     }
 
     // ------------------------------------------------------------------ Arbeitskopie

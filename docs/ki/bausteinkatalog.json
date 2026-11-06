@@ -4010,6 +4010,168 @@
       ]
     },
     {
+      "type": "verlauf.bewerten",
+      "displayName": "Verlauf beenden und bewerten",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Pr\u00FCft die gesamte st\u00FCckweise lineare Messkurve und speichert Messung, Grenzlinien und Herkunft. Unvollst\u00E4ndig/abgebrochen ergibt ERROR, niemals PASS.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErgebnisZiel",
+          "label": "Auswertungsdetails \u2192 Stringvariable (JSON)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "verlauf.punkt",
+      "displayName": "Messpunkt erg\u00E4nzen",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Erg\u00E4nzt alle Kan\u00E4le mit gemeinsamer Empfangszeit. Ger\u00E4te werden nacheinander abgefragt; keine zugesicherte simultane Abtastung.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Quelle",
+          "label": "Datenquelle",
+          "kind": "Choice",
+          "default": "Ausdr\u00FCcke",
+          "required": false,
+          "choices": [
+            "Ausdr\u00FCcke",
+            "Ger\u00E4te"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Werte",
+          "label": "Wertausdr\u00FCcke (Semikolon)",
+          "kind": "Text",
+          "default": "Spannung",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Ressourcen",
+          "label": "Ger\u00E4tenamen (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeit",
+          "label": "Zeit [s], leer = seit Aufnahmebeginn",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
+      "type": "verlauf.start",
+      "displayName": "Messwertverlauf beginnen",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "Beginnt eine begrenzte Mehrkanalaufnahme. Grenzkurven haben Kan\u00E4le Untergrenze und Obergrenze mit derselben Einheit wie der Messkanal.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kanaele",
+          "label": "Kanalnamen (Komma)",
+          "kind": "Text",
+          "default": "Spannung",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Einheiten",
+          "label": "Einheiten (Komma, gleiche Reihenfolge)",
+          "kind": "Text",
+          "default": "V",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Grenzkurven",
+          "label": "Grenzkurven: ID@Version (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MaxPunkte",
+          "label": "Punktlimit je Kanal (2..100000)",
+          "kind": "Number",
+          "default": "10000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MaxLuecke",
+          "label": "Maximale Messl\u00FCcke [s]",
+          "kind": "Number",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "MinDauer",
+          "label": "Mindestdauer der Aufnahme [s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Beruehren",
+          "label": "Ber\u00FChren einer Grenzlinie zul\u00E4ssig",
+          "kind": "Bool",
+          "default": "true",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "warten",
       "displayName": "Warten",
       "category": "Ablauf",

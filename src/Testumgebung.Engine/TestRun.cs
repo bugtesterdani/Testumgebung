@@ -87,6 +87,7 @@ public sealed record TargetedExecutionResult(bool Executed, ResultRating Rating,
 public sealed class TestRun
 {
     internal AsyncLocal<string?> ProcessOwnerOverride { get; } = new();
+    internal Testumgebung.Domain.Curves.EnvelopeRecordings Recordings { get; } = new();
     internal Testumgebung.Workers.ProcessSession Processes { get; } = new();
     private static int _runCounter;
 
@@ -241,7 +242,7 @@ public sealed class TestRun
     }
     private sealed class TargetedProcessScope(TestRun run, string owner) : IDisposable
     {
-        public void Dispose() { run.Processes.CloseOwner(owner); run.ProcessOwnerOverride.Value = null; }
+        public void Dispose() { run.Recordings.CloseOwner(owner); run.Processes.CloseOwner(owner); run.ProcessOwnerOverride.Value = null; }
     }
 
     private Scope BuildDebugContext(string nodeId, IReadOnlyDictionary<string, object>? context)
@@ -629,6 +630,7 @@ public sealed class TestRun
         }
         finally
         {
+            FinishRecordings(group, scope.Id, path, parentIteration, accumulator);
             if (group.IsDutRun) Processes.CloseOwner(scope.Id);
             // 6. Sperren freigeben (nach Exit), Prüflingstest abschließen, Scope verwerfen
             if (lease is not null)
@@ -795,6 +797,17 @@ public sealed class TestRun
 
     internal void MarkDevelopmentRun() => IsDevelopmentRun = true;
 
+    private void FinishRecordings(GroupDefinition group, string scopeId, string path, int iteration, ResultAccumulator accumulator)
+    {
+        if (!group.IsDutRun && !ReferenceEquals(group, Definition.Root)) return;
+        var owner = group.IsDutRun ? scopeId : RunId;
+        foreach (var unfinished in Recordings.CloseOwner(owner))
+        {
+            accumulator.Merge(ResultRating.Error);
+            Emit(new StepCompleted(ResultRating.Error, unfinished.Data, null, null, null, "Aufzeichnung ohne abschließende Bewertung beendet; unvollständig.", OperatorAborted)
+                { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = iteration });
+        }
+    }
     internal void Emit(EngineEvent e)
     {
         // Assign and deliver events in one order, without holding the execution-stack gate during callbacks.
@@ -805,7 +818,7 @@ public sealed class TestRun
                 e.Sequence = ++_sequence;
                 var historyEvent = !Options.RetainWaveformsInHistory && e is StepCompleted { Value: WaveformSet or Waveform } step
                     ? step with { Value = step.Value.ToString() } : e;
-                _events.Add(historyEvent);
+                if (e is not TraceUpdated) _events.Add(historyEvent);
                 if (_events.Count > Options.EventHistoryLimit)
                     _events.RemoveRange(0, _events.Count - Math.Max(0, Options.EventHistoryLimit));
             }

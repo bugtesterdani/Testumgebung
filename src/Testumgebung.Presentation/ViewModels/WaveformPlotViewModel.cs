@@ -60,6 +60,7 @@ public sealed class PlotChannel : ObservableObject
 
 /// <summary>Beschriftung der Y-Achse (Position in Plotkoordinaten).</summary>
 public sealed record PlotAxisLabel(double Y, string Text);
+public sealed record PlotViolationMarker(double X);
 
 /// <summary>
 /// Kurvenanzeige mit Kanalauswahl, Zoom, Verschieben und Cursor (Abschnitt 8). Zeichenfläche
@@ -73,6 +74,9 @@ public sealed class WaveformPlotViewModel : ObservableObject
     private const int Columns = 1000;
 
     private IReadOnlyList<PlotSource> _sources = [];
+    private IReadOnlyDictionary<string, double[]> _violations = new Dictionary<string, double[]>();
+    public ObservableCollection<PlotViolationMarker> ViolationMarkers { get; } = [];
+    private bool _pointTrace;
     private double _sampleRate = 1;
     private IReadOnlyList<double>? _times;
     private double _viewStart;
@@ -107,7 +111,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
 
     /// <summary>Gesamtdauer in Sekunden.</summary>
     public double Duration => Count == 0 ? 0
-        : _times is { } t ? t[^1] + (t.Count > 1 ? t[^1] - t[^2] : 0)
+        : _times is { } t ? t[^1] + (!_pointTrace && t.Count > 1 ? t[^1] - t[^2] : 0)
         : Count / _sampleRate;
 
     public double ViewStart => _viewStart;
@@ -145,10 +149,13 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public void Clear() => SetData([], 1, null);
 
     /// <summary>Neue Daten. <paramref name="keepView"/> behält Zoom und Cursor, soweit noch im Bereich.</summary>
-    public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false)
+    public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false)
     {
+        var wasFullView = _viewStart == 0 && Math.Abs(_viewEnd - Duration) < 1e-9;
+        _pointTrace = pointTrace;
         var visible = Channels.ToDictionary(c => c.Id, c => c.IsVisible);
         _sources = sources;
+        _violations = violations ?? new Dictionary<string, double[]>();
         _sampleRate = sampleRate > 0 ? sampleRate : 1;
         _times = times;
         Channels.Clear();
@@ -160,7 +167,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
             Channels.Add(ch);
         }
         var d = Duration;
-        if (!keepView || _viewEnd <= _viewStart || _viewEnd > d + 1e-12) { _viewStart = 0; _viewEnd = d; }
+        if (!keepView || _viewEnd <= _viewStart || _viewEnd > d + 1e-12 || (pointTrace && wasFullView)) { _viewStart = 0; _viewEnd = d; }
         if (!keepView || _cursor > d) _cursor = null;
         foreach (var c in new[] { ZoomInCommand, ZoomOutCommand, ZoomAllCommand, PanLeftCommand, PanRightCommand, ClearCursorCommand })
             c.RaiseCanExecuteChanged();
@@ -174,7 +181,8 @@ public sealed class WaveformPlotViewModel : ObservableObject
     {
         if (set.Channels.Count == 0) { Clear(); return; }
         var first = set.Channels[0];
-        SetData(set.Channels.Select(w => new PlotSource(w.Channel, w.Unit, w.Values)).ToList(), first.SampleRate, first.TimeValues, keepView: true);
+        var violations = set.Channels.ToDictionary(w => w.Channel, w => EnvelopeTraceMetadata.Decode(w.Quality)?.Violations ?? []);
+        SetData(set.Channels.Select(w => new PlotSource(w.Channel, w.Unit, w.Values)).ToList(), first.SampleRate, first.TimeValues, keepView: true, violations: violations, pointTrace: set.Channels.Any(w => EnvelopeTraceMetadata.Decode(w.Quality) is not null));
     }
 
     public void SetView(double start, double end)
@@ -200,7 +208,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
 
     private void Pan(double fraction)
     {
-        var span = _viewEnd - _viewStart;
+        var span = Math.Max(_viewEnd - _viewStart, 1e-12);
         SetView(_viewStart + span * fraction, _viewEnd + span * fraction);
     }
 
@@ -270,6 +278,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
 
     private void Render()
     {
+        ViolationMarkers.Clear();
         Series.Clear();
         YLabels.Clear();
         var visible = Channels.Where(c => c.IsVisible).ToList();
@@ -290,7 +299,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
 
             var i0 = IndexAt(_viewStart);
             var i1 = Math.Min(Count - 1, IndexAt(_viewEnd) + 1);
-            var span = _viewEnd - _viewStart;
+            var span = Math.Max(_viewEnd - _viewStart, 1e-12);
             foreach (var c in visible)
             {
                 var s = _sources[c.ColorIndex].Samples;
@@ -321,12 +330,20 @@ public sealed class WaveformPlotViewModel : ObservableObject
                 Series.Add(new PlotSeries(c.Id, c.ColorIndex, points, $"{c.Id} [{c.Unit}]"));
             }
         }
+        UpdateViolationMarkers();
         UpdateRmsLabels();
         UpdateCursor();
         OnPropertiesChanged(nameof(HasData), nameof(Count), nameof(Duration), nameof(ViewStart), nameof(ViewEnd), nameof(ViewText),
             nameof(RangeText), nameof(ZeroY), nameof(ShowZero), nameof(YTopText), nameof(YMidText), nameof(YBottomText));
     }
 
+    private void UpdateViolationMarkers()
+    {
+        if (_viewEnd <= _viewStart) return;
+        var times = Channels.Where(c => c.IsVisible).SelectMany(c => _violations.GetValueOrDefault(c.Id) ?? []);
+        foreach (var time in times.Where(t => double.IsFinite(t) && t >= _viewStart && t <= _viewEnd).Distinct().Take(1000))
+            ViolationMarkers.Add(new((time - _viewStart) / (_viewEnd - _viewStart) * PlotWidth));
+    }
     private void UpdateCursor()
     {
         foreach (var c in Channels)

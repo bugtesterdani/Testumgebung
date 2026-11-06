@@ -100,3 +100,6 @@ public sealed record LiveOutputReported(Testumgebung.Domain.Definitions.LiveOutp
 
 /// <summary>Konfiguriert deaktiviertes Element: keine Ausführung und keine Bewertung.</summary>
 public sealed record NodeSkipped(string Reason) : NodeEvent;
+
+/// <summary>Transient plot snapshot, excluded from retained history and result storage.</summary>
+public sealed record TraceUpdated(WaveformSet Data) : EngineEvent;

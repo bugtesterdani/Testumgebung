@@ -43,6 +43,9 @@ internal sealed class StepContext(
             return run.RunId;
         }
     }
+    public Testumgebung.Domain.Curves.EnvelopeRecordings Recordings => run.Recordings;
+    public bool IsOperatorAborted => run.OperatorAborted;
+    public void ReportTrace(WaveformSet data) => run.Emit(new TraceUpdated(data) { Time = run.Clock.Now, RunId = run.RunId });
     public string RunId => run.RunId;
     public IReadOnlyList<Testumgebung.Domain.Code.ManagedAssembly> ManagedAssemblies => run.Definition.Assemblies;
     public string StepId => step.Id;

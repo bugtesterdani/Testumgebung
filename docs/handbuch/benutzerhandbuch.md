@@ -1,4 +1,4 @@
-﻿# Benutzerhandbuch Testumgebung
+# Benutzerhandbuch Testumgebung
 
 Eigene Geräte lassen sich im Projekt definieren: [Anleitung und Beispiel](../eigene-geraete.md).
 
@@ -593,3 +593,7 @@ Als Übergang bis zur Entra-Einrichtung lässt sich unter **Einstellungen → Zu
 ## Ergebnis bei Werkerabbruch
 
 Ein vom Werker abgebrochener Prüflingstest erhält den Gesamtstatus **ABORT**, auch wenn zuvor bereits Schritte bestanden wurden. Bereits abgeschlossene Prüflinge bleiben unverändert. Messwerte und Schrittbewertungen bleiben zur Diagnose erhalten; die Auswertung zählt den Lauf als ABORT. [Details zu Speicherung und älteren Ergebnissen](../werkerabbruch-und-ergebnis.md).
+
+## Messwertverläufe mit Grenzbandprüfung
+
+Die Ablaufbausteine **Messwertverlauf beginnen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten** zeichnen Geräte-/Variablenwerte auf und prüfen sie gegen versionierte Unter-/Obergrenzen. Einrichtung, Beispiele, Zeitbasis, Fehlerbehandlung und Speicherung: [Messwertverläufe und Grenzbandprüfung](../messwertverlaeufe.md).

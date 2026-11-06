@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -22,6 +22,7 @@ public sealed partial class DevelopmentWorkspaceTests
             app.InitializeComponent();
             VerifyLiveOutputPanel(dispatcher);
             InteractionBoundaryTests.VerifyPlotGestures();
+            VerifyEnvelopePlot(dispatcher);
             VerifyEditorKeyboard();
             VerifyEditorDragDrop();
             VerifyVisualBlockProgramming(dispatcher);
