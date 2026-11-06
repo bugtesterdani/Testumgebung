@@ -20,6 +20,7 @@ public sealed partial class DevelopmentWorkspaceTests
         {
             var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown, LicenseTermsConsent = () => true };
             app.InitializeComponent();
+            VerifyReleaseSelectionAndWorkflow(dispatcher);
             VerifyLiveOutputPanel(dispatcher);
             InteractionBoundaryTests.VerifyPlotGestures();
             VerifyEnvelopePlot(dispatcher);
@@ -27,6 +28,7 @@ public sealed partial class DevelopmentWorkspaceTests
             VerifyEditorDragDrop();
             VerifyVisualBlockProgramming(dispatcher);
             VerifyGraphWorkspace(dispatcher);
+            VerifyConditionalGroups(dispatcher);
             VerifySettingsPasswords();
             VerifyLocalPasswordLogin(dispatcher);
             VerifyReleaseErrorLayout(dispatcher);

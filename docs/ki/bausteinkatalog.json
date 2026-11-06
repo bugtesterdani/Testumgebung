@@ -275,8 +275,20 @@
       "type": "bewertung",
       "displayName": "Bewertung",
       "category": "Bewertung",
-      "description": "PASS, wenn die Bedingung erf\u00FCllt ist, sonst FAIL.",
+      "description": "Pr\u00FCft eine Bedingung (PASS/FAIL) oder setzt ein festes Ergebnis einschlie\u00DFlich ERROR mit Meldung.",
       "parameters": [
+        {
+          "name": "Art",
+          "label": "Art",
+          "kind": "Choice",
+          "default": "Bedingung pr\u00FCfen",
+          "required": false,
+          "choices": [
+            "Bedingung pr\u00FCfen",
+            "Festes Ergebnis"
+          ],
+          "hint": null
+        },
         {
           "name": "Bedingung",
           "label": "Bedingung",
@@ -284,7 +296,21 @@
           "default": "true",
           "required": true,
           "choices": null,
-          "hint": "z. B. Spannung \u003E= GrenzwertMin \u0026\u0026 Spannung \u003C= GrenzwertMax"
+          "hint": null
+        },
+        {
+          "name": "Bewertung",
+          "label": "Festes Ergebnis",
+          "kind": "Choice",
+          "default": "PASS",
+          "required": false,
+          "choices": [
+            "NRESULT",
+            "PASS",
+            "FAIL",
+            "ERROR"
+          ],
+          "hint": null
         },
         {
           "name": "Wert",
@@ -306,7 +332,7 @@
         },
         {
           "name": "Meldung",
-          "label": "Meldung bei FAIL",
+          "label": "Meldung bei FAIL / festem Ergebnis",
           "kind": "Text",
           "default": "",
           "required": false,
@@ -2638,7 +2664,7 @@
     },
     {
       "type": "netz.sftp.upload",
-      "displayName": "SFTP-Datei hochladen",
+      "displayName": "SFTP-Dateitransfer",
       "category": "Kommunikation",
       "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
       "parameters": [
@@ -2731,6 +2757,18 @@
           "required": false,
           "choices": null,
           "hint": "Optional: String-Variable f\u00FCr den \u00F6ffentlichen Schl\u00FCsselblob (Base64)."
+        },
+        {
+          "name": "Richtung",
+          "label": "Richtung",
+          "kind": "Choice",
+          "default": "Hochladen",
+          "required": false,
+          "choices": [
+            "Hochladen",
+            "Herunterladen"
+          ],
+          "hint": null
         },
         {
           "name": "Lokal",

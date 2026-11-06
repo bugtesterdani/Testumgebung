@@ -9,7 +9,7 @@ public sealed partial class EditorViewModel
     /// <summary>Identität der geöffneten Arbeitsfläche; bleibt bei Speichern und Undo unverändert.</summary>
     public Guid GraphWorkspaceId { get; private set; } = Guid.NewGuid();
     /// <summary>Zusätzliche Knotenansicht; die Ansicht verändert die gespeicherte Ablaufstruktur nicht.</summary>
-    public bool GraphView { get => _graphView; set => SetProperty(ref _graphView, value); }
+    public bool GraphView { get => _graphView; set { if (SetProperty(ref _graphView, value)) OnPropertyChanged(nameof(Palette)); } }
 
     /// <summary>Ein Ausgang wird an den Eingang eines vorhandenen Blocks gesteckt. Rückgängig bleibt atomar.</summary>
     public bool ConnectGraph(GraphSocket output, NodeViewModel target)

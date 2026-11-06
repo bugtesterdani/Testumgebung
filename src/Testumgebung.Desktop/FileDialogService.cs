@@ -14,6 +14,15 @@ public sealed class FileDialogService : IFileDialogService
 {
     private const string Filter = "Testumgebung-Projekt (*.tproj.json)|*.tproj.json|JSON (*.json)|*.json|Alle Dateien (*.*)|*.*";
 
+    public UnsavedProjectDecision AskSaveProjectChanges()
+        => MessageBox.Show("Ungespeicherte Änderungen am aktuellen Editorprojekt vor dem Laden speichern?\n\nJa: speichern · Nein: verwerfen · Abbrechen: bisheriges Projekt behalten.",
+            "Testumgebung", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel) switch
+        {
+            MessageBoxResult.Yes => UnsavedProjectDecision.Save,
+            MessageBoxResult.No => UnsavedProjectDecision.Discard,
+            _ => UnsavedProjectDecision.Cancel,
+        };
+
     public string? OpenProject()
     {
         var dialog = new OpenFileDialog { Filter = Filter, Title = "Projekt öffnen" };

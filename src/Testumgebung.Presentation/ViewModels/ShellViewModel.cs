@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verdrahtet Seiten und Prüfplätze und steuert Navigation sowie angemeldete Benutzerrechte.
  */
@@ -199,7 +199,13 @@ public sealed class ShellViewModel : ObservableObject
             PairedStations.Enabled = settings.ShowPairedStations;
         }
 
-        ReleasesViewModel? CreateReleasesPage() => releases is null ? null : new ReleasesViewModel(releases, Session, Editor, _ui, Stations);
+        ReleasesViewModel? CreateReleasesPage()
+        {
+            if (releases is null) return null;
+            var page = new ReleasesViewModel(releases, Session, Editor, _ui, Stations);
+            page.EditorLoaded += () => { if (Session.CanDevelop) Page = ShellPage.Editor; };
+            return page;
+        }
 
         EditorViewModel CreateEditor()
         {
