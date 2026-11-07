@@ -46,6 +46,10 @@ internal sealed class MsalIdentityProvider : IIdentityProvider
         {
             throw new SignInCanceledException();
         }
+        catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS7000218:", StringComparison.Ordinal))
+        {
+            throw new SignInException("Entra-Anmeldung fehlgeschlagen (AADSTS7000218). Entra erwartet einen App-Nachweis beim Einlösen des Anmeldecodes. Die IT muss prüfen, ob die Registrierung den Desktop-Redirect als öffentliche Clientanwendung unterstützt oder ein vertraulicher Anmeldedienst erforderlich ist.", ex);
+        }
         catch (MsalException ex)
         {
             throw new SignInException("Entra-Anmeldung fehlgeschlagen: " + ex.Message, ex);

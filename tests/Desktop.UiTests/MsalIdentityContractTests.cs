@@ -55,6 +55,21 @@ public sealed class MsalIdentityContractTests
         await provider.SignOutAsync(new UserIdentity("test", "test", "test", true), default);
     }
     [Fact]
+    public async Task Browser_login_explains_when_entra_expects_confidential_client_credentials()
+    {
+        var failure = new MsalServiceException("invalid_client", "AADSTS7000218: fixture server response");
+        var provider = new MsalIdentityProvider(
+            (_, _, _) => Task.FromException<AuthenticationResult>(failure),
+            _ => throw new InvalidOperationException("Failed login cannot cache an account."));
+
+        var error = await Assert.ThrowsAsync<SignInException>(() => provider.SignInAsync(true, default));
+        Assert.Contains("AADSTS7000218", error.Message);
+        Assert.Contains("vertraulicher Anmeldedienst", error.Message);
+        Assert.DoesNotContain("fixture server response", error.Message);
+        await provider.SignOutAsync(new UserIdentity("test", "test", "test", true), default);
+    }
+
+    [Fact]
     public async Task Sign_out_clears_account_even_when_provider_fails()
     {
         var account = DispatchProxy.Create<IAccount, AccountPeer>(); var count = 0;
