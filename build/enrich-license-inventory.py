@@ -87,6 +87,11 @@ TOOLS.extend([
 ('actions/upload-artifact','v7.0.2 / cf430e030ddbb5b0abf93d22962f4752f3646cd9','MIT','GitHub runner action','Both GitHub workflows; not redistributed')])
 
 EXTERNAL=[
+('LabJack LJM', 'LabJackM.dll', 'src/Testumgebung.Instruments/Daq/LjmIoSession.cs', 'MIT plus package-specific Boost/gRPC notices; externally installed; see docs/licensing/labjack-redlab.md'),
+('LabJack UD', 'LabJackUD.dll', 'src/Testumgebung.Instruments/Daq/UdIoSession.cs', 'LabJack default MIT unless package states otherwise; externally installed'),
+('LabJack U12', 'ljackuw.dll', 'src/Testumgebung.Instruments/Daq/U12IoSession.cs', 'LabJack default MIT unless package states otherwise; externally installed'),
+('MCC Universal Library (RedLab)', 'cbw64.dll', 'src/Testumgebung.Instruments/Daq/NativeUlApi.cs', 'Vendor runtime redistribution terms; SDK development files excluded; externally installed'),
+
 ('NI-DAQmx','nicaiu.dll','src/Testumgebung.Instruments/Daqmx.cs','NI license; driver independently installed'),
 ('VISA','visa64.dll / nivisa64 / ktvisa64','src/Testumgebung.Instruments/Io.cs','NI/Keysight implementation-specific license'),
 ('PEAK PCAN','PCANBasic.dll','src/Testumgebung.Instruments/Communication/Can.cs','PEAK SDK/driver license'),

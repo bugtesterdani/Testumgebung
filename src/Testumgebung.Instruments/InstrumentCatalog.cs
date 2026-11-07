@@ -21,6 +21,12 @@ public static class InstrumentCatalog
 
     public static IReadOnlyList<InstrumentFamily> Families { get; } =
     [
+        new(DaqModels.Simulation, "DAQ-Ein-/Ausgänge ohne Herstellertreiber", DaqModels.Names(DaqModels.Simulation), "DAQ-DEMO",
+            "Hardwarefreie Nachbildung. LabJack-Kanäle nach Modell; UL-Kanäle über AI-Kanaele, AO-Kanaele, DIO-Kanaele ausdrücklich konfigurieren. Eingaenge=AIN0=5;DIO0=1, Rueckkopplung=AIN0=DAC0. Kein Nachweis realer Gerätekompatibilität."),
+        new(DaqModels.LabJack, "LabJack digitale / analoge Ein-/Ausgänge", DaqModels.Names(DaqModels.LabJack), "470010001",
+            "Modellabhängig USB/Ethernet/WLAN. T-Serie: LJM, U3/U6/UE9: UD, U12: U12-Laufzeit. Kanäle AINn, DACn, DIOn. Eindeutige Seriennummer/Geräte-ID oder Netzwerkadresse. Sichere Ausgänge ausdrücklich konfigurieren. U12: AO-Paar-Startwerte erforderlich."),
+        new(DaqModels.RedLab, "RedLab / MCC digitale / analoge Ein-/Ausgänge", DaqModels.Names(DaqModels.RedLab), "01ABCDEF",
+            "Universal Library x64/InstaCal erforderlich. Nur die zum Modell passende Verbindung wählen. Weitere USB-/Ethernet-Produkte über automatische UL-Erkennung. Kanäle AIn, AOn, DIOn; Temperaturgeräte TIn. Programmierbare Bereiche über AI-Bereich/AO-Bereich als ULRange-Kennung; Port-Richtungen bei portweise umschaltbaren DIO ausdrücklich setzen."),
         new(Chroma61602Source.AdapterName, "AC-Quelle Chroma 61602", Chroma61602Source.Models, "COM3",
             "COM/RS232 oder VISA (GPIB/USB/LAN). Kanäle VOLT, FREQ, CURR, POW, OUT. Bereich HIGH/LOW; serielle Optionen Baud, Parität, Datenbits, Stoppbits, Handshake, Zeilenende."),
         new(EtEaq1000Source.AdapterName, "AC-Quelle ET Instrumente EAQ-1000", EtEaq1000Source.Models, "COM4",
@@ -93,10 +99,13 @@ public static class InstrumentCatalog
 
     public static InstrumentFamily? Family(string adapter) => Families.FirstOrDefault(f => f.Adapter == adapter);
 
-    private enum AdapterKind { Unknown, Dmm, Supply, AcSource, ThreePhase, Generator, Scope, Daqmx, DaqmxReplica, Stream, Remote, Modbus, Can, Lin, OpcUa, Chroma, Eaq }
+    private enum AdapterKind { Unknown, DaqIo, Dmm, Supply, AcSource, ThreePhase, Generator, Scope, Daqmx, DaqmxReplica, Stream, Remote, Modbus, Can, Lin, OpcUa, Chroma, Eaq }
 
     private static readonly IReadOnlyDictionary<string, AdapterKind> AdapterKinds = new Dictionary<string, AdapterKind>(StringComparer.Ordinal)
     {
+        [DaqModels.Simulation] = AdapterKind.DaqIo,
+        [DaqModels.LabJack] = AdapterKind.DaqIo,
+        [DaqModels.RedLab] = AdapterKind.DaqIo,
         [Chroma61602Source.AdapterName] = AdapterKind.Chroma,
         [EtEaq1000Source.AdapterName] = AdapterKind.Eaq,
         [Keysight3446xDmm.AdapterName] = AdapterKind.Dmm,
@@ -134,6 +143,7 @@ public static class InstrumentCatalog
             : Session();
         return AdapterKinds.GetValueOrDefault(adapter, AdapterKind.Unknown) switch
         {
+            AdapterKind.DaqIo => new DaqIoDevice(adapter, string.IsNullOrWhiteSpace(model) ? DaqModels.Names(adapter)[0] : model, resource, opts),
             AdapterKind.Chroma => new Chroma61602Source(AcSession(), opts),
             AdapterKind.Eaq => new EtEaq1000Source(Model(model, EtEaq1000Source.Models), AcSession(), opts),
             AdapterKind.Dmm => new Keysight3446xDmm(Model(model, Keysight3446xDmm.Models), Session(), opts),

@@ -59,19 +59,21 @@ public sealed class DeviceRow : ObservableObject
             var family = ProjectInstruments.Family(_project(), value);
             Device.Model = family?.Models.FirstOrDefault();
             if (family is not null && string.IsNullOrWhiteSpace(Device.Resource)) Device.Resource = family.ResourceExample;
-            OnPropertiesChanged(nameof(Adapter), nameof(Models), nameof(Model), nameof(Resource), nameof(IsReal), nameof(Notes), nameof(Text));
+            NormalizeDaqConnection();
+            OnPropertiesChanged(nameof(Adapter), nameof(Models), nameof(Model), nameof(Resource), nameof(IsReal), nameof(HasCommandTimeout), nameof(Notes), nameof(Text), nameof(ConnectionChoices), nameof(HasConnectionChoices), nameof(Connection), nameof(OptionsText));
             _changed();
         }
     }
 
     public bool IsReal => !Device.IsSimulation;
+    public bool HasCommandTimeout => IsReal && !DaqModels.IsDaq(Adapter);
     public IReadOnlyList<string> Models => ProjectInstruments.Family(_project(), Device.Adapter)?.Models ?? [];
     public string Notes => ProjectInstruments.Family(_project(), Device.Adapter)?.Notes ?? "Simuliertes Gerät: Verhalten aus dem Simulationsprofil des Projekts.";
 
     public string? Model
     {
         get => Device.Model;
-        set { if (Device.Model != value) { Device.Model = value; OnPropertiesChanged(nameof(Model), nameof(Text)); _changed(); } }
+        set { if (Device.Model != value) { Device.Model = value; NormalizeDaqConnection(); OnPropertiesChanged(nameof(Model), nameof(Text), nameof(ConnectionChoices), nameof(HasConnectionChoices), nameof(Connection), nameof(OptionsText)); _changed(); } }
     }
 
     public string? Resource
@@ -83,8 +85,33 @@ public sealed class DeviceRow : ObservableObject
     /// <summary>Optionen, eine Zeile je „Schlüssel=Wert“.</summary>
     public string OptionsText
     {
-        get => Device.OptionsText;
-        set { if (Device.OptionsText != value) { Device.OptionsText = value; OnPropertyChanged(); _changed(); } }
+        get => DaqModels.IsDaq(Adapter) ? string.Join(Environment.NewLine, (Device.Options ?? []).Where(pair => !pair.Key.Equals("Verbindung", StringComparison.OrdinalIgnoreCase)).Select(pair => pair.Key + "=" + pair.Value)) : Device.OptionsText;
+        set
+        {
+            if (OptionsText == value) return;
+            var connection = Connection;
+            Device.OptionsText = value;
+            if (HasConnectionChoices && connection is not null) (Device.Options ??= new(StringComparer.OrdinalIgnoreCase))["Verbindung"] = connection;
+            OnPropertiesChanged(nameof(OptionsText), nameof(Connection)); _changed();
+        }
+    }
+
+    public IReadOnlyList<string> ConnectionChoices => Adapter == DaqModels.Simulation ? ["Simulation"] : DaqModels.All.FirstOrDefault(model => model.Name.Equals(Model, StringComparison.OrdinalIgnoreCase) && (Adapter == DaqModels.Simulation || (model.Sdk == DaqSdk.UniversalLibrary) == (Adapter == DaqModels.RedLab)) && DaqModels.IsDaq(Adapter))?.Connections ?? [];
+    public bool HasConnectionChoices => ConnectionChoices.Count > 0;
+    public string? Connection
+    {
+        get => new InstrumentOptions(Device.Options).Text("Verbindung") ?? ConnectionChoices.FirstOrDefault();
+        set
+        {
+            if (value is null || !ConnectionChoices.Contains(value) || value == Connection) return;
+            (Device.Options ??= new(StringComparer.OrdinalIgnoreCase))["Verbindung"] = value;
+            OnPropertiesChanged(nameof(Connection), nameof(OptionsText)); _changed();
+        }
+    }
+    private void NormalizeDaqConnection()
+    {
+        if (!HasConnectionChoices || ConnectionChoices.Contains(Connection!)) return;
+        (Device.Options ??= new(StringComparer.OrdinalIgnoreCase))["Verbindung"] = ConnectionChoices[0];
     }
 
     public string TimeoutText
@@ -109,7 +136,7 @@ public sealed class DeviceRow : ObservableObject
     public string Text => $"{Device.Name}{(Device.IsSimulation ? "" : $" – {Device.Model}")}{(Device.Shared ? " (gemeinsam)" : "")}";
 
     internal void RaiseAllDevice() => OnPropertiesChanged(nameof(Name), nameof(Shared), nameof(Adapter), nameof(Models), nameof(Model), nameof(Resource),
-        nameof(OptionsText), nameof(TimeoutText), nameof(IsReal), nameof(Notes), nameof(Text), nameof(LockPerChannel));
+        nameof(OptionsText), nameof(TimeoutText), nameof(IsReal), nameof(HasCommandTimeout), nameof(Notes), nameof(Text), nameof(LockPerChannel));
 
     // ------------------------------------------------------------------ Gerät testen
 

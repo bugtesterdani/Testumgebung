@@ -54632,6 +54632,34 @@
       "version": "Externally installed; not pinned and not bundled",
       "used_in": "src/Testumgebung.Instruments/Communication/Transports.cs",
       "license": "Windows OS component; not separately redistributed"
+    },
+    {
+      "name": "LabJack LJM",
+      "file": "LabJackM.dll",
+      "version": "Externally installed; not pinned and not bundled",
+      "used_in": "src/Testumgebung.Instruments/Daq/LjmIoSession.cs",
+      "license": "MIT plus package-specific Boost/gRPC notices; externally installed; see docs/licensing/labjack-redlab.md"
+    },
+    {
+      "name": "LabJack UD",
+      "file": "LabJackUD.dll",
+      "version": "Externally installed; not pinned and not bundled",
+      "used_in": "src/Testumgebung.Instruments/Daq/UdIoSession.cs",
+      "license": "LabJack default MIT unless package states otherwise; externally installed"
+    },
+    {
+      "name": "LabJack U12",
+      "file": "ljackuw.dll",
+      "version": "Externally installed; not pinned and not bundled",
+      "used_in": "src/Testumgebung.Instruments/Daq/U12IoSession.cs",
+      "license": "LabJack default MIT unless package states otherwise; externally installed"
+    },
+    {
+      "name": "MCC Universal Library (RedLab)",
+      "file": "cbw64.dll",
+      "version": "Externally installed; not pinned and not bundled",
+      "used_in": "src/Testumgebung.Instruments/Daq/NativeUlApi.cs",
+      "license": "Vendor runtime redistribution terms; SDK development files excluded; externally installed"
     }
   ],
   "pip_vendors": [

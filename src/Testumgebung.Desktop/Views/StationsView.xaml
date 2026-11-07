@@ -353,9 +353,13 @@
                             <StackPanel Visibility="{Binding IsReal, Converter={StaticResource BoolVis}}">
                                 <TextBlock Style="{StaticResource Label}" Text="Modell" Margin="0,0,0,2" />
                                 <ComboBox ItemsSource="{Binding Models}" Text="{Binding Model, UpdateSourceTrigger=LostFocus}" IsEditable="True" Margin="0,0,0,6" />
-                                <TextBlock Style="{StaticResource Label}" Text="Ressource (VISA, TCPIP::…::5025::SOCKET oder DAQmx-Gerät)" Margin="0,0,0,2" />
+                                <StackPanel Visibility="{Binding HasConnectionChoices, Converter={StaticResource BoolVis}}">
+                                    <TextBlock Style="{StaticResource Label}" Text="Verbindung (modellabhängig)" Margin="0,0,0,2" />
+                                    <ComboBox ItemsSource="{Binding ConnectionChoices}" SelectedItem="{Binding Connection}" Margin="0,0,0,6" AutomationProperties.Name="Geräteverbindung" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="Ressource / Gerätekennung / Netzwerkadresse" Margin="0,0,0,2" />
                                 <TextBox Text="{Binding Resource, UpdateSourceTrigger=LostFocus}" FontFamily="{StaticResource CodeFont}" Margin="0,0,0,6" />
-                                <DockPanel Margin="0,0,0,6">
+                                <DockPanel Margin="0,0,0,6" Visibility="{Binding HasCommandTimeout, Converter={StaticResource BoolVis}}">
                                     <TextBlock DockPanel.Dock="Left" Style="{StaticResource Label}" Text="Zeitlimit [ms]" />
                                     <TextBox Text="{Binding TimeoutText, UpdateSourceTrigger=LostFocus}" Width="70" HorizontalAlignment="Left" />
                                 </DockPanel>

@@ -682,3 +682,7 @@ Doxygen wird ausschließlich zur Quellcode-Dokumentation verwendet, nicht im MSI
 ## SVN-Integrationstestclient 1.15.0
 
 Der Qualitätslauf verwendet einen per SHA-256 gepinnten Windows-Testclient. Er wird nicht mit dem MSIX oder als Werkzeug-Download weitergegeben. Die Originalhinweise für Subversion und sämtliche enthaltenen Bibliotheken stehen unter [Herkunft und Lizenzen](licenses/third-party/svn-tests/1.15.0/NOTICE.md).
+
+## Optionale LabJack-/RedLab-Laufzeiten
+
+Die neue DIO-/AIO-Anbindung verteilt keine Herstellerdateien. Lizenzvorprüfung und notwendige Hinweise: [LabJack und RedLab/MCC](docs/licensing/labjack-redlab.md), [Hinweis im Lizenzpaket](licenses/third-party/labjack-redlab/README.md). Versionen sind extern, nicht festgelegt und nicht mitgeliefert.

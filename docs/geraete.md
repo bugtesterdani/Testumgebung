@@ -12,6 +12,10 @@ Die Testumgebung spricht Geräte über zwei Wege an:
 
 Ohne installierte Treiber startet die Anwendung normal; erst „Gerät testen“ bzw. der erste Zugriff meldet, was fehlt.
 
+## LabJack und RedLab/MCC
+
+Neu: [DIO-/AIO-Anbindung, Modell-/Anschlussauswahl, Installation und Simulation](labjack-redlab.md). Verwendet werden die vorhandenen Analog-/Digital-Ablaufpunkte; Herstellerlaufzeiten werden separat installiert.
+
 ## Unterstützte Geräte
 
 | Adapter | Modelle | Kanäle (Prüfplatzkonfiguration) | Ressource (Beispiel) |
