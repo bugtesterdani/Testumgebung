@@ -9,6 +9,10 @@ Die separate Lösung `Testumgebung.EntraBroker.slnx` enthält die separat baubar
 - Port 5001 ist lokal frei. Ein vertrauenswürdiges TLS-Zertifikat für `localhost` liegt mit privatem Schlüssel in **Lokaler Computer → Eigene Zertifikate**. Der Browser und Windows müssen dessen Kette vertrauen.
 - Als App-Nachweis entweder ein in Entra registriertes RSA-App-Zertifikat mit privatem Schlüssel im selben Windows-Speicher oder der Wert eines Entra-Client-Secrets. Für den App-Nachweis empfiehlt sich ein anderes Zertifikat als für TLS. Entra erwartet pro Tokenanfrage einen dieser Nachweise.
 
+## Offizieller Download
+
+Im GitHub-Release das MSIX für die Testumgebung und das separate ZIP Testumgebung-EntraBroker-<Version>-win-x64.zip herunterladen. Die mitgelieferte SHA-256-Datei gilt für das ZIP. Wer die Anwendung aus dem Quellcode bauen möchte, verwendet die separate Lösung.
+
 ## Separat bauen
 
 Aus dem Projektordner bauen. Der Publish-Ordner enthält den Dienst, ohne die ASP.NET-Core-Laufzeit mitzuliefern.
