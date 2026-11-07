@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Definiert anbieterunabhängige Identitäten, Rechte und die Konfiguration der Anmeldung.
  */
@@ -85,6 +85,27 @@ public sealed class AccessConfig
 
     /// <summary>Mandanten-ID; Anmeldungen aus anderen Mandanten werden abgelehnt.</summary>
     public string? TenantId { get; set; }
+
+    /// <summary>Lokale Browser-Rückleitung. Ohne Angabe wählt MSAL einen freien Port.</summary>
+    public string? EntraRedirectUri { get; set; }
+
+    /// <summary>SHA-256-Fingerabdruck des lokalen Dienstes. Ein Wert aktiviert den Dienstmodus.</summary>
+    public string? EntraBrokerTlsSha256 { get; set; }
+
+    public const string DefaultEntraRedirectUri = "http://localhost";
+
+    public static bool IsValidEntraRedirectUri(string value)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+            && uri.IsWellFormedOriginalString()
+            && uri.Scheme == Uri.UriSchemeHttp
+            && uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            && uri.Port != 0
+            && value.IndexOfAny(['@', '?', '#']) < 0;
+    }
+
+    public const string EntraRedirectUriHint =
+        "Eine lokale HTTP-Adresse eingeben, z. B. http://localhost/Anmeldung oder http://localhost:5001/Anmeldung. Ohne Port wählt MSAL einen freien Port.";
 
     /// <summary>Automatische Abmeldung nach Inaktivität in Minuten (0 = aus). Ein laufender Test wird dabei nie fortgesetzt oder gestoppt.</summary>
     public int InactivityMinutes { get; set; }

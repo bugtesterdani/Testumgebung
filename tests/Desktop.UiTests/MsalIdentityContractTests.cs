@@ -15,6 +15,32 @@ public sealed class MsalIdentityContractTests
         Assert.Contains("Systembrowser", provider.Name);
     }
 
+    [Theory]
+    [InlineData(null, "/", 80)]
+    [InlineData("http://localhost:5001/Anmeldung", "/Anmeldung", 5001)]
+    [InlineData("http://localhost/Anmeldung/", "/Anmeldung/", 0)]
+    public void Application_uses_the_configured_path_and_port(string? configuredUri, string path, int port)
+    {
+        var app = MsalIdentityProvider.CreateApplication("11111111-2222-3333-4444-555555555555",
+            "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", configuredUri);
+        var redirect = new Uri(app.AppConfig.RedirectUri);
+        Assert.Equal(path, redirect.AbsolutePath);
+        if (port == 0) Assert.InRange(redirect.Port, 1024, 65535);
+        else Assert.Equal(port, redirect.Port);
+    }
+
+    [Theory]
+    [InlineData("https://localhost:5001/Anmeldung")]
+    [InlineData("http://localhost.example.test:5001/Anmeldung")]
+    [InlineData("http://localhost:5001/Anmeldung?x=y")]
+    public async Task Invalid_redirect_is_reported_at_login_without_opening_a_browser(string uri)
+    {
+        var provider = new MsalIdentityProvider("11111111-2222-3333-4444-555555555555",
+            "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", uri);
+        var error = await Assert.ThrowsAsync<SignInException>(() => provider.SignInAsync(true, default));
+        Assert.Contains("Umleitungs-URI ungültig", error.Message);
+    }
+
     public class AccountPeer : DispatchProxy
     {
         protected override object? Invoke(MethodInfo? method, object?[]? args) => method!.Name switch
@@ -54,6 +80,21 @@ public sealed class MsalIdentityContractTests
         else { var error = await Assert.ThrowsAsync<SignInException>(() => provider.SignInAsync(true, default)); Assert.Same(exception, error.InnerException); Assert.Contains("Entra-Anmeldung fehlgeschlagen", error.Message); }
         await provider.SignOutAsync(new UserIdentity("test", "test", "test", true), default);
     }
+    [Fact]
+    public async Task Browser_login_explains_when_entra_expects_confidential_client_credentials()
+    {
+        var failure = new MsalServiceException("invalid_client", "AADSTS7000218: fixture server response");
+        var provider = new MsalIdentityProvider(
+            (_, _, _) => Task.FromException<AuthenticationResult>(failure),
+            _ => throw new InvalidOperationException("Failed login cannot cache an account."));
+
+        var error = await Assert.ThrowsAsync<SignInException>(() => provider.SignInAsync(true, default));
+        Assert.Contains("AADSTS7000218", error.Message);
+        Assert.Contains("vertraulicher Anmeldedienst", error.Message);
+        Assert.DoesNotContain("fixture server response", error.Message);
+        await provider.SignOutAsync(new UserIdentity("test", "test", "test", true), default);
+    }
+
     [Fact]
     public async Task Sign_out_clears_account_even_when_provider_fails()
     {

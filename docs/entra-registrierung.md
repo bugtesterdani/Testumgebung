@@ -19,6 +19,31 @@ angemeldete Person hat alle Rechte.
 
 App-Rollen sind nicht nötig: Die Rechte werden je Prüfplatz lokal vergeben (Entscheidung Etappe 7).
 
+### Umleitungs-URI am Prüfplatz
+
+Unter **Einstellungen → Zugang und Rechte → Entra-Umleitungs-URI** lässt sich der lokale Browser-Callback eintragen. Leer verwendet `http://localhost` und überlässt MSAL die Portwahl. `http://localhost/Anmeldung` verwendet ebenfalls einen automatisch gewählten Port und übernimmt den Pfad. `http://localhost:5001/Anmeldung` verwendet Port 5001. Der feste Port muss am Prüfplatz frei sein.
+
+Bei einer als Desktopanwendung registrierten HTTP-URI mit Host `localhost` ignoriert Entra den Port beim Abgleich. Den Pfad einschließlich Groß-/Kleinschreibung und abschließendem Schrägstrich wie registriert eintragen. Für eine HTTPS-Web-URI gelten die Vorgaben der Web-Registrierung und des dortigen Anmeldedienstes. Der Desktop-Callback verwendet HTTP auf `localhost`.
+
+In `zugang.json` heißt der optionale Schlüssel `entraRedirectUri`. [Microsoft-Dokumentation zum URI-Abgleich](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url#localhost-exceptions)
+
+### Firmenregistrierungen mit App-Zertifikat oder Client-Secret
+
+Bei der persönlichen Anmeldung bestätigt Entra die Identität des Firmenkontos im Browser. Bei einer vertraulichen Web-App verlangt Entra zusätzlich einen Nachweis der Anwendung, sobald ein Anmeldedienst den Browser-Code gegen Tokens eintauscht.
+
+| Begriff | Bedeutung |
+|---|---|
+| App-Zertifikat | Der Anmeldedienst signiert den App-Nachweis mit dem privaten Schlüssel. In der Entra-Registrierung liegt das öffentliche Zertifikat. |
+| PFX/P12-Kennwort | Öffnet die Datei mit dem privaten Schlüssel beim Import. Es ist kein Parameter der Entra-Tokenanfrage. |
+| Entra Client-Secret | Separater App-Nachweis, den Entra alternativ zur signierten Zertifikats-Assertion unterstützt. |
+| Benutzerzertifikat | Authentifiziert gegebenenfalls das persönliche Konto im Browser, wenn der Mandant diese Methode anbietet. |
+
+Bei **AADSTS7000218** erwartet die Registrierung einen App-Nachweis. Die IT sollte den Plattformtyp und die tatsächlich registrierte Umleitungs-URI prüfen. Der Desktop-Anmeldeweg benötigt die Registrierung als öffentliche Desktopanwendung mit Loopback-Redirect. Verlangt die Organisation einen vertraulichen Client, braucht dieser einen vertrauenswürdigen Anmeldedienst mit eigener HTTPS-Umleitungs-URI. Für den festen Rückruf auf `https://localhost:5001` kann der [separat baubare Anmeldeanwendung](entra-dienst.md) auf demselben Prüfplatz laufen.
+
+Der Dienst muss ein persönliches Browser-Anmeldeergebnis des vorgesehenen Mandanten verifizieren und an die konkrete Anmeldesitzung des Prüfplatzes binden. App-Zertifikat, privater Schlüssel und gegebenenfalls Client-Secret liegen beim Dienst. Ein reines App-Token enthält keine bestätigte persönliche Identität für Entwickler- oder Freigaberechte.
+
+Quellen: [Entra-Codeflow mit Zertifikatsnachweis](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow#request-an-access-token-with-a-certificate-credential), [öffentliche und vertrauliche Clients](https://learn.microsoft.com/en-us/entra/identity-platform/msal-client-applications), [Benutzerzertifikate](https://learn.microsoft.com/en-us/entra/identity/authentication/concept-certificate-based-authentication).
+
 ## 2. Zugangsdatei je Prüfplatz
 
 Datei `%ProgramData%\Testumgebung\zugang.json` – gilt für alle Windows-Benutzer des Rechners. Bearbeiten über

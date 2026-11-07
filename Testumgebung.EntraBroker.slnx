@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/Testumgebung.EntraBroker/Testumgebung.EntraBroker.csproj" />
+  <Project Path="src/Testumgebung.Contracts/Testumgebung.Contracts.csproj" />
+  <Project Path="src/Testumgebung.Identity/Testumgebung.Identity.csproj" />
+  <Project Path="tests/EntraBroker.Tests/Testumgebung.EntraBroker.Tests.csproj" />
+</Solution>
