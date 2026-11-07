@@ -1,6 +1,6 @@
 # Lokaler Entra-Anmeldedienst
 
-Die separate Lösung `Testumgebung.EntraBroker.slnx` enthält einen Windows-Dienst für den festen HTTPS-Rückruf auf `https://localhost:5001`. Die Desktop-App startet die Anmeldung im Browser. Der Dienst löst den Code bei Entra ein und liefert einmalig die geprüfte Benutzeridentität für genau diesen Anmeldeversuch. Entwickler- und Freigaberechte werden danach anhand der Zugangskonfiguration der Testumgebung ausgewertet.
+Die separate Lösung `Testumgebung.EntraBroker.slnx` enthält die separat baubare Anmeldeanwendung für den festen HTTPS-Rückruf auf `https://localhost:5001`. Die Desktop-App startet die Anmeldung im Browser. Der Dienst löst den Code bei Entra ein und liefert einmalig die geprüfte Benutzeridentität für genau diesen Anmeldeversuch. Entwickler- und Freigaberechte werden danach anhand der Zugangskonfiguration der Testumgebung ausgewertet.
 
 ## Voraussetzungen
 
@@ -9,7 +9,7 @@ Die separate Lösung `Testumgebung.EntraBroker.slnx` enthält einen Windows-Dien
 - Port 5001 ist lokal frei. Ein vertrauenswürdiges TLS-Zertifikat für `localhost` liegt mit privatem Schlüssel in **Lokaler Computer → Eigene Zertifikate**. Der Browser und Windows müssen dessen Kette vertrauen.
 - Als App-Nachweis entweder ein in Entra registriertes RSA-App-Zertifikat mit privatem Schlüssel im selben Windows-Speicher oder der Wert eines Entra-Client-Secrets. Für den App-Nachweis empfiehlt sich ein anderes Zertifikat als für TLS. Entra erwartet pro Tokenanfrage einen dieser Nachweise.
 
-## Einmalig installieren
+## Separat bauen
 
 Aus dem Projektordner bauen. Der Publish-Ordner enthält den Dienst, ohne die ASP.NET-Core-Laufzeit mitzuliefern.
 
@@ -17,6 +17,19 @@ Aus dem Projektordner bauen. Der Publish-Ordner enthält den Dienst, ohne die AS
 dotnet test Testumgebung.EntraBroker.slnx -c Release
 dotnet publish src/Testumgebung.EntraBroker/Testumgebung.EntraBroker.csproj -c Release -r win-x64 --self-contained false -o artifacts/entra-broker
 ```
+
+Für die Ausführung gibt es zwei Möglichkeiten. Eine separat gestartete Anwendung braucht keinen Eintrag in der Windows-Dienstverwaltung. Beide Modi verwenden denselben Publish-Build und dieselbe Verbindung zur Desktop-App. Pro Prüfplatz kann nur einer der Modi Port 5001 belegen.
+
+## Ohne Windows-Dienst starten
+
+1. Die IT erstellt ein eigenes Windows-Standardkonto für die Anmeldeanwendung. Prüfplatzbenutzer erhalten keinen Zugriff auf dieses Konto. Die EXE und ihre DLLs liegen in einem Ordner, den nur die IT ändern kann.
+2. Den geschützten Konfigurationsordner `%ProgramData%\TestumgebungEntra` und die Konfiguration wie unten einrichten. Beim `icacls`-Befehl das virtuelle Dienstkonto durch das eigene Windows-Konto ersetzen. Die Administratorengruppe und SYSTEM behalten Vollzugriff. Das Konto der Anmeldeanwendung erhält nur Lesen und Ausführen. Bei einem Wechsel von einem bestehenden Dienst muss die alte Lesefreigabe entfernt werden.
+3. Diesem Konto in `certlm.msc` Leserechte auf den privaten TLS-Schlüssel und gegebenenfalls den privaten App-Schlüssel geben. App-Zertifikat oder Client-Secret wird einmalig wie unten beschrieben eingerichtet.
+4. Die IT startet die Anwendung unter dem eingerichteten Konto mit `Testumgebung.EntraBroker.exe --standalone`. Solange der Prozess läuft, kann die Testumgebung sich anmelden. Die IT kann den Start über die Windows-Aufgabenplanung übernehmen lassen. Bei der Aufgabenplanung kein Häkchen für erhöhte Rechte setzen.
+
+Das Windows-Konto der Anmeldeanwendung muss sich vom normalen Prüfplatzkonto unterscheiden. Der Prozess prüft die Zugriffsregeln anhand seines tatsächlichen Windows-Kontos. Die Anmeldeanwendung kann auch ohne sichtbares Fenster aus der Aufgabenplanung laufen.
+
+## Alternativ als Windows-Dienst installieren
 
 Die IT kopiert den Publish-Inhalt nach `C:\Program Files\TestumgebungEntra`. Der Ordner und die ausführbaren Dateien dürfen nur durch Administratoren oder SYSTEM geändert werden. Anschließend in einer erhöhten PowerShell den Dienst anlegen und auf das eigene virtuelle Dienstkonto umstellen:
 
@@ -95,11 +108,21 @@ Bei Rotation den Dienst stoppen, den Nachweis im geschützten Ordner oder Zertif
 
 ## Desktop-App verbinden
 
-1. Den Windows-Dienst mit `Start-Service TestumgebungEntra` starten. Bei einem Fehler Dienststatus und Windows-Ereignisanzeige prüfen. Häufige Ursachen sind ein belegter Port, ein fehlender privater Schlüssel oder ein unzulässiger Zugriff auf die Konfiguration.
+1. Die Anmeldeanwendung im gewählten Modus starten. Beim Windows-Dienst `Start-Service TestumgebungEntra` verwenden. Bei einem Fehler die Konsolenausgabe oder die Windows-Ereignisanzeige prüfen. Häufige Ursachen sind ein belegter Port, ein fehlender privater Schlüssel oder ein unzulässiger Zugriff auf die Konfiguration.
 2. Unter **Einstellungen → Zugang und Rechte** dieselbe Anwendungs-ID, Mandanten-ID und vollständige **Entra-Umleitungs-URI** eintragen.
 3. Unter **SHA-256-Fingerabdruck des lokalen Entra-Dienstes** den Fingerabdruck des **TLS-Zertifikats** eintragen. Der Prüfplatz verifiziert bei jeder Anmeldung Zertifikatskette, Host und diesen Fingerabdruck. Die Datei `zugang.json` vor Änderungen durch normale Prüfplatzkonten schützen.
 4. Rechtequelle wie gewohnt wählen und einen echten Browser-Anmeldeversuch durchführen. Die IT prüft sowohl ein berechtigtes Konto als auch ein Konto ohne Prüfplatzrechte.
 
 Der Dienst lauscht auf Loopback. Browser- und Abrufschlüssel sind getrennt und laufen nach fünf Minuten ab. Der Abrufschlüssel bleibt im Desktop-Prozess. Ein erfolgreiches Ergebnis kann einmal abgeholt werden und enthält keine Entra-Tokens. Der Dienst verteilt weder Windows-Rechte noch App-only-Tokens. Die Schnittstelle bindet das Ergebnis an einen Anmeldeversuch. Prozesse unter demselben Windows-Konto kann Windows dadurch nicht anhand des Namens der EXE unterscheiden.
+
+## Schnittstelle für eine eigene Implementierung
+
+Wenn ihr eine eigene Anmeldeanwendung entwickelt, kann sie dieselbe lokale Schnittstelle implementieren. Die Testumgebung vertraut der Benutzeridentität, die sie über die gepinnte HTTPS-Verbindung erhält. Eure Anwendung muss deshalb die Entra-ID-Tokens für die konfigurierte App und den Mandanten vollständig prüfen und die Antwort an den begonnenen Versuch binden.
+
+- Basisadresse `https://localhost:5001/_testumgebung/entra/v1`. Die POST-Anfragen enthalten den Header `X-Testumgebung-Entra: 1`.
+- `POST /start` liefert JSON mit `browserKey`, `resultKey`, `tenantId`, `clientId` und `callback`. Die Schlüssel sind getrennte zufällige 32-Byte-Werte als 64 Hexzeichen. Die Desktop-App prüft App, Mandant und Rückrufadresse.
+- `GET /browser/{browserKey}` startet die persönliche Browseranmeldung. Der Abrufschlüssel wird dem Browser nicht übergeben.
+- `POST /result` verwendet `Authorization: Bearer <resultKey>`. JSON enthält `status` mit `pending`, `failed` oder `ok`. Bei `ok` enthält es `upn`, `name`, `tenantId`, `objectId` und optional `roles`. Ein abschließendes Ergebnis wird einmal ausgegeben. Versuche verfallen nach fünf Minuten.
+- `POST /cancel` mit demselben Bearer-Schlüssel verwirft den Versuch und antwortet mit HTTP 204. Die Desktop-App akzeptiert keine HTTP-Weiterleitungen vom lokalen API-Endpunkt.
 
 Quellen: [OpenID Connect in ASP.NET Core](https://learn.microsoft.com/aspnet/core/security/authentication/configure-oidc-web-authentication), [Entra-Zertifikatssignatur](https://learn.microsoft.com/en-us/entra/identity-platform/certificate-credentials), [Windows-Zertifikatsspeicher](https://learn.microsoft.com/en-us/windows-server/identity/ad-cs/inspect-certificates-manage-certificate-stores), [DPAPI-Schutzbereiche](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.dataprotectionscope).

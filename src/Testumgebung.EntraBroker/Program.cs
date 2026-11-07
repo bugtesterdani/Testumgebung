@@ -1,4 +1,6 @@
+using System.Security.Principal;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
@@ -8,15 +10,35 @@ using Testumgebung.Identity;
 
 const string serviceName = "TestumgebungEntra";
 const string attemptItem = "tu_attempt";
+var standalone = args is ["--standalone"];
+if (args is ["--help"])
+{
+    Console.WriteLine("Testumgebung.EntraBroker --standalone");
+    Console.WriteLine("Als separate Anwendung unter dem vorgesehenen Windows-Konto starten. Ohne Argument startet der Windows-Dienst.");
+    return;
+}
+if ((!standalone && args.Length != 0) || (!standalone && !WindowsServiceHelpers.IsWindowsService()))
+{
+    Console.Error.WriteLine("Über die Windows-Dienstverwaltung starten oder --standalone verwenden. Hilfe: --help");
+    Environment.ExitCode = 2;
+    return;
+}
+
+using var account = WindowsIdentity.GetCurrent();
+if (standalone && (account.IsSystem || new WindowsPrincipal(account).IsInRole(WindowsBuiltInRole.Administrator)))
+    throw new InvalidOperationException("Die separate Anmeldeanwendung unter einem eigenen Windows-Standardkonto starten.");
+var reader = standalone
+    ? account.User ?? throw new InvalidOperationException("Das Windows-Konto für die Anmeldeanwendung konnte nicht bestimmt werden.")
+    : (SecurityIdentifier)new NTAccount("NT SERVICE", serviceName).Translate(typeof(SecurityIdentifier));
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
-    Args = args,
+    Args = [],
     EnvironmentName = Environments.Production
 });
-builder.Host.UseWindowsService(options => options.ServiceName = serviceName);
+if (!standalone) builder.Host.UseWindowsService(options => options.ServiceName = serviceName);
 builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
 var settingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), serviceName);
-var storage = new BrokerStorage(serviceName, settingsDirectory);
+var storage = new BrokerStorage(reader, settingsDirectory);
 var config = new ConfigurationBuilder()
     .AddJsonFile(storage.RequireProtectedFile("broker.json"))
     .Build().GetSection("EntraBroker");

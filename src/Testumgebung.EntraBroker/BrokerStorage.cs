@@ -8,12 +8,14 @@ internal sealed class BrokerStorage
 {
     private readonly SecurityIdentifier _administrators = new(WellKnownSidType.BuiltinAdministratorsSid, null);
     private readonly SecurityIdentifier _system = new(WellKnownSidType.LocalSystemSid, null);
-    private readonly SecurityIdentifier _service;
+    private readonly SecurityIdentifier _reader;
 
-    public BrokerStorage(string serviceName, string directory)
+    public BrokerStorage(SecurityIdentifier reader, string directory)
     {
-        _service = (SecurityIdentifier)new NTAccount("NT SERVICE", serviceName).Translate(typeof(SecurityIdentifier));
+        _reader = reader;
         Directory = new DirectoryInfo(directory);
+        if (!Directory.Exists)
+            throw new InvalidOperationException("Der geschützte Entra-Konfigurationsordner fehlt. Siehe docs/entra-dienst.md.");
         Check(Directory, Directory.GetAccessControl());
     }
 
@@ -40,7 +42,7 @@ internal sealed class BrokerStorage
             if (rule.AccessControlType == AccessControlType.Deny) continue;
             var sid = (SecurityIdentifier)rule.IdentityReference;
             if (sid == _administrators || sid == _system) continue;
-            if (sid != _service || (rule.FileSystemRights & ~FileSystemRights.ReadAndExecute & ~FileSystemRights.Synchronize) != 0)
+            if (sid != _reader || (rule.FileSystemRights & ~FileSystemRights.ReadAndExecute & ~FileSystemRights.Synchronize) != 0)
                 throw new InvalidOperationException("Die Zugriffsrechte des Entra-Dienstspeichers sind zu weit gefasst.");
         }
     }
