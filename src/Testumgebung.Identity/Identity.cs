@@ -89,6 +89,9 @@ public sealed class AccessConfig
     /// <summary>Lokale Browser-Rückleitung. Ohne Angabe wählt MSAL einen freien Port.</summary>
     public string? EntraRedirectUri { get; set; }
 
+    /// <summary>SHA-256-Fingerabdruck des lokalen Dienstes. Ein Wert aktiviert den Dienstmodus.</summary>
+    public string? EntraBrokerTlsSha256 { get; set; }
+
     public const string DefaultEntraRedirectUri = "http://localhost";
 
     public static bool IsValidEntraRedirectUri(string value)

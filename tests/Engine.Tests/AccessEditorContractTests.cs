@@ -72,6 +72,39 @@ public sealed class AccessEditorContractTests
     }
 
     [Fact]
+    public void Broker_settings_require_a_pinned_local_https_callback_and_survive_reload()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "tu-broker-" + Guid.NewGuid().ToString("N") + ".json");
+        var store = new AccessConfigStore(path);
+        var provider = new SimulatedIdentityProvider(() => "Tester");
+        var services = new IdentityServices(new SessionService(provider, null), store, _ => provider);
+        var vm = new AccessSettingsViewModel(services)
+        {
+            ClientId = "11111111-2222-3333-4444-555555555555",
+            TenantId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+            EntraRedirectUri = "https://localhost:5001/Anmeldung"
+        };
+        vm.Users.Add(new RightsEditRow { Upn = "worker@example.test", Develop = true });
+        try
+        {
+            Assert.False(vm.Save());
+            vm.EntraBrokerTlsSha256 = "invalid";
+            Assert.False(vm.Save());
+            vm.EntraBrokerTlsSha256 = new string('A', 64);
+            vm.EntraRedirectUri = "https://localhost:5002/Anmeldung";
+            Assert.False(vm.Save());
+            vm.EntraRedirectUri = "https://localhost:5001/Anmeldung";
+            Assert.True(vm.Save(), vm.Status);
+            Assert.Contains("lokalen Entra-Dienst", vm.ModeText);
+            vm.EntraBrokerTlsSha256 = "";
+            vm.Load();
+            Assert.Equal(new string('A', 64), vm.EntraBrokerTlsSha256);
+            Assert.Equal("https://localhost:5001/Anmeldung", vm.EntraRedirectUri);
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
     public void Simulated_access_has_no_store_and_cannot_save()
     {
         var vm = new AccessSettingsViewModel(IdentityServices.Simulated(() => "Tester"));

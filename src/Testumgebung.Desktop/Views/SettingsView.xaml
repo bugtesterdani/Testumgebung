@@ -172,6 +172,11 @@
                                      AutomationProperties.Name="Entra-Umleitungs-URI" />
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0"
                                        Text="Leer: localhost mit freiem Port. Beispiel mit Pfad: http://localhost/Anmeldung. Für einen festen Port: http://localhost:5001/Anmeldung. Pfad wie in Entra eintragen." />
+                            <TextBlock Text="SHA-256-Fingerabdruck des lokalen Entra-Dienstes (optional)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                            <TextBox Text="{Binding EntraBrokerTlsSha256, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}"
+                                     AutomationProperties.Name="Entra-Dienstzertifikat Fingerabdruck" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Text="Für den separat installierten Entra-Dienst dessen Zertifikat-Fingerabdruck und die registrierte HTTPS-Umleitungs-URI auf localhost:5001 eintragen." />
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,8"
                                        Text="Ohne Entra kann ein optionaler lokaler Passwortzugang eingerichtet werden. Entra hat bei vollständiger Konfiguration Vorrang." />
                             <DockPanel Margin="0,0,0,8">

@@ -36,6 +36,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     private string _clientId = "";
     private string _tenantId = "";
     private string _entraRedirectUri = "";
+    private string _entraBrokerTlsSha256 = "";
     private int _inactivityMinutes;
     private string _rightsSource = "Lokal";
     private string _developRole = "Testumgebung.Entwickeln";
@@ -68,6 +69,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
         null => "Produktivbetrieb: Zugangsdatei fehlt – keine erweiterten Rechte. Entra-Zugang konfigurieren.",
         { LoadError: { } e } => "Zugangsdatei beschädigt – niemand hat Rechte: " + e,
         { UsesLocalPasswords: true } => "Lokaler Passwortzugang aktiv. Rechte aus der Benutzerliste; keine Entra-bestätigte Firmenidentität.",
+        { UsesEntra: true, EntraBrokerTlsSha256.Length: > 0 } => "Anmeldung über den lokalen Entra-Dienst im Systembrowser.",
         { UsesEntra: true } => "Anmeldung über Microsoft Entra ID im Systembrowser; Rechte aus der Liste unten.",
         _ when _identity.Session.IsDevelopmentMode => "Expliziter Entwicklungsmodus: simulierte Anmeldung; Rechte aus der Liste unten.",
         { SupportsLocalDevelopment: true } => "Lokale Entwicklung eingerichtet: Im Anmeldefenster ausdrücklich lokal anmelden. Rechte aus der Benutzerliste; keine bestätigte Firmenanmeldung.",
@@ -79,6 +81,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     public string ClientId { get => _clientId; set => SetProperty(ref _clientId, value?.Trim() ?? ""); }
     public string TenantId { get => _tenantId; set => SetProperty(ref _tenantId, value?.Trim() ?? ""); }
     public string EntraRedirectUri { get => _entraRedirectUri; set => SetProperty(ref _entraRedirectUri, value?.Trim() ?? ""); }
+    public string EntraBrokerTlsSha256 { get => _entraBrokerTlsSha256; set => SetProperty(ref _entraBrokerTlsSha256, value?.Trim() ?? ""); }
     public int InactivityMinutes { get => _inactivityMinutes; set => SetProperty(ref _inactivityMinutes, Math.Max(0, value)); }
 
     public IReadOnlyList<string> RightsSources { get; } = ["Lokal", "AppRollen", "Beide"];
@@ -119,6 +122,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
         ClientId = c?.ClientId ?? "";
         TenantId = c?.TenantId ?? "";
         EntraRedirectUri = c?.EntraRedirectUri ?? "";
+        EntraBrokerTlsSha256 = c?.EntraBrokerTlsSha256 ?? "";
         InactivityMinutes = c?.InactivityMinutes ?? 0;
     }
 
@@ -143,16 +147,13 @@ public sealed class AccessSettingsViewModel : ObservableObject
             Status = "Client-ID und Mandanten-ID gehören zusammen.";
             return false;
         }
-        if (EntraRedirectUri.Length > 0 && !AccessConfig.IsValidEntraRedirectUri(EntraRedirectUri))
-        {
-            Status = AccessConfig.EntraRedirectUriHint;
-            return false;
-        }
+        if (!ValidateEntraCallback()) return false;
         var config = new AccessConfig
         {
             ClientId = ClientId.Length == 0 ? null : ClientId,
             TenantId = TenantId.Length == 0 ? null : TenantId,
             EntraRedirectUri = EntraRedirectUri.Length == 0 ? null : EntraRedirectUri,
+            EntraBrokerTlsSha256 = EntraBrokerTlsSha256.Length == 0 ? null : EntraBrokerTlsSha256,
             InactivityMinutes = InactivityMinutes,
             AllowLocalPasswords = AllowLocalPasswords,
             AllowLocalDevelopment = SaveLocalDevelopmentMode,
@@ -180,6 +181,21 @@ public sealed class AccessSettingsViewModel : ObservableObject
         Status = $"Gespeichert ({DateTime.Now:HH:mm:ss}). Angemeldete Personen wurden neu bewertet.";
         OnPropertyChanged(nameof(ModeText));
         return true;
+    }
+
+    private bool ValidateEntraCallback()
+    {
+        if (EntraBrokerTlsSha256.Length > 0)
+        {
+            if (Guid.TryParse(ClientId, out _) && Guid.TryParse(TenantId, out _) &&
+                EntraBrokerProtocol.IsFingerprint(EntraBrokerTlsSha256) &&
+                EntraBrokerProtocol.IsCallback(EntraRedirectUri)) return true;
+            Status = "Für den lokalen Entra-Dienst sind gültige Anwendungs- und Mandanten-IDs, die HTTPS-Umleitungs-URI auf localhost:5001 und der SHA-256-Fingerabdruck des Dienstzertifikats erforderlich.";
+            return false;
+        }
+        if (EntraRedirectUri.Length == 0 || AccessConfig.IsValidEntraRedirectUri(EntraRedirectUri)) return true;
+        Status = AccessConfig.EntraRedirectUriHint;
+        return false;
     }
 
     /// <summary>Validate the future mapping before writing, so rejected edits leave file and session intact.</summary>
