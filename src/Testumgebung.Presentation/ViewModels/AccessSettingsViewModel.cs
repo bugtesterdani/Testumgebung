@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Bearbeitet Mandant, Anbieter und Rechtezuordnung mit den Zugangsbeschränkungen der Oberfläche.
  */
@@ -35,6 +35,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     private readonly IdentityServices _identity;
     private string _clientId = "";
     private string _tenantId = "";
+    private string _entraRedirectUri = "";
     private int _inactivityMinutes;
     private string _rightsSource = "Lokal";
     private string _developRole = "Testumgebung.Entwickeln";
@@ -77,6 +78,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
 
     public string ClientId { get => _clientId; set => SetProperty(ref _clientId, value?.Trim() ?? ""); }
     public string TenantId { get => _tenantId; set => SetProperty(ref _tenantId, value?.Trim() ?? ""); }
+    public string EntraRedirectUri { get => _entraRedirectUri; set => SetProperty(ref _entraRedirectUri, value?.Trim() ?? ""); }
     public int InactivityMinutes { get => _inactivityMinutes; set => SetProperty(ref _inactivityMinutes, Math.Max(0, value)); }
 
     public IReadOnlyList<string> RightsSources { get; } = ["Lokal", "AppRollen", "Beide"];
@@ -116,6 +118,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     {
         ClientId = c?.ClientId ?? "";
         TenantId = c?.TenantId ?? "";
+        EntraRedirectUri = c?.EntraRedirectUri ?? "";
         InactivityMinutes = c?.InactivityMinutes ?? 0;
     }
 
@@ -140,10 +143,16 @@ public sealed class AccessSettingsViewModel : ObservableObject
             Status = "Client-ID und Mandanten-ID gehören zusammen.";
             return false;
         }
+        if (EntraRedirectUri.Length > 0 && !AccessConfig.IsValidEntraRedirectUri(EntraRedirectUri))
+        {
+            Status = AccessConfig.EntraRedirectUriHint;
+            return false;
+        }
         var config = new AccessConfig
         {
             ClientId = ClientId.Length == 0 ? null : ClientId,
             TenantId = TenantId.Length == 0 ? null : TenantId,
+            EntraRedirectUri = EntraRedirectUri.Length == 0 ? null : EntraRedirectUri,
             InactivityMinutes = InactivityMinutes,
             AllowLocalPasswords = AllowLocalPasswords,
             AllowLocalDevelopment = SaveLocalDevelopmentMode,

@@ -108,7 +108,7 @@ public partial class MainWindow : Window
         var access = accessStore.Load();
         IIdentityProvider Provider(AccessConfig? c) => c switch
         {
-            { UsesEntra: true } => new MsalIdentityProvider(c.ClientId!, c.TenantId!),
+            { UsesEntra: true } => new MsalIdentityProvider(c.ClientId!, c.TenantId!, c.EntraRedirectUri),
             { UsesLocalPasswords: true } => new LocalPasswordIdentityProvider(c, () => (Shell?.LoginName ?? "", LocalLoginPassword.Password)),
             _ => new SimulatedIdentityProvider(() => Shell?.LoginName ?? "")
         };

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Testumgebung.Desktop.Views.SettingsView"
+<UserControl x:Class="Testumgebung.Desktop.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
@@ -167,6 +167,11 @@
                                     <TextBox Text="{Binding TenantId, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" />
                                 </StackPanel>
                             </Grid>
+                            <TextBlock Text="Entra-Umleitungs-URI (optional)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                            <TextBox Text="{Binding EntraRedirectUri, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}"
+                                     AutomationProperties.Name="Entra-Umleitungs-URI" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Text="Leer: localhost mit freiem Port. Beispiel mit Pfad: http://localhost/Anmeldung. Für einen festen Port: http://localhost:5001/Anmeldung. Pfad wie in Entra eintragen." />
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,8"
                                        Text="Ohne Entra kann ein optionaler lokaler Passwortzugang eingerichtet werden. Entra hat bei vollständiger Konfiguration Vorrang." />
                             <DockPanel Margin="0,0,0,8">

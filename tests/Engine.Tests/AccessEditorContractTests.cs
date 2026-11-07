@@ -29,6 +29,8 @@ public sealed class AccessEditorContractTests
             Assert.Equal(store.Path, vm.Path);
             Assert.Contains("Produktivbetrieb", vm.ModeText);
             vm.ClientId = " " + client + " "; vm.TenantId = " " + tenant + " ";
+            var callback = client.Length > 0 ? "http://localhost:5001/Anmeldung" : null;
+            vm.EntraRedirectUri = callback ?? "";
             vm.RightsSource = source; vm.InactivityMinutes = -1;
             Assert.Equal(0, vm.InactivityMinutes);
             vm.InactivityMinutes = 7;
@@ -47,12 +49,17 @@ public sealed class AccessEditorContractTests
                 Assert.Equal(source, loaded.RightsSource); Assert.Equal(7, loaded.InactivityMinutes);
                 Assert.Equal(client.Length == 0 ? null : client, loaded.ClientId);
                 Assert.Equal(tenant.Length == 0 ? null : tenant, loaded.TenantId);
+                Assert.Equal(callback, loaded.EntraRedirectUri);
+                vm.EntraRedirectUri = "https://login.example.test/Anmeldung";
+                Assert.False(vm.Save());
+                Assert.Equal(callback, store.Load()!.EntraRedirectUri);
                 Assert.Equal(roles ? "Develop" : "Testumgebung.Entwickeln", loaded.DevelopRole);
                 Assert.Equal(roles ? "Release" : "Testumgebung.Freigeben", loaded.ReleaseRole);
                 Assert.Equal(user, Assert.Single(loaded.Users).Upn);
                 Assert.Equal(roles, loaded.Users[0].Develop); Assert.Equal(!roles, loaded.Users[0].Release);
                 vm.ClientId = "discard"; vm.ReloadCommand.Execute(null);
                 Assert.Equal(client, vm.ClientId); Assert.Equal(tenant, vm.TenantId);
+                Assert.Equal(callback ?? "", vm.EntraRedirectUri);
                 Assert.Single(vm.Users);
             }
             vm.RemoveCommand.Execute(new object()); Assert.Single(vm.Users);

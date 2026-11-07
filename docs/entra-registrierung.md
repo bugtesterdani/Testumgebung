@@ -19,6 +19,14 @@ angemeldete Person hat alle Rechte.
 
 App-Rollen sind nicht nötig: Die Rechte werden je Prüfplatz lokal vergeben (Entscheidung Etappe 7).
 
+### Umleitungs-URI am Prüfplatz
+
+Unter **Einstellungen → Zugang und Rechte → Entra-Umleitungs-URI** lässt sich der lokale Browser-Callback eintragen. Leer verwendet `http://localhost` und überlässt MSAL die Portwahl. `http://localhost/Anmeldung` verwendet ebenfalls einen automatisch gewählten Port und übernimmt den Pfad. `http://localhost:5001/Anmeldung` verwendet Port 5001. Der feste Port muss am Prüfplatz frei sein.
+
+Bei einer als Desktopanwendung registrierten HTTP-URI mit Host `localhost` ignoriert Entra den Port beim Abgleich. Den Pfad einschließlich Groß-/Kleinschreibung und abschließendem Schrägstrich wie registriert eintragen. Für eine HTTPS-Web-URI gelten die Vorgaben der Web-Registrierung und des dortigen Anmeldedienstes. Der Desktop-Callback verwendet HTTP auf `localhost`.
+
+In `zugang.json` heißt der optionale Schlüssel `entraRedirectUri`. [Microsoft-Dokumentation zum URI-Abgleich](https://learn.microsoft.com/en-us/entra/identity-platform/reply-url#localhost-exceptions)
+
 ### Firmenregistrierungen mit App-Zertifikat oder Client-Secret
 
 Bei der persönlichen Anmeldung bestätigt Entra die Identität des Firmenkontos im Browser. Bei einer vertraulichen Web-App verlangt Entra zusätzlich einen Nachweis der Anwendung, sobald ein Anmeldedienst den Browser-Code gegen Tokens eintauscht.
