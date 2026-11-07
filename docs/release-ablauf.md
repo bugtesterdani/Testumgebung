@@ -69,7 +69,7 @@ Die Notes nennen die gemergten PRs der aufgenommenen Commits seit dem vorherigen
 
 Bodies und Kommentare werden nicht übernommen. Mit `confidential`, `vertraulich`, `private`, `security` oder `security-sensitive` markierte Einträge erscheinen ausschließlich mit ID und einem Hinweis auf ausgeblendeten Inhalt. Ein solches Label macht das Original-Issue im öffentlichen Repository nicht vertraulich; geheime Meldungen benötigen einen privaten Meldeweg.
 
-MSIX-Bundle, Kommandozeile, KI-Paket, Dokumentation, passende Quellen und Lizenznachweise liegen als Anlagen im Release-Entwurf. Ein veröffentlichter Release-Text wird von einem erneuten Lauf nicht überschrieben. Ohne erfolgreiches MSIX-Bundle beginnt keine neue Planung.
+MSIX-Bundle, Kommandozeile, KI-Paket, Dokumentation, passende Quellen und Lizenznachweise liegen als Anlagen im Release-Entwurf. Ab 1.2.4 liegt die separat ausführbare Entra-Anmeldeanwendung als eigenes Windows-x64-ZIP mit SHA-256-Prüfsumme bei. Beide Pakete tragen dieselbe Buildversion. Ein veröffentlichter Release-Text wird von einem erneuten Lauf nicht überschrieben. Ohne erfolgreiches MSIX-Bundle beginnt keine neue Planung.
 
 ## Main-Schutz
 
