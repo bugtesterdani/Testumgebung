@@ -156,6 +156,21 @@ public sealed partial class ProgramSourcesTests
             await scan.Within();
             await station.WaitForCompletionAsync().Within();
             ui.Pump();
+            if (loginCycle) await WaitForLoginAuditAsync(service.Store);
+        }
+    }
+
+    private static async Task WaitForLoginAuditAsync(IReleaseStore store)
+    {
+        // The shell writes audit events in the background. Wait for both writes before deleting the fixture directory.
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (true)
+        {
+            var audit = await store.ReadAuditAsync(timeout.Token);
+            if (audit.Any(entry => entry.Action == "Anmeldung") &&
+                audit.Any(entry => entry.Action == "Abmeldung"))
+                return;
+            await Task.Delay(10, timeout.Token);
         }
     }
 }
