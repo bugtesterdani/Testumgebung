@@ -149,9 +149,9 @@ public sealed class NodeViewModel : ObservableObject
     {
         GroupDefinition when IsSection => NodeIcon.Section,
         GroupDefinition when IsExit => NodeIcon.ExitGroup,
-        GroupDefinition g when g.IsDutRun => NodeIcon.DutGroup,
+        GroupDefinition group when group.IsDutRun => NodeIcon.DutGroup,
         GroupDefinition => NodeIcon.Group,
-        StepDefinition s => s.BlockType is null ? NodeIcon.Code : IconFor(s.BlockType),
+        StepDefinition step => step.BlockType is null ? NodeIcon.Code : IconFor(step.BlockType),
         _ => NodeIcon.Doc,
     };
 
@@ -180,25 +180,25 @@ public sealed class NodeViewModel : ObservableObject
     {
         get
         {
-            if (Definition is not GroupDefinition g) return "";
+            if (Definition is not GroupDefinition group) return "";
             var parts = new List<string>();
             if (Note is not null) parts.Add(Note);
             if (IsExit) parts.Add("Exit");
-            if (g.IsDutRun) parts.Add("Prüfling-Run");
-            if (g.Parallel) parts.Add("parallel");
-            parts.Add(g.Repetition.Mode switch
+            if (group.IsDutRun) parts.Add("Prüfling-Run");
+            if (group.Parallel) parts.Add("parallel");
+            parts.Add(group.Repetition.Mode switch
             {
                 RepeatMode.Endless => "wiederholt bis Werkerabbruch",
-                RepeatMode.Count => $"×{g.Repetition.Count}",
-                RepeatMode.Duration => $"{g.Repetition.Duration.TotalSeconds:0.#} s",
-                RepeatMode.While => $"solange {g.Repetition.Expression}",
-                RepeatMode.Until => $"bis {g.Repetition.Expression}",
+                RepeatMode.Count => $"×{group.Repetition.Count}",
+                RepeatMode.Duration => $"{group.Repetition.Duration.TotalSeconds:0.#} s",
+                RepeatMode.While => $"solange {group.Repetition.Expression}",
+                RepeatMode.Until => $"bis {group.Repetition.Expression}",
                 _ => "",
             });
-            if (g.EntryCondition is not null) parts.Add($"wenn {g.EntryCondition}");
-            if (g.Resources.Count > 0) parts.Add("🔒 " + string.Join(", ", g.Resources));
-            if (g.Variables.Count > 0) parts.Add($"{g.Variables.Count} Var.");
-            var text = string.Join(" · ", parts.Where(p => p.Length > 0));
+            if (group.EntryCondition is not null) parts.Add($"wenn {group.EntryCondition}");
+            if (group.Resources.Count > 0) parts.Add("🔒 " + string.Join(", ", group.Resources));
+            if (group.Variables.Count > 0) parts.Add($"{group.Variables.Count} Var.");
+            var text = string.Join(" · ", parts.Where(part => part.Length > 0));
             return text.Length == 0 ? "" : $"({text})";
         }
     }
@@ -208,9 +208,9 @@ public sealed class NodeViewModel : ObservableObject
     public IEnumerable<NodeViewModel> SelfAndDescendants()
     {
         yield return this;
-        foreach (var c in Children)
-            foreach (var d in c.SelfAndDescendants())
-                yield return d;
+        foreach (var node in Children)
+            foreach (var node2 in node.SelfAndDescendants())
+                yield return node2;
     }
 
     public override string ToString() => $"{Number} {Name}";

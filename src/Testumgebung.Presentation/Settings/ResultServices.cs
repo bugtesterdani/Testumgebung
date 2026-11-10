@@ -89,13 +89,13 @@ public sealed class ResultServices : IAsyncDisposable
         ApplyWarning = null;
         Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(settings.ResultFolder) ? ResultFileStore.DefaultFolder : settings.ResultFolder, RecoveryFolder);
 
-        var o = settings.Outbox;
+        var outbox = settings.Outbox;
         Outbox.Options = new OutboxOptions
         {
-            RetryInterval = TimeSpan.FromSeconds(Math.Max(1, o.RetryIntervalSeconds)),
-            BackoffFactor = Math.Max(1, o.BackoffFactor),
-            MaxRetryInterval = TimeSpan.FromMinutes(Math.Max(0.1, o.MaxRetryMinutes)),
-            AttemptTimeout = TimeSpan.FromSeconds(Math.Max(1, o.AttemptTimeoutSeconds)),
+            RetryInterval = TimeSpan.FromSeconds(Math.Max(1, outbox.RetryIntervalSeconds)),
+            BackoffFactor = Math.Max(1, outbox.BackoffFactor),
+            MaxRetryInterval = TimeSpan.FromMinutes(Math.Max(0.1, outbox.MaxRetryMinutes)),
+            AttemptTimeout = TimeSpan.FromSeconds(Math.Max(1, outbox.AttemptTimeoutSeconds)),
         };
 
         Database.Inner = CreateDatabase(settings.Database, out var warning);
@@ -110,7 +110,7 @@ public sealed class ResultServices : IAsyncDisposable
         if (settings.Mqtt.Enabled && !string.IsNullOrWhiteSpace(settings.Mqtt.Host))
         {
             _mqtt = new MqttNotifier(MqttOptionsOf(settings.Mqtt));
-            _mqtt.Delivered += d => MqttDelivered?.Invoke(d);
+            _mqtt.Delivered += mqttDelivery => MqttDelivered?.Invoke(mqttDelivery);
         }
         var oldHttp = _http;
         ConfigureHttp(settings.Http);
@@ -138,7 +138,7 @@ public sealed class ResultServices : IAsyncDisposable
             else
             {
                 _opcUa = OpcUaFactory(options);
-                _opcUa.Delivered += d => NotifyDelivered?.Invoke(d);
+                _opcUa.Delivered += notifyDelivery => NotifyDelivered?.Invoke(notifyDelivery);
             }
         }
     }
@@ -153,7 +153,7 @@ public sealed class ResultServices : IAsyncDisposable
             else
             {
                 _http = new HttpNotifier(options);
-                _http.Delivered += d => NotifyDelivered?.Invoke(d);
+                _http.Delivered += notifyDelivery => NotifyDelivered?.Invoke(notifyDelivery);
             }
         }
     }
@@ -178,7 +178,7 @@ public sealed class ResultServices : IAsyncDisposable
         return new SqlRunDatabase(factory, db.ConnectionString, SqlDialect.For(provider));
     }
 
-    private static string Join(string? a, string b) => a is null ? b : a + " " + b;
+    private static string Join(string? prefix, string text) => prefix is null ? text : prefix + " " + text;
 
     public static HttpNotifyOptions HttpOptionsOf(HttpNotifySettings h) => new()
     {

@@ -149,14 +149,14 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
                 {
                     ObjectId = NodeId.Parse(objectNodeId),
                     MethodId = NodeId.Parse(methodNodeId),
-                    InputArguments = [.. arguments.Select(a => ToVariant(a))],
+                    InputArguments = [.. arguments.Select(argument => ToVariant(argument))],
                 },
             ];
             var response = await session.CallAsync(null, request, cancellationToken).ConfigureAwait(false);
             var result = response.Results[0];
             if (StatusCode.IsBad(result.StatusCode))
                 throw new OpcUaException($"OPC UA: Methode „{methodNodeId}“ abgelehnt ({result.StatusCode.SymbolicId}).");
-            return [.. (result.OutputArguments.ToArray() ?? []).Select(v => FromVariant(v.AsBoxedObject()))];
+            return [.. (result.OutputArguments.ToArray() ?? []).Select(variant => FromVariant(variant.AsBoxedObject()))];
         }
         catch (Exception ex) when (ex is not OpcUaException and not OperationCanceledException)
         {
@@ -221,11 +221,11 @@ public sealed class OpcUaClient(string endpointUrl, InstrumentOptions options) :
     private static object? FromVariant(object? value) => value switch
     {
         null => null,
-        bool b => b,
+        bool flag => flag,
         sbyte or byte or short or ushort or int or uint or long => Convert.ToInt64(value, CultureInfo.InvariantCulture),
-        ulong u => (long)u,
+        ulong number => (long)number,
         float or double => Convert.ToDouble(value, CultureInfo.InvariantCulture),
-        string s => s,
+        string text => text,
         _ => value.ToString(),
     };
 

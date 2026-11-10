@@ -105,8 +105,8 @@ public sealed record OperatorPrompt(
     {
         if (value is long or double)
         {
-            var d = Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture);
-            if ((Min is { } min && d < min) || (Max is { } max && d > max))
+            var number = Convert.ToDouble(value, System.Globalization.CultureInfo.InvariantCulture);
+            if ((Min is { } min && number < min) || (Max is { } max && number > max))
                 return (null, $"Zulässiger Bereich: {Min} – {Max}{(Unit is null ? "" : " " + Unit)}");
         }
         if (AllowedValues is { Count: > 0 } && !AllowedValues.Contains(TypedValue.Format(value).Trim('"')))

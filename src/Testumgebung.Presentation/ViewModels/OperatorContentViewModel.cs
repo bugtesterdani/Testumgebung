@@ -24,13 +24,13 @@ public sealed class OperatorContentViewModel : ObservableObject
         _input = prompt.DefaultValue switch
         {
             null => "",
-            double d => Format.Number(d),
-            var v => v.ToString() ?? "",
+            double number => Format.Number(number),
+            var value => value.ToString() ?? "",
         };
         ConfirmCommand = new RelayCommand(Confirm, () => IsAwaiting);
-        ChooseCommand = new RelayCommand(p =>
+        ChooseCommand = new RelayCommand(parameter =>
         {
-            SelectedChoice = p as string;
+            SelectedChoice = parameter as string;
             Confirm();
         }, _ => IsAwaiting);
     }
@@ -126,9 +126,9 @@ public sealed class OperatorContentViewModel : ObservableObject
         AnswerText = value switch
         {
             null => "",
-            double d => Format.Number(d) + (Unit is null ? "" : " " + Unit),
+            double number => Format.Number(number) + (Unit is null ? "" : " " + Unit),
             bool => "bestätigt",
-            var v => TypedValue.Format(v).Trim('"'),
+            var value2 => TypedValue.Format(value2).Trim('"'),
         };
         OnPropertyChanged(nameof(AnswerText));
         IsAnswered = true;

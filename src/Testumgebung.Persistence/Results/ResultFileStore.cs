@@ -65,8 +65,8 @@ public sealed class ResultFileStore(string folder, string? recoveryFolder = null
     {
         if (RecoveryFolder is null || !Directory.Exists(RecoveryFolder)) return [];
         return new DirectoryInfo(RecoveryFolder).GetFiles("*" + ResultFile.Extension)
-            .OrderBy(f => f.LastWriteTimeUtc)
-            .Select(f => new ResultFileInfo(f.FullName, f.Name, f.LastWriteTime, f.Length))
+            .OrderBy(file => file.LastWriteTimeUtc)
+            .Select(file => new ResultFileInfo(file.FullName, file.Name, file.LastWriteTime, file.Length))
             .ToList();
     }
 
@@ -112,8 +112,8 @@ public sealed class ResultFileStore(string folder, string? recoveryFolder = null
     {
         if (!Directory.Exists(Folder)) return [];
         return new DirectoryInfo(Folder).GetFiles("*" + ResultFile.Extension)
-            .OrderByDescending(f => f.LastWriteTimeUtc)
-            .Select(f => new ResultFileInfo(f.FullName, f.Name, f.LastWriteTime, f.Length))
+            .OrderByDescending(file => file.LastWriteTimeUtc)
+            .Select(file => new ResultFileInfo(file.FullName, file.Name, file.LastWriteTime, file.Length))
             .ToList();
     }
 
@@ -139,17 +139,17 @@ public sealed class ResultFileStore(string folder, string? recoveryFolder = null
                 return final;
             }
             var target = final;
-            for (var n = 2; ; n++)
+            for (var index = 2; ; index++)
             {
                 try
                 {
                     File.Move(temp, target, overwrite: false);
                     return target;
                 }
-                catch (IOException) when (File.Exists(target) && n < 100)
+                catch (IOException) when (File.Exists(target) && index < 100)
                 {
                     target = System.IO.Path.Combine(folder,
-                        System.IO.Path.GetFileNameWithoutExtension(fileName) + $"_{n}" + System.IO.Path.GetExtension(fileName));
+                        System.IO.Path.GetFileNameWithoutExtension(fileName) + $"_{index}" + System.IO.Path.GetExtension(fileName));
                 }
             }
         }
@@ -165,8 +165,8 @@ public sealed class ResultFileStore(string folder, string? recoveryFolder = null
     {
         var invalid = System.IO.Path.GetInvalidFileNameChars().Concat(['/', '\\', ':', '*', '?', '"', '<', '>', '|']).ToHashSet();
         var sb = new StringBuilder();
-        foreach (var c in text.Trim()) sb.Append(invalid.Contains(c) || char.IsControl(c) ? '_' : c);
-        var s = sb.ToString();
-        return s.Length > 60 ? s[..60] : s;
+        foreach (var trim in text.Trim()) sb.Append(invalid.Contains(trim) || char.IsControl(trim) ? '_' : trim);
+        var text2 = sb.ToString();
+        return text2.Length > 60 ? text2[..60] : text2;
     }
 }

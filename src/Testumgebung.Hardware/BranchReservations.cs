@@ -20,11 +20,11 @@ internal sealed class BranchReservations
         => owner.Run == request.OwnerRunId && Descendant(request.Branch, owner.Branch);
 
     public bool CanAccess(ResourceRequest request, string resource)
-        => !_held.TryGetValue(resource, out var owners) || owners.Keys.All(o => Compatible(o, request));
+        => !_held.TryGetValue(resource, out var owners) || owners.Keys.All(entry => Compatible(entry, request));
 
     public IEnumerable<string> Blockers(ResourceRequest request)
-        => request.Resources.Where(_held.ContainsKey).SelectMany(r => _held[r].Keys)
-            .Where(o => !Compatible(o, request)).Select(o => Node(o.Run, o.Branch)).Distinct();
+        => request.Resources.Where(_held.ContainsKey).SelectMany(resource => _held[resource].Keys)
+            .Where(entry => !Compatible(entry, request)).Select(entry => Node(entry.Run, entry.Branch)).Distinct();
 
     public void Add(ResourceRequest request)
     {

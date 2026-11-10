@@ -28,9 +28,9 @@ public partial class ProtocolGrid : UserControl
         if (_source is not null) _source.CollectionChanged += OnChanged;
     }
 
-    private void OnChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
     {
-        if (e.Action != NotifyCollectionChangedAction.Add || !IsVisible) return;
+        if (eventArgs.Action != NotifyCollectionChangedAction.Add || !IsVisible) return;
         Dispatcher.InvokeAsync(() =>
         {
             var count = ProtocolTable.Items.Count;

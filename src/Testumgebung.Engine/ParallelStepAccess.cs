@@ -21,7 +21,7 @@ internal sealed class ParallelStepAccess(TestRun run, string branch, string scop
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            var keys = resources.Distinct().Where(k => !_keys.Contains(k)).Order(StringComparer.Ordinal).ToList();
+            var keys = resources.Distinct().Where(distinct => !_keys.Contains(distinct)).Order(StringComparer.Ordinal).ToList();
             if (keys.Count == 0) return;
             var request = new ResourceRequest(run.RunId, scopeId, keys, run.Options.StationName, name) { Branch = branch };
             var lease = await run.Resources.AcquireAsync(request, null, Token).ConfigureAwait(false);

@@ -12,7 +12,7 @@ namespace Testumgebung.Desktop.Views;
 
 public partial class SettingsView : UserControl
 {
-    private void OnSetLocalPassword(object sender, RoutedEventArgs e)
+    private void OnSetLocalPassword(object sender, RoutedEventArgs eventArgs)
     {
         if ((DataContext as ShellViewModel)?.Session.CanDevelop != true || sender is not FrameworkElement { DataContext: RightsEditRow row }) return;
         new LocalPasswordWindow(row) { Owner = Window.GetWindow(this) }.ShowDialog();
@@ -39,9 +39,9 @@ public partial class SettingsView : UserControl
         SyncPassword();
     }
 
-    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (e.PropertyName is null or "" or nameof(SettingsViewModel.MqttPassword) or nameof(SettingsViewModel.HttpHeaderValue)
+        if (eventArgs.PropertyName is null or "" or nameof(SettingsViewModel.MqttPassword) or nameof(SettingsViewModel.HttpHeaderValue)
             or nameof(SettingsViewModel.OpcUaPassword)) SyncPassword();
     }
 
@@ -55,7 +55,7 @@ public partial class SettingsView : UserControl
         _syncing = false;
     }
 
-    private void MqttPasswordChanged(object sender, RoutedEventArgs e)
+    private void MqttPasswordChanged(object sender, RoutedEventArgs eventArgs)
     {
         if (_syncing || Settings is not { } vm) return;
         _syncing = true;
@@ -63,7 +63,7 @@ public partial class SettingsView : UserControl
         _syncing = false;
     }
 
-    private void HttpHeaderChanged(object sender, RoutedEventArgs e)
+    private void HttpHeaderChanged(object sender, RoutedEventArgs eventArgs)
     {
         if (_syncing || Settings is not { } vm) return;
         _syncing = true;
@@ -71,7 +71,7 @@ public partial class SettingsView : UserControl
         _syncing = false;
     }
 
-    private void OpcUaPasswordChanged(object sender, RoutedEventArgs e)
+    private void OpcUaPasswordChanged(object sender, RoutedEventArgs eventArgs)
     {
         if (_syncing || Settings is not { } vm) return;
         _syncing = true;

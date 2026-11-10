@@ -32,7 +32,7 @@ public sealed class SourceCredentials(SourceLoginMode mode, string username = ""
         if (new Uri(source.Repository).Scheme != "https") throw new ArgumentException("Diese Zugangsmethode benötigt eine HTTPS-Repository-URL. Für SSH die vorhandene Client-Anmeldung verwenden.");
         if (Mode == SourceLoginMode.SvnWindows) return;
         if (string.IsNullOrWhiteSpace(Username) || Secret.Length == 0) throw new ArgumentException("Benutzername und Token/Passwort eingeben.");
-        if (Username.Contains(':') || (Username + Secret).Any(c => c is '\r' or '\n' or '\0')) throw new ArgumentException("Zugangsdaten enthalten unzulässige Steuerzeichen oder einen Doppelpunkt im Benutzernamen.");
+        if (Username.Contains(':') || (Username + Secret).Any(character => character is '\r' or '\n' or '\0')) throw new ArgumentException("Zugangsdaten enthalten unzulässige Steuerzeichen oder einen Doppelpunkt im Benutzernamen.");
     }
 }
 
@@ -64,10 +64,10 @@ public static class SourceAuthentication
             ("http.followRedirects", "false") };
         start.Environment.Remove("GIT_CONFIG_PARAMETERS");
         start.Environment["GIT_CONFIG_COUNT"] = values.Length.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        for (var i = 0; i < values.Length; i++)
+        for (var index = 0; index < values.Length; index++)
         {
-            start.Environment["GIT_CONFIG_KEY_" + i] = values[i].Item1;
-            start.Environment["GIT_CONFIG_VALUE_" + i] = values[i].Item2;
+            start.Environment["GIT_CONFIG_KEY_" + index] = values[index].Item1;
+            start.Environment["GIT_CONFIG_VALUE_" + index] = values[index].Item2;
         }
         return null;
     }

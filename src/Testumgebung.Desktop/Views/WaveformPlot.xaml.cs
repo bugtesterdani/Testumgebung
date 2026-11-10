@@ -14,8 +14,8 @@ namespace Testumgebung.Desktop.Views;
 public partial class WaveformPlot : UserControl
 {
     public static readonly DependencyProperty ShowToolbarProperty = DependencyProperty.Register(
-        nameof(ShowToolbar), typeof(bool), typeof(WaveformPlot), new PropertyMetadata(true, (d, e) =>
-            ((WaveformPlot)d).Toolbar.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed));
+        nameof(ShowToolbar), typeof(bool), typeof(WaveformPlot), new PropertyMetadata(true, (definition, entry) =>
+            ((WaveformPlot)definition).Toolbar.Visibility = (bool)entry.NewValue ? Visibility.Visible : Visibility.Collapsed));
 
     private Point? _start;
 
@@ -29,8 +29,8 @@ public partial class WaveformPlot : UserControl
 
     private WaveformPlotViewModel? Vm => DataContext as WaveformPlotViewModel;
 
-    private void OnMouseDown(object sender, MouseButtonEventArgs e)
-        => BeginGesture(e.GetPosition(PlotSurface), e.ClickCount);
+    private void OnMouseDown(object sender, MouseButtonEventArgs eventArgs)
+        => BeginGesture(eventArgs.GetPosition(PlotSurface), eventArgs.ClickCount);
 
     internal void BeginGesture(Point position, int clickCount)
     {
@@ -44,37 +44,37 @@ public partial class WaveformPlot : UserControl
         PlotSurface.CaptureMouse();
     }
 
-    private void OnMouseMove(object sender, MouseEventArgs e)
-        => MoveGesture(e.GetPosition(PlotSurface).X, e.LeftButton == MouseButtonState.Pressed);
+    private void OnMouseMove(object sender, MouseEventArgs eventArgs)
+        => MoveGesture(eventArgs.GetPosition(PlotSurface).X, eventArgs.LeftButton == MouseButtonState.Pressed);
 
     internal void MoveGesture(double positionX, bool pressed)
     {
-        if (_start is not { } s || !pressed) return;
-        var x = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
-        if (Math.Abs(x - s.X) < 4) return;
-        Canvas.SetLeft(DragRect, Math.Min(x, s.X));
-        DragRect.Width = Math.Abs(x - s.X);
+        if (_start is not { } point || !pressed) return;
+        var xValue = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
+        if (Math.Abs(xValue - point.X) < 4) return;
+        Canvas.SetLeft(DragRect, Math.Min(xValue, point.X));
+        DragRect.Width = Math.Abs(xValue - point.X);
         DragRect.Visibility = Visibility.Visible;
     }
 
-    private void OnMouseUp(object sender, MouseButtonEventArgs e)
-        => EndGesture(e.GetPosition(PlotSurface).X);
+    private void OnMouseUp(object sender, MouseButtonEventArgs eventArgs)
+        => EndGesture(eventArgs.GetPosition(PlotSurface).X);
 
     internal void EndGesture(double positionX)
     {
         PlotSurface.ReleaseMouseCapture();
         DragRect.Visibility = Visibility.Collapsed;
-        if (_start is not { } s || Vm is not { } vm) return;
+        if (_start is not { } point || Vm is not { } vm) return;
         _start = null;
-        var x = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
-        if (Math.Abs(x - s.X) >= 4) vm.ZoomToX(s.X, x);
-        else vm.SetCursorAtX(x);
+        var xValue = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
+        if (Math.Abs(xValue - point.X) >= 4) vm.ZoomToX(point.X, xValue);
+        else vm.SetCursorAtX(xValue);
     }
 
-    private void OnWheel(object sender, MouseWheelEventArgs e)
+    private void OnWheel(object sender, MouseWheelEventArgs eventArgs)
     {
         if (Vm is not { HasData: true } vm) return;
-        vm.WheelZoom(e.GetPosition(PlotSurface).X, e.Delta > 0);
-        e.Handled = true;
+        vm.WheelZoom(eventArgs.GetPosition(PlotSurface).X, eventArgs.Delta > 0);
+        eventArgs.Handled = true;
     }
 }

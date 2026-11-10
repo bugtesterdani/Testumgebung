@@ -94,7 +94,7 @@ public sealed class DevicePool
             _devices.Clear();
             _configured.Clear();
         }
-        foreach (var d in old.OfType<IDisposable>()) d.Dispose();
+        foreach (var iDisposable in old.OfType<IDisposable>()) iDisposable.Dispose();
     }
 
     /// <summary>Simulierte Geräte (Tests, Anzeige).</summary>
@@ -119,48 +119,48 @@ public static class StationHardware
         var config = setup.Station(station) ?? throw new StationSetupException($"Prüfplatz '{station}' ist nicht konfiguriert.");
         var random = new Random(seed);
         var registry = new HardwareRegistry();
-        foreach (var a in config.Resources)
+        foreach (var assignment in config.Resources)
         {
-            var adapter = pool.Get(setup, station, a.Device, project);
-            var key = setup.LockKey(station, a);
-            if (adapter is SimulationAdapter sim && pool.FirstConfiguration(sim, a.Channel))
-                Configure(sim, a, project, random, seed);
-            registry.Bind(a.Name, adapter, a.Channel, a.RequiresLock, key);
+            var adapter = pool.Get(setup, station, assignment.Device, project);
+            var key = setup.LockKey(station, assignment);
+            if (adapter is SimulationAdapter sim && pool.FirstConfiguration(sim, assignment.Channel))
+                Configure(sim, assignment, project, random, seed);
+            registry.Bind(assignment.Name, adapter, assignment.Channel, assignment.RequiresLock, key);
         }
         return registry;
     }
 
     /// <summary>Simulationsverhalten aus dem Projekt (Wert, Rauschen, Sinus, Kurvenausgang) für den zugeordneten Kanal.</summary>
-    private static void Configure(SimulationAdapter adapter, ResourceAssignment a, TestProject project, Random random, int seed)
+    private static void Configure(SimulationAdapter adapter, ResourceAssignment assignment, TestProject project, Random random, int seed)
     {
-        if (project.SimulationComm.FirstOrDefault(c => c.Name == a.Name) is { } comm)
-            adapter.ConfigureCommunication(a.Channel, CommSimulation.Create(comm.Kind, comm.Rules, seed));
-        if (project.Simulation.FirstOrDefault(r => r.Name == a.Name) is { } r)
+        if (project.SimulationComm.FirstOrDefault(communication => communication.Name == assignment.Name) is { } comm)
+            adapter.ConfigureCommunication(assignment.Channel, CommSimulation.Create(comm.Kind, comm.Rules, seed));
+        if (project.Simulation.FirstOrDefault(resource => resource.Name == assignment.Name) is { } resource)
         {
-            adapter.Channel(a.Channel, new ChannelCapabilities(r.Unit, r.Min, r.Max));
-            if (r.Noise > 0)
+            adapter.Channel(assignment.Channel, new ChannelCapabilities(resource.Unit, resource.Min, resource.Max));
+            if (resource.Noise > 0)
             {
-                var (value, noise) = (r.Value, r.Noise);
-                adapter.SetInput(a.Channel, () =>
+                var (value, noise) = (resource.Value, resource.Noise);
+                adapter.SetInput(assignment.Channel, () =>
                 {
                     lock (random) return Math.Round(value + (random.NextDouble() * 2 - 1) * noise, 3);
                 });
             }
-            else if (r.Value != 0)
+            else if (resource.Value != 0)
             {
-                adapter.SetInput(a.Channel, r.Value);
+                adapter.SetInput(assignment.Channel, resource.Value);
             }
-            if (r.Frequency > 0) adapter.SetSine(a.Channel, r.Value, r.Frequency, r.Phase);
+            if (resource.Frequency > 0) adapter.SetSine(assignment.Channel, resource.Value, resource.Frequency, resource.Phase);
         }
-        if (project.SimulationOutputs.FirstOrDefault(o => o.Name == a.Name) is { } o)
+        if (project.SimulationOutputs.FirstOrDefault(output => output.Name == assignment.Name) is { } output)
         {
-            var rates = o.SampleRates.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => double.Parse(x, CultureInfo.InvariantCulture)).ToList();
+            var rates = output.SampleRates.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(entry => double.Parse(entry, CultureInfo.InvariantCulture)).ToList();
             // Rückwirkung über Namen: Kurvenkanal → Messkanal desselben Geräts (laut Zuordnung dieses Prüfplatzes)
-            var feedback = o.Feedback.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Split('=', 2, StringSplitOptions.TrimEntries)).Where(x => x.Length == 2).ToDictionary(x => x[0], x => x[1]);
-            adapter.ConfigureOutput(a.Channel, new OutputCapabilities($"{o.Name} ({adapter.Name})", o.Unit, o.Min, o.Max,
-                o.Channels.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), rates, o.ExplicitTimes, o.MaxSamples), feedback);
+            var feedback = output.Feedback.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(entry => entry.Split('=', 2, StringSplitOptions.TrimEntries)).Where(parts => parts.Length == 2).ToDictionary(parts => parts[0], parts => parts[1]);
+            adapter.ConfigureOutput(assignment.Channel, new OutputCapabilities($"{output.Name} ({adapter.Name})", output.Unit, output.Min, output.Max,
+                output.Channels.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), rates, output.ExplicitTimes, output.MaxSamples), feedback);
         }
     }
 
@@ -170,7 +170,7 @@ public static class StationHardware
     /// </summary>
     private static void CheckProfiles(TestProject project, List<ConfigIssue> issues)
     {
-        foreach (var duplicate in project.DeviceProfiles.GroupBy(p => p.Id).Where(g => g.Count() > 1))
+        foreach (var duplicate in project.DeviceProfiles.GroupBy(customDeviceProfile => customDeviceProfile.Id).Where(group => group.Count() > 1))
             issues.Add(new(ConfigSeverity.Error, null, null, $"Geräteprofil-ID '{duplicate.Key}' ist mehrfach vergeben."));
         foreach (var profile in project.DeviceProfiles)
             foreach (var error in profile.Validate()) issues.Add(new(ConfigSeverity.Error, null, null, $"{profile.Name}: {error}"));
@@ -180,36 +180,36 @@ public static class StationHardware
     {
         var issues = new List<ConfigIssue>();
         CheckProfiles(project, issues);
-        foreach (var dup in setup.Devices.GroupBy(d => d.Id).Where(g => g.Count() > 1))
+        foreach (var dup in setup.Devices.GroupBy(device => device.Id).Where(group => group.Count() > 1))
             issues.Add(new(ConfigSeverity.Error, null, null, $"Geräte-ID '{dup.Key}' ist mehrfach vergeben."));
         var channelsOf = new Dictionary<string, IReadOnlyList<InstrumentChannel>?>(StringComparer.Ordinal);
         CheckDevices();
         if (setup.Stations.Count == 0)
             issues.Add(new(ConfigSeverity.Error, null, null, "Kein Prüfplatz konfiguriert."));
-        foreach (var dup in setup.Stations.GroupBy(s => s.Name).Where(g => g.Count() > 1 || string.IsNullOrWhiteSpace(g.Key)))
+        foreach (var dup in setup.Stations.GroupBy(station => station.Name).Where(group => group.Count() > 1 || string.IsNullOrWhiteSpace(group.Key)))
             issues.Add(new(ConfigSeverity.Error, dup.Key, null, string.IsNullOrWhiteSpace(dup.Key) ? "Prüfplatz ohne Namen." : "Prüfplatzname ist mehrfach vergeben."));
 
         void CheckDevices()
         {
-            foreach (var d in setup.Devices.Where(d => !d.IsSimulation))
+            foreach (var device2 in setup.Devices.Where(device3 => !device3.IsSimulation))
             {
-                if (ProjectInstruments.Family(project, d.Adapter) is not { } family)
+                if (ProjectInstruments.Family(project, device2.Adapter) is not { } family)
                 {
-                    issues.Add(new(ConfigSeverity.Error, null, null, $"Gerät „{d.Name}“: unbekannter Adapter „{d.Adapter}“."));
+                    issues.Add(new(ConfigSeverity.Error, null, null, $"Gerät „{device2.Name}“: unbekannter Adapter „{device2.Adapter}“."));
                     continue;
                 }
-                if (string.IsNullOrWhiteSpace(d.Resource))
-                    issues.Add(new(ConfigSeverity.Error, null, null, $"Gerät „{d.Name}“: keine Ressource angegeben.", "z. B. " + family.ResourceExample));
-                if (!string.IsNullOrWhiteSpace(d.Model) && !family.Models.Contains(d.Model) && family.Adapter != InstrumentCatalog.DaqmxReplica && family.Adapter != DaqmxDevice.AdapterName)
-                    issues.Add(new(ConfigSeverity.Warning, null, null, $"Gerät „{d.Name}“: Modell {d.Model} ist nicht erprobt – Kanalsatz und Grenzen der Familie werden verwendet."));
-                channelsOf[d.Id] = ChannelsOf(d, project);
-                if (channelsOf[d.Id] is null && d.Adapter == DaqmxDevice.AdapterName)
-                    issues.Add(new(ConfigSeverity.Warning, null, null, $"Gerät „{d.Name}“: Kanäle nicht prüfbar – NI-DAQmx nicht installiert oder Gerät {d.Resource} nicht vorhanden."));
+                if (string.IsNullOrWhiteSpace(device2.Resource))
+                    issues.Add(new(ConfigSeverity.Error, null, null, $"Gerät „{device2.Name}“: keine Ressource angegeben.", "z. B. " + family.ResourceExample));
+                if (!string.IsNullOrWhiteSpace(device2.Model) && !family.Models.Contains(device2.Model) && family.Adapter != InstrumentCatalog.DaqmxReplica && family.Adapter != DaqmxDevice.AdapterName)
+                    issues.Add(new(ConfigSeverity.Warning, null, null, $"Gerät „{device2.Name}“: Modell {device2.Model} ist nicht erprobt – Kanalsatz und Grenzen der Familie werden verwendet."));
+                channelsOf[device2.Id] = ChannelsOf(device2, project);
+                if (channelsOf[device2.Id] is null && device2.Adapter == DaqmxDevice.AdapterName)
+                    issues.Add(new(ConfigSeverity.Warning, null, null, $"Gerät „{device2.Name}“: Kanäle nicht prüfbar – NI-DAQmx nicht installiert oder Gerät {device2.Resource} nicht vorhanden."));
                 // Ein reales Gerät gibt es nur einmal: ohne „gemeinsam“ darf es nur ein Prüfplatz verwenden
-                var users = setup.Stations.Where(st => st.Resources.Any(a => a.Device == d.Id)).Select(st => st.Name).ToList();
-                if (!d.Shared && users.Count > 1)
+                var users = setup.Stations.Where(st => st.Resources.Any(assignment => assignment.Device == device2.Id)).Select(st => st.Name).ToList();
+                if (!device2.Shared && users.Count > 1)
                     issues.Add(new(ConfigSeverity.Error, null, null,
-                        $"Gerät „{d.Name}“ ist nicht gemeinsam, wird aber von {string.Join(", ", users)} verwendet – widersprüchlicher Zugriff möglich.",
+                        $"Gerät „{device2.Name}“ ist nicht gemeinsam, wird aber von {string.Join(", ", users)} verwendet – widersprüchlicher Zugriff möglich.",
                         "Als „gemeinsam“ markieren (Zugriff dann nur mit Sperre) oder je Prüfplatz ein eigenes Gerät."));
             }
         }
@@ -221,61 +221,61 @@ public static class StationHardware
         {
             foreach (var station in setup.Stations)
             {
-                foreach (var dup in station.Resources.GroupBy(a => a.Name).Where(g => g.Count() > 1))
+                foreach (var dup in station.Resources.GroupBy(assignment => assignment.Name).Where(group => group.Count() > 1))
                     issues.Add(new(ConfigSeverity.Error, station.Name, dup.Key, $"'{dup.Key}' ist mehrfach zugeordnet."));
-                void CheckAssignment(ResourceAssignment a)
+                void CheckAssignment(ResourceAssignment assignment)
                 {
-                    var device = setup.Device(a.Device);
+                    var device = setup.Device(assignment.Device);
                     if (device is null)
                     {
-                        issues.Add(new(ConfigSeverity.Error, station.Name, a.Name, $"{a.Name}: Gerät '{a.Device}' ist nicht konfiguriert."));
+                        issues.Add(new(ConfigSeverity.Error, station.Name, assignment.Name, $"{assignment.Name}: Gerät '{assignment.Device}' ist nicht konfiguriert."));
                         return;
                     }
-                    CheckChannel(a, device);
-                    if (device.Shared && !a.RequiresLock)
-                        issues.Add(new(ConfigSeverity.Error, station.Name, a.Name,
-                            $"{a.Name} liegt auf dem gemeinsamen Gerät „{device.Name}“ ohne Sperre – widersprüchlicher Zugriff mehrerer Prüfplätze möglich.",
+                    CheckChannel(assignment, device);
+                    if (device.Shared && !assignment.RequiresLock)
+                        issues.Add(new(ConfigSeverity.Error, station.Name, assignment.Name,
+                            $"{assignment.Name} liegt auf dem gemeinsamen Gerät „{device.Name}“ ohne Sperre – widersprüchlicher Zugriff mehrerer Prüfplätze möglich.",
                             "„Sperre erforderlich“ setzen und die Ressource an der Gruppe reservieren."));
-                    if (device.IsSimulation && !project.Simulation.Any(r => r.Name == a.Name) && !project.SimulationOutputs.Any(o => o.Name == a.Name) && !project.SimulationComm.Any(c => c.Name == a.Name) && used.Contains(a.Name))
-                        issues.Add(new(ConfigSeverity.Warning, station.Name, a.Name, $"{a.Name}: kein Simulationsverhalten im Projekt – liefert 0."));
+                    if (device.IsSimulation && !project.Simulation.Any(resource => resource.Name == assignment.Name) && !project.SimulationOutputs.Any(output => output.Name == assignment.Name) && !project.SimulationComm.Any(communication => communication.Name == assignment.Name) && used.Contains(assignment.Name))
+                        issues.Add(new(ConfigSeverity.Warning, station.Name, assignment.Name, $"{assignment.Name}: kein Simulationsverhalten im Projekt – liefert 0."));
                 }
 
-                void CheckChannel(ResourceAssignment a, DeviceConfig device)
+                void CheckChannel(ResourceAssignment assignment2, DeviceConfig device)
                 {
-                    if (string.IsNullOrWhiteSpace(a.Channel))
-                        issues.Add(new(ConfigSeverity.Error, station.Name, a.Name, $"{a.Name}: kein Kanal angegeben."));
+                    if (string.IsNullOrWhiteSpace(assignment2.Channel))
+                        issues.Add(new(ConfigSeverity.Error, station.Name, assignment2.Name, $"{assignment2.Name}: kein Kanal angegeben."));
                     else if (InstrumentCatalog.IsCommunication(device.Adapter))
                     {
-                        if (!CommChannelOk(device, a.Channel))
-                            issues.Add(new(ConfigSeverity.Error, station.Name, a.Name, $"{a.Name}: Kanal „{a.Channel}“ ist für {device.Adapter} ungültig.",
+                        if (!CommChannelOk(device, assignment2.Channel))
+                            issues.Add(new(ConfigSeverity.Error, station.Name, assignment2.Name, $"{assignment2.Name}: Kanal „{assignment2.Channel}“ ist für {device.Adapter} ungültig.",
                                 "Modbus: Unit-ID (z. B. 1) oder Punkt 1/HR100:float32."));
                     }
                     else if (channelsOf.TryGetValue(device.Id, out var channels) && channels is not null)
                     {
-                        if (channels.FirstOrDefault(c => string.Equals(c.Name, a.Channel, StringComparison.OrdinalIgnoreCase)) is not { } channel)
-                            issues.Add(new(ConfigSeverity.Error, station.Name, a.Name, $"{a.Name}: Kanal „{a.Channel}“ gibt es bei {device.Model ?? device.Adapter} nicht.",
-                                "Vorhanden: " + string.Join(", ", channels.Take(24).Select(c => c.Name)) + (channels.Count > 24 ? " …" : "")));
-                        else if (project.Simulation.FirstOrDefault(r => r.Name == a.Name) is { } sim && sim.Unit != channel.Unit
+                        if (channels.FirstOrDefault(channel2 => string.Equals(channel2.Name, assignment2.Channel, StringComparison.OrdinalIgnoreCase)) is not { } channel)
+                            issues.Add(new(ConfigSeverity.Error, station.Name, assignment2.Name, $"{assignment2.Name}: Kanal „{assignment2.Channel}“ gibt es bei {device.Model ?? device.Adapter} nicht.",
+                                "Vorhanden: " + string.Join(", ", channels.Take(24).Select(channel2 => channel2.Name)) + (channels.Count > 24 ? " …" : "")));
+                        else if (project.Simulation.FirstOrDefault(resource => resource.Name == assignment2.Name) is { } sim && sim.Unit != channel.Unit
                                  && !(sim.Unit == "bool" && channel.Unit == "bool"))
-                            issues.Add(new(ConfigSeverity.Warning, station.Name, a.Name, $"{a.Name}: Ablauf erwartet {sim.Unit}, Gerätekanal liefert {channel.Unit} – keine Umrechnung."));
+                            issues.Add(new(ConfigSeverity.Warning, station.Name, assignment2.Name, $"{assignment2.Name}: Ablauf erwartet {sim.Unit}, Gerätekanal liefert {channel.Unit} – keine Umrechnung."));
                     }
                 }
 
-                foreach (var a in station.Resources)
+                foreach (var assignment3 in station.Resources)
                 {
-                    CheckAssignment(a);
+                    CheckAssignment(assignment3);
                 }
-                foreach (var missing in used.Where(n => station.Resources.All(a => a.Name != n)))
+                foreach (var missing in used.Where(used2 => station.Resources.All(assignment4 => assignment4.Name != used2)))
                     issues.Add(new(ConfigSeverity.Error, station.Name, missing, $"{missing} wird im Ablauf verwendet, ist aber nicht zugeordnet.",
                         "„Fehlende aus Projekt übernehmen“."));
                 // Gesperrte Hardware muss im Ablauf an einer Gruppe reserviert werden
-                var reserved = project.Definition.EnabledNodes().OfType<GroupDefinition>().SelectMany(g => g.Resources).ToHashSet(StringComparer.Ordinal);
-                foreach (var a in station.Resources.Where(a => a.RequiresLock && used.Contains(a.Name)))
+                var reserved = project.Definition.EnabledNodes().OfType<GroupDefinition>().SelectMany(group => group.Resources).ToHashSet(StringComparer.Ordinal);
+                foreach (var assignment4 in station.Resources.Where(assignment5 => assignment5.RequiresLock && used.Contains(assignment5.Name)))
                 {
-                    var key = setup.LockKey(station.Name, a);
+                    var key = setup.LockKey(station.Name, assignment4);
                     var keyOf = setup.KeyOf(station.Name);
-                    if (!reserved.Any(r => keyOf(r) == key))
-                        issues.Add(new(ConfigSeverity.Warning, station.Name, a.Name, $"{a.Name} erfordert eine Sperre, wird im Ablauf aber an keiner Gruppe reserviert – Zugriff ergibt ERROR."));
+                    if (!reserved.Any(reserved2 => keyOf(reserved2) == key))
+                        issues.Add(new(ConfigSeverity.Warning, station.Name, assignment4.Name, $"{assignment4.Name} erfordert eine Sperre, wird im Ablauf aber an keiner Gruppe reserviert – Zugriff ergibt ERROR."));
                 }
             }
 
@@ -283,16 +283,16 @@ public static class StationHardware
 
         // Gemeinsame Kanäle: Übersicht
         foreach (var shared in setup.Stations
-                     .SelectMany(s => s.Resources.Select(a => (Station: s.Name, A: a)))
-                     .Where(x => setup.Device(x.A.Device) is { Shared: true })
-                     .GroupBy(x => setup.LockKey(x.Station, x.A)))
+                     .SelectMany(station2 => station2.Resources.Select(assignment5 => (Station: station2.Name, A: assignment5)))
+                     .Where(entry => setup.Device(entry.A.Device) is { Shared: true })
+                     .GroupBy(entry => setup.LockKey(entry.Station, entry.A)))
         {
-            var users = shared.Select(x => x.A.Name == shared.First().A.Name ? x.Station : $"{x.Station} als {x.A.Name}").Distinct();
+            var users = shared.Select(entry => entry.A.Name == shared.First().A.Name ? entry.Station : $"{entry.Station} als {entry.A.Name}").Distinct();
             issues.Add(new(ConfigSeverity.Info, null, shared.First().A.Name,
                 $"Gemeinsam: {shared.First().A.Name} ({string.Join(", ", users)}) – eine Sperre für Gerät/Kanal {shared.Key}."));
         }
 
-        if (CycleRisk(setup, setup.Stations.Select(s => (s.Name, project.Definition))) is { } cycle)
+        if (CycleRisk(setup, setup.Stations.Select(station2 => (station2.Name, project.Definition))) is { } cycle)
             issues.Add(new(ConfigSeverity.Error, null, null, cycle.Text + ". Start wird verweigert.", cycle.Suggestion));
         return issues;
     }
@@ -330,7 +330,7 @@ public static class StationHardware
 
     /// <summary>Zyklusrisiko der Sperrreihenfolge für die Abläufe der genannten Prüfplätze.</summary>
     public static LockCycle? CycleRisk(StationSetup setup, IEnumerable<(string Station, TestDefinition Definition)> runs)
-        => LockOrderAnalysis.FindCycle(runs.SelectMany(r => LockOrderAnalysis.Edges(r.Definition, setup.KeyOf(r.Station), r.Station)));
+        => LockOrderAnalysis.FindCycle(runs.SelectMany(entry => LockOrderAnalysis.Edges(entry.Definition, setup.KeyOf(entry.Station), entry.Station)));
 }
 
 /// <summary>
@@ -408,7 +408,7 @@ public sealed class StationCoordinator
     public LockCycle? CycleRiskWithRunning(string station, TestDefinition definition)
     {
         lock (_gate)
-            return StationHardware.CycleRisk(_setup, _running.Where(r => r.Key != station).Select(r => (r.Key, r.Value)).Append((station, definition)));
+            return StationHardware.CycleRisk(_setup, _running.Where(entry => entry.Key != station).Select(entry => (entry.Key, entry.Value)).Append((station, definition)));
     }
 
     /// <summary>Lauf eines Prüfplatzes beendet; Versionswechsel am Prüfling: neue Definition melden.</summary>
@@ -435,12 +435,12 @@ public sealed class StationCoordinator
         lock (_gate)
         {
             setup = _setup;
-            others = _running.Keys.Where(k => k != station).ToList();
+            others = _running.Keys.Where(key => key != station).ToList();
         }
-        var devices = (setup.Station(station)?.Resources ?? []).Select(a => setup.Device(a.Device)).OfType<DeviceConfig>().Distinct()
-            .Where(d => !(d.Shared || !d.IsSimulation) || others.All(o => setup.Station(o)?.Resources.All(a => a.Device != d.Id) ?? true))
+        var devices = (setup.Station(station)?.Resources ?? []).Select(assignment => setup.Device(assignment.Device)).OfType<DeviceConfig>().Distinct()
+            .Where(device => !(device.Shared || !device.IsSimulation) || others.All(other => setup.Station(other)?.Resources.All(assignment => assignment.Device != device.Id) ?? true))
             .ToList();
-        return await SafeStateDevicesAsync(devices.Select(d => (d, DevicePool.InstanceKey(d, station))), cancellationToken).ConfigureAwait(false);
+        return await SafeStateDevicesAsync(devices.Select(device => (d: device, DevicePool.InstanceKey(device, station))), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Alle angelegten Geräte in den sicheren Zustand (Beenden der Anwendung).</summary>
@@ -448,8 +448,8 @@ public sealed class StationCoordinator
     {
         var setup = Setup;
         var keys = Pool.Adapters.Keys.ToList();
-        return SafeStateDevicesAsync(keys.Select(k => (setup.Device(k.Contains('/') ? k[(k.IndexOf('/') + 1)..] : k), k))
-            .Where(x => x.Item1 is not null).Select(x => (x.Item1!, x.k)), cancellationToken);
+        return SafeStateDevicesAsync(keys.Select(key => (setup.Device(key.Contains('/') ? key[(key.IndexOf('/') + 1)..] : key), k: key))
+            .Where(entry => entry.Item1 is not null).Select(entry => (entry.Item1!, entry.k)), cancellationToken);
     }
 
     private async Task<IReadOnlyList<string>> SafeStateDevicesAsync(IEnumerable<(DeviceConfig Device, string Key)> devices, CancellationToken ct)

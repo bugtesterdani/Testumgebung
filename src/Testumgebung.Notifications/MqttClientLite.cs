@@ -118,28 +118,28 @@ public static class MqttClientLite
 
     private static byte[] Packet(byte header, byte[] body)
     {
-        var p = new MemoryStream();
-        p.WriteByte(header);
+        var stream = new MemoryStream();
+        stream.WriteByte(header);
         var len = body.Length;
         do
         {
-            var b = (byte)(len % 128);
+            var dataByte = (byte)(len % 128);
             len /= 128;
-            if (len > 0) b |= 0x80;
-            p.WriteByte(b);
+            if (len > 0) dataByte |= 0x80;
+            stream.WriteByte(dataByte);
         } while (len > 0);
-        p.Write(body);
-        return p.ToArray();
+        stream.Write(body);
+        return stream.ToArray();
     }
 
-    private static void WriteString(Stream s, string text)
+    private static void WriteString(Stream stream, string text)
     {
         var bytes = Encoding.UTF8.GetBytes(text);
         if (bytes.Length > ushort.MaxValue) throw new MqttException("Text zu lang für MQTT.");
         Span<byte> len = stackalloc byte[2];
         BinaryPrimitives.WriteUInt16BigEndian(len, (ushort)bytes.Length);
-        s.Write(len);
-        s.Write(bytes);
+        stream.Write(len);
+        stream.Write(bytes);
     }
 
     private static string ConnackText(byte rc) => rc switch

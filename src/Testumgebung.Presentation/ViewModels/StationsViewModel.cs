@@ -119,9 +119,9 @@ public sealed class DeviceRow : ObservableObject
         get => Device.TimeoutMs?.ToString(CultureInfo.InvariantCulture) ?? "";
         set
         {
-            var t = int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ms) && ms > 0 ? ms : (int?)null;
-            if (Device.TimeoutMs == t) return;
-            Device.TimeoutMs = t;
+            var parsedValue = int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ms) && ms > 0 ? ms : (int?)null;
+            if (Device.TimeoutMs == parsedValue) return;
+            Device.TimeoutMs = parsedValue;
             OnPropertyChanged();
             _changed();
         }
@@ -198,7 +198,7 @@ public sealed class AssignmentRow : ObservableObject
 
     public DeviceRow? Device
     {
-        get => _owner.Devices.FirstOrDefault(d => d.Id == Assignment.Device);
+        get => _owner.Devices.FirstOrDefault(deviceRow => deviceRow.Id == Assignment.Device);
         set
         {
             if (value is null || value.Id == Assignment.Device) return;
@@ -311,7 +311,7 @@ public sealed partial class StationsViewModel : ObservableObject
 
     public string StorePath => _store?.Path ?? "(nicht gespeichert)";
 
-    public string SourceText => _coordinator.LoadError is { } e ? "Konfigurationsdatei beschädigt – kein Prüfplatz startet: " + e
+    public string SourceText => _coordinator.LoadError is { } errorText ? "Konfigurationsdatei beschädigt – kein Prüfplatz startet: " + errorText
         : _coordinator.IsSuggestion ? "Keine Konfigurationsdatei: Vorschlag aus dem Projekt (gesperrte Ressourcen auf einem gemeinsamen Gerät)."
         : "Gespeichert in " + StorePath;
 
@@ -359,7 +359,7 @@ public sealed partial class StationsViewModel : ObservableObject
     internal void Edited()
     {
         IsDirty = true;
-        foreach (var r in Rows) r.RaiseAll();
+        foreach (var assignmentRow in Rows) assignmentRow.RaiseAll();
         Check();
         UpdateDetails();
         RefreshLive();
@@ -370,9 +370,9 @@ public sealed partial class StationsViewModel : ObservableObject
         ReloadProfiles();
         _draft = _coordinator.Setup.Clone();
         Devices.Clear();
-        foreach (var d in _draft.Devices) Devices.Add(new DeviceRow(d, Edited, () => Project));
+        foreach (var device in _draft.Devices) Devices.Add(new DeviceRow(device, Edited, () => Project));
         StationNames.Clear();
-        foreach (var s in _draft.Stations) StationNames.Add(s.Name);
+        foreach (var station in _draft.Stations) StationNames.Add(station.Name);
         _selectedStation = StationNames.Contains(_selectedStation ?? "") ? _selectedStation : StationNames.FirstOrDefault();
         IsDirty = false;
         LoadRows();
@@ -402,12 +402,12 @@ public sealed partial class StationsViewModel : ObservableObject
 
     private void AddStation()
     {
-        var n = 1;
-        while (_draft.Stations.Any(s => s.Name == StationSetup.StationName(n))) n++;
-        var station = new StationConfig { Name = StationSetup.StationName(n) };
+        var index = 1;
+        while (_draft.Stations.Any(station2 => station2.Name == StationSetup.StationName(index))) index++;
+        var station = new StationConfig { Name = StationSetup.StationName(index) };
         // Zuordnung des gewählten Prüfplatzes übernehmen (lokale Geräte bekommen eigene Instanzen, gemeinsame bleiben gemeinsam)
         var template = Station?.Resources ?? StationSetup.Suggest(Project, []).ToList();
-        station.Resources.AddRange(template.Select(a => new ResourceAssignment { Name = a.Name, Device = a.Device, Channel = a.Channel, RequiresLock = a.RequiresLock }));
+        station.Resources.AddRange(template.Select(assignment => new ResourceAssignment { Name = assignment.Name, Device = assignment.Device, Channel = assignment.Channel, RequiresLock = assignment.RequiresLock }));
         _draft.Stations.Add(station);
         StationNames.Add(station.Name);
         SelectedStation = station.Name;
@@ -444,18 +444,18 @@ public sealed partial class StationsViewModel : ObservableObject
     private void LoadRows()
     {
         Rows.Clear();
-        if (Station is { } s)
-            foreach (var a in s.Resources) Rows.Add(new AssignmentRow(this, a));
-        SelectedRow = Rows.FirstOrDefault(r => r.Assignment.RequiresLock) ?? Rows.FirstOrDefault();
+        if (Station is { } station)
+            foreach (var assignment in station.Resources) Rows.Add(new AssignmentRow(this, assignment));
+        SelectedRow = Rows.FirstOrDefault(assignmentRow => assignmentRow.Assignment.RequiresLock) ?? Rows.FirstOrDefault();
         AddResourceCommand.RaiseCanExecuteChanged();
         AddMissingCommand.RaiseCanExecuteChanged();
         RefreshLive();
     }
 
     internal string UnitOf(ResourceAssignment a)
-        => Channels(a.Device)?.FirstOrDefault(c => string.Equals(c.Name, a.Channel, StringComparison.OrdinalIgnoreCase))?.Unit
-           ?? Project.Simulation.FirstOrDefault(r => r.Name == a.Name)?.Unit
-           ?? Project.SimulationOutputs.FirstOrDefault(o => o.Name == a.Name)?.Unit
+        => Channels(a.Device)?.FirstOrDefault(channel => string.Equals(channel.Name, a.Channel, StringComparison.OrdinalIgnoreCase))?.Unit
+           ?? Project.Simulation.FirstOrDefault(resource => resource.Name == a.Name)?.Unit
+           ?? Project.SimulationOutputs.FirstOrDefault(output => output.Name == a.Name)?.Unit
            ?? "—";
 
     private readonly Dictionary<string, (string Signature, IReadOnlyList<InstrumentChannel>? Channels)> _channelCache = new(StringComparer.Ordinal);
@@ -463,25 +463,25 @@ public sealed partial class StationsViewModel : ObservableObject
     /// <summary>Kanäle eines realen Geräts (zwischengespeichert, solange Adapter/Modell/Ressource gleich bleiben).</summary>
     internal IReadOnlyList<InstrumentChannel>? Channels(string deviceId)
     {
-        if (_draft.Device(deviceId) is not { IsSimulation: false } d) return null;
-        var signature = $"{d.Adapter}|{d.Model}|{d.Resource}|{d.OptionsText}";
+        if (_draft.Device(deviceId) is not { IsSimulation: false } device) return null;
+        var signature = $"{device.Adapter}|{device.Model}|{device.Resource}|{device.OptionsText}";
         if (_channelCache.TryGetValue(deviceId, out var cached) && cached.Signature == signature) return cached.Channels;
-        var channels = StationHardware.ChannelsOf(d, Project);
+        var channels = StationHardware.ChannelsOf(device, Project);
         _channelCache[deviceId] = (signature, channels);
         return channels;
     }
 
-    internal IReadOnlyList<string> ChannelNames(string deviceId) => Channels(deviceId)?.Select(c => c.Name).ToList() ?? [];
+    internal IReadOnlyList<string> ChannelNames(string deviceId) => Channels(deviceId)?.Select(channel => channel.Name).ToList() ?? [];
 
     private void AddResource()
     {
-        if (Station is not { } s) return;
-        var n = 1;
-        while (s.Resources.Any(a => a.Name == $"Neue_Ressource_{n}")) n++;
-        var a = new ResourceAssignment { Name = $"Neue_Ressource_{n}", Device = StationSetup.LocalSimulation, Channel = $"ch{n}" };
-        if (_draft.Device(a.Device) is null) a.Device = _draft.Devices.FirstOrDefault()?.Id ?? "";
-        s.Resources.Add(a);
-        var row = new AssignmentRow(this, a);
+        if (Station is not { } station) return;
+        var index = 1;
+        while (station.Resources.Any(assignment => assignment.Name == $"Neue_Ressource_{index}")) index++;
+        var assignment = new ResourceAssignment { Name = $"Neue_Ressource_{index}", Device = StationSetup.LocalSimulation, Channel = $"ch{index}" };
+        if (_draft.Device(assignment.Device) is null) assignment.Device = _draft.Devices.FirstOrDefault()?.Id ?? "";
+        station.Resources.Add(assignment);
+        var row = new AssignmentRow(this, assignment);
         Rows.Add(row);
         SelectedRow = row;
         Edited();
@@ -489,8 +489,8 @@ public sealed partial class StationsViewModel : ObservableObject
 
     private void RemoveResource()
     {
-        if (Station is not { } s || _selectedRow is null) return;
-        s.Resources.Remove(_selectedRow.Assignment);
+        if (Station is not { } station || _selectedRow is null) return;
+        station.Resources.Remove(_selectedRow.Assignment);
         Rows.Remove(_selectedRow);
         SelectedRow = Rows.FirstOrDefault();
         Edited();
@@ -499,18 +499,18 @@ public sealed partial class StationsViewModel : ObservableObject
     /// <summary>Vom Ablauf verwendete, noch nicht zugeordnete Namen nach dem Projektvorschlag ergänzen.</summary>
     private void AddMissing()
     {
-        if (Station is not { } s) return;
-        var added = StationSetup.Suggest(Project, s.Resources).ToList();
-        foreach (var n in StationSetup.UsedResources(Project).Where(n => s.Resources.All(a => a.Name != n) && added.All(a => a.Name != n)))
-            added.Add(new ResourceAssignment { Name = n, Device = StationSetup.LocalSimulation, Channel = n });
-        s.Resources.AddRange(added);
+        if (Station is not { } station) return;
+        var added = StationSetup.Suggest(Project, station.Resources).ToList();
+        foreach (var name in StationSetup.UsedResources(Project).Where(usedResource => station.Resources.All(assignment => assignment.Name != usedResource) && added.All(assignment => assignment.Name != usedResource)))
+            added.Add(new ResourceAssignment { Name = name, Device = StationSetup.LocalSimulation, Channel = name });
+        station.Resources.AddRange(added);
         LoadRows();
         Edited();
-        Status = added.Count == 0 ? "Alle verwendeten Ressourcen sind zugeordnet." : $"{added.Count} Ressource(n) ergänzt: {string.Join(", ", added.Select(a => a.Name))}.";
+        Status = added.Count == 0 ? "Alle verwendeten Ressourcen sind zugeordnet." : $"{added.Count} Ressource(n) ergänzt: {string.Join(", ", added.Select(assignment => assignment.Name))}.";
     }
 
     /// <summary>Auswahl der Adapterfamilie: Simulation und die Treiber aus dem Gerätekatalog.</summary>
-    public IReadOnlyList<string> AdapterChoices => [StationSetup.SimulationAdapter, .. InstrumentCatalog.Families.Select(f => f.Adapter), .. Project.DeviceProfiles.Select(p => p.Adapter)];
+    public IReadOnlyList<string> AdapterChoices => [StationSetup.SimulationAdapter, .. InstrumentCatalog.Families.Select(instrumentFamily => instrumentFamily.Adapter), .. Project.DeviceProfiles.Select(customDeviceProfile => customDeviceProfile.Adapter)];
 
     private DeviceRow? _selectedDevice;
 
@@ -542,7 +542,7 @@ public sealed partial class StationsViewModel : ObservableObject
     private void RemoveDevice()
     {
         if (_selectedDevice is not { } row) return;
-        var users = _draft.Stations.Where(st => st.Resources.Any(a => a.Device == row.Id)).Select(st => st.Name).ToList();
+        var users = _draft.Stations.Where(st => st.Resources.Any(assignment => assignment.Device == row.Id)).Select(st => st.Name).ToList();
         if (users.Count > 0)
         {
             Error = $"„{row.Name}“ wird noch verwendet ({string.Join(", ", users)}) – erst die Zuordnungen ändern.";
@@ -560,8 +560,8 @@ public sealed partial class StationsViewModel : ObservableObject
         Discovered.Clear();
         Status = "Suche Geräte …";
         var found = await Task.Run(InstrumentCatalog.Discover).ConfigureAwait(true);
-        foreach (var f in found) Discovered.Add(f);
-        Status = $"{found.Count(f => f.StartsWith("VISA: ", StringComparison.Ordinal) && f.Contains("::", StringComparison.Ordinal)) + found.Count(f => f.StartsWith("NI-DAQmx: ", StringComparison.Ordinal) && f.Contains(" – ", StringComparison.Ordinal))} Gerät(e) gefunden.";
+        foreach (var found2 in found) Discovered.Add(found2);
+        Status = $"{found.Count(found3 => found3.StartsWith("VISA: ", StringComparison.Ordinal) && found3.Contains("::", StringComparison.Ordinal)) + found.Count(found3 => found3.StartsWith("NI-DAQmx: ", StringComparison.Ordinal) && found3.Contains(" – ", StringComparison.Ordinal))} Gerät(e) gefunden.";
     }
 
     /// <summary>
@@ -582,15 +582,15 @@ public sealed partial class StationsViewModel : ObservableObject
         ];
         foreach (var (id, name, adapter, model, resource, options) in devices)
         {
-            var d = _draft.Device(id);
-            if (d is null)
+            var device = _draft.Device(id);
+            if (device is null)
             {
-                d = new DeviceConfig { Id = id };
-                _draft.Devices.Add(d);
-                Devices.Add(new DeviceRow(d, Edited, () => Project));
+                device = new DeviceConfig { Id = id };
+                _draft.Devices.Add(device);
+                Devices.Add(new DeviceRow(device, Edited, () => Project));
             }
-            (d.Name, d.Adapter, d.Model, d.Resource, d.Shared) = (name, adapter, model, resource, true);
-            d.OptionsText = options ?? "";
+            (device.Name, device.Adapter, device.Model, device.Resource, device.Shared) = (name, adapter, model, resource, true);
+            device.OptionsText = options ?? "";
         }
         foreach (var row in Devices) row.RaiseAllDevice();
         Edited();
@@ -600,19 +600,19 @@ public sealed partial class StationsViewModel : ObservableObject
 
     private void AddDevice()
     {
-        var n = 1;
-        while (_draft.Devices.Any(d => d.Id == $"geraet-{n}")) n++;
-        var d = new DeviceConfig { Id = $"geraet-{n}", Name = $"Gerät {n} (Simulation)" };
-        _draft.Devices.Add(d);
-        Devices.Add(new DeviceRow(d, Edited, () => Project));
+        var index = 1;
+        while (_draft.Devices.Any(device => device.Id == $"geraet-{index}")) index++;
+        var device = new DeviceConfig { Id = $"geraet-{index}", Name = $"Gerät {index} (Simulation)" };
+        _draft.Devices.Add(device);
+        Devices.Add(new DeviceRow(device, Edited, () => Project));
         Edited();
     }
 
     private void RestoreSuggestion()
     {
-        _draft = StationSetup.Default(Project, _draft.Stations.Select(s => s.Name).ToList());
+        _draft = StationSetup.Default(Project, _draft.Stations.Select(station => station.Name).ToList());
         Devices.Clear();
-        foreach (var d in _draft.Devices) Devices.Add(new DeviceRow(d, Edited, () => Project));
+        foreach (var device in _draft.Devices) Devices.Add(new DeviceRow(device, Edited, () => Project));
         LoadRows();
         Edited();
         Status = "Vorschlag aus dem Projekt wiederhergestellt (noch nicht gespeichert).";
@@ -630,13 +630,13 @@ public sealed partial class StationsViewModel : ObservableObject
         Details.Clear();
         OnPropertyChanged(nameof(DetailsTitle));
         if (_selectedRow is not { } row || _selectedStation is null) return;
-        var a = row.Assignment;
-        var device = _draft.Device(a.Device);
-        var sim = Project.Simulation.FirstOrDefault(r => r.Name == a.Name);
-        var output = Project.SimulationOutputs.FirstOrDefault(o => o.Name == a.Name);
+        var assignment = row.Assignment;
+        var device = _draft.Device(assignment.Device);
+        var sim = Project.Simulation.FirstOrDefault(resource => resource.Name == assignment.Name);
+        var output = Project.SimulationOutputs.FirstOrDefault(output2 => output2.Name == assignment.Name);
         Details.Add(new("Adapter", device is null ? "—" : $"{device.Adapter}"));
-        Details.Add(new("Gerät", device?.Name ?? $"unbekannt ({a.Device})"));
-        Details.Add(new("Kanal", a.Channel));
+        Details.Add(new("Gerät", device?.Name ?? $"unbekannt ({assignment.Device})"));
+        Details.Add(new("Kanal", assignment.Channel));
         AddCapabilities();
 
         void AddCapabilities()
@@ -658,12 +658,12 @@ public sealed partial class StationsViewModel : ObservableObject
             Details.Add(new("Unterstützte Aktionen", string.Join(", ", actions)));
         }
 
-        Details.Add(new("Sperre", a.RequiresLock ? "erforderlich (Reservierung an einer Gruppe)" : "keine"));
-        Details.Add(new("Sperrschlüssel", _draft.LockKey(_selectedStation, a)));
+        Details.Add(new("Sperre", assignment.RequiresLock ? "erforderlich (Reservierung an einer Gruppe)" : "keine"));
+        Details.Add(new("Sperrschlüssel", _draft.LockKey(_selectedStation, assignment)));
         if (device is { Shared: true })
         {
-            var key = _draft.LockKey(_selectedStation, a);
-            var users = _draft.Stations.SelectMany(s => s.Resources.Where(x => _draft.LockKey(s.Name, x) == key).Select(x => x.Name == a.Name ? s.Name : $"{s.Name} ({x.Name})")).Distinct();
+            var key = _draft.LockKey(_selectedStation, assignment);
+            var users = _draft.Stations.SelectMany(station => station.Resources.Where(assignment2 => _draft.LockKey(station.Name, assignment2) == key).Select(assignment2 => assignment2.Name == assignment.Name ? station.Name : $"{station.Name} ({assignment2.Name})")).Distinct();
             Details.Add(new("Gemeinsam mit", string.Join(", ", users)));
         }
     }
@@ -685,18 +685,18 @@ public sealed partial class StationsViewModel : ObservableObject
 
     public string GroupPath => _selectedGroup is null ? "" : PathOf(_selectedGroup);
 
-    private string PathOf(GroupDefinition g)
+    private string PathOf(GroupDefinition group2)
     {
         var parts = new List<string>();
         foreach (var root in Project.Definition.AllRoots)
-            if (Find(root, g, parts)) break;
+            if (Find(root, group2, parts)) break;
         return string.Join(" › ", parts);
 
         static bool Find(GroupDefinition current, GroupDefinition target, List<string> path)
         {
             path.Add(current.Name);
             if (ReferenceEquals(current, target)) return true;
-            foreach (var child in current.Children.OfType<GroupDefinition>().Concat(current.ExitGroup is { } e ? [e] : []))
+            foreach (var child in current.Children.OfType<GroupDefinition>().Concat(current.ExitGroup is { } group ? [group] : []))
                 if (Find(child, target, path)) return true;
             path.RemoveAt(path.Count - 1);
             return false;
@@ -707,8 +707,8 @@ public sealed partial class StationsViewModel : ObservableObject
     {
         var keep = _selectedGroup?.Id;
         Groups.Clear();
-        foreach (var g in Project.Definition.AllNodes().OfType<GroupDefinition>().Where(g => g.Resources.Count > 0)) Groups.Add(g);
-        _selectedGroup = Groups.FirstOrDefault(g => g.Id == keep) ?? Groups.FirstOrDefault();
+        foreach (var group in Project.Definition.AllNodes().OfType<GroupDefinition>().Where(group2 => group2.Resources.Count > 0)) Groups.Add(group);
+        _selectedGroup = Groups.FirstOrDefault(group2 => group2.Id == keep) ?? Groups.FirstOrDefault();
         OnPropertiesChanged(nameof(SelectedGroup), nameof(TimeoutEnabled), nameof(TimeoutSeconds), nameof(GroupPath), nameof(HasGroups));
     }
 
@@ -729,16 +729,16 @@ public sealed partial class StationsViewModel : ObservableObject
 
     public string TimeoutSeconds
     {
-        get => _selectedGroup?.ResourceTimeout is { } t ? t.TotalSeconds.ToString("0.###", CultureInfo.InvariantCulture) : "";
+        get => _selectedGroup?.ResourceTimeout is { } duration ? duration.TotalSeconds.ToString("0.###", CultureInfo.InvariantCulture) : "";
         set
         {
             if (_selectedGroup is null) return;
-            if (!double.TryParse(value.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var s) || s <= 0)
+            if (!double.TryParse(value.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var sample) || sample <= 0)
             {
                 Error = "Wartezeit: positive Zahl in Sekunden angeben.";
                 return;
             }
-            _selectedGroup.ResourceTimeout = TimeSpan.FromSeconds(s);
+            _selectedGroup.ResourceTimeout = TimeSpan.FromSeconds(sample);
             _editor.MarkChanged();
             Error = null;
             OnPropertyChanged();
@@ -781,12 +781,12 @@ public sealed partial class StationsViewModel : ObservableObject
             {
                 if (station is null) continue;
                 var key = _draft.LockKey(station, row.Assignment);
-                var o = _snapshot.FirstOrDefault(x => x.Resource == key);
-                (row.Status, row.StatusKind) = o switch
+                var ownership = _snapshot.FirstOrDefault(ownership2 => ownership2.Resource == key);
+                (row.Status, row.StatusKind) = ownership switch
                 {
-                    { OwnerRunId: not null } when o.OwnerName == station => ($"Reserviert (eigener Lauf){Waiting(o)}", StationStatusKind.Paused),
-                    { OwnerRunId: not null } => ($"Reserviert – {o.OwnerName ?? o.OwnerRunId}{Waiting(o)}", StationStatusKind.Waiting),
-                    { WaitingNames.Count: > 0 } => ($"Frei – wartend: {string.Join(", ", o.WaitingNames!)}", StationStatusKind.Waiting),
+                    { OwnerRunId: not null } when ownership.OwnerName == station => ($"Reserviert (eigener Lauf){Waiting(ownership)}", StationStatusKind.Paused),
+                    { OwnerRunId: not null } => ($"Reserviert – {ownership.OwnerName ?? ownership.OwnerRunId}{Waiting(ownership)}", StationStatusKind.Waiting),
+                    { WaitingNames.Count: > 0 } => ($"Frei – wartend: {string.Join(", ", ownership.WaitingNames!)}", StationStatusKind.Waiting),
                     _ when _draft.Device(row.Assignment.Device) is null => ("Gerät fehlt", StationStatusKind.Aborting),
                     _ => ("Bereit", StationStatusKind.Running),
                 };
@@ -798,45 +798,45 @@ public sealed partial class StationsViewModel : ObservableObject
         WaitStatus.Clear();
         Acquired = false;
         ScopeText = "—";
-        if (_selectedGroup is { } g && station is not null)
+        if (_selectedGroup is { } group && station is not null)
         {
-            var keys = AddReservations(g, station);
-            Acquired = keys.Count > 0 && keys.All(k => _snapshot.Any(x => x.Resource == k && x.OwnerName == station));
-            RefreshWaitStatus(g);
-            var owner = _snapshot.FirstOrDefault(x => keys.Contains(x.Resource) && x.OwnerRunId is not null);
+            var keys = AddReservations(group, station);
+            Acquired = keys.Count > 0 && keys.All(key2 => _snapshot.Any(ownership2 => ownership2.Resource == key2 && ownership2.OwnerName == station));
+            RefreshWaitStatus(group);
+            var owner = _snapshot.FirstOrDefault(ownership2 => keys.Contains(ownership2.Resource) && ownership2.OwnerRunId is not null);
             if (owner is not null)
                 ScopeText = $"{owner.OwnerRunId} / {owner.ScopeName ?? "Gruppe"}" +
                             (owner.Since is { } since ? $" seit {since.ToLocalTime():HH:mm:ss}" : "");
         }
-        List<string> AddReservations(GroupDefinition g, string station)
+        List<string> AddReservations(GroupDefinition group2, string station)
         {
             var keyOf = _draft.KeyOf(station);
             var keys = new List<string>();
-            foreach (var name in g.Resources)
+            foreach (var name in group2.Resources)
             {
-                var a = _draft.Station(station)?.Resources.FirstOrDefault(x => x.Name == name);
+                var assignment = _draft.Station(station)?.Resources.FirstOrDefault(assignment2 => assignment2.Name == name);
                 var key = keyOf(name);
                 keys.Add(key);
-                var o = _snapshot.FirstOrDefault(x => x.Resource == key);
-                var (text, kind) = o switch
+                var ownership2 = _snapshot.FirstOrDefault(ownership3 => ownership3.Resource == key);
+                var (text, kind) = ownership2 switch
                 {
-                    { OwnerRunId: not null } when o.OwnerName == station => ("Reserviert (eigener Lauf)", StationStatusKind.Paused),
-                    { OwnerRunId: not null } => ($"Reserviert ({o.OwnerName ?? o.OwnerRunId})", StationStatusKind.Waiting),
-                    _ when a is null => ("nicht zugeordnet", StationStatusKind.Aborting),
+                    { OwnerRunId: not null } when ownership2.OwnerName == station => ("Reserviert (eigener Lauf)", StationStatusKind.Paused),
+                    { OwnerRunId: not null } => ($"Reserviert ({ownership2.OwnerName ?? ownership2.OwnerRunId})", StationStatusKind.Waiting),
+                    _ when assignment is null => ("nicht zugeordnet", StationStatusKind.Aborting),
                     _ => ("Bereit", StationStatusKind.Running),
                 };
-                Reservations.Add(new ReservationRow(name, a is null ? "—" : _draft.Device(a.Device)?.Name ?? a.Device, a?.Channel ?? "—", key, text, kind));
+                Reservations.Add(new ReservationRow(name, assignment is null ? "—" : _draft.Device(assignment.Device)?.Name ?? assignment.Device, assignment?.Channel ?? "—", key, text, kind));
             }
             return keys;
         }
 
-        void RefreshWaitStatus(GroupDefinition g)
+        void RefreshWaitStatus(GroupDefinition group3)
         {
             foreach (var st in _draft.Stations)
             {
-                var stKeys = g.Resources.Select(_draft.KeyOf(st.Name)).ToList();
-                var owns = stKeys.Any(k => _snapshot.Any(x => x.Resource == k && x.OwnerName == st.Name));
-                var waits = stKeys.Any(k => _snapshot.Any(x => x.Resource == k && (x.WaitingNames ?? []).Contains(st.Name)));
+                var stKeys = group3.Resources.Select(_draft.KeyOf(st.Name)).ToList();
+                var owns = stKeys.Any(stKey => _snapshot.Any(ownership3 => ownership3.Resource == stKey && ownership3.OwnerName == st.Name));
+                var waits = stKeys.Any(stKey => _snapshot.Any(ownership3 => ownership3.Resource == stKey && (ownership3.WaitingNames ?? []).Contains(st.Name)));
                 WaitStatus.Add(new WaitRow(st.Name, owns ? "Eigentümer" : waits ? "In Warteschlange" : "—", owns, waits));
             }
         }
@@ -845,12 +845,12 @@ public sealed partial class StationsViewModel : ObservableObject
         OnPropertiesChanged(nameof(Acquired), nameof(AcquiredText), nameof(ScopeText));
 
         Accesses.Clear();
-        foreach (var a in _coordinator.Journal.Recent().Take(60))
-            Accesses.Add(new AccessRow(a.Start.ToLocalTime().ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture), a.Station, a.Resource, a.Operation, a.Key, a.Conflict));
+        foreach (var hardwareAccess in _coordinator.Journal.Recent().Take(60))
+            Accesses.Add(new AccessRow(hardwareAccess.Start.ToLocalTime().ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture), hardwareAccess.Station, hardwareAccess.Resource, hardwareAccess.Operation, hardwareAccess.Key, hardwareAccess.Conflict));
         OnPropertiesChanged(nameof(AccessSummary), nameof(HasConflicts));
     }
 
-    private static string Waiting(ResourceOwnership o) => o.WaitingNames is { Count: > 0 } w ? " · wartend: " + string.Join(", ", w) : "";
+    private static string Waiting(ResourceOwnership ownership) => ownership.WaitingNames is { Count: > 0 } items ? " · wartend: " + string.Join(", ", items) : "";
 
     // ------------------------------------------------------------------ Zugriffsprotokoll
 
@@ -871,14 +871,14 @@ public sealed partial class StationsViewModel : ObservableObject
     // ------------------------------------------------------------------ Prüfung und Speichern
 
     public ObservableCollection<ConfigIssue> Issues { get; } = [];
-    public bool HasConfigErrors => Issues.Any(i => i.IsError);
+    public bool HasConfigErrors => Issues.Any(issue => issue.IsError);
 
     public string CheckSummary
     {
         get
         {
-            var errors = Issues.Count(i => i.IsError);
-            var warnings = Issues.Count(i => i.Severity == ConfigSeverity.Warning);
+            var errors = Issues.Count(issue => issue.IsError);
+            var warnings = Issues.Count(issue => issue.Severity == ConfigSeverity.Warning);
             return errors > 0 ? $"{errors} Fehler – Konfiguration verweigert" : warnings > 0 ? $"In Ordnung, {warnings} Hinweis(e)" : "Konfiguration in Ordnung";
         }
     }
@@ -887,7 +887,7 @@ public sealed partial class StationsViewModel : ObservableObject
     public void Check()
     {
         Issues.Clear();
-        foreach (var i in StationHardware.Check(_draft, Project).OrderByDescending(i => i.Severity)) Issues.Add(i);
+        foreach (var issue in StationHardware.Check(_draft, Project).OrderByDescending(issue2 => issue2.Severity)) Issues.Add(issue);
         OnPropertiesChanged(nameof(HasConfigErrors), nameof(CheckSummary));
     }
 
@@ -903,7 +903,7 @@ public sealed partial class StationsViewModel : ObservableObject
         Check();
         if (HasConfigErrors)
         {
-            Error = "Nicht gespeichert: " + string.Join(" ", Issues.Where(i => i.IsError).Select(i => i.Text));
+            Error = "Nicht gespeichert: " + string.Join(" ", Issues.Where(issue => issue.IsError).Select(issue => issue.Text));
             return;
         }
         if (_anyRunning())

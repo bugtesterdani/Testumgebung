@@ -22,35 +22,35 @@ public static class CommText
     {
         if (hex) return ParseHex(text);
         var sb = new StringBuilder();
-        for (var i = 0; i < text.Length; i++)
+        for (var index = 0; index < text.Length; index++)
         {
-            var c = text[i];
-            if (c != '\\' || i + 1 >= text.Length)
+            var character = text[index];
+            if (character != '\\' || index + 1 >= text.Length)
             {
-                sb.Append(c);
+                sb.Append(character);
                 continue;
             }
-            AppendEscape(sb, text, ref i);
+            AppendEscape(sb, text, ref index);
         }
         return Latin1.GetBytes(sb.ToString());
     }
 
     // Consumes one escape; unknown or incomplete escapes remain literal.
-    private static void AppendEscape(StringBuilder sb, string text, ref int i)
+    private static void AppendEscape(StringBuilder sb, string text, ref int index)
     {
-        var n = text[++i];
-        switch (n)
+        var character = text[++index];
+        switch (character)
         {
             case 'r': sb.Append('\r'); break;
             case 'n': sb.Append('\n'); break;
             case 't': sb.Append('\t'); break;
             case '0': sb.Append('\0'); break;
             case '\\': sb.Append('\\'); break;
-            case 'x' when i + 2 < text.Length && byte.TryParse(text.AsSpan(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b):
-                sb.Append((char)b);
-                i += 2;
+            case 'x' when index + 2 < text.Length && byte.TryParse(text.AsSpan(index + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var dataByte):
+                sb.Append((char)dataByte);
+                index += 2;
                 break;
-            default: sb.Append('\\').Append(n); break;
+            default: sb.Append('\\').Append(character); break;
         }
     }
 
@@ -59,8 +59,8 @@ public static class CommText
         var clean = new StringBuilder();
         foreach (var part in text.Split([' ', ',', ';', ':', '-', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
         {
-            var p = part.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? part[2..] : part;
-            clean.Append(p.Length % 2 == 1 ? "0" + p : p);
+            var startsWithPrefix = part.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? part[2..] : part;
+            clean.Append(startsWithPrefix.Length % 2 == 1 ? "0" + startsWithPrefix : startsWithPrefix);
         }
         try
         {
@@ -74,18 +74,18 @@ public static class CommText
 
     public static string Format(ReadOnlySpan<byte> data, bool hex)
     {
-        if (hex) return string.Join(" ", data.ToArray().Select(b => b.ToString("X2", CultureInfo.InvariantCulture)));
+        if (hex) return string.Join(" ", data.ToArray().Select(dataByte => dataByte.ToString("X2", CultureInfo.InvariantCulture)));
         var sb = new StringBuilder();
-        foreach (var b in data)
+        foreach (var dataByte in data)
         {
-            switch (b)
+            switch (dataByte)
             {
                 case (byte)'\r': sb.Append("\\r"); break;
                 case (byte)'\n': sb.Append("\\n"); break;
                 case (byte)'\t': sb.Append("\\t"); break;
                 case (byte)'\\': sb.Append("\\\\"); break;
-                case < 0x20 or >= 0x7F: sb.Append("\\x").Append(b.ToString("X2", CultureInfo.InvariantCulture)); break;
-                default: sb.Append((char)b); break;
+                case < 0x20 or >= 0x7F: sb.Append("\\x").Append(dataByte.ToString("X2", CultureInfo.InvariantCulture)); break;
+                default: sb.Append((char)dataByte); break;
             }
         }
         return sb.ToString();
@@ -95,10 +95,10 @@ public static class CommText
     public static string Trace(ReadOnlySpan<byte> data, int max = 120)
     {
         var printable = true;
-        foreach (var b in data)
-            if (b is (< 0x20 and not (byte)'\r' and not (byte)'\n' and not (byte)'\t') or >= 0x7F) { printable = false; break; }
-        var s = Format(data, !printable);
-        return s.Length > max ? s[..max] + " …" : s;
+        foreach (var dataByte in data)
+            if (dataByte is (< 0x20 and not (byte)'\r' and not (byte)'\n' and not (byte)'\t') or >= 0x7F) { printable = false; break; }
+        var text = Format(data, !printable);
+        return text.Length > max ? text[..max] + " …" : text;
     }
 
     /// <summary>Bytes als Text (Latin-1, ohne Escapes) – für Mustervergleiche.</summary>
@@ -178,7 +178,7 @@ public static class ModbusCodec
             ModbusDataType.Int32 => (long)System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes),
             ModbusDataType.Float32 => (double)System.Buffers.Binary.BinaryPrimitives.ReadSingleBigEndian(bytes),
             ModbusDataType.Float64 => System.Buffers.Binary.BinaryPrimitives.ReadDoubleBigEndian(bytes),
-            _ => Encoding.ASCII.GetString(regs.SelectMany(r => new[] { (byte)(r >> 8), (byte)r }).ToArray()).TrimEnd('\0', ' '),
+            _ => Encoding.ASCII.GetString(regs.SelectMany(reg => new[] { (byte)(reg >> 8), (byte)reg }).ToArray()).TrimEnd('\0', ' '),
         };
     }
 
@@ -209,13 +209,13 @@ public static class ModbusCodec
             default:
                 {
                     var text = Encoding.ASCII.GetBytes(Convert.ToString(value, inv) ?? "");
-                    var n = Math.Max(textRegisters, (text.Length + 1) / 2);
-                    bytes = new byte[n * 2];
+                    var count = Math.Max(textRegisters, (text.Length + 1) / 2);
+                    bytes = new byte[count * 2];
                     text.AsSpan(0, Math.Min(text.Length, bytes.Length)).CopyTo(bytes);
-                    return Enumerable.Range(0, n).Select(i => (ushort)((bytes[2 * i] << 8) | bytes[2 * i + 1])).ToArray();
+                    return Enumerable.Range(0, count).Select(index => (ushort)((bytes[2 * index] << 8) | bytes[2 * index + 1])).ToArray();
                 }
         }
-        var regs = Enumerable.Range(0, bytes.Length / 2).Select(i => (ushort)((bytes[2 * i] << 8) | bytes[2 * i + 1])).ToArray();
+        var regs = Enumerable.Range(0, bytes.Length / 2).Select(index => (ushort)((bytes[2 * index] << 8) | bytes[2 * index + 1])).ToArray();
         if (lowWordFirst) Array.Reverse(regs);
         return regs;
     }
@@ -224,10 +224,10 @@ public static class ModbusCodec
     {
         var ordered = lowWordFirst ? regs.Reverse().ToArray() : regs.ToArray();
         var bytes = new byte[ordered.Length * 2];
-        for (var i = 0; i < ordered.Length; i++)
+        for (var index = 0; index < ordered.Length; index++)
         {
-            bytes[2 * i] = (byte)(ordered[i] >> 8);
-            bytes[2 * i + 1] = (byte)ordered[i];
+            bytes[2 * index] = (byte)(ordered[index] >> 8);
+            bytes[2 * index + 1] = (byte)ordered[index];
         }
         return bytes;
     }
@@ -237,27 +237,27 @@ public static class ModbusCodec
     /// </summary>
     public static (ModbusArea Area, int Address) ParseAddress(string text, ModbusArea? defaultArea = null)
     {
-        var t = text.Trim().ToUpperInvariant();
+        var text2 = text.Trim().ToUpperInvariant();
         (string Prefix, ModbusArea Area)[] prefixes = [("HR", ModbusArea.HoldingRegister), ("IR", ModbusArea.InputRegister), ("DI", ModbusArea.DiscreteInput), ("C", ModbusArea.Coil)];
         foreach (var (prefix, area) in prefixes)
-            if (t.StartsWith(prefix, StringComparison.Ordinal) && int.TryParse(t[prefix.Length..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var a) && a is >= 0 and <= 65535)
-                return (area, a);
-        if (!int.TryParse(t.StartsWith("0X", StringComparison.Ordinal) ? t[2..] : t, t.StartsWith("0X", StringComparison.Ordinal) ? NumberStyles.HexNumber : NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) || n < 0)
+            if (text2.StartsWith(prefix, StringComparison.Ordinal) && int.TryParse(text2[prefix.Length..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var address) && address is >= 0 and <= 65535)
+                return (area, address);
+        if (!int.TryParse(text2.StartsWith("0X", StringComparison.Ordinal) ? text2[2..] : text2, text2.StartsWith("0X", StringComparison.Ordinal) ? NumberStyles.HexNumber : NumberStyles.Integer, CultureInfo.InvariantCulture, out var count) || count < 0)
             throw new FormatException($"Modbus-Adresse „{text}“ ungültig (z. B. HR100, IR5, C3, DI2 oder 40101).");
-        if (defaultArea is { } d) return (d, n);
-        return ParseConventionalAddress(n, text);
+        if (defaultArea is { } modbusArea) return (modbusArea, count);
+        return ParseConventionalAddress(count, text);
     }
 
-    private static (ModbusArea Area, int Address) ParseConventionalAddress(int n, string text)
+    private static (ModbusArea Area, int Address) ParseConventionalAddress(int address, string text)
     {
-        return n switch
+        return address switch
         {
-            >= 400001 and <= 465536 => (ModbusArea.HoldingRegister, n - 400001),
-            >= 300001 and <= 365536 => (ModbusArea.InputRegister, n - 300001),
-            >= 40001 and <= 49999 => (ModbusArea.HoldingRegister, n - 40001),
-            >= 30001 and <= 39999 => (ModbusArea.InputRegister, n - 30001),
-            >= 10001 and <= 19999 => (ModbusArea.DiscreteInput, n - 10001),
-            >= 1 and <= 9999 => (ModbusArea.Coil, n - 1),
+            >= 400001 and <= 465536 => (ModbusArea.HoldingRegister, address - 400001),
+            >= 300001 and <= 365536 => (ModbusArea.InputRegister, address - 300001),
+            >= 40001 and <= 49999 => (ModbusArea.HoldingRegister, address - 40001),
+            >= 30001 and <= 39999 => (ModbusArea.InputRegister, address - 30001),
+            >= 10001 and <= 19999 => (ModbusArea.DiscreteInput, address - 10001),
+            >= 1 and <= 9999 => (ModbusArea.Coil, address - 1),
             _ => throw new FormatException($"Modbus-Adresse „{text}“: Bereich nicht erkennbar – HR/IR/C/DI voranstellen."),
         };
     }
@@ -293,11 +293,11 @@ public sealed record CanSignal(int StartBit, int Length, bool Motorola = false, 
     private ulong IntelBits(ReadOnlySpan<byte> data)
     {
         ulong raw = 0;
-        for (var i = 0; i < Length; i++)
+        for (var index = 0; index < Length; index++)
         {
-            var bit = StartBit + i;
+            var bit = StartBit + index;
             if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
-            if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << i;
+            if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << index;
         }
         return raw;
     }
@@ -306,10 +306,10 @@ public sealed record CanSignal(int StartBit, int Length, bool Motorola = false, 
     {
         ulong raw = 0;
         var bit = StartBit;
-        for (var i = Length - 1; i >= 0; i--)
+        for (var index = Length - 1; index >= 0; index--)
         {
             if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
-            if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << i;
+            if ((data[bit / 8] >> (bit % 8) & 1) != 0) raw |= 1UL << index;
             bit = bit % 8 == 0 ? bit + 15 : bit - 1;
         }
         return raw;
@@ -320,8 +320,8 @@ public sealed record CanSignal(int StartBit, int Length, bool Motorola = false, 
     {
         if (!IsFloat) return Raw(data) * Factor + Offset;
         var bits = Bits(data);
-        var f = Length == 32 ? BitConverter.Int32BitsToSingle(unchecked((int)(uint)bits)) : BitConverter.Int64BitsToDouble(unchecked((long)bits));
-        return f * Factor + Offset;
+        var frequency = Length == 32 ? BitConverter.Int32BitsToSingle(unchecked((int)(uint)bits)) : BitConverter.Int64BitsToDouble(unchecked((long)bits));
+        return frequency * Factor + Offset;
     }
 
     /// <summary>Höchster bzw. niedrigster darstellbarer Rohwert.</summary>
@@ -335,8 +335,8 @@ public sealed record CanSignal(int StartBit, int Length, bool Motorola = false, 
         ulong raw;
         if (IsFloat)
         {
-            var v = (physical - Offset) / Factor;
-            raw = Length == 32 ? (uint)BitConverter.SingleToInt32Bits((float)v) : unchecked((ulong)BitConverter.DoubleToInt64Bits(v));
+            var value = (physical - Offset) / Factor;
+            raw = Length == 32 ? (uint)BitConverter.SingleToInt32Bits((float)value) : unchecked((ulong)BitConverter.DoubleToInt64Bits(value));
         }
         else
         {
@@ -350,22 +350,22 @@ public sealed record CanSignal(int StartBit, int Length, bool Motorola = false, 
     {
         if (!Motorola)
         {
-            for (var i = 0; i < Length; i++)
+            for (var index = 0; index < Length; index++)
             {
-                var bit = StartBit + i;
+                var bit = StartBit + index;
                 if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
                 var mask = (byte)(1 << (bit % 8));
-                data[bit / 8] = (raw >> i & 1) != 0 ? (byte)(data[bit / 8] | mask) : (byte)(data[bit / 8] & ~mask);
+                data[bit / 8] = (raw >> index & 1) != 0 ? (byte)(data[bit / 8] | mask) : (byte)(data[bit / 8] & ~mask);
             }
         }
         else
         {
             var bit = StartBit;
-            for (var i = Length - 1; i >= 0; i--)
+            for (var index2 = Length - 1; index2 >= 0; index2--)
             {
                 if (bit / 8 >= data.Length) throw new ArgumentException($"Signal reicht über die {data.Length} Datenbytes hinaus.");
                 var mask = (byte)(1 << (bit % 8));
-                data[bit / 8] = (raw >> i & 1) != 0 ? (byte)(data[bit / 8] | mask) : (byte)(data[bit / 8] & ~mask);
+                data[bit / 8] = (raw >> index2 & 1) != 0 ? (byte)(data[bit / 8] | mask) : (byte)(data[bit / 8] & ~mask);
                 bit = bit % 8 == 0 ? bit + 15 : bit - 1;
             }
         }

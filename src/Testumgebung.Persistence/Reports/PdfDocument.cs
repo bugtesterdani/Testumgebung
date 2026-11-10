@@ -36,12 +36,12 @@ public sealed class PdfPage
 {
     internal readonly StringBuilder Content = new();
 
-    private static string N(double v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string N(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     public void Text(double x, double y, string text, double size = 10, PdfFont font = PdfFont.Regular, PdfColor? color = null)
     {
-        var f = font switch { PdfFont.Bold => "F2", PdfFont.Mono => "F3", _ => "F1" };
-        Content.Append((color ?? PdfColor.Black).Fill).Append(" BT /").Append(f).Append(' ').Append(N(size)).Append(" Tf ")
+        var fileName = font switch { PdfFont.Bold => "F2", PdfFont.Mono => "F3", _ => "F1" };
+        Content.Append((color ?? PdfColor.Black).Fill).Append(" BT /").Append(fileName).Append(' ').Append(N(size)).Append(" Tf ")
             .Append(N(x)).Append(' ').Append(N(y)).Append(" Td (").Append(PdfText.Escape(text)).Append(") Tj ET\n");
     }
 
@@ -57,7 +57,7 @@ public sealed class PdfPage
         if (points.Count < 2) return;
         Content.Append((color ?? PdfColor.Blue).Stroke).Append(' ').Append(N(width)).Append(" w ");
         Content.Append(N(points[0].X)).Append(' ').Append(N(points[0].Y)).Append(" m ");
-        for (var i = 1; i < points.Count; i++) Content.Append(N(points[i].X)).Append(' ').Append(N(points[i].Y)).Append(" l ");
+        for (var index = 1; index < points.Count; index++) Content.Append(N(points[index].X)).Append(' ').Append(N(points[index].Y)).Append(" l ");
         Content.Append("S\n");
     }
 }
@@ -120,13 +120,13 @@ public static class PdfText
     public static double Width(string text, double size, PdfFont font = PdfFont.Regular)
     {
         if (font == PdfFont.Mono) return text.Length * 0.6 * size;
-        double w = 0;
-        foreach (var c in Normalize(text))
+        double number = 0;
+        foreach (var normalize in Normalize(text))
         {
-            var basic = BasicGlyph.GetValueOrDefault(c, c);
-            w += basic is >= ' ' and <= '~' ? Helvetica[basic - ' '] : 556;
+            var basic = BasicGlyph.GetValueOrDefault(normalize, normalize);
+            number += basic is >= ' ' and <= '~' ? Helvetica[basic - ' '] : 556;
         }
-        return w / 1000 * size * (font == PdfFont.Bold ? 1.06 : 1);
+        return number / 1000 * size * (font == PdfFont.Bold ? 1.06 : 1);
     }
 
     /// <summary>Zeichen außerhalb von WinAnsi ersetzen (±, µ, °, Umlaute bleiben erhalten).</summary>
@@ -147,12 +147,12 @@ public static class PdfText
     public static string Normalize(string text)
     {
         var sb = new StringBuilder(text.Length);
-        foreach (var c in text)
+        foreach (var text2 in text)
         {
-            if (c is '\r' or '\n' or '\t') sb.Append(' ');
-            else if (c <= 0xFF && c is not (>= (char)0x80 and <= (char)0x9F)) sb.Append(c);
-            else if (WinAnsi.ContainsKey(c)) sb.Append(c);
-            else sb.Append(FallbackGlyphs.GetValueOrDefault(c, "?"));
+            if (text2 is '\r' or '\n' or '\t') sb.Append(' ');
+            else if (text2 <= 0xFF && text2 is not (>= (char)0x80 and <= (char)0x9F)) sb.Append(text2);
+            else if (WinAnsi.ContainsKey(text2)) sb.Append(text2);
+            else sb.Append(FallbackGlyphs.GetValueOrDefault(text2, "?"));
         }
         return sb.ToString();
     }
@@ -160,16 +160,16 @@ public static class PdfText
     internal static string Escape(string text)
     {
         var sb = new StringBuilder();
-        foreach (var c in Normalize(text))
+        foreach (var normalize in Normalize(text))
         {
-            var b = WinAnsi.TryGetValue(c, out var mapped) ? mapped : (byte)c;
-            switch (b)
+            var dataByte = WinAnsi.TryGetValue(normalize, out var mapped) ? mapped : (byte)normalize;
+            switch (dataByte)
             {
                 case (byte)'(': sb.Append("\\("); break;
                 case (byte)')': sb.Append("\\)"); break;
                 case (byte)'\\': sb.Append("\\\\"); break;
-                case < 0x20 or >= 0x7F: sb.Append('\\').Append(Convert.ToString(b, 8).PadLeft(3, '0')); break;
-                default: sb.Append((char)b); break;
+                case < 0x20 or >= 0x7F: sb.Append('\\').Append(Convert.ToString(dataByte, 8).PadLeft(3, '0')); break;
+                default: sb.Append((char)dataByte); break;
             }
         }
         return sb.ToString();
@@ -179,9 +179,9 @@ public static class PdfText
     public static string Fit(string text, double width, double size, PdfFont font = PdfFont.Regular)
     {
         if (Width(text, size, font) <= width) return text;
-        var t = text;
-        while (t.Length > 1 && Width(t + "…", size, font) > width) t = t[..^1];
-        return t + "…";
+        var textValue = text;
+        while (textValue.Length > 1 && Width(textValue + "…", size, font) > width) textValue = textValue[..^1];
+        return textValue + "…";
     }
 
     /// <summary>Zeilenumbruch an Wortgrenzen.</summary>
@@ -239,7 +239,7 @@ public sealed class PdfDocument
         var latin = Encoding.Latin1;
         using var ms = new MemoryStream();
         var offsets = new List<long>();
-        void Write(string s) => ms.Write(latin.GetBytes(s));
+        void Write(string text) => ms.Write(latin.GetBytes(text));
         void Obj(string body)
         {
             offsets.Add(ms.Position);
@@ -250,7 +250,7 @@ public sealed class PdfDocument
         var pageCount = _pages.Count;
         // 1 Katalog, 2 Seitenbaum, 3–5 Schriften, 6 Info, danach je Seite: Seite + Inhalt
         Obj("<< /Type /Catalog /Pages 2 0 R >>");
-        var kids = string.Join(" ", Enumerable.Range(0, pageCount).Select(i => $"{7 + 2 * i} 0 R"));
+        var kids = string.Join(" ", Enumerable.Range(0, pageCount).Select(index2 => $"{7 + 2 * index2} 0 R"));
         Obj($"<< /Type /Pages /Kids [{kids}] /Count {pageCount} >>");
         Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
         Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
@@ -270,7 +270,7 @@ public sealed class PdfDocument
         var xref = ms.Position;
         var sb = new StringBuilder();
         sb.Append(CultureInfo.InvariantCulture, $"xref\n0 {offsets.Count + 1}\n0000000000 65535 f \n");
-        foreach (var o in offsets) sb.Append(o.ToString("D10", CultureInfo.InvariantCulture)).Append(" 00000 n \n");
+        foreach (var offset in offsets) sb.Append(offset.ToString("D10", CultureInfo.InvariantCulture)).Append(" 00000 n \n");
         sb.Append(CultureInfo.InvariantCulture, $"trailer\n<< /Size {offsets.Count + 1} /Root 1 0 R /Info 6 0 R >>\nstartxref\n{xref}\n%%EOF\n");
         Write(sb.ToString());
         return ms.ToArray();
@@ -372,18 +372,18 @@ public sealed class PdfReportWriter
     /// <summary>Tabelle mit Kopfzeile (wird auf Folgeseiten wiederholt), Spaltenbreiten relativ, Text wird gekürzt.</summary>
     public void Table(IReadOnlyList<(string Header, double Weight)> columns, IEnumerable<IReadOnlyList<(string Text, PdfColor? Color)>> rows, double size = 8.5)
     {
-        var total = columns.Sum(c => c.Weight);
-        var widths = columns.Select(c => c.Weight / total * ContentWidth).ToArray();
+        var total = columns.Sum(entry => entry.Weight);
+        var widths = columns.Select(entry => entry.Weight / total * ContentWidth).ToArray();
         var rowHeight = size + 6;
         void HeaderRow()
         {
             Need(rowHeight * 2);
             _page.Rect(Margin, _y - rowHeight, ContentWidth, rowHeight, PdfColor.Light);
-            var x = Margin;
-            for (var i = 0; i < columns.Count; i++)
+            var marginValue = Margin;
+            for (var index = 0; index < columns.Count; index++)
             {
-                _page.Text(x + 3, _y - size - 2, PdfText.Fit(columns[i].Header, widths[i] - 6, size, PdfFont.Bold), size, PdfFont.Bold);
-                x += widths[i];
+                _page.Text(marginValue + 3, _y - size - 2, PdfText.Fit(columns[index].Header, widths[index] - 6, size, PdfFont.Bold), size, PdfFont.Bold);
+                marginValue += widths[index];
             }
             _y -= rowHeight;
         }
@@ -395,13 +395,13 @@ public sealed class PdfReportWriter
                 NewPage();
                 HeaderRow();
             }
-            var x = Margin;
-            for (var i = 0; i < columns.Count && i < row.Count; i++)
+            var marginValue2 = Margin;
+            for (var index2 = 0; index2 < columns.Count && index2 < row.Count; index2++)
             {
-                var (text, color) = row[i];
-                _page.Text(x + 3, _y - size - 2, PdfText.Fit(text, widths[i] - 6, size, color is null ? PdfFont.Regular : PdfFont.Bold), size,
+                var (text, color) = row[index2];
+                _page.Text(marginValue2 + 3, _y - size - 2, PdfText.Fit(text, widths[index2] - 6, size, color is null ? PdfFont.Regular : PdfFont.Bold), size,
                     color is null ? PdfFont.Regular : PdfFont.Bold, color);
-                x += widths[i];
+                marginValue2 += widths[index2];
             }
             _y -= rowHeight;
             _page.Line(Margin, _y, Margin + ContentWidth, _y, 0.3);
@@ -415,37 +415,37 @@ public sealed class PdfReportWriter
         Need(height + 30);
         _page.Text(Margin, _y - 10, title, 9.5, PdfFont.Bold);
         _y -= 16;
-        var (left, bottom, w, h) = (Margin + 40, _y - height, ContentWidth - 40, height - 14);
-        var all = series.Where(s => s.X.Length > 0).ToList();
+        var (left, bottom, number, upperValue) = (Margin + 40, _y - height, ContentWidth - 40, height - 14);
+        var all = series.Where(namedEntry => namedEntry.X.Length > 0).ToList();
         if (all.Count == 0) return;
-        var (xmin, xmax) = (all.Min(s => s.X.Min()), all.Max(s => s.X.Max()));
-        var (ymin, ymax) = (all.Min(s => s.Y.Min()), all.Max(s => s.Y.Max()));
+        var (xmin, xmax) = (all.Min(namedEntry => namedEntry.X.Min()), all.Max(namedEntry => namedEntry.X.Max()));
+        var (ymin, ymax) = (all.Min(namedEntry => namedEntry.Y.Min()), all.Max(namedEntry => namedEntry.Y.Max()));
         if (xmax <= xmin) xmax = xmin + 1;
         if (ymax <= ymin) { ymax += 1; ymin -= 1; }
         var pad = (ymax - ymin) * 0.05;
         (ymin, ymax) = (ymin - pad, ymax + pad);
-        _page.Rect(left, bottom, w, h, PdfColor.Light);
-        for (var i = 0; i <= 4; i++)
+        _page.Rect(left, bottom, number, upperValue, PdfColor.Light);
+        for (var index = 0; index <= 4; index++)
         {
-            var yv = ymin + (ymax - ymin) * i / 4;
-            var y = bottom + h * i / 4;
-            _page.Line(left, y, left + w, y, 0.3);
-            _page.Text(Margin, y - 3, yv.ToString("G4", CultureInfo.InvariantCulture), 7, PdfFont.Regular, PdfColor.Gray);
-            var xv = xmin + (xmax - xmin) * i / 4;
-            _page.Text(left + w * i / 4 - 8, bottom - 10, xv.ToString("G4", CultureInfo.InvariantCulture), 7, PdfFont.Regular, PdfColor.Gray);
+            var yv = ymin + (ymax - ymin) * index / 4;
+            var yValue = bottom + upperValue * index / 4;
+            _page.Line(left, yValue, left + number, yValue, 0.3);
+            _page.Text(Margin, yValue - 3, yv.ToString("G4", CultureInfo.InvariantCulture), 7, PdfFont.Regular, PdfColor.Gray);
+            var xv = xmin + (xmax - xmin) * index / 4;
+            _page.Text(left + number * index / 4 - 8, bottom - 10, xv.ToString("G4", CultureInfo.InvariantCulture), 7, PdfFont.Regular, PdfColor.Gray);
         }
-        _page.Text(left + w - 30, bottom - 20, xUnit, 7, PdfFont.Regular, PdfColor.Gray);
-        _page.Text(Margin, bottom + h + 3, yUnit, 7, PdfFont.Regular, PdfColor.Gray);
+        _page.Text(left + number - 30, bottom - 20, xUnit, 7, PdfFont.Regular, PdfColor.Gray);
+        _page.Text(Margin, bottom + upperValue + 3, yUnit, 7, PdfFont.Regular, PdfColor.Gray);
         PdfColor[] colors = [new(0.75, 0.45, 0.1), new(0.15, 0.15, 0.15), new(0.45, 0.45, 0.48), PdfColor.Blue, PdfColor.Pass];
         var legendX = left;
-        for (var s = 0; s < all.Count; s++)
+        for (var index2 = 0; index2 < all.Count; index2++)
         {
-            var (name, xs, ys) = all[s];
+            var (name, xs, ys) = all[index2];
             var step = Math.Max(1, xs.Length / 600);
             var points = new List<(double, double)>();
-            for (var i = 0; i < xs.Length; i += step)
-                points.Add((left + (xs[i] - xmin) / (xmax - xmin) * w, bottom + (ys[i] - ymin) / (ymax - ymin) * h));
-            var color = colors[s % colors.Length];
+            for (var index3 = 0; index3 < xs.Length; index3 += step)
+                points.Add((left + (xs[index3] - xmin) / (xmax - xmin) * number, bottom + (ys[index3] - ymin) / (ymax - ymin) * upperValue));
+            var color = colors[index2 % colors.Length];
             _page.Polyline(points, 0.7, color);
             _page.Rect(legendX + 40, bottom - 27, 8, 3, color);
             _page.Text(legendX + 51, bottom - 29, name, 7, PdfFont.Regular, PdfColor.Gray);
@@ -458,12 +458,12 @@ public sealed class PdfReportWriter
     public PdfDocument Finish(string footer)
     {
         var pages = _doc.Pages;
-        for (var i = 0; i < pages.Count; i++)
+        for (var index = 0; index < pages.Count; index++)
         {
-            pages[i].Line(Margin, 36, PdfDocument.Width - Margin, 36);
-            pages[i].Text(Margin, 24, footer, 7.5, PdfFont.Regular, PdfColor.Gray);
-            var text = $"Seite {i + 1} von {pages.Count}";
-            pages[i].Text(PdfDocument.Width - Margin - PdfText.Width(text, 7.5), 24, text, 7.5, PdfFont.Regular, PdfColor.Gray);
+            pages[index].Line(Margin, 36, PdfDocument.Width - Margin, 36);
+            pages[index].Text(Margin, 24, footer, 7.5, PdfFont.Regular, PdfColor.Gray);
+            var text = $"Seite {index + 1} von {pages.Count}";
+            pages[index].Text(PdfDocument.Width - Margin - PdfText.Width(text, 7.5), 24, text, 7.5, PdfFont.Regular, PdfColor.Gray);
         }
         return _doc;
     }

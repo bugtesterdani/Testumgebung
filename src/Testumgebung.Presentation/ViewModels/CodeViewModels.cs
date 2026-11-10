@@ -65,7 +65,7 @@ public sealed class CodeToolsViewModel : ObservableObject
         _editor = editor;
         _node = node;
         Visible = CodeBlockConverter.VisibleVariables(editor.Project.Definition, node.Id);
-        VisibleVariables = Visible.Select(v => $"{v.Name} : {v.Type.ToString().ToLowerInvariant()}").ToList();
+        VisibleVariables = Visible.Select(variable => $"{variable.Name} : {variable.Type.ToString().ToLowerInvariant()}").ToList();
         BuildCommand = new RelayCommand(() => _ = BuildAsync(), () => !IsBusy);
         ConvertCommand = new RelayCommand(Convert);
     }
@@ -122,10 +122,10 @@ public sealed class CodeToolsViewModel : ObservableObject
         BuildStatus = "Build läuft …";
         try
         {
-            var ports = Visible.Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
+            var ports = Visible.Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
             var result = await runtime.CompileAsync(new CodeRequest(Language, Step.Parameters.GetValueOrDefault("Quelltext") ?? "", ports) { Assemblies = _editor.Project.Definition.Assemblies }, CancellationToken.None);
             Diagnostics.Clear();
-            foreach (var d in result.Diagnostics) Diagnostics.Add(d);
+            foreach (var diagnostic in result.Diagnostics) Diagnostics.Add(diagnostic);
             BuildOk = result.Success;
             BuildStatus = CodeHelp.BuildText(result);
             RuntimeInfo = result.RuntimeInfo;
@@ -206,7 +206,7 @@ public sealed class LibraryBindingsViewModel : ObservableObject
 
     public BlockRef? SelectedBlock
     {
-        get => Blocks.FirstOrDefault(b => b.Id == _owner.Step.Parameters.GetValueOrDefault("Baustein"));
+        get => Blocks.FirstOrDefault(blockRef => blockRef.Id == _owner.Step.Parameters.GetValueOrDefault("Baustein"));
         set
         {
             if (value is null || value.Id == SelectedBlock?.Id) return;
@@ -223,7 +223,7 @@ public sealed class LibraryBindingsViewModel : ObservableObject
     private void RebuildRows()
     {
         Rows.Clear();
-        foreach (var p in SelectedBlock?.Ports ?? []) Rows.Add(new PortBindingViewModel(_owner, p));
+        foreach (var port in SelectedBlock?.Ports ?? []) Rows.Add(new PortBindingViewModel(_owner, port));
     }
 }
 
@@ -256,8 +256,8 @@ public sealed class PortRowViewModel : ObservableObject
         _testValue = port.TestValue switch
         {
             null => "",
-            string s => s,
-            var v => TypedValue.Format(v),
+            string text => text,
+            var value => TypedValue.Format(value),
         };
     }
 
@@ -279,7 +279,7 @@ public sealed class PortRowViewModel : ObservableObject
 
     public CodePort? ToPort()
     {
-        if (string.IsNullOrWhiteSpace(Name) || !(char.IsLetter(Name[0]) || Name[0] == '_') || !Name.All(c => char.IsLetterOrDigit(c) || c == '_'))
+        if (string.IsNullOrWhiteSpace(Name) || !(char.IsLetter(Name[0]) || Name[0] == '_') || !Name.All(name => char.IsLetterOrDigit(name) || name == '_'))
         {
             Error = "Ungültiger Name";
             return null;
@@ -309,24 +309,24 @@ internal sealed class LibraryTestHost(TestProject project, List<string> log) : I
 
     public Task<double> ReadAsync(string resource)
     {
-        var b = _hardware.Resolve(resource);
-        return b.Adapter.ReadAsync(b.Channel, CancellationToken.None);
+        var binding = _hardware.Resolve(resource);
+        return binding.Adapter.ReadAsync(binding.Channel, CancellationToken.None);
     }
 
     public Task WriteAsync(string resource, double value)
     {
-        var b = _hardware.Resolve(resource);
-        return b.Adapter.WriteAsync(b.Channel, value, CancellationToken.None);
+        var binding = _hardware.Resolve(resource);
+        return binding.Adapter.WriteAsync(binding.Channel, value, CancellationToken.None);
     }
 
     public Task<object?> AskAsync(OperatorPrompt prompt)
-        => Task.FromResult<object?>(prompt.DefaultValue ?? (prompt.InputType is { } t ? TypedValue.Default(t) : true));
+        => Task.FromResult<object?>(prompt.DefaultValue ?? (prompt.InputType is { } varType ? TypedValue.Default(varType) : true));
 
     public Task<object?> DeviceAsync(string operation, IReadOnlyDictionary<string, object?> arguments)
     {
-        var resource = arguments.TryGetValue("resource", out var r) && r is string s ? s : throw new InvalidOperationException("Argument „resource“ fehlt.");
-        var b = _hardware.Resolve(resource);
-        return Testumgebung.Engine.Blocks.CodeDevices.ExecuteAsync(b.Adapter, b.Channel, operation, arguments, CancellationToken.None);
+        var resource = arguments.TryGetValue("resource", out var result) && result is string text ? text : throw new InvalidOperationException("Argument „resource“ fehlt.");
+        var binding = _hardware.Resolve(resource);
+        return Testumgebung.Engine.Blocks.CodeDevices.ExecuteAsync(binding.Adapter, binding.Channel, operation, arguments, CancellationToken.None);
     }
 
     public void Log(string message)
@@ -351,9 +351,9 @@ public sealed class LibraryBlockViewModel : ObservableObject
     {
         _editor = editor;
         Block = block;
-        foreach (var p in block.Ports) Ports.Add(new PortRowViewModel(PortsChanged, p));
+        foreach (var port in block.Ports) Ports.Add(new PortRowViewModel(PortsChanged, port));
         AddPortCommand = new RelayCommand(AddPort);
-        RemovePortCommand = new RelayCommand(p => { if (p is PortRowViewModel row) { Ports.Remove(row); PortsChanged(); } });
+        RemovePortCommand = new RelayCommand(parameter => { if (parameter is PortRowViewModel row) { Ports.Remove(row); PortsChanged(); } });
         BuildCommand = new RelayCommand(() => _ = BuildAsync(), () => !IsBusy);
         TestCommand = new RelayCommand(() => _ = TestAsync(), () => !IsBusy);
         OpenInLabViewCommand = new RelayCommand(OpenInLabView, () => IsLabView);
@@ -426,8 +426,8 @@ public sealed class LibraryBlockViewModel : ObservableObject
     }
 
     public IReadOnlyList<string> UsedIn => _editor.Project.Definition.AllNodes().OfType<StepDefinition>()
-        .Where(s => s.BlockType == BlockCatalog.LibraryBlock && s.Parameters.GetValueOrDefault("Baustein") == Block.Id)
-        .Select(s => s.Name).ToList();
+        .Where(step => step.BlockType == BlockCatalog.LibraryBlock && step.Parameters.GetValueOrDefault("Baustein") == Block.Id)
+        .Select(step => step.Name).ToList();
 
     public string BuildStatus { get => _buildStatus; private set => SetProperty(ref _buildStatus, value); }
     public bool? BuildOk { get => _buildOk; private set => SetProperty(ref _buildOk, value); }
@@ -448,9 +448,9 @@ public sealed class LibraryBlockViewModel : ObservableObject
 
     private void AddPort()
     {
-        var n = 1;
-        while (Ports.Any(p => p.Name == $"Eingang{n}")) n++;
-        Ports.Add(new PortRowViewModel(PortsChanged, new CodePort($"Eingang{n}", VarType.Double, PortDirection.Input)));
+        var index = 1;
+        while (Ports.Any(portRowViewModel => portRowViewModel.Name == $"Eingang{index}")) index++;
+        Ports.Add(new PortRowViewModel(PortsChanged, new CodePort($"Eingang{index}", VarType.Double, PortDirection.Input)));
         PortsChanged();
     }
 
@@ -459,9 +459,9 @@ public sealed class LibraryBlockViewModel : ObservableObject
 
     private bool SynchronizePorts()
     {
-        var ports = Ports.Select(p => p.ToPort()).ToList();
-        foreach (var dup in Ports.GroupBy(p => p.Name).Where(g => g.Count() > 1).SelectMany(g => g)) dup.ToPort();
-        if (ports.Any(p => p is null) || Ports.GroupBy(p => p.Name).Any(g => g.Count() > 1)) return false;
+        var ports = Ports.Select(portRowViewModel => portRowViewModel.ToPort()).ToList();
+        foreach (var dup in Ports.GroupBy(portRowViewModel => portRowViewModel.Name).Where(group => group.Count() > 1).SelectMany(group => group)) dup.ToPort();
+        if (ports.Any(port => port is null) || Ports.GroupBy(portRowViewModel => portRowViewModel.Name).Any(group => group.Count() > 1)) return false;
         Block.Ports.Clear();
         Block.Ports.AddRange(ports!);
         _editor.RaiseLibraryChanged();
@@ -493,7 +493,7 @@ public sealed class LibraryBlockViewModel : ObservableObject
             }
             var result = await runtime.CompileAsync(new CodeRequest(Block.Language, Block.Source, Block.Ports) { Assemblies = _editor.Project.Definition.Assemblies }, CancellationToken.None);
             Diagnostics.Clear();
-            foreach (var d in result.Diagnostics) Diagnostics.Add(d);
+            foreach (var diagnostic in result.Diagnostics) Diagnostics.Add(diagnostic);
             BuildOk = result.Success;
             BuildStatus = CodeHelp.BuildText(result);
             RuntimeInfo = result.RuntimeInfo;
@@ -529,12 +529,12 @@ public sealed class LibraryBlockViewModel : ObservableObject
                 TestResult = "ERROR · Schnittstelle ungültig: Portnamen, doppelte Namen und Testwerte prüfen.";
                 return;
             }
-            var values = Block.Ports.Where(p => p.IsInput)
-                .ToDictionary(p => p.Name, p => (object?)(p.TestValue ?? TypedValue.Default(p.Type)));
+            var values = Block.Ports.Where(port => port.IsInput)
+                .ToDictionary(port => port.Name, port => (object?)(port.TestValue ?? TypedValue.Default(port.Type)));
             var result = await runtime.InvokeAsync(new CodeRequest(Block.Language, Block.Source, Block.Ports, InvocationId) { Assemblies = _editor.Project.Definition.Assemblies }, values,
                 new LibraryTestHost(_editor.Project, log), TimeSpan.FromSeconds(5), CancellationToken.None);
-            var outputs = Block.Ports.Where(p => p.IsOutput && result.Values.ContainsKey(p.Name))
-                .Select(p => $"{p.Name} = {Show(result.Values[p.Name])}");
+            var outputs = Block.Ports.Where(port => port.IsOutput && result.Values.ContainsKey(port.Name))
+                .Select(port => $"{port.Name} = {Show(result.Values[port.Name])}");
             TestResult = $"{result.Rating.ToDisplay()}"
                          + (result.Value is null ? "" : $" · Wert {Show(result.Value)}{(result.Unit is null ? "" : " " + result.Unit)}")
                          + (result.Message is null ? "" : $" · {result.Message}")
@@ -546,7 +546,7 @@ public sealed class LibraryBlockViewModel : ObservableObject
         }
         finally
         {
-            foreach (var l in log) TestLog.Add(l);
+            foreach (var log2 in log) TestLog.Add(log2);
             IsBusy = false;
         }
     }
@@ -554,8 +554,8 @@ public sealed class LibraryBlockViewModel : ObservableObject
     private static string Show(object? value) => value switch
     {
         null => "—",
-        double d => d.ToString("0.###", CultureInfo.GetCultureInfo("de-DE")),
-        bool b => b ? "true" : "false",
+        double number => number.ToString("0.###", CultureInfo.GetCultureInfo("de-DE")),
+        bool flag => flag ? "true" : "false",
         _ => value.ToString() ?? "",
     };
 }
@@ -569,15 +569,15 @@ public sealed class GroupBlockViewModel : ObservableObject
     {
         _editor = editor;
         Block = block;
-        foreach (var p in block.Ports) Ports.Add(new PortRowViewModel(PortsChanged, p));
+        foreach (var port in block.Ports) Ports.Add(new PortRowViewModel(PortsChanged, port));
         AddPortCommand = new RelayCommand(() =>
         {
-            var n = 1;
-            while (Ports.Any(p => p.Name == $"Eingang{n}")) n++;
-            Ports.Add(new PortRowViewModel(PortsChanged, new CodePort($"Eingang{n}", VarType.Double, PortDirection.Input)));
+            var index = 1;
+            while (Ports.Any(portRowViewModel => portRowViewModel.Name == $"Eingang{index}")) index++;
+            Ports.Add(new PortRowViewModel(PortsChanged, new CodePort($"Eingang{index}", VarType.Double, PortDirection.Input)));
             PortsChanged();
         });
-        RemovePortCommand = new RelayCommand(p => { if (p is PortRowViewModel row) { Ports.Remove(row); PortsChanged(); } });
+        RemovePortCommand = new RelayCommand(parameter => { if (parameter is PortRowViewModel row) { Ports.Remove(row); PortsChanged(); } });
         OpenInEditorCommand = new RelayCommand(() => OpenInEditor?.Invoke(this));
     }
 
@@ -618,15 +618,15 @@ public sealed class GroupBlockViewModel : ObservableObject
         get
         {
             var lines = new List<string>();
-            void Walk(GroupDefinition g, int depth)
+            void Walk(GroupDefinition group, int depth)
             {
-                lines.Add(new string(' ', depth * 3) + "▸ " + g.Name);
-                foreach (var c in g.Children)
+                lines.Add(new string(' ', depth * 3) + "▸ " + group.Name);
+                foreach (var node in group.Children)
                 {
-                    if (c is GroupDefinition cg) Walk(cg, depth + 1);
-                    else lines.Add(new string(' ', (depth + 1) * 3) + "• " + c.Name);
+                    if (node is GroupDefinition cg) Walk(cg, depth + 1);
+                    else lines.Add(new string(' ', (depth + 1) * 3) + "• " + node.Name);
                 }
-                if (g.ExitGroup is { } exit) Walk(exit, depth + 1);
+                if (group.ExitGroup is { } exit) Walk(exit, depth + 1);
             }
             Walk(Block.Body, 0);
             return lines;
@@ -634,15 +634,15 @@ public sealed class GroupBlockViewModel : ObservableObject
     }
 
     public IReadOnlyList<string> UsedIn => _editor.Project.Definition.AllNodes().OfType<StepDefinition>()
-        .Where(s => s.BlockType == BlockCatalog.GroupBlock && s.Parameters.GetValueOrDefault("Baustein") == Block.Id)
-        .Select(s => s.Name).ToList();
+        .Where(step => step.BlockType == BlockCatalog.GroupBlock && step.Parameters.GetValueOrDefault("Baustein") == Block.Id)
+        .Select(step => step.Name).ToList();
 
     internal void OnUsageChanged() => OnPropertiesChanged(nameof(UsedIn), nameof(Structure));
 
     private void PortsChanged()
     {
-        var ports = Ports.Select(p => p.ToPort()).ToList();
-        if (ports.Any(p => p is null) || Ports.GroupBy(p => p.Name).Any(g => g.Count() > 1)) return;
+        var ports = Ports.Select(portRowViewModel => portRowViewModel.ToPort()).ToList();
+        if (ports.Any(port => port is null) || Ports.GroupBy(portRowViewModel => portRowViewModel.Name).Any(group => group.Count() > 1)) return;
         Block.Ports.Clear();
         Block.Ports.AddRange(ports!);
         _editor.RaiseLibraryChanged();
@@ -685,8 +685,8 @@ public sealed class LibraryViewModel : ObservableObject
         editor.LibraryChanged += () =>
         {
             if (Blocks.Count != editor.Library.Count || GroupBlocks.Count != editor.Project.Definition.GroupLibrary.Count) Reload();
-            foreach (var b in Blocks) b.OnUsageChanged();
-            foreach (var g in GroupBlocks) g.OnUsageChanged();
+            foreach (var libraryBlockViewModel in Blocks) libraryBlockViewModel.OnUsageChanged();
+            foreach (var groupBlockViewModel in GroupBlocks) groupBlockViewModel.OnUsageChanged();
         };
         Reload();
     }
@@ -702,7 +702,7 @@ public sealed class LibraryViewModel : ObservableObject
     {
         var assembly = ManagedAssemblyImport.Read(path);
         var definition = _editor.Project.Definition;
-        var previous = definition.Assemblies.FirstOrDefault(a => a.Name.Equals(assembly.Name, StringComparison.OrdinalIgnoreCase));
+        var previous = definition.Assemblies.FirstOrDefault(managedAssembly => managedAssembly.Name.Equals(assembly.Name, StringComparison.OrdinalIgnoreCase));
         if (previous is not null) { definition.Assemblies.Remove(previous); Assemblies.Remove(previous); }
         definition.Assemblies.Add(assembly);
         Assemblies.Add(assembly);
@@ -751,8 +751,8 @@ public sealed class LibraryViewModel : ObservableObject
         get => (object?)_selected ?? _selectedGroup;
         set
         {
-            if (value is LibraryBlockViewModel l) Selected = l;
-            else if (value is GroupBlockViewModel g) SelectedGroup = g;
+            if (value is LibraryBlockViewModel libraryBlockViewModel) Selected = libraryBlockViewModel;
+            else if (value is GroupBlockViewModel groupBlockViewModel) SelectedGroup = groupBlockViewModel;
         }
     }
 
@@ -771,14 +771,14 @@ public sealed class LibraryViewModel : ObservableObject
         Blocks.Clear();
         GroupBlocks.Clear();
         Items.Clear();
-        foreach (var b in _editor.Library) Blocks.Add(new LibraryBlockViewModel(_editor, b));
-        foreach (var g in _editor.Project.Definition.GroupLibrary)
-            GroupBlocks.Add(new GroupBlockViewModel(_editor, g) { OpenInEditor = vm => OpenGroupBlock?.Invoke(vm) });
-        foreach (var b in Blocks) Items.Add(b);
-        foreach (var g in GroupBlocks) Items.Add(g);
+        foreach (var codeBlock in _editor.Library) Blocks.Add(new LibraryBlockViewModel(_editor, codeBlock));
+        foreach (var groupBlock in _editor.Project.Definition.GroupLibrary)
+            GroupBlocks.Add(new GroupBlockViewModel(_editor, groupBlock) { OpenInEditor = vm => OpenGroupBlock?.Invoke(vm) });
+        foreach (var libraryBlockViewModel in Blocks) Items.Add(libraryBlockViewModel);
+        foreach (var groupBlockViewModel in GroupBlocks) Items.Add(groupBlockViewModel);
         _selected = null;
         _selectedGroup = null;
-        SelectedItem = Items.FirstOrDefault(i => (i as LibraryBlockViewModel)?.Id == selectedId || (i as GroupBlockViewModel)?.Id == selectedId)
+        SelectedItem = Items.FirstOrDefault(libraryItem => (libraryItem as LibraryBlockViewModel)?.Id == selectedId || (libraryItem as GroupBlockViewModel)?.Id == selectedId)
                        ?? Items.FirstOrDefault();
         OnPropertyChanged(nameof(Selected));
         OnPropertyChanged(nameof(SelectedGroup));
@@ -798,30 +798,30 @@ public sealed class LibraryViewModel : ObservableObject
         _editor.Library.Add(block);
         _editor.RaiseLibraryChanged();
         Reload();
-        Selected = Blocks.First(b => b.Id == block.Id);
+        Selected = Blocks.First(libraryBlockViewModel => libraryBlockViewModel.Id == block.Id);
         Message = null;
         return Selected;
     }
 
     private void Delete()
     {
-        if (Selected is { } s)
+        if (Selected is { } libraryBlockViewModel)
         {
-            if (s.UsedIn.Count > 0)
+            if (libraryBlockViewModel.UsedIn.Count > 0)
             {
-                Message = $"„{s.Name}“ wird noch verwendet: {string.Join(", ", s.UsedIn)}.";
+                Message = $"„{libraryBlockViewModel.Name}“ wird noch verwendet: {string.Join(", ", libraryBlockViewModel.UsedIn)}.";
                 return;
             }
-            _editor.Library.Remove(s.Block);
+            _editor.Library.Remove(libraryBlockViewModel.Block);
         }
-        else if (SelectedGroup is { } g)
+        else if (SelectedGroup is { } groupBlockViewModel)
         {
-            if (g.UsedIn.Count > 0)
+            if (groupBlockViewModel.UsedIn.Count > 0)
             {
-                Message = $"„{g.Name}“ wird noch verwendet: {string.Join(", ", g.UsedIn)}.";
+                Message = $"„{groupBlockViewModel.Name}“ wird noch verwendet: {string.Join(", ", groupBlockViewModel.UsedIn)}.";
                 return;
             }
-            _editor.Project.Definition.GroupLibrary.Remove(g.Block);
+            _editor.Project.Definition.GroupLibrary.Remove(groupBlockViewModel.Block);
             _editor.RebuildTree();
         }
         else return;

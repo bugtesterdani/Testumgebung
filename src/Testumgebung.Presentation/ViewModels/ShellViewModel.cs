@@ -98,7 +98,7 @@ public sealed class ShellViewModel : ObservableObject
         var accessStore = _identity.Store;
         SystemPage = CreateSystemPage();
         SelectionPage = CreateSelectionPage();
-        SelectStationCommand = new RelayCommand(p => { if (p is StationViewModel s) SelectedStation = s; });
+        SelectStationCommand = new RelayCommand(parameter => { if (parameter is StationViewModel station) SelectedStation = station; });
         NavigateCommand = CreateNavigationCommand();
         LoginCommand = new RelayCommand(() => _ = LoginAsync(false), () => !IsSignedIn && !Session.IsSigningIn);
         DevelopmentLoginCommand = new RelayCommand(() => _ = LoginDevelopmentAsync(), () => CanEnableDevelopmentLogin);
@@ -133,11 +133,11 @@ public sealed class ShellViewModel : ObservableObject
 
         RelayCommand CreateNavigationCommand()
         {
-            return new RelayCommand(p =>
+            return new RelayCommand(parameter =>
             {
-                if (p is ShellPage page) Page = page;
-                else if (p is string s && Enum.TryParse<ShellPage>(s, out var parsed)) Page = parsed;
-            }, p => Allowed(p switch
+                if (parameter is ShellPage page) Page = page;
+                else if (parameter is string text && Enum.TryParse<ShellPage>(text, out var parsed)) Page = parsed;
+            }, parameter => Allowed(parameter switch
             {
                 ShellPage page => page,
                 string text when Enum.TryParse<ShellPage>(text, out var parsed) => parsed,
@@ -167,7 +167,7 @@ public sealed class ShellViewModel : ObservableObject
             if (services is not null)
             {
                 var page = new SettingsViewModel(services, settingsStore ?? new Settings.SettingsStore(Settings.SettingsStore.DefaultPath, Settings.PlainSecretProtector.Instance), _ui,
-                    ValidateStationDisplay, () => Coordinator.Setup.Stations.Select(s => s.Name).ToList());
+                    ValidateStationDisplay, () => Coordinator.Setup.Stations.Select(station => station.Name).ToList());
                 Coordinator.SetupChanged += () => _ui.Post(page.RefreshStationNames);
                 services.Applied += () => _ui.Post(Results.SettingsChanged);
                 services.Applied += () => _ui.Post(() => ApplyStationDisplay(services.Current));
@@ -183,19 +183,19 @@ public sealed class ShellViewModel : ObservableObject
             var current = services!.Current;
             var changed = settings.ShowPairedStations != current.ShowPairedStations || settings.FirstPairedStation != current.FirstPairedStation
                 || settings.SecondPairedStation != current.SecondPairedStation;
-            if (changed && (PairedStations.IsBusy || Coordinator.RunningStations.Count > 0 || Stations.Any(s => s.IsRunning || s.Selection.IsActive)))
+            if (changed && (PairedStations.IsBusy || Coordinator.RunningStations.Count > 0 || Stations.Any(station => station.IsRunning || station.Selection.IsActive)))
                 return "Die Prüfplatzanzeige kann erst nach Ende aller Prüfungen und Aufträge geändert werden.";
             if (settings.ShowPairedStations && (settings.FirstPairedStation == settings.SecondPairedStation
-                || !Stations.Any(s => s.Name == settings.FirstPairedStation) || !Stations.Any(s => s.Name == settings.SecondPairedStation)))
+                || !Stations.Any(station => station.Name == settings.FirstPairedStation) || !Stations.Any(station => station.Name == settings.SecondPairedStation)))
                 return "Für die gemeinsame Anzeige zwei verschiedene vorhandene Prüfplätze auswählen.";
             return null;
         }
 
         void ApplyStationDisplay(Settings.AppSettings settings)
         {
-            PairedStations.First = Stations.FirstOrDefault(s => s.Name == settings.FirstPairedStation) ?? Stations.FirstOrDefault();
-            PairedStations.Second = Stations.FirstOrDefault(s => s.Name == settings.SecondPairedStation)
-                ?? Stations.FirstOrDefault(s => !ReferenceEquals(s, PairedStations.First));
+            PairedStations.First = Stations.FirstOrDefault(station => station.Name == settings.FirstPairedStation) ?? Stations.FirstOrDefault();
+            PairedStations.Second = Stations.FirstOrDefault(station => station.Name == settings.SecondPairedStation)
+                ?? Stations.FirstOrDefault(station => !ReferenceEquals(station, PairedStations.First));
             PairedStations.Enabled = settings.ShowPairedStations;
         }
 
@@ -262,11 +262,11 @@ public sealed class ShellViewModel : ObservableObject
                 }, pythonRuntime: codeRuntime as Testumgebung.Workers.CodeRuntime);
         }
 
-        Editor.PropertyChanged += (_, e) =>
+        Editor.PropertyChanged += (_, eventArgs) =>
         {
-            if (e.PropertyName != nameof(EditorViewModel.SelectedNode)) return;
+            if (eventArgs.PropertyName != nameof(EditorViewModel.SelectedNode)) return;
             ExecuteSelectedCommand.RaiseCanExecuteChanged();
-            SelectedStation.Debug.SelectPatchNode(Editor.SelectedNode is { IsSection: false } n ? n.Id : null);
+            SelectedStation.Debug.SelectPatchNode(Editor.SelectedNode is { IsSection: false } node ? node.Id : null);
         };
     }
 
@@ -294,10 +294,10 @@ public sealed class ShellViewModel : ObservableObject
     {
         var station = new StationViewModel(name, () => Editor.Project, Resources, _ui, _serializer, _clockForStations,
             () => Session.User?.Upn ?? "Werker", _codeRuntime, _results, Releases, Coordinator);
-        station.DevelopmentRecorded += d => Audit(d.User, "Entwicklungseingriff: " + d.Kind, $"{station.Name} · {d.Details}");
+        station.DevelopmentRecorded += developmentEvent => Audit(developmentEvent.User, "Entwicklungseingriff: " + developmentEvent.Kind, $"{station.Name} · {developmentEvent.Details}");
         station.Debug.MarkNode = (id, marker) =>
         {
-            if (ReferenceEquals(station, SelectedStation) && Editor.FindNode(id) is { } n) n.RunMarker = marker;
+            if (ReferenceEquals(station, SelectedStation) && Editor.FindNode(id) is { } node) node.RunMarker = marker;
         };
         ConnectStationEvents(station);
         Stations.Add(station);
@@ -306,14 +306,14 @@ public sealed class ShellViewModel : ObservableObject
 
     private void ConnectStationEvents(StationViewModel station)
     {
-        station.PropertyChanged += (_, e) =>
+        station.PropertyChanged += (_, eventArgs) =>
         {
-            if (ReferenceEquals(station, SelectedStation) && e.PropertyName == nameof(StationViewModel.IsRunning))
+            if (ReferenceEquals(station, SelectedStation) && eventArgs.PropertyName == nameof(StationViewModel.IsRunning))
             {
                 ExecuteSelectedCommand?.RaiseCanExecuteChanged();
                 StartSimulationCommand?.RaiseCanExecuteChanged();
             }
-            if (ReferenceEquals(station, SelectedStation) && e.PropertyName is nameof(StationViewModel.IsRunning)
+            if (ReferenceEquals(station, SelectedStation) && eventArgs.PropertyName is nameof(StationViewModel.IsRunning)
                     or nameof(StationViewModel.RunningVersionText) or nameof(StationViewModel.ReleasedVersionText))
                 OnPropertyChanged(nameof(ActiveSoftwareText));
         };
@@ -323,11 +323,11 @@ public sealed class ShellViewModel : ObservableObject
 
     private void ConnectStationDebugger(StationViewModel station)
     {
-        station.Debug.PropertyChanged += (_, e) =>
+        station.Debug.PropertyChanged += (_, eventArgs) =>
         {
             if (ReferenceEquals(station, SelectedStation) &&
-                ((e.PropertyName == nameof(DebugViewModel.IsPaused) && station.Debug.IsPaused)
-                || (e.PropertyName == nameof(DebugViewModel.IsCodePaused) && station.Debug.IsCodePaused)))
+                ((eventArgs.PropertyName == nameof(DebugViewModel.IsPaused) && station.Debug.IsPaused)
+                || (eventArgs.PropertyName == nameof(DebugViewModel.IsCodePaused) && station.Debug.IsCodePaused)))
                 if (!Editor.GraphView || Page != ShellPage.Editor) WorkspaceToolTab = 2;
         };
     }
@@ -335,16 +335,16 @@ public sealed class ShellViewModel : ObservableObject
     /// <summary>Prüfplätze an die (neu gespeicherte) Konfiguration angleichen; laufende Prüfplätze bleiben.</summary>
     private void SyncStations()
     {
-        var names = Coordinator.Setup.Stations.Select(s => s.Name).ToList();
-        foreach (var gone in Stations.Where(s => !names.Contains(s.Name) && !s.IsRunning).ToList())
+        var names = Coordinator.Setup.Stations.Select(station => station.Name).ToList();
+        foreach (var gone in Stations.Where(station => !names.Contains(station.Name) && !station.IsRunning).ToList())
             Stations.Remove(gone);
-        foreach (var name in names.Where(n => Stations.All(s => s.Name != n)))
+        foreach (var name in names.Where(name => Stations.All(station => station.Name != name)))
             AddStation(name);
         // Reihenfolge wie in der Konfiguration
-        for (var i = 0; i < names.Count; i++)
+        for (var index = 0; index < names.Count; index++)
         {
-            var at = Stations.ToList().FindIndex(s => s.Name == names[i]);
-            if (at >= 0 && at != i && i < Stations.Count) Stations.Move(at, i);
+            var at = Stations.ToList().FindIndex(station2 => station2.Name == names[index]);
+            if (at >= 0 && at != index && index < Stations.Count) Stations.Move(at, index);
         }
         if (!Stations.Contains(_selectedStation)) SelectedStation = Stations.First();
         foreach (var station in Stations) station.RaiseStartState();
@@ -426,7 +426,7 @@ public sealed class ShellViewModel : ObservableObject
         set
         {
             if (value is null || ReferenceEquals(value, _selectedStation)) return;
-            foreach (var n in Editor.AllNodes()) n.RunMarker = RunMarker.None;
+            foreach (var node in Editor.AllNodes()) node.RunMarker = RunMarker.None;
             _selectedStation = value;
             Editor.Breakpoints = value.Debug.Controller;
             OnPropertyChanged();
@@ -462,7 +462,7 @@ public sealed class ShellViewModel : ObservableObject
     public string AccountSwitchLabel => IsLocalPasswordLogin ? "Konto wechseln" : "Firmenkonto wechseln";
     public bool IsSimulatedLogin => Session.Provider is SimulatedIdentityProvider;
     public string UserText => Session.User?.DisplayName ?? (Session.IsSigningIn ? "Anmeldung läuft …" : "Anmelden");
-    public string UserDetail => Session.User is { } u ? $"{u.Upn} · {SessionService.RightsText(Session.Rights)}{(u.IsConfirmed ? "" : IsLocalPasswordLogin ? " · lokaler Passwortzugang" : " · simuliert")}" : "";
+    public string UserDetail => Session.User is { } userIdentity ? $"{userIdentity.Upn} · {SessionService.RightsText(Session.Rights)}{(userIdentity.IsConfirmed ? "" : IsLocalPasswordLogin ? " · lokaler Passwortzugang" : " · simuliert")}" : "";
     public string ViewTitle => IsSignedIn && Page is not (ShellPage.Operator or ShellPage.Protocol) ? "ENTWICKLERANSICHT" : "WERKERANSICHT";
 
     /// <summary>Kopfzeile „Aktive Prüfsoftware“.</summary>
@@ -507,7 +507,7 @@ public sealed class ShellViewModel : ObservableObject
 
     public async Task LogoutAsync()
     {
-        foreach (var s in Stations) s.UseDraft = false;
+        foreach (var station in Stations) station.UseDraft = false;
         await Session.SignOutAsync().ConfigureAwait(true);
         if (!Allowed(Page)) Page = ShellPage.Operator;
     }
@@ -542,11 +542,11 @@ public sealed class ShellViewModel : ObservableObject
         var user = Session.User?.Upn;
         if (_lastUser is { } previous && user is null)
         {
-            foreach (var s in Stations.Where(s => s.Debug.IsPaused))
+            foreach (var station in Stations.Where(station2 => station2.Debug.IsPaused))
             {
-                s.SetHint($"Entwicklungslauf pausiert – {previous} hat sich abgemeldet. Der Lauf wird nicht automatisch fortgesetzt; " +
+                station.SetHint($"Entwicklungslauf pausiert – {previous} hat sich abgemeldet. Der Lauf wird nicht automatisch fortgesetzt; " +
                           "ein Entwickler setzt ihn fort, oder Werkerabbruch beendet ihn (Exit-Gruppen laufen).");
-                Audit(previous, "Abmeldung während Pause", $"{s.Name}: Lauf pausiert an {s.Debug.NodeName}, nicht fortgesetzt");
+                Audit(previous, "Abmeldung während Pause", $"{station.Name}: Lauf pausiert an {station.Debug.NodeName}, nicht fortgesetzt");
             }
         }
         _lastUser = user;

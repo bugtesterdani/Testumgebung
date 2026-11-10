@@ -70,7 +70,7 @@ public sealed class ProcessSession : IProcessSession
     private void Prune()
     {
         if (_records.Count < _capacity) return;
-        foreach (var record in _records.Values.Where(r => r.Completion.IsCompleted).ToList())
+        foreach (var record in _records.Values.Where(externalProcessRecord => externalProcessRecord.Completion.IsCompleted).ToList())
         { _records.Remove(record.Handle); record.Dispose(); }
         if (_records.Count >= _capacity) throw new InvalidOperationException($"Maximal {_capacity} laufende Prozesse je Prüflauf erlaubt.");
     }
@@ -169,7 +169,7 @@ public sealed class ProcessSession : IProcessSession
     public void CloseOwner(string owner)
     {
         lock (_gate)
-            foreach (var record in _records.Values.Where(r => r.Bound && r.Owner == owner).ToList()) Release(record, stop: true);
+            foreach (var record in _records.Values.Where(externalProcessRecord => externalProcessRecord.Bound && externalProcessRecord.Owner == owner).ToList()) Release(record, stop: true);
     }
     private void Release(ExternalProcessRecord record, bool stop)
     {

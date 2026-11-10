@@ -25,26 +25,26 @@ public static class NodeReleaseHistory
         string projectName, string nodeId, CancellationToken ct = default)
     {
         var releases = (await service.ListAsync(ct).ConfigureAwait(false))
-            .Where(r => r.ProjectName == projectName && r.State is ReleaseState.Released or ReleaseState.Archived)
-            .OrderBy(r => r.ReleasedAt).ThenBy(r => r.ReleaseId, StringComparer.Ordinal).ToList();
-        if (releases.Any(r => r.ReleasedAt is null))
+            .Where(release => release.ProjectName == projectName && release.State is ReleaseState.Released or ReleaseState.Archived)
+            .OrderBy(release => release.ReleasedAt).ThenBy(release => release.ReleaseId, StringComparer.Ordinal).ToList();
+        if (releases.Any(release => release.ReleasedAt is null))
             throw new ReleaseRuleException("Historie unvollständig: Einer Version fehlt der Freigabezeitpunkt.");
-        if (releases.GroupBy(r => r.ReleasedAt).Any(g => g.Count() > 1))
+        if (releases.GroupBy(release => release.ReleasedAt).Any(group => group.Count() > 1))
             throw new ReleaseRuleException("Die Reihenfolge gleichzeitiger Freigaben ist nicht eindeutig belegbar.");
         var result = new List<NodeValuePeriod>();
         var active = new Dictionary<string, int>(StringComparer.Ordinal);
         var previous = new Dictionary<string, FieldValue>(StringComparer.Ordinal);
-        for (int i = 0; i < releases.Count; i++)
+        for (int index = 0; index < releases.Count; index++)
         {
             ct.ThrowIfCancellationRequested();
-            var release = releases[i];
+            var release = releases[index];
             var opened = await service.OpenAsync(release, ct).ConfigureAwait(false);
             if (opened.Project.Definition.Name != release.ProjectName || opened.Project.Definition.Version != release.Version)
                 throw new ReleasePackageException($"v{release.Version}: Metadaten passen nicht zum gespeicherten Paket.");
             if (!opened.IsIntact)
                 throw new ReleasePackageException($"v{release.Version}: Paket beschädigt. Keine gesicherte Wertehistorie möglich.");
             var current = Capture(opened.Project, nodeId);
-            AddChanges(result, active, previous, current, release, i == 0);
+            AddChanges(result, active, previous, current, release, index == 0);
             previous = current;
         }
         return result;
@@ -58,7 +58,7 @@ public static class NodeReleaseHistory
     private static void AddChanges(List<NodeValuePeriod> result, Dictionary<string, int> active,
         Dictionary<string, FieldValue> previous, Dictionary<string, FieldValue> current, ReleaseInfo release, bool first)
     {
-        foreach (var key in previous.Keys.Union(current.Keys).OrderBy(k => k, StringComparer.Ordinal))
+        foreach (var key in previous.Keys.Union(current.Keys).OrderBy(union => union, StringComparer.Ordinal))
         {
             previous.TryGetValue(key, out var before);
             current.TryGetValue(key, out var after);
@@ -143,10 +143,10 @@ public static class NodeReleaseHistory
         else if (element.ValueKind == JsonValueKind.Array && TryNames(element, out var names))
         {
             result.Add(key + "/@order", new FieldValue(label + " / Reihenfolge", JsonSerializer.Serialize(names)));
-            int i = 0;
+            int index = 0;
             foreach (var item in element.EnumerateArray())
             {
-                var name = names[i++];
+                var name = names[index++];
                 Flatten(item, key + "/[" + Uri.EscapeDataString(name) + "]", label + " / " + name, result);
             }
         }

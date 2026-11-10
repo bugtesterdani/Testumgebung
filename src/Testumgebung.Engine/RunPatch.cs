@@ -63,7 +63,7 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
             diagnostics.Add($"„{node.Name}“: die Elterngruppe „{parent.Name}“ ist gerade aktiv – Struktur wird nicht geändert.");
             return;
         }
-        if (node is GroupDefinition g && active.Contains(g.Id))
+        if (node is GroupDefinition group && active.Contains(group.Id))
         {
             diagnostics.Add($"„{node.Name}“ ist gerade aktiv.");
             return;
@@ -74,7 +74,7 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                 diagnostics.Add($"„{node.Name}“: Versatz als ganze Zahl ungleich 0 angeben (z. B. -1).");
             else
             {
-                var index = parent.Children.FindIndex(c => c.Id == node.Id);
+                var index = parent.Children.FindIndex(node2 => node2.Id == node.Id);
                 var target = index + offset;
                 if (index < 0 || target < 0 || target >= parent.Children.Count)
                     diagnostics.Add($"„{node.Name}“: Verschieben um {offset} liegt außerhalb der Gruppe.");
@@ -84,8 +84,8 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
 
     private static string NameOf(TestRun run, string id)
         => run.Definition.Find(id)?.Name
-           ?? run.Definition.Library.FirstOrDefault(b => b.Id == id)?.Name
-           ?? run.Definition.GroupLibrary.FirstOrDefault(b => b.Id == id)?.Name
+           ?? run.Definition.Library.FirstOrDefault(codeBlock => codeBlock.Id == id)?.Name
+           ?? run.Definition.GroupLibrary.FirstOrDefault(groupBlock => groupBlock.Id == id)?.Name
            ?? id;
 
     private PatchResult Process(IReadOnlyList<PatchChange> changes, bool apply, string user)
@@ -95,19 +95,19 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
             var diagnostics = new List<string>();
             if (changes.Count == 0) diagnostics.Add("Keine Änderungen.");
             if (run.Options.Debugger is not { IsPaused: true }) diagnostics.Add("Run-Patches sind nur im pausierten Lauf möglich.");
-            var active = run.ExecutionStack.Select(f => f.NodeId).ToHashSet(StringComparer.Ordinal);
+            var active = run.ExecutionStack.Select(frame => frame.NodeId).ToHashSet(StringComparer.Ordinal);
 
             // Prüfen an Kopien – nichts wird geändert, solange eine Diagnose existiert.
             var stepCopies = new Dictionary<string, StepDefinition>(StringComparer.Ordinal);
             void ApplyChange(PatchChange change)
             {
-                if (change.Property is "code" or "name" && run.Definition.Library.FirstOrDefault(b => b.Id == change.NodeId) is { } libBlock)
+                if (change.Property is "code" or "name" && run.Definition.Library.FirstOrDefault(codeBlock => codeBlock.Id == change.NodeId) is { } libBlock)
                 {
                     if (change.Property == "code") libBlock.Source = change.Value ?? "";
                     else libBlock.Name = change.Value!.Trim();
                     return;
                 }
-                if (change.Property == "name" && run.Definition.GroupLibrary.FirstOrDefault(b => b.Id == change.NodeId) is { } grpBlock)
+                if (change.Property == "name" && run.Definition.GroupLibrary.FirstOrDefault(groupBlock => groupBlock.Id == change.NodeId) is { } grpBlock)
                 {
                     grpBlock.Name = change.Value!.Trim();
                     return;
@@ -121,11 +121,11 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                 switch (node, change.Property)
                 {
                     case (_, "delete"):
-                        ParentOf(run, node.Id)!.Children.RemoveAll(c => c.Id == node.Id);
+                        ParentOf(run, node.Id)!.Children.RemoveAll(node2 => node2.Id == node.Id);
                         break;
                     case (_, "move"):
                         var parent = ParentOf(run, node.Id)!;
-                        var index = parent.Children.FindIndex(c => c.Id == node.Id);
+                        var index = parent.Children.FindIndex(node2 => node2.Id == node.Id);
                         var item = parent.Children[index];
                         parent.Children.RemoveAt(index);
                         parent.Children.Insert(Math.Clamp(index + int.Parse(change.Value!), 0, parent.Children.Count), item);
@@ -133,11 +133,11 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                     case (_, "name"):
                         node.Name = change.Value!.Trim();
                         break;
-                    case (GroupDefinition g, "condition"):
-                        g.EntryCondition = string.IsNullOrWhiteSpace(change.Value) ? null : change.Value;
+                    case (GroupDefinition group, "condition"):
+                        group.EntryCondition = string.IsNullOrWhiteSpace(change.Value) ? null : change.Value;
                         break;
-                    case (StepDefinition s, var p):
-                        s.Parameters[p["param:".Length..]] = change.Value ?? "";
+                    case (StepDefinition step, var path):
+                        step.Parameters[path["param:".Length..]] = change.Value ?? "";
                         break;
                 }
             }
@@ -151,12 +151,12 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
             void ValidateChange(PatchChange change)
             {
                 // Bibliotheksbaustein (Code oder grafisch) – gilt für künftige Aufrufe, auch wenn er schon lief
-                if (change.Property is "code" or "name" && run.Definition.Library.FirstOrDefault(b => b.Id == change.NodeId) is { } libBlock)
+                if (change.Property is "code" or "name" && run.Definition.Library.FirstOrDefault(codeBlock => codeBlock.Id == change.NodeId) is { } libBlock)
                 {
                     ValidateLibraryText(change, libBlock.Name);
                     return;
                 }
-                if (change.Property == "name" && run.Definition.GroupLibrary.FirstOrDefault(b => b.Id == change.NodeId) is { } grpBlock)
+                if (change.Property == "name" && run.Definition.GroupLibrary.FirstOrDefault(groupBlock => groupBlock.Id == change.NodeId) is { } grpBlock)
                 {
                     if (string.IsNullOrWhiteSpace(change.Value)) diagnostics.Add($"„{grpBlock.Name}“: Bezeichnung darf nicht leer sein.");
                     return;
@@ -190,26 +190,26 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                         break;
                     case (_, "name"):
                         break;
-                    case (GroupDefinition g, "condition"):
+                    case (GroupDefinition group2, "condition"):
                         if (!string.IsNullOrWhiteSpace(change.Value))
                         {
                             try { Expression.Parse(change.Value); }
-                            catch (ExpressionException ex) { diagnostics.Add($"„{g.Name}“, Bedingung: {ex.Message}"); }
+                            catch (ExpressionException ex) { diagnostics.Add($"„{group2.Name}“, Bedingung: {ex.Message}"); }
                         }
                         break;
-                    case (StepDefinition s, var p) when p.StartsWith("param:", StringComparison.Ordinal):
-                        if (s.BlockType is null)
+                    case (StepDefinition step2, var path2) when path2.StartsWith("param:", StringComparison.Ordinal):
+                        if (step2.BlockType is null)
                         {
-                            diagnostics.Add($"„{s.Name}“ ist im Code definiert und nicht patchbar.");
+                            diagnostics.Add($"„{step2.Name}“ ist im Code definiert und nicht patchbar.");
                             break;
                         }
-                        if (!stepCopies.TryGetValue(s.Id, out var copy))
+                        if (!stepCopies.TryGetValue(step2.Id, out var copy))
                         {
-                            copy = new StepDefinition(s.Id, s.Name, s.Action) { BlockType = s.BlockType };
-                            foreach (var (k, v) in s.Parameters) copy.Parameters[k] = v;
-                            stepCopies[s.Id] = copy;
+                            copy = new StepDefinition(step2.Id, step2.Name, step2.Action) { BlockType = step2.BlockType };
+                            foreach (var (key, value) in step2.Parameters) copy.Parameters[key] = value;
+                            stepCopies[step2.Id] = copy;
                         }
-                        copy.Parameters[p["param:".Length..]] = change.Value ?? "";
+                        copy.Parameters[path2["param:".Length..]] = change.Value ?? "";
                         break;
                     default:
                         diagnostics.Add($"„{node.Name}“: Änderung '{change.Property}' wird nicht unterstützt.");
@@ -222,7 +222,7 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
                 ValidateChange(change);
             }
             foreach (var copy in stepCopies.Values)
-                foreach (var d in catalog.Rebuild(copy)) diagnostics.Add($"„{copy.Name}“: {d}");
+                foreach (var rebuild in catalog.Rebuild(copy)) diagnostics.Add($"„{copy.Name}“: {rebuild}");
 
             if (diagnostics.Count > 0 || !apply) return new PatchResult(false, PatchCount, diagnostics);
 
@@ -234,7 +234,7 @@ internal sealed class RunPatcher(TestRun run, BlockCatalog catalog)
 
             PatchCount++;
             run.MarkDevelopmentRun();
-            var details = string.Join("; ", changes.Select(c => $"{NameOf(run, c.NodeId)}.{c.Property}"));
+            var details = string.Join("; ", changes.Select(patchChange => $"{NameOf(run, patchChange.NodeId)}.{patchChange.Property}"));
             run.Emit(new DevelopmentEvent(user, $"Run-Patch {PatchCount} angewendet", details) { Time = run.Clock.Now, RunId = run.RunId });
             return new PatchResult(true, PatchCount, []);
         }

@@ -49,7 +49,7 @@ public sealed class FolderReleaseStore(string folder) : IReleaseStore
         await Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (LoadAll().Any(r => r.ProjectName == info.ProjectName && r.Version == info.Version))
+            if (LoadAll().Any(release => release.ProjectName == info.ProjectName && release.Version == info.Version))
                 throw new InvalidOperationException($"Version {info.Version} von '{info.ProjectName}' existiert bereits.");
             ResultFileStore.WriteAtomic(Folder, Safe(info.ReleaseId) + ".tpkg", package); // nie überschreiben
             WriteInfo(info);
@@ -64,12 +64,12 @@ public sealed class FolderReleaseStore(string folder) : IReleaseStore
         try
         {
             var all = LoadAll();
-            var r = all.FirstOrDefault(x => x.ReleaseId == t.ReleaseId);
-            if (r is null || r.State != t.From) return false;
+            var release = all.FirstOrDefault(release2 => release2.ReleaseId == t.ReleaseId);
+            if (release is null || release.State != t.From) return false;
             if (t.ArchiveOtherReleased)
-                foreach (var other in all.Where(x => x.ProjectName == r.ProjectName && x.State == ReleaseState.Released && x.ReleaseId != r.ReleaseId))
+                foreach (var other in all.Where(release2 => release2.ProjectName == release.ProjectName && release2.State == ReleaseState.Released && release2.ReleaseId != release.ReleaseId))
                     WriteInfo(other with { State = ReleaseState.Archived, ArchivedAt = t.Time });
-            WriteInfo(Apply(r, t));
+            WriteInfo(Apply(release, t));
             Append(audit);
             return true;
         }
@@ -102,8 +102,8 @@ public sealed class FolderReleaseStore(string folder) : IReleaseStore
     {
         if (!Directory.Exists(Folder)) return [];
         return Directory.GetFiles(Folder, "*.json")
-            .Select(f => JsonSerializer.Deserialize<ReleaseInfo>(File.ReadAllText(f), Json)!)
-            .OrderByDescending(r => r.CreatedAt)
+            .Select(fileName => JsonSerializer.Deserialize<ReleaseInfo>(File.ReadAllText(fileName), Json)!)
+            .OrderByDescending(release => release.CreatedAt)
             .ToList();
     }
 
@@ -114,22 +114,22 @@ public sealed class FolderReleaseStore(string folder) : IReleaseStore
     {
         var path = Path.Combine(Folder, "audit.jsonl");
         if (!File.Exists(path)) return [];
-        return File.ReadAllLines(path).Where(l => l.Length > 0).Select(l => JsonSerializer.Deserialize<AuditEntry>(l, Json)!).ToList();
+        return File.ReadAllLines(path).Where(line => line.Length > 0).Select(line => JsonSerializer.Deserialize<AuditEntry>(line, Json)!).ToList();
     }
 
-    private void Append(AuditDraft d)
+    private void Append(AuditDraft auditDraft)
     {
         Directory.CreateDirectory(Folder);
         var existing = ReadAudit();
         var last = existing.LastOrDefault();
-        var entry = AuditChain.Create((last?.Sequence ?? 0) + 1, d.Time, d.User, d.Action, d.Details, d.ReleaseId, last?.Hash ?? AuditChain.Genesis);
+        var entry = AuditChain.Create((last?.Sequence ?? 0) + 1, auditDraft.Time, auditDraft.User, auditDraft.Action, auditDraft.Details, auditDraft.ReleaseId, last?.Hash ?? AuditChain.Genesis);
         var line = JsonSerializer.Serialize(entry, new JsonSerializerOptions(Json) { WriteIndented = false }) + "\n";
         using var fs = new FileStream(Path.Combine(Folder, "audit.jsonl"), FileMode.Append, FileAccess.Write, FileShare.Read);
         fs.Write(System.Text.Encoding.UTF8.GetBytes(line));
         fs.Flush(flushToDisk: true);
     }
 
-    private static string Safe(string id) => new(id.Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' ? c : '_').ToArray());
+    private static string Safe(string id) => new(id.Select(character => char.IsLetterOrDigit(character) || character is '-' or '_' ? character : '_').ToArray());
 }
 
 /// <summary>Austauschbare Release-Ablage (Datenbank ↔ Ordner, je nach Einstellung).</summary>

@@ -55,8 +55,8 @@ internal sealed class StepContext(
 
     public object Get(string name) => scope.Get(name);
 
-    public object? Preset(string name) => run.Options.Presets is { } p && p.TryGetValue(name, out var v) ? v
-        : run.Options.SessionPresets is { } s && s.TryGetValue(name, out var sv) ? sv : null;
+    public object? Preset(string name) => run.Options.Presets is { } entries && entries.TryGetValue(name, out var value) ? value
+        : run.Options.SessionPresets is { } entries2 && entries2.TryGetValue(name, out var sv) ? sv : null;
 
     public void Set(string name, object? value) => scope.Set(name, value);
 
@@ -126,28 +126,28 @@ internal sealed class StepContext(
         if (resources.Count == 0) throw new InvalidOperationException("Keine Kanäle für die Kurvenaufnahme angegeben.");
         var bindings = resources.Select(CheckAccess).ToList();
         var adapter = bindings[0].Adapter;
-        if (bindings.Any(b => !ReferenceEquals(b.Adapter, adapter)))
+        if (bindings.Any(binding => !ReferenceEquals(binding.Adapter, adapter)))
             throw new InvalidOperationException("Gemeinsame Zeitbasis: alle Kanäle einer Aufnahme müssen am selben Gerät liegen.");
         if (adapter is not IWaveformAdapter wave)
             throw new InvalidOperationException($"Gerät '{adapter.Name}' unterstützt keine Kurvenaufnahme.");
-        if (_parallelAccess is not null) await _parallelAccess.AcquireAsync(bindings.Select(b => b.Key)).ConfigureAwait(false);
+        if (_parallelAccess is not null) await _parallelAccess.AcquireAsync(bindings.Select(binding => binding.Key)).ConfigureAwait(false);
         return await CaptureMapped(wave, bindings, sampleRate, samples).ConfigureAwait(false);
     }
 
     private async Task<WaveformSet> CaptureMapped(IWaveformAdapter wave, List<ResourceBinding> bindings, double sampleRate, int samples)
     {
-        var tracked = bindings.Select(b => Track(b, "Kurvenaufnahme")).ToList();
+        var tracked = bindings.Select(binding => Track(binding, "Kurvenaufnahme")).ToList();
         WaveformSet set;
         try
         {
-            set = await wave.CaptureAsync(bindings.Select(b => b.Channel).ToList(), sampleRate, samples, token).ConfigureAwait(false);
+            set = await wave.CaptureAsync(bindings.Select(binding => binding.Channel).ToList(), sampleRate, samples, token).ConfigureAwait(false);
         }
         finally
         {
-            foreach (var t in tracked) t?.Dispose();
+            foreach (var iDisposable in tracked) iDisposable?.Dispose();
         }
         // Gerätekanal → abstrakter Name (Tests und Ergebnisse verwenden nur abstrakte Namen).
-        return new WaveformSet(set.Channels.Select((w, i) => w with { Channel = bindings[i].Name }).ToList());
+        return new WaveformSet(set.Channels.Select((waveform, index) => waveform with { Channel = bindings[index].Name }).ToList());
     }
 
     public async Task<object?> AskOperatorAsync(OperatorPrompt prompt)
@@ -175,7 +175,7 @@ internal sealed class StepContext(
     }
 
     public IReadOnlyList<(string Name, VarType Type)> VisibleVariables()
-        => scope.VisibleVariables().Select(v => (v.Name, v.Type)).ToList();
+        => scope.VisibleVariables().Select(variable => (variable.Name, variable.Type)).ToList();
 
     public string? ProgramPythonVenv => run.Options.PythonVenv;
     public PairedStationContext? PairedStation => run.Options.PairedStation;
@@ -192,10 +192,10 @@ internal sealed class StepContext(
             : Task.FromResult(Testumgebung.Domain.Code.CodeDebugStop.Continue);
 
     public Testumgebung.Domain.Code.CodeBlockDefinition? FindLibraryBlock(string id)
-        => run.Definition.Library.FirstOrDefault(b => b.Id == id);
+        => run.Definition.Library.FirstOrDefault(codeBlock => codeBlock.Id == id);
 
     public GroupBlockDefinition? FindGroupBlock(string id)
-        => run.Definition.GroupLibrary.FirstOrDefault(b => b.Id == id);
+        => run.Definition.GroupLibrary.FirstOrDefault(groupBlock => groupBlock.Id == id);
 
     public Task<(ResultRating Rating, IReadOnlyDictionary<string, object?> Outputs)> ExecuteGroupBlockAsync(
         GroupBlockDefinition block, IReadOnlyDictionary<string, object?> inputs)

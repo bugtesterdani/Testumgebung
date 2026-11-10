@@ -65,29 +65,29 @@ public abstract class ScpiInstrument : IInstrumentDriver
     public abstract IReadOnlyList<InstrumentChannel> Channels { get; }
 
     protected InstrumentChannel Channel(string channel)
-        => Channels.FirstOrDefault(c => string.Equals(c.Name, channel, StringComparison.OrdinalIgnoreCase))
-           ?? throw new InstrumentException($"{Model}: Kanal „{channel}“ gibt es nicht (vorhanden: {string.Join(", ", Channels.Select(c => c.Name))}).");
+        => Channels.FirstOrDefault(channel2 => string.Equals(channel2.Name, channel, StringComparison.OrdinalIgnoreCase))
+           ?? throw new InstrumentException($"{Model}: Kanal „{channel}“ gibt es nicht (vorhanden: {string.Join(", ", Channels.Select(channel2 => channel2.Name))}).");
 
     public ChannelCapabilities GetCapabilities(string channel)
     {
-        var c = Channel(channel);
-        return new ChannelCapabilities(c.Unit, c.Min, c.Max, c.Access.HasFlag(ChannelAccess.Waveform), c.Access.HasFlag(ChannelAccess.Waveform));
+        var channel2 = Channel(channel);
+        return new ChannelCapabilities(channel2.Unit, channel2.Min, channel2.Max, channel2.Access.HasFlag(ChannelAccess.Waveform), channel2.Access.HasFlag(ChannelAccess.Waveform));
     }
 
     public async Task<double> ReadAsync(string channel, CancellationToken cancellationToken)
     {
-        var c = Channel(channel);
-        if (!c.Access.HasFlag(ChannelAccess.Read)) throw new InstrumentException($"{Model}: Kanal {c.Name} ist nicht lesbar.");
-        return await ReadChannelAsync(c, cancellationToken).ConfigureAwait(false);
+        var channel2 = Channel(channel);
+        if (!channel2.Access.HasFlag(ChannelAccess.Read)) throw new InstrumentException($"{Model}: Kanal {channel2.Name} ist nicht lesbar.");
+        return await ReadChannelAsync(channel2, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task WriteAsync(string channel, double value, CancellationToken cancellationToken)
     {
-        var c = Channel(channel);
-        if (!c.Access.HasFlag(ChannelAccess.Write)) throw new InstrumentException($"{Model}: Kanal {c.Name} ist nur lesbar.");
-        if (value < c.Min || value > c.Max)
-            throw new ArgumentOutOfRangeException(nameof(value), $"{F(value)} {c.Unit} außerhalb {F(c.Min)} … {F(c.Max)} {c.Unit} von {Model} {c.Name} – keine automatische Begrenzung.");
-        await WriteChannelAsync(c, value, cancellationToken).ConfigureAwait(false);
+        var channel2 = Channel(channel);
+        if (!channel2.Access.HasFlag(ChannelAccess.Write)) throw new InstrumentException($"{Model}: Kanal {channel2.Name} ist nur lesbar.");
+        if (value < channel2.Min || value > channel2.Max)
+            throw new ArgumentOutOfRangeException(nameof(value), $"{F(value)} {channel2.Unit} außerhalb {F(channel2.Min)} … {F(channel2.Max)} {channel2.Unit} von {Model} {channel2.Name} – keine automatische Begrenzung.");
+        await WriteChannelAsync(channel2, value, cancellationToken).ConfigureAwait(false);
     }
 
     protected abstract Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct);
@@ -106,9 +106,9 @@ public abstract class ScpiInstrument : IInstrumentDriver
             if (!SameModel(Model, id.Model))
                 details.Add($"Achtung: Gerät meldet {id.Model}, konfiguriert ist {Model}.");
             var errors = await Session.ReadErrorsAsync(cancellationToken).ConfigureAwait(false);
-            details.AddRange(errors.Select(e => "Fehlerwarteschlange: " + e));
+            details.AddRange(errors.Select(error => "Fehlerwarteschlange: " + error));
             details.AddRange(await DescribeAsync(cancellationToken).ConfigureAwait(false));
-            details.Add("Kanäle: " + string.Join(", ", Channels.Select(c => $"{c.Name} [{c.Unit}]")));
+            details.Add("Kanäle: " + string.Join(", ", Channels.Select(channel => $"{channel.Name} [{channel.Unit}]")));
             return new InstrumentProbe(true, id.ToString(), details, Log);
         }
         catch (Exception ex) when (ex is InstrumentException or TimeoutException or IOException)
@@ -124,12 +124,12 @@ public abstract class ScpiInstrument : IInstrumentDriver
     /// <summary>„DSOX3034T“ ≙ „DSO-X 3034T“, „34461A“ ≙ „34461A“; Agilent/Keysight-Varianten mit gleicher Nummer gelten als gleich.</summary>
     public static bool SameModel(string configured, string reported)
     {
-        static string N(string s) => new(s.Where(char.IsLetterOrDigit).Select(char.ToUpperInvariant).ToArray());
-        var (c, r) = (N(configured), N(reported));
-        if (c.Length == 0 || r.Length == 0) return false;
-        if (r.Contains(c, StringComparison.Ordinal) || c.Contains(r, StringComparison.Ordinal)) return true;
-        var digits = new string(c.Where(char.IsDigit).ToArray());
-        return digits.Length >= 4 && r.Contains(digits, StringComparison.Ordinal);
+        static string N(string text) => new(text.Where(char.IsLetterOrDigit).Select(char.ToUpperInvariant).ToArray());
+        var (code, resource) = (N(configured), N(reported));
+        if (code.Length == 0 || resource.Length == 0) return false;
+        if (resource.Contains(code, StringComparison.Ordinal) || code.Contains(resource, StringComparison.Ordinal)) return true;
+        var digits = new string(code.Where(char.IsDigit).ToArray());
+        return digits.Length >= 4 && resource.Contains(digits, StringComparison.Ordinal);
     }
 
     protected static string F(double v) => v.ToString("G10", CultureInfo.InvariantCulture);

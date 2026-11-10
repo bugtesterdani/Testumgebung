@@ -40,7 +40,7 @@ public sealed partial class ReleaseService
         }
         using var snapshot = await SourceProviders.Get(source.Source.Provider).ExportAsync(source.Source, source.Revision, ct).ConfigureAwait(false);
         if (snapshot.Version != source) throw new ReleaseRuleException("Remote-Version oder Repository-Identität weicht vom geprüften Paket ab.");
-        var expected = opened.Manifest.Entries.SingleOrDefault(e => e.Area == "Programmquelle" && e.Name == "source.zip");
+        var expected = opened.Manifest.Entries.SingleOrDefault(manifestEntry => manifestEntry.Area == "Programmquelle" && manifestEntry.Name == "source.zip");
         if (expected?.Sha256 != ReleasePackage.Sha256(SourceArchive.Build(snapshot))) throw new ReleaseRuleException("Remote-Dateien weichen vom geprüften Quellarchiv ab.");
     }
 }

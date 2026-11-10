@@ -51,21 +51,21 @@ public sealed class SettingsViewModel : ObservableObject
         TestDatabaseCommand = new RelayCommand(() => _ = TestDatabaseAsync(), () => !IsBusy && IsSqlProvider);
         ContractCheckCommand = new RelayCommand(() => _ = ContractCheckAsync(), () => !IsBusy && IsSqlProvider);
         TestMqttCommand = new RelayCommand(() => _ = TestMqttAsync(), () => !IsBusy && !string.IsNullOrWhiteSpace(MqttHost));
-        services.MqttDelivered += d => _ui.Post(() =>
+        services.MqttDelivered += mqttDelivery => _ui.Post(() =>
         {
-            MqttLog.Insert(0, new CheckRow(d.Sent, $"{MqttNotifier.EventName(d.Notification.Kind)} · {d.Notification.DutId}",
-                d.Sent ? d.Topic : d.Error ?? "", d.Time.ToString("HH:mm:ss", CultureInfo.InvariantCulture)));
+            MqttLog.Insert(0, new CheckRow(mqttDelivery.Sent, $"{MqttNotifier.EventName(mqttDelivery.Notification.Kind)} · {mqttDelivery.Notification.DutId}",
+                mqttDelivery.Sent ? mqttDelivery.Topic : mqttDelivery.Error ?? "", mqttDelivery.Time.ToString("HH:mm:ss", CultureInfo.InvariantCulture)));
             while (MqttLog.Count > 100) MqttLog.RemoveAt(MqttLog.Count - 1);
         });
         TestHttpCommand = new RelayCommand(() => _ = TestHttpAsync(), () => !IsBusy && !string.IsNullOrWhiteSpace(HttpUrl));
         TestOpcUaCommand = new RelayCommand(() => _ = TestOpcUaAsync(), () => !IsBusy && OpcUaAvailable && !string.IsNullOrWhiteSpace(OpcUaEndpoint));
-        services.NotifyDelivered += d => _ui.Post(() =>
+        services.NotifyDelivered += notifyDelivery => _ui.Post(() =>
         {
-            NotifyLog.Insert(0, new CheckRow(d.Sent, $"{d.Channel} · {MqttNotifier.EventName(d.Notification.Kind)} · {d.Notification.DutId}",
-                d.Sent ? d.Target : d.Error ?? "", d.Time.ToString("HH:mm:ss", CultureInfo.InvariantCulture)));
+            NotifyLog.Insert(0, new CheckRow(notifyDelivery.Sent, $"{notifyDelivery.Channel} · {MqttNotifier.EventName(notifyDelivery.Notification.Kind)} · {notifyDelivery.Notification.DutId}",
+                notifyDelivery.Sent ? notifyDelivery.Target : notifyDelivery.Error ?? "", notifyDelivery.Time.ToString("HH:mm:ss", CultureInfo.InvariantCulture)));
             while (NotifyLog.Count > 100) NotifyLog.RemoveAt(NotifyLog.Count - 1);
         });
-        foreach (var w in store.Warnings) Warnings.Add(w);
+        foreach (var warning in store.Warnings) Warnings.Add(warning);
     }
 
     public IReadOnlyList<string> StationNames => _stationNames();
@@ -183,7 +183,7 @@ public sealed class SettingsViewModel : ObservableObject
         set { _edit.OpcUa.NodePrefix = value?.Trim() ?? ""; OnPropertyChanged(); OnPropertyChanged(nameof(OpcUaNodesHint)); }
     }
 
-    public string OpcUaNodesHint => "Geschrieben werden (als Zeichenkette): " + string.Join(", ", OpcUaNotifyOptions.FieldNames.Select(f => _edit.OpcUa.NodePrefix + f));
+    public string OpcUaNodesHint => "Geschrieben werden (als Zeichenkette): " + string.Join(", ", OpcUaNotifyOptions.FieldNames.Select(fieldName => _edit.OpcUa.NodePrefix + fieldName));
 
     public bool OpcUaUseSecurity
     {
@@ -297,7 +297,7 @@ public sealed class SettingsViewModel : ObservableObject
 
     public ChoiceItem<DatabaseChoice> SelectedProvider
     {
-        get => ProviderChoices.First(c => c.Value == _edit.Database.Provider);
+        get => ProviderChoices.First(providerChoice => providerChoice.Value == _edit.Database.Provider);
         set
         {
             if (value is null || value.Value == _edit.Database.Provider) return;
@@ -456,8 +456,8 @@ public sealed class SettingsViewModel : ObservableObject
             }
             _services.Apply(applied);
             _store.Save(Copy(applied));
-            SaveStatus = _services.ApplyWarning is { } w
-                ? $"Gespeichert, aber: {w}"
+            SaveStatus = _services.ApplyWarning is { } text
+                ? $"Gespeichert, aber: {text}"
                 : $"Gespeichert und übernommen ({DateTime.Now:HH:mm:ss}).";
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -512,7 +512,7 @@ public sealed class SettingsViewModel : ObservableObject
             var result = await Task.Run(() => DatabaseContractCheck.RunAsync(db).WaitAsync(TimeSpan.FromMinutes(2))).ConfigureAwait(false);
             _ui.Post(() =>
             {
-                foreach (var s in result.Steps) ContractResult.Add(new CheckRow(s.Passed, s.Name, s.Detail));
+                foreach (var contractCheckStep in result.Steps) ContractResult.Add(new CheckRow(contractCheckStep.Passed, contractCheckStep.Name, contractCheckStep.Detail));
                 DatabaseStatus = result.Passed ? "Vertragsprüfung bestanden." : "Vertragsprüfung NICHT bestanden.";
             });
         }
@@ -557,9 +557,9 @@ public sealed class SettingsViewModel : ObservableObject
 
     private static string Describe(Exception ex)
     {
-        var e = ex is AggregateException { InnerException: { } inner } ? inner : ex;
-        return e is TimeoutException ? "Zeitüberschreitung." : e.Message;
+        var error = ex is AggregateException { InnerException: { } inner } ? inner : ex;
+        return error is TimeoutException ? "Zeitüberschreitung." : error.Message;
     }
 
-    private AppSettings Copy(AppSettings s) => s.Clone(PlainSecretProtector.Instance);
+    private AppSettings Copy(AppSettings appSettings) => appSettings.Clone(PlainSecretProtector.Instance);
 }

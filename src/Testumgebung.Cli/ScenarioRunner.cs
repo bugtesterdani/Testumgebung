@@ -29,11 +29,11 @@ public static class ScenarioRunner
         var (adapter, registry) = SampleProjects.CreateSimulation(project, scenario.Seed);
         foreach (var (name, element) in scenario.Simulation)
         {
-            var resource = project.Simulation.FirstOrDefault(r => r.Name == name);
+            var resource = project.Simulation.FirstOrDefault(resource2 => resource2.Name == name);
             if (resource is null)
             {
                 report.Fail(suite, "Simulation", $"Ressource „{name}“ ist im Projekt nicht unter „simulation“ angelegt " +
-                    $"(vorhanden: {string.Join(", ", project.Simulation.Select(r => r.Name))}).");
+                    $"(vorhanden: {string.Join(", ", project.Simulation.Select(resource2 => resource2.Name))}).");
                 return;
             }
             Scenario.SimulationValues(element, out var values);
@@ -54,11 +54,11 @@ public static class ScenarioRunner
         op.Run = run;
 
         var starts = new ConcurrentDictionary<string, int>(StringComparer.Ordinal);
-        run.EventRaised += e =>
+        run.EventRaised += engineEvent =>
         {
-            Trace(trace, e);
-            if (scenario.Abort is { } abort && e is StepStarted started && started.NodeId == abort.AtStep
-                && starts.AddOrUpdate(started.NodeId, 1, (_, n) => n + 1) == abort.Occurrence)
+            Trace(trace, engineEvent);
+            if (scenario.Abort is { } abort && engineEvent is StepStarted started && started.NodeId == abort.AtStep
+                && starts.AddOrUpdate(started.NodeId, 1, (_, count) => count + 1) == abort.Occurrence)
             {
                 trace.AppendLine($"Szenario: Werkerabbruch bei {abort.AtStep} (#{abort.Occurrence})");
                 run.RequestAbort();
@@ -117,15 +117,15 @@ public static class ScenarioRunner
         {
             if (duts.Count != expect.Duts.Count)
                 report.Fail(suite, "Prüflinge", $"erwartet {expect.Duts.Count} abgeschlossene Prüflinge, erhalten {duts.Count} ({Describe(duts)})");
-            for (var i = 0; i < Math.Min(duts.Count, expect.Duts.Count); i++)
+            for (var index = 0; index < Math.Min(duts.Count, expect.Duts.Count); index++)
             {
-                var e = expect.Duts[i];
-                var a = duts[i];
+                var dutExpectation = expect.Duts[index];
+                var dutRunCompleted = duts[index];
                 var wrong = new List<string>();
-                if (e.DutId is not null && e.DutId != a.DutId) wrong.Add($"Kennung erwartet „{e.DutId}“, erhalten „{a.DutId}“");
-                if (e.Rating is not null && !StatusMatches(e.Rating, a.Status)) wrong.Add($"Ergebnis erwartet {e.Rating}, erhalten {a.Status}");
-                var name = $"Prüfling {i + 1}";
-                if (wrong.Count == 0) report.Pass(suite, name, $"{a.DutId}: {a.Status}");
+                if (dutExpectation.DutId is not null && dutExpectation.DutId != dutRunCompleted.DutId) wrong.Add($"Kennung erwartet „{dutExpectation.DutId}“, erhalten „{dutRunCompleted.DutId}“");
+                if (dutExpectation.Rating is not null && !StatusMatches(dutExpectation.Rating, dutRunCompleted.Status)) wrong.Add($"Ergebnis erwartet {dutExpectation.Rating}, erhalten {dutRunCompleted.Status}");
+                var name = $"Prüfling {index + 1}";
+                if (wrong.Count == 0) report.Pass(suite, name, $"{dutRunCompleted.DutId}: {dutRunCompleted.Status}");
                 else report.Fail(suite, name, string.Join("; ", wrong));
             }
         }
@@ -135,24 +135,24 @@ public static class ScenarioRunner
     private static void CompareSteps(ScenarioExpectation expect, string suite, IReadOnlyList<EngineEvent> events, Report report)
     {
         var completed = events.OfType<StepCompleted>().ToList();
-        foreach (var e in expect.Steps)
+        foreach (var stepExpectation in expect.Steps)
         {
-            CompareStep(e, suite, completed, report);
+            CompareStep(stepExpectation, suite, completed, report);
         }
     }
 
-    private static void CompareStep(StepExpectation e, string suite, List<StepCompleted> completed, Report report)
+    private static void CompareStep(StepExpectation stepExpectation, string suite, List<StepCompleted> completed, Report report)
     {
-        var name = $"Schritt {e.Step}" + (e.Occurrence is { } o ? $" #{o}" : "");
-        var all = completed.Where(c => c.NodeId == e.Step).ToList();
+        var name = $"Schritt {stepExpectation.Step}" + (stepExpectation.Occurrence is { } offset ? $" #{offset}" : "");
+        var all = completed.Where(stepCompleted => stepCompleted.NodeId == stepExpectation.Step).ToList();
         var wrong = new List<string>();
-        if (e.Count is { } count && all.Count != count) wrong.Add($"{all.Count}× ausgeführt statt {count}×");
-        var selected = e.Occurrence is { } n ? all.Skip(n - 1).Take(1).ToList() : all;
-        if (selected.Count == 0 && (e.Rating is not null || e.Value is not null))
+        if (stepExpectation.Count is { } count && all.Count != count) wrong.Add($"{all.Count}× ausgeführt statt {count}×");
+        var selected = stepExpectation.Occurrence is { } count2 ? all.Skip(count2 - 1).Take(1).ToList() : all;
+        if (selected.Count == 0 && (stepExpectation.Rating is not null || stepExpectation.Value is not null))
         {
             wrong.Add(all.Count == 0 ? "nicht ausgeführt" : $"nur {all.Count}× ausgeführt");
         }
-        foreach (var c in selected) CompareStepResult(e, c, wrong);
+        foreach (var stepCompleted in selected) CompareStepResult(stepExpectation, stepCompleted, wrong);
         if (wrong.Count == 0) report.Pass(suite, name, selected.Count == 1 ? $"{selected[0].Rating.ToDisplay()} {Text(selected[0].Value)}" : $"{selected.Count}×");
         else report.Fail(suite, name, string.Join("; ", wrong.Distinct()));
     }
@@ -188,9 +188,9 @@ public static class ScenarioRunner
     private static string Text(object? value) => value switch
     {
         null => "–",
-        double d => d.ToString("R", CultureInfo.InvariantCulture),
-        bool b => b ? "true" : "false",
-        IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
+        double number => number.ToString("R", CultureInfo.InvariantCulture),
+        bool flag => flag ? "true" : "false",
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
         _ => value.ToString() ?? "",
     };
 
@@ -205,47 +205,47 @@ public static class ScenarioRunner
 
     private static string Normalize(string text) => string.Join(" ", text.ToUpperInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-    private static string Describe(IEnumerable<DutRunCompleted> duts) => string.Join(", ", duts.Select(d => $"{d.DutId}: {d.Status}"));
+    private static string Describe(IEnumerable<DutRunCompleted> duts) => string.Join(", ", duts.Select(dutRunCompleted => $"{dutRunCompleted.DutId}: {dutRunCompleted.Status}"));
 
-    private static void Trace(StringBuilder trace, EngineEvent e)
+    private static void Trace(StringBuilder trace, EngineEvent engineEvent)
     {
         lock (trace)
         {
-            switch (e)
+            switch (engineEvent)
             {
-                case StepCompleted s:
-                    trace.AppendLine(DescribeStep(s));
+                case StepCompleted stepCompleted:
+                    trace.AppendLine(DescribeStep(stepCompleted));
                     break;
-                case DutRunStarted d:
-                    trace.AppendLine($"Prüfling startet ({d.NodeId})");
+                case DutRunStarted dutRunStarted:
+                    trace.AppendLine($"Prüfling startet ({dutRunStarted.NodeId})");
                     break;
-                case DutRunCompleted d:
-                    trace.AppendLine($"Prüfling {d.DutId}: {d.Status}");
+                case DutRunCompleted dutRunCompleted:
+                    trace.AppendLine($"Prüfling {dutRunCompleted.DutId}: {dutRunCompleted.Status}");
                     break;
                 case NodeSkipped skipped:
                     trace.AppendLine($"  Element {skipped.NodeId} übersprungen: {skipped.Reason}");
                     break;
-                case GroupNotEntered g:
-                    trace.AppendLine($"  Gruppe {g.NodeId} nicht betreten: {g.Reason}");
+                case GroupNotEntered groupNotEntered:
+                    trace.AppendLine($"  Gruppe {groupNotEntered.NodeId} nicht betreten: {groupNotEntered.Reason}");
                     break;
-                case Diagnostic d:
-                    trace.AppendLine($"  Diagnose {d.NodeId}: {d.Message}");
+                case Diagnostic diagnostic:
+                    trace.AppendLine($"  Diagnose {diagnostic.NodeId}: {diagnostic.Message}");
                     break;
-                case OperatorAbortRequested a:
-                    trace.AppendLine($"Werkerabbruch #{a.Number}: {a.Effect}");
+                case OperatorAbortRequested operatorAbortRequested:
+                    trace.AppendLine($"Werkerabbruch #{operatorAbortRequested.Number}: {operatorAbortRequested.Effect}");
                     break;
-                case ResourceNotAcquired r:
-                    trace.AppendLine($"  Ressourcen {string.Join(", ", r.Resources)} nicht erhalten: {r.Reason}");
+                case ResourceNotAcquired resourceNotAcquired:
+                    trace.AppendLine($"  Ressourcen {string.Join(", ", resourceNotAcquired.Resources)} nicht erhalten: {resourceNotAcquired.Reason}");
                     break;
             }
         }
     }
 
-    private static string DescribeStep(StepCompleted s)
+    private static string DescribeStep(StepCompleted stepCompleted)
     {
-        var limits = s.LowLimit is null && s.HighLimit is null ? "" : $" [{Text(s.LowLimit)} … {Text(s.HighLimit)}]";
-        return $"  {s.Rating.ToDisplay(),-7} {s.NodeId}: {Text(s.Value)}{(s.Unit is null ? "" : " " + s.Unit)}{limits}" +
-               (s.Message is { Length: > 0 } ? $" – {s.Message}" : "") + (s.Cancelled ? " (abgebrochen)" : "");
+        var limits = stepCompleted.LowLimit is null && stepCompleted.HighLimit is null ? "" : $" [{Text(stepCompleted.LowLimit)} … {Text(stepCompleted.HighLimit)}]";
+        return $"  {stepCompleted.Rating.ToDisplay(),-7} {stepCompleted.NodeId}: {Text(stepCompleted.Value)}{(stepCompleted.Unit is null ? "" : " " + stepCompleted.Unit)}{limits}" +
+               (stepCompleted.Message is { Length: > 0 } ? $" – {stepCompleted.Message}" : "") + (stepCompleted.Cancelled ? " (abgebrochen)" : "");
     }
 
     /// <summary>Beantwortet Werkerinteraktionen aus dem Szenario; fehlende Antworten beenden den Lauf mit Werkerabbruch.</summary>
@@ -258,7 +258,7 @@ public static class ScenarioRunner
         public Task<object?> AskAsync(string runId, OperatorPrompt prompt, CancellationToken cancellationToken)
         {
             var stepId = prompt.DisplayId.Split('#')[0];
-            var answer = scenario.Answers.FirstOrDefault(a => a.Step == stepId) ?? scenario.Answers.FirstOrDefault(a => a.Step == prompt.StepName);
+            var answer = scenario.Answers.FirstOrDefault(scenarioAnswer => scenarioAnswer.Step == stepId) ?? scenario.Answers.FirstOrDefault(scenarioAnswer => scenarioAnswer.Step == prompt.StepName);
             if (!prompt.ExpectsValue)
             {
                 Log($"  Werker bestätigt {stepId}: {prompt.Text}");
@@ -276,7 +276,7 @@ public static class ScenarioRunner
             }
             else
             {
-                var index = _used.AddOrUpdate(answer, 0, (_, n) => n + 1);
+                var index = _used.AddOrUpdate(answer, 0, (_, count) => count + 1);
                 if (index >= answer.Values!.Count)
                     return Missing($"Antworten für „{answer.Step}“ aufgebraucht ({answer.Values.Count} Werte, {index + 1}. Abfrage).");
                 value = answer.Values[index];

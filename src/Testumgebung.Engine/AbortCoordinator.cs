@@ -80,7 +80,7 @@ internal sealed class AbortCoordinator
                 Regular.Cancel();
                 return (AbortCount, "Reguläre Schritte gestoppt; Exit-Gruppen von innen nach außen.", Regular);
             }
-            var top = _exitStack.LastOrDefault(p => !p.IsCancelled);
+            var top = _exitStack.LastOrDefault(executionPhase => !executionPhase.IsCancelled);
             if (top is not null)
             {
                 top.Cancel();

@@ -111,6 +111,6 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
     private static ResultRun Exclude(ResultRun run, IReadOnlyCollection<string> excluded, string label)
     {
         var set = excluded.ToHashSet(StringComparer.Ordinal);
-        return run.CopyWith(label, run.Events.Where(e => e.NodeId is null || !set.Contains(e.NodeId)).ToList(), [], []);
+        return run.CopyWith(label, run.Events.Where(resultEvent => resultEvent.NodeId is null || !set.Contains(resultEvent.NodeId)).ToList(), [], []);
     }
 }

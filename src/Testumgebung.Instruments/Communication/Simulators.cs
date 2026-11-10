@@ -19,43 +19,43 @@ public static class ModbusSlave
     public static async Task<byte[]> HandleAsync(IModbusAdapter backend, byte unit, byte[] pdu, CancellationToken ct)
     {
         var function = pdu[0];
-        var u = unit.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        int A(int i) => (pdu[i] << 8) | pdu[i + 1];
+        var text = unit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        int A(int index) => (pdu[index] << 8) | pdu[index + 1];
         try
         {
             switch (function)
             {
                 case 1 or 2:
                 {
-                    var bits = await backend.ReadBitsAsync(u, function == 1 ? ModbusArea.Coil : ModbusArea.DiscreteInput, A(1), A(3), ct).ConfigureAwait(false);
+                    var bits = await backend.ReadBitsAsync(text, function == 1 ? ModbusArea.Coil : ModbusArea.DiscreteInput, A(1), A(3), ct).ConfigureAwait(false);
                     var packed = new byte[(bits.Length + 7) / 8];
-                    for (var i = 0; i < bits.Length; i++)
-                        if (bits[i]) packed[i / 8] |= (byte)(1 << (i % 8));
+                    for (var index2 = 0; index2 < bits.Length; index2++)
+                        if (bits[index2]) packed[index2 / 8] |= (byte)(1 << (index2 % 8));
                     return [function, (byte)packed.Length, .. packed];
                 }
                 case 3 or 4:
                 {
-                    var regs = await backend.ReadRegistersAsync(u, function == 3 ? ModbusArea.HoldingRegister : ModbusArea.InputRegister, A(1), A(3), ct).ConfigureAwait(false);
-                    return [function, (byte)(regs.Length * 2), .. regs.SelectMany(r => new[] { (byte)(r >> 8), (byte)r })];
+                    var regs = await backend.ReadRegistersAsync(text, function == 3 ? ModbusArea.HoldingRegister : ModbusArea.InputRegister, A(1), A(3), ct).ConfigureAwait(false);
+                    return [function, (byte)(regs.Length * 2), .. regs.SelectMany(reg => new[] { (byte)(reg >> 8), (byte)reg })];
                 }
                 case 5:
-                    await backend.WriteBitsAsync(u, A(1), [pdu[3] == 0xFF], ct).ConfigureAwait(false);
+                    await backend.WriteBitsAsync(text, A(1), [pdu[3] == 0xFF], ct).ConfigureAwait(false);
                     return pdu[..5];
                 case 6:
-                    await backend.WriteRegistersAsync(u, A(1), [(ushort)A(3)], ct).ConfigureAwait(false);
+                    await backend.WriteRegistersAsync(text, A(1), [(ushort)A(3)], ct).ConfigureAwait(false);
                     return pdu[..5];
                 case 15:
                 {
                     var count = A(3);
-                    var values = Enumerable.Range(0, count).Select(i => (pdu[6 + i / 8] >> (i % 8) & 1) != 0).ToArray();
-                    await backend.WriteBitsAsync(u, A(1), values, ct).ConfigureAwait(false);
+                    var values = Enumerable.Range(0, count).Select(index3 => (pdu[6 + index3 / 8] >> (index3 % 8) & 1) != 0).ToArray();
+                    await backend.WriteBitsAsync(text, A(1), values, ct).ConfigureAwait(false);
                     return pdu[..5];
                 }
                 case 16:
                 {
                     var count = A(3);
-                    var values = Enumerable.Range(0, count).Select(i => (ushort)A(6 + 2 * i)).ToArray();
-                    await backend.WriteRegistersAsync(u, A(1), values, ct).ConfigureAwait(false);
+                    var values = Enumerable.Range(0, count).Select(index3 => (ushort)A(6 + 2 * index3)).ToArray();
+                    await backend.WriteRegistersAsync(text, A(1), values, ct).ConfigureAwait(false);
                     return pdu[..5];
                 }
                 default:

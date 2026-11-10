@@ -33,17 +33,17 @@ public sealed class ThreePhaseAcSource : IInstrumentDriver
     public string Model => "3× " + _phases[0].Model;
     public string Resource { get; }
     public IReadOnlyList<InstrumentChannel> Channels { get; }
-    public IReadOnlyList<string> Log => _phases.SelectMany((p, i) => p.Log.Select(l => $"[{Phases[i]}] {l}")).ToList();
+    public IReadOnlyList<string> Log => _phases.SelectMany((iInstrumentDriver, index) => iInstrumentDriver.Log.Select(log => $"[{Phases[index]}] {log}")).ToList();
 
     private static IReadOnlyList<InstrumentChannel> BuildChannels(IReadOnlyList<InstrumentChannel> single)
     {
         var list = new List<InstrumentChannel>();
         foreach (var phase in Phases)
-            foreach (var c in single)
-                list.Add(c with { Name = $"{phase}:{c.Name}", Description = $"{phase}: {c.Description}" });
+            foreach (var channel in single)
+                list.Add(channel with { Name = $"{phase}:{channel.Name}", Description = $"{phase}: {channel.Description}" });
         // gemeinsame Kanäle auf alle drei Phasen
-        foreach (var c in single.Where(c => c.Access.HasFlag(ChannelAccess.Write)))
-            list.Add(c with { Name = $"ALLE:{c.Name}", Description = $"Alle Phasen: {c.Description}" });
+        foreach (var channel2 in single.Where(channel3 => channel3.Access.HasFlag(ChannelAccess.Write)))
+            list.Add(channel2 with { Name = $"ALLE:{channel2.Name}", Description = $"Alle Phasen: {channel2.Description}" });
         return list;
     }
 
@@ -55,7 +55,7 @@ public sealed class ThreePhaseAcSource : IInstrumentDriver
         var prefix = channel[..colon];
         var rest = channel[(colon + 1)..];
         if (prefix.Equals("ALLE", StringComparison.OrdinalIgnoreCase)) return (-1, rest);
-        var index = Array.FindIndex(Phases, p => p.Equals(prefix, StringComparison.OrdinalIgnoreCase));
+        var index = Array.FindIndex(Phases, path => path.Equals(prefix, StringComparison.OrdinalIgnoreCase));
         return index >= 0 ? (index, rest) : (-1, channel);
     }
 
@@ -79,16 +79,16 @@ public sealed class ThreePhaseAcSource : IInstrumentDriver
             await _phases[phase].WriteAsync(inner, value, cancellationToken).ConfigureAwait(false);
             return;
         }
-        foreach (var p in _phases) await p.WriteAsync(inner, value, cancellationToken).ConfigureAwait(false);
+        foreach (var iInstrumentDriver in _phases) await iInstrumentDriver.WriteAsync(inner, value, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SafeStateAsync(CancellationToken cancellationToken)
     {
         // jede Phase einzeln in den sicheren Zustand – ein Fehler darf die anderen nicht verhindern
         List<Exception>? errors = null;
-        foreach (var p in _phases)
+        foreach (var iInstrumentDriver in _phases)
         {
-            try { await p.SafeStateAsync(cancellationToken).ConfigureAwait(false); }
+            try { await iInstrumentDriver.SafeStateAsync(cancellationToken).ConfigureAwait(false); }
             catch (Exception ex) { (errors ??= []).Add(ex); }
         }
         if (errors is not null) throw new AggregateException("Sicherer Zustand einer Phase fehlgeschlagen.", errors);
@@ -98,18 +98,18 @@ public sealed class ThreePhaseAcSource : IInstrumentDriver
     {
         var details = new List<string>();
         var ok = true;
-        for (var i = 0; i < 3; i++)
+        for (var index = 0; index < 3; index++)
         {
-            var probe = await _phases[i].ProbeAsync(cancellationToken).ConfigureAwait(false);
+            var probe = await _phases[index].ProbeAsync(cancellationToken).ConfigureAwait(false);
             ok &= probe.Ok;
-            details.Add($"{Phases[i]}: {(probe.Ok ? "OK" : "Fehler")} – {probe.Identity}");
-            details.AddRange(probe.Details.Select(d => $"  {Phases[i]} {d}"));
+            details.Add($"{Phases[index]}: {(probe.Ok ? "OK" : "Fehler")} – {probe.Identity}");
+            details.AddRange(probe.Details.Select(detail => $"  {Phases[index]} {detail}"));
         }
-        return new InstrumentProbe(ok, $"Dreiphasig: {string.Join(" / ", _phases.Select(p => p.Resource))}", details, Log);
+        return new InstrumentProbe(ok, $"Dreiphasig: {string.Join(" / ", _phases.Select(iInstrumentDriver => iInstrumentDriver.Resource))}", details, Log);
     }
 
     public void Dispose()
     {
-        foreach (var p in _phases) p.Dispose();
+        foreach (var iInstrumentDriver in _phases) iInstrumentDriver.Dispose();
     }
 }

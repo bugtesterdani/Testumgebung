@@ -52,11 +52,11 @@ public static class GdbInspector
         async Task<List<string>> NativeFramesAsync()
         {
             var frames = new List<string>();
-            for (var i = 0; i < 12; i++)
+            for (var index = 0; index < 12; index++)
             {
                 var frameData = await Command("-stack-info-frame", timeout.Token);
-                if (frameData["frame"] is not JsonObject f) break;
-                frames.Add($"#{i} {f["func"]} ({f["file"]}:{f["line"]})");
+                if (frameData["frame"] is not JsonObject jsonObject) break;
+                frames.Add($"#{index} {jsonObject["func"]} ({jsonObject["file"]}:{jsonObject["line"]})");
                 try { await Command("-interpreter-exec console \"up-silently\"", timeout.Token); }
                 catch (InvalidOperationException) { break; }
             }
@@ -70,7 +70,7 @@ public static class GdbInspector
                 && uint.TryParse(nativeThread, out var osThread))
             {
                 var native = (threads["threads"] as JsonArray ?? []).OfType<JsonObject>()
-                    .FirstOrDefault(t => System.Text.RegularExpressions.Regex.IsMatch((string?)t["target-id"] ?? "",
+                    .FirstOrDefault(jsonObject2 => System.Text.RegularExpressions.Regex.IsMatch((string?)jsonObject2["target-id"] ?? "",
                         @"\.(?:" + osThread + "|0x" + osThread.ToString("x") + @")(?:\s|$)", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
                 if (native is not null)
                 {
@@ -79,9 +79,9 @@ public static class GdbInspector
                     await Command($"-interpreter-exec console \"frame view 0x{fp:x} 0x{pc:x}\"", timeout.Token);
                     var data = await Command("-stack-list-variables --all-values", timeout.Token);
                     var variables = new Dictionary<string, string>(StringComparer.Ordinal);
-                    foreach (var v in (data["variables"] as JsonArray ?? []).OfType<JsonObject>())
-                        if ((string?)v["name"] is { } name && !name.StartsWith("__", StringComparison.Ordinal))
-                            variables.TryAdd(name, (string?)v["value"] ?? "<nicht verfügbar>");
+                    foreach (var jsonObject2 in (data["variables"] as JsonArray ?? []).OfType<JsonObject>())
+                        if ((string?)jsonObject2["name"] is { } name && !name.StartsWith("__", StringComparison.Ordinal))
+                            variables.TryAdd(name, (string?)jsonObject2["value"] ?? "<nicht verfügbar>");
                     var frames = await NativeFramesAsync();
                     return new(variables, frames);
                 }
@@ -111,9 +111,9 @@ public static class GdbInspector
                     try { stack = await Command($"-stack-list-frames --thread {threadId} 0 80", timeout.Token); }
                     catch (InvalidOperationException) { continue; }
                     var frames = (stack["stack"] as JsonArray ?? []).OfType<JsonObject>().ToList();
-                    var frame = frames.FirstOrDefault(f => ((string?)f["file"]) is "CodeBlock"
-                        || ((string?)f["fullname"])?.EndsWith("/CodeBlock", StringComparison.Ordinal) == true
-                        || ((string?)f["fullname"])?.EndsWith("\\CodeBlock", StringComparison.Ordinal) == true);
+                    var frame = frames.FirstOrDefault(jsonObject3 => ((string?)jsonObject3["file"]) is "CodeBlock"
+                        || ((string?)jsonObject3["fullname"])?.EndsWith("/CodeBlock", StringComparison.Ordinal) == true
+                        || ((string?)jsonObject3["fullname"])?.EndsWith("\\CodeBlock", StringComparison.Ordinal) == true);
                     if (frame is null) continue;
                     var level = (string?)frame["level"];
                     if (!int.TryParse(level, out _)) continue;
@@ -125,7 +125,7 @@ public static class GdbInspector
                         if (name is not null && !name.StartsWith("__", StringComparison.Ordinal))
                             variables.TryAdd(name, (string?)variable["value"] ?? "<nicht verfügbar>");
                     }
-                    return new(variables, frames.Select(f => $"#{f["level"]} {f["func"]} ({f["file"]}:{f["line"]})").ToList());
+                    return new(variables, frames.Select(jsonObject3 => $"#{jsonObject3["level"]} {jsonObject3["func"]} ({jsonObject3["file"]}:{jsonObject3["line"]})").ToList());
                 }
                 return new(new Dictionary<string, string>(), [], "No user code frame found.");
             }
@@ -170,39 +170,39 @@ public static class GdbInspector
         private JsonNode Value()
         {
             if (_position >= text.Length) throw new FormatException("GDB/MI-Wert fehlt.");
-            var c = text[_position++];
-            if (c == '{') { var obj = Fields('}'); Expect('}'); return obj; }
-            if (c == '[')
+            var character = text[_position++];
+            if (character == '{') { var obj = Fields('}'); Expect('}'); return obj; }
+            if (character == '[')
             {
                 return ListValue();
             }
-            if (c != '"') throw new FormatException("Ungültiger GDB/MI-Wert.");
+            if (character != '"') throw new FormatException("Ungültiger GDB/MI-Wert.");
             var value = new StringBuilder();
             while (_position < text.Length)
             {
-                c = text[_position++];
-                if (c == '"') return JsonValue.Create(value.ToString())!;
-                if (c == '\\')
+                character = text[_position++];
+                if (character == '"') return JsonValue.Create(value.ToString())!;
+                if (character == '\\')
                 {
                     if (_position >= text.Length) break;
-                    c = text[_position++];
-                    c = Escape(c);
+                    character = text[_position++];
+                    character = Escape(character);
                 }
-                value.Append(c);
+                value.Append(character);
             }
             throw new FormatException("GDB/MI-Zeichenkette unvollständig.");
         }
-        private char Escape(char c)
+        private char Escape(char character)
         {
-            if (c is >= '0' and <= '7')
+            if (character is >= '0' and <= '7')
             {
-                var number = c - '0';
-                for (var i = 0; i < 2 && _position < text.Length && text[_position] is >= '0' and <= '7'; i++)
+                var number = character - '0';
+                for (var index = 0; index < 2 && _position < text.Length && text[_position] is >= '0' and <= '7'; index++)
                     number = number * 8 + text[_position++] - '0';
-                c = (char)number;
+                character = (char)number;
             }
-            else c = c switch { 'n' => '\n', 'r' => '\r', 't' => '\t', _ => c };
-            return c;
+            else character = character switch { 'n' => '\n', 'r' => '\r', 't' => '\t', _ => character };
+            return character;
         }
 
         private JsonNode ListValue()
@@ -223,9 +223,9 @@ public static class GdbInspector
             return list;
         }
 
-        private void Expect(char c)
+        private void Expect(char expectedCharacter)
         {
-            if (_position >= text.Length || text[_position++] != c) throw new FormatException("GDB/MI-Struktur unvollständig.");
+            if (_position >= text.Length || text[_position++] != expectedCharacter) throw new FormatException("GDB/MI-Struktur unvollständig.");
         }
     }
 }

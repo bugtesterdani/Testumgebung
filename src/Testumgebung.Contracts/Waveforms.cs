@@ -39,13 +39,13 @@ public sealed record Waveform
     public TimeSpan Duration => SampleRate > 0 ? TimeSpan.FromSeconds(Count / SampleRate) : TimeSpan.Zero;
 
     /// <summary>Zeitpunkt eines Samples in Sekunden relativ zum Start.</summary>
-    public double TimeOf(int index) => TimeValues is { } t ? t[index] : index / SampleRate;
+    public double TimeOf(int index) => TimeValues is { } sampleBuffer ? sampleBuffer[index] : index / SampleRate;
 
     public double Rms()
     {
         if (Count == 0) return 0;
         double sum = 0;
-        foreach (var s in Values) sum += s * s;
+        foreach (var sample in Values) sum += sample * sample;
         return Math.Sqrt(sum / Count);
     }
 
@@ -75,31 +75,31 @@ public sealed record OutputCurve(string Key, double SampleRate, double[]? Times,
 {
     public int Count => Channels.Count == 0 ? 0 : Channels[0].Samples.Length;
 
-    public double Duration => Count == 0 ? 0 : Times is { } t ? t[^1] - t[0] + (t.Length > 1 ? t[^1] - t[^2] : 0) : Count / SampleRate;
+    public double Duration => Count == 0 ? 0 : Times is { } samples ? samples[^1] - samples[0] + (samples.Length > 1 ? samples[^1] - samples[^2] : 0) : Count / SampleRate;
 
     /// <summary>Wert bei t (periodische Wiedergabe, lineare Interpolation).</summary>
     public double ValueAt(int channel, double t)
     {
-        var s = Channels[channel].Samples;
-        if (s.Length == 0) return 0;
-        var d = Duration;
-        if (d > 0) t %= d;
-        if (t < 0) t += d;
+        var samples = Channels[channel].Samples;
+        if (samples.Length == 0) return 0;
+        var durationValue = Duration;
+        if (durationValue > 0) t %= durationValue;
+        if (t < 0) t += durationValue;
         if (Times is null)
         {
-            var x = t * SampleRate;
-            var i = (int)Math.Floor(x);
-            if (i >= s.Length - 1) return s[^1] + (s[0] - s[^1]) * Math.Clamp(x - (s.Length - 1), 0, 1);
-            return s[i] + (s[i + 1] - s[i]) * (x - i);
+            var xValue = t * SampleRate;
+            var index = (int)Math.Floor(xValue);
+            if (index >= samples.Length - 1) return samples[^1] + (samples[0] - samples[^1]) * Math.Clamp(xValue - (samples.Length - 1), 0, 1);
+            return samples[index] + (samples[index + 1] - samples[index]) * (xValue - index);
         }
         var times = Times;
         var tt = times[0] + t;
-        if (tt <= times[0]) return s[0];
-        if (tt >= times[^1]) return s[^1];
-        var k = Array.BinarySearch(times, tt);
-        if (k >= 0) return s[k];
-        k = ~k;
-        return s[k - 1] + (s[k] - s[k - 1]) * (tt - times[k - 1]) / (times[k] - times[k - 1]);
+        if (tt <= times[0]) return samples[0];
+        if (tt >= times[^1]) return samples[^1];
+        var index2 = Array.BinarySearch(times, tt);
+        if (index2 >= 0) return samples[index2];
+        index2 = ~index2;
+        return samples[index2 - 1] + (samples[index2] - samples[index2 - 1]) * (tt - times[index2 - 1]) / (times[index2] - times[index2 - 1]);
     }
 }
 
@@ -121,11 +121,11 @@ public sealed record OutputCapabilities(
 
     public bool SupportsRate(double rate)
         => HasRateRange ? rate >= MinSampleRate && rate <= MaxSampleRate
-            : SampleRates.Any(r => Math.Abs(r - rate) <= 1e-9 * r);
+            : SampleRates.Any(sampleRate => Math.Abs(sampleRate - rate) <= 1e-9 * sampleRate);
 
     public string RatesText => HasRateRange
         ? string.Create(CultureInfo.InvariantCulture, $"{MinSampleRate:0.###} … {MaxSampleRate:0.###}")
-        : string.Join(" / ", SampleRates.Select(r => r.ToString("0.###", CultureInfo.InvariantCulture)));
+        : string.Join(" / ", SampleRates.Select(sampleRate => sampleRate.ToString("0.###", CultureInfo.InvariantCulture)));
 }
 
 public sealed record SuitabilityIssue(bool IsError, string Text);

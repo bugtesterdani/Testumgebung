@@ -62,16 +62,16 @@ public partial class FlowGraphView : UserControl
         if (_boundEditor is not null) { _boundEditor.Nodes.CollectionChanged -= OnNodesChanged; _boundEditor.Changed -= OnEditorChanged; }
         _boundEditor = null;
     }
-    private void OnNodesChanged(object? sender, NotifyCollectionChangedEventArgs e) => Schedule();
+    private void OnNodesChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs) => Schedule();
     private void OnEditorChanged() => Schedule();
-    private void OnStateChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnStateChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
         var relevant = sender switch
         {
-            ShellViewModel => e.PropertyName == nameof(ShellViewModel.SelectedStation),
-            EditorViewModel => e.PropertyName == nameof(EditorViewModel.GraphWorkspaceId),
-            StationViewModel => e.PropertyName == nameof(StationViewModel.IsRunning),
-            DebugViewModel => e.PropertyName is nameof(DebugViewModel.Pause) or nameof(DebugViewModel.IsCodePaused) or nameof(DebugViewModel.CodeLine),
+            ShellViewModel => eventArgs.PropertyName == nameof(ShellViewModel.SelectedStation),
+            EditorViewModel => eventArgs.PropertyName == nameof(EditorViewModel.GraphWorkspaceId),
+            StationViewModel => eventArgs.PropertyName == nameof(StationViewModel.IsRunning),
+            DebugViewModel => eventArgs.PropertyName is nameof(DebugViewModel.Pause) or nameof(DebugViewModel.IsCodePaused) or nameof(DebugViewModel.CodeLine),
             _ => false
         };
         if (sender is ShellViewModel && relevant) _lastPause = null;
@@ -100,7 +100,7 @@ public partial class FlowGraphView : UserControl
         }
         UpdateDebug();
     }
-    private bool IsRunning => Shell?.Stations.Any(s => s.IsRunning) == true;
+    private bool IsRunning => Shell?.Stations.Any(station => station.IsRunning) == true;
     private void Reflow()
     {
         if (_reflowing || Editor is null) return;
@@ -150,10 +150,10 @@ public partial class FlowGraphView : UserControl
         var inactive = new DataTrigger { Binding = new Binding("IsInactive"), Value = true };
         inactive.Setters.Add(new Setter(OpacityProperty, .5)); appearance.Triggers.Add(inactive); border.Style = appearance;
         border.PreviewMouseLeftButtonDown += (_, _) => { if (Editor is { } editor) editor.SelectedNode = item.Owner; };
-        border.MouseRightButtonUp += (_, e) =>
+        border.MouseRightButtonUp += (_, entry) =>
         {
-            if (IsRunning || IsInput(e.OriginalSource as DependencyObject) || !_fields.TryGetValue(item.Id, out var fields)) return;
-            fields.ShowGraphActions(); e.Handled = true;
+            if (IsRunning || IsInput(entry.OriginalSource as DependencyObject) || !_fields.TryGetValue(item.Id, out var fields)) return;
+            fields.ShowGraphActions(); entry.Handled = true;
         };
         border.SetBinding(Border.BorderBrushProperty, new Binding("RunMarker") { Converter = new GraphMarkerBrush() });
         border.SizeChanged += (_, _) =>
@@ -221,7 +221,7 @@ public partial class FlowGraphView : UserControl
     {
         var panel = _ports[item.Id];
         var kinds = SocketKinds(item).ToArray();
-        var existing = panel.Children.OfType<StackPanel>().SelectMany(p => p.Children.OfType<Ellipse>()).Select(e => ((GraphSocket)e.Tag).Kind);
+        var existing = panel.Children.OfType<StackPanel>().SelectMany(parameter => parameter.Children.OfType<Ellipse>()).Select(entry => ((GraphSocket)entry.Tag).Kind);
         if (existing.SequenceEqual(kinds)) return;
         panel.Children.Clear();
         foreach (var kind in kinds)
@@ -251,10 +251,10 @@ public partial class FlowGraphView : UserControl
     private static Ellipse SocketCircle(object tag, string hint) => new() { Width = 16, Height = 16, Fill = Brushes.White, Stroke = Brushes.RoyalBlue, StrokeThickness = 2, Tag = tag, ToolTip = hint, Cursor = Cursors.Cross };
     private void ApplyCamera()
     { World.RenderTransform = new MatrixTransform(Camera.Zoom, 0, 0, Camera.Zoom, Camera.X, Camera.Y); ZoomText.Content = $"{Camera.Zoom * 100:0} %"; }
-    private void OnZoomIn(object sender, RoutedEventArgs e) => Zoom(Camera.Zoom * 1.2, new(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
-    private void OnZoomOut(object sender, RoutedEventArgs e) => Zoom(Camera.Zoom / 1.2, new(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
-    private void OnReset(object sender, RoutedEventArgs e) => Zoom(1, new Point(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
-    private void OnFit(object sender, RoutedEventArgs e)
+    private void OnZoomIn(object sender, RoutedEventArgs eventArgs) => Zoom(Camera.Zoom * 1.2, new(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
+    private void OnZoomOut(object sender, RoutedEventArgs eventArgs) => Zoom(Camera.Zoom / 1.2, new(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
+    private void OnReset(object sender, RoutedEventArgs eventArgs) => Zoom(1, new Point(Viewport.ActualWidth / 2, Viewport.ActualHeight / 2));
+    private void OnFit(object sender, RoutedEventArgs eventArgs)
     {
         if (Scene is null) return;
         World.UpdateLayout();
@@ -263,20 +263,20 @@ public partial class FlowGraphView : UserControl
         Camera.Fit(bounds.Width, bounds.Height, Viewport.ActualWidth, Viewport.ActualHeight);
         Camera.Pan(-bounds.X * Camera.Zoom, -bounds.Y * Camera.Zoom); ApplyCamera();
     }
-    private void OnArrange(object sender, RoutedEventArgs e) { _positions.Clear(); Reflow(); }
+    private void OnArrange(object sender, RoutedEventArgs eventArgs) { _positions.Clear(); Reflow(); }
     internal void Zoom(double zoom, Point anchor) { Camera.ZoomAt(zoom, anchor.X, anchor.Y); ApplyCamera(); }
-    private void OnWheel(object sender, MouseWheelEventArgs e)
-    { if (IsInput(e.OriginalSource as DependencyObject) && Keyboard.Modifiers != ModifierKeys.Control) return; Zoom(Camera.Zoom * Math.Pow(1.15, e.Delta / 120d), e.GetPosition(Viewport)); e.Handled = true; }
+    private void OnWheel(object sender, MouseWheelEventArgs eventArgs)
+    { if (IsInput(eventArgs.OriginalSource as DependencyObject) && Keyboard.Modifiers != ModifierKeys.Control) return; Zoom(Camera.Zoom * Math.Pow(1.15, eventArgs.Delta / 120d), eventArgs.GetPosition(Viewport)); eventArgs.Handled = true; }
     private static bool IsInput(DependencyObject? element)
     {
-        for (var p = element; p is not null && p is not FlowGraphView; p = VisualTreeHelper.GetParent(p))
-            if (p is TextBoxBase or ComboBox or ScrollBar) return true;
+        for (var element2 = element; element2 is not null && element2 is not FlowGraphView; element2 = VisualTreeHelper.GetParent(element2))
+            if (element2 is TextBoxBase or ComboBox or ScrollBar) return true;
         return false;
     }
-    private void OnGraphKey(object sender, KeyEventArgs e)
+    private void OnGraphKey(object sender, KeyEventArgs eventArgs)
     {
-        if (e.Key != Key.F9 || IsInput(e.OriginalSource as DependencyObject) || Editor?.SelectedNode is not { } node) return;
-        Editor.ToggleBreakpointCommand.Execute(node); e.Handled = true;
+        if (eventArgs.Key != Key.F9 || IsInput(eventArgs.OriginalSource as DependencyObject) || Editor?.SelectedNode is not { } node) return;
+        Editor.ToggleBreakpointCommand.Execute(node); eventArgs.Handled = true;
     }
 }
 

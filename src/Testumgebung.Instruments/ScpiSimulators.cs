@@ -76,8 +76,8 @@ public sealed class SimulatedBench
         lock (_gate)
         {
             if (!DcOn[ch]) return 0;
-            var v = DcVolt[ch];
-            return Math.Abs(v / DcLoadOhm) > DcCurrentLimit[ch] ? Math.Sign(v) * DcCurrentLimit[ch] * DcLoadOhm : v; // Strombegrenzung
+            var value = DcVolt[ch];
+            return Math.Abs(value / DcLoadOhm) > DcCurrentLimit[ch] ? Math.Sign(value) * DcCurrentLimit[ch] * DcLoadOhm : value; // Strombegrenzung
         }
     }
 
@@ -87,16 +87,16 @@ public sealed class SimulatedBench
     {
         lock (_gate)
         {
-            var g = Generator[ch];
-            if (!g.On) return 0;
-            return g.Function switch
+            var generatorChannel = Generator[ch];
+            if (!generatorChannel.On) return 0;
+            return generatorChannel.Function switch
             {
-                "DC" => g.Offset,
-                "SIN" => g.Offset + g.Amplitude / 2 * Math.Sin(2 * Math.PI * g.Freq * t),
-                "SQU" => g.Offset + g.Amplitude / 2 * Math.Sign(Math.Sin(2 * Math.PI * g.Freq * t)),
-                "ARB" when g.Arb is { } name && g.ArbData.TryGetValue(name, out var d) && d.Length > 0
-                    => g.Offset + g.Amplitude / 2 * d[(int)(Math.Max(0, t - g.SyncTime) * g.ArbRate) % d.Length],
-                _ => g.Offset,
+                "DC" => generatorChannel.Offset,
+                "SIN" => generatorChannel.Offset + generatorChannel.Amplitude / 2 * Math.Sin(2 * Math.PI * generatorChannel.Freq * t),
+                "SQU" => generatorChannel.Offset + generatorChannel.Amplitude / 2 * Math.Sign(Math.Sin(2 * Math.PI * generatorChannel.Freq * t)),
+                "ARB" when generatorChannel.Arb is { } name && generatorChannel.ArbData.TryGetValue(name, out var samples) && samples.Length > 0
+                    => generatorChannel.Offset + generatorChannel.Amplitude / 2 * samples[(int)(Math.Max(0, t - generatorChannel.SyncTime) * generatorChannel.ArbRate) % samples.Length],
+                _ => generatorChannel.Offset,
             };
         }
     }
@@ -104,7 +104,7 @@ public sealed class SimulatedBench
     public void Sync(double t)
     {
         lock (_gate)
-            foreach (var g in Generator) g.SyncTime = t;
+            foreach (var generatorChannel in Generator) generatorChannel.SyncTime = t;
     }
 
     public object Gate => _gate;
@@ -139,8 +139,8 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
     public byte[]? Execute(string command, byte[]? block)
     {
         lock (Received) Received.Add(command);
-        var c = command.Trim();
-        var upper = c.ToUpperInvariant();
+        var code = command.Trim();
+        var upper = code.ToUpperInvariant();
         switch (upper)
         {
             case "*IDN?": return Encoding.ASCII.GetBytes(Identity + "\n");
@@ -150,7 +150,7 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
         }
         try
         {
-            var reply = Handle(c, upper, block);
+            var reply = Handle(code, upper, block);
             return EncodeReply(reply);
         }
         catch (FormatException)
@@ -165,9 +165,9 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
         return reply switch
         {
             null => null,
-            byte[] b => b,
-            string s => Encoding.ASCII.GetBytes(s + "\n"),
-            double d => Encoding.ASCII.GetBytes(d.ToString("+0.000000000E+00;-0.000000000E+00", CultureInfo.InvariantCulture) + "\n"),
+            byte[] bytes => bytes,
+            string text => Encoding.ASCII.GetBytes(text + "\n"),
+            double number => Encoding.ASCII.GetBytes(number.ToString("+0.000000000E+00;-0.000000000E+00", CultureInfo.InvariantCulture) + "\n"),
             _ => Encoding.ASCII.GetBytes(reply + "\n"),
         };
     }
@@ -187,13 +187,13 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
 
     protected static double Num(string text)
     {
-        var t = text.Trim().TrimEnd(',').Trim();
-        return t.ToUpperInvariant() switch
+        var text2 = text.Trim().TrimEnd(',').Trim();
+        return text2.ToUpperInvariant() switch
         {
             "ON" => 1,
             "OFF" => 0,
             "INF" => double.PositiveInfinity,
-            _ => double.Parse(t, NumberStyles.Float, CultureInfo.InvariantCulture),
+            _ => double.Parse(text2, NumberStyles.Float, CultureInfo.InvariantCulture),
         };
     }
 
@@ -207,9 +207,9 @@ public abstract class ScpiDeviceSimulator(string model, SimulatedBench bench)
         foreach (var part in inner.Split(','))
         {
             var range = part.Split(':');
-            var a = int.Parse(range[0], CultureInfo.InvariantCulture);
-            var b = range.Length > 1 ? int.Parse(range[1], CultureInfo.InvariantCulture) : a;
-            for (var i = a; i <= b; i++) list.Add(i - 1);
+            var startChannel = int.Parse(range[0], CultureInfo.InvariantCulture);
+            var bit = range.Length > 1 ? int.Parse(range[1], CultureInfo.InvariantCulture) : startChannel;
+            for (var index = startChannel; index <= bit; index++) list.Add(index - 1);
         }
         return list;
     }
@@ -272,10 +272,10 @@ public sealed class SupplySimulator(string model, SimulatedBench bench) : ScpiDe
     protected override void Reset()
     {
         lock (Bench.Gate)
-            for (var i = 0; i < 3; i++)
+            for (var index = 0; index < 3; index++)
             {
-                Bench.DcOn[i] = false;
-                Bench.DcVolt[i] = 0;
+                Bench.DcOn[index] = false;
+                Bench.DcVolt[index] = 0;
             }
     }
 
@@ -308,23 +308,23 @@ public sealed class SupplySimulator(string model, SimulatedBench bench) : ScpiDe
         {
             case Command.Volt:
                 {
-                    var v = Num(upper.Split(' ', 2)[1].Split(",(@")[0]);
-                    foreach (var c in chans)
-                        if (InRange(v, 0, _maxV[c])) lock (Bench.Gate) Bench.DcVolt[c] = v;
+                    var value = Num(upper.Split(' ', 2)[1].Split(",(@")[0]);
+                    foreach (var chan in chans)
+                        if (InRange(value, 0, _maxV[chan])) lock (Bench.Gate) Bench.DcVolt[chan] = value;
                     return null;
                 }
             case Command.Curr:
                 {
-                    var a = Num(upper.Split(' ', 2)[1].Split(",(@")[0]);
-                    foreach (var c in chans)
-                        if (InRange(a, 0, _maxI[c])) lock (Bench.Gate) Bench.DcCurrentLimit[c] = a;
+                    var current = Num(upper.Split(' ', 2)[1].Split(",(@")[0]);
+                    foreach (var chan2 in chans)
+                        if (InRange(current, 0, _maxI[chan2])) lock (Bench.Gate) Bench.DcCurrentLimit[chan2] = current;
                     return null;
                 }
             case Command.Outp:
                 {
                     var on = Num(upper.Split(' ', 2)[1].Split(",(@")[0]) >= 0.5;
                     lock (Bench.Gate)
-                        foreach (var c in chans) Bench.DcOn[c] = on;
+                        foreach (var chan3 in chans) Bench.DcOn[chan3] = on;
                     return null;
                 }
             case Command.OutpQuery:
@@ -379,28 +379,28 @@ public sealed class AcSourceSimulator(string model, SimulatedBench bench) : Scpi
         {
             case Command.Volt:
                 {
-                    var v = Num(parts[1]);
-                    if (InRange(v, 0, Bench.AcRange)) lock (Bench.Gate) Bench.AcVolt = v;
+                    var value = Num(parts[1]);
+                    if (InRange(value, 0, Bench.AcRange)) lock (Bench.Gate) Bench.AcVolt = value;
                     return null;
                 }
             case Command.VoltRang:
                 {
-                    var r = Num(parts[1]);
+                    var ratio = Num(parts[1]);
                     if (Bench.AcOn) { Error(-221, "Settings conflict; output on"); return null; }
-                    if (r is 155 or 310) lock (Bench.Gate) Bench.AcRange = r;
+                    if (ratio is 155 or 310) lock (Bench.Gate) Bench.AcRange = ratio;
                     else Error(-222, "Data out of range");
                     return null;
                 }
             case Command.Freq:
                 {
-                    var f = Num(parts[1]);
-                    if (InRange(f, 40, 500)) lock (Bench.Gate) Bench.AcFreq = f;
+                    var frequency = Num(parts[1]);
+                    if (InRange(frequency, 40, 500)) lock (Bench.Gate) Bench.AcFreq = frequency;
                     return null;
                 }
             case Command.Curr:
                 {
-                    var a = Num(parts[1]);
-                    if (InRange(a, 0, 40)) lock (Bench.Gate) Bench.AcCurrentLimit = a;
+                    var current = Num(parts[1]);
+                    if (InRange(current, 0, 40)) lock (Bench.Gate) Bench.AcCurrentLimit = current;
                     return null;
                 }
             case Command.Outp:
@@ -430,9 +430,9 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
         return (0, upper);
     }
 
-    private bool Check(SimulatedBench.GeneratorChannel g, double amplitude, double offset)
+    private bool Check(SimulatedBench.GeneratorChannel generatorChannel, double amplitude, double offset)
     {
-        var limit = g.HighZ ? 10 : 5;
+        var limit = generatorChannel.HighZ ? 10 : 5;
         if (Math.Abs(offset) + amplitude / 2 <= limit + 1e-9) return true;
         Error(-222, "Data out of range; amplitude + offset");
         return false;
@@ -464,17 +464,17 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
         if (HandleFormattingAndSync(upper)) return null;
         var (ch, rest) = Source(upper);
         if (ch is < 0 or > 1) return Unknown(upper);
-        var g = Bench.Generator[ch];
+        var generatorChannel = Bench.Generator[ch];
         var parts = rest.Split(' ', 2);
         object? StoreArbitraryWaveform()
         {
             var name = parts[1].Split(',')[0].Trim();
             if (block is null) { Error(-104, "Data type error; block expected"); return null; }
             var values = new float[block.Length / 4];
-            for (var i = 0; i < values.Length; i++)
-                values[i] = _swap ? BinaryPrimitives.ReadSingleLittleEndian(block.AsSpan(i * 4)) : BinaryPrimitives.ReadSingleBigEndian(block.AsSpan(i * 4));
-            if (values.Any(v => v is < -1 or > 1)) { Error(-222, "Data out of range; arb values"); return null; }
-            g.ArbData[name] = values;
+            for (var index = 0; index < values.Length; index++)
+                values[index] = _swap ? BinaryPrimitives.ReadSingleLittleEndian(block.AsSpan(index * 4)) : BinaryPrimitives.ReadSingleBigEndian(block.AsSpan(index * 4));
+            if (values.Any(value => value is < -1 or > 1)) { Error(-222, "Data out of range; arb values"); return null; }
+            generatorChannel.ArbData[name] = values;
             return null;
         }
 
@@ -482,27 +482,27 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
         {
             switch (Commands.GetValueOrDefault(parts[0], Command.Unknown))
             {
-                case Command.Freq: g.Freq = Num(parts[1]); return null;
-                case Command.FreqQuery: return g.Freq;
+                case Command.Freq: generatorChannel.Freq = Num(parts[1]); return null;
+                case Command.FreqQuery: return generatorChannel.Freq;
                 case Command.Volt:
                     {
-                        SetAmplitude(g, parts[1]);
+                        SetAmplitude(generatorChannel, parts[1]);
                         return null;
                     }
-                case Command.VoltQuery: return g.Amplitude;
+                case Command.VoltQuery: return generatorChannel.Amplitude;
                 case Command.VoltOffs:
                     {
-                        SetOffset(g, parts[1]);
+                        SetOffset(generatorChannel, parts[1]);
                         return null;
                     }
-                case Command.VoltOffsQuery: return g.Offset;
-                case Command.Func: g.Function = parts[1].Trim(); return null;
-                case Command.FuncQuery: return g.Function;
+                case Command.VoltOffsQuery: return generatorChannel.Offset;
+                case Command.Func: generatorChannel.Function = parts[1].Trim(); return null;
+                case Command.FuncQuery: return generatorChannel.Function;
                 case Command.FuncArb:
-                    SelectArbitraryWaveform(g, parts[1]);
+                    SelectArbitraryWaveform(generatorChannel, parts[1]);
                     return null;
-                case Command.FuncArbSrat: g.ArbRate = Num(parts[1]); return null;
-                case Command.DataVolCle: g.ArbData.Clear(); g.Arb = null; return null;
+                case Command.FuncArbSrat: generatorChannel.ArbRate = Num(parts[1]); return null;
+                case Command.DataVolCle: generatorChannel.ArbData.Clear(); generatorChannel.Arb = null; return null;
                 case Command.DataArb:
                     {
                         return StoreArbitraryWaveform();
@@ -510,7 +510,7 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
                 case Command.Outp:
                 case Command.OutpQuery:
                 case Command.OutpLoad:
-                    return HandleOutput(Commands.GetValueOrDefault(parts[0], Command.Unknown), parts, g);
+                    return HandleOutput(Commands.GetValueOrDefault(parts[0], Command.Unknown), parts, generatorChannel);
             }
         }
         return Unknown(upper);
@@ -530,31 +530,31 @@ public sealed class GeneratorSimulator(string model, SimulatedBench bench) : Scp
         return false;
     }
 
-    private void SelectArbitraryWaveform(SimulatedBench.GeneratorChannel g, string text)
+    private void SelectArbitraryWaveform(SimulatedBench.GeneratorChannel generatorChannel, string text)
     {
-        if (!g.ArbData.ContainsKey(text.Trim())) { Error(-224, "Illegal parameter value; arb not loaded"); return; }
-        g.Arb = text.Trim();
+        if (!generatorChannel.ArbData.ContainsKey(text.Trim())) { Error(-224, "Illegal parameter value; arb not loaded"); return; }
+        generatorChannel.Arb = text.Trim();
     }
 
-    private void SetAmplitude(SimulatedBench.GeneratorChannel g, string text)
+    private void SetAmplitude(SimulatedBench.GeneratorChannel generatorChannel, string text)
     {
-        var a = Num(text);
-        if (Check(g, a, g.Offset)) g.Amplitude = a;
+        var current = Num(text);
+        if (Check(generatorChannel, current, generatorChannel.Offset)) generatorChannel.Amplitude = current;
     }
 
-    private void SetOffset(SimulatedBench.GeneratorChannel g, string text)
+    private void SetOffset(SimulatedBench.GeneratorChannel generatorChannel, string text)
     {
-        var o = Num(text);
-        if (Check(g, g.Function == "DC" ? 0 : g.Amplitude, o)) g.Offset = o;
+        var number = Num(text);
+        if (Check(generatorChannel, generatorChannel.Function == "DC" ? 0 : generatorChannel.Amplitude, number)) generatorChannel.Offset = number;
     }
 
-    private static object? HandleOutput(Command command, string[] parts, SimulatedBench.GeneratorChannel g)
+    private static object? HandleOutput(Command command, string[] parts, SimulatedBench.GeneratorChannel generatorChannel)
     {
         switch (command)
         {
-            case Command.Outp: g.On = Num(parts[1]) >= 0.5; return null;
-            case Command.OutpQuery: return g.On ? "1" : "0";
-            case Command.OutpLoad: g.HighZ = parts[1].Trim() == "INF"; return null;
+            case Command.Outp: generatorChannel.On = Num(parts[1]) >= 0.5; return null;
+            case Command.OutpQuery: return generatorChannel.On ? "1" : "0";
+            case Command.OutpLoad: generatorChannel.HighZ = parts[1].Trim() == "INF"; return null;
             default: throw new ArgumentOutOfRangeException(nameof(command));
         }
     }
@@ -575,11 +575,11 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
 
     private int MaxPoints => Model.StartsWith("DSOX1", StringComparison.Ordinal) ? 62500 : 4_000_000;
 
-    private double Signal(int ch, double t) => ch switch
+    private double Signal(int ch, double time) => ch switch
     {
-        0 => Bench.AcVoltage(t),
-        1 => Bench.GeneratorVoltage(0, t),
-        2 => Bench.GeneratorVoltage(1, t),
+        0 => Bench.AcVoltage(time),
+        1 => Bench.GeneratorVoltage(0, time),
+        2 => Bench.GeneratorVoltage(1, time),
         _ => Bench.DcOutput(0),
     };
 
@@ -614,8 +614,8 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
 
     protected override object? Handle(string command, string upper, byte[]? block)
     {
-        var u = upper.TrimStart(':');
-        var parts = u.Split(' ', 2);
+        var unit = upper.TrimStart(':');
+        var parts = unit.Split(' ', 2);
         switch (Commands.GetValueOrDefault(parts[0], Command.Unknown))
         {
             case Command.TimRef:
@@ -643,8 +643,8 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
                     var count = Math.Min(_points, data.Length);
                     var step = data.Length / (double)count;
                     var bytes = new byte[count * 2];
-                    for (var i = 0; i < count; i++)
-                        BinaryPrimitives.WriteInt16LittleEndian(bytes.AsSpan(i * 2), (short)Math.Clamp(Math.Round(data[(int)(i * step)] / _yinc), short.MinValue, short.MaxValue));
+                    for (var index = 0; index < count; index++)
+                        BinaryPrimitives.WriteInt16LittleEndian(bytes.AsSpan(index * 2), (short)Math.Clamp(Math.Round(data[(int)(index * step)] / _yinc), short.MinValue, short.MaxValue));
                     var len = bytes.Length.ToString(CultureInfo.InvariantCulture);
                     return (byte[])[.. Encoding.ASCII.GetBytes($"#{len.Length}{len}"), .. bytes, (byte)10];
                 }
@@ -656,23 +656,23 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
             case Command.MeasVppQuery:
                 {
                     var ch = Ch(parts[1].Trim());
-                    var d = Sample(ch);
-                    return d.Max() - d.Min();
+                    var samples = Sample(ch);
+                    return samples.Max() - samples.Min();
                 }
             case Command.MeasVavQuery:
                 return Sample(Ch(parts[1].Split(',')[^1])).Average();
             case Command.MeasFreqQuery:
                 return Ch(parts[1].Trim()) == 0 && Bench.AcRms > 0 ? Bench.AcFreq : Ch(parts[1].Trim()) is 1 or 2 ? Bench.Generator[Ch(parts[1].Trim()) - 1].Freq : 9.9e37;
         }
-        return HandleChannel(u, upper);
+        return HandleChannel(unit, upper);
     }
 
-    private object? HandleChannel(string u, string upper)
+    private object? HandleChannel(string command, string upper)
     {
-        if (u.StartsWith("CHAN", StringComparison.Ordinal) && u.Length > 5)
+        if (command.StartsWith("CHAN", StringComparison.Ordinal) && command.Length > 5)
         {
-            var ch = u[4] - '1';
-            var what = u[6..].Split(' ');
+            var ch = command[4] - '1';
+            var what = command[6..].Split(' ');
             switch (what[0])
             {
                 case "SCAL": _scale[ch] = Num(what[1]); return null;
@@ -688,38 +688,38 @@ public sealed class ScopeSimulator(string model, SimulatedBench bench) : ScpiDev
     {
         var sources = sourceList.Split(',', StringSplitOptions.TrimEntries);
         var span = _timebase * 10;
-        var n = Math.Min(MaxPoints, Math.Max(_points, 62500));
-        _capturedXinc = span / n;
+        var index = Math.Min(MaxPoints, Math.Max(_points, 62500));
+        _capturedXinc = span / index;
         var t0 = Bench.Now;
         _captured.Clear();
-        foreach (var s in sources)
+        foreach (var source in sources)
         {
-            var ch = Ch(s);
+            var ch = Ch(source);
             if (ch < 0 || ch > 3) { Error(-224, "Illegal parameter value"); continue; }
-            var data = new double[n];
-            for (var i = 0; i < n; i++) data[i] = Signal(ch, t0 + i * _capturedXinc);
-            _captured[s] = data;
+            var data = new double[index];
+            for (var index2 = 0; index2 < index; index2++) data[index2] = Signal(ch, t0 + index2 * _capturedXinc);
+            _captured[source] = data;
         }
         if (span > 0.05) Thread.Sleep(TimeSpan.FromSeconds(Math.Min(span, 2))); // Erfassungsdauer
     }
 
     private double _yinc = 1;
 
-    private double[] Data() => _captured.TryGetValue(_source, out var d) ? d : new double[Math.Max(1, _points)];
+    private double[] Data() => _captured.TryGetValue(_source, out var samples) ? samples : new double[Math.Max(1, _points)];
 
     private double[] Sample(int ch)
     {
-        var n = 2000;
+        var count = 2000;
         var t0 = Bench.Now;
-        var dt = _timebase * 10 / n;
-        return Enumerable.Range(0, n).Select(i => Signal(ch, t0 + i * dt)).ToArray();
+        var dt = _timebase * 10 / count;
+        return Enumerable.Range(0, count).Select(index => Signal(ch, t0 + index * dt)).ToArray();
     }
 
     private double Rms(int ch)
     {
-        var d = Sample(ch);
-        var mean = d.Average();
-        return Math.Sqrt(d.Select(x => (x - mean) * (x - mean)).Average());
+        var samples = Sample(ch);
+        var mean = samples.Average();
+        return Math.Sqrt(samples.Select(xValue => (xValue - mean) * (xValue - mean)).Average());
     }
 }
 
@@ -777,9 +777,9 @@ public sealed class ScpiSimulatorServer : IAsyncDisposable
         {
             while (!_cts.IsCancellationRequested)
             {
-                var n = await stream.ReadAsync(buffer, _cts.Token).ConfigureAwait(false);
-                if (n == 0) return;
-                pending.AddRange(buffer.AsSpan(0, n).ToArray());
+                var count = await stream.ReadAsync(buffer, _cts.Token).ConfigureAwait(false);
+                if (count == 0) return;
+                pending.AddRange(buffer.AsSpan(0, count).ToArray());
                 while (TryTakeMessage(pending, out var text, out var block))
                 {
                     foreach (var command in Split(text))
@@ -805,30 +805,30 @@ public sealed class ScpiSimulatorServer : IAsyncDisposable
     {
         text = "";
         block = null;
-        var i = 0;
-        while (i < data.Count)
+        var index = 0;
+        while (index < data.Count)
         {
-            if (data[i] == '#')
+            if (data[index] == '#')
             {
-                if (i + 2 > data.Count) return false;
-                var digits = data[i + 1] - '0';
-                if (digits is < 1 or > 9 || i + 2 + digits > data.Count) return false;
-                var len = int.Parse(Encoding.ASCII.GetString([.. data.GetRange(i + 2, digits)]), CultureInfo.InvariantCulture);
-                var end = i + 2 + digits + len;
+                if (index + 2 > data.Count) return false;
+                var digits = data[index + 1] - '0';
+                if (digits is < 1 or > 9 || index + 2 + digits > data.Count) return false;
+                var len = int.Parse(Encoding.ASCII.GetString([.. data.GetRange(index + 2, digits)]), CultureInfo.InvariantCulture);
+                var end = index + 2 + digits + len;
                 if (end > data.Count) return false;
-                block = [.. data.GetRange(i + 2 + digits, len)];
-                text = Encoding.ASCII.GetString([.. data.GetRange(0, i)]);
+                block = [.. data.GetRange(index + 2 + digits, len)];
+                text = Encoding.ASCII.GetString([.. data.GetRange(0, index)]);
                 var after = end < data.Count && data[end] == '\n' ? end + 1 : end;
                 data.RemoveRange(0, after);
                 return true;
             }
-            if (data[i] == '\n')
+            if (data[index] == '\n')
             {
-                text = Encoding.ASCII.GetString([.. data.GetRange(0, i)]).TrimEnd('\r');
-                data.RemoveRange(0, i + 1);
+                text = Encoding.ASCII.GetString([.. data.GetRange(0, index)]).TrimEnd('\r');
+                data.RemoveRange(0, index + 1);
                 return true;
             }
-            i++;
+            index++;
         }
         return false;
     }
@@ -854,7 +854,7 @@ public sealed class SimulatedLab : IAsyncDisposable
     public SimulatedLab(int basePort = 0)
     {
         Bench = new SimulatedBench();
-        int Port(int i) => basePort == 0 ? 0 : basePort + i;
+        int Port(int index) => basePort == 0 ? 0 : basePort + index;
         Dmm = new ScpiSimulatorServer(new DmmSimulator("34465A", Bench), Port(1));
         Supply = new ScpiSimulatorServer(new SupplySimulator("E36312A", Bench), Port(2));
         AcSource = new ScpiSimulatorServer(new AcSourceSimulator("AC6802B", Bench), Port(3));
@@ -873,6 +873,6 @@ public sealed class SimulatedLab : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        foreach (var s in All) await s.DisposeAsync().ConfigureAwait(false);
+        foreach (var scpiSimulatorServer in All) await scpiSimulatorServer.DisposeAsync().ConfigureAwait(false);
     }
 }

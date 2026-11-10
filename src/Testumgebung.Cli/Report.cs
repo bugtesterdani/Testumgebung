@@ -19,7 +19,7 @@ public sealed class Report
 
     public IReadOnlyList<CheckResult> Results => _results;
 
-    public int Failed => _results.Count(r => r.Outcome == CheckOutcome.Failed);
+    public int Failed => _results.Count(checkResult => checkResult.Outcome == CheckOutcome.Failed);
 
     public void Add(CheckResult result)
     {
@@ -51,8 +51,8 @@ public sealed class Report
 
     public void WriteSummary()
     {
-        var passed = _results.Count(r => r.Outcome == CheckOutcome.Passed);
-        var skipped = _results.Count(r => r.Outcome == CheckOutcome.Skipped);
+        var passed = _results.Count(checkResult => checkResult.Outcome == CheckOutcome.Passed);
+        var skipped = _results.Count(checkResult => checkResult.Outcome == CheckOutcome.Skipped);
         Console.WriteLine();
         Console.WriteLine(Failed == 0
             ? $"Ergebnis: alles bestanden ({passed} bestanden{(skipped > 0 ? $", {skipped} übersprungen" : "")})."
@@ -65,18 +65,18 @@ public sealed class Report
         if (Directory.Exists(path)) path = Path.Combine(path, "testumgebung.xml");
         var suites = new XElement("testsuites", new XAttribute("name", "Testumgebung"),
             new XAttribute("tests", _results.Count), new XAttribute("failures", Failed));
-        foreach (var group in _results.GroupBy(r => r.Suite))
+        foreach (var group in _results.GroupBy(checkResult => checkResult.Suite))
         {
             var suite = new XElement("testsuite", new XAttribute("name", XmlText(group.Key)),
                 new XAttribute("tests", group.Count()),
-                new XAttribute("failures", group.Count(r => r.Outcome == CheckOutcome.Failed)),
-                new XAttribute("skipped", group.Count(r => r.Outcome == CheckOutcome.Skipped)));
-            foreach (var r in group)
+                new XAttribute("failures", group.Count(checkResult => checkResult.Outcome == CheckOutcome.Failed)),
+                new XAttribute("skipped", group.Count(checkResult => checkResult.Outcome == CheckOutcome.Skipped)));
+            foreach (var checkResult in group)
             {
-                var testcase = new XElement("testcase", new XAttribute("classname", XmlText(group.Key)), new XAttribute("name", XmlText(r.Name)));
-                if (r.Outcome == CheckOutcome.Failed) testcase.Add(new XElement("failure", new XAttribute("message", XmlText(Clip(r.Message ?? ""))), XmlText(r.Message ?? "")));
-                if (r.Outcome == CheckOutcome.Skipped) testcase.Add(new XElement("skipped", new XAttribute("message", XmlText(Clip(r.Message ?? "")))));
-                if (r.Output is { Length: > 0 }) testcase.Add(new XElement("system-out", XmlText(r.Output)));
+                var testcase = new XElement("testcase", new XAttribute("classname", XmlText(group.Key)), new XAttribute("name", XmlText(checkResult.Name)));
+                if (checkResult.Outcome == CheckOutcome.Failed) testcase.Add(new XElement("failure", new XAttribute("message", XmlText(Clip(checkResult.Message ?? ""))), XmlText(checkResult.Message ?? "")));
+                if (checkResult.Outcome == CheckOutcome.Skipped) testcase.Add(new XElement("skipped", new XAttribute("message", XmlText(Clip(checkResult.Message ?? "")))));
+                if (checkResult.Output is { Length: > 0 }) testcase.Add(new XElement("system-out", XmlText(checkResult.Output)));
                 suite.Add(testcase);
             }
             suites.Add(suite);
@@ -87,9 +87,9 @@ public sealed class Report
     }
 
     // Worker output can contain terminal control characters, which XML 1.0 cannot represent directly.
-    private static string XmlText(string text) => string.Concat(text.EnumerateRunes().Select(r =>
-        r.Value is 9 or 10 or 13 or >= 32 and <= 0xD7FF or >= 0xE000 and <= 0xFFFD or >= 0x10000 and <= 0x10FFFF
-            ? r.ToString() : $"\\u{r.Value:x4}"));
+    private static string XmlText(string text) => string.Concat(text.EnumerateRunes().Select(rune =>
+        rune.Value is 9 or 10 or 13 or >= 32 and <= 0xD7FF or >= 0xE000 and <= 0xFFFD or >= 0x10000 and <= 0x10FFFF
+            ? rune.ToString() : $"\\u{rune.Value:x4}"));
 
     private static string Clip(string text) => text.Length <= 300 ? text : text[..300] + " …";
 }

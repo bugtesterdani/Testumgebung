@@ -40,8 +40,8 @@ public partial class EditorView : UserControl
         if (_layoutEditor is not null) _layoutEditor.PropertyChanged += OnBlockLayoutChanged;
         ApplyBlockLayout();
     }
-    private void OnBlockLayoutChanged(object? sender, PropertyChangedEventArgs e)
-    { if (e.PropertyName is nameof(EditorViewModel.VisualBlocks) or nameof(EditorViewModel.GraphView) or nameof(EditorViewModel.Project)) ApplyBlockLayout(); }
+    private void OnBlockLayoutChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    { if (eventArgs.PropertyName is nameof(EditorViewModel.VisualBlocks) or nameof(EditorViewModel.GraphView) or nameof(EditorViewModel.Project)) ApplyBlockLayout(); }
     private void ApplyBlockLayout()
     {
         var visibility = Editor is { VisualBlocks: true } or { GraphView: true } ? Visibility.Collapsed : Visibility.Visible;
@@ -52,8 +52,8 @@ public partial class EditorView : UserControl
     // Ablaufblock ziehen noch dessen Entf-/Strg+C-Befehle auslösen.
     private static bool IsBlockInput(DependencyObject? source)
     {
-        for (var p = source; p is not null && p is not TreeViewItem; p = ParentOf(p))
-            if (p is TextBoxBase or ComboBox or ButtonBase or Testumgebung.Desktop.Controls.NumberedCodeEditor) return true;
+        for (var source2 = source; source2 is not null && source2 is not TreeViewItem; source2 = ParentOf(source2))
+            if (source2 is TextBoxBase or ComboBox or ButtonBase or Testumgebung.Desktop.Controls.NumberedCodeEditor) return true;
         return false;
     }
 
@@ -72,7 +72,7 @@ public partial class EditorView : UserControl
 
     private EditorViewModel? Editor => (DataContext as ShellViewModel)?.Editor;
 
-    private void OnNodeHistory(object sender, RoutedEventArgs e)
+    private void OnNodeHistory(object sender, RoutedEventArgs eventArgs)
     {
         if (DataContext is not ShellViewModel shell || sender is not FrameworkElement { DataContext: NodeOptionsViewModel options }) return;
         var model = new NodeHistoryViewModel(shell.Releases?.Service, shell.Editor.Project.Definition.Name, options.NodeId, options.NodeName);
@@ -80,15 +80,15 @@ public partial class EditorView : UserControl
         window.Show();
     }
 
-    private void OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    private void OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> eventArgs)
     {
-        if (Editor is { } editor && e.NewValue is NodeViewModel node) editor.SelectedNode = node;
+        if (Editor is { } editor && eventArgs.NewValue is NodeViewModel node) editor.SelectedNode = node;
     }
 
-    private void OnTreeKeyDown(object sender, KeyEventArgs e)
+    private void OnTreeKeyDown(object sender, KeyEventArgs eventArgs)
     {
-        if (IsBlockInput(e.OriginalSource as DependencyObject)) return;
-        if (TryHandleTreeKey(e.Key, Keyboard.Modifiers)) e.Handled = true;
+        if (IsBlockInput(eventArgs.OriginalSource as DependencyObject)) return;
+        if (TryHandleTreeKey(eventArgs.Key, Keyboard.Modifiers)) eventArgs.Handled = true;
     }
 
     private bool TryHandleTreeKey(Key key, ModifierKeys modifiers)
@@ -119,17 +119,17 @@ public partial class EditorView : UserControl
         return false;
     }
 
-    private void OnTreeMouseDown(object sender, MouseButtonEventArgs e)
+    private void OnTreeMouseDown(object sender, MouseButtonEventArgs eventArgs)
     {
         _dragNode = null;
-        if (IsBlockInput(e.OriginalSource as DependencyObject)) return;
-        _dragStart = e.GetPosition(FlowTree);
-        _dragNode = NodeFrom(e.OriginalSource as DependencyObject);
+        if (IsBlockInput(eventArgs.OriginalSource as DependencyObject)) return;
+        _dragStart = eventArgs.GetPosition(FlowTree);
+        _dragNode = NodeFrom(eventArgs.OriginalSource as DependencyObject);
     }
 
-    private void OnTreeMouseMove(object sender, MouseEventArgs e)
+    private void OnTreeMouseMove(object sender, MouseEventArgs eventArgs)
     {
-        if (TryBeginTreeDrag(e.LeftButton, e.GetPosition(FlowTree)) is { } node)
+        if (TryBeginTreeDrag(eventArgs.LeftButton, eventArgs.GetPosition(FlowTree)) is { } node)
             DragDrop.DoDragDrop(FlowTree, node, DragDropEffects.Move);
     }
 
@@ -143,45 +143,45 @@ public partial class EditorView : UserControl
         return node;
     }
 
-    private void OnTreeDragOver(object sender, DragEventArgs e)
+    private void OnTreeDragOver(object sender, DragEventArgs eventArgs)
     {
-        e.Effects = TryGetTarget(e, out _, out _, out _) ? DragDropEffects.Move
-            : TryGetPaletteTarget(e, out _, out _, out _) ? DragDropEffects.Copy : DragDropEffects.None;
-        e.Handled = true;
+        eventArgs.Effects = TryGetTarget(eventArgs, out _, out _, out _) ? DragDropEffects.Move
+            : TryGetPaletteTarget(eventArgs, out _, out _, out _) ? DragDropEffects.Copy : DragDropEffects.None;
+        eventArgs.Handled = true;
     }
 
-    private void OnTreeDrop(object sender, DragEventArgs e)
+    private void OnTreeDrop(object sender, DragEventArgs eventArgs)
     {
-        if (TryGetTarget(e, out var node, out var parent, out var index)) Editor!.Move(node, parent, index);
-        else if (TryGetPaletteTarget(e, out var palette, out parent, out index)) Editor!.InsertAt(palette, parent, index);
-        e.Handled = true;
+        if (TryGetTarget(eventArgs, out var node, out var parent, out var index)) Editor!.Move(node, parent, index);
+        else if (TryGetPaletteTarget(eventArgs, out var palette, out parent, out index)) Editor!.InsertAt(palette, parent, index);
+        eventArgs.Handled = true;
     }
 
-    private bool TryGetTarget(DragEventArgs e, out NodeViewModel node, out NodeViewModel parent, out int index)
+    private bool TryGetTarget(DragEventArgs eventArgs, out NodeViewModel node, out NodeViewModel parent, out int index)
     {
         node = null!;
         parent = null!;
         index = 0;
-        if (Editor is not { } editor || e.Data.GetData(typeof(NodeViewModel)) is not NodeViewModel dragged) return false;
+        if (Editor is not { } editor || eventArgs.Data.GetData(typeof(NodeViewModel)) is not NodeViewModel dragged) return false;
         node = dragged;
 
-        if (!ResolveDropPosition(e, out parent, out index)) return false;
+        if (!ResolveDropPosition(eventArgs, out parent, out index)) return false;
         return editor.CanMove(node, parent, index);
     }
 
     /// <summary>Die Karte (Border „Card“ aus FlowNodeTemplate) unter dem Mauszeiger.</summary>
     private static FrameworkElement? CardFrom(DependencyObject? source)
     {
-        for (var d = source; d is not null; d = ParentOf(d))
+        for (var source2 = source; source2 is not null; source2 = ParentOf(source2))
         {
-            if (d is Border { Name: "Card" or "EmptySlot" } border) return border;
-            if (d is TreeViewItem) return null;
+            if (source2 is Border { Name: "Card" or "EmptySlot" } border) return border;
+            if (source2 is TreeViewItem) return null;
         }
         return null;
     }
 
-    private static DependencyObject? ParentOf(DependencyObject d)
-        => d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d);
+    private static DependencyObject? ParentOf(DependencyObject element)
+        => element is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element);
 
     private static NodeViewModel? NodeFrom(DependencyObject? source)
         => CardFrom(source)?.DataContext as NodeViewModel;

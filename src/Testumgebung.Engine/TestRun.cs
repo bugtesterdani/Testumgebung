@@ -113,7 +113,7 @@ public sealed class TestRun
         IsDevelopmentRun = Options.DevelopmentRun;
         Clock = Options.Clock;
         Resources = Options.Resources ?? new ResourceManager(Clock);
-        if (!Resources.SupportsParallelBranches && definition.EnabledNodes().OfType<GroupDefinition>().Any(g => g.Parallel))
+        if (!Resources.SupportsParallelBranches && definition.EnabledNodes().OfType<GroupDefinition>().Any(group => group.Parallel))
             throw new ArgumentException("Die Ressourcenvermittlung unterstützt keine parallelen Ausführungszweige.", nameof(options));
         RunId = runId ?? $"Run-{Interlocked.Increment(ref _runCounter):D3}";
         _patcher = new RunPatcher(this, Options.Catalog ?? Blocks.BlockCatalog.Default);
@@ -228,7 +228,7 @@ public sealed class TestRun
         MarkDevelopmentRun();
         Emit(new DevelopmentEvent(user, "Gruppe gezielt ausgeführt", group.Name) { Time = Clock.Now, RunId = RunId });
         using var phase = new ExecutionPhase("gezielt", isExit: false);
-        var parentPath = string.Join(" > ", Definition.AncestorsOf(groupId).Skip(1).Select(g => g.Name));
+        var parentPath = string.Join(" > ", Definition.AncestorsOf(groupId).Skip(1).Select(group2 => group2.Name));
         using var processScope = BeginTargetedProcessScope();
         var result = await ExecuteGroupAsync(group, parentScope, phase, parentPath, 1, forceEnter: false, isExit: false).ConfigureAwait(false);
         return new TargetedExecutionResult(result is not null, result?.Rating ?? ResultRating.NResult, null);
@@ -265,7 +265,7 @@ public sealed class TestRun
     {
         var scope = new Scope($"Baustein {block.Name}", null, isInterfaceBoundary: true, groupId: block.Id);
         foreach (var port in block.Ports)
-            scope.Define(port.Name, port.Type, inputs.TryGetValue(port.Name, out var v) ? v : null);
+            scope.Define(port.Name, port.Type, inputs.TryGetValue(port.Name, out var value) ? value : null);
         return scope;
     }
 
@@ -279,13 +279,13 @@ public sealed class TestRun
         var scope = PortScope(block, inputs);
         var accumulator = new ResultAccumulator();
         await ExecuteNodeAsync(block.Body, scope, phase, accumulator, callerPath, iteration, forceEnter: false).ConfigureAwait(false);
-        var outputs = block.Ports.Where(p => p.IsOutput).ToDictionary(p => p.Name, p => (object?)scope.Get(p.Name), StringComparer.Ordinal);
+        var outputs = block.Ports.Where(port => port.IsOutput).ToDictionary(port => port.Name, port => (object?)scope.Get(port.Name), StringComparer.Ordinal);
         return (accumulator.Rating, outputs);
     }
 
     private string PathOf(string nodeId)
     {
-        var parents = Definition.AncestorsOf(nodeId).Skip(1).Select(g => g.Name);
+        var parents = Definition.AncestorsOf(nodeId).Skip(1).Select(group => group.Name);
         return string.Join(" > ", parents.Append(Definition.Find(nodeId)!.Name));
     }
 
@@ -298,8 +298,8 @@ public sealed class TestRun
     private string Holders(IEnumerable<string> names)
     {
         var keys = LockKeys(names);
-        var owners = Resources.Snapshot().Where(o => keys.Contains(o.Resource) && o.OwnerRunId is not null && o.OwnerRunId != RunId)
-            .Select(o => o.OwnerName ?? o.OwnerRunId!).Distinct().ToList();
+        var owners = Resources.Snapshot().Where(ownership => keys.Contains(ownership.Resource) && ownership.OwnerRunId is not null && ownership.OwnerRunId != RunId)
+            .Select(ownership => ownership.OwnerName ?? ownership.OwnerRunId!).Distinct().ToList();
         return owners.Count == 0 ? "" : " – belegt von " + string.Join(", ", owners);
     }
 
@@ -309,7 +309,7 @@ public sealed class TestRun
 
     /// <summary>Abstrakte Namen → Sperrschlüssel der Prüfplatzkonfiguration (gleiches Gerät = gleiche Sperre).</summary>
     internal IReadOnlyList<string> LockKeys(IEnumerable<string> names)
-        => names.Select(n => Options.Hardware?.LockKeyOf(n) ?? n).Distinct(StringComparer.Ordinal).ToList();
+        => names.Select(name => Options.Hardware?.LockKeyOf(name) ?? name).Distinct(StringComparer.Ordinal).ToList();
 
     private sealed record NodeResult(ResultRating Rating, ScopeSnapshot? Snapshot);
 
@@ -331,8 +331,8 @@ public sealed class TestRun
         {
             NodeResult? result = node switch
             {
-                StepDefinition step => await ExecuteStepAsync(step, parentScope!, phase, Combine(parentPath, step.Name), parentIteration).ConfigureAwait(false) is { } r
-                    ? new NodeResult(r, null)
+                StepDefinition step => await ExecuteStepAsync(step, parentScope!, phase, Combine(parentPath, step.Name), parentIteration).ConfigureAwait(false) is { } rating
+                    ? new NodeResult(rating, null)
                     : null,
                 GroupDefinition group => await ExecuteGroupAsync(group, parentScope, phase, parentPath, parentIteration, forceEnter, isExit).ConfigureAwait(false),
                 _ => throw new NotSupportedException(node.GetType().Name),
@@ -698,7 +698,7 @@ public sealed class TestRun
     private async Task<int> RunIterationsAsync(GroupDefinition group, Scope scope, ExecutionPhase phase, ResultAccumulator accumulator, string path, string childPath)
     {
         var repetition = Options.ContinuousLoop && group == Definition.Loop ? Repetition.Endless : group.Repetition;
-        var repeatExpression = repetition.Expression is { } e ? Expression.Parse(e) : null;
+        var repeatExpression = repetition.Expression is { } errorText ? Expression.Parse(errorText) : null;
         var start = Clock.Now;
         var iteration = 0;
 
@@ -847,7 +847,7 @@ public sealed class TestRun
     {
         lock (_gate)
         {
-            var index = _stack.FindLastIndex(f => f.NodeId == nodeId && f.Branch == (ExecutionBranch.Value ?? ""));
+            var index = _stack.FindLastIndex(frame => frame.NodeId == nodeId && frame.Branch == (ExecutionBranch.Value ?? ""));
             if (index >= 0) _stack.RemoveAt(index);
         }
         PublishState();
@@ -857,7 +857,7 @@ public sealed class TestRun
     {
         lock (_gate)
         {
-            var index = _stack.FindLastIndex(f => f.NodeId == nodeId && f.Branch == (ExecutionBranch.Value ?? ""));
+            var index = _stack.FindLastIndex(frame => frame.NodeId == nodeId && frame.Branch == (ExecutionBranch.Value ?? ""));
             if (index >= 0) _stack[index] = _stack[index] with { Iteration = iteration };
         }
     }
@@ -867,9 +867,9 @@ public sealed class TestRun
         if (_completed) return EngineState.Completed;
         if (_transient.Count > 0) return _transient[^1];
         if (_stack.Count == 0) return _started == 1 ? EngineState.Initializing : EngineState.Idle;
-        if (_stack.Any(f => f.NodeId == Definition.Finalization.Id)) return EngineState.Finalizing;
-        if (_stack.Any(f => f.IsExit)) return EngineState.Exiting;
-        if (_stack.Any(f => f.NodeId == Definition.Init.Id)) return EngineState.Initializing;
+        if (_stack.Any(frame => frame.NodeId == Definition.Finalization.Id)) return EngineState.Finalizing;
+        if (_stack.Any(frame => frame.IsExit)) return EngineState.Exiting;
+        if (_stack.Any(frame => frame.NodeId == Definition.Init.Id)) return EngineState.Initializing;
         return EngineState.Testing;
     }
 

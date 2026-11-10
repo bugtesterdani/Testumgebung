@@ -43,8 +43,8 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
     public void FireTrigger(string source)
     {
         lock (_gate)
-            foreach (var t in _tasks.Values.Where(t => t.Started && t.Trigger == source && t.StartTime < 0))
-                t.StartTime = Now;
+            foreach (var task in _tasks.Values.Where(task2 => task2.Started && task2.Trigger == source && task2.StartTime < 0))
+                task.StartTime = Now;
     }
 
     /// <summary>Anzahl offener Tasks (Tests: Tasks werden immer freigegeben).</summary>
@@ -64,8 +64,8 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
     public DaqDeviceInfo DeviceInfo(string device) => device switch
     {
         "Dev1" => new DaqDeviceInfo("Dev1", "USB-6211", true,
-            Enumerable.Range(0, 16).Select(i => $"Dev1/ai{i}").ToList(), ["Dev1/ao0", "Dev1/ao1"],
-            Enumerable.Range(0, 4).Select(i => $"Dev1/port1/line{i}").ToList(), Enumerable.Range(0, 4).Select(i => $"Dev1/port0/line{i}").ToList(),
+            Enumerable.Range(0, 16).Select(index => $"Dev1/ai{index}").ToList(), ["Dev1/ao0", "Dev1/ao1"],
+            Enumerable.Range(0, 4).Select(index => $"Dev1/port1/line{index}").ToList(), Enumerable.Range(0, 4).Select(index => $"Dev1/port0/line{index}").ToList(),
             10, 10, 250000, 250000, false),
         "cDAQ1Mod1" when _withCdaq => new DaqDeviceInfo("cDAQ1Mod1", "NI 9225", true,
             ["cDAQ1Mod1/ai0", "cDAQ1Mod1/ai1", "cDAQ1Mod1/ai2"], [], [], [], 425, 0, 50000, 0, true),
@@ -77,7 +77,7 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
     private SimTask Task(nint task)
     {
         lock (_gate)
-            return _tasks.TryGetValue(task, out var t) ? t : throw Err(-200088, "Task specified is invalid or does not exist.");
+            return _tasks.TryGetValue(task, out var task2) ? task2 : throw Err(-200088, "Task specified is invalid or does not exist.");
     }
 
     private void Note(string call)
@@ -89,10 +89,10 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
     {
         lock (_gate)
         {
-            var h = _next++;
-            _tasks[h] = new SimTask();
+            var handle = _next++;
+            _tasks[handle] = new SimTask();
             Note("CreateTask");
-            return h;
+            return handle;
         }
     }
 
@@ -107,31 +107,31 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
 
     public void StartTask(nint task)
     {
-        var t = Task(task);
+        var task2 = Task(task);
         lock (_gate)
         {
-            t.Started = true;
-            t.StartTime = t.Trigger is null ? Now : -1;
-            t.Read = 0;
+            task2.Started = true;
+            task2.StartTime = task2.Trigger is null ? Now : -1;
+            task2.Read = 0;
         }
         Note("StartTask");
     }
 
     public void StopTask(nint task)
     {
-        var t = Task(task);
+        var task2 = Task(task);
         lock (_gate)
         {
-            if (t.AoData is not null && t.Started)
-                for (var k = 0; k < t.Channels.Count; k++) _aoStatic[AoIndex(t.Channels[k].Channel)] = Ao(t, k, Now); // letzter Wert bleibt stehen
-            t.Started = false;
+            if (task2.AoData is not null && task2.Started)
+                for (var previousIndex = 0; previousIndex < task2.Channels.Count; previousIndex++) _aoStatic[AoIndex(task2.Channels[previousIndex].Channel)] = Ao(task2, previousIndex, Now); // letzter Wert bleibt stehen
+            task2.Started = false;
         }
         Note("StopTask");
     }
 
     private void Known(string channel)
     {
-        var all = DeviceNames().Select(DeviceInfo).SelectMany(i => i.AiChannels.Concat(i.AoChannels).Concat(i.DoLines).Concat(i.DiLines));
+        var all = DeviceNames().Select(DeviceInfo).SelectMany(device => device.AiChannels.Concat(device.AoChannels).Concat(device.DoLines).Concat(device.DiLines));
         if (!all.Contains(channel, StringComparer.OrdinalIgnoreCase)) throw Err(-200170, $"Physical channel specified does not exist on this device: {channel}");
     }
 
@@ -139,68 +139,68 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
 
     public void CreateAIVoltageChan(nint task, string physical, AiTerminal terminal, double min, double max)
     {
-        var t = Task(task);
-        foreach (var c in List(physical))
+        var task2 = Task(task);
+        foreach (var list in List(physical))
         {
-            Known(c);
-            var limit = c.StartsWith("cDAQ", StringComparison.OrdinalIgnoreCase) ? 425 : 10;
+            Known(list);
+            var limit = list.StartsWith("cDAQ", StringComparison.OrdinalIgnoreCase) ? 425 : 10;
             if (max > limit || min < -limit) throw Err(-200077, $"Requested value is not a supported value for this property: Range ±{max} V");
-            lock (_gate) t.Channels.Add(("AI", c, min, max));
+            lock (_gate) task2.Channels.Add(("AI", list, min, max));
         }
         Note($"CreateAIVoltageChan {physical}");
     }
 
     public void CreateAOVoltageChan(nint task, string physical, double min, double max)
     {
-        var t = Task(task);
-        foreach (var c in List(physical))
+        var task2 = Task(task);
+        foreach (var list in List(physical))
         {
-            Known(c);
-            lock (_gate) t.Channels.Add(("AO", c, min, max));
+            Known(list);
+            lock (_gate) task2.Channels.Add(("AO", list, min, max));
         }
         Note($"CreateAOVoltageChan {physical}");
     }
 
     public void CreateDOChan(nint task, string lines)
     {
-        var t = Task(task);
-        foreach (var c in List(lines))
+        var task2 = Task(task);
+        foreach (var list in List(lines))
         {
-            Known(c);
-            lock (_gate) t.Channels.Add(("DO", c, 0, 1));
+            Known(list);
+            lock (_gate) task2.Channels.Add(("DO", list, 0, 1));
         }
     }
 
     public void CreateDIChan(nint task, string lines)
     {
-        var t = Task(task);
-        foreach (var c in List(lines))
+        var task2 = Task(task);
+        foreach (var list in List(lines))
         {
-            Known(c);
-            lock (_gate) t.Channels.Add(("DI", c, 0, 1));
+            Known(list);
+            lock (_gate) task2.Channels.Add(("DI", list, 0, 1));
         }
     }
 
     public void CfgSampClkTiming(nint task, double rate, bool continuous, long samplesPerChannel)
     {
-        var t = Task(task);
-        var multiplexed = t.Channels.Any(c => c.Channel.StartsWith("Dev1/ai", StringComparison.Ordinal));
-        var max = t.Channels.Any(c => c.Channel.StartsWith("cDAQ", StringComparison.Ordinal)) ? 50000 : 250000;
-        var total = multiplexed ? rate * t.Channels.Count : rate;
+        var task2 = Task(task);
+        var multiplexed = task2.Channels.Any(channelEntry => channelEntry.Channel.StartsWith("Dev1/ai", StringComparison.Ordinal));
+        var max = task2.Channels.Any(channelEntry => channelEntry.Channel.StartsWith("cDAQ", StringComparison.Ordinal)) ? 50000 : 250000;
+        var total = multiplexed ? rate * task2.Channels.Count : rate;
         if (total > max) throw Err(-200077, $"Requested sample rate {rate} exceeds the maximum ({max} S/s{(multiplexed ? " aggregate" : "")}).");
         lock (_gate)
         {
-            t.Rate = rate;
-            t.Continuous = continuous;
-            t.Samples = samplesPerChannel;
+            task2.Rate = rate;
+            task2.Continuous = continuous;
+            task2.Samples = samplesPerChannel;
         }
         Note($"CfgSampClkTiming {rate} {(continuous ? "kontinuierlich" : "endlich")} {samplesPerChannel}");
     }
 
     public void CfgDigEdgeStartTrig(nint task, string source, bool rising)
     {
-        var t = Task(task);
-        lock (_gate) t.Trigger = source;
+        var task2 = Task(task);
+        lock (_gate) task2.Trigger = source;
         Note($"CfgDigEdgeStartTrig {source}");
     }
 
@@ -208,11 +208,11 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
 
     private static int AoIndex(string channel) => channel.EndsWith('1') ? 1 : 0;
 
-    private double Ao(SimTask t, int k, double now)
+    private double Ao(SimTask task, int index2, double now)
     {
-        if (t.AoData is null || t.Samples == 0) return 0;
-        var i = (long)Math.Floor((now - t.StartTime) * t.Rate) % t.Samples;
-        return t.AoData[k * t.Samples + Math.Max(0, i)];
+        if (task.AoData is null || task.Samples == 0) return 0;
+        var index = (long)Math.Floor((now - task.StartTime) * task.Rate) % task.Samples;
+        return task.AoData[index2 * task.Samples + Math.Max(0, index)];
     }
 
     /// <summary>Spannung eines Eingangs zum Zeitpunkt (Sekunden).</summary>
@@ -220,18 +220,18 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
     {
         if (channel.StartsWith("cDAQ1Mod1/ai", StringComparison.Ordinal))
         {
-            var k = channel[^1] - '0';
-            return 230 * Math.Sqrt(2) * Math.Sin(2 * Math.PI * 50 * time - k * 2 * Math.PI / 3);
+            var index2 = channel[^1] - '0';
+            return 230 * Math.Sqrt(2) * Math.Sin(2 * Math.PI * 50 * time - index2 * 2 * Math.PI / 3);
         }
         if (channel is "Dev1/ai0" or "Dev1/ai1")
         {
             var index = channel == "Dev1/ai0" ? 0 : 1;
             lock (_gate)
             {
-                foreach (var t in _tasks.Values.Where(t => t.Started && t.AoData is not null))
-                    for (var k = 0; k < t.Channels.Count; k++)
-                        if (AoIndex(t.Channels[k].Channel) == index && t.Channels[k].Channel.StartsWith("Dev1/ao", StringComparison.Ordinal))
-                            return Ao(t, k, time);
+                foreach (var task in _tasks.Values.Where(task2 => task2.Started && task2.AoData is not null))
+                    for (var previousIndex = 0; previousIndex < task.Channels.Count; previousIndex++)
+                        if (AoIndex(task.Channels[previousIndex].Channel) == index && task.Channels[previousIndex].Channel.StartsWith("Dev1/ao", StringComparison.Ordinal))
+                            return Ao(task, previousIndex, time);
                 return _aoStatic[index];
             }
         }
@@ -240,15 +240,15 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
 
     public double ReadAnalogScalar(nint task, double timeout)
     {
-        var t = Task(task);
-        if (t.Channels.Count != 1 || t.Channels[0].Kind != "AI") throw Err(-200523, "Read scalar requires exactly one analog input channel.");
-        return Input(t.Channels[0].Channel, Now);
+        var task2 = Task(task);
+        if (task2.Channels.Count != 1 || task2.Channels[0].Kind != "AI") throw Err(-200523, "Read scalar requires exactly one analog input channel.");
+        return Input(task2.Channels[0].Channel, Now);
     }
 
     public int ReadAnalogInterleaved(nint task, int samplesPerChannel, double timeout, double[] buffer)
     {
-        var t = Task(task);
-        if (!t.Started) throw Err(-200473, "Read cannot be performed when the task is not started.");
+        var task2 = Task(task);
+        if (!task2.Started) throw Err(-200473, "Read cannot be performed when the task is not started.");
         var deadline = Now + timeout;
         while (true)
         {
@@ -256,20 +256,20 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
             long read, total;
             lock (_gate)
             {
-                start = t.StartTime;
-                read = t.Read;
-                total = t.Samples;
+                start = task2.StartTime;
+                read = task2.Read;
+                total = task2.Samples;
             }
             if (start >= 0)
             {
-                var available = Math.Min(total, (long)Math.Floor((Now - start) * t.Rate)) - read;
+                var available = Math.Min(total, (long)Math.Floor((Now - start) * task2.Rate)) - read;
                 var want = Math.Min(samplesPerChannel, total - read);
                 if (available >= want)
                 {
-                    for (var i = 0; i < want; i++)
-                        for (var k = 0; k < t.Channels.Count; k++)
-                            buffer[i * t.Channels.Count + k] = Input(t.Channels[k].Channel, start + (read + i) / t.Rate);
-                    lock (_gate) t.Read += want;
+                    for (var index = 0; index < want; index++)
+                        for (var previousIndex = 0; previousIndex < task2.Channels.Count; previousIndex++)
+                            buffer[index * task2.Channels.Count + previousIndex] = Input(task2.Channels[previousIndex].Channel, start + (read + index) / task2.Rate);
+                    lock (_gate) task2.Read += want;
                     return (int)want;
                 }
             }
@@ -280,8 +280,8 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
 
     public void WriteAnalogScalar(nint task, double value, double timeout)
     {
-        var t = Task(task);
-        var ch = t.Channels.Single();
+        var task2 = Task(task);
+        var ch = task2.Channels.Single();
         if (value < ch.Min || value > ch.Max) throw Err(-200448, $"Attempted to write a sample beyond the final range of the device: {value}");
         lock (_gate) _aoStatic[AoIndex(ch.Channel)] = value;
         Note($"WriteAnalogScalar {ch.Channel}={value}");
@@ -289,34 +289,34 @@ public sealed class SimulatedDaqmxApi : IDaqmxApi
 
     public int WriteAnalogByChannel(nint task, int samplesPerChannel, bool autoStart, double timeout, double[] data)
     {
-        var t = Task(task);
-        if (data.Length != samplesPerChannel * t.Channels.Count) throw Err(-200524, "Write buffer size mismatch.");
-        for (var k = 0; k < t.Channels.Count; k++)
-            for (var i = 0; i < samplesPerChannel; i++)
-                if (data[k * samplesPerChannel + i] < t.Channels[k].Min || data[k * samplesPerChannel + i] > t.Channels[k].Max)
+        var task2 = Task(task);
+        if (data.Length != samplesPerChannel * task2.Channels.Count) throw Err(-200524, "Write buffer size mismatch.");
+        for (var previousIndex = 0; previousIndex < task2.Channels.Count; previousIndex++)
+            for (var index = 0; index < samplesPerChannel; index++)
+                if (data[previousIndex * samplesPerChannel + index] < task2.Channels[previousIndex].Min || data[previousIndex * samplesPerChannel + index] > task2.Channels[previousIndex].Max)
                     throw Err(-200448, "Attempted to write a sample beyond the final range of the device.");
         lock (_gate)
         {
-            t.AoData = data;
-            t.Samples = samplesPerChannel;
+            task2.AoData = data;
+            task2.Samples = samplesPerChannel;
         }
-        Note($"WriteAnalogF64 {samplesPerChannel}×{t.Channels.Count}");
+        Note($"WriteAnalogF64 {samplesPerChannel}×{task2.Channels.Count}");
         if (autoStart) StartTask(task);
         return samplesPerChannel;
     }
 
     public void WriteDigitalLines(nint task, byte[] states, double timeout)
     {
-        var t = Task(task);
+        var task2 = Task(task);
         lock (_gate)
-            for (var k = 0; k < t.Channels.Count; k++) _do[t.Channels[k].Channel[^1] - '0'] = states[k];
-        Note($"WriteDigitalLines {string.Join(",", t.Channels.Select(c => c.Channel))}={string.Join("", states)}");
+            for (var previousIndex = 0; previousIndex < task2.Channels.Count; previousIndex++) _do[task2.Channels[previousIndex].Channel[^1] - '0'] = states[previousIndex];
+        Note($"WriteDigitalLines {string.Join(",", task2.Channels.Select(channelEntry => channelEntry.Channel))}={string.Join("", states)}");
     }
 
     public byte[] ReadDigitalLines(nint task, int lines, double timeout)
     {
-        var t = Task(task);
-        lock (_gate) return t.Channels.Select(c => _do[c.Channel[^1] - '0']).ToArray(); // DI ← DO (Verdrahtung)
+        var task2 = Task(task);
+        lock (_gate) return task2.Channels.Select(channelEntry => _do[channelEntry.Channel[^1] - '0']).ToArray(); // DI ← DO (Verdrahtung)
     }
 
     /// <summary>Aktueller statischer Wert eines Analogausgangs (Tests: sicherer Zustand).</summary>

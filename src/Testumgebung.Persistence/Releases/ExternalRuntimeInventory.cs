@@ -33,10 +33,10 @@ public static class ExternalRuntimeInventory
                 files.Add(file with { Name = "Konfiguriert/" + file.Name });
             }
         }
-        if (files.GroupBy(f => f.Name, StringComparer.Ordinal).Any(g => g.Count() > 1))
+        if (files.GroupBy(externalRuntimeFile => externalRuntimeFile.Name, StringComparer.Ordinal).Any(group => group.Count() > 1))
             throw new InvalidDataException("Doppelte Namen in der Laufzeitdateiliste.");
         var result = new List<RuntimeComponent>();
-        foreach (var file in files.OrderBy(f => f.Name, StringComparer.Ordinal))
+        foreach (var file in files.OrderBy(externalRuntimeFile => externalRuntimeFile.Name, StringComparer.Ordinal))
         {
             // Fehlende konfigurierte Dateien blockieren die Freigabe und werden nicht still ignoriert.
             using var stream = File.OpenRead(file.Path);

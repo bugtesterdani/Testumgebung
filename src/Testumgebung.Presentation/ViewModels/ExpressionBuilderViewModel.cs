@@ -24,8 +24,8 @@ public sealed class ExpressionBuilderViewModel : ObservableObject
         VarType? expectedType = null, bool variablesOnly = false, bool allowEmpty = false)
     {
         Original = original; Variables = variables; ExpectedType = expectedType; VariablesOnly = variablesOnly; AllowEmpty = allowEmpty;
-        InsertCommand = new RelayCommand(p => { if (p is ExpressionTile tile) Insert(tile); });
-        WrapCommand = new RelayCommand(p => { if (p is ExpressionTile tile) Insert(tile, true); });
+        InsertCommand = new RelayCommand(parameter => { if (parameter is ExpressionTile tile) Insert(tile); });
+        WrapCommand = new RelayCommand(parameter => { if (parameter is ExpressionTile tile) Insert(tile, true); });
         DeleteCommand = new RelayCommand(() => ReplaceSelected(new(this, VisualExpressionKind.Empty)));
         UndoCommand = new RelayCommand(() => Restore(_undo, _redo), () => _undo.Count > 0);
         RedoCommand = new RelayCommand(() => Restore(_redo, _undo), () => _redo.Count > 0);
@@ -63,8 +63,8 @@ public sealed class ExpressionBuilderViewModel : ObservableObject
     public RelayCommand DeleteCommand { get; }
     public RelayCommand UndoCommand { get; }
     public RelayCommand RedoCommand { get; }
-    public IReadOnlyList<ExpressionPaletteGroup> Palette => Tiles.Where(t => !VariablesOnly || t.Kind == VisualExpressionKind.Variable)
-        .GroupBy(t => t.Category).Select(g => new ExpressionPaletteGroup(g.Key, g.ToList())).ToList();
+    public IReadOnlyList<ExpressionPaletteGroup> Palette => Tiles.Where(expressionTile => !VariablesOnly || expressionTile.Kind == VisualExpressionKind.Variable)
+        .GroupBy(expressionTile => expressionTile.Category).Select(group => new ExpressionPaletteGroup(group.Key, group.ToList())).ToList();
 
     public void Insert(ExpressionTile tile, bool wrap = false)
     {
@@ -89,10 +89,10 @@ public sealed class ExpressionBuilderViewModel : ObservableObject
 
     private ExpressionVariable DefaultVariable()
     {
-        var ordinary = Variables.Where(v => !v.Path.Contains("_BlockZweig_", StringComparison.Ordinal)).ToList();
-        var user = ordinary.Where(v => !IsStatusVariable(v.Path)).ToList();
+        var ordinary = Variables.Where(variable => !variable.Path.Contains("_BlockZweig_", StringComparison.Ordinal)).ToList();
+        var user = ordinary.Where(variable => !IsStatusVariable(variable.Path)).ToList();
         var expected = SlotType();
-        bool Matches(ExpressionVariable v) => expected is null || v.Type == expected || expected == VarType.Double && v.Type == VarType.Int;
+        bool Matches(ExpressionVariable variable) => expected is null || variable.Type == expected || expected == VarType.Double && variable.Type == VarType.Int;
         return user.FirstOrDefault(Matches) ?? ordinary.FirstOrDefault(Matches) ?? user.FirstOrDefault() ?? ordinary.FirstOrDefault() ?? Variables[0];
     }
     private static bool IsStatusVariable(string path)

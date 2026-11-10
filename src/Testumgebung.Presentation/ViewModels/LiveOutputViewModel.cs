@@ -35,7 +35,7 @@ public sealed class LiveOutputCollection : ObservableObject
     public bool HasContent => Items.Count > 0;
     public void Apply(string nodeId, string title, LiveOutputUpdate update)
     {
-        var item = Items.FirstOrDefault(i => i.NodeId == nodeId && i.Channel == update.Channel);
+        var item = Items.FirstOrDefault(liveOutputViewModel => liveOutputViewModel.NodeId == nodeId && liveOutputViewModel.Channel == update.Channel);
         if (item is null)
         {
             if (Items.Count >= 8) Items.RemoveAt(0);
@@ -46,7 +46,7 @@ public sealed class LiveOutputCollection : ObservableObject
     }
     public void Complete(string nodeId)
     {
-        foreach (var item in Items.Where(i => i.NodeId == nodeId)) item.Complete();
+        foreach (var item in Items.Where(liveOutputViewModel => liveOutputViewModel.NodeId == nodeId)) item.Complete();
     }
     public void Clear() { Items.Clear(); OnPropertyChanged(nameof(HasContent)); }
 }

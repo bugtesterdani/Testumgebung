@@ -84,9 +84,9 @@ public sealed class MqttNotifier : IRunNotifier, IAsyncDisposable
     /// <summary>Testnachricht (Bedienknopf „MQTT testen“) – direkt, ohne Puffer.</summary>
     public async Task<string> SendTestAsync(CancellationToken cancellationToken)
     {
-        var n = new RunNotification(RunNotificationKind.Stored, "TEST-" + Guid.NewGuid().ToString("N")[..8], "Testmeldung", DateTimeOffset.Now, 0, null);
-        var topic = TopicFor(n);
-        await _publish(Options, topic, PayloadFor(n), cancellationToken).ConfigureAwait(false);
+        var runNotification = new RunNotification(RunNotificationKind.Stored, "TEST-" + Guid.NewGuid().ToString("N")[..8], "Testmeldung", DateTimeOffset.Now, 0, null);
+        var topic = TopicFor(runNotification);
+        await _publish(Options, topic, PayloadFor(runNotification), cancellationToken).ConfigureAwait(false);
         return $"Testmeldung an {Options.Host}:{Options.Port} gesendet (Topic {topic}).";
     }
 
@@ -94,13 +94,13 @@ public sealed class MqttNotifier : IRunNotifier, IAsyncDisposable
     {
         try
         {
-            await foreach (var n in _queue.Reader.ReadAllAsync(_cts.Token).ConfigureAwait(false))
+            await foreach (var runNotification in _queue.Reader.ReadAllAsync(_cts.Token).ConfigureAwait(false))
             {
-                var topic = TopicFor(n);
+                var topic = TopicFor(runNotification);
                 string? error = null;
                 try
                 {
-                    await _publish(Options, topic, PayloadFor(n), _cts.Token).ConfigureAwait(false);
+                    await _publish(Options, topic, PayloadFor(runNotification), _cts.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (_cts.IsCancellationRequested)
                 {
@@ -110,7 +110,7 @@ public sealed class MqttNotifier : IRunNotifier, IAsyncDisposable
                 {
                     error = ex.Message; // verworfen – keine Wiederholung (P06)
                 }
-                try { Delivered?.Invoke(new MqttDelivery(n, topic, error is null, error, DateTimeOffset.Now)); }
+                try { Delivered?.Invoke(new MqttDelivery(runNotification, topic, error is null, error, DateTimeOffset.Now)); }
                 catch (Exception) { }
             }
         }
@@ -125,6 +125,6 @@ public sealed class MqttNotifier : IRunNotifier, IAsyncDisposable
         _cts.Dispose();
     }
 
-    private static string Sanitize(string s)
-        => string.IsNullOrEmpty(s) ? "_" : new string(s.Select(c => c is '+' or '#' or '/' || char.IsControl(c) ? '_' : c).ToArray());
+    private static string Sanitize(string text)
+        => string.IsNullOrEmpty(text) ? "_" : new string(text.Select(character => character is '+' or '#' or '/' || char.IsControl(character) ? '_' : character).ToArray());
 }

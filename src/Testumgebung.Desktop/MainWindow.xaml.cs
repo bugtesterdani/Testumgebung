@@ -76,7 +76,7 @@ public partial class MainWindow : Window
         ConfigureExampleMode(exampleMode);
         DataContext = Shell;
         Shell.Session.Changed += () => Dispatcher.BeginInvoke(new Action(() => { if (!Shell.Session.IsSigningIn) LocalLoginPassword.Clear(); }));
-        _programStartupLoader = new(_releases, Shell.Editor, () => Shell.SelectedStation, () => Shell.Stations.Any(s => s.IsRunning));
+        _programStartupLoader = new(_releases, Shell.Editor, () => Shell.SelectedStation, () => Shell.Stations.Any(station => station.IsRunning));
         _releases.Changed += () => Dispatcher.BeginInvoke(new Action(() => _ = _programStartupLoader.TryLoadAsync()));
         _ = _releases.RefreshAsync();
         _releases.StartPolling(TimeSpan.FromSeconds(30)); // Freigaben anderer Prüfplätze (gemeinsame Datenbank)
@@ -94,10 +94,10 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Keeps account configuration and provider selection together during startup.</summary>
-    private void OnLocalPasswordKey(object sender, System.Windows.Input.KeyEventArgs e)
+    private void OnLocalPasswordKey(object sender, System.Windows.Input.KeyEventArgs eventArgs)
     {
-        if (e.Key != System.Windows.Input.Key.Enter || !Shell.LoginCommand.CanExecute(null)) return;
-        Shell.LoginCommand.Execute(null); e.Handled = true;
+        if (eventArgs.Key != System.Windows.Input.Key.Enter || !Shell.LoginCommand.CanExecute(null)) return;
+        Shell.LoginCommand.Execute(null); eventArgs.Handled = true;
     }
 
     private IdentityServices CreateIdentityServices(MainWindowStartup? startup, bool developmentMode)
@@ -106,11 +106,11 @@ public partial class MainWindow : Window
         // Entwicklungsmodus muss ausdrücklich beim Start eingeschaltet werden.
         var accessStore = startup?.AccessStore ?? new AccessConfigStore(AccessConfigStore.DefaultPath);
         var access = accessStore.Load();
-        IIdentityProvider Provider(AccessConfig? c) => c switch
+        IIdentityProvider Provider(AccessConfig? accessConfig) => accessConfig switch
         {
-            { UsesEntra: true, EntraBrokerTlsSha256.Length: > 0 } => new EntraBrokerIdentityProvider(c),
-            { UsesEntra: true } => new MsalIdentityProvider(c.ClientId!, c.TenantId!, c.EntraRedirectUri),
-            { UsesLocalPasswords: true } => new LocalPasswordIdentityProvider(c, () => (Shell?.LoginName ?? "", LocalLoginPassword.Password)),
+            { UsesEntra: true, EntraBrokerTlsSha256.Length: > 0 } => new EntraBrokerIdentityProvider(accessConfig),
+            { UsesEntra: true } => new MsalIdentityProvider(accessConfig.ClientId!, accessConfig.TenantId!, accessConfig.EntraRedirectUri),
+            { UsesLocalPasswords: true } => new LocalPasswordIdentityProvider(accessConfig, () => (Shell?.LoginName ?? "", LocalLoginPassword.Password)),
             _ => new SimulatedIdentityProvider(() => Shell?.LoginName ?? "")
         };
         return new IdentityServices(new SessionService(Provider(access), access, allowDevelopmentMode: developmentMode), accessStore, Provider);
@@ -163,14 +163,14 @@ public partial class MainWindow : Window
 
     public ShellViewModel Shell { get; }
 
-    private static string? Env(string name) => Environment.GetEnvironmentVariable(name) is { Length: > 0 } v ? v : null;
+    private static string? Env(string name) => Environment.GetEnvironmentVariable(name) is { Length: > 0 } value ? value : null;
 
     private void UpdateClock()
         => ClockText.Text = DateTime.Now.ToString("ddd, dd.MM.yyyy   HH:mm", CultureInfo.GetCultureInfo("de-DE"));
 
-    private void ShowLicenses(object sender, RoutedEventArgs e) => LicenseInformation.Show(this);
+    private void ShowLicenses(object sender, RoutedEventArgs eventArgs) => LicenseInformation.Show(this);
 
-    private void ClosePopup(object sender, RoutedEventArgs e) => UserToggle.IsChecked = false;
+    private void ClosePopup(object sender, RoutedEventArgs eventArgs) => UserToggle.IsChecked = false;
 
     private bool _closeReady;
     private bool _closing;
@@ -194,7 +194,7 @@ public partial class MainWindow : Window
             if (save == MessageBoxResult.Cancel) return false;
             if (save == MessageBoxResult.Yes && !Shell.Editor.Save(Shell.Editor.FilePath)) return false;
         }
-        if (!_faultShutdown && Shell.Stations.Any(s => s.IsRunning))
+        if (!_faultShutdown && Shell.Stations.Any(station => station.IsRunning))
         {
             var answer = _showMessage(
                 "Auf mindestens einem Prüfplatz läuft eine Prüfung. Trotzdem beenden?\n\nDer Software-Abbruch ersetzt keine hardwareseitige Abschaltung.",
@@ -218,8 +218,8 @@ public partial class MainWindow : Window
         Title = "Testumgebung – Abschluss und Speicherung …";
         try
         {
-            foreach (var s in Shell.Stations) s.RequestAbort();
-            await Task.WhenAll(Shell.Stations.Select(s => s.WaitForCompletionAsync()));
+            foreach (var station in Shell.Stations) station.RequestAbort();
+            await Task.WhenAll(Shell.Stations.Select(station2 => station2.WaitForCompletionAsync()));
             var safeStateErrors = await _coordinator.SafeStateAllAsync();
             if (safeStateErrors.Count > 0)
                 throw new InvalidOperationException(string.Join(Environment.NewLine, safeStateErrors));

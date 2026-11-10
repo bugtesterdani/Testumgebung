@@ -57,9 +57,9 @@ public sealed record LabViewSettings(string? ViPath, string? DllPath, string? Fu
             list.Add(new CodeDiagnostic(0, 0, "error", "Kein exportierter Funktionsname angegeben (funktion = …)."));
         if (!string.IsNullOrWhiteSpace(ViPath) && !File.Exists(ViPath))
             list.Add(new CodeDiagnostic(0, 0, "warning", $"VI '{ViPath}' nicht gefunden (nur für die Bearbeitung in LabVIEW nötig)."));
-        foreach (var p in ports.Where(p => p.Type == VarType.DateTime))
-            list.Add(new CodeDiagnostic(0, 0, "error", $"Port '{p.Name}': DateTime wird am LabVIEW-Connector nicht unterstützt."));
-        if (ports.Any(p => p.Name == "Bewertung" && (p.Type != VarType.Int || p.Direction == PortDirection.Input)))
+        foreach (var port in ports.Where(port2 => port2.Type == VarType.DateTime))
+            list.Add(new CodeDiagnostic(0, 0, "error", $"Port '{port.Name}': DateTime wird am LabVIEW-Connector nicht unterstützt."));
+        if (ports.Any(port2 => port2.Name == "Bewertung" && (port2.Type != VarType.Int || port2.Direction == PortDirection.Input)))
             list.Add(new CodeDiagnostic(0, 0, "error", "Port 'Bewertung' muss ein Int-Ausgang sein (0 = NRESULT, 1 = PASS, 2 = FAIL, 3 = ERROR)."));
         return list;
     }
@@ -74,7 +74,7 @@ public sealed record LabViewSettings(string? ViPath, string? DllPath, string? Fu
     /// </summary>
     public string GenerateGlue(IReadOnlyList<CodePort> ports)
     {
-        static string InType(VarType t) => t switch
+        static string InType(VarType varType) => varType switch
         {
             VarType.Double => "double",
             VarType.Int => "int32_t",
@@ -95,15 +95,15 @@ public sealed record LabViewSettings(string? ViPath, string? DllPath, string? Fu
         sb.AppendLine("#endif");
 
         var parameters = new List<string>();
-        foreach (var p in ports)
+        foreach (var port in ports)
         {
-            if (p.Direction == PortDirection.Input) parameters.Add(InType(p.Type));
-            else if (p.Type == VarType.String)
+            if (port.Direction == PortDirection.Input) parameters.Add(InType(port.Type));
+            else if (port.Type == VarType.String)
             {
                 parameters.Add("char*");
                 parameters.Add("int32_t");
             }
-            else parameters.Add(InType(p.Type) + "*");
+            else parameters.Add(InType(port.Type) + "*");
         }
         sb.AppendLine($"typedef void (TU_CC *tu_vi_fn)({string.Join(", ", parameters.DefaultIfEmpty("void"))});");
         sb.AppendLine("TU_EXPORT int tu_invoke(const tu_host* host)");
@@ -116,42 +116,42 @@ public sealed record LabViewSettings(string? ViPath, string? DllPath, string? Fu
         sb.AppendLine($"        if (!fn) return host->set_outcome(host->ctx, 3, 0, 0, \"Funktion '{(Function ?? "").Replace("\"", "'")}' nicht in der DLL exportiert.\", \"\", 0, 0, 0, 0), 1;");
 
         var args = new List<string>();
-        var i = 0;
+        var index = 0;
         WriteArguments();
 
         void WriteArguments()
         {
-            foreach (var p in ports)
+            foreach (var port2 in ports)
             {
-                var v = $"p{i++}";
-                var name = Literal(p.Name);
-                switch (p.Type)
+                var value = $"p{index++}";
+                var name = Literal(port2.Name);
+                switch (port2.Type)
                 {
-                    case VarType.String when p.Direction == PortDirection.Input:
-                        sb.AppendLine($"        std::string {v}s = host->get_string(host->ctx, {name});");
-                        args.Add($"{v}s.c_str()");
+                    case VarType.String when port2.Direction == PortDirection.Input:
+                        sb.AppendLine($"        std::string {value}s = host->get_string(host->ctx, {name});");
+                        args.Add($"{value}s.c_str()");
                         break;
                     case VarType.String:
-                        sb.AppendLine($"        std::vector<char> {v}(4096, 0);");
-                        if (p.Direction == PortDirection.InOut)
-                            sb.AppendLine($"        {{ std::string s = host->get_string(host->ctx, {name}); std::copy_n(s.begin(), std::min<size_t>(s.size(), 4095), {v}.begin()); }}");
-                        args.Add($"{v}.data()");
+                        sb.AppendLine($"        std::vector<char> {value}(4096, 0);");
+                        if (port2.Direction == PortDirection.InOut)
+                            sb.AppendLine($"        {{ std::string s = host->get_string(host->ctx, {name}); std::copy_n(s.begin(), std::min<size_t>(s.size(), 4095), {value}.begin()); }}");
+                        args.Add($"{value}.data()");
                         args.Add("(int32_t)4096");
                         break;
                     case VarType.Double:
-                        sb.AppendLine($"        double {v} = {(p.IsInput ? $"host->get_double(host->ctx, {name})" : "0")};");
-                        args.Add(p.Direction == PortDirection.Input ? v : "&" + v);
+                        sb.AppendLine($"        double {value} = {(port2.IsInput ? $"host->get_double(host->ctx, {name})" : "0")};");
+                        args.Add(port2.Direction == PortDirection.Input ? value : "&" + value);
                         break;
                     case VarType.Int:
-                        sb.AppendLine($"        int32_t {v} = {(p.IsInput ? $"(int32_t)host->get_int(host->ctx, {name})" : "0")};");
-                        args.Add(p.Direction == PortDirection.Input ? v : "&" + v);
+                        sb.AppendLine($"        int32_t {value} = {(port2.IsInput ? $"(int32_t)host->get_int(host->ctx, {name})" : "0")};");
+                        args.Add(port2.Direction == PortDirection.Input ? value : "&" + value);
                         break;
                     case VarType.Bool:
-                        sb.AppendLine($"        uint8_t {v} = {(p.IsInput ? $"(uint8_t)(host->get_bool(host->ctx, {name}) ? 1 : 0)" : "0")};");
-                        args.Add(p.Direction == PortDirection.Input ? v : "&" + v);
+                        sb.AppendLine($"        uint8_t {value} = {(port2.IsInput ? $"(uint8_t)(host->get_bool(host->ctx, {name}) ? 1 : 0)" : "0")};");
+                        args.Add(port2.Direction == PortDirection.Input ? value : "&" + value);
                         break;
                     default:
-                        sb.AppendLine($"        throw std::runtime_error(\"Typ von {p.Name.Replace("\"", "'")} wird nicht unterstützt\");");
+                        sb.AppendLine($"        throw std::runtime_error(\"Typ von {port2.Name.Replace("\"", "'")} wird nicht unterstützt\");");
                         break;
                 }
             }
@@ -164,21 +164,21 @@ public sealed record LabViewSettings(string? ViPath, string? DllPath, string? Fu
 
         void WriteOutputs()
         {
-            i = 0;
-            foreach (var p in ports)
+            index = 0;
+            foreach (var port3 in ports)
             {
-                var v = $"p{i++}";
-                if (!p.IsOutput) continue;
-                var name = Literal(p.Name);
-                sb.AppendLine(p.Type switch
+                var value2 = $"p{index++}";
+                if (!port3.IsOutput) continue;
+                var name = Literal(port3.Name);
+                sb.AppendLine(port3.Type switch
                 {
-                    VarType.String => $"        {v}.back() = 0; host->set_string(host->ctx, {name}, {v}.data());",
-                    VarType.Double => $"        host->set_double(host->ctx, {name}, {v});",
-                    VarType.Int => $"        host->set_int(host->ctx, {name}, (long long){v});",
-                    _ => $"        host->set_bool(host->ctx, {name}, {v} != 0);",
+                    VarType.String => $"        {value2}.back() = 0; host->set_string(host->ctx, {name}, {value2}.data());",
+                    VarType.Double => $"        host->set_double(host->ctx, {name}, {value2});",
+                    VarType.Int => $"        host->set_int(host->ctx, {name}, (long long){value2});",
+                    _ => $"        host->set_bool(host->ctx, {name}, {value2} != 0);",
                 });
-                if (p.Name == "Bewertung" && p.Type == VarType.Int) sb.AppendLine($"        rating = ({v} >= 0 && {v} <= 3) ? (int){v} : 3;");
-                if (p.Name == "Fehler" && p.Type == VarType.String) sb.AppendLine($"        error = {v}.data();");
+                if (port3.Name == "Bewertung" && port3.Type == VarType.Int) sb.AppendLine($"        rating = ({value2} >= 0 && {value2} <= 3) ? (int){value2} : 3;");
+                if (port3.Name == "Fehler" && port3.Type == VarType.String) sb.AppendLine($"        error = {value2}.data();");
             }
         }
 

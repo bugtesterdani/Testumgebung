@@ -37,8 +37,8 @@ public sealed class VariableRowViewModel : ObservableObject
         _initial = definition.Initial switch
         {
             null => "",
-            string s => s,
-            var v => TypedValue.Format(v),
+            string text => text,
+            var value => TypedValue.Format(value),
         };
     }
 
@@ -135,7 +135,7 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
         {
             if (_comm is not null) return _comm;
             _comm = [];
-            for (var i = 0; i < _editor.Project.SimulationComm.Count; i++) _comm.Add(new CommSimulationRow(_editor, _editor.Project.SimulationComm[i]));
+            for (var index = 0; index < _editor.Project.SimulationComm.Count; index++) _comm.Add(new CommSimulationRow(_editor, _editor.Project.SimulationComm[index]));
             return _comm;
         }
     }
@@ -154,9 +154,9 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
 
     public RelayCommand AddCommCommand => _addComm ??= new(() =>
     {
-        var n = 1;
-        while (_editor.Project.SimulationComm.Any(c => c.Name == $"Pruefling_Komm{n}")) n++;
-        var sim = new Persistence.SimulatedComm($"Pruefling_Komm{n}", $"komm{n}", Testumgebung.Hardware.CommKind.Stream,
+        var index = 1;
+        while (_editor.Project.SimulationComm.Any(communication => communication.Name == $"Pruefling_Komm{index}")) index++;
+        var sim = new Persistence.SimulatedComm($"Pruefling_Komm{index}", $"komm{index}", Testumgebung.Hardware.CommKind.Stream,
             "# MUSTER => ANTWORT (regulärer Ausdruck, $1 = Gruppe, {zufall:min:max:dez})\n\\*IDN\\? => ACME,PRUEFLING,0001,1.0");
         _editor.Project.SimulationComm.Add(sim);
         var row = new CommSimulationRow(_editor, sim);
@@ -168,7 +168,7 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
     public RelayCommand RemoveCommCommand => _removeComm ??= new(() =>
     {
         if (_selectedComm is not { } row) return;
-        _editor.Project.SimulationComm.RemoveAll(c => c.Name == row.Name);
+        _editor.Project.SimulationComm.RemoveAll(communication => communication.Name == row.Name);
         CommSimulations.Remove(row);
         SelectedComm = null;
         _editor.MarkChanged();
@@ -186,7 +186,7 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
 
     /// <summary>Importierte DBC-/LDF-Dateien (im Projekt gespeichert, Teil des Release-Pakets).</summary>
     public ObservableCollection<BusDatabaseRow> BusDatabases
-        => _buses ??= new ObservableCollection<BusDatabaseRow>(_editor.Project.Definition.BusDatabases.Select(d => new BusDatabaseRow(_editor, d)));
+        => _buses ??= new ObservableCollection<BusDatabaseRow>(_editor.Project.Definition.BusDatabases.Select(database => new BusDatabaseRow(_editor, database)));
 
     public BusDatabaseRow? SelectedBus
     {
@@ -208,7 +208,7 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
     public RelayCommand RemoveBusCommand => _removeBus ??= new(() =>
     {
         if (_selectedBus is not { } row) return;
-        _editor.Project.Definition.BusDatabases.RemoveAll(d => d.Name == row.Name);
+        _editor.Project.Definition.BusDatabases.RemoveAll(database => database.Name == row.Name);
         BusDatabases.Remove(row);
         SelectedBus = null;
         BusStatus = $"„{row.Name}“ entfernt.";
@@ -248,18 +248,18 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
             BusStatus = $"Import abgelehnt: {ex.Message}";
             return null;
         }
-        var name = new string(Path.GetFileNameWithoutExtension(path).Select(c => char.IsLetterOrDigit(c) || c is '_' or '-' ? c : '_').ToArray());
+        var name = new string(Path.GetFileNameWithoutExtension(path).Select(character => char.IsLetterOrDigit(character) || character is '_' or '-' ? character : '_').ToArray());
         if (name.Length == 0) name = "Bus";
         _ = BusDatabases; // Zeilen vor der Änderung der Liste aufbauen
         var list = _editor.Project.Definition.BusDatabases;
         var definition = new BusDatabaseDefinition(name, format, text, file);
-        var index = list.FindIndex(d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase));
+        var index = list.FindIndex(database => string.Equals(database.Name, name, StringComparison.OrdinalIgnoreCase));
         BusDatabaseRow row;
         if (index >= 0)
         {
             list[index] = definition.WithName(list[index].Name);
             row = new BusDatabaseRow(_editor, list[index]);
-            BusDatabases[BusDatabases.IndexOf(BusDatabases.First(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)))] = row;
+            BusDatabases[BusDatabases.IndexOf(BusDatabases.First(busDatabaseRow => string.Equals(busDatabaseRow.Name, name, StringComparison.OrdinalIgnoreCase)))] = row;
             BusStatus = $"„{row.Name}“ aktualisiert: {parsed.Summary}.";
         }
         else
@@ -330,20 +330,20 @@ public sealed class BusDatabaseRow(EditorViewModel editor, BusDatabaseDefinition
         get => _def.Name;
         set
         {
-            var v = (value ?? "").Trim();
+            var value2 = (value ?? "").Trim();
             var list = editor.Project.Definition.BusDatabases;
-            if (v.Length == 0 || v == _def.Name || v.Contains(' ') || list.Any(d => string.Equals(d.Name, v, StringComparison.OrdinalIgnoreCase) && !ReferenceEquals(d, _def)))
+            if (value2.Length == 0 || value2 == _def.Name || value2.Contains(' ') || list.Any(database => string.Equals(database.Name, value2, StringComparison.OrdinalIgnoreCase) && !ReferenceEquals(database, _def)))
             {
                 OnPropertyChanged(nameof(Name));
                 return;
             }
             var old = _def.Name;
-            var index = list.FindIndex(d => ReferenceEquals(d, _def));
-            _def = _def.WithName(v);
+            var index = list.FindIndex(database => ReferenceEquals(database, _def));
+            _def = _def.WithName(value2);
             if (index >= 0) list[index] = _def;
             // Verweise in Bausteinen mitziehen
             foreach (var step in editor.Project.Definition.AllNodes().OfType<StepDefinition>())
-                if (step.Parameters.TryGetValue("Datenbank", out var db) && db.Trim() == old) step.Parameters["Datenbank"] = v;
+                if (step.Parameters.TryGetValue("Datenbank", out var db) && db.Trim() == old) step.Parameters["Datenbank"] = value2;
             editor.MarkStructureChanged();
             editor.Validate();
             OnPropertyChanged(nameof(Name));
@@ -388,9 +388,9 @@ public sealed class BusDatabaseRow(EditorViewModel editor, BusDatabaseDefinition
     /// <summary>Botschaften mit Signalen (Übersicht zum Nachschlagen der Namen für die Bausteine).</summary>
     public IReadOnlyList<string> Overview
         => Parsed is { } db
-            ? db.Messages.Select(m =>
-                $"{m.Name} (0x{m.Id:X}{(m.Extended ? db.IsJ1939 ? $", PGN 0x{m.Pgn:X4}" : ", 29 Bit" : "")}, {m.Length} Bytes{(m.CycleMs is { } c ? $", {c} ms" : "")}{(db.Format == BusDatabaseFormat.Ldf ? ", " + m.Sender : "")}): "
-                + string.Join(", ", m.Signals.Select(s => string.IsNullOrEmpty(s.Unit) ? s.Name : $"{s.Name} [{s.Unit}]"))).ToList()
+            ? db.Messages.Select(busMessage =>
+                $"{busMessage.Name} (0x{busMessage.Id:X}{(busMessage.Extended ? db.IsJ1939 ? $", PGN 0x{busMessage.Pgn:X4}" : ", 29 Bit" : "")}, {busMessage.Length} Bytes{(busMessage.CycleMs is { } count ? $", {count} ms" : "")}{(db.Format == BusDatabaseFormat.Ldf ? ", " + busMessage.Sender : "")}): "
+                + string.Join(", ", busMessage.Signals.Select(busSignal => string.IsNullOrEmpty(busSignal.Unit) ? busSignal.Name : $"{busSignal.Name} [{busSignal.Unit}]"))).ToList()
             : [];
 }
 
@@ -403,7 +403,7 @@ public sealed class CommSimulationRow(EditorViewModel editor, Persistence.Simula
     {
         if (next == _sim) return;
         var list = editor.Project.SimulationComm;
-        var index = list.FindIndex(c => c.Name == _sim.Name);
+        var index = list.FindIndex(communication => communication.Name == _sim.Name);
         if (index >= 0) list[index] = next;
         _sim = next;
         editor.MarkChanged();
@@ -415,13 +415,13 @@ public sealed class CommSimulationRow(EditorViewModel editor, Persistence.Simula
         get => _sim.Name;
         set
         {
-            var v = (value ?? "").Trim();
-            if (v.Length == 0 || v.Contains(' ') || editor.Project.SimulationComm.Any(c => c.Name == v && !ReferenceEquals(c, _sim)))
+            var value2 = (value ?? "").Trim();
+            if (value2.Length == 0 || value2.Contains(' ') || editor.Project.SimulationComm.Any(communication => communication.Name == value2 && !ReferenceEquals(communication, _sim)))
             {
                 OnPropertyChanged(nameof(Name)); // abgelehnte Eingabe zurücksetzen
                 return;
             }
-            Replace(_sim with { Name = v });
+            Replace(_sim with { Name = value2 });
         }
     }
 
@@ -476,9 +476,9 @@ public sealed class VariableListViewModel : ObservableObject
     {
         _group = group;
         _changed = changed;
-        foreach (var v in group.Variables) Rows.Add(new VariableRowViewModel(v, Apply));
+        foreach (var variable in group.Variables) Rows.Add(new VariableRowViewModel(variable, Apply));
         AddCommand = new RelayCommand(Add);
-        RemoveCommand = new RelayCommand(p => Remove(p as VariableRowViewModel));
+        RemoveCommand = new RelayCommand(parameter => Remove(parameter as VariableRowViewModel));
     }
 
     public ObservableCollection<VariableRowViewModel> Rows { get; } = [];
@@ -487,9 +487,9 @@ public sealed class VariableListViewModel : ObservableObject
 
     public void Add()
     {
-        var n = 1;
-        while (Rows.Any(r => r.Name == $"Variable{n}")) n++;
-        Rows.Add(new VariableRowViewModel(new VariableDefinition($"Variable{n}", VarType.Double, 0.0), Apply));
+        var index = 1;
+        while (Rows.Any(variableRowViewModel => variableRowViewModel.Name == $"Variable{index}")) index++;
+        Rows.Add(new VariableRowViewModel(new VariableDefinition($"Variable{index}", VarType.Double, 0.0), Apply));
         Apply();
     }
 
@@ -502,10 +502,10 @@ public sealed class VariableListViewModel : ObservableObject
 
     private void Apply()
     {
-        var defs = Rows.Select(r => r.ToDefinition()).ToList();
-        foreach (var dup in Rows.GroupBy(r => r.Name).Where(g => g.Count() > 1).SelectMany(g => g))
+        var defs = Rows.Select(variableRowViewModel => variableRowViewModel.ToDefinition()).ToList();
+        foreach (var dup in Rows.GroupBy(variableRowViewModel => variableRowViewModel.Name).Where(group => group.Count() > 1).SelectMany(group => group))
             dup.Error = "Name doppelt";
-        if (defs.Any(d => d is null) || Rows.Any(r => r.Error is not null)) return;
+        if (defs.Any(variable => variable is null) || Rows.Any(variableRowViewModel => variableRowViewModel.Error is not null)) return;
         _group.Variables.Clear();
         _group.Variables.AddRange(defs!);
         _changed();
@@ -787,7 +787,7 @@ public sealed class ParameterRowViewModel : ObservableObject
 
     public string Value
     {
-        get => _owner.Step.Parameters.TryGetValue(Descriptor.Name, out var v) ? v : Descriptor.Default;
+        get => _owner.Step.Parameters.TryGetValue(Descriptor.Name, out var value) ? value : Descriptor.Default;
         set
         {
             if (Value == value) return;
@@ -817,13 +817,13 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     {
         _editor = editor;
         _node = node;
-        if (Step.BlockType is { } t && editor.Catalog.TryGet(t, out var d))
+        if (Step.BlockType is { } text && editor.Catalog.TryGet(text, out var block))
         {
-            Block = d;
-            foreach (var p in d.Parameters)
+            Block = block;
+            foreach (var parameter in block.Parameters)
             {
-                var hidden = t is BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock && p.Name == "Baustein";
-                Parameters.Add(new ParameterRowViewModel(this, p) { IsHidden = hidden });
+                var hidden = text is BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock && parameter.Name == "Baustein";
+                Parameters.Add(new ParameterRowViewModel(this, parameter) { IsHidden = hidden });
             }
         }
         if (Step.BlockType == BlockCatalog.Code) CodeTools = new CodeToolsViewModel(editor, node);

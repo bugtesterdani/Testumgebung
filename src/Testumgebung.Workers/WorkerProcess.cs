@@ -56,12 +56,12 @@ public sealed class WorkerProcess : IDisposable
             StandardErrorEncoding = new UTF8Encoding(false),
             StandardInputEncoding = new UTF8Encoding(false),
         };
-        foreach (var a in arguments) info.ArgumentList.Add(a);
+        foreach (var argument in arguments) info.ArgumentList.Add(argument);
         info.Environment["PYTHONIOENCODING"] = "utf-8";
         info.Environment["PYTHONUNBUFFERED"] = "1";
         info.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
         if (environment is not null)
-            foreach (var (k, v) in environment) info.Environment[k] = v;
+            foreach (var (key, value) in environment) info.Environment[key] = value;
 
         var process = new Process { StartInfo = info, EnableRaisingEvents = true };
         var worker = new WorkerProcess(process);
@@ -69,12 +69,12 @@ public sealed class WorkerProcess : IDisposable
         if (!process.Start()) throw new InvalidOperationException($"Worker '{fileName}' konnte nicht gestartet werden.");
         process.StandardInput.AutoFlush = true;
         _ = Task.Run(worker.ReadLoopAsync);
-        process.ErrorDataReceived += (_, e) =>
+        process.ErrorDataReceived += (_, eventArgs) =>
         {
-            if (e.Data is null) return;
+            if (eventArgs.Data is null) return;
             lock (worker._stderr)
             {
-                if (worker._stderr.Length < 20_000) worker._stderr.AppendLine(e.Data);
+                if (worker._stderr.Length < 20_000) worker._stderr.AppendLine(eventArgs.Data);
             }
         };
         process.BeginErrorReadLine();

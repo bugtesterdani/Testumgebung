@@ -54,29 +54,29 @@ public static class CurveGenerator
         if (s.ChannelIds.Count == 0) throw new CurveGeneratorException("Mindestens ein Kanal erforderlich.");
         if (s.ChannelIds.Distinct().Count() != s.ChannelIds.Count) throw new CurveGeneratorException("Kanalnamen müssen eindeutig sein.");
         if (s.SampleRate <= 0) throw new CurveGeneratorException("Abtastrate muss > 0 sein.");
-        var duration = s.Kind == GeneratorKind.Step ? ParseSteps(s.Steps).Sum(x => x.Duration) : s.Duration;
+        var duration = s.Kind == GeneratorKind.Step ? ParseSteps(s.Steps).Sum(entry => entry.Duration) : s.Duration;
         if (duration <= 0) throw new CurveGeneratorException("Dauer muss > 0 sein.");
         var count = (int)Math.Round(duration * s.SampleRate);
         if (count < 1 || count > MaxSamples) throw new CurveGeneratorException($"Samplezahl {count} außerhalb 1 … {MaxSamples}.");
 
         var channels = new List<CurveChannel>();
-        for (var c = 0; c < s.ChannelIds.Count; c++)
+        for (var columnIndex = 0; columnIndex < s.ChannelIds.Count; columnIndex++)
         {
-            Func<double, double> f = s.Kind switch
+            Func<double, double> callback = s.Kind switch
             {
-                GeneratorKind.Sine => Sine(s, c),
-                GeneratorKind.Ramp => t => s.RampStart + (s.RampEnd - s.RampStart) * Math.Clamp(t / duration, 0, 1),
+                GeneratorKind.Sine => Sine(s, columnIndex),
+                GeneratorKind.Ramp => time => s.RampStart + (s.RampEnd - s.RampStart) * Math.Clamp(time / duration, 0, 1),
                 GeneratorKind.Step => StepFunction(ParseSteps(s.Steps)),
-                _ => Formula(s, c),
+                _ => Formula(s, columnIndex),
             };
             var data = new double[count];
-            for (var i = 0; i < count; i++)
+            for (var index = 0; index < count; index++)
             {
-                var v = f(i / s.SampleRate);
-                if (!double.IsFinite(v)) throw new CurveGeneratorException($"Kanal {s.ChannelIds[c]}: Wert bei t = {i / s.SampleRate:0.######} s ist nicht endlich.");
-                data[i] = v;
+                var value = callback(index / s.SampleRate);
+                if (!double.IsFinite(value)) throw new CurveGeneratorException($"Kanal {s.ChannelIds[columnIndex]}: Wert bei t = {index / s.SampleRate:0.######} s ist nicht endlich.");
+                data[index] = value;
             }
-            channels.Add(new CurveChannel(s.ChannelIds[c], s.Unit, data));
+            channels.Add(new CurveChannel(s.ChannelIds[columnIndex], s.Unit, data));
         }
         return new CurveDefinition
         {
@@ -95,7 +95,7 @@ public static class CurveGenerator
 
     public static string Describe(GeneratorSettings s)
     {
-        string N(double v) => v.ToString("0.######", CultureInfo.InvariantCulture);
+        string N(double value) => value.ToString("0.######", CultureInfo.InvariantCulture);
         var common = $"{string.Join("/", s.ChannelIds)} [{s.Unit}], {N(s.SampleRate)} Hz";
         return s.Kind switch
         {
@@ -106,18 +106,18 @@ public static class CurveGenerator
         };
     }
 
-    private static Func<double, double> Sine(GeneratorSettings s, int c)
+    private static Func<double, double> Sine(GeneratorSettings generatorSettings, int channelIndex)
     {
-        var phase = (c < s.Phases.Count ? s.Phases[c] : 0) * Math.PI / 180;
-        return t => s.Offset + s.Amplitude * Math.Sin(2 * Math.PI * s.Frequency * t - phase);
+        var phase = (channelIndex < generatorSettings.Phases.Count ? generatorSettings.Phases[channelIndex] : 0) * Math.PI / 180;
+        return time => generatorSettings.Offset + generatorSettings.Amplitude * Math.Sin(2 * Math.PI * generatorSettings.Frequency * time - phase);
     }
 
-    private static Func<double, double> Formula(GeneratorSettings s, int c)
+    private static Func<double, double> Formula(GeneratorSettings generatorSettings, int channelIndex)
     {
-        if (s.Formulas.Count == 0) throw new CurveGeneratorException("Formel fehlt.");
-        var text = c < s.Formulas.Count ? s.Formulas[c] : s.Formulas[0];
+        if (generatorSettings.Formulas.Count == 0) throw new CurveGeneratorException("Formel fehlt.");
+        var text = channelIndex < generatorSettings.Formulas.Count ? generatorSettings.Formulas[channelIndex] : generatorSettings.Formulas[0];
         try { return CurveFormula.Compile(text); }
-        catch (CurveFormulaException ex) { throw new CurveGeneratorException($"Kanal {s.ChannelIds[c]}: {ex.Message}"); }
+        catch (CurveFormulaException ex) { throw new CurveGeneratorException($"Kanal {generatorSettings.ChannelIds[channelIndex]}: {ex.Message}"); }
     }
 
     public static IReadOnlyList<(double Value, double Duration)> ParseSteps(string text)
@@ -126,10 +126,10 @@ public static class CurveGenerator
         foreach (var part in text.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
             var kv = part.Split(':', StringSplitOptions.TrimEntries);
-            if (kv.Length != 2 || !double.TryParse(kv[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var v)
-                || !double.TryParse(kv[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var d) || d <= 0)
+            if (kv.Length != 2 || !double.TryParse(kv[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+                || !double.TryParse(kv[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var number) || number <= 0)
                 throw new CurveGeneratorException($"Stufe '{part}' ungültig – Format „Wert:Dauer“, z. B. 230:0.03.");
-            list.Add((v, d));
+            list.Add((value, number));
         }
         if (list.Count == 0) throw new CurveGeneratorException("Mindestens eine Stufe angeben.");
         return list;
@@ -139,11 +139,11 @@ public static class CurveGenerator
     {
         var ends = new double[steps.Count];
         double acc = 0;
-        for (var i = 0; i < steps.Count; i++) ends[i] = acc += steps[i].Duration;
-        return t =>
+        for (var index = 0; index < steps.Count; index++) ends[index] = acc += steps[index].Duration;
+        return time =>
         {
-            for (var i = 0; i < ends.Length; i++)
-                if (t < ends[i] - 1e-12) return steps[i].Value;
+            for (var index2 = 0; index2 < ends.Length; index2++)
+                if (time < ends[index2] - 1e-12) return steps[index2].Value;
             return steps[^1].Value;
         };
     }
@@ -155,16 +155,16 @@ public static class CurveGenerator
 /// </summary>
 public static class CurveOps
 {
-    private static string N(double v) => v.ToString("0.######", CultureInfo.InvariantCulture);
+    private static string N(double value) => value.ToString("0.######", CultureInfo.InvariantCulture);
 
     /// <summary>Zuschnitt auf [von, bis) in Sekunden; die Zeitbasis beginnt danach wieder bei 0.</summary>
     public static CurveDefinition Trim(CurveDefinition c, double from, double to)
     {
         if (to <= from) throw new ArgumentException("Zuschnitt: Ende muss nach dem Anfang liegen.");
-        var idx = Enumerable.Range(0, c.Count).Where(i => c.TimeOf(i) >= from - 1e-12 && c.TimeOf(i) < to - 1e-12).ToArray();
+        var idx = Enumerable.Range(0, c.Count).Where(index => c.TimeOf(index) >= from - 1e-12 && c.TimeOf(index) < to - 1e-12).ToArray();
         if (idx.Length == 0) throw new ArgumentException("Zuschnitt enthält keine Samples.");
-        var channels = c.Channels.Select(ch => ch with { Samples = idx.Select(i => ch.Samples[i]).ToArray() }).ToList();
-        double[]? times = c.Times is null ? null : idx.Select(i => c.Times[i] - c.Times[idx[0]]).ToArray();
+        var channels = c.Channels.Select(ch => ch with { Samples = idx.Select(idx2 => ch.Samples[idx2]).ToArray() }).ToList();
+        double[]? times = c.Times is null ? null : idx.Select(idx2 => c.Times[idx2] - c.Times[idx[0]]).ToArray();
         return c.Derive($"Zuschnitt {N(from * 1000)}–{N(to * 1000)} ms", channels, times: times, keepTimes: false);
     }
 
@@ -173,7 +173,7 @@ public static class CurveOps
     {
         if (!double.IsFinite(factor)) throw new ArgumentException("Skalierung: Faktor ungültig.");
         if (channel is not null && c.Channels.All(ch => ch.Id != channel)) throw new ArgumentException($"Kanal {channel} unbekannt.");
-        var channels = c.Channels.Select(ch => channel is null || ch.Id == channel ? ch with { Samples = ch.Samples.Select(v => v * factor).ToArray() } : ch).ToList();
+        var channels = c.Channels.Select(ch => channel is null || ch.Id == channel ? ch with { Samples = ch.Samples.Select(sample => sample * factor).ToArray() } : ch).ToList();
         return c.Derive($"Skalierung ×{N(factor)}{(channel is null ? "" : $" ({channel})")}", channels);
     }
 
@@ -182,22 +182,22 @@ public static class CurveOps
     {
         if (c.Times is { } times)
         {
-            var shifted = times.Select(t => t + dt).ToArray();
-            var keep = Enumerable.Range(0, shifted.Length).Where(i => shifted[i] >= 0).ToArray();
+            var shifted = times.Select(time => time + dt).ToArray();
+            var keep = Enumerable.Range(0, shifted.Length).Where(index => shifted[index] >= 0).ToArray();
             if (keep.Length == 0) throw new ArgumentException("Zeitverschiebung entfernt alle Samples.");
             return c.Derive($"Zeitverschiebung {N(dt * 1000)} ms",
-                c.Channels.Select(ch => ch with { Samples = keep.Select(i => ch.Samples[i]).ToArray() }).ToList(),
-                times: keep.Select(i => shifted[i]).ToArray());
+                c.Channels.Select(ch => ch with { Samples = keep.Select(keep2 => ch.Samples[keep2]).ToArray() }).ToList(),
+                times: keep.Select(keep2 => shifted[keep2]).ToArray());
         }
-        var n = (int)Math.Round(dt * c.SampleRate);
-        if (n == 0) return c;
+        var count = (int)Math.Round(dt * c.SampleRate);
+        if (count == 0) return c;
         var channels = c.Channels.Select(ch =>
         {
-            if (n > 0) return ch with { Samples = Enumerable.Repeat(ch.Samples.Length == 0 ? 0 : ch.Samples[0], n).Concat(ch.Samples).ToArray() };
-            if (-n >= ch.Samples.Length) throw new ArgumentException("Zeitverschiebung entfernt alle Samples.");
-            return ch with { Samples = ch.Samples[-n..] };
+            if (count > 0) return ch with { Samples = Enumerable.Repeat(ch.Samples.Length == 0 ? 0 : ch.Samples[0], count).Concat(ch.Samples).ToArray() };
+            if (-count >= ch.Samples.Length) throw new ArgumentException("Zeitverschiebung entfernt alle Samples.");
+            return ch with { Samples = ch.Samples[-count..] };
         }).ToList();
-        return c.Derive($"Zeitverschiebung {N(n / c.SampleRate * 1000)} ms ({n} Samples)", channels);
+        return c.Derive($"Zeitverschiebung {N(count / c.SampleRate * 1000)} ms ({count} Samples)", channels);
     }
 
     /// <summary>Ausdrückliche Änderung der Abtastrate (lineare Interpolation); explizite Zeitpunkte werden zu fester Zeitbasis.</summary>
@@ -205,12 +205,12 @@ public static class CurveOps
     {
         if (newRate <= 0) throw new ArgumentException("Abtastrate muss > 0 sein.");
         var start = c.Times?[0] ?? 0;
-        var end = c.Times is { } t ? t[^1] : (c.Count - 1) / c.SampleRate;
+        var end = c.Times is { } samples ? samples[^1] : (c.Count - 1) / c.SampleRate;
         var count = (int)Math.Floor((end - start) * newRate + 1e-9) + 1;
         if (count > CurveGenerator.MaxSamples) throw new ArgumentException("Zu viele Samples.");
         var channels = c.Channels.Select((ch, ci) => ch with
         {
-            Samples = Enumerable.Range(0, count).Select(i => c.ValueAt(ci, start + i / newRate)).ToArray(),
+            Samples = Enumerable.Range(0, count).Select(index => c.ValueAt(ci, start + index / newRate)).ToArray(),
         }).ToList();
         return c.Derive($"Abtastrate ausdrücklich geändert: {N(c.SampleRate)} → {N(newRate)} Hz (linear interpoliert)", channels, newRate, keepTimes: false);
     }
@@ -218,9 +218,9 @@ public static class CurveOps
     /// <summary>Kanäle umbenennen bzw. auswählen (Kanalzuordnung): Quelle → Ziel.</summary>
     public static CurveDefinition MapChannels(CurveDefinition c, IReadOnlyList<(string Source, string Target)> mapping)
     {
-        var channels = mapping.Select(m => (c.Channels.FirstOrDefault(ch => ch.Id == m.Source) ?? throw new ArgumentException($"Kanal {m.Source} unbekannt.")) with { Id = m.Target }).ToList();
+        var channels = mapping.Select(entry => (c.Channels.FirstOrDefault(ch => ch.Id == entry.Source) ?? throw new ArgumentException($"Kanal {entry.Source} unbekannt.")) with { Id = entry.Target }).ToList();
         if (channels.Select(ch => ch.Id).Distinct().Count() != channels.Count) throw new ArgumentException("Zielkanäle müssen eindeutig sein.");
-        return c.Derive("Kanalzuordnung " + string.Join(", ", mapping.Select(m => $"{m.Source}→{m.Target}")), channels);
+        return c.Derive("Kanalzuordnung " + string.Join(", ", mapping.Select(entry => $"{entry.Source}→{entry.Target}")), channels);
     }
 
     /// <summary>Formale Prüfung: gleiche Längen, endliche Werte, steigende Zeitpunkte.</summary>
@@ -230,12 +230,12 @@ public static class CurveOps
         if (c.Channels.Count == 0) list.Add("Keine Kanäle.");
         if (c.Channels.Select(ch => ch.Samples.Length).Distinct().Count() > 1) list.Add("Kanäle haben unterschiedliche Längen.");
         if (c.Channels.Select(ch => ch.Id).Distinct().Count() != c.Channels.Count) list.Add("Kanal-IDs nicht eindeutig.");
-        foreach (var ch in c.Channels.Where(ch => ch.Samples.Any(v => !double.IsFinite(v)))) list.Add($"Kanal {ch.Id}: nicht endliche Werte.");
-        if (c.Times is { } t)
+        foreach (var ch in c.Channels.Where(ch => ch.Samples.Any(sample => !double.IsFinite(sample)))) list.Add($"Kanal {ch.Id}: nicht endliche Werte.");
+        if (c.Times is { } samples)
         {
-            if (t.Length != c.Count) list.Add("Anzahl Zeitpunkte passt nicht zu den Samples.");
-            for (var i = 1; i < t.Length; i++)
-                if (t[i] <= t[i - 1]) { list.Add($"Zeitpunkte nicht streng steigend (Zeile {i + 1})."); break; }
+            if (samples.Length != c.Count) list.Add("Anzahl Zeitpunkte passt nicht zu den Samples.");
+            for (var index = 1; index < samples.Length; index++)
+                if (samples[index] <= samples[index - 1]) { list.Add($"Zeitpunkte nicht streng steigend (Zeile {index + 1})."); break; }
         }
         else if (c.SampleRate <= 0) list.Add("Abtastrate fehlt.");
         return list;

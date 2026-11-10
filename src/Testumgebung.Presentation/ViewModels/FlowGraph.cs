@@ -26,15 +26,15 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
     public FlowGraph Build(IEnumerable<NodeViewModel> roots)
     {
         var all = roots.ToList();
-        var scene = Sequence(all.Where(n => n.Note is null).Select(BuildNode).ToList());
+        var scene = Sequence(all.Where(node => node.Note is null).Select(BuildNode).ToList());
         var width = scene.Width; var height = scene.Height;
         // Bibliothekskörper sind Definitionen, keine weiteren Programmschritte.
-        foreach (var definition in all.Where(n => n.Note is not null))
+        foreach (var definition in all.Where(node => node.Note is not null))
         {
             var body = BuildNode(definition);
-            var x = scene.Cards.Count == 0 ? 0 : width + LaneGap;
-            Shift(body, x, 0); scene.Cards.AddRange(body.Cards); scene.Links.AddRange(body.Links);
-            width = x + body.Width; height = Math.Max(height, body.Height);
+            var xValue = scene.Cards.Count == 0 ? 0 : width + LaneGap;
+            Shift(body, xValue, 0); scene.Cards.AddRange(body.Cards); scene.Links.AddRange(body.Links);
+            width = xValue + body.Width; height = Math.Max(height, body.Height);
         }
         return new(scene.Cards, scene.Links, width, height);
     }
@@ -44,7 +44,7 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
         { Height = CardHeight(node) };
         var result = new Fragment([card], [], card.Id, card.Id, CardWidth, card.Height);
         if (node.Group is not { } group) return result;
-        var children = node.Children.Where(c => !c.IsExit && !c.IsTemplateDecision).ToList();
+        var children = node.Children.Where(node2 => !node2.IsExit && !node2.IsTemplateDecision).ToList();
         var decision = node.Children.FirstOrDefault()?.IsTemplateDecision == true;
         // Empty phases are a single terminal, not an empty group plus a duplicate end marker.
         if (node.IsSection && children.Count == 0 && group.Repetition.Mode == RepeatMode.Once && group.ExitGroup is null) return result;
@@ -59,7 +59,7 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
         if (SimpleDecisionBranch(node))
             return result;
         result = FinishGroup(result, node, decision);
-        if (node.Children.FirstOrDefault(c => c.IsExit) is { } exit)
+        if (node.Children.FirstOrDefault(node2 => node2.IsExit) is { } exit)
             result = Append(result, BuildNode(exit), GraphLinkKind.Exit, "Exit / Aufräumen");
         return result;
     }
@@ -80,7 +80,7 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
         // Branch entry links are rooted at an invisible placeholder until the header exists.
         if (decision || kind == GraphLinkKind.Parallel)
         {
-            foreach (var link in links.Where(l => l.From == "@split").ToArray())
+            foreach (var link in links.Where(graphLink => graphLink.From == "@split").ToArray())
             { links.Remove(link); links.Add(link with { From = header.Last }); }
         }
         else links.Add(new(header.Last, body.First, kind, ""));
@@ -88,22 +88,22 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
     }
     private static Fragment Parallel(List<Fragment> branches, bool decision)
     {
-        var cards = new List<GraphCard>(); var links = new List<GraphLink>(); double x = 0;
-        for (int i = 0; i < branches.Count; i++)
+        var cards = new List<GraphCard>(); var links = new List<GraphLink>(); double xValue = 0;
+        for (int index = 0; index < branches.Count; index++)
         {
-            var branch = branches[i]; Shift(branch, x, 0);
+            var branch = branches[index]; Shift(branch, xValue, 0);
             cards.AddRange(branch.Cards); links.AddRange(branch.Links);
-            var kind = decision ? i == 0 ? GraphLinkKind.Then : GraphLinkKind.Else : GraphLinkKind.Parallel;
-            links.Add(new("@split", branch.First, kind, decision ? i == 0 ? "Dann" : "Sonst" : "Parallel"));
-            x += branch.Width + LaneGap;
+            var kind = decision ? index == 0 ? GraphLinkKind.Then : GraphLinkKind.Else : GraphLinkKind.Parallel;
+            links.Add(new("@split", branch.First, kind, decision ? index == 0 ? "Dann" : "Sonst" : "Parallel"));
+            xValue += branch.Width + LaneGap;
         }
-        return new(cards, links, branches[0].First, "@join", x - LaneGap, branches.Max(b => b.Height));
+        return new(cards, links, branches[0].First, "@join", xValue - LaneGap, branches.Max(fragment => fragment.Height));
     }
     private Fragment FinishGroup(Fragment body, NodeViewModel node, bool decision)
     {
         var join = new GraphCard("end:" + node.Id, node, true, node.Group!.Parallel ? "Auf alle Zweige warten" : decision ? "Zweige zusammenführen" : node.Name + " · Ende")
         { X = (body.Width - 230) / 2, Y = body.Height + Gap, Height = measuredHeights?.GetValueOrDefault("end:" + node.Id, 42) ?? 42 };
-        var outgoing = body.Cards.Where(c => !body.Links.Any(l => l.From == c.Id && l.Kind != GraphLinkKind.Repeat)).ToList();
+        var outgoing = body.Cards.Where(graphCard => !body.Links.Any(graphLink => graphLink.From == graphCard.Id && graphLink.Kind != GraphLinkKind.Repeat)).ToList();
         foreach (var last in outgoing) body.Links.Add(new(last.Id, join.Id, node.Group!.Parallel ? GraphLinkKind.Parallel : GraphLinkKind.Flow, ""));
         // A conditional group can skip its body; the branch line makes that path visible.
         if (HasBypass(node, decision))
@@ -136,16 +136,16 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
 
     private static Fragment ConditionalRow(List<Fragment> groups)
     {
-        var cards = new List<GraphCard>(); var links = new List<GraphLink>(); double x = 0;
+        var cards = new List<GraphCard>(); var links = new List<GraphLink>(); double xValue = 0;
         for (var index = 0; index < groups.Count; index++)
         {
-            var group = groups[index]; Shift(group, x, 0);
+            var group = groups[index]; Shift(group, xValue, 0);
             cards.AddRange(group.Cards); links.AddRange(group.Links);
             // These are ordinary fall-through links, not a parallel split or an inferred if/else.
             if (index > 0) links.Add(new(groups[index - 1].Last, group.First, GraphLinkKind.Flow, "Nächste Bedingung"));
-            x += group.Width + LaneGap;
+            xValue += group.Width + LaneGap;
         }
-        return new(cards, links, groups[0].First, groups[^1].Last, x - LaneGap, groups.Max(group => group.Height));
+        return new(cards, links, groups[0].First, groups[^1].Last, xValue - LaneGap, groups.Max(group => group.Height));
     }
 
     private static Fragment Sequence(List<Fragment> items)
@@ -161,8 +161,8 @@ public sealed class FlowGraphLayout(IReadOnlyDictionary<string, double>? measure
         Shift(first, (width - first.Width) / 2, 0); Shift(next, (width - next.Width) / 2, first.Height + Gap);
         return new([.. first.Cards, .. next.Cards], [.. first.Links, .. next.Links, new(first.Last, next.First, kind, label)], first.First, next.Last, width, first.Height + Gap + next.Height);
     }
-    private static void Shift(Fragment fragment, double x, double y)
-    { foreach (var card in fragment.Cards) { card.X += x; card.Y += y; } }
+    private static void Shift(Fragment fragment, double horizontalOffset, double verticalOffset)
+    { foreach (var card in fragment.Cards) { card.X += horizontalOffset; card.Y += verticalOffset; } }
 }
 
 /// <summary>Zoom um den Mauszeiger und freies Schieben ohne Änderung des Prüfprogramms.</summary>

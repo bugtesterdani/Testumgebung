@@ -75,8 +75,8 @@ public sealed class Expression
     public object Evaluate(IValueResolver resolver) => _root.Eval(resolver);
 
     public bool EvaluateBool(IValueResolver resolver)
-        => Evaluate(resolver) is bool b
-            ? b
+        => Evaluate(resolver) is bool flag
+            ? flag
             : throw new ExpressionException($"Bedingung '{Source}' liefert keinen bool-Wert.");
 
     public override string ToString() => Source;
@@ -94,69 +94,69 @@ public sealed class Expression
         public static List<Token> Tokenize(string s)
         {
             var list = new List<Token>();
-            var i = 0;
+            var index = 0;
             void ReadNumber()
             {
-                var start = i;
-                while (i < s.Length && (char.IsDigit(s[i]) || s[i] == '.')) i++;
-                if (i < s.Length && (s[i] == 'e' || s[i] == 'E'))
+                var start = index;
+                while (index < s.Length && (char.IsDigit(s[index]) || s[index] == '.')) index++;
+                if (index < s.Length && (s[index] == 'e' || s[index] == 'E'))
                 {
-                    i++;
-                    if (i < s.Length && (s[i] == '+' || s[i] == '-')) i++;
-                    while (i < s.Length && char.IsDigit(s[i])) i++;
+                    index++;
+                    if (index < s.Length && (s[index] == '+' || s[index] == '-')) index++;
+                    while (index < s.Length && char.IsDigit(s[index])) index++;
                 }
-                list.Add(new Token(T.Number, s[start..i], start));
+                list.Add(new Token(T.Number, s[start..index], start));
             }
 
             void ReadString()
             {
-                var start = i++;
+                var start = index++;
                 var sb = new StringBuilder();
-                while (i < s.Length && s[i] != '"')
+                while (index < s.Length && s[index] != '"')
                 {
-                    if (s[i] == '\\' && i + 1 < s.Length) { sb.Append(s[i + 1]); i += 2; }
-                    else sb.Append(s[i++]);
+                    if (s[index] == '\\' && index + 1 < s.Length) { sb.Append(s[index + 1]); index += 2; }
+                    else sb.Append(s[index++]);
                 }
-                if (i >= s.Length) throw new ExpressionException($"Nicht abgeschlossene Zeichenkette ab Position {start}.");
-                i++;
+                if (index >= s.Length) throw new ExpressionException($"Nicht abgeschlossene Zeichenkette ab Position {start}.");
+                index++;
                 list.Add(new Token(T.String, sb.ToString(), start));
             }
 
             void ReadName()
             {
-                var start = i;
-                while (i + 2 < s.Length && s[i] == '.' && s[i + 1] == '.' && s[i + 2] == '/') i += 3;
-                if (i >= s.Length || !(char.IsLetter(s[i]) || s[i] == '_'))
-                    throw new ExpressionException($"Variablenname erwartet an Position {i}.");
-                while (i < s.Length && (char.IsLetterOrDigit(s[i]) || s[i] == '_' || s[i] == '.')) i++;
-                list.Add(new Token(T.Ident, s[start..i], start));
+                var start = index;
+                while (index + 2 < s.Length && s[index] == '.' && s[index + 1] == '.' && s[index + 2] == '/') index += 3;
+                if (index >= s.Length || !(char.IsLetter(s[index]) || s[index] == '_'))
+                    throw new ExpressionException($"Variablenname erwartet an Position {index}.");
+                while (index < s.Length && (char.IsLetterOrDigit(s[index]) || s[index] == '_' || s[index] == '.')) index++;
+                list.Add(new Token(T.Ident, s[start..index], start));
             }
 
-            while (i < s.Length)
+            while (index < s.Length)
             {
-                var c = s[i];
-                if (char.IsWhiteSpace(c)) { i++; continue; }
-                if (char.IsDigit(c))
+                var character = s[index];
+                if (char.IsWhiteSpace(character)) { index++; continue; }
+                if (char.IsDigit(character))
                 {
                     ReadNumber();
                     continue;
                 }
-                if (c == '"')
+                if (character == '"')
                 {
                     ReadString();
                     continue;
                 }
-                if (char.IsLetter(c) || c == '_' || (c == '.' && i + 2 < s.Length && s[i + 1] == '.' && s[i + 2] == '/'))
+                if (char.IsLetter(character) || character == '_' || (character == '.' && index + 2 < s.Length && s[index + 1] == '.' && s[index + 2] == '/'))
                 {
                     ReadName();
                     continue;
                 }
-                if (c == '(') { list.Add(new Token(T.LParen, "(", i++)); continue; }
-                if (c == ')') { list.Add(new Token(T.RParen, ")", i++)); continue; }
-                var op = Ops.FirstOrDefault(o => string.CompareOrdinal(s, i, o, 0, o.Length) == 0);
-                if (op is null) throw new ExpressionException($"Unerwartetes Zeichen '{c}' an Position {i}.");
-                list.Add(new Token(T.Op, op, i));
-                i += op.Length;
+                if (character == '(') { list.Add(new Token(T.LParen, "(", index++)); continue; }
+                if (character == ')') { list.Add(new Token(T.RParen, ")", index++)); continue; }
+                var op = Ops.FirstOrDefault(option => string.CompareOrdinal(s, index, option, 0, option.Length) == 0);
+                if (op is null) throw new ExpressionException($"Unerwartetes Zeichen '{character}' an Position {index}.");
+                list.Add(new Token(T.Op, op, index));
+                index += op.Length;
             }
             list.Add(new Token(T.End, "", s.Length));
             return list;
@@ -214,28 +214,28 @@ public sealed class Expression
 
         private Node ParsePrimary()
         {
-            var t = Cur;
-            switch (t.Kind)
+            var cur = Cur;
+            switch (cur.Kind)
             {
                 case T.Number:
                     _p++;
-                    if (t.Text.Contains('.') || t.Text.Contains('e') || t.Text.Contains('E'))
-                        return double.TryParse(t.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)
-                            ? new Literal(d, t.Text)
-                            : throw new ExpressionException($"Ungültige Zahl '{t.Text}'.");
-                    return long.TryParse(t.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l)
-                        ? new Literal(l, t.Text)
-                        : throw new ExpressionException($"Ungültige Zahl '{t.Text}'.");
+                    if (cur.Text.Contains('.') || cur.Text.Contains('e') || cur.Text.Contains('E'))
+                        return double.TryParse(cur.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+                            ? new Literal(number, cur.Text)
+                            : throw new ExpressionException($"Ungültige Zahl '{cur.Text}'.");
+                    return long.TryParse(cur.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var length)
+                        ? new Literal(length, cur.Text)
+                        : throw new ExpressionException($"Ungültige Zahl '{cur.Text}'.");
                 case T.String:
                     _p++;
-                    return new Literal(t.Text);
+                    return new Literal(cur.Text);
                 case T.Ident:
                     _p++;
-                    return t.Text switch
+                    return cur.Text switch
                     {
                         "true" => new Literal(true),
                         "false" => new Literal(false),
-                        _ => new Variable(t.Text),
+                        _ => new Variable(cur.Text),
                     };
                 case T.LParen:
                     _p++;
@@ -244,9 +244,9 @@ public sealed class Expression
                     _p++;
                     return inner;
                 default:
-                    throw new ExpressionException(t.Kind == T.End
+                    throw new ExpressionException(cur.Kind == T.End
                         ? "Ausdruck unvollständig."
-                        : $"Unerwartetes '{t.Text}' an Position {t.Pos}.");
+                        : $"Unerwartetes '{cur.Text}' an Position {cur.Pos}.");
             }
         }
     }
@@ -283,13 +283,13 @@ public sealed class Expression
         public override ExpressionSyntax ToSyntax() => new(ExpressionSyntaxKind.Unary, op, operand.ToSyntax());
         public override object Eval(IValueResolver r)
         {
-            var v = operand.Eval(r);
-            return (op, v) switch
+            var value = operand.Eval(r);
+            return (op, v: value) switch
             {
-                ("!", bool b) => !b,
-                ("-", long l) => -l,
-                ("-", double d) => -d,
-                _ => throw new ExpressionException($"Operator '{op}' nicht anwendbar auf {Describe(v)}."),
+                ("!", bool flag) => !flag,
+                ("-", long integerValue) => -integerValue,
+                ("-", double number) => -number,
+                _ => throw new ExpressionException($"Operator '{op}' nicht anwendbar auf {Describe(value)}."),
             };
         }
 
@@ -311,58 +311,58 @@ public sealed class Expression
                 return right.Eval(r) as bool? ?? throw new ExpressionException($"'{op}' erwartet bool rechts.");
             }
 
-            var a = left.Eval(r);
-            var b = right.Eval(r);
+            var argument = left.Eval(r);
+            var block = right.Eval(r);
 
-            return EvaluateValues(op, a, b);
+            return EvaluateValues(op, argument, block);
         }
 
-        private static object EvaluateValues(string op, object a, object b)
+        private static object EvaluateValues(string op, object evaluateValue, object evaluateValue2)
         {
             if (op is "==" or "!=")
             {
-                return EvaluateEquality(op, a, b);
+                return EvaluateEquality(op, evaluateValue, evaluateValue2);
             }
 
             if (op is "<" or "<=" or ">" or ">=")
             {
-                return EvaluateComparison(op, a, b);
+                return EvaluateComparison(op, evaluateValue, evaluateValue2);
             }
 
-            return EvaluateArithmetic(op, a, b);
+            return EvaluateArithmetic(op, evaluateValue, evaluateValue2);
         }
 
-        private static object EvaluateArithmetic(string op, object a, object b)
+        private static object EvaluateArithmetic(string op, object leftOperand, object rightOperand)
         {
-            if (op == "+" && a is string s1 && b is string s2) return s1 + s2;
+            if (op == "+" && leftOperand is string s1 && rightOperand is string s2) return s1 + s2;
 
-            if (!IsNumber(a) || !IsNumber(b))
-                throw new ExpressionException($"Operator '{op}' nicht anwendbar auf {Describe(a)} und {Describe(b)}.");
+            if (!IsNumber(leftOperand) || !IsNumber(rightOperand))
+                throw new ExpressionException($"Operator '{op}' nicht anwendbar auf {Describe(leftOperand)} und {Describe(rightOperand)}.");
 
-            if (a is long la && b is long lb)
+            if (leftOperand is long la && rightOperand is long lb)
             {
                 return EvaluateIntegers(op, la, lb);
             }
 
-            return EvaluateFloatingPoint(op, ToDouble(a), ToDouble(b));
+            return EvaluateFloatingPoint(op, ToDouble(leftOperand), ToDouble(rightOperand));
         }
 
-        private static bool EvaluateComparison(string op, object a, object b)
+        private static bool EvaluateComparison(string op, object leftOperand, object rightOperand)
         {
             int cmp;
-            if (IsNumber(a) && IsNumber(b)) cmp = ToDouble(a).CompareTo(ToDouble(b));
-            else if (a is string sa && b is string sb) cmp = string.CompareOrdinal(sa, sb);
-            else if (a is DateTime da && b is DateTime db) cmp = da.CompareTo(db);
-            else throw new ExpressionException($"Vergleich '{op}' zwischen {Describe(a)} und {Describe(b)} nicht erlaubt.");
+            if (IsNumber(leftOperand) && IsNumber(rightOperand)) cmp = ToDouble(leftOperand).CompareTo(ToDouble(rightOperand));
+            else if (leftOperand is string sa && rightOperand is string sb) cmp = string.CompareOrdinal(sa, sb);
+            else if (leftOperand is DateTime da && rightOperand is DateTime db) cmp = da.CompareTo(db);
+            else throw new ExpressionException($"Vergleich '{op}' zwischen {Describe(leftOperand)} und {Describe(rightOperand)} nicht erlaubt.");
             return op switch { "<" => cmp < 0, "<=" => cmp <= 0, ">" => cmp > 0, _ => cmp >= 0 };
         }
 
-        private static bool EvaluateEquality(string op, object a, object b)
+        private static bool EvaluateEquality(string op, object leftOperand, object rightOperand)
         {
             bool eq;
-            if (IsNumber(a) && IsNumber(b)) eq = ToDouble(a) == ToDouble(b);
-            else if (a.GetType() == b.GetType()) eq = a.Equals(b);
-            else throw new ExpressionException($"Vergleich '{op}' zwischen {Describe(a)} und {Describe(b)} nicht erlaubt.");
+            if (IsNumber(leftOperand) && IsNumber(rightOperand)) eq = ToDouble(leftOperand) == ToDouble(rightOperand);
+            else if (leftOperand.GetType() == rightOperand.GetType()) eq = leftOperand.Equals(rightOperand);
+            else throw new ExpressionException($"Vergleich '{op}' zwischen {Describe(leftOperand)} und {Describe(rightOperand)} nicht erlaubt.");
             return op == "==" ? eq : !eq;
         }
 
@@ -377,28 +377,28 @@ public sealed class Expression
                 _ => throw new ExpressionException($"Unbekannter Operator '{op}'."),
             };
 
-        private static object EvaluateFloatingPoint(string op, double x, double y)
+        private static object EvaluateFloatingPoint(string op, double leftOperand, double rightOperand)
             => op switch
             {
-                "+" => x + y,
-                "-" => x - y,
-                "*" => x * y,
-                "/" => x / y,
-                "%" => x % y,
+                "+" => leftOperand + rightOperand,
+                "-" => leftOperand - rightOperand,
+                "*" => leftOperand * rightOperand,
+                "/" => leftOperand / rightOperand,
+                "%" => leftOperand % rightOperand,
                 _ => throw new ExpressionException($"Unbekannter Operator '{op}'."),
             };
     }
 
-    private static object Normalize(object v) => v switch
+    private static object Normalize(object value) => value switch
     {
-        int i => (long)i,
-        float f => (double)f,
-        _ => v,
+        int index => (long)index,
+        float floatingPointValue => (double)floatingPointValue,
+        _ => value,
     };
 
-    private static bool IsNumber(object v) => v is long or double;
+    private static bool IsNumber(object value) => value is long or double;
 
-    private static double ToDouble(object v) => v is long l ? l : (double)v;
+    private static double ToDouble(object value) => value is long integerValue ? integerValue : (double)value;
 
-    private static string Describe(object v) => $"{TypedValue.TypeOf(v)?.ToString() ?? v.GetType().Name} ({TypedValue.Format(v)})";
+    private static string Describe(object value) => $"{TypedValue.TypeOf(value)?.ToString() ?? value.GetType().Name} ({TypedValue.Format(value)})";
 }

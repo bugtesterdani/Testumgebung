@@ -95,7 +95,7 @@ internal sealed class MsalIdentityProvider : IIdentityProvider
         _account = result.Account;
         var name = result.ClaimsPrincipal?.FindFirst("name")?.Value ?? result.Account.Username;
         // App-Rollen (zentrale Rechte, Abschnitt 15): Claim „roles“ des ID-Tokens
-        var roles = result.ClaimsPrincipal?.FindAll("roles").Select(c => c.Value).ToList() ?? [];
+        var roles = result.ClaimsPrincipal?.FindAll("roles").Select(claim => claim.Value).ToList() ?? [];
         return new UserIdentity(result.Account.Username, name, "Microsoft Entra ID", IsConfirmed: true, result.TenantId, result.UniqueId, roles);
     }
 

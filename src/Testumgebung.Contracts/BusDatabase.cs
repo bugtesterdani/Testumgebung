@@ -69,10 +69,10 @@ public sealed class BusSignal
     /// <summary>Wert aus Text: Zahl (physikalisch) oder Eintrag der Wertetabelle.</summary>
     public double ParseValue(string text)
     {
-        var t = text.Trim().Trim('"');
-        if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)) return d;
+        var text2 = text.Trim().Trim('"');
+        if (double.TryParse(text2, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)) return number;
         foreach (var (raw, label) in Values)
-            if (string.Equals(label, t, StringComparison.OrdinalIgnoreCase)) return raw * Coding.Factor + Coding.Offset;
+            if (string.Equals(label, text2, StringComparison.OrdinalIgnoreCase)) return raw * Coding.Factor + Coding.Offset;
         throw new FormatException($"Signal „{Name}“: „{text}“ ist weder Zahl noch Eintrag der Wertetabelle ({string.Join(", ", Values.Values)}).");
     }
 
@@ -117,36 +117,36 @@ public sealed class BusMessage
     /// <summary>J1939-Parametergruppe (aus der ID ohne Priorität, Zieladresse und Quelladresse).</summary>
     public uint Pgn => J1939.PgnOf(Id);
 
-    public BusSignal? Multiplexer => Signals.FirstOrDefault(s => s.IsMultiplexer);
+    public BusSignal? Multiplexer => Signals.FirstOrDefault(busSignal => busSignal.IsMultiplexer);
 
     public BusSignal? Signal(string name)
-        => Signals.FirstOrDefault(s => s.Name == name) ?? Signals.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
+        => Signals.FirstOrDefault(busSignal => busSignal.Name == name) ?? Signals.FirstOrDefault(busSignal => string.Equals(busSignal.Name, name, StringComparison.OrdinalIgnoreCase));
 
     public BusSignal RequireSignal(string name)
-        => Signal(name) ?? throw new BusDatabaseException($"Signal „{name}“ fehlt in Botschaft „{Name}“ ({string.Join(", ", Signals.Select(s => s.Name))}).");
+        => Signal(name) ?? throw new BusDatabaseException($"Signal „{name}“ fehlt in Botschaft „{Name}“ ({string.Join(", ", Signals.Select(busSignal => busSignal.Name))}).");
 
     /// <summary>Signal gilt in diesen Daten (ohne Multiplex oder mit passendem Multiplexerwert).</summary>
     public bool IsActive(BusSignal signal, ReadOnlySpan<byte> data)
-        => signal.MuxValue is not { } mux || Multiplexer is not { } m || m.Coding.Raw(data) == mux;
+        => signal.MuxValue is not { } mux || Multiplexer is not { } busSignal || busSignal.Coding.Raw(data) == mux;
 
     /// <summary>Alle gültigen Signale mit Wert und Text der Wertetabelle.</summary>
     public IEnumerable<(BusSignal Signal, double Value, string? Text)> Decode(byte[] data)
     {
-        foreach (var s in Signals)
+        foreach (var busSignal in Signals)
         {
-            if (!IsActive(s, data)) continue;
-            double v;
-            string? t;
+            if (!IsActive(busSignal, data)) continue;
+            double value;
+            string? text;
             try
             {
-                v = s.Physical(data);
-                t = s.Describe(data);
+                value = busSignal.Physical(data);
+                text = busSignal.Describe(data);
             }
             catch (ArgumentException)
             {
                 continue; // kürzerer Rahmen als beschrieben
             }
-            yield return (s, v, t);
+            yield return (busSignal, value, text);
         }
     }
 
@@ -160,16 +160,16 @@ public sealed class BusMessage
         var given = values.ToDictionary(kv => RequireSignal(kv.Key), kv => kv.Value);
         var mux = Multiplexer;
         var muxValue = ResolveMultiplexer(given, mux);
-        foreach (var s in Signals)
+        foreach (var busSignal in Signals)
         {
-            if (s.MuxValue is { } own && own != (muxValue ?? (long)(mux?.InitialRaw ?? 0))) continue;
-            if (s.IsMultiplexer && muxValue is { } mval) s.Coding.WriteRaw(data, unchecked((ulong)mval));
-            else s.Coding.WriteRaw(data, s.InitialRaw);
+            if (busSignal.MuxValue is { } own && own != (muxValue ?? (long)(mux?.InitialRaw ?? 0))) continue;
+            if (busSignal.IsMultiplexer && muxValue is { } mval) busSignal.Coding.WriteRaw(data, unchecked((ulong)mval));
+            else busSignal.Coding.WriteRaw(data, busSignal.InitialRaw);
         }
-        foreach (var (s, v) in given)
+        foreach (var (busSignal2, value) in given)
         {
-            if (s.CheckRange(v) is { } error) throw new BusDatabaseException(error);
-            s.Coding.Write(data, v);
+            if (busSignal2.CheckRange(value) is { } error) throw new BusDatabaseException(error);
+            busSignal2.Coding.Write(data, value);
         }
         return data;
     }
@@ -177,11 +177,11 @@ public sealed class BusMessage
     private static long? ResolveMultiplexer(Dictionary<BusSignal, double> given, BusSignal? mux)
     {
         long? muxValue = mux is not null && given.TryGetValue(mux, out var mv) ? (long)Math.Round((mv - mux.Coding.Offset) / mux.Coding.Factor) : null;
-        foreach (var s in given.Keys.Where(s => s.MuxValue is not null))
+        foreach (var busSignal in given.Keys.Where(busSignal2 => busSignal2.MuxValue is not null))
         {
-            if (muxValue is { } m && m != s.MuxValue)
-                throw new BusDatabaseException($"Signal „{s.Name}“ gilt nur bei Multiplexer {s.MuxValue}, angegeben ist {m}.");
-            muxValue = s.MuxValue;
+            if (muxValue is { } number && number != busSignal.MuxValue)
+                throw new BusDatabaseException($"Signal „{busSignal.Name}“ gilt nur bei Multiplexer {busSignal.MuxValue}, angegeben ist {number}.");
+            muxValue = busSignal.MuxValue;
         }
         return muxValue;
     }
@@ -217,30 +217,30 @@ public sealed class BusDatabase
     public bool IsJ1939 => string.Equals(Protocol, "J1939", StringComparison.OrdinalIgnoreCase);
 
     public string Summary
-        => $"{Format.ToString().ToUpperInvariant()}: {Messages.Count} Botschaft(en), {Messages.Sum(m => m.Signals.Count)} Signal(e)"
-           + (Protocol is { } p ? $", {p}" : "") + (Bitrate is { } b ? $", {b / 1000.0:0.#} kbit/s" : "");
+        => $"{Format.ToString().ToUpperInvariant()}: {Messages.Count} Botschaft(en), {Messages.Sum(busMessage => busMessage.Signals.Count)} Signal(e)"
+           + (Protocol is { } path ? $", {path}" : "") + (Bitrate is { } bit ? $", {bit / 1000.0:0.#} kbit/s" : "");
 
     /// <summary>Botschaft über Namen oder ID („0x123“, „291“).</summary>
     public BusMessage? Message(string nameOrId)
     {
-        var t = nameOrId.Trim();
-        var byName = Messages.FirstOrDefault(m => m.Name == t) ?? Messages.FirstOrDefault(m => string.Equals(m.Name, t, StringComparison.OrdinalIgnoreCase));
+        var text = nameOrId.Trim();
+        var byName = Messages.FirstOrDefault(busMessage => busMessage.Name == text) ?? Messages.FirstOrDefault(busMessage => string.Equals(busMessage.Name, text, StringComparison.OrdinalIgnoreCase));
         if (byName is not null) return byName;
         uint id;
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? uint.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out id)
-            : uint.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
-        return ok ? Messages.FirstOrDefault(m => m.Id == id) : null;
+        var ok = text.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? uint.TryParse(text[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out id)
+            : uint.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
+        return ok ? Messages.FirstOrDefault(busMessage => busMessage.Id == id) : null;
     }
 
     public BusMessage RequireMessage(string nameOrId)
         => Message(nameOrId) ?? throw new BusDatabaseException($"Botschaft „{nameOrId}“ ist nicht in der Datenbank.");
 
     /// <summary>J1939: Botschaft zur Parametergruppe.</summary>
-    public BusMessage? ByPgn(uint pgn) => Messages.FirstOrDefault(m => m.Extended && m.Pgn == pgn);
+    public BusMessage? ByPgn(uint pgn) => Messages.FirstOrDefault(busMessage => busMessage.Extended && busMessage.Pgn == pgn);
 
     public BusFrameGroup? FrameGroup(string name)
-        => FrameGroups.FirstOrDefault(g => g.Name == name) ?? FrameGroups.FirstOrDefault(g => string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase));
+        => FrameGroups.FirstOrDefault(busFrameGroup => busFrameGroup.Name == name) ?? FrameGroups.FirstOrDefault(busFrameGroup => string.Equals(busFrameGroup.Name, name, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Signal über „Botschaft.Signal“ oder eindeutigen Signalnamen.</summary>
     public (BusMessage Message, BusSignal Signal) FindSignal(string reference)
@@ -248,15 +248,15 @@ public sealed class BusDatabase
         var dot = reference.IndexOf('.');
         if (dot > 0)
         {
-            var m = RequireMessage(reference[..dot]);
-            return (m, m.RequireSignal(reference[(dot + 1)..]));
+            var busMessage = RequireMessage(reference[..dot]);
+            return (busMessage, busMessage.RequireSignal(reference[(dot + 1)..]));
         }
-        var hits = Messages.SelectMany(m => m.Signals.Where(s => string.Equals(s.Name, reference, StringComparison.OrdinalIgnoreCase)).Select(s => (m, s))).ToList();
+        var hits = Messages.SelectMany(busMessage2 => busMessage2.Signals.Where(busSignal => string.Equals(busSignal.Name, reference, StringComparison.OrdinalIgnoreCase)).Select(busSignal => (m: busMessage2, s: busSignal))).ToList();
         return hits.Count switch
         {
             1 => hits[0],
             0 => throw new BusDatabaseException($"Signal „{reference}“ ist nicht in der Datenbank."),
-            _ => throw new BusDatabaseException($"Signal „{reference}“ kommt in mehreren Botschaften vor ({string.Join(", ", hits.Select(h => h.m.Name))}) – „Botschaft.Signal“ angeben."),
+            _ => throw new BusDatabaseException($"Signal „{reference}“ kommt in mehreren Botschaften vor ({string.Join(", ", hits.Select(entry => entry.m.Name))}) – „Botschaft.Signal“ angeben."),
         };
     }
 
@@ -286,36 +286,36 @@ public sealed class BusDatabase
     {
         var lines = text.Replace("\r\n", "\n").Split('\n');
         string[] multi = ["CM_", "VAL_", "BA_", "BA_DEF_", "BA_DEF_DEF_", "SIG_VALTYPE_", "VAL_TABLE_", "SIG_GROUP_", "BO_TX_BU_", "EV_", "ENVVAR_DATA_", "SIG_TYPE_REF_", "SG_MUL_VAL_"];
-        for (var i = 0; i < lines.Length; i++)
+        for (var index = 0; index < lines.Length; index++)
         {
-            var line = lines[i].Trim();
+            var line = lines[index].Trim();
             if (line.Length == 0 || line.StartsWith("//", StringComparison.Ordinal)) continue;
             var keyword = line.Split([' ', '\t', ':'], 2)[0];
             if (!multi.Contains(keyword) || keyword == line) // einzelnes Schlüsselwort: Liste unter NS_
             {
-                yield return (i + 1, line);
+                yield return (index + 1, line);
                 continue;
             }
-            var start = i;
+            var start = index;
             var sb = new StringBuilder(line);
-            while (!Complete(sb.ToString()) && i + 1 < lines.Length) sb.Append('\n').Append(lines[++i]);
+            while (!Complete(sb.ToString()) && index + 1 < lines.Length) sb.Append('\n').Append(lines[++index]);
             yield return (start + 1, sb.ToString());
         }
 
-        static bool Complete(string s)
+        static bool Complete(string text2)
         {
             var quoted = false;
-            for (var k = 0; k < s.Length; k++)
+            for (var previousIndex = 0; previousIndex < text2.Length; previousIndex++)
             {
-                if (s[k] == '\\' && quoted) { k++; continue; }
-                if (s[k] == '"') quoted = !quoted;
-                else if (s[k] == ';' && !quoted) return true;
+                if (text2[previousIndex] == '\\' && quoted) { previousIndex++; continue; }
+                if (text2[previousIndex] == '"') quoted = !quoted;
+                else if (text2[previousIndex] == ';' && !quoted) return true;
             }
             return false;
         }
     }
 
-    private static string Unescape(string s) => s.Replace("\\\"", "\"").Replace("\\\\", "\\");
+    private static string Unescape(string text) => text.Replace("\\\"", "\"").Replace("\\\\", "\\");
 
     private static BusDatabase ParseDbc(string text)
     {
@@ -327,8 +327,8 @@ public sealed class BusDatabase
         var frameFormats = new List<(uint Raw, int Format)>();
         void ReadDbcVersion(string statement)
         {
-            var q = statement.IndexOf('"');
-            db.Version = q >= 0 ? statement[(q + 1)..].TrimEnd().TrimEnd('"') : null;
+            var index2 = statement.IndexOf('"');
+            db.Version = index2 >= 0 ? statement[(index2 + 1)..].TrimEnd().TrimEnd('"') : null;
         }
 
         void ReadDbcNodes(string statement)
@@ -339,17 +339,17 @@ public sealed class BusDatabase
 
         void ReadDbcMessage(string statement)
         {
-            var m = DbcMessage.Match(statement);
-            if (!m.Success) throw new BusDatabaseException("BO_ unvollständig („BO_ ID Name: Länge Sender“).");
-            var raw = uint.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+            var match = DbcMessage.Match(statement);
+            if (!match.Success) throw new BusDatabaseException("BO_ unvollständig („BO_ ID Name: Länge Sender“).");
+            var raw = uint.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
             if (raw == 0xC0000000) // VECTOR__INDEPENDENT_SIG_MSG: Pseudo-Botschaft
             {
                 current = null;
                 return;
             }
             var extended = (raw & 0x80000000) != 0;
-            var length = int.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
-            current = new BusMessage(raw & 0x1FFFFFFF, extended, m.Groups[2].Value, length, m.Groups[4].Value) { Fd = length > 8 };
+            var length = int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+            current = new BusMessage(raw & 0x1FFFFFFF, extended, match.Groups[2].Value, length, match.Groups[4].Value) { Fd = length > 8 };
             db.Messages.Add(current);
             byId[raw] = current;
         }
@@ -357,18 +357,18 @@ public sealed class BusDatabase
         void ReadDbcSignal(string statement)
         {
             if (current is null) return; // Signal der Pseudo-Botschaft
-            var m = DbcSignal.Match(statement);
-            if (!m.Success) throw new BusDatabaseException("SG_ nicht lesbar („SG_ Name : Start|Länge@1+ (Faktor,Offset) [Min|Max] \"Einheit\" Empfänger“).");
-            var coding = new CanSignal(int.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture), int.Parse(m.Groups[4].Value, CultureInfo.InvariantCulture),
-                Motorola: m.Groups[5].Value == "0", Signed: m.Groups[6].Value == "-", Factor: Num(m.Groups[7].Value), Offset: Num(m.Groups[8].Value));
-            if (coding.Length is < 1 or > 64) throw new BusDatabaseException($"Signal {m.Groups[1].Value}: Länge {coding.Length} außerhalb 1–64.");
-            var signal = new BusSignal(m.Groups[1].Value, coding) { Unit = Unescape(m.Groups[11].Value) };
-            if (m.Groups[9].Value.Length > 0 && m.Groups[10].Value.Length > 0)
+            var match2 = DbcSignal.Match(statement);
+            if (!match2.Success) throw new BusDatabaseException("SG_ nicht lesbar („SG_ Name : Start|Länge@1+ (Faktor,Offset) [Min|Max] \"Einheit\" Empfänger“).");
+            var coding = new CanSignal(int.Parse(match2.Groups[3].Value, CultureInfo.InvariantCulture), int.Parse(match2.Groups[4].Value, CultureInfo.InvariantCulture),
+                Motorola: match2.Groups[5].Value == "0", Signed: match2.Groups[6].Value == "-", Factor: Num(match2.Groups[7].Value), Offset: Num(match2.Groups[8].Value));
+            if (coding.Length is < 1 or > 64) throw new BusDatabaseException($"Signal {match2.Groups[1].Value}: Länge {coding.Length} außerhalb 1–64.");
+            var signal = new BusSignal(match2.Groups[1].Value, coding) { Unit = Unescape(match2.Groups[11].Value) };
+            if (match2.Groups[9].Value.Length > 0 && match2.Groups[10].Value.Length > 0)
             {
-                var (lo, hi) = (Num(m.Groups[9].Value), Num(m.Groups[10].Value));
+                var (lo, hi) = (Num(match2.Groups[9].Value), Num(match2.Groups[10].Value));
                 if (lo != 0 || hi != 0) (signal.Minimum, signal.Maximum) = (lo, hi);
             }
-            var mux = m.Groups[2].Value;
+            var mux = match2.Groups[2].Value;
             if (mux == "M") signal.IsMultiplexer = true;
             else if (mux.StartsWith('m')) signal.MuxValue = long.Parse(mux[1..].TrimEnd('M'), CultureInfo.InvariantCulture);
             current.Signals.Add(signal);
@@ -376,10 +376,10 @@ public sealed class BusDatabase
 
         void ReadDbcComment(string statement)
         {
-            var q = statement.IndexOf('"');
-            if (q < 0) return;
-            var comment = Unescape(statement[(q + 1)..statement.LastIndexOf('"')]);
-            var head = statement[3..q].Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+            var index3 = statement.IndexOf('"');
+            if (index3 < 0) return;
+            var comment = Unescape(statement[(index3 + 1)..statement.LastIndexOf('"')]);
+            var head = statement[3..index3].Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
             if (head.Length >= 2 && head[0] == "BO_" && byId.TryGetValue(uint.Parse(head[1], CultureInfo.InvariantCulture), out var bo)) bo.Comment = comment;
             else if (head.Length >= 3 && head[0] == "SG_" && byId.TryGetValue(uint.Parse(head[1], CultureInfo.InvariantCulture), out var so) && so.Signal(head[2]) is { } sg) sg.Comment = comment;
         }
@@ -389,7 +389,7 @@ public sealed class BusDatabase
             var head = statement[4..].Split([' ', '\t'], 3, StringSplitOptions.RemoveEmptyEntries);
             if (head.Length < 3 || !uint.TryParse(head[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var raw)) return; // VAL_ zu Umgebungsvariablen
             if (!byId.TryGetValue(raw, out var vo) || vo.Signal(head[1]) is not { } vs) return;
-            foreach (Match v in Quoted.Matches(head[2])) vs.Values[long.Parse(v.Groups[1].Value, CultureInfo.InvariantCulture)] = Unescape(v.Groups[2].Value);
+            foreach (Match match3 in Quoted.Matches(head[2])) vs.Values[long.Parse(match3.Groups[1].Value, CultureInfo.InvariantCulture)] = Unescape(match3.Groups[2].Value);
         }
 
         void ReadDbcFloatType(string statement)
@@ -439,8 +439,8 @@ public sealed class BusDatabase
 
         void ReadDbcBitrate(string statement)
         {
-            var t = statement[3..].Trim().TrimStart(':').Trim();
-            if (t.Length > 0 && double.TryParse(t.Split([':', ' '], 2)[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var bs) && bs > 0)
+            var text2 = statement[3..].Trim().TrimStart(':').Trim();
+            if (text2.Length > 0 && double.TryParse(text2.Split([':', ' '], 2)[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var bs) && bs > 0)
                 db.Bitrate = (int)(bs < 10_000 ? bs * 1000 : bs);
         }
 
@@ -448,13 +448,13 @@ public sealed class BusDatabase
         {
             foreach (var (raw, name, type) in floatTypes)
             {
-                if (!byId.TryGetValue(raw, out var m) || m.Signal(name) is not { } s || type is not (1 or 2)) continue;
-                if (s.Coding.Length != (type == 1 ? 32 : 64))
+                if (!byId.TryGetValue(raw, out var busMessage) || busMessage.Signal(name) is not { } busSignal || type is not (1 or 2)) continue;
+                if (busSignal.Coding.Length != (type == 1 ? 32 : 64))
                 {
-                    db.Warnings.Add($"{m.Name}.{s.Name}: Gleitkommatyp passt nicht zur Länge {s.Coding.Length}.");
+                    db.Warnings.Add($"{busMessage.Name}.{busSignal.Name}: Gleitkommatyp passt nicht zur Länge {busSignal.Coding.Length}.");
                     continue;
                 }
-                s.Coding = s.Coding with { IsFloat = true, Signed = false };
+                busSignal.Coding = busSignal.Coding with { IsFloat = true, Signed = false };
             }
         }
 
@@ -462,16 +462,16 @@ public sealed class BusDatabase
         {
             ApplyFloatTypes();
             foreach (var (raw, name, value) in startValues)
-                if (byId.TryGetValue(raw, out var m) && m.Signal(name) is { } s && !s.Coding.IsFloat)
-                    s.InitialRaw = unchecked((ulong)(long)value);
+                if (byId.TryGetValue(raw, out var busMessage2) && busMessage2.Signal(name) is { } busSignal2 && !busSignal2.Coding.IsFloat)
+                    busSignal2.InitialRaw = unchecked((ulong)(long)value);
             foreach (var (raw, format) in frameFormats)
-                if (byId.TryGetValue(raw, out var m)) m.Fd |= format is 14 or 15;
+                if (byId.TryGetValue(raw, out var busMessage3)) busMessage3.Fd |= format is 14 or 15;
 
-            foreach (var m in db.Messages)
-                foreach (var s in m.Signals)
+            foreach (var busMessage4 in db.Messages)
+                foreach (var busSignal3 in busMessage4.Signals)
                 {
-                    var last = s.Coding.Motorola ? MotorolaLastByte(s.Coding) : (s.Coding.StartBit + s.Coding.Length - 1) / 8;
-                    if (last >= m.Length) db.Warnings.Add($"{m.Name}.{s.Name}: reicht über die {m.Length} Bytes der Botschaft hinaus.");
+                    var last = busSignal3.Coding.Motorola ? MotorolaLastByte(busSignal3.Coding) : (busSignal3.Coding.StartBit + busSignal3.Coding.Length - 1) / 8;
+                    if (last >= busMessage4.Length) db.Warnings.Add($"{busMessage4.Name}.{busSignal3.Name}: reicht über die {busMessage4.Length} Bytes der Botschaft hinaus.");
                 }
         }
 
@@ -527,10 +527,10 @@ public sealed class BusDatabase
         return db;
     }
 
-    private static int MotorolaLastByte(CanSignal s)
+    private static int MotorolaLastByte(CanSignal canSignal)
     {
-        var bit = s.StartBit;
-        for (var i = 1; i < s.Length; i++) bit = bit % 8 == 0 ? bit + 15 : bit - 1;
+        var bit = canSignal.StartBit;
+        for (var index = 1; index < canSignal.Length; index++) bit = bit % 8 == 0 ? bit + 15 : bit - 1;
         return bit / 8;
     }
 
@@ -542,39 +542,39 @@ public sealed class BusDatabase
     private static List<string> LdfTokens(string text)
     {
         var tokens = new List<string>();
-        var i = 0;
-        while (i < text.Length)
+        var index = 0;
+        while (index < text.Length)
         {
-            var c = text[i];
-            if (char.IsWhiteSpace(c)) { i++; continue; }
-            if (SkipLdfComment(text, ref i)) continue;
-            if (c == '"')
+            var character = text[index];
+            if (char.IsWhiteSpace(character)) { index++; continue; }
+            if (SkipLdfComment(text, ref index)) continue;
+            if (character == '"')
             {
-                var end = text.IndexOf('"', i + 1);
+                var end = text.IndexOf('"', index + 1);
                 if (end < 0) throw new BusDatabaseException("LDF: Anführungszeichen nicht geschlossen.");
-                tokens.Add(text[i..(end + 1)]);
-                i = end + 1;
+                tokens.Add(text[index..(end + 1)]);
+                index = end + 1;
                 continue;
             }
-            if ("{};,:=".Contains(c)) { tokens.Add(c.ToString()); i++; continue; }
-            var start = i;
-            while (i < text.Length && !char.IsWhiteSpace(text[i]) && !"{};,:=\"".Contains(text[i])) i++;
-            tokens.Add(text[start..i]);
+            if ("{};,:=".Contains(character)) { tokens.Add(character.ToString()); index++; continue; }
+            var start = index;
+            while (index < text.Length && !char.IsWhiteSpace(text[index]) && !"{};,:=\"".Contains(text[index])) index++;
+            tokens.Add(text[start..index]);
         }
         return tokens;
     }
 
-    private static bool SkipLdfComment(string text, ref int i)
+    private static bool SkipLdfComment(string text, ref int index)
     {
-        if (text[i] != '/' || i + 1 >= text.Length) return false;
-        if (text[i + 1] == '/')
+        if (text[index] != '/' || index + 1 >= text.Length) return false;
+        if (text[index + 1] == '/')
         {
-            while (i < text.Length && text[i] != '\n') i++;
+            while (index < text.Length && text[index] != '\n') index++;
             return true;
         }
-        if (text[i + 1] != '*') return false;
-        var end = text.IndexOf("*/", i + 2, StringComparison.Ordinal);
-        i = end < 0 ? text.Length : end + 2;
+        if (text[index + 1] != '*') return false;
+        var end = text.IndexOf("*/", index + 2, StringComparison.Ordinal);
+        index = end < 0 ? text.Length : end + 2;
         return true;
     }
 
@@ -584,8 +584,8 @@ public sealed class BusDatabase
         var head = new List<string>();
         while (pos < tokens.Count)
         {
-            var t = tokens[pos++];
-            switch (t)
+            var text = tokens[pos++];
+            switch (text)
             {
                 case ";":
                     if (head.Count > 0) items.Add(new LdfItem(head, null));
@@ -607,7 +607,7 @@ public sealed class BusDatabase
                     if (head.Count > 0) items.Add(new LdfItem(head, null));
                     return items;
                 default:
-                    head.Add(t);
+                    head.Add(text);
                     break;
             }
         }
@@ -622,22 +622,22 @@ public sealed class BusDatabase
         var depth = 1;
         while (pos < tokens.Count && depth > 0)
         {
-            var x = tokens[pos++];
-            if (x == "{") depth++;
-            else if (x == "}") depth--;
-            sb.Append(depth == 0 ? "}" : x);
+            var text = tokens[pos++];
+            if (text == "{") depth++;
+            else if (text == "}") depth--;
+            sb.Append(depth == 0 ? "}" : text);
         }
         return sb.ToString();
     }
 
-    private static List<string> Values(IEnumerable<string> head) => head.Where(t => t is not ("," or ":" or "=")).ToList();
+    private static List<string> Values(IEnumerable<string> head) => head.Where(head2 => head2 is not ("," or ":" or "=")).ToList();
 
     private static long LdfInt(string text)
     {
-        var t = text.Trim();
-        return t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? long.Parse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture)
-            : (long)double.Parse(t, NumberStyles.Float, CultureInfo.InvariantCulture);
+        var text2 = text.Trim();
+        return text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? long.Parse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+            : (long)double.Parse(text2, NumberStyles.Float, CultureInfo.InvariantCulture);
     }
 
     private static BusDatabase ParseLdf(string text)
@@ -655,43 +655,43 @@ public sealed class BusDatabase
                 var name = item.Head.FirstOrDefault() ?? "";
                 if (item.Body is null)
                 {
-                    var v = Values(item.Head.Skip(1));
-                    if (name == "LIN_protocol_version" && v.Count > 0) db.Version = v[0].Trim('"');
-                    if (name == "LIN_speed" && v.Count > 0)
+                    var items2 = Values(item.Head.Skip(1));
+                    if (name == "LIN_protocol_version" && items2.Count > 0) db.Version = items2[0].Trim('"');
+                    if (name == "LIN_speed" && items2.Count > 0)
                     {
-                        var speed = double.Parse(v[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                        db.Bitrate = (int)(v.Count > 1 && v[1].StartsWith("kbps", StringComparison.OrdinalIgnoreCase) || speed < 1000 ? speed * 1000 : speed);
+                        var speed = double.Parse(items2[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                        db.Bitrate = (int)(items2.Count > 1 && items2[1].StartsWith("kbps", StringComparison.OrdinalIgnoreCase) || speed < 1000 ? speed * 1000 : speed);
                     }
                     continue;
                 }
                 switch (name)
                 {
                     case "Nodes":
-                        foreach (var n in item.Body)
+                        foreach (var ldfItem in item.Body)
                         {
-                            var v = Values(n.Head);
-                            if (v.Count < 2) continue;
-                            if (v[0] == "Master") { db.MasterNode = v[1]; db.Nodes.Add(v[1]); }
-                            else if (v[0] == "Slaves") db.Nodes.AddRange(v.Skip(1));
+                            var items3 = Values(ldfItem.Head);
+                            if (items3.Count < 2) continue;
+                            if (items3[0] == "Master") { db.MasterNode = items3[1]; db.Nodes.Add(items3[1]); }
+                            else if (items3[0] == "Slaves") db.Nodes.AddRange(items3.Skip(1));
                         }
                         break;
                     case "Signals":
-                        foreach (var s in item.Body)
+                        foreach (var ldfItem2 in item.Body)
                         {
-                            var v = Values(s.Head);
-                            if (v.Count < 3) continue;
-                            var init = v[2].StartsWith('{') ? 0UL : unchecked((ulong)LdfInt(v[2]));
-                            signals[v[0]] = ((int)LdfInt(v[1]), init, v.Count > 3 ? v[3] : "");
+                            var items4 = Values(ldfItem2.Head);
+                            if (items4.Count < 3) continue;
+                            var init = items4[2].StartsWith('{') ? 0UL : unchecked((ulong)LdfInt(items4[2]));
+                            signals[items4[0]] = ((int)LdfInt(items4[1]), init, items4.Count > 3 ? items4[3] : "");
                         }
                         break;
                     case "Signal_encoding_types":
-                        foreach (var e in item.Body.Where(e => e.Body is not null)) encodings[e.Head[0]] = e.Body!;
+                        foreach (var ldfItem3 in item.Body.Where(ldfItem4 => ldfItem4.Body is not null)) encodings[ldfItem3.Head[0]] = ldfItem3.Body!;
                         break;
                     case "Signal_representation":
-                        foreach (var r in item.Body)
+                        foreach (var ldfItem4 in item.Body)
                         {
-                            var v = Values(r.Head);
-                            foreach (var s in v.Skip(1)) representation[s] = v[0];
+                            var items5 = Values(ldfItem4.Head);
+                            foreach (var skip in items5.Skip(1)) representation[skip] = items5[0];
                         }
                         break;
                 }
@@ -701,16 +701,16 @@ public sealed class BusDatabase
 
         void ReadLdfFrames()
         {
-            var frames = items.FirstOrDefault(i => i.Head.FirstOrDefault() == "Frames" && i.Body is not null);
+            var frames = items.FirstOrDefault(ldfItem5 => ldfItem5.Head.FirstOrDefault() == "Frames" && ldfItem5.Body is not null);
             if (frames is null) throw new BusDatabaseException("LDF: Abschnitt „Frames“ fehlt.");
-            foreach (var f in frames.Body!)
+            foreach (var ldfItem5 in frames.Body!)
             {
-                var v = Values(f.Head);
-                if (v.Count < 4) continue;
-                var id = (uint)LdfInt(v[1]);
-                if (id > 63) throw new BusDatabaseException($"Frame {v[0]}: ID {id} größer als 63.");
-                var message = new BusMessage(id, false, v[0], (int)LdfInt(v[3]), v[2]);
-                foreach (var entry in f.Body ?? [])
+                var items6 = Values(ldfItem5.Head);
+                if (items6.Count < 4) continue;
+                var id = (uint)LdfInt(items6[1]);
+                if (id > 63) throw new BusDatabaseException($"Frame {items6[0]}: ID {id} größer als 63.");
+                var message = new BusMessage(id, false, items6[0], (int)LdfInt(items6[3]), items6[2]);
+                foreach (var entry in ldfItem5.Body ?? [])
                 {
                     var sv = Values(entry.Head);
                     if (sv.Count < 2) continue;
@@ -728,29 +728,29 @@ public sealed class BusDatabase
         void ReadLdfFrameGroups()
         {
             // Ereignisgesteuerte Frames: ETF { Name, auflösende-ID, Frame1, Frame2, … }
-            foreach (var etf in items.Where(i => i.Head.FirstOrDefault() == "Event_triggered_frames" && i.Body is not null).SelectMany(i => i.Body!))
+            foreach (var etf in items.Where(ldfItem6 => ldfItem6.Head.FirstOrDefault() == "Event_triggered_frames" && ldfItem6.Body is not null).SelectMany(ldfItem6 => ldfItem6.Body!))
             {
-                var v = Values(etf.Head);
-                if (v.Count < 2) continue;
+                var items7 = Values(etf.Head);
+                if (items7.Count < 2) continue;
                 uint resolveId = 0;
-                var members = v.Skip(1).ToList();
+                var members = items7.Skip(1).ToList();
                 if (members.Count > 0 && (members[0].StartsWith("0x", StringComparison.OrdinalIgnoreCase) || members[0].All(char.IsDigit)))
                 {
                     resolveId = (uint)LdfInt(members[0]);
                     members = members.Skip(1).ToList();
                 }
-                db.FrameGroups.Add(new BusFrameGroup(v[0], LinFrameKind.EventTriggered, members) { Id = resolveId });
+                db.FrameGroups.Add(new BusFrameGroup(items7[0], LinFrameKind.EventTriggered, members) { Id = resolveId });
             }
             // Sporadische Frames: SF { Name: Frame1, Frame2 }
-            foreach (var sf in items.Where(i => i.Head.FirstOrDefault() == "Sporadic_frames" && i.Body is not null).SelectMany(i => i.Body!))
+            foreach (var sf in items.Where(ldfItem6 => ldfItem6.Head.FirstOrDefault() == "Sporadic_frames" && ldfItem6.Body is not null).SelectMany(ldfItem6 => ldfItem6.Body!))
             {
-                var v = Values(sf.Head);
-                if (v.Count < 2) continue;
-                db.FrameGroups.Add(new BusFrameGroup(v[0], LinFrameKind.Sporadic, v.Skip(1).ToList()));
+                var items8 = Values(sf.Head);
+                if (items8.Count < 2) continue;
+                db.FrameGroups.Add(new BusFrameGroup(items8[0], LinFrameKind.Sporadic, items8.Skip(1).ToList()));
             }
-            foreach (var g in db.FrameGroups)
-                foreach (var m in g.Members.Where(m => db.Messages.All(x => !string.Equals(x.Name, m, StringComparison.OrdinalIgnoreCase))))
-                    db.Warnings.Add($"{(g.Kind == LinFrameKind.EventTriggered ? "Ereignis-" : "Sporadischer ")}Frame {g.Name}: Einzelframe {m} nicht definiert.");
+            foreach (var busFrameGroup in db.FrameGroups)
+                foreach (var message2 in busFrameGroup.Members.Where(member => db.Messages.All(busMessage => !string.Equals(busMessage.Name, member, StringComparison.OrdinalIgnoreCase))))
+                    db.Warnings.Add($"{(busFrameGroup.Kind == LinFrameKind.EventTriggered ? "Ereignis-" : "Sporadischer ")}Frame {busFrameGroup.Name}: Einzelframe {message2} nicht definiert.");
         }
 
         try
@@ -772,18 +772,18 @@ public sealed class BusDatabase
         var physicalSet = false;
         foreach (var rule in rules)
         {
-            var v = Values(rule.Head);
-            if (v.Count == 0) continue;
-            if (v[0] == "logical_value" && v.Count >= 2)
-                signal.Values[LdfInt(v[1])] = v.Count >= 3 ? v[2].Trim('"') : v[1];
-            else if (v[0] == "physical_value" && v.Count >= 5 && !physicalSet)
+            var items = Values(rule.Head);
+            if (items.Count == 0) continue;
+            if (items[0] == "logical_value" && items.Count >= 2)
+                signal.Values[LdfInt(items[1])] = items.Count >= 3 ? items[2].Trim('"') : items[1];
+            else if (items[0] == "physical_value" && items.Count >= 5 && !physicalSet)
             {
-                var factor = double.Parse(v[3], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var offset = double.Parse(v[4], NumberStyles.Float, CultureInfo.InvariantCulture);
+                var factor = double.Parse(items[3], NumberStyles.Float, CultureInfo.InvariantCulture);
+                var offset = double.Parse(items[4], NumberStyles.Float, CultureInfo.InvariantCulture);
                 signal.Coding = signal.Coding with { Factor = factor, Offset = offset };
-                signal.Minimum = LdfInt(v[1]) * factor + offset;
-                signal.Maximum = LdfInt(v[2]) * factor + offset;
-                if (v.Count >= 6) signal.Unit = v[5].Trim('"');
+                signal.Minimum = LdfInt(items[1]) * factor + offset;
+                signal.Maximum = LdfInt(items[2]) * factor + offset;
+                if (items.Count >= 6) signal.Unit = items[5].Trim('"');
                 physicalSet = true;
             }
         }

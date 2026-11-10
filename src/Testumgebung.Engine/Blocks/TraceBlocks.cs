@@ -11,24 +11,24 @@ public static class TraceBlocks
     public static void Register(BlockCatalog catalog)
     {
         catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
-            RecordingParameters(false), p =>
+            RecordingParameters(false), parameters =>
             {
-                var settings = new TraceRecordingSettings(p);
+                var settings = new TraceRecordingSettings(parameters);
                 return new DelegateAction(ctx => { settings.Begin(ctx); return Task.FromResult(StepOutcome.Unrated(message: "Messwertaufzeichnung begonnen.")); });
             }));
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
             new[] { Name() }.Concat(ReaderParameters()).Append(new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression)).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
-            [Name(), ResultTarget()], p => new DelegateAction(ctx =>
+            [Name(), ResultTarget()], parameters => new DelegateAction(ctx =>
             {
-                ValidateTarget(ctx, p.Optional("ErgebnisZiel"));
-                var result = ctx.Recordings.Stop(ctx.ProcessOwner, p.Text("Aufnahme"), !ctx.IsOperatorAborted);
-                WriteDetails(ctx, p.Optional("ErgebnisZiel"), result);
+                ValidateTarget(ctx, parameters.Optional("ErgebnisZiel"));
+                var result = ctx.Recordings.Stop(ctx.ProcessOwner, parameters.Text("Aufnahme"), !ctx.IsOperatorAborted);
+                WriteDetails(ctx, parameters.Optional("ErgebnisZiel"), result);
                 return Task.FromResult(Outcome(result, !result.Finished));
             })));
         catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
             RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget()]).ToArray(),
-            p => new TimedTraceAction(new(p), new(p), p.Number("Intervall") ?? 0, p.Optional("ErgebnisZiel"))));
+            parameters => new TimedTraceAction(new(parameters), new(parameters), parameters.Number("Intervall") ?? 0, parameters.Optional("ErgebnisZiel"))));
     }
     private static ParameterDescriptor Name() => new("Aufnahme", "Aufnahmekennung", ParameterKind.Text, "Verlauf", Required: true);
     private static ParameterDescriptor ResultTarget() => new("ErgebnisZiel", "Auswertungsdetails → Stringvariable (JSON)", ParameterKind.Variable);
@@ -46,16 +46,16 @@ public static class TraceBlocks
      new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
      new("FailAbbruch", "Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)", ParameterKind.Bool, "false"),
      new("AbweichungProzent", "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10")];
-    private static IStepAction CreatePoint(BlockParameters p)
+    private static IStepAction CreatePoint(BlockParameters parameters)
     {
-        var reader = new TraceSampleReader(p); var time = p.Expr("Zeit"); var name = p.Text("Aufnahme");
+        var reader = new TraceSampleReader(parameters); var time = parameters.Expr("Zeit"); var name = parameters.Text("Aufnahme");
         return new DelegateAction(async ctx =>
         {
             if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
             try
             {
-                double? x = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(new ContextResolver(ctx)), "Zeit");
-                var preview = await reader.AppendAsync(ctx, name, x).ConfigureAwait(false);
+                double? xValue = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(new ContextResolver(ctx)), "Zeit");
+                var preview = await reader.AppendAsync(ctx, name, xValue).ConfigureAwait(false);
                 if (preview is not null)
                 {
                     if (preview.Finished) return Outcome(preview, true);

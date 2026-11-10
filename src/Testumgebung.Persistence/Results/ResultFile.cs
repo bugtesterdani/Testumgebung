@@ -69,29 +69,29 @@ public static class ResultFile
                 if (deflated.Length < raw.Length) (codec, stored) = (CodecDeflate, deflated);
             }
             var crc = Crc32.Compute(stored);
-            var h = new byte[ChunkHeaderSize];
-            Encoding.ASCII.GetBytes(type, h);
-            h[4] = codec;
-            BinaryPrimitives.WriteInt32LittleEndian(h.AsSpan(5), stored.Length);
-            BinaryPrimitives.WriteInt32LittleEndian(h.AsSpan(9), raw.Length);
-            BinaryPrimitives.WriteUInt32LittleEndian(h.AsSpan(13), crc);
-            stream.Write(h);
+            var bytes = new byte[ChunkHeaderSize];
+            Encoding.ASCII.GetBytes(type, bytes);
+            bytes[4] = codec;
+            BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(5), stored.Length);
+            BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(9), raw.Length);
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(13), crc);
+            stream.Write(bytes);
             stream.Write(stored);
             index.Add((type, pos, stored.Length, crc));
-            pos += h.Length + stored.Length;
+            pos += bytes.Length + stored.Length;
         }
 
         Chunk("HEAD", EncodeHeader(run));
         Chunk("STRU", EncodeStructure(run.Structure));
-        var nodeIndex = run.Structure.Select((n, i) => (n.Id, i)).ToDictionary(x => x.Id, x => x.i, StringComparer.Ordinal);
-        for (var i = 0; i < run.Events.Count || i == 0; i += EventsPerChunk)
-            Chunk("EVNT", EncodeEvents(run.Events.Skip(i).Take(EventsPerChunk).ToList(), nodeIndex));
-        foreach (var w in run.Waveforms)
+        var nodeIndex = run.Structure.Select((resultNode, index2) => (resultNode.Id, i: index2)).ToDictionary(entry => entry.Id, entry => entry.i, StringComparer.Ordinal);
+        for (var index2 = 0; index2 < run.Events.Count || index2 == 0; index2 += EventsPerChunk)
+            Chunk("EVNT", EncodeEvents(run.Events.Skip(index2).Take(EventsPerChunk).ToList(), nodeIndex));
+        foreach (var waveform in run.Waveforms)
         {
-            var parts = Math.Max(1, (w.Data.Count + SamplesPerChunk - 1) / SamplesPerChunk);
-            for (var p = 0; p < parts; p++) Chunk("WAVE", EncodeWavePart(w, p, parts));
+            var parts = Math.Max(1, (waveform.Data.Count + SamplesPerChunk - 1) / SamplesPerChunk);
+            for (var index3 = 0; index3 < parts; index3++) Chunk("WAVE", EncodeWavePart(waveform, index3, parts));
         }
-        foreach (var a in run.Attachments) Chunk("ATTA", EncodeAttachment(a));
+        foreach (var resultAttachment in run.Attachments) Chunk("ATTA", EncodeAttachment(resultAttachment));
 
         var indexOffset = pos;
         var iw = new MsgPackWriter().Array(index.Count);
@@ -114,46 +114,46 @@ public static class ResultFile
     private static byte[] Deflate(byte[] raw)
     {
         using var ms = new MemoryStream();
-        using (var z = new DeflateStream(ms, CompressionLevel.Optimal, leaveOpen: true)) z.Write(raw);
+        using (var deflateStream = new DeflateStream(ms, CompressionLevel.Optimal, leaveOpen: true)) deflateStream.Write(raw);
         return ms.ToArray();
     }
 
     private static byte[] Inflate(byte[] stored, int rawLength)
     {
         var raw = new byte[rawLength];
-        using var z = new DeflateStream(new MemoryStream(stored), CompressionMode.Decompress);
-        z.ReadExactly(raw);
+        using var deflateStream = new DeflateStream(new MemoryStream(stored), CompressionMode.Decompress);
+        deflateStream.ReadExactly(raw);
         return raw;
     }
 
-    private static byte[] EncodeHeader(ResultRun r)
+    private static byte[] EncodeHeader(ResultRun run)
     {
-        var w = new MsgPackWriter().Map(17);
-        w.Key("runId").Str(r.RunId);
-        w.Key("stationRunId").Str(r.StationRunId);
-        w.Key("station").Str(r.Station);
-        w.Key("dutId").Str(r.DutId);
-        w.Key("order").Str(r.Order);
-        w.Key("testName").Str(r.TestName);
-        w.Key("testVersion").Str(r.TestVersion);
-        w.Key("started").Int(r.Started.UtcTicks);
-        w.Key("ended").Int(r.Ended.UtcTicks);
-        w.Key("utcOffsetMin").Int((long)r.Started.Offset.TotalMinutes);
-        w.Key("rating").Str(RatingText(r.Rating));
-        w.Key("werror").Bool(r.OperatorAbort);
-        w.Key("status").Str(r.Status.ToString());
-        w.Key("development").Bool(r.IsDevelopmentRun);
-        w.Key("filteredFor").Str(r.FilteredFor);
-        w.Key("application").Str(r.Application);
-        w.Key("schema").Str("testumgebung.ergebnis/1");
-        return w.ToArray();
+        var msgPackWriter = new MsgPackWriter().Map(17);
+        msgPackWriter.Key("runId").Str(run.RunId);
+        msgPackWriter.Key("stationRunId").Str(run.StationRunId);
+        msgPackWriter.Key("station").Str(run.Station);
+        msgPackWriter.Key("dutId").Str(run.DutId);
+        msgPackWriter.Key("order").Str(run.Order);
+        msgPackWriter.Key("testName").Str(run.TestName);
+        msgPackWriter.Key("testVersion").Str(run.TestVersion);
+        msgPackWriter.Key("started").Int(run.Started.UtcTicks);
+        msgPackWriter.Key("ended").Int(run.Ended.UtcTicks);
+        msgPackWriter.Key("utcOffsetMin").Int((long)run.Started.Offset.TotalMinutes);
+        msgPackWriter.Key("rating").Str(RatingText(run.Rating));
+        msgPackWriter.Key("werror").Bool(run.OperatorAbort);
+        msgPackWriter.Key("status").Str(run.Status.ToString());
+        msgPackWriter.Key("development").Bool(run.IsDevelopmentRun);
+        msgPackWriter.Key("filteredFor").Str(run.FilteredFor);
+        msgPackWriter.Key("application").Str(run.Application);
+        msgPackWriter.Key("schema").Str("testumgebung.ergebnis/1");
+        return msgPackWriter.ToArray();
     }
 
     private static byte[] EncodeStructure(List<ResultNode> nodes)
     {
-        var w = new MsgPackWriter().Array(nodes.Count);
-        foreach (var n in nodes) w.Array(6).Str(n.Id).Str(n.ParentId).Str(n.Name).Str(n.Kind).Str(n.BlockType).Str(n.Description);
-        return w.ToArray();
+        var msgPackWriter = new MsgPackWriter().Array(nodes.Count);
+        foreach (var resultNode in nodes) msgPackWriter.Array(6).Str(resultNode.Id).Str(resultNode.ParentId).Str(resultNode.Name).Str(resultNode.Kind).Str(resultNode.BlockType).Str(resultNode.Description);
+        return msgPackWriter.ToArray();
     }
 
     private static byte[] EncodeEvents(List<ResultEvent> events, Dictionary<string, int> nodeIndex)
@@ -161,105 +161,105 @@ public static class ResultFile
         // Schema-Referenzen: Pfade und Einheiten einmalig je Chunk, Ereignisse verweisen per Index.
         var strings = new List<string>();
         var lookup = new Dictionary<string, int>(StringComparer.Ordinal);
-        int S(string? s)
+        int S(string? text)
         {
-            if (s is null) return -1;
-            if (!lookup.TryGetValue(s, out var i))
+            if (text is null) return -1;
+            if (!lookup.TryGetValue(text, out var index))
             {
-                i = strings.Count;
-                strings.Add(s);
-                lookup[s] = i;
+                index = strings.Count;
+                strings.Add(text);
+                lookup[text] = index;
             }
-            return i;
+            return index;
         }
 
         var body = new MsgPackWriter().Array(events.Count);
-        foreach (var e in events)
+        foreach (var resultEvent in events)
         {
             body.Array(15);
-            body.Int(e.Sequence).Int((int)e.Kind);
-            body.Int(e.NodeId is not null && nodeIndex.TryGetValue(e.NodeId, out var ni) ? ni : -1);
-            body.Str(e.NodeId is not null && !nodeIndex.ContainsKey(e.NodeId) ? e.NodeId : null);
-            body.Int(S(e.Path)).Int(e.Iteration).Int(e.Time.UtcTicks);
-            body.Int(e.Rating is { } r ? (int)r : -1);
-            WriteValue(body, e.Value);
-            body.Int(S(e.Unit)).OptDouble(e.LowLimit).OptDouble(e.HighLimit).Str(e.Message).Bool(e.Cancelled);
-            if (e.WaveformIds is { } ids)
+            body.Int(resultEvent.Sequence).Int((int)resultEvent.Kind);
+            body.Int(resultEvent.NodeId is not null && nodeIndex.TryGetValue(resultEvent.NodeId, out var ni) ? ni : -1);
+            body.Str(resultEvent.NodeId is not null && !nodeIndex.ContainsKey(resultEvent.NodeId) ? resultEvent.NodeId : null);
+            body.Int(S(resultEvent.Path)).Int(resultEvent.Iteration).Int(resultEvent.Time.UtcTicks);
+            body.Int(resultEvent.Rating is { } rating ? (int)rating : -1);
+            WriteValue(body, resultEvent.Value);
+            body.Int(S(resultEvent.Unit)).OptDouble(resultEvent.LowLimit).OptDouble(resultEvent.HighLimit).Str(resultEvent.Message).Bool(resultEvent.Cancelled);
+            if (resultEvent.WaveformIds is { } ids)
             {
-                body.Array(ids.Count + 1).Str(e.AttachmentId);
+                body.Array(ids.Count + 1).Str(resultEvent.AttachmentId);
                 foreach (var id in ids) body.Str(id);
             }
-            else body.Array(1).Str(e.AttachmentId);
+            else body.Array(1).Str(resultEvent.AttachmentId);
         }
-        var w = new MsgPackWriter().Map(2);
-        w.Key("strings").Array(strings.Count);
-        foreach (var s in strings) w.Str(s);
-        w.Key("events");
-        var bytes = w.ToArray();
+        var msgPackWriter = new MsgPackWriter().Map(2);
+        msgPackWriter.Key("strings").Array(strings.Count);
+        foreach (var text2 in strings) msgPackWriter.Str(text2);
+        msgPackWriter.Key("events");
+        var bytes = msgPackWriter.ToArray();
         return [.. bytes, .. body.ToArray()];
     }
 
     /// <summary>Typisierter Wert als [Typ, Wert]: n, b, i, d, s, t (DateTime UTC-Ticks).</summary>
-    private static void WriteValue(MsgPackWriter w, object? v)
+    private static void WriteValue(MsgPackWriter msgPackWriter, object? value)
     {
-        switch (v)
+        switch (value)
         {
-            case null: w.Nil(); break;
-            case bool b: w.Array(2).Str("b").Bool(b); break;
-            case long l: w.Array(2).Str("i").Int(l); break;
-            case double d: w.Array(2).Str("d").Double(d); break;
-            case string s: w.Array(2).Str("s").Str(s); break;
-            case DateTime dt: w.Array(2).Str("t").Int(dt.ToUniversalTime().Ticks); break;
-            default: w.Array(2).Str("s").Str(v.ToString()); break;
+            case null: msgPackWriter.Nil(); break;
+            case bool flag: msgPackWriter.Array(2).Str("b").Bool(flag); break;
+            case long integerValue: msgPackWriter.Array(2).Str("i").Int(integerValue); break;
+            case double number: msgPackWriter.Array(2).Str("d").Double(number); break;
+            case string text: msgPackWriter.Array(2).Str("s").Str(text); break;
+            case DateTime dt: msgPackWriter.Array(2).Str("t").Int(dt.ToUniversalTime().Ticks); break;
+            default: msgPackWriter.Array(2).Str("s").Str(value.ToString()); break;
         }
     }
 
-    private static object? ReadValue(object? v)
+    private static object? ReadValue(object? value)
     {
-        if (v is not object?[] { Length: 2 } a || a[0] is not string t) return null;
-        return t switch
+        if (value is not object?[] { Length: 2 } items || items[0] is not string text) return null;
+        return text switch
         {
-            "b" => a[1] is true,
-            "i" => a[1] is long l ? l : null,
-            "d" => a[1] switch { double d => d, long l => (double)l, _ => null },
-            "s" => a[1] as string,
-            "t" => a[1] is long ticks ? new DateTime(ticks, DateTimeKind.Utc) : null,
+            "b" => items[1] is true,
+            "i" => items[1] is long integerValue ? integerValue : null,
+            "d" => items[1] switch { double number => number, long integerValue2 => (double)integerValue2, _ => null },
+            "s" => items[1] as string,
+            "t" => items[1] is long ticks ? new DateTime(ticks, DateTimeKind.Utc) : null,
             _ => null,
         };
     }
 
     private static byte[] EncodeWavePart(ResultWaveform rw, int part, int parts)
     {
-        var w = rw.Data;
+        var data = rw.Data;
         var offset = part * SamplesPerChunk;
-        var count = Math.Min(SamplesPerChunk, w.Count - offset);
-        var m = new MsgPackWriter().Map(16);
-        m.Key("id").Str(rw.Id);
-        m.Key("event").Int(rw.EventSequence);
-        m.Key("node").Str(rw.NodeId);
-        m.Key("channel").Str(w.Channel);
-        m.Key("unit").Str(w.Unit);
-        m.Key("rate").Double(w.SampleRate);
-        m.Key("start").Int(w.Start.UtcTicks);
-        m.Key("quality").Str(w.Quality);
-        m.Key("sync").Str(w.SyncGroup);
-        m.Key("part").Int(part);
-        m.Key("parts").Int(parts);
-        m.Key("offset").Int(offset);
-        m.Key("total").Int(w.Count);
-        m.Key("sampleType").Str("f64le");
-        m.Key("samples").Bin(ToBytes(w.Values.ReadBlock(offset, Math.Max(0, count))));
-        m.Key("times");
-        if (w.TimeValues is { } times) m.Bin(ToBytes(times.ReadBlock(offset, Math.Max(0, count))));
-        else m.Nil();
-        return m.ToArray();
+        var count = Math.Min(SamplesPerChunk, data.Count - offset);
+        var msgPackWriter = new MsgPackWriter().Map(16);
+        msgPackWriter.Key("id").Str(rw.Id);
+        msgPackWriter.Key("event").Int(rw.EventSequence);
+        msgPackWriter.Key("node").Str(rw.NodeId);
+        msgPackWriter.Key("channel").Str(data.Channel);
+        msgPackWriter.Key("unit").Str(data.Unit);
+        msgPackWriter.Key("rate").Double(data.SampleRate);
+        msgPackWriter.Key("start").Int(data.Start.UtcTicks);
+        msgPackWriter.Key("quality").Str(data.Quality);
+        msgPackWriter.Key("sync").Str(data.SyncGroup);
+        msgPackWriter.Key("part").Int(part);
+        msgPackWriter.Key("parts").Int(parts);
+        msgPackWriter.Key("offset").Int(offset);
+        msgPackWriter.Key("total").Int(data.Count);
+        msgPackWriter.Key("sampleType").Str("f64le");
+        msgPackWriter.Key("samples").Bin(ToBytes(data.Values.ReadBlock(offset, Math.Max(0, count))));
+        msgPackWriter.Key("times");
+        if (data.TimeValues is { } times) msgPackWriter.Bin(ToBytes(times.ReadBlock(offset, Math.Max(0, count))));
+        else msgPackWriter.Nil();
+        return msgPackWriter.ToArray();
     }
 
     private static byte[] ToBytes(ReadOnlySpan<double> values)
     {
         var bytes = new byte[values.Length * 8];
         if (BitConverter.IsLittleEndian) MemoryMarshal.AsBytes(values).CopyTo(bytes);
-        else for (var i = 0; i < values.Length; i++) BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(i * 8), values[i]);
+        else for (var index = 0; index < values.Length; index++) BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(index * 8), values[index]);
         return bytes;
     }
 
@@ -267,12 +267,12 @@ public static class ResultFile
     {
         if (bytes.Length % 8 != 0) throw new FormatException("Samplearray hat keine ganze Anzahl float64-Werte.");
         var values = new double[bytes.Length / 8];
-        for (var i = 0; i < values.Length; i++) values[i] = BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(i * 8));
+        for (var index = 0; index < values.Length; index++) values[index] = BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(index * 8));
         return values;
     }
 
-    private static byte[] EncodeAttachment(ResultAttachment a)
-        => new MsgPackWriter().Map(4).Key("id").Str(a.Id).Key("name").Str(a.Name).Key("media").Str(a.MediaType).Key("data").Bin(a.Data).ToArray();
+    private static byte[] EncodeAttachment(ResultAttachment resultAttachment)
+        => new MsgPackWriter().Map(4).Key("id").Str(resultAttachment.Id).Key("name").Str(resultAttachment.Name).Key("media").Str(resultAttachment.MediaType).Key("data").Bin(resultAttachment.Data).ToArray();
 
     internal static string RatingText(ResultRating r) => r switch
     {
@@ -282,7 +282,7 @@ public static class ResultFile
         _ => "NRESULT",
     };
 
-    private static ResultRating ParseRating(string? s) => s switch
+    private static ResultRating ParseRating(string? text) => text switch
     {
         "PASS" => ResultRating.Pass,
         "FAIL" => ResultRating.Fail,
@@ -372,10 +372,10 @@ public static class ResultFile
         {
             var entries = (object?[])MsgPackReader.Parse(raw)!;
             if (entries.Length != seen.Count) throw new FormatException("Anzahl der Indexeinträge stimmt nicht.");
-            for (var i = 0; i < entries.Length; i++)
+            for (var index = 0; index < entries.Length; index++)
             {
-                var item = seen[i];
-                ValidateIndexEntry(entries[i], item);
+                var item = seen[index];
+                ValidateIndexEntry(entries[index], item);
             }
         }
         catch (Exception ex) when (ex is FormatException or InvalidCastException)
@@ -471,9 +471,9 @@ public static class ResultFile
 
     private static void ValidateIndexEntry(object? entry, (string Type, long Offset, int Length, uint Crc) item)
     {
-        if (entry is not object?[] { Length: 4 } a || a[0] is not string t || t != item.Type
-                            || a[1] is not long off || off != item.Offset || a[2] is not long length || length != item.Length
-                            || a[3] is not long crc || crc != item.Crc)
+        if (entry is not object?[] { Length: 4 } items || items[0] is not string text || text != item.Type
+                            || items[1] is not long off || off != item.Offset || items[2] is not long length || length != item.Length
+                            || items[3] is not long crc || crc != item.Crc)
             throw new FormatException("Index entry does not match its chunk.");
     }
 
@@ -496,16 +496,16 @@ public static class ResultFile
             waveforms.Add(new ResultWaveform(id, first.L("event") ?? 0, first.S("node"), wave));
         }
         // Reihenfolge wie beim Schreiben (nach Ereignis, dann Kanal-Id)
-        waveforms = waveforms.OrderBy(w => w.EventSequence).ThenBy(w => w.Id, StringComparer.Ordinal).ToList();
+        waveforms = waveforms.OrderBy(waveform => waveform.EventSequence).ThenBy(waveform => waveform.Id, StringComparer.Ordinal).ToList();
 
         return waveforms;
     }
 
     private static void CheckAttachments(List<ResultEvent> events, List<ResultAttachment> attachments, List<string> problems)
     {
-        foreach (var e in events)
+        foreach (var resultEvent in events)
         {
-            if (e.AttachmentId is { } aid && attachments.All(a => a.Id != aid)) problems.Add($"Anhang {aid[..Math.Min(12, aid.Length)]}… fehlt.");
+            if (resultEvent.AttachmentId is { } aid && attachments.All(resultAttachment => resultAttachment.Id != aid)) problems.Add($"Anhang {aid[..Math.Min(12, aid.Length)]}… fehlt.");
         }
 
     }
@@ -544,18 +544,18 @@ public static class ResultFile
                     case "STRU":
                         foreach (var item in (object?[])MsgPackReader.Parse(raw)!)
                         {
-                            var a = (object?[])item!;
-                            structure.Add(new ResultNode((string)a[0]!, a[1] as string, a[2] as string ?? "", a[3] as string ?? "", a[4] as string, a[5] as string));
+                            var items = (object?[])item!;
+                            structure.Add(new ResultNode((string)items[0]!, items[1] as string, items[2] as string ?? "", items[3] as string ?? "", items[4] as string, items[5] as string));
                         }
                         break;
                     case "EVNT":
                         ReadEvents(raw, structure, events, Time);
                         break;
                     case "WAVE":
-                        var m = (Dictionary<string, object?>)MsgPackReader.Parse(raw)!;
-                        var id = m.Req("id");
-                        if (!parts.TryGetValue(id, out var list)) parts[id] = list = new WaveParts(m);
-                        list.Append(m);
+                        var entries = (Dictionary<string, object?>)MsgPackReader.Parse(raw)!;
+                        var id = entries.Req("id");
+                        if (!parts.TryGetValue(id, out var list)) parts[id] = list = new WaveParts(entries);
+                        list.Append(entries);
                         break;
                     case "ATTA":
                         var at = (Dictionary<string, object?>)MsgPackReader.Parse(raw)!;
@@ -594,7 +594,7 @@ public static class ResultFile
                 FilteredFor = head.S("filteredFor") ?? "",
                 Application = head.S("application") ?? "",
                 Structure = structure,
-                Events = events.OrderBy(e => e.Sequence).ToList(),
+                Events = events.OrderBy(resultEvent => resultEvent.Sequence).ToList(),
                 Waveforms = waveforms,
                 Attachments = attachments,
             };
@@ -605,30 +605,30 @@ public static class ResultFile
 
     private static void ReadEvents(byte[] raw, List<ResultNode> structure, List<ResultEvent> events, Func<long, DateTimeOffset> time)
     {
-        var m = (Dictionary<string, object?>)MsgPackReader.Parse(raw)!;
-        var strings = m.A("strings").Select(s => s as string ?? "").ToArray();
-        string? Str(object? i) => i is long l && l >= 0 && l < strings.Length ? strings[l] : null;
-        foreach (var item in m.A("events"))
+        var entries = (Dictionary<string, object?>)MsgPackReader.Parse(raw)!;
+        var strings = entries.A("strings").Select(source => source as string ?? "").ToArray();
+        string? Str(object? entry) => entry is long integerValue && integerValue >= 0 && integerValue < strings.Length ? strings[integerValue] : null;
+        foreach (var item in entries.A("events"))
         {
-            var a = (object?[])item!;
-            var nodeIdx = (long)a[2]!;
-            var nodeId = nodeIdx >= 0 && nodeIdx < structure.Count ? structure[(int)nodeIdx].Id : a[3] as string;
-            var refs = (object?[])a[14]!;
-            var waves = refs.Length > 1 ? refs.Skip(1).Select(x => (string)x!).ToList() : null;
+            var items = (object?[])item!;
+            var nodeIdx = (long)items[2]!;
+            var nodeId = nodeIdx >= 0 && nodeIdx < structure.Count ? structure[(int)nodeIdx].Id : items[3] as string;
+            var refs = (object?[])items[14]!;
+            var waves = refs.Length > 1 ? refs.Skip(1).Select(skip => (string)skip!).ToList() : null;
             events.Add(new ResultEvent(
-                (long)a[0]!,
-                (ResultEventKind)(long)a[1]!,
+                (long)items[0]!,
+                (ResultEventKind)(long)items[1]!,
                 nodeId,
-                Str(a[4]) ?? "",
-                (int)(long)a[5]!,
-                time((long)a[6]!),
-                a[7] is long r && r >= 0 ? (ResultRating)r : null,
-                ReadValue(a[8]),
-                Str(a[9]),
-                a[10] as double?,
-                a[11] as double?,
-                a[12] as string,
-                a[13] is true,
+                Str(items[4]) ?? "",
+                (int)(long)items[5]!,
+                time((long)items[6]!),
+                items[7] is long revision && revision >= 0 ? (ResultRating)revision : null,
+                ReadValue(items[8]),
+                Str(items[9]),
+                items[10] as double?,
+                items[11] as double?,
+                items[12] as string,
+                items[13] is true,
                 waves,
                 refs[0] as string));
         }
@@ -662,16 +662,16 @@ public static class ResultFile
 
     private static void ReadIndexChunks(byte[] data, object?[] entries, List<(string, byte[])> chunks, List<string> problems)
     {
-        foreach (var e in entries)
+        foreach (var entry in entries)
         {
-            if (e is not object?[] { Length: 4 } a || a[0] is not string t || a[1] is not long off) continue;
-            if (t == "INDX") continue;
-            if (!TryReadChunk(data, off, out var actualType, out var body, out var error) || actualType != t)
+            if (entry is not object?[] { Length: 4 } items || items[0] is not string text || items[1] is not long off) continue;
+            if (text == "INDX") continue;
+            if (!TryReadChunk(data, off, out var actualType, out var body, out var error) || actualType != text)
             {
-                problems.Add($"Chunk {t} @ {off}: {error ?? "Typ passt nicht zum Index"}");
+                problems.Add($"Chunk {text} @ {off}: {error ?? "Typ passt nicht zum Index"}");
                 continue;
             }
-            chunks.Add((t, body));
+            chunks.Add((text, body));
         }
     }
 
@@ -702,18 +702,18 @@ public static class ResultFile
             error = "Position außerhalb der Datei";
             return false;
         }
-        var p = (int)pos;
-        type = Encoding.ASCII.GetString(data, p, 4);
-        var codec = data[p + 4];
-        var stored = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(p + 5));
-        var rawLength = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(p + 9));
-        var crc = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(p + 13));
-        if (stored < 0 || rawLength < 0 || p + ChunkHeaderSize + (long)stored > data.Length)
+        var position = (int)pos;
+        type = Encoding.ASCII.GetString(data, position, 4);
+        var codec = data[position + 4];
+        var stored = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(position + 5));
+        var rawLength = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(position + 9));
+        var crc = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(position + 13));
+        if (stored < 0 || rawLength < 0 || position + ChunkHeaderSize + (long)stored > data.Length)
         {
             error = "abgeschnitten";
             return false;
         }
-        var body = data.AsSpan(p + ChunkHeaderSize, stored);
+        var body = data.AsSpan(position + ChunkHeaderSize, stored);
         if (Crc32.Compute(body) != crc)
         {
             error = "Prüfsumme falsch (beschädigt)";

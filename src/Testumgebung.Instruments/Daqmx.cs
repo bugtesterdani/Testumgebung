@@ -207,11 +207,11 @@ public sealed class NativeDaqmxApi : IDaqmxApi
         throw new InstrumentException($"NI-DAQmx {call} ({status}): {(text.Length > 0 ? text : "Fehler")}");
     }
 
-    private static T Call<T>(Func<T> f)
+    private static T Call<T>(Func<T> callback)
     {
         try
         {
-            return f();
+            return callback();
         }
         catch (DllNotFoundException ex)
         {
@@ -219,12 +219,12 @@ public sealed class NativeDaqmxApi : IDaqmxApi
         }
     }
 
-    private static void Call(Action f) => Call(() => { f(); return 0; });
+    private static void Call(Action action) => Call(() => { action(); return 0; });
 
-    private string Text(Func<byte[], uint, int> f, string call)
+    private string Text(Func<byte[], uint, int> callback, string call)
     {
         var buffer = new byte[8192];
-        Check(f(buffer, (uint)buffer.Length), call);
+        Check(callback(buffer, (uint)buffer.Length), call);
         return Encoding.ASCII.GetString(buffer).TrimEnd('\0');
     }
 
@@ -234,29 +234,29 @@ public sealed class NativeDaqmxApi : IDaqmxApi
 
     public DaqDeviceInfo DeviceInfo(string device) => Call(() =>
     {
-        double MaxRange(Func<string, double[], uint, int> f)
+        double MaxRange(Func<string, double[], uint, int> callback)
         {
-            var r = new double[64];
-            return f(device, r, (uint)r.Length) < 0 ? 10 : r.Select(Math.Abs).DefaultIfEmpty(10).Max() is var m && m > 0 ? m : 10;
+            var samples = new double[64];
+            return callback(device, samples, (uint)samples.Length) < 0 ? 10 : samples.Select(Math.Abs).DefaultIfEmpty(10).Max() is var measurement && measurement > 0 ? measurement : 10;
         }
         _api.DAQmxGetDevIsSimulated(device, out var sim);
         var aiRate = _api.DAQmxGetDevAIMaxMultiChanRate(device, out var air) < 0 ? 0 : air;
         var aoRate = _api.DAQmxGetDevAOMaxRate(device, out var aor) < 0 ? 0 : aor;
         var simultaneous = _api.DAQmxGetDevAISimultaneousSamplingSupported(device, out var simu) >= 0 && simu != 0;
-        string Opt(Func<string, byte[], uint, int> f)
+        string Opt(Func<string, byte[], uint, int> callback2)
         {
-            var b = new byte[8192];
-            return f(device, b, (uint)b.Length) < 0 ? "" : Encoding.ASCII.GetString(b).TrimEnd('\0');
+            var bytes = new byte[8192];
+            return callback2(device, bytes, (uint)bytes.Length) < 0 ? "" : Encoding.ASCII.GetString(bytes).TrimEnd('\0');
         }
-        return new DaqDeviceInfo(device, Text((b, n) => _api.DAQmxGetDevProductType(device, b, n), "DAQmxGetDevProductType"), sim != 0,
+        return new DaqDeviceInfo(device, Text((bytes2, count) => _api.DAQmxGetDevProductType(device, bytes2, count), "DAQmxGetDevProductType"), sim != 0,
             List(Opt(_api.DAQmxGetDevAIPhysicalChans)), List(Opt(_api.DAQmxGetDevAOPhysicalChans)), List(Opt(_api.DAQmxGetDevDOLines)), List(Opt(_api.DAQmxGetDevDILines)),
             MaxRange(_api.DAQmxGetDevAIVoltageRngs), MaxRange(_api.DAQmxGetDevAOVoltageRngs), aiRate, aoRate, simultaneous);
     });
 
     public nint CreateTask(string name) => Call(() =>
     {
-        Check(_api.DAQmxCreateTask("", out var t), "DAQmxCreateTask");
-        return t;
+        Check(_api.DAQmxCreateTask("", out var handle), "DAQmxCreateTask");
+        return handle;
     });
 
     public void ClearTask(nint task) => Call(() => Check(_api.DAQmxClearTask(task), "DAQmxClearTask"));
@@ -282,8 +282,8 @@ public sealed class NativeDaqmxApi : IDaqmxApi
 
     public double ReadAnalogScalar(nint task, double timeout) => Call(() =>
     {
-        Check(_api.DAQmxReadAnalogScalarF64(task, timeout, out var v, 0), "DAQmxReadAnalogScalarF64");
-        return v;
+        Check(_api.DAQmxReadAnalogScalarF64(task, timeout, out var value, 0), "DAQmxReadAnalogScalarF64");
+        return value;
     });
 
     public int ReadAnalogInterleaved(nint task, int samplesPerChannel, double timeout, double[] buffer) => Call(() =>
@@ -368,13 +368,13 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
     {
         if (_info is not null) return _info;
         _info = _devices.Select(_api.DeviceInfo).ToList();
-        if (Model.Length == 0) Model = string.Join(" + ", _info.Select(i => i.ProductType));
+        if (Model.Length == 0) Model = string.Join(" + ", _info.Select(device => device.ProductType));
         return _info;
     }
 
     /// <summary>Messbereich eines Eingangs: Option „Bereich“ (±V), höchstens der Gerätebereich.</summary>
-    private double AiRange(InstrumentChannel c) => Math.Min(_options.Number("Bereich") ?? c.Max, c.Max);
-    private double AoRange => _options.Number("AO-Bereich") ?? Info().Select(i => i.AoMax).DefaultIfEmpty(10).Max();
+    private double AiRange(InstrumentChannel channel) => Math.Min(_options.Number("Bereich") ?? channel.Max, channel.Max);
+    private double AoRange => _options.Number("AO-Bereich") ?? Info().Select(device => device.AoMax).DefaultIfEmpty(10).Max();
 
     private AiTerminal Terminal => (_options.Text("Anschluss") ?? "").ToUpperInvariant() switch
     {
@@ -390,28 +390,28 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
         get
         {
             var list = new List<InstrumentChannel>();
-            foreach (var d in Info())
+            foreach (var device in Info())
             {
-                list.AddRange(d.AiChannels.Select(c => new InstrumentChannel(c, "V", -d.AiMax, d.AiMax, ChannelAccess.Read | ChannelAccess.Waveform, $"{d.ProductType} Analogeingang")));
-                list.AddRange(d.AoChannels.Select(c => new InstrumentChannel(c, "V", -d.AoMax, d.AoMax, ChannelAccess.Write, $"{d.ProductType} Analogausgang")));
-                list.AddRange(d.DoLines.Select(c => new InstrumentChannel(c, "bool", 0, 1, ChannelAccess.Write, $"{d.ProductType} Digitalausgang")));
-                list.AddRange(d.DiLines.Select(c => new InstrumentChannel(c, "bool", 0, 1, ChannelAccess.Read, $"{d.ProductType} Digitaleingang")));
+                list.AddRange(device.AiChannels.Select(aiChannel => new InstrumentChannel(aiChannel, "V", -device.AiMax, device.AiMax, ChannelAccess.Read | ChannelAccess.Waveform, $"{device.ProductType} Analogeingang")));
+                list.AddRange(device.AoChannels.Select(aoChannel => new InstrumentChannel(aoChannel, "V", -device.AoMax, device.AoMax, ChannelAccess.Write, $"{device.ProductType} Analogausgang")));
+                list.AddRange(device.DoLines.Select(doLine => new InstrumentChannel(doLine, "bool", 0, 1, ChannelAccess.Write, $"{device.ProductType} Digitalausgang")));
+                list.AddRange(device.DiLines.Select(diLine => new InstrumentChannel(diLine, "bool", 0, 1, ChannelAccess.Read, $"{device.ProductType} Digitaleingang")));
             }
-            if (list.Any(c => c.Access == ChannelAccess.Write && c.Unit == "V"))
+            if (list.Any(channel => channel.Access == ChannelAccess.Write && channel.Unit == "V"))
                 list.Add(new(OutputChannel, "V", -AoRange, AoRange, ChannelAccess.WaveformOutput, "Kurvenausgabe auf Analogausgänge"));
             return list;
         }
     }
 
     private InstrumentChannel Channel(string name)
-        => Channels.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))
+        => Channels.FirstOrDefault(channel => string.Equals(channel.Name, name, StringComparison.OrdinalIgnoreCase))
            ?? throw new InstrumentException($"NI-DAQmx {Resource}: Kanal „{name}“ gibt es nicht.");
 
     public ChannelCapabilities GetCapabilities(string channel)
     {
-        var c = Channel(channel);
-        var simultaneous = Info().Any(i => i.SimultaneousSampling);
-        return new ChannelCapabilities(c.Unit, c.Min, c.Max, c.Access.HasFlag(ChannelAccess.Waveform), simultaneous);
+        var channel2 = Channel(channel);
+        var simultaneous = Info().Any(device => device.SimultaneousSampling);
+        return new ChannelCapabilities(channel2.Unit, channel2.Min, channel2.Max, channel2.Access.HasFlag(ChannelAccess.Waveform), simultaneous);
     }
 
     /// <summary>Kurzlebiger Task: anlegen, benutzen, immer freigeben (auch bei Fehler/Abbruch).</summary>
@@ -431,41 +431,41 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
 
     public Task<double> ReadAsync(string channel, CancellationToken cancellationToken) => Task.Run(() =>
     {
-        var c = Channel(channel);
+        var channel2 = Channel(channel);
         cancellationToken.ThrowIfCancellationRequested();
-        if (c.Unit == "bool")
-            return WithTask($"DI lesen {c.Name}", t =>
+        if (channel2.Unit == "bool")
+            return WithTask($"DI lesen {channel2.Name}", handle =>
             {
-                _api.CreateDIChan(t, c.Name);
-                return _api.ReadDigitalLines(t, 1, 5)[0] != 0 ? 1.0 : 0.0;
+                _api.CreateDIChan(handle, channel2.Name);
+                return _api.ReadDigitalLines(handle, 1, 5)[0] != 0 ? 1.0 : 0.0;
             });
-        if (!c.Access.HasFlag(ChannelAccess.Read)) throw new InstrumentException($"NI-DAQmx: Kanal {c.Name} ist nicht lesbar.");
-        return WithTask($"AI lesen {c.Name}", t =>
+        if (!channel2.Access.HasFlag(ChannelAccess.Read)) throw new InstrumentException($"NI-DAQmx: Kanal {channel2.Name} ist nicht lesbar.");
+        return WithTask($"AI lesen {channel2.Name}", handle =>
         {
-            _api.CreateAIVoltageChan(t, c.Name, Terminal, -AiRange(c), AiRange(c));
-            return _api.ReadAnalogScalar(t, 5);
+            _api.CreateAIVoltageChan(handle, channel2.Name, Terminal, -AiRange(channel2), AiRange(channel2));
+            return _api.ReadAnalogScalar(handle, 5);
         });
     }, cancellationToken);
 
     public Task WriteAsync(string channel, double value, CancellationToken cancellationToken) => Task.Run(() =>
     {
-        var c = Channel(channel);
+        var channel2 = Channel(channel);
         cancellationToken.ThrowIfCancellationRequested();
-        if (!c.Access.HasFlag(ChannelAccess.Write) || c.Name == OutputChannel) throw new InstrumentException($"NI-DAQmx: Kanal {c.Name} ist nicht schreibbar.");
-        if (value < c.Min || value > c.Max)
-            throw new ArgumentOutOfRangeException(nameof(value), $"{value} {c.Unit} außerhalb {c.Min} … {c.Max} von {c.Name}.");
-        if (c.Unit == "bool")
-            WithTask($"DO setzen {c.Name}={value}", t =>
+        if (!channel2.Access.HasFlag(ChannelAccess.Write) || channel2.Name == OutputChannel) throw new InstrumentException($"NI-DAQmx: Kanal {channel2.Name} ist nicht schreibbar.");
+        if (value < channel2.Min || value > channel2.Max)
+            throw new ArgumentOutOfRangeException(nameof(value), $"{value} {channel2.Unit} außerhalb {channel2.Min} … {channel2.Max} von {channel2.Name}.");
+        if (channel2.Unit == "bool")
+            WithTask($"DO setzen {channel2.Name}={value}", handle =>
             {
-                _api.CreateDOChan(t, c.Name);
-                _api.WriteDigitalLines(t, [value >= 0.5 ? (byte)1 : (byte)0], 5);
+                _api.CreateDOChan(handle, channel2.Name);
+                _api.WriteDigitalLines(handle, [value >= 0.5 ? (byte)1 : (byte)0], 5);
                 return 0;
             });
         else
-            WithTask($"AO setzen {c.Name}={value}", t =>
+            WithTask($"AO setzen {channel2.Name}={value}", handle =>
             {
-                _api.CreateAOVoltageChan(t, c.Name, c.Min, c.Max);
-                _api.WriteAnalogScalar(t, value, 5);
+                _api.CreateAOVoltageChan(handle, channel2.Name, channel2.Min, channel2.Max);
+                _api.WriteAnalogScalar(handle, value, 5);
                 return 0;
             });
     }, cancellationToken);
@@ -477,20 +477,20 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
     public Task<WaveformSet> CaptureAsync(IReadOnlyList<string> channels, double sampleRate, int samples, CancellationToken cancellationToken) => Task.Run(() =>
     {
         var chans = channels.Select(Channel).ToList();
-        if (chans.Count == 0 || chans.Any(c => !c.Access.HasFlag(ChannelAccess.Waveform)))
+        if (chans.Count == 0 || chans.Any(channel => !channel.Access.HasFlag(ChannelAccess.Waveform)))
             throw new InstrumentException("NI-DAQmx: Kurvenaufnahme nur auf Analogeingängen.");
         var (involved, simultaneous) = ValidateCaptureRate(chans, sampleRate);
         var start = DateTimeOffset.Now;
         var data = chans.Select(_ => new SampleBufferWriter(samples)).ToList();
         try
         {
-            WithTask($"Aufnahme {string.Join(",", chans.Select(c => c.Name))} {samples} @ {sampleRate} Hz", t =>
+            WithTask($"Aufnahme {string.Join(",", chans.Select(channel => channel.Name))} {samples} @ {sampleRate} Hz", handle =>
             {
-                foreach (var c in chans) _api.CreateAIVoltageChan(t, c.Name, Terminal, -AiRange(c), AiRange(c));
-                _api.CfgSampClkTiming(t, sampleRate, false, samples);
+                foreach (var channel in chans) _api.CreateAIVoltageChan(handle, channel.Name, Terminal, -AiRange(channel), AiRange(channel));
+                _api.CfgSampClkTiming(handle, sampleRate, false, samples);
                 var trigger = _options.Text("Starttrigger");
-                if (trigger is not null) _api.CfgDigEdgeStartTrig(t, trigger, true);
-                _api.StartTask(t);
+                if (trigger is not null) _api.CfgDigEdgeStartTrig(handle, trigger, true);
+                _api.StartTask(handle);
                 var block = (int)Math.Clamp(sampleRate * 0.2, 1, Math.Min(samples, SampleBuffer.BlockSize));
                 var buffer = new double[block * chans.Count];
                 var done = 0;
@@ -499,7 +499,7 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        _api.StopTask(t);
+                        _api.StopTask(handle);
                         cancellationToken.ThrowIfCancellationRequested();
                     }
                     if (DateTime.UtcNow > deadline) throw new TimeoutException("NI-DAQmx: Aufnahme nicht rechtzeitig abgeschlossen (Trigger?).");
@@ -507,36 +507,36 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
                     int read;
                     try
                     {
-                        read = _api.ReadAnalogInterleaved(t, want, 0.5, buffer);
+                        read = _api.ReadAnalogInterleaved(handle, want, 0.5, buffer);
                     }
                     catch (InstrumentException ex) when (ex.Message.Contains("(-200284)", StringComparison.Ordinal))
                     {
                         continue; // Zeitlimit eines Blocks (noch kein Trigger) – weiter warten bzw. Abbruch prüfen
                     }
-                    for (var k = 0; k < chans.Count; k++)
+                    for (var previousIndex = 0; previousIndex < chans.Count; previousIndex++)
                     {
                         var values = new double[read];
-                        for (var i = 0; i < read; i++) values[i] = buffer[i * chans.Count + k];
-                        data[k].Append(values);
+                        for (var index = 0; index < read; index++) values[index] = buffer[index * chans.Count + previousIndex];
+                        data[previousIndex].Append(values);
                     }
                     done += read;
                 }
-                _api.StopTask(t);
+                _api.StopTask(handle);
                 return 0;
             });
             var sync = $"daqmx-{Resource}-{Interlocked.Increment(ref _captures)}";
             var quality = simultaneous ? "NI-DAQmx, simultan abgetastet" : "NI-DAQmx, gemultiplext (Kanalversatz ≤ 1/Gesamtrate)";
-            if (involved.Any(i => i.IsSimulated)) quality += ", simuliertes Gerät";
-            return new WaveformSet(chans.Select((c, k) => new Waveform(c.Name, "V", sampleRate, start, data[k].Complete(), Quality: quality, SyncGroup: sync)).ToList());
+            if (involved.Any(device => device.IsSimulated)) quality += ", simuliertes Gerät";
+            return new WaveformSet(chans.Select((channel, index) => new Waveform(channel.Name, "V", sampleRate, start, data[index].Complete(), Quality: quality, SyncGroup: sync)).ToList());
         }
         finally { foreach (var writer in data) writer.Dispose(); }
     }, CancellationToken.None);
 
     private (List<DaqDeviceInfo> Involved, bool Simultaneous) ValidateCaptureRate(List<InstrumentChannel> chans, double sampleRate)
     {
-        var involved = Info().Where(i => chans.Any(c => c.Name.StartsWith(i.Name + "/", StringComparison.OrdinalIgnoreCase))).ToList();
-        var maxRate = involved.Select(i => i.AiMaxRate).Where(r => r > 0).DefaultIfEmpty(double.MaxValue).Min();
-        var simultaneous = involved.Count > 0 && involved.All(i => i.SimultaneousSampling);
+        var involved = Info().Where(device => chans.Any(channel => channel.Name.StartsWith(device.Name + "/", StringComparison.OrdinalIgnoreCase))).ToList();
+        var maxRate = involved.Select(device => device.AiMaxRate).Where(ratio => ratio > 0).DefaultIfEmpty(double.MaxValue).Min();
+        var simultaneous = involved.Count > 0 && involved.All(device => device.SimultaneousSampling);
         if (sampleRate * (simultaneous ? 1 : chans.Count) > maxRate)
             throw new InstrumentException(string.Create(CultureInfo.InvariantCulture, $"NI-DAQmx: {sampleRate:0.###} Hz × {chans.Count} Kanäle übersteigt die Gerätegrenze {maxRate:0.###} S/s."));
         return (involved, simultaneous);
@@ -548,15 +548,15 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
     {
         var map = _options.Map("Kurvenkanäle");
         if (map.Count > 0) return map;
-        var ao = Info().SelectMany(i => i.AoChannels).ToList();
+        var ao = Info().SelectMany(device => device.AoChannels).ToList();
         string[] ids = ["L1", "L2", "L3", "L4"];
-        return ao.Take(ids.Length).Select((c, i) => (ids[i], c)).ToDictionary(x => x.Item1, x => x.c, StringComparer.Ordinal);
+        return ao.Take(ids.Length).Select((code, index) => (ids[index], c: code)).ToDictionary(entry => entry.Item1, entry => entry.c, StringComparer.Ordinal);
     }
 
     public OutputCapabilities GetOutputCapabilities(string channel)
     {
         Check(channel);
-        var maxRate = Info().Select(i => i.AoMaxRate).Where(r => r > 0).DefaultIfEmpty(1000).Min();
+        var maxRate = Info().Select(device => device.AoMaxRate).Where(ratio => ratio > 0).DefaultIfEmpty(1000).Min();
         return new OutputCapabilities($"NI-DAQmx {Resource} ({Model})", "V", -AoRange, AoRange, Map().Keys.ToList(), [], false,
             (int)(_options.Number("Speicher") ?? 8_000_000), 1, maxRate);
     }
@@ -583,8 +583,8 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
         lock (_gate)
         {
             if (_state == OutputState.Running) throw new OutputSequenceException("Ausgabe läuft – erst stoppen, dann neue Kurve laden.");
-            var errors = OutputSuitability.Check(GetOutputCapabilities(channel), curve).Where(i => i.IsError).ToList();
-            if (errors.Count > 0) throw new OutputSequenceException("Gerät ungeeignet: " + string.Join(" ", errors.Select(e => e.Text)));
+            var errors = OutputSuitability.Check(GetOutputCapabilities(channel), curve).Where(issue => issue.IsError).ToList();
+            if (errors.Count > 0) throw new OutputSequenceException("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
             _loaded = curve;
             _state = OutputState.Loaded;
         }
@@ -609,7 +609,7 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
             foreach (var ch in curve.Channels) _api.CreateAOVoltageChan(task, map[ch.Id], -AoRange, AoRange);
             _api.CfgSampClkTiming(task, curve.SampleRate, true, curve.Count);
             _api.SetWriteRegenMode(task, true);
-            var data = curve.Channels.SelectMany(c => c.Samples).ToArray();
+            var data = curve.Channels.SelectMany(outputChannelData => outputChannelData.Samples).ToArray();
             var written = _api.WriteAnalogByChannel(task, curve.Count, false, 10, data);
             if (written != curve.Count) throw new InstrumentException($"NI-DAQmx: nur {written} von {curve.Count} Samples übertragen.");
         }
@@ -618,7 +618,7 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
             _api.ClearTask(task);
             throw;
         }
-        Note($"AO übertragen {curve.Key}: {curve.Count} Samples @ {curve.SampleRate} Hz auf {string.Join(",", curve.Channels.Select(c => map[c.Id]))}");
+        Note($"AO übertragen {curve.Key}: {curve.Count} Samples @ {curve.SampleRate} Hz auf {string.Join(",", curve.Channels.Select(outputChannelData => map[outputChannelData.Id]))}");
         lock (_gate)
         {
             _aoTask = task;
@@ -678,19 +678,19 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
             if (_state == OutputState.Running) _state = OutputState.Stopped;
             if (_state == OutputState.Transferred) _state = OutputState.Loaded;
         }
-        var ao = Info().SelectMany(i => i.AoChannels).ToList();
-        foreach (var c in ao)
-            WithTask($"Sicherer Zustand {c}=0 V", t =>
+        var ao = Info().SelectMany(device => device.AoChannels).ToList();
+        foreach (var code in ao)
+            WithTask($"Sicherer Zustand {code}=0 V", handle =>
             {
-                _api.CreateAOVoltageChan(t, c, -AoRange, AoRange);
-                _api.WriteAnalogScalar(t, 0, 2);
+                _api.CreateAOVoltageChan(handle, code, -AoRange, AoRange);
+                _api.WriteAnalogScalar(handle, 0, 2);
                 return 0;
             });
         foreach (var (line, value) in _options.Map("Sichere Ausgänge"))
-            WithTask($"Sicherer Zustand {line}={value}", t =>
+            WithTask($"Sicherer Zustand {line}={value}", handle =>
             {
-                _api.CreateDOChan(t, line);
-                _api.WriteDigitalLines(t, [value == "1" ? (byte)1 : (byte)0], 2);
+                _api.CreateDOChan(handle, line);
+                _api.WriteDigitalLines(handle, [value == "1" ? (byte)1 : (byte)0], 2);
                 return 0;
             });
     }, CancellationToken.None);
@@ -702,11 +702,11 @@ public sealed class DaqmxDevice : IInstrumentDriver, IWaveformAdapter, IWaveform
             if (!_api.IsAvailable) return new InstrumentProbe(false, "NI-DAQmx nicht installiert", ["nicaiu.dll fehlt – NI-DAQmx installieren (ohne Hardware: simuliertes Gerät in NI MAX)."], Log);
             _info = null;
             var known = _api.DeviceNames();
-            var missing = _devices.Where(d => !known.Contains(d, StringComparer.OrdinalIgnoreCase)).ToList();
+            var missing = _devices.Where(device => !known.Contains(device, StringComparer.OrdinalIgnoreCase)).ToList();
             if (missing.Count > 0)
                 return new InstrumentProbe(false, "Gerät nicht gefunden", [$"Nicht vorhanden: {string.Join(", ", missing)}. Gefunden: {string.Join(", ", known)}."], Log);
-            var details = Info().Select(i => string.Create(CultureInfo.InvariantCulture,
-                $"{i.Name}: {i.ProductType}{(i.IsSimulated ? " (simuliert)" : "")}, AI {i.AiChannels.Count} (±{i.AiMax} V, {i.AiMaxRate:0} S/s{(i.SimultaneousSampling ? ", simultan" : "")}), AO {i.AoChannels.Count} (±{i.AoMax} V, {i.AoMaxRate:0} S/s), DO {i.DoLines.Count}, DI {i.DiLines.Count}")).ToList();
+            var details = Info().Select(device => string.Create(CultureInfo.InvariantCulture,
+                $"{device.Name}: {device.ProductType}{(device.IsSimulated ? " (simuliert)" : "")}, AI {device.AiChannels.Count} (±{device.AiMax} V, {device.AiMaxRate:0} S/s{(device.SimultaneousSampling ? ", simultan" : "")}), AO {device.AoChannels.Count} (±{device.AoMax} V, {device.AoMaxRate:0} S/s), DO {device.DoLines.Count}, DI {device.DiLines.Count}")).ToList();
             return new InstrumentProbe(true, Model, details, Log);
         }
         catch (InstrumentException ex)

@@ -41,7 +41,7 @@ public sealed partial class InlineBlockEditor
         var names = QuickFieldNames(step);
         foreach (var name in names)
         {
-            var row = step.Parameters.FirstOrDefault(p => p.Descriptor.Name == name);
+            var row = step.Parameters.FirstOrDefault(parameterRowViewModel => parameterRowViewModel.Descriptor.Name == name);
             if (row is null || !UsefulQuickField(step, row)) continue;
             var field = new StackPanel();
             BindParameterVisibility(field, row);
@@ -56,7 +56,7 @@ public sealed partial class InlineBlockEditor
 
     private static IEnumerable<string> QuickFieldNames(StepPropertiesViewModel step)
         => QuickFields.GetValueOrDefault(step.Step.BlockType ?? "")
-            ?? step.Parameters.Where(p => p.Descriptor.Required && !p.IsCode && !p.IsHidden).Take(2).Select(p => p.Descriptor.Name).ToArray();
+            ?? step.Parameters.Where(parameterRowViewModel => parameterRowViewModel.Descriptor.Required && !parameterRowViewModel.IsCode && !parameterRowViewModel.IsHidden).Take(2).Select(parameterRowViewModel => parameterRowViewModel.Descriptor.Name).ToArray();
 
     private static bool UsefulQuickField(StepPropertiesViewModel step, ParameterRowViewModel row)
         => step.Step.BlockType != BlockCatalog.Operator || row.Descriptor.Name != "Ziel"
@@ -90,9 +90,9 @@ public sealed partial class InlineBlockEditor
     {
         var project = Editor!.Project;
         var configured = Host?.DataContext is ShellViewModel shell
-            ? shell.StationsPage.Draft.Station(shell.SelectedStation.Name)?.Resources.Select(r => r.Name) ?? [] : [];
-        return configured.Concat(project.Simulation.Select(r => r.Name)).Concat(project.SimulationOutputs.Select(r => r.Name))
-            .Concat(project.SimulationComm.Select(r => r.Name)).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+            ? shell.StationsPage.Draft.Station(shell.SelectedStation.Name)?.Resources.Select(assignment => assignment.Name) ?? [] : [];
+        return configured.Concat(project.Simulation.Select(resource => resource.Name)).Concat(project.SimulationOutputs.Select(output => output.Name))
+            .Concat(project.SimulationComm.Select(communication => communication.Name)).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
     }
 
     private void CompactGroup(Panel panel, GroupPropertiesViewModel group)
@@ -100,7 +100,7 @@ public sealed partial class InlineBlockEditor
         var node = Node!;
         if (node.Children.FirstOrDefault() is { IsTemplateDecision: true, InlineProperties: StepPropertiesViewModel decision })
         {
-            var row = decision.Parameters.Single(p => p.Descriptor.Name == "Ausdruck");
+            var row = decision.Parameters.Single(parameterRowViewModel => parameterRowViewModel.Descriptor.Name == "Ausdruck");
             CompactRow(panel, "Wenn", CompactInput(row)); return;
         }
         if (node.IsSection || node.Parent?.Children.FirstOrDefault()?.IsTemplateDecision == true) return;

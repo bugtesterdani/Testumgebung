@@ -37,10 +37,10 @@ public static partial class CodeBlockConverter
             if (matches.Count == 0) continue;
 
             bool read = false, write = false;
-            foreach (Match m in matches)
+            foreach (Match match in matches)
             {
-                var before = code[..m.Index].TrimEnd();
-                var after = code[(m.Index + m.Length)..].TrimStart();
+                var before = code[..match.Index].TrimEnd();
+                var after = code[(match.Index + match.Length)..].TrimStart();
                 var compound = Regex.IsMatch(after, @"^(\+=|-=|\*=|/=|%=|\+\+|--)") || before.EndsWith("++", StringComparison.Ordinal) || before.EndsWith("--", StringComparison.Ordinal);
                 var assign = Regex.IsMatch(after, @"^=(?!=)");
                 var declaration = Regex.IsMatch(before, @"(\bvar|\bdouble|\bint|\blong|\bbool|\bstring)$");
@@ -58,8 +58,8 @@ public static partial class CodeBlockConverter
         }
 
         var warnings = new List<string>();
-        foreach (Match m in VarCall().Matches(source))
-            warnings.Add($"Dynamischer Variablenzugriff {m.Value} – im Baustein nicht erlaubt, bitte als Port anlegen.");
+        foreach (Match match2 in VarCall().Matches(source))
+            warnings.Add($"Dynamischer Variablenzugriff {match2.Value} – im Baustein nicht erlaubt, bitte als Port anlegen.");
         return new CodeDependencies(ports, warnings);
     }
 
@@ -77,7 +77,7 @@ public static partial class CodeBlockConverter
         var language = BlockCatalog.ParseLanguage(codeStep.Parameters.GetValueOrDefault("Sprache") ?? "C#");
         var source = codeStep.Parameters.GetValueOrDefault("Quelltext") ?? "";
         var deps = Analyze(language, source, visible);
-        if (deps.Ports.Any(p => p.Name == Scope.GroupResultVariable && p.IsOutput))
+        if (deps.Ports.Any(port => port.Name == Scope.GroupResultVariable && port.IsOutput))
             throw new InvalidOperationException("GruppenErgebnis ist schreibgeschützt und kann kein Ausgang eines konvertierten Bausteins sein.");
 
         var block = new CodeBlockDefinition(blockId, codeStep.Name)
@@ -94,10 +94,10 @@ public static partial class CodeBlockConverter
             ["Baustein"] = blockId,
             ["Timeout"] = codeStep.Parameters.GetValueOrDefault("Timeout") ?? "5",
         };
-        foreach (var p in deps.Ports)
+        foreach (var port in deps.Ports)
         {
-            if (p.IsInput) parameters[BlockCatalog.InputBindingPrefix + p.Name] = p.Name;
-            if (p.Direction == PortDirection.Output) parameters[BlockCatalog.OutputBindingPrefix + p.Name] = p.Name;
+            if (port.IsInput) parameters[BlockCatalog.InputBindingPrefix + port.Name] = port.Name;
+            if (port.Direction == PortDirection.Output) parameters[BlockCatalog.OutputBindingPrefix + port.Name] = port.Name;
         }
         var step = catalog.Create(BlockCatalog.LibraryBlock, codeStep.Id, codeStep.Name, parameters);
         step.Description = codeStep.Description;
@@ -112,8 +112,8 @@ public static partial class CodeBlockConverter
         foreach (var group in definition.AncestorsOf(nodeId).Reverse())
         {
             if (seen.Add(Scope.GroupResultVariable)) result.Add((Scope.GroupResultVariable, VarType.String));
-            foreach (var v in group.Variables)
-                if (seen.Add(v.Name)) result.Add((v.Name, v.Type));
+            foreach (var variable in group.Variables)
+                if (seen.Add(variable.Name)) result.Add((variable.Name, variable.Type));
             if (group.Resources.Count > 0 && seen.Add(TestRun.ResourcesAcquiredVariable))
                 result.Add((TestRun.ResourcesAcquiredVariable, VarType.Bool));
             if (group.IsInterfaceBoundary) break;
@@ -126,57 +126,57 @@ public static partial class CodeBlockConverter
     }
 
     private static bool IsIdentifier(string name)
-        => name.Length > 0 && (char.IsLetter(name[0]) || name[0] == '_') && name.All(c => char.IsLetterOrDigit(c) || c == '_');
+        => name.Length > 0 && (char.IsLetter(name[0]) || name[0] == '_') && name.All(name2 => char.IsLetterOrDigit(name2) || name2 == '_');
 
     private static string StripStringsAndComments(string source, CodeLanguage language)
     {
         var sb = new StringBuilder(source.Length);
-        var i = 0;
-        while (i < source.Length)
+        var index = 0;
+        while (index < source.Length)
         {
-            var c = source[i];
-            if (SkipComment(source, ref i, language)) continue;
-            if (c is '"' or '\'')
+            var character = source[index];
+            if (SkipComment(source, ref index, language)) continue;
+            if (character is '"' or '\'')
             {
-                SkipQuotedText(source, ref i, c);
+                SkipQuotedText(source, ref index, character);
                 sb.Append(" \"\" ");
                 continue;
             }
-            sb.Append(c);
-            i++;
+            sb.Append(character);
+            index++;
         }
         return sb.ToString();
     }
 
-    private static bool SkipComment(string source, ref int i, CodeLanguage language)
+    private static bool SkipComment(string source, ref int index, CodeLanguage language)
     {
         if (language == CodeLanguage.Python)
         {
-            if (source[i] != '#') return false;
-            while (i < source.Length && source[i] != '\n') i++;
+            if (source[index] != '#') return false;
+            while (index < source.Length && source[index] != '\n') index++;
             return true;
         }
-        if (source[i] != '/' || i + 1 >= source.Length) return false;
-        if (source[i + 1] == '/')
+        if (source[index] != '/' || index + 1 >= source.Length) return false;
+        if (source[index + 1] == '/')
         {
-            while (i < source.Length && source[i] != '\n') i++;
+            while (index < source.Length && source[index] != '\n') index++;
             return true;
         }
-        if (source[i + 1] != '*') return false;
-        var end = source.IndexOf("*/", i + 2, StringComparison.Ordinal);
-        i = end < 0 ? source.Length : end + 2;
+        if (source[index + 1] != '*') return false;
+        var end = source.IndexOf("*/", index + 2, StringComparison.Ordinal);
+        index = end < 0 ? source.Length : end + 2;
         return true;
     }
 
-    private static void SkipQuotedText(string source, ref int i, char quote)
+    private static void SkipQuotedText(string source, ref int index, char quote)
     {
-        i++;
-        while (i < source.Length && source[i] != quote && source[i] != '\n')
+        index++;
+        while (index < source.Length && source[index] != quote && source[index] != '\n')
         {
-            if (source[i] == '\\') i++;
-            i++;
+            if (source[index] == '\\') index++;
+            index++;
         }
-        i++;
+        index++;
     }
 
     [GeneratedRegex(@"\b(Var<[^>]+>|VarText|Var|SetVar|var|set_var)\s*\(\s*""[^""]*""")]

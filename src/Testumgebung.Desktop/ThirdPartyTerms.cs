@@ -83,7 +83,7 @@ internal static class ThirdPartyTerms
     {
         var paths = new[] { "THIRD-PARTY-TERMS.md", "licenses/third-party/microsoft/dotnet-library.txt",
             "licenses/third-party/microsoft/windows-sdk.txt" };
-        var texts = paths.Select(p => File.ReadAllText(Path.Combine(folder, p))).ToList();
+        var texts = paths.Select(path => File.ReadAllText(Path.Combine(folder, path))).ToList();
         var python = Path.Combine(folder, "workers", "python", "runtime", "LICENSE.txt");
         if (File.Exists(Path.Combine(folder, "workers", "python", "runtime", "python.exe")))
             texts.Add(File.ReadAllText(python));

@@ -48,7 +48,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     {
         _identity = identity;
         AddCommand = new RelayCommand(() => Users.Add(new RightsEditRow { Develop = true }));
-        RemoveCommand = new RelayCommand(p => { if (p is RightsEditRow r) Users.Remove(r); });
+        RemoveCommand = new RelayCommand(parameter => { if (parameter is RightsEditRow user) Users.Remove(user); });
         SaveCommand = new RelayCommand(() => Save(), () => _identity.Store is not null);
         ReloadCommand = new RelayCommand(Load);
         Load();
@@ -67,7 +67,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     {
         null when _identity.Session.IsDevelopmentMode => "Expliziter Entwicklungsmodus (--development): simulierte Anmeldung mit allen Rechten.",
         null => "Produktivbetrieb: Zugangsdatei fehlt – keine erweiterten Rechte. Entra-Zugang konfigurieren.",
-        { LoadError: { } e } => "Zugangsdatei beschädigt – niemand hat Rechte: " + e,
+        { LoadError: { } errorText } => "Zugangsdatei beschädigt – niemand hat Rechte: " + errorText,
         { UsesLocalPasswords: true } => "Lokaler Passwortzugang aktiv. Rechte aus der Benutzerliste; keine Entra-bestätigte Firmenidentität.",
         { UsesEntra: true, EntraBrokerTlsSha256.Length: > 0 } => "Anmeldung über den lokalen Entra-Dienst im Systembrowser.",
         { UsesEntra: true } => "Anmeldung über Microsoft Entra ID im Systembrowser; Rechte aus der Liste unten.",
@@ -97,14 +97,14 @@ public sealed class AccessSettingsViewModel : ObservableObject
 
     public void Load()
     {
-        var c = _identity.Store?.Load();
-        LoadIdentitySettings(c);
-        AllowLocalPasswords = c?.AllowLocalPasswords ?? false;
-        RightsSource = c?.RightsSource ?? "Lokal";
-        DevelopRole = c?.DevelopRole ?? "Testumgebung.Entwickeln";
-        ReleaseRole = c?.ReleaseRole ?? "Testumgebung.Freigeben";
+        var accessConfig = _identity.Store?.Load();
+        LoadIdentitySettings(accessConfig);
+        AllowLocalPasswords = accessConfig?.AllowLocalPasswords ?? false;
+        RightsSource = accessConfig?.RightsSource ?? "Lokal";
+        DevelopRole = accessConfig?.DevelopRole ?? "Testumgebung.Entwickeln";
+        ReleaseRole = accessConfig?.ReleaseRole ?? "Testumgebung.Freigeben";
         Users.Clear();
-        foreach (var u in c?.Users ?? []) Users.Add(new RightsEditRow { Upn = u.Upn, Name = u.Name ?? "", Develop = u.Develop, Release = u.Release, PasswordHash = u.PasswordHash });
+        foreach (var user in accessConfig?.Users ?? []) Users.Add(new RightsEditRow { Upn = user.Upn, Name = user.Name ?? "", Develop = user.Develop, Release = user.Release, PasswordHash = user.PasswordHash });
         RefreshSession();
     }
 
@@ -117,13 +117,13 @@ public sealed class AccessSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ModeText));
     }
 
-    private void LoadIdentitySettings(AccessConfig? c)
+    private void LoadIdentitySettings(AccessConfig? accessConfig)
     {
-        ClientId = c?.ClientId ?? "";
-        TenantId = c?.TenantId ?? "";
-        EntraRedirectUri = c?.EntraRedirectUri ?? "";
-        EntraBrokerTlsSha256 = c?.EntraBrokerTlsSha256 ?? "";
-        InactivityMinutes = c?.InactivityMinutes ?? 0;
+        ClientId = accessConfig?.ClientId ?? "";
+        TenantId = accessConfig?.TenantId ?? "";
+        EntraRedirectUri = accessConfig?.EntraRedirectUri ?? "";
+        EntraBrokerTlsSha256 = accessConfig?.EntraBrokerTlsSha256 ?? "";
+        InactivityMinutes = accessConfig?.InactivityMinutes ?? 0;
     }
 
     private bool SaveLocalDevelopmentMode => !AllowLocalPasswords && ClientId.Length == 0 && TenantId.Length == 0
@@ -132,7 +132,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     public bool Save()
     {
         if (_identity.Store is not { } store) return false;
-        if (Users.Any(u => string.IsNullOrWhiteSpace(u.Upn)))
+        if (Users.Any(user => string.IsNullOrWhiteSpace(user.Upn)))
         {
             Status = "Jede Zeile braucht einen Anmeldenamen (UPN).";
             return false;
@@ -160,7 +160,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
             RightsSource = RightsSource,
             DevelopRole = DevelopRole.Length == 0 ? "Testumgebung.Entwickeln" : DevelopRole,
             ReleaseRole = ReleaseRole.Length == 0 ? "Testumgebung.Freigeben" : ReleaseRole,
-            Users = Users.Select(u => new RightsEntry { Upn = u.Upn.Trim(), Name = u.Name.Length == 0 ? null : u.Name, Develop = u.Develop, Release = u.Release, PasswordHash = u.PasswordHash }).ToList(),
+            Users = Users.Select(user => new RightsEntry { Upn = user.Upn.Trim(), Name = user.Name.Length == 0 ? null : user.Name, Develop = user.Develop, Release = user.Release, PasswordHash = user.PasswordHash }).ToList(),
         };
         if (!ValidateReachableAccess(config)) return false;
         try
@@ -204,13 +204,13 @@ public sealed class AccessSettingsViewModel : ObservableObject
         if (config.AllowLocalDevelopment || config.UsesLocalPasswords)
             foreach (var user in config.Users)
                 if (!user.Upn.Contains('@')) user.Upn = SimulatedIdentityProvider.ToUpn(user.Upn);
-        if (config.Users.Any(u => !System.Net.Mail.MailAddress.TryCreate(u.Upn, out var address)
-            || !string.Equals(address.Address, u.Upn, StringComparison.OrdinalIgnoreCase)))
+        if (config.Users.Any(user => !System.Net.Mail.MailAddress.TryCreate(user.Upn, out var address)
+            || !string.Equals(address.Address, user.Upn, StringComparison.OrdinalIgnoreCase)))
         {
             Status = "Ungültiger Anmeldename. Einen vollständigen UPN wie name@firma.example verwenden; lokale Namen werden im Entwicklungsmodus normalisiert.";
             return false;
         }
-        if (config.Users.GroupBy(u => u.Upn, StringComparer.OrdinalIgnoreCase).Any(g => g.Count() > 1))
+        if (config.Users.GroupBy(user => user.Upn, StringComparer.OrdinalIgnoreCase).Any(group => group.Count() > 1))
         {
             Status = "Anmeldenamen sind nach der Normalisierung doppelt vorhanden. Jede Person nur einmal zuordnen.";
             return false;
@@ -229,9 +229,9 @@ public sealed class AccessSettingsViewModel : ObservableObject
     private bool ValidatePasswords(AccessConfig config)
     {
         if (!config.UsesLocalPasswords) return true;
-        if (config.RightsSource != "Lokal" || !config.Users.Any(u => u.Develop))
+        if (config.RightsSource != "Lokal" || !config.Users.Any(user => user.Develop))
         { Status = "Lokaler Passwortzugang benötigt die Rechtequelle Lokal und mindestens ein Konto mit Entwickeln."; return false; }
-        if (config.Users.Any(u => !LocalPasswordHash.IsValid(u.PasswordHash)))
+        if (config.Users.Any(user => !LocalPasswordHash.IsValid(user.PasswordHash)))
         { Status = "Vor dem Aktivieren für jedes lokale Konto ein Passwort setzen."; return false; }
         return true;
     }
