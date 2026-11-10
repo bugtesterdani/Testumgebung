@@ -1,3 +1,4 @@
+using System.Net.Sockets;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
@@ -250,6 +251,38 @@ public sealed class CommunicationTests
     }
 
     // ------------------------------------------------------------------ Treiber gegen lokale Gegenstellen
+
+    [Fact]
+    public async Task TcpSocketAbortDistinguishesDeadlineCallerCancellationAndIoFailure()
+    {
+        var buffer = new byte[1];
+        using var stream = new AbortedSocketRead();
+        Assert.Null(await TcpTransport.ReadWithTimeoutAsync(stream, buffer, TimeSpan.FromMilliseconds(10), default));
+
+        using var caller = new CancellationTokenSource();
+        caller.Cancel();
+        var cancelled = await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            TcpTransport.ReadWithTimeoutAsync(stream, buffer, System.Threading.Timeout.InfiniteTimeSpan, caller.Token));
+        Assert.Equal(caller.Token, cancelled.CancellationToken);
+
+        using var interrupted = new AbortedSocketRead(waitForCancellation: false);
+        var failure = await Assert.ThrowsAsync<IOException>(() =>
+            TcpTransport.ReadWithTimeoutAsync(interrupted, buffer, System.Threading.Timeout.InfiniteTimeSpan, default));
+        Assert.Equal(SocketError.OperationAborted, Assert.IsType<SocketException>(failure.InnerException).SocketErrorCode);
+    }
+
+    private sealed class AbortedSocketRead(bool waitForCancellation = true) : MemoryStream
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (waitForCancellation)
+            {
+                try { await Task.Delay(System.Threading.Timeout.InfiniteTimeSpan, cancellationToken); }
+                catch (OperationCanceledException) { }
+            }
+            throw new IOException("Socket read aborted.", new SocketException((int)SocketError.OperationAborted));
+        }
+    }
 
     [Fact]
     public async Task TCP_Textprotokoll_mit_echter_Verbindung()

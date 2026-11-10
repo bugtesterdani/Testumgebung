@@ -507,26 +507,44 @@ public sealed class TcpTransport : IStreamTransport
 
     public async Task<int> ReadAsync(Memory<byte> buffer, TimeSpan timeout, CancellationToken cancellationToken)
     {
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(timeout);
+        int? count;
         try
         {
-            var count = await Stream.ReadAsync(buffer, cts.Token).ConfigureAwait(false);
-            if (count == 0)
-            {
-                Close();
-                throw new CommunicationException($"{Description}: Gegenstelle hat die Verbindung geschlossen.");
-            }
-            return count;
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return 0;
+            count = await ReadWithTimeoutAsync(Stream, buffer, timeout, cancellationToken).ConfigureAwait(false);
         }
         catch (IOException ex)
         {
             Close();
             throw new CommunicationException($"{Description}: Verbindung unterbrochen ({ex.Message}).", ex);
+        }
+
+        if (count == 0)
+        {
+            Close();
+            throw new CommunicationException($"{Description}: Gegenstelle hat die Verbindung geschlossen.");
+        }
+        return count ?? 0;
+    }
+
+    // NetworkStream can surface a cancelled Windows socket read as an IOException with WSA_OPERATION_ABORTED.
+    internal static async Task<int?> ReadWithTimeoutAsync(Stream stream, Memory<byte> buffer, TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        using var readDeadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        readDeadline.CancelAfter(timeout);
+        try
+        {
+            return await stream.ReadAsync(buffer, readDeadline.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+        catch (IOException ex) when (readDeadline.IsCancellationRequested
+            && ex.InnerException is SocketException { SocketErrorCode: SocketError.OperationAborted })
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return null;
         }
     }
 
