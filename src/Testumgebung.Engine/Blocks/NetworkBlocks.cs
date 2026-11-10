@@ -42,36 +42,36 @@ public static class NetworkBlocks
         c.Register(new(Configure, "Verbindung konfigurieren", CommunicationBlocks.Category, "arrow",
             "Ändert COM-Port oder Netzwerkadresse und Optionen aus aktuellen Variablen. Eine bestehende Streamverbindung wird geschlossen.",
             [new("Ressource", "Ressource", ParameterKind.Resource, "Pruefling_Seriell", Required: true), .. ConnectionParameters()],
-            p => new ConfigureAction(p.Text("Ressource"), p.Optional("Adresse"), p.Optional("Verbindungsoptionen"))));
+            parameters => new ConfigureAction(parameters.Text("Ressource"), parameters.Optional("Adresse"), parameters.Optional("Verbindungsoptionen"))));
         c.Register(new(Http, "HTTP-Anfrage (GET / POST / …)", CommunicationBlocks.Category, "arrow",
             "HTTP/HTTPS direkt ohne curl-Installation. Antwort und Statuscode als Variablen; maximal 1 MiB Antwort.",
             [.. Common(), new("Methode", "Methode", ParameterKind.Choice, "GET", Choices: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
                 new("Pfad", "Pfad / URL", ParameterKind.Text, "/", Required: true),
                 new("Body", "Request-Body", ParameterKind.Text, Hint: "Platzhalter {Variable}; JSON-Klammern als {{ und }} schreiben."),
                 new("Header", "Header", ParameterKind.Text, Hint: "Eine Zeile Name: Wert; z.B. Content-Type: application/json oder Authorization: Bearer {Token}. Nicht protokolliert.")],
-            p => Create(p, "http", "Pfad")));
+            parameters => Create(parameters, "http", "Pfad")));
         c.Register(new(Ssh, "SSH-Befehl", CommunicationBlocks.Category, "arrow",
             "Führt einen Befehl über SSH aus. Passwort oder Schlüsseldatei; HostKeySHA256 oder ausdrücklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
-            [.. Common(), .. HostKeyTargets(), new("Befehl", "Befehl", ParameterKind.Text, "uname -a", Required: true)], p => Create(p, "ssh", "Befehl")));
+            [.. Common(), .. HostKeyTargets(), new("Befehl", "Befehl", ParameterKind.Text, "uname -a", Required: true)], parameters => Create(parameters, "ssh", "Befehl")));
         foreach (var upload in new[] { true, false })
             c.Register(new(upload ? Upload : Download, upload ? "SFTP-Dateitransfer" : "SFTP-Datei herunterladen", CommunicationBlocks.Category, "arrow",
                 "Überträgt eine Datei über SSH/SFTP. Pfade unterstützen Variablen. Überschreiben ist ausdrücklich wählbar.",
                 [.. Common(), .. HostKeyTargets(), .. (upload ? new ParameterDescriptor[] { new("Richtung", "Richtung", ParameterKind.Choice, "Hochladen", Choices: ["Hochladen", "Herunterladen"]) } : []), new("Lokal", "Lokale Datei", ParameterKind.Text, Required: true), new("Remote", "Datei auf Gegenstelle", ParameterKind.Text, Required: true),
                     new("Ueberschreiben", "Bestehende Datei überschreiben", ParameterKind.Bool, "false")],
-                p => Create(p, upload && p.Choice("Richtung") == "Hochladen" ? "sftp.upload" : "sftp.download", "Remote")));
+                parameters => Create(parameters, upload && parameters.Choice("Richtung") == "Hochladen" ? "sftp.upload" : "sftp.download", "Remote")));
     }
-    private static RemoteAction Create(BlockParameters p, string operation, string argument)
+    private static RemoteAction Create(BlockParameters parameters, string operation, string argument)
     {
-        var timeout = p.Number("Zeitlimit") ?? 30000;
+        var timeout = parameters.Number("Zeitlimit") ?? 30000;
         if (!double.IsFinite(timeout) || timeout <= 0) throw new BlockConfigurationException("Zeitlimit muss positiv sein.");
         (string? Fingerprint, string? Data) keys = operation == "http" ? (null, null)
-            : (p.Optional("HostKeyZiel"), p.Optional("HostKeyDatenZiel"));
-        return new(p.Text("Ressource"), p.Optional("Adresse"), p.Optional("Verbindungsoptionen"),
-            new RemoteRequest(operation, p.Text(argument), operation == "http" ? p.Choice("Methode") : "GET",
-                operation == "http" ? p.Text("Body") : "", operation == "http" ? p.Text("Header") : "",
-                operation.StartsWith("sftp", StringComparison.Ordinal) ? p.Text("Lokal") : "", TimeSpan.FromMilliseconds(timeout),
-                operation.StartsWith("sftp", StringComparison.Ordinal) && p.Bool("Ueberschreiben")),
-            p.Optional("Ziel"), p.Optional("StatusZiel"), p.Optional("FehlerZiel"), p.Optional("ErwarteterStatus"), keys.Fingerprint, keys.Data);
+            : (parameters.Optional("HostKeyZiel"), parameters.Optional("HostKeyDatenZiel"));
+        return new(parameters.Text("Ressource"), parameters.Optional("Adresse"), parameters.Optional("Verbindungsoptionen"),
+            new RemoteRequest(operation, parameters.Text(argument), operation == "http" ? parameters.Choice("Methode") : "GET",
+                operation == "http" ? parameters.Text("Body") : "", operation == "http" ? parameters.Text("Header") : "",
+                operation.StartsWith("sftp", StringComparison.Ordinal) ? parameters.Text("Lokal") : "", TimeSpan.FromMilliseconds(timeout),
+                operation.StartsWith("sftp", StringComparison.Ordinal) && parameters.Bool("Ueberschreiben")),
+            parameters.Optional("Ziel"), parameters.Optional("StatusZiel"), parameters.Optional("FehlerZiel"), parameters.Optional("ErwarteterStatus"), keys.Fingerprint, keys.Data);
     }
     internal static async Task ConfigureAsync(IHardwareAdapter adapter, string? endpoint, string? options, IStepContext ctx, CancellationToken token)
     {
@@ -95,8 +95,8 @@ public static class NetworkBlocks
         public async Task<StepOutcome> ExecuteAsync(IStepContext context)
         {
             if (string.IsNullOrWhiteSpace(endpoint)) throw new CommunicationException("Adresse / COM-Port fehlt.");
-            await context.UseDeviceAsync(resource, "Verbindung konfigurieren", async (a, _, ct) =>
-            { await ConfigureAsync(a, endpoint, options, context, ct).ConfigureAwait(false); return 0; }).ConfigureAwait(false);
+            await context.UseDeviceAsync(resource, "Verbindung konfigurieren", async (iHardwareAdapter, _, ct) =>
+            { await ConfigureAsync(iHardwareAdapter, endpoint, options, context, ct).ConfigureAwait(false); return 0; }).ConfigureAwait(false);
             return StepOutcome.Unrated("Verbindung konfiguriert");
         }
     }
@@ -107,10 +107,10 @@ public static class NetworkBlocks
         {
             string Expand(string text) => CommunicationBlocks.Interpolate(text, context);
             var resolved = request with { Argument = Expand(request.Argument), Body = Expand(request.Body), Headers = Expand(request.Headers), LocalPath = Expand(request.LocalPath) };
-            var response = await context.UseDeviceAsync(resource, request.Operation, async (a, _, ct) =>
+            var response = await context.UseDeviceAsync(resource, request.Operation, async (iHardwareAdapter, _, ct) =>
             {
-                await ConfigureAsync(a, endpoint, options, context, ct).ConfigureAwait(false);
-                return await CommunicationBlocks.As<IRemoteConnection>(a, "SSH/SFTP/HTTP").ExecuteAsync(resolved, ct).ConfigureAwait(false);
+                await ConfigureAsync(iHardwareAdapter, endpoint, options, context, ct).ConfigureAwait(false);
+                return await CommunicationBlocks.As<IRemoteConnection>(iHardwareAdapter, "SSH/SFTP/HTTP").ExecuteAsync(resolved, ct).ConfigureAwait(false);
             }).ConfigureAwait(false);
             SaveResponse(context, response);
             var range = (expected is null ? (request.Operation == "http" ? "200-299" : "0") : Expand(expected)).Split('-', 2);

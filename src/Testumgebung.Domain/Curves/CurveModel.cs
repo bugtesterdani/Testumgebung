@@ -19,7 +19,7 @@ public sealed record CurveChannel(string Id, string Unit, double[] Samples)
     {
         if (Samples.Length == 0) return 0;
         double sum = 0;
-        foreach (var s in Samples) sum += s * s;
+        foreach (var sample in Samples) sum += sample * sample;
         return Math.Sqrt(sum / Samples.Length);
     }
 }
@@ -72,44 +72,44 @@ public sealed class CurveDefinition
     public string Key => $"{Id}@{Version}";
 
     /// <summary>Zeitpunkt eines Samples in Sekunden.</summary>
-    public double TimeOf(int index) => Times is { } t ? t[index] : index / SampleRate;
+    public double TimeOf(int index) => Times is { } samples ? samples[index] : index / SampleRate;
 
-    public double Duration => Count == 0 ? 0 : Times is { } t ? t[^1] - t[0] + (t.Length > 1 ? t[^1] - t[^2] : 0) : Count / SampleRate;
+    public double Duration => Count == 0 ? 0 : Times is { } samples ? samples[^1] - samples[0] + (samples.Length > 1 ? samples[^1] - samples[^2] : 0) : Count / SampleRate;
 
     /// <summary>Wert eines Kanals zur Zeit t (lineare Interpolation; außerhalb: Randwert).</summary>
     public double ValueAt(int channel, double t)
     {
-        var s = Channels[channel].Samples;
-        if (s.Length == 0) return 0;
+        var samples = Channels[channel].Samples;
+        if (samples.Length == 0) return 0;
         if (Times is null)
         {
-            var x = t * SampleRate;
-            if (x <= 0) return s[0];
-            if (x >= s.Length - 1) return s[^1];
-            var i = (int)x;
-            return s[i] + (s[i + 1] - s[i]) * (x - i);
+            var xValue = t * SampleRate;
+            if (xValue <= 0) return samples[0];
+            if (xValue >= samples.Length - 1) return samples[^1];
+            var index = (int)xValue;
+            return samples[index] + (samples[index + 1] - samples[index]) * (xValue - index);
         }
         var times = Times;
-        if (t <= times[0]) return s[0];
-        if (t >= times[^1]) return s[^1];
-        var k = Array.BinarySearch(times, t);
-        if (k >= 0) return s[k];
-        k = ~k;
-        var f = (t - times[k - 1]) / (times[k] - times[k - 1]);
-        return s[k - 1] + (s[k] - s[k - 1]) * f;
+        if (t <= times[0]) return samples[0];
+        if (t >= times[^1]) return samples[^1];
+        var index2 = Array.BinarySearch(times, t);
+        if (index2 >= 0) return samples[index2];
+        index2 = ~index2;
+        var frequency = (t - times[index2 - 1]) / (times[index2] - times[index2 - 1]);
+        return samples[index2 - 1] + (samples[index2] - samples[index2 - 1]) * frequency;
     }
 
     /// <summary>Inhaltshash (Zeitbasis, Kanäle, Einheiten, Samples) – unabhängig von Name/Beschreibung.</summary>
     public string ContentHash()
     {
         using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        void Text(string s) { var b = Encoding.UTF8.GetBytes(s + "\n"); sha.AppendData(b); }
-        void Doubles(double[] d)
+        void Text(string text) { var bytes = Encoding.UTF8.GetBytes(text + "\n"); sha.AppendData(bytes); }
+        void Doubles(double[] samples)
         {
             var buf = new byte[8];
-            foreach (var v in d)
+            foreach (var value in samples)
             {
-                BinaryPrimitives.WriteDoubleLittleEndian(buf, v);
+                BinaryPrimitives.WriteDoubleLittleEndian(buf, value);
                 sha.AppendData(buf);
             }
         }
@@ -119,11 +119,11 @@ public sealed class CurveDefinition
             Text("times");
             Doubles(times);
         }
-        foreach (var c in Channels)
+        foreach (var curveChannel in Channels)
         {
-            Text(c.Id);
-            Text(c.Unit);
-            Doubles(c.Samples);
+            Text(curveChannel.Id);
+            Text(curveChannel.Unit);
+            Doubles(curveChannel.Samples);
         }
         return Convert.ToHexStringLower(sha.GetHashAndReset());
     }
@@ -167,7 +167,7 @@ public sealed class CurveDefinition
 
     /// <summary>Für das Ausgabegerät.</summary>
     public Testumgebung.Contracts.OutputCurve ToOutput()
-        => new(Key, SampleRate, Times, Channels.Select(c => new Testumgebung.Contracts.OutputChannelData(c.Id, c.Unit, c.Samples)).ToList());
+        => new(Key, SampleRate, Times, Channels.Select(curveChannel => new Testumgebung.Contracts.OutputChannelData(curveChannel.Id, curveChannel.Unit, curveChannel.Samples)).ToList());
 
     public override string ToString() => $"{Name} v{Version} ({Channels.Count} Kanäle, {Count} Samples)";
 }
@@ -179,19 +179,19 @@ public sealed class CurveLibrary
 
     public IReadOnlyList<CurveDefinition> Versions => _versions;
 
-    public IEnumerable<string> Ids => _versions.Select(v => v.Id).Distinct();
+    public IEnumerable<string> Ids => _versions.Select(curve => curve.Id).Distinct();
 
     public CurveDefinition? Find(string id, string? version = null)
         => version is null or "" or "neueste"
-            ? _versions.Where(v => v.Id == id).OrderBy(v => v.Version, VersionComparer.Instance).LastOrDefault()
-            : _versions.FirstOrDefault(v => v.Id == id && v.Version == version);
+            ? _versions.Where(curve => curve.Id == id).OrderBy(curve => curve.Version, VersionComparer.Instance).LastOrDefault()
+            : _versions.FirstOrDefault(curve => curve.Id == id && curve.Version == version);
 
-    public IReadOnlyList<CurveDefinition> VersionsOf(string id) => _versions.Where(v => v.Id == id).OrderBy(v => v.Version, VersionComparer.Instance).ToList();
+    public IReadOnlyList<CurveDefinition> VersionsOf(string id) => _versions.Where(curve => curve.Id == id).OrderBy(curve => curve.Version, VersionComparer.Instance).ToList();
 
     /// <summary>Version speichern. Eine bestehende Version wird nie überschrieben.</summary>
     public void Add(CurveDefinition curve)
     {
-        if (_versions.Any(v => v.Id == curve.Id && v.Version == curve.Version))
+        if (_versions.Any(curve2 => curve2.Id == curve.Id && curve2.Version == curve.Version))
             throw new InvalidOperationException($"Kurve {curve.Id} v{curve.Version} existiert bereits – Versionen sind unveränderlich.");
         if (string.IsNullOrWhiteSpace(curve.Id) || string.IsNullOrWhiteSpace(curve.Version)) throw new InvalidOperationException("Kurven-Id und Version erforderlich.");
         _versions.Add(curve);
@@ -202,7 +202,7 @@ public sealed class CurveLibrary
         var last = Find(id);
         if (last is null) return "0.1";
         var parts = last.Version.Split('.');
-        return int.TryParse(parts[^1], out var n) ? string.Join('.', parts[..^1].Append((n + 1).ToString(System.Globalization.CultureInfo.InvariantCulture))) : last.Version + ".1";
+        return int.TryParse(parts[^1], out var count) ? string.Join('.', parts[..^1].Append((count + 1).ToString(System.Globalization.CultureInfo.InvariantCulture))) : last.Version + ".1";
     }
 }
 
@@ -213,14 +213,14 @@ public sealed class VersionComparer : IComparer<string>
 
     public int Compare(string? x, string? y)
     {
-        var a = (x ?? "").Split('.');
-        var b = (y ?? "").Split('.');
-        for (var i = 0; i < Math.Max(a.Length, b.Length); i++)
+        var parts = (x ?? "").Split('.');
+        var parts2 = (y ?? "").Split('.');
+        for (var index = 0; index < Math.Max(parts.Length, parts2.Length); index++)
         {
-            var pa = i < a.Length ? a[i] : "0";
-            var pb = i < b.Length ? b[i] : "0";
-            var c = int.TryParse(pa, out var na) && int.TryParse(pb, out var nb) ? na.CompareTo(nb) : string.CompareOrdinal(pa, pb);
-            if (c != 0) return c;
+            var pa = index < parts.Length ? parts[index] : "0";
+            var pb = index < parts2.Length ? parts2[index] : "0";
+            var parsedValue = int.TryParse(pa, out var na) && int.TryParse(pb, out var nb) ? na.CompareTo(nb) : string.CompareOrdinal(pa, pb);
+            if (parsedValue != 0) return parsedValue;
         }
         return 0;
     }

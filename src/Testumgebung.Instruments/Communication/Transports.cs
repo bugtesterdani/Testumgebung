@@ -84,10 +84,10 @@ public sealed class StreamReceiver(IStreamTransport transport)
             var slice = rule.Terminator is null && rule.Length is null && _pending.Count > 0
                 ? TimeSpan.FromTicks(Math.Min(remaining.Ticks, rule.EffectiveIdle.Ticks))
                 : TimeSpan.FromTicks(Math.Min(remaining.Ticks, TimeSpan.FromMilliseconds(250).Ticks));
-            var n = await transport.ReadAsync(buffer, slice, cancellationToken).ConfigureAwait(false);
-            if (n > 0)
+            var count = await transport.ReadAsync(buffer, slice, cancellationToken).ConfigureAwait(false);
+            if (count > 0)
             {
-                _pending.AddRange(buffer.AsSpan(0, n).ToArray());
+                _pending.AddRange(buffer.AsSpan(0, count).ToArray());
                 lastData = DateTime.UtcNow;
                 if (_pending.Count > rule.MaxBytes)
                 {
@@ -104,28 +104,28 @@ public sealed class StreamReceiver(IStreamTransport transport)
         if (rule.Length is { } len)
         {
             if (_pending.Count < len) return null;
-            var r = _pending.Take(len).ToArray();
+            var bytes = _pending.Take(len).ToArray();
             _pending.RemoveRange(0, len);
-            return r;
+            return bytes;
         }
-        if (rule.Terminator is { Length: > 0 } t)
+        if (rule.Terminator is { Length: > 0 } bytes2)
         {
-            var index = IndexOf(_pending, t);
+            var index = IndexOf(_pending, bytes2);
             if (index < 0) return null;
-            var r = _pending.Take(index).ToArray();
-            _pending.RemoveRange(0, index + t.Length);
-            return r;
+            var bytes3 = _pending.Take(index).ToArray();
+            _pending.RemoveRange(0, index + bytes2.Length);
+            return bytes3;
         }
         return null;
     }
 
     private static int IndexOf(List<byte> data, byte[] pattern)
     {
-        for (var i = 0; i + pattern.Length <= data.Count; i++)
+        for (var index = 0; index + pattern.Length <= data.Count; index++)
         {
             var match = true;
-            for (var j = 0; j < pattern.Length && match; j++) match = data[i + j] == pattern[j];
-            if (match) return i;
+            for (var innerIndex = 0; innerIndex < pattern.Length && match; innerIndex++) match = data[index + innerIndex] == pattern[innerIndex];
+            if (match) return index;
         }
         return -1;
     }
@@ -147,9 +147,9 @@ public sealed record SerialSettings(string Port, int Baud = 9600, int DataBits =
         return settings;
     }
 
-    private static char ParseParity(InstrumentOptions o)
+    private static char ParseParity(InstrumentOptions instrumentOptions)
     {
-        var parity = (o.Text("Parität") ?? o.Text("Paritaet") ?? "N").ToUpperInvariant()[0];
+        var parity = (instrumentOptions.Text("Parität") ?? instrumentOptions.Text("Paritaet") ?? "N").ToUpperInvariant()[0];
         parity = parity switch { 'K' => 'N', 'G' => 'E', 'U' => 'O', _ => parity };
         if (!"NEOMS".Contains(parity)) throw new InstrumentException($"Parität „{parity}“: N, E, O, M oder S.");
         return parity;
@@ -222,18 +222,18 @@ public sealed class SerialTransport(SerialSettings settings) : IStreamTransport
 
     private static CommunicationException Win32(string what) => new($"{what}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}");
 
-    private SafeFileHandle Handle => _handle is { IsInvalid: false, IsClosed: false } h ? h : throw new CommunicationException($"{settings.Port} ist nicht geöffnet.");
+    private SafeFileHandle Handle => _handle is { IsInvalid: false, IsClosed: false } safeFileHandle ? safeFileHandle : throw new CommunicationException($"{settings.Port} ist nicht geöffnet.");
 
     public Task WriteAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken) => Task.Run(() =>
     {
-        var h = Handle;
+        var handle = Handle;
         lock (_gate)
         {
             var timeouts = new Native.CommTimeouts { WriteTotalTimeoutConstant = 2000, WriteTotalTimeoutMultiplier = 10 };
-            _api.SetCommTimeouts(h, ref timeouts);
+            _api.SetCommTimeouts(handle, ref timeouts);
             var bytes = data.ToArray();
-            using var reg = cancellationToken.Register(() => _api.CancelIoEx(h, IntPtr.Zero));
-            if (!_api.WriteFile(h, bytes, bytes.Length, out var written, IntPtr.Zero) || written != bytes.Length)
+            using var reg = cancellationToken.Register(() => _api.CancelIoEx(handle, IntPtr.Zero));
+            if (!_api.WriteFile(handle, bytes, bytes.Length, out var written, IntPtr.Zero) || written != bytes.Length)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 throw Win32($"Schreiben auf {settings.Port}");
@@ -243,7 +243,7 @@ public sealed class SerialTransport(SerialSettings settings) : IStreamTransport
 
     public Task<int> ReadAsync(Memory<byte> buffer, TimeSpan timeout, CancellationToken cancellationToken) => Task.Run(() =>
     {
-        var h = Handle;
+        var handle = Handle;
         lock (_gate)
         {
             // Rückkehr, sobald ein Byte da ist, spätestens nach dem Zeitlimit (MAXDWORD-Intervall + Multiplikator).
@@ -253,10 +253,10 @@ public sealed class SerialTransport(SerialSettings settings) : IStreamTransport
                 ReadTotalTimeoutMultiplier = uint.MaxValue,
                 ReadTotalTimeoutConstant = (uint)Math.Clamp(timeout.TotalMilliseconds, 1, uint.MaxValue - 1),
             };
-            _api.SetCommTimeouts(h, ref timeouts);
+            _api.SetCommTimeouts(handle, ref timeouts);
             var temp = new byte[buffer.Length];
-            using var reg = cancellationToken.Register(() => _api.CancelIoEx(h, IntPtr.Zero));
-            if (!_api.ReadFile(h, temp, temp.Length, out var read, IntPtr.Zero))
+            using var reg = cancellationToken.Register(() => _api.CancelIoEx(handle, IntPtr.Zero));
+            if (!_api.ReadFile(handle, temp, temp.Length, out var read, IntPtr.Zero))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 throw Win32($"Lesen von {settings.Port}");
@@ -288,7 +288,7 @@ public sealed class SerialTransport(SerialSettings settings) : IStreamTransport
         var ports = new List<string>();
         foreach (var name in key.GetValueNames())
             if (key.GetValue(name) is string port) ports.Add(port);
-        return ports.OrderBy(p => p.Length).ThenBy(p => p, StringComparer.Ordinal).ToList();
+        return ports.OrderBy(port => port.Length).ThenBy(port => port, StringComparer.Ordinal).ToList();
     }
 
     internal static class Native
@@ -394,18 +394,18 @@ internal static class Endpoints
     /// <summary>„192.168.1.50:5000“, „pruefling.local:502“, „TCPIP::host::port::SOCKET“.</summary>
     public static (string Host, int Port) Parse(string resource, int defaultPort)
     {
-        var r = resource.Trim();
-        if (r.StartsWith("TCPIP", StringComparison.OrdinalIgnoreCase))
+        var text = resource.Trim();
+        if (text.StartsWith("TCPIP", StringComparison.OrdinalIgnoreCase))
         {
-            var parts = r.Split("::", StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length >= 3 && int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var p)) return (parts[1], p);
+            var parts = text.Split("::", StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 3 && int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var position)) return (parts[1], position);
             if (parts.Length >= 2) return (parts[1], defaultPort);
         }
-        var colon = r.LastIndexOf(':');
-        if (colon > 0 && !r.EndsWith(']') && int.TryParse(r[(colon + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
-            return (r[..colon].Trim('[', ']'), port);
-        if (r.Length == 0) throw new CommunicationException("Adresse fehlt (z. B. 192.168.1.50:5000).");
-        return (r.Trim('[', ']'), defaultPort);
+        var colon = text.LastIndexOf(':');
+        if (colon > 0 && !text.EndsWith(']') && int.TryParse(text[(colon + 1)..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
+            return (text[..colon].Trim('[', ']'), port);
+        if (text.Length == 0) throw new CommunicationException("Adresse fehlt (z. B. 192.168.1.50:5000).");
+        return (text.Trim('[', ']'), defaultPort);
     }
 }
 
@@ -511,13 +511,13 @@ public sealed class TcpTransport : IStreamTransport
         cts.CancelAfter(timeout);
         try
         {
-            var n = await Stream.ReadAsync(buffer, cts.Token).ConfigureAwait(false);
-            if (n == 0)
+            var count = await Stream.ReadAsync(buffer, cts.Token).ConfigureAwait(false);
+            if (count == 0)
             {
                 Close();
                 throw new CommunicationException($"{Description}: Gegenstelle hat die Verbindung geschlossen.");
             }
-            return n;
+            return count;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -570,7 +570,7 @@ public sealed class UdpTransport(string host, int port, int localPort) : IStream
     {
         if (IsOpen) return;
         var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
-        var address = addresses.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork) ?? addresses.FirstOrDefault()
+        var address = addresses.FirstOrDefault(ipAddress => ipAddress.AddressFamily == AddressFamily.InterNetwork) ?? addresses.FirstOrDefault()
                       ?? throw new CommunicationException($"Adresse {host} nicht auflösbar.");
         _remote = new IPEndPoint(address, port);
         _client = new UdpClient(new IPEndPoint(address.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, localPort));
@@ -597,10 +597,10 @@ public sealed class UdpTransport(string host, int port, int localPort) : IStream
                 return 0;
             }
         }
-        var n = Math.Min(buffer.Length, _rest!.Length);
-        _rest.AsSpan(0, n).CopyTo(buffer.Span);
-        _rest = n == _rest.Length ? null : _rest[n..];
-        return n;
+        var count = Math.Min(buffer.Length, _rest!.Length);
+        _rest.AsSpan(0, count).CopyTo(buffer.Span);
+        _rest = count == _rest.Length ? null : _rest[count..];
+        return count;
     }
 
     public void DiscardInput()
@@ -632,11 +632,11 @@ public sealed class LoopbackTransport : IStreamTransport
 
     public static (LoopbackTransport A, LoopbackTransport B) Pair()
     {
-        var a = new LoopbackTransport();
-        var b = new LoopbackTransport();
-        a._peer = b;
-        b._peer = a;
-        return (a, b);
+        var loopbackTransport = new LoopbackTransport();
+        var loopbackTransport2 = new LoopbackTransport();
+        loopbackTransport._peer = loopbackTransport2;
+        loopbackTransport2._peer = loopbackTransport;
+        return (loopbackTransport, loopbackTransport2);
     }
 
     public string Description => "Testschleife";
@@ -664,10 +664,10 @@ public sealed class LoopbackTransport : IStreamTransport
                 return 0;
             }
         }
-        var n = Math.Min(buffer.Length, _rest.Length);
-        _rest.AsSpan(0, n).CopyTo(buffer.Span);
-        _rest = n == _rest.Length ? null : _rest[n..];
-        return n;
+        var count = Math.Min(buffer.Length, _rest.Length);
+        _rest.AsSpan(0, count).CopyTo(buffer.Span);
+        _rest = count == _rest.Length ? null : _rest[count..];
+        return count;
     }
 
     public void DiscardInput()

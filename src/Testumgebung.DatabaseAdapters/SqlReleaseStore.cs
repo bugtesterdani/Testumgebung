@@ -27,42 +27,42 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
         await using var connection = await database.OpenMigratedAsync(cancellationToken).ConfigureAwait(false);
         await using var cmd = new SqlRunDatabase.Writer(connection, null, cancellationToken).Command($"SELECT {Columns} FROM tu_releases");
         var list = new List<ReleaseInfo>();
-        await using var r = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await r.ReadAsync(cancellationToken).ConfigureAwait(false))
+        await using var dbDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await dbDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             list.Add(new ReleaseInfo(
-                Str(r, 0)!, Str(r, 1)!, Str(r, 2)!, ReleaseStateText.Parse(Str(r, 3)!), Str(r, 4)!, Lng(r, 5) ?? 0,
-                Str(r, 6)!, Time(Lng(r, 7))!.Value, Str(r, 8), Time(Lng(r, 9)), Str(r, 10), Time(Lng(r, 11)), Time(Lng(r, 12)), Str(r, 13)));
+                Str(dbDataReader, 0)!, Str(dbDataReader, 1)!, Str(dbDataReader, 2)!, ReleaseStateText.Parse(Str(dbDataReader, 3)!), Str(dbDataReader, 4)!, Lng(dbDataReader, 5) ?? 0,
+                Str(dbDataReader, 6)!, Time(Lng(dbDataReader, 7))!.Value, Str(dbDataReader, 8), Time(Lng(dbDataReader, 9)), Str(dbDataReader, 10), Time(Lng(dbDataReader, 11)), Time(Lng(dbDataReader, 12)), Str(dbDataReader, 13)));
         }
-        await r.DisposeAsync().ConfigureAwait(false);
-        for (var i = 0; i < list.Count; i++)
+        await dbDataReader.DisposeAsync().ConfigureAwait(false);
+        for (var index = 0; index < list.Count; index++)
         {
-            var info = list[i];
+            var info = list[index];
             if (!_sources.TryGetValue(info.ReleaseId, out var cached) || cached.Hash != info.PackageSha256)
             {
                 var bytes = await GetPackageAsync(info.ReleaseId, cancellationToken).ConfigureAwait(false);
                 cached = (info.PackageSha256, ReleasePackage.ReadSource(bytes)); _sources[info.ReleaseId] = cached;
             }
-            list[i] = info with { Source = cached.Source };
+            list[index] = info with { Source = cached.Source };
         }
-        return list.OrderByDescending(x => x.CreatedAt).ToList();
+        return list.OrderByDescending(release => release.CreatedAt).ToList();
     }
 
     public async Task<byte[]> GetPackageAsync(string releaseId, CancellationToken cancellationToken = default)
     {
         await using var connection = await database.OpenMigratedAsync(cancellationToken).ConfigureAwait(false);
-        var v = await new SqlRunDatabase.Writer(connection, null, cancellationToken)
+        var value = await new SqlRunDatabase.Writer(connection, null, cancellationToken)
             .ValueAsync("SELECT package FROM tu_releases WHERE release_id = @id", ("id", releaseId)).ConfigureAwait(false);
-        return v as byte[] ?? throw new ReleasePackageException($"Paket {releaseId} nicht gefunden.");
+        return value as byte[] ?? throw new ReleasePackageException($"Paket {releaseId} nicht gefunden.");
     }
 
     public Task CreateAsync(ReleaseInfo info, byte[] package, AuditDraft audit, CancellationToken cancellationToken = default)
-        => InTransaction(async w =>
+        => InTransaction(async writer =>
         {
-            if (await w.ScalarAsync("SELECT COUNT(*) FROM tu_releases WHERE project_name = @p AND version = @v",
+            if (await writer.ScalarAsync("SELECT COUNT(*) FROM tu_releases WHERE project_name = @p AND version = @v",
                     ("p", info.ProjectName), ("v", info.Version)).ConfigureAwait(false) > 0)
                 throw new InvalidOperationException($"Version {info.Version} von '{info.ProjectName}' existiert bereits.");
-            await w.ExecAsync(
+            await writer.ExecAsync(
                 """
                 INSERT INTO tu_releases (release_id, project_name, version, state, package, package_sha256, package_size, created_by, created_utc)
                 VALUES (@id, @project, @version, @state, @package, @sha, @size, @by, @at)
@@ -70,17 +70,17 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
                 ("id", info.ReleaseId), ("project", info.ProjectName), ("version", info.Version), ("state", ReleaseStateText.Code(info.State)),
                 ("package", package), ("sha", info.PackageSha256), ("size", (long)package.Length), ("by", info.CreatedBy),
                 ("at", info.CreatedAt.UtcTicks)).ConfigureAwait(false);
-            await AppendAsync(w, audit).ConfigureAwait(false);
+            await AppendAsync(writer, audit).ConfigureAwait(false);
             return true;
         }, cancellationToken);
 
     public Task<bool> TransitionAsync(ReleaseTransition t, AuditDraft audit, CancellationToken cancellationToken = default)
-        => InTransaction(async w =>
+        => InTransaction(async writer =>
         {
-            var project = await w.ValueAsync("SELECT project_name FROM tu_releases WHERE release_id = @id", ("id", t.ReleaseId)).ConfigureAwait(false) as string;
+            var project = await writer.ValueAsync("SELECT project_name FROM tu_releases WHERE release_id = @id", ("id", t.ReleaseId)).ConfigureAwait(false) as string;
             if (project is null) return false;
             if (t.ArchiveOtherReleased)
-                await w.ExecAsync("UPDATE tu_releases SET state = @archived, archived_utc = @t WHERE project_name = @p AND state = @released AND release_id <> @id",
+                await writer.ExecAsync("UPDATE tu_releases SET state = @archived, archived_utc = @t WHERE project_name = @p AND state = @released AND release_id <> @id",
                     ("archived", ReleaseStateText.Code(ReleaseState.Archived)), ("t", t.Time.UtcTicks), ("p", project),
                     ("released", ReleaseStateText.Code(ReleaseState.Released)), ("id", t.ReleaseId)).ConfigureAwait(false);
             var (setBy, setAt) = t.To switch
@@ -97,15 +97,15 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
             };
             if (setBy is not null) args.Add(("user", t.User));
             if (t.ReviewReport is not null) args.Add(("report", t.ReviewReport));
-            if (await w.ExecCountAsync(sql, args.ToArray()).ConfigureAwait(false) != 1) throw new StaleReleaseException();
-            await AppendAsync(w, audit).ConfigureAwait(false);
+            if (await writer.ExecCountAsync(sql, args.ToArray()).ConfigureAwait(false) != 1) throw new StaleReleaseException();
+            await AppendAsync(writer, audit).ConfigureAwait(false);
             return true;
         }, cancellationToken, staleIsFalse: true);
 
     public Task AppendAuditAsync(AuditDraft audit, CancellationToken cancellationToken = default)
-        => InTransaction(async w =>
+        => InTransaction(async writer =>
         {
-            await AppendAsync(w, audit).ConfigureAwait(false);
+            await AppendAsync(writer, audit).ConfigureAwait(false);
             return true;
         }, cancellationToken);
 
@@ -115,26 +115,26 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
         await using var cmd = new SqlRunDatabase.Writer(connection, null, cancellationToken)
             .Command("SELECT seq, time_utc, user_name, action, details, release_id, prev_hash, entry_hash FROM tu_audit_log ORDER BY seq");
         var list = new List<AuditEntry>();
-        await using var r = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await r.ReadAsync(cancellationToken).ConfigureAwait(false))
-            list.Add(new AuditEntry(Lng(r, 0)!.Value, Time(Lng(r, 1))!.Value, Str(r, 2) ?? "", Str(r, 3) ?? "", Str(r, 4) ?? "", Str(r, 5), Str(r, 6) ?? "", Str(r, 7) ?? ""));
+        await using var dbDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await dbDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            list.Add(new AuditEntry(Lng(dbDataReader, 0)!.Value, Time(Lng(dbDataReader, 1))!.Value, Str(dbDataReader, 2) ?? "", Str(dbDataReader, 3) ?? "", Str(dbDataReader, 4) ?? "", Str(dbDataReader, 5), Str(dbDataReader, 6) ?? "", Str(dbDataReader, 7) ?? ""));
         return list;
     }
 
-    private static async Task AppendAsync(SqlRunDatabase.Writer w, AuditDraft d)
+    private static async Task AppendAsync(SqlRunDatabase.Writer writer, AuditDraft auditDraft)
     {
-        var last = await w.ScalarAsync("SELECT COALESCE(MAX(seq), 0) FROM tu_audit_log").ConfigureAwait(false);
+        var last = await writer.ScalarAsync("SELECT COALESCE(MAX(seq), 0) FROM tu_audit_log").ConfigureAwait(false);
         var previous = last == 0
             ? AuditChain.Genesis
-            : await w.ValueAsync("SELECT entry_hash FROM tu_audit_log WHERE seq = @s", ("s", last)).ConfigureAwait(false) as string ?? AuditChain.Genesis;
-        var e = AuditChain.Create(last + 1, d.Time, d.User, d.Action, d.Details, d.ReleaseId, previous);
-        await w.ExecAsync(
+            : await writer.ValueAsync("SELECT entry_hash FROM tu_audit_log WHERE seq = @s", ("s", last)).ConfigureAwait(false) as string ?? AuditChain.Genesis;
+        var auditEntry = AuditChain.Create(last + 1, auditDraft.Time, auditDraft.User, auditDraft.Action, auditDraft.Details, auditDraft.ReleaseId, previous);
+        await writer.ExecAsync(
             """
             INSERT INTO tu_audit_log (seq, time_utc, time_text, user_name, action, details, release_id, prev_hash, entry_hash)
             VALUES (@seq, @t, @text, @user, @action, @details, @release, @prev, @hash)
             """,
-            ("seq", e.Sequence), ("t", e.Time.UtcTicks), ("text", e.Time.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz", CultureInfo.InvariantCulture)),
-            ("user", e.User), ("action", e.Action), ("details", e.Details), ("release", e.ReleaseId), ("prev", e.PreviousHash), ("hash", e.Hash)).ConfigureAwait(false);
+            ("seq", auditEntry.Sequence), ("t", auditEntry.Time.UtcTicks), ("text", auditEntry.Time.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz", CultureInfo.InvariantCulture)),
+            ("user", auditEntry.User), ("action", auditEntry.Action), ("details", auditEntry.Details), ("release", auditEntry.ReleaseId), ("prev", auditEntry.PreviousHash), ("hash", auditEntry.Hash)).ConfigureAwait(false);
     }
 
     private sealed class StaleReleaseException : Exception;
@@ -168,9 +168,9 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
         }
     }
 
-    private static string? Str(DbDataReader r, int i) => r.IsDBNull(i) ? null : Convert.ToString(r.GetValue(i), CultureInfo.InvariantCulture);
+    private static string? Str(DbDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : Convert.ToString(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
 
-    private static long? Lng(DbDataReader r, int i) => r.IsDBNull(i) ? null : Convert.ToInt64(r.GetValue(i), CultureInfo.InvariantCulture);
+    private static long? Lng(DbDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : Convert.ToInt64(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
 
-    private static DateTimeOffset? Time(long? ticks) => ticks is { } t ? new DateTimeOffset(t, TimeSpan.Zero).ToLocalTime() : null;
+    private static DateTimeOffset? Time(long? ticks) => ticks is { } typeCode ? new DateTimeOffset(typeCode, TimeSpan.Zero).ToLocalTime() : null;
 }

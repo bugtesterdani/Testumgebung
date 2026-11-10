@@ -47,15 +47,15 @@ public sealed partial class StationViewModel
     internal IReadOnlyList<AvailableTest> AvailableTests()
     {
         if (_coordinator?.Setup.ExampleProjects is { Count: > 0 } examples)
-            return examples.Select(p => new AvailableTest(p.Definition.Name, p.Definition.Version, true, "Simulation / Beispiel")).ToList();
+            return examples.Select(project => new AvailableTest(project.Definition.Name, project.Definition.Version, true, "Simulation / Beispiel")).ToList();
         if (_releases is not null && !UseDraft)
-            return _releases.ForStation(ProgramStationId).Where(r => r.State is ReleaseState.Released or ReleaseState.Archived)
-                .OrderBy(r => r.ProjectName, StringComparer.OrdinalIgnoreCase).ThenByDescending(r => r.ReleasedAt)
-                .Select(r => new AvailableTest(r.ProjectName, r.Version, r.State == ReleaseState.Released,
-                    r.State == ReleaseState.Released ? "freigegeben" : "früher freigegeben"))
+            return _releases.ForStation(ProgramStationId).Where(release => release.State is ReleaseState.Released or ReleaseState.Archived)
+                .OrderBy(release => release.ProjectName, StringComparer.OrdinalIgnoreCase).ThenByDescending(release => release.ReleasedAt)
+                .Select(release => new AvailableTest(release.ProjectName, release.Version, release.State == ReleaseState.Released,
+                    release.State == ReleaseState.Released ? "freigegeben" : "früher freigegeben"))
                 .ToList();
-        var p = _projectSource().Definition;
-        return [new AvailableTest(p.Name, p.Version, true, _releases is null ? "Editor" : "Entwurf")];
+        var definition = _projectSource().Definition;
+        return [new AvailableTest(definition.Name, definition.Version, true, _releases is null ? "Editor" : "Entwurf")];
     }
 
     /// <summary>Projekt des ausgewählten Tests laden (Release-Paket geprüft bzw. Kopie des Editorstands).</summary>
@@ -63,7 +63,7 @@ public sealed partial class StationViewModel
     {
         if (_coordinator?.Setup.ExampleProjects is { Count: > 0 } examples)
         {
-            var example = examples.Single(p => p.Definition.Name == test.Name && p.Definition.Version == test.Version);
+            var example = examples.Single(project => project.Definition.Name == test.Name && project.Definition.Version == test.Version);
             return (_serializer.Clone(example), null);
         }
         if (_releases is not null && !UseDraft)
@@ -72,8 +72,8 @@ public sealed partial class StationViewModel
             if (_releases.Catalog is not null) return await LoadCatalogTestAsync(test).ConfigureAwait(true);
             if (test.IsCurrent && _releases.GetReleased(test.Name) is { } current && current.Info.Version == test.Version)
                 return (current.Project, current.Info);
-            var info = _releases.All.FirstOrDefault(r => r.ProjectName == test.Name && r.Version == test.Version
-                                                        && r.State is ReleaseState.Released or ReleaseState.Archived)
+            var info = _releases.All.FirstOrDefault(release => release.ProjectName == test.Name && release.Version == test.Version
+                                                        && release.State is ReleaseState.Released or ReleaseState.Archived)
                        ?? throw new InvalidOperationException($"{test.Title} ist nicht (mehr) freigegeben.");
             var opened = await _releases.Service.OpenAsync(info).ConfigureAwait(true);
             if (!opened.IsIntact) throw new InvalidOperationException($"{test.Title}: Paket beschädigt – {string.Join("; ", opened.Problems)}");
@@ -199,8 +199,8 @@ public sealed class StationSelectionViewModel : ObservableObject
     public bool HasProblem => _outcome is { CanStart: false };
     public string ResultText => _outcome?.Message ?? (OrderSession ? "Fertigungsauftrag scannen (Enter)." : "Kennung erfassen und zuordnen (Enter).");
     public string TestText => _outcome?.Test?.Title ?? "—";
-    public string SourceText => _outcome is { Test: not null } o ? o.Source : "";
-    public string ParametersText => _outcome is { Parameters.Count: > 0 } o ? string.Join(", ", o.Parameters.Select(kv => $"{kv.Key} = {kv.Value}")) : "";
+    public string SourceText => _outcome is { Test: not null } selectionOutcome ? selectionOutcome.Source : "";
+    public string ParametersText => _outcome is { Parameters.Count: > 0 } selectionOutcome ? string.Join(", ", selectionOutcome.Parameters.Select(kv => $"{kv.Key} = {kv.Value}")) : "";
     public string AlternativeText => _station.SelectionConfig?.AlternativeText ?? "Manuell auswählen";
     public ObservableCollection<AvailableTest> Candidates { get; } = [];
     public bool ShowManual => _outcome is { CanStart: false, ManualAllowed: true } && Candidates.Count > 0;
@@ -257,7 +257,7 @@ public sealed class StationSelectionViewModel : ObservableObject
         _manualChoice = null;
         Candidates.Clear();
         if (outcome is { CanStart: false })
-            foreach (var c in outcome.Candidates) Candidates.Add(c);
+            foreach (var program in outcome.Candidates) Candidates.Add(program);
         OnPropertiesChanged(nameof(Outcome), nameof(IsUnique), nameof(HasProblem), nameof(ResultText), nameof(TestText), nameof(SourceText),
             nameof(ParametersText), nameof(ShowManual), nameof(ManualChoice), nameof(CanStart), nameof(AlternativeText));
         _station.RaiseStartState();
@@ -375,8 +375,8 @@ public sealed class StationSelectionViewModel : ObservableObject
 
     private bool ValidateOrderProgram(TestProject project)
     {
-        var duts = project.Definition.Loop.Descendants().OfType<GroupDefinition>().Where(g => g.IsDutRun).ToList();
-        if (duts.Count == 0 || duts.Any(dut => !dut.Variables.Any(v => v.Name == dut.DutIdVariable && v.Type == VarType.String)))
+        var duts = project.Definition.Loop.Descendants().OfType<GroupDefinition>().Where(group => group.IsDutRun).ToList();
+        if (duts.Count == 0 || duts.Any(dut => !dut.Variables.Any(variable => variable.Name == dut.DutIdVariable && variable.Type == VarType.String)))
         {
             _station.ShowError("Der Auftragsmodus benötigt einen Prüflingstest im Loop mit einer eigenen String-Variable für die Seriennummer (standardmäßig Kennung). Diese wird je Prüfling neu erfasst.");
             return false;
@@ -390,7 +390,7 @@ public sealed class StationSelectionViewModel : ObservableObject
             _station.ShowError("Jeder Prüflingstest muss mit einer verpflichtenden Werkereingabe seiner Seriennummer beginnen. Bitte als ersten Schritt eine Eingabe mit Ziel Kennung (bzw. DutIdVariable) und Pflicht=true anlegen.");
             return false;
         }
-        if (!project.Definition.Root.Variables.Any(v => v.Name == "Auftrag" && v.Type == VarType.String))
+        if (!project.Definition.Root.Variables.Any(variable => variable.Name == "Auftrag" && variable.Type == VarType.String))
         {
             _station.ShowError("Der gewählte Test benötigt im Hauptablauf die String-Variable Auftrag, damit Start, Loop und End auf den Fertigungsauftrag zugreifen können.");
             return false;
@@ -402,12 +402,12 @@ public sealed class StationSelectionViewModel : ObservableObject
     {
         var presets = new Dictionary<string, object?>(StringComparer.Ordinal);
         if (_station.PairContext is { } paired) presets["Pruefseite"] = (long)paired.Side;
-        foreach (var (k, v) in _outcome!.Parameters) presets[k] = v;
+        foreach (var (key, value) in _outcome!.Parameters) presets[key] = value;
         if (session)
         {
             // Seriennummern dürfen weder vom Auftrag noch von Auswahlparametern vorbelegt werden.
             presets.Remove("Kennung");
-            foreach (var dut in project.Definition.AllNodes().OfType<GroupDefinition>().Where(g => g.IsDutRun))
+            foreach (var dut in project.Definition.AllNodes().OfType<GroupDefinition>().Where(group => group.IsDutRun))
                 presets.Remove(dut.DutIdVariable);
         }
         else presets["Kennung"] = _kennung.Trim();

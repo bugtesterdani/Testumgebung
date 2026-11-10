@@ -14,8 +14,8 @@ public sealed record InstrumentIdentity(string Manufacturer, string Model, strin
 {
     public static InstrumentIdentity Parse(string idn)
     {
-        var p = idn.Trim().Split(',', StringSplitOptions.TrimEntries);
-        string At(int i) => i < p.Length ? p[i] : "";
+        var parts = idn.Trim().Split(',', StringSplitOptions.TrimEntries);
+        string At(int index) => index < parts.Length ? parts[index] : "";
         return new InstrumentIdentity(At(0), At(1), At(2), At(3));
     }
 
@@ -138,10 +138,10 @@ public sealed class ScpiSession : IDisposable
     {
         var text = await QueryAsync(command, ct, timeout).ConfigureAwait(false);
         var first = text.Split(',')[0].Trim().Trim('"');
-        if (!double.TryParse(first, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+        if (!double.TryParse(first, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
             throw new InstrumentException($"{command}: unerwartete Antwort „{text}“.");
-        if (Math.Abs(v) >= 9.9e37) throw new InstrumentException($"{command}: Messbereich überschritten (Überlauf {text}).");
-        return v;
+        if (Math.Abs(value) >= 9.9e37) throw new InstrumentException($"{command}: Messbereich überschritten (Überlauf {text}).");
+        return value;
     }
 
     /// <summary>Abfrage mit IEEE-488.2-Block (definite length) – liefert die Nutzdaten.</summary>
@@ -238,8 +238,8 @@ public sealed class ScpiSession : IDisposable
     /// <summary>Wartet, bis alle Befehle ausgeführt sind (*OPC?), z. B. nach einer Aufnahme.</summary>
     public async Task WaitCompleteAsync(TimeSpan timeout, CancellationToken ct = default)
     {
-        var r = await QueryAsync("*OPC?", ct, timeout).ConfigureAwait(false);
-        if (r.Trim() != "1") throw new InstrumentException($"*OPC? lieferte „{r}“.");
+        var resource = await QueryAsync("*OPC?", ct, timeout).ConfigureAwait(false);
+        if (resource.Trim() != "1") throw new InstrumentException($"*OPC? lieferte „{resource}“.");
     }
 
     /// <summary>Verbindung neu aufbauen bzw. Device Clear (nach Abbruch/Zeitlimit automatisch).</summary>
@@ -349,7 +349,7 @@ public sealed class ScpiSession : IDisposable
     private async Task<IReadOnlyList<string>> ErrorsAsync(CancellationToken ct)
     {
         var errors = new List<string>();
-        for (var i = 0; i < 20; i++)
+        for (var index = 0; index < 20; index++)
         {
             await SendAsync("SYST:ERR?", ct).ConfigureAwait(false);
             var text = Encoding.ASCII.GetString(await ReceiveAsync(Timeout, ct).ConfigureAwait(false)).Trim();

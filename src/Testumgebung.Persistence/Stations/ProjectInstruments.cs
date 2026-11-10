@@ -11,11 +11,11 @@ namespace Testumgebung.Persistence.Stations;
 public static class ProjectInstruments
 {
     public static CustomDeviceProfile? Profile(TestProject? project, string adapter)
-        => project?.DeviceProfiles.FirstOrDefault(p => p.Adapter == adapter);
+        => project?.DeviceProfiles.FirstOrDefault(customDeviceProfile => customDeviceProfile.Adapter == adapter);
 
     public static InstrumentFamily? Family(TestProject? project, string adapter)
-        => Profile(project, adapter) is { } p
-            ? new(adapter, p.Name, [p.Name], "TCPIP::localhost::5025::SOCKET", p.Description)
+        => Profile(project, adapter) is { } customDeviceProfile
+            ? new(adapter, customDeviceProfile.Name, [customDeviceProfile.Name], "TCPIP::localhost::5025::SOCKET", customDeviceProfile.Description)
             : InstrumentCatalog.Family(adapter);
 
     public static IInstrumentDriver Create(TestProject? project, DeviceConfig device)

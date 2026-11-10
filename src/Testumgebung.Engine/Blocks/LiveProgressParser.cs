@@ -40,11 +40,11 @@ public sealed class LiveProgressParser
     /// <summary>CR und LF schließen eine Statuszeile ab, auch bei Konsolen-Prozentanzeigen mit Wagenrücklauf.</summary>
     public void Push(string chunk, bool final = false)
     {
-        foreach (var c in chunk)
+        foreach (var chunk2 in chunk)
         {
-            if (c is '\r' or '\n') { ApplyPending(); continue; }
+            if (chunk2 is '\r' or '\n') { ApplyPending(); continue; }
             if (_pending.Length >= 65536) throw new InvalidOperationException("Logzeile überschreitet 65536 Zeichen.");
-            _pending.Append(c);
+            _pending.Append(chunk2);
         }
         // An end marker may be emitted without a newline; retain incomplete numbers until the line ends.
         if (_end?.IsMatch(_pending.ToString()) == true) { Finished = true; ApplyPending(); }

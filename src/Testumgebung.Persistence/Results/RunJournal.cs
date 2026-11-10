@@ -70,7 +70,7 @@ public sealed class RunJournal(string folder)
 
     public string PathFor(string runId)
     {
-        var safe = string.Concat(runId.Select(c => System.IO.Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        var safe = string.Concat(runId.Select(runId2 => System.IO.Path.GetInvalidFileNameChars().Contains(runId2) ? '_' : runId2));
         return System.IO.Path.Combine(Folder, safe + Extension);
     }
 
@@ -125,7 +125,7 @@ public sealed class RunJournal(string folder)
             if (open.Contains(path, StringComparer.OrdinalIgnoreCase)) continue;
             if (Read(path) is { } run) list.Add(run);
         }
-        return list.OrderBy(r => r.Header.Started).ToList();
+        return list.OrderBy(incompleteRun => incompleteRun.Header.Started).ToList();
     }
 
     /// <summary>Journal lesen; eine abgeschnittene letzte Zeile (Stromausfall) wird übersprungen.</summary>
@@ -134,8 +134,8 @@ public sealed class RunJournal(string folder)
         if (string.IsNullOrEmpty(header.DutId))
         {
             var writers = header.DutIdWriters.ToHashSet(StringComparer.Ordinal);
-            header.DutId = events.LastOrDefault(e => e.Kind == ResultEventKind.Step && e.NodeId is not null && writers.Contains(e.NodeId)
-                                                     && e.Value is string { Length: > 0 })?.Value as string;
+            header.DutId = events.LastOrDefault(resultEvent => resultEvent.Kind == ResultEventKind.Step && resultEvent.NodeId is not null && writers.Contains(resultEvent.NodeId)
+                                                     && resultEvent.Value is string { Length: > 0 })?.Value as string;
         }
     }
 
@@ -167,7 +167,7 @@ public sealed class RunJournal(string folder)
                         header = JsonSerializer.Deserialize<JournalHeader>(line[2..], Json);
                         break;
                     case 'E':
-                        if (JsonSerializer.Deserialize<JournalEvent>(line[2..], Json) is { } e) events.Add(e.ToEvent());
+                        if (JsonSerializer.Deserialize<JournalEvent>(line[2..], Json) is { } journalEvent) events.Add(journalEvent.ToEvent());
                         break;
                     case 'D':
                         if (header is not null) header.DutId = line[2..];
@@ -181,33 +181,33 @@ public sealed class RunJournal(string folder)
         }
         if (header is null) return null;
         ResolveDutId(header, events);
-        var last = events.Count > 0 ? events.Max(e => e.Time) : header.Started;
+        var last = events.Count > 0 ? events.Max(resultEvent => resultEvent.Time) : header.Started;
         return new IncompleteRun(path, header, events, last, damaged);
     }
 
     /// <summary>Unvollständigen Lauf als abgebrochenen Prüflingstest (ERROR) für die Speicherung aufbereiten.</summary>
     public static ResultRun ToAbortedRun(IncompleteRun incomplete, DateTimeOffset now, string user)
     {
-        var h = incomplete.Header;
+        var header = incomplete.Header;
         var events = incomplete.Events.ToList();
-        var seq = events.Count == 0 ? 0 : events.Max(e => e.Sequence);
+        var seq = events.Count == 0 ? 0 : events.Max(resultEvent => resultEvent.Sequence);
         events.Add(new ResultEvent(seq + 1, ResultEventKind.Diagnostic, null, "", 0, now, ResultRating.Error,
             Value: user, Message: $"Unvollständiger Prüflingstest (Programmende, Absturz oder Stromausfall) – nach Neustart als abgebrochen gespeichert. "
                                   + $"Letzte Aufzeichnung {incomplete.LastActivity.ToLocalTime():dd.MM.yyyy HH:mm:ss}. Kurven werden nicht zwischengespeichert."));
         return new ResultRun
         {
-            RunId = h.RunId,
-            StationRunId = h.StationRunId,
-            Station = h.Station,
-            DutId = h.DutId ?? "",
-            Order = h.Order ?? "",
-            TestName = h.TestName,
-            TestVersion = h.TestVersion,
-            Started = h.Started,
+            RunId = header.RunId,
+            StationRunId = header.StationRunId,
+            Station = header.Station,
+            DutId = header.DutId ?? "",
+            Order = header.Order ?? "",
+            TestName = header.TestName,
+            TestVersion = header.TestVersion,
+            Started = header.Started,
             Ended = incomplete.LastActivity,
             Rating = ResultRating.Error,
             OperatorAbort = false,
-            Structure = h.Structure,
+            Structure = header.Structure,
             Events = events,
         };
     }
@@ -293,12 +293,12 @@ internal sealed class JournalEvent
 
     public static JournalEvent From(ResultEvent e)
     {
-        var (vt, v) = e.Value switch
+        var (vt, value) = e.Value switch
         {
             null => ((char?)null, (string?)null),
-            bool b => ('b', b ? "1" : "0"),
-            long l => ('l', l.ToString(CultureInfo.InvariantCulture)),
-            double d => ('d', d.ToString("R", CultureInfo.InvariantCulture)),
+            bool flag => ('b', flag ? "1" : "0"),
+            long integerValue => ('l', integerValue.ToString(CultureInfo.InvariantCulture)),
+            double number => ('d', number.ToString("R", CultureInfo.InvariantCulture)),
             DateTime dt => ('t', dt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)),
             _ => ('s', Convert.ToString(e.Value, CultureInfo.InvariantCulture)),
         };
@@ -312,7 +312,7 @@ internal sealed class JournalEvent
             T = e.Time,
             R = e.Rating,
             Vt = vt,
-            V = v,
+            V = value,
             U = e.Unit,
             Lo = e.LowLimit,
             Hi = e.HighLimit,

@@ -37,9 +37,9 @@ public sealed class StorageRowViewModel : ObservableObject
         get => _owner.Node.Storage.Get(Target) switch { true => OnText, false => OffText, _ => InheritText };
         set
         {
-            bool? v = value switch { OnText => true, OffText => false, _ => null };
-            if (_owner.Node.Storage.Get(Target) == v) return;
-            _owner.Node.Storage = _owner.Node.Storage.With(Target, v);
+            bool? flag = value switch { OnText => true, OffText => false, _ => null };
+            if (_owner.Node.Storage.Get(Target) == flag) return;
+            _owner.Node.Storage = _owner.Node.Storage.With(Target, flag);
             _owner.Changed();
         }
     }
@@ -72,7 +72,7 @@ public sealed class StorageSettingsViewModel : ObservableObject
     {
         _editor = editor;
         Node = node;
-        foreach (var t in StorageSettings.Targets) Rows.Add(new StorageRowViewModel(this, t));
+        foreach (var storageTarget in StorageSettings.Targets) Rows.Add(new StorageRowViewModel(this, storageTarget));
         ResetCommand = new RelayCommand(() =>
         {
             Node.Storage = StorageSettings.Inherit;
@@ -94,14 +94,14 @@ public sealed class StorageSettingsViewModel : ObservableObject
     public string MinimalSet => StorageSettings.MinimalSetDescription;
 
     /// <summary>Kurzfassung für den Ablaufbaum, z. B. „Datei aus“.</summary>
-    public string Summary => string.Join(", ", Rows.Where(r => r.IsOff).Select(r => r.Label + " aus"));
+    public string Summary => string.Join(", ", Rows.Where(storageRowViewModel => storageRowViewModel.IsOff).Select(storageRowViewModel => storageRowViewModel.Label + " aus"));
 
     internal StorageResolver Resolver() => new(_editor.Project.Definition);
 
     internal void Changed()
     {
         _editor.MarkChanged();
-        foreach (var r in Rows) r.Refresh();
+        foreach (var storageRowViewModel in Rows) storageRowViewModel.Refresh();
         ResetCommand.RaiseCanExecuteChanged();
         OnPropertyChanged(nameof(Summary));
     }

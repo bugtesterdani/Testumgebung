@@ -17,7 +17,7 @@ public sealed partial class InlineBlockEditor : UserControl
     private EditorViewModel? Editor => Host?.DataContext is ShellViewModel shell ? shell.Editor : null;
     private EditorView? Host
     {
-        get { for (DependencyObject? p = this; p is not null; p = VisualTreeHelper.GetParent(p)) if (p is EditorView view) return view; return null; }
+        get { for (DependencyObject? element = this; element is not null; element = VisualTreeHelper.GetParent(element)) if (element is EditorView view) return view; return null; }
     }
     public InlineBlockEditor()
     {
@@ -113,7 +113,7 @@ public sealed partial class InlineBlockEditor : UserControl
         if (group.IsSection) { AddVariables(fields, group); return; }
         if (Node?.Children.FirstOrDefault() is { IsTemplateDecision: true, InlineProperties: StepPropertiesViewModel decision })
         {
-            AddField(fields, "Wenn diese Bedingung stimmt", ParameterInput(decision.Parameters.Single(p => p.Descriptor.Name == "Ausdruck")));
+            AddField(fields, "Wenn diese Bedingung stimmt", ParameterInput(decision.Parameters.Single(parameterRowViewModel => parameterRowViewModel.Descriptor.Name == "Ausdruck")));
             return;
         }
         if (Node?.Group?.EntryCondition?.TrimStart('!').StartsWith("_BlockZweig_", StringComparison.Ordinal) == true)
@@ -146,7 +146,7 @@ public sealed partial class InlineBlockEditor : UserControl
         return expander;
     }
     internal NodeViewModel? EditedNode => Node;
-    private IReadOnlyList<string> Variables(bool writable) => ExpressionVariableChoices.ForNode(Editor!.Project.Definition, Node!.Id, writable).Select(v => v.Path).ToArray();
+    private IReadOnlyList<string> Variables(bool writable) => ExpressionVariableChoices.ForNode(Editor!.Project.Definition, Node!.Id, writable).Select(variable => variable.Path).ToArray();
     private void ChooseBlock(NodeViewModel? target = null)
     {
         if ((target ?? Node) is not { } node || Editor is not { } editor) return;

@@ -21,7 +21,7 @@ public sealed partial class ReleasesViewModel
 
     /// <summary>Vergleichsbasis: „Editorstand“ oder eine Version.</summary>
     public IReadOnlyList<string> CompareTargets
-        => [EditorTarget, .. Releases.Where(r => !ReferenceEquals(r, _selected)).Select(r => $"v{r.Version} ({r.StateText})")];
+        => [EditorTarget, .. Releases.Where(release => !ReferenceEquals(release, _selected)).Select(release => $"v{release.Version} ({release.StateText})")];
 
     public string? CompareWith
     {
@@ -42,7 +42,7 @@ public sealed partial class ReleasesViewModel
     private async Task<TestProject?> LoadAsync(string? target)
     {
         if (target is null or EditorTarget) return _editor.Project;
-        var release = Releases.FirstOrDefault(r => target.StartsWith($"v{r.Version} (", StringComparison.Ordinal));
+        var release = Releases.FirstOrDefault(release2 => target.StartsWith($"v{release2.Version} (", StringComparison.Ordinal));
         if (release is null) return null;
         var opened = await _hub.Service.OpenAsync(release).ConfigureAwait(true);
         return opened.Project;
@@ -61,7 +61,7 @@ public sealed partial class ReleasesViewModel
                 CompareStatus = "Vergleichsbasis nicht gefunden.";
                 return;
             }
-            foreach (var d in ProjectDiff.Compare(before, after)) Differences.Add(d);
+            foreach (var diffEntry in ProjectDiff.Compare(before, after)) Differences.Add(diffEntry);
             var to = _selected is null ? "Editorstand" : $"v{_selected.Version}";
             CompareStatus = Differences.Count == 0 ? $"{_compareWith ?? EditorTarget} → {to}: keine Unterschiede."
                 : $"{_compareWith ?? EditorTarget} → {to}: {Differences.Count} Änderung(en).";

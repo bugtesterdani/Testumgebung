@@ -32,7 +32,7 @@ internal sealed class TraceRecordingSettings
     public void Begin(IStepContext ctx)
     {
         if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
-        var channels = _names.Select((name, i) => new TraceChannelDefinition(name, _units[i], Resolve(ctx, _curves[i]))).ToArray();
+        var channels = _names.Select((name, index) => new TraceChannelDefinition(name, _units[index], Resolve(ctx, _curves[index]))).ToArray();
         ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration);
     }
     private static CurveDefinition Resolve(IStepContext ctx, string key)

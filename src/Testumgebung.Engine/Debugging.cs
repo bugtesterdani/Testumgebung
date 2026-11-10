@@ -157,7 +157,7 @@ public sealed class DebugController
     {
         if (left is null) return parent.Get(name);
         if (name.StartsWith("../", StringComparison.Ordinal)) return parent.Get(name[3..]);
-        return left.Variables.FirstOrDefault(v => v.Name == name)?.Value ?? parent.Get(name);
+        return left.Variables.FirstOrDefault(variableSnapshot => variableSnapshot.Name == name)?.Value ?? parent.Get(name);
     }
     private bool EvaluateRule(BreakpointState state, string nodeId, int iteration, ResultRating? rating, Func<string, object> resolve)
     {
@@ -232,7 +232,7 @@ public sealed class DebugController
     public void ClearCodeBreakpoints(string nodeId)
     {
         _codeBreakpoints.TryRemove(nodeId, out _);
-        foreach (var key in _codeRules.Keys.Where(k => k.Node == nodeId)) _codeRules.TryRemove(key, out _);
+        foreach (var key in _codeRules.Keys.Where(entry => entry.Node == nodeId)) _codeRules.TryRemove(key, out _);
     }
     public void ConfigureCodeBreakpoint(string nodeId, int line, BreakpointRule rule)
     {
@@ -277,31 +277,31 @@ public sealed class DebugController
         return new CodeDebugConfig(true, [.. breakpoints], entry, Step: false);
     }
 
-    private bool ShouldPauseCode(string nodeId, int iteration, CodeDebugCapability capability, CodeDebugEvent e)
+    private bool ShouldPauseCode(string nodeId, int iteration, CodeDebugCapability capability, CodeDebugEvent codeDebugEvent)
     {
         lock (_codeGate)
         {
             if (_codeStep) return true;
-            if (e.Kind == "entry")
+            if (codeDebugEvent.Kind == "entry")
             {
                 if (_codeStopOnEntry) return true;
                 // Reduzierter Modus: ein beliebiger Haltepunkt am Baustein = Halt bei Eintritt (Zeilen gibt es nicht).
-                return capability == CodeDebugCapability.EntryExitOnly && MatchReducedCode(nodeId, iteration, e);
+                return capability == CodeDebugCapability.EntryExitOnly && MatchReducedCode(nodeId, iteration, codeDebugEvent);
             }
-            if (e.Kind == "exit") return false;
+            if (codeDebugEvent.Kind == "exit") return false;
         }
-        return HasCodeBreakpoint(nodeId, e.Line) && MatchCodeRule(nodeId, e.Line, iteration, e);
+        return HasCodeBreakpoint(nodeId, codeDebugEvent.Line) && MatchCodeRule(nodeId, codeDebugEvent.Line, iteration, codeDebugEvent);
     }
 
-    private bool MatchReducedCode(string nodeId, int iteration, CodeDebugEvent e)
+    private bool MatchReducedCode(string nodeId, int iteration, CodeDebugEvent codeDebugEvent)
     {
         var stop = false;
-        foreach (var line in CodeBreakpoints(nodeId)) stop |= MatchCodeRule(nodeId, line, iteration, e);
+        foreach (var line in CodeBreakpoints(nodeId)) stop |= MatchCodeRule(nodeId, line, iteration, codeDebugEvent);
         return stop;
     }
-    private bool MatchCodeRule(string nodeId, int line, int iteration, CodeDebugEvent e)
+    private bool MatchCodeRule(string nodeId, int line, int iteration, CodeDebugEvent codeDebugEvent)
         => EvaluateRule(_codeRules.GetOrAdd((nodeId, line), _ => new(BreakpointRule.Default)), nodeId, iteration, null,
-            name => e.Variables.TryGetValue(name, out var value) && value is not null ? value : throw new KeyNotFoundException("Codevariable '" + name + "' nicht im Schnappschuss vorhanden."));
+            name => codeDebugEvent.Variables.TryGetValue(name, out var value) && value is not null ? value : throw new KeyNotFoundException("Codevariable '" + name + "' nicht im Schnappschuss vorhanden."));
 
     /// <summary>
     /// Vom Host aufgerufen, wenn der Worker eine Nutzercode-Zeile meldet. Entscheidet über Anhalten,
@@ -320,22 +320,22 @@ public sealed class DebugController
 
     private async Task<CodeDebugStop> OnCodeEventCoreAsync(
         string nodeId, string nodeName, string path, int iteration, CodeDebugCapability capability,
-        CodeDebugEvent e, CancellationToken abortToken)
+        CodeDebugEvent codeDebugEvent, CancellationToken abortToken)
     {
         IReadOnlyList<int> Bps() => [.. CodeBreakpoints(nodeId)];
 
-        var variables = e.Variables
-            .OrderBy(v => v.Key, StringComparer.Ordinal)
-            .Select(v => new CodeDebugVariable(v.Key, v.Value))
+        var variables = codeDebugEvent.Variables
+            .OrderBy(entry => entry.Key, StringComparer.Ordinal)
+            .Select(entry => new CodeDebugVariable(entry.Key, entry.Value))
             .ToList();
-        if (e.InspectNativeAsync is not null && e.Kind == "line")
+        if (codeDebugEvent.InspectNativeAsync is not null && codeDebugEvent.Kind == "line")
         {
-            var native = await e.InspectNativeAsync(abortToken).ConfigureAwait(false);
+            var native = await codeDebugEvent.InspectNativeAsync(abortToken).ConfigureAwait(false);
             foreach (var (name, value) in native.Variables) variables.Add(new CodeDebugVariable("GDB: " + name, value));
             if (native.Frames.Count > 0) variables.Add(new CodeDebugVariable("GDB: Callstack", string.Join(Environment.NewLine, native.Frames)));
             if (native.Error is not null) variables.Add(new CodeDebugVariable("GDB: Diagnose", native.Error));
         }
-        var pause = new CodeLinePause(nodeId, nodeName, path, iteration, e.Line, e.Kind, capability, variables);
+        var pause = new CodeLinePause(nodeId, nodeName, path, iteration, codeDebugEvent.Line, codeDebugEvent.Kind, capability, variables);
         var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_codeGate)
         {
@@ -354,7 +354,7 @@ public sealed class DebugController
             _codeCurrent = null;
         }
         if (Run is { } run)
-            run.Emit(new DevelopmentEvent("", "Code-Haltepunkt", $"{nodeName}:{e.Line} → {command}") { Time = run.Clock.Now, RunId = run.RunId });
+            run.Emit(new DevelopmentEvent("", "Code-Haltepunkt", $"{nodeName}:{codeDebugEvent.Line} → {command}") { Time = run.Clock.Now, RunId = run.RunId });
         return new CodeDebugStop(command, Bps(), step);
     }
 
@@ -367,15 +367,15 @@ public sealed class DebugController
 
         var result = new List<DebugVariable>();
         var prefix = "";
-        for (var s = scope; s is not null; s = s.Parent)
+        for (var scope2 = scope; scope2 is not null; scope2 = scope2.Parent)
         {
-            foreach (var v in s.Variables.OrderBy(v => v.Name, StringComparer.Ordinal))
+            foreach (var variable in scope2.Variables.OrderBy(variable2 => variable2.Name, StringComparer.Ordinal))
             {
-                var visible = scope.TryLookup(v.Name, out var found, out _) && ReferenceEquals(found, v);
-                var path = visible ? v.Name : prefix + v.Name;
-                result.Add(new DebugVariable(v.Name, path, v.Type, v.Value, s.GroupName, v.IsReadOnly));
+                var visible = scope.TryLookup(variable.Name, out var found, out _) && ReferenceEquals(found, variable);
+                var path = visible ? variable.Name : prefix + variable.Name;
+                result.Add(new DebugVariable(variable.Name, path, variable.Type, variable.Value, scope2.GroupName, variable.IsReadOnly));
             }
-            if (s.IsInterfaceBoundary) break;
+            if (scope2.IsInterfaceBoundary) break;
             prefix += "../";
         }
         return result;

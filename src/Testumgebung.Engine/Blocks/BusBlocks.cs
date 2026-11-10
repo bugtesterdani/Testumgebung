@@ -80,7 +80,7 @@ public static class BusBlocks
                 new("Zeitlimit", "Zeitlimit [ms]", ParameterKind.Number, Hint: "leer = 3 × Zykluszeit (mindestens 100 ms) bzw. 1000 ms"),
                 .. Evaluation(expected: false),
             ],
-            p => new SignalReadAction(p.Text("Ressource"), p.Text("Datenbank"), p.Text("Signal"), p.Number("Zeitlimit"), SignalCheck.From(p, withBytes: false))));
+            parameters => new SignalReadAction(parameters.Text("Ressource"), parameters.Text("Datenbank"), parameters.Text("Signal"), parameters.Number("Zeitlimit"), SignalCheck.From(parameters, withBytes: false))));
 
         c.Register(new(MessageSend, "CAN-Botschaft senden (DBC)", cat, "arrow",
             "Setzt die Botschaft aus Signalwerten zusammen (nicht genannte Signale mit Startwert, Multiplexer automatisch) und sendet sie – "
@@ -94,8 +94,8 @@ public static class BusBlocks
                 new("Abstand", "Abstand [ms]", ParameterKind.Number, Hint: "leer = Zykluszeit der Botschaft bzw. 100 ms"),
                 new("Quelladresse", "J1939: Quelladresse", ParameterKind.Text, Hint: "überschreibt die Adresse aus der ID, z. B. 0xF9"),
             ],
-            p => new MessageSendAction(p.Text("Ressource"), p.Text("Datenbank"), p.Text("Botschaft"), SignalValues.Parse(p.Optional("Werte")),
-                Math.Max(1, (int)(p.Number("Anzahl") ?? 1)), p.Number("Abstand"), ParseAddress(p.Optional("Quelladresse"), "Quelladresse"))));
+            parameters => new MessageSendAction(parameters.Text("Ressource"), parameters.Text("Datenbank"), parameters.Text("Botschaft"), SignalValues.Parse(parameters.Optional("Werte")),
+                Math.Max(1, (int)(parameters.Number("Anzahl") ?? 1)), parameters.Number("Abstand"), ParseAddress(parameters.Optional("Quelladresse"), "Quelladresse"))));
 
         RegisterDiagnosticBlocks(c, cat);
 
@@ -114,9 +114,9 @@ public static class BusBlocks
                 .. RawSignal(),
                 .. Evaluation(),
             ],
-            p => new J1939ReceiveAction(p.Text("Ressource"), p.Optional("Pgn") is { } pgn ? ParsePgn(pgn) : null, ParseAddress(p.Optional("Quelle"), "Quelladresse"),
-                p.Bool("Anfordern"), ParseAddress(p.Optional("Eigene"), "Eigene Adresse") ?? 0xF9, TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
-                p.Optional("Datenbank"), p.Optional("Signal"), RawSignalFrom(p), SignalCheck.From(p, withBytes: true))));
+            parameters => new J1939ReceiveAction(parameters.Text("Ressource"), parameters.Optional("Pgn") is { } pgn ? ParsePgn(pgn) : null, ParseAddress(parameters.Optional("Quelle"), "Quelladresse"),
+                parameters.Bool("Anfordern"), ParseAddress(parameters.Optional("Eigene"), "Eigene Adresse") ?? 0xF9, TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000),
+                parameters.Optional("Datenbank"), parameters.Optional("Signal"), RawSignalFrom(parameters), SignalCheck.From(parameters, withBytes: true))));
 
         c.Register(new(J1939Send, "J1939 senden", cat, "arrow",
             "Sendet eine Parametergruppe mit Priorität, Quell- und Zieladresse; mehr als 8 Bytes über das Transportprotokoll (global BAM, sonst RTS/CTS).",
@@ -131,15 +131,15 @@ public static class BusBlocks
                 new("Botschaft", "Botschaft (Datenbank)", ParameterKind.Text),
                 new("Werte", "Signalwerte", ParameterKind.Text, Hint: "Signal = Ausdruck; …"),
             ],
-            p =>
+            parameters =>
             {
-                CommunicationBlocks.CheckHex(p.Text("Daten"), "Daten");
-                var prio = (int)(p.Number("Prioritaet") ?? 6);
+                CommunicationBlocks.CheckHex(parameters.Text("Daten"), "Daten");
+                var prio = (int)(parameters.Number("Prioritaet") ?? 6);
                 if (prio is < 0 or > 7) throw new BlockConfigurationException("Priorität 0–7.");
-                if (p.Optional("Daten") is null && p.Optional("Botschaft") is null) throw new BlockConfigurationException("Daten oder Botschaft aus der Datenbank angeben.");
-                return new J1939SendAction(p.Text("Ressource"), p.Optional("Pgn") is { } pgn ? ParsePgn(pgn) : null, prio,
-                    ParseAddress(p.Optional("Quelle"), "Quelladresse") ?? 0xF9, ParseAddress(p.Optional("Ziel"), "Zieladresse") ?? J1939.Global,
-                    p.Text("Daten"), p.Optional("Datenbank"), p.Optional("Botschaft"), SignalValues.Parse(p.Optional("Werte")));
+                if (parameters.Optional("Daten") is null && parameters.Optional("Botschaft") is null) throw new BlockConfigurationException("Daten oder Botschaft aus der Datenbank angeben.");
+                return new J1939SendAction(parameters.Text("Ressource"), parameters.Optional("Pgn") is { } pgn ? ParsePgn(pgn) : null, prio,
+                    ParseAddress(parameters.Optional("Quelle"), "Quelladresse") ?? 0xF9, ParseAddress(parameters.Optional("Ziel"), "Zieladresse") ?? J1939.Global,
+                    parameters.Text("Daten"), parameters.Optional("Datenbank"), parameters.Optional("Botschaft"), SignalValues.Parse(parameters.Optional("Werte")));
             }));
 
         c.Register(new(LinRead, "LIN lesen", cat, "measure",
@@ -155,9 +155,9 @@ public static class BusBlocks
                 .. RawSignal(),
                 .. Evaluation(),
             ],
-            p => new LinReadAction(p.Text("Ressource"), p.Text("Frame"), p.Optional("Datenbank"), p.Optional("Signal"), (int?)p.Number("Laenge"),
-                p.Choice("Pruefsumme") == LinChecksums[1] ? LinChecksum.Classic : LinChecksum.Enhanced, TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 100),
-                RawSignalFrom(p), SignalCheck.From(p, withBytes: true))));
+            parameters => new LinReadAction(parameters.Text("Ressource"), parameters.Text("Frame"), parameters.Optional("Datenbank"), parameters.Optional("Signal"), (int?)parameters.Number("Laenge"),
+                parameters.Choice("Pruefsumme") == LinChecksums[1] ? LinChecksum.Classic : LinChecksum.Enhanced, TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 100),
+                RawSignalFrom(parameters), SignalCheck.From(parameters, withBytes: true))));
 
         c.Register(new(LinSend, "LIN senden", cat, "arrow",
             "Sendet als Master einen Frame mit Daten (Hex) oder aus Signalwerten der LDF.",
@@ -169,12 +169,12 @@ public static class BusBlocks
                 new("Werte", "Signalwerte", ParameterKind.Text, Hint: "Signal = Ausdruck; … (mit Datenbank)"),
                 new("Pruefsumme", "Prüfsumme", ParameterKind.Choice, LinChecksums[0], Choices: LinChecksums),
             ],
-            p =>
+            parameters =>
             {
-                CommunicationBlocks.CheckHex(p.Text("Daten"), "Daten");
-                if (p.Optional("Daten") is null && p.Optional("Werte") is null) throw new BlockConfigurationException("Daten oder Signalwerte angeben.");
-                return new LinSendAction(p.Text("Ressource"), p.Text("Frame"), p.Optional("Datenbank"), p.Text("Daten"), SignalValues.Parse(p.Optional("Werte")),
-                    p.Choice("Pruefsumme") == LinChecksums[1] ? LinChecksum.Classic : LinChecksum.Enhanced);
+                CommunicationBlocks.CheckHex(parameters.Text("Daten"), "Daten");
+                if (parameters.Optional("Daten") is null && parameters.Optional("Werte") is null) throw new BlockConfigurationException("Daten oder Signalwerte angeben.");
+                return new LinSendAction(parameters.Text("Ressource"), parameters.Text("Frame"), parameters.Optional("Datenbank"), parameters.Text("Daten"), SignalValues.Parse(parameters.Optional("Werte")),
+                    parameters.Choice("Pruefsumme") == LinChecksums[1] ? LinChecksum.Classic : LinChecksum.Enhanced);
             }));
 
         c.Register(new(J1939Claim, "J1939 Adresse beanspruchen", cat, "arrow",
@@ -188,8 +188,8 @@ public static class BusBlocks
                 new("Abfragen", "Teilnehmer vorher abfragen", ParameterKind.Bool, "false"),
                 new("Ziel", "Teilnehmer in Variable", ParameterKind.Variable, Hint: "Liste „Adresse=NAME“ (bei Abfrage)"),
             ],
-            p => new J1939ClaimAction(p.Text("Ressource"), ParseAddress(p.Text("Adresse"), "Quelladresse") ?? 0x80, ParseName(p.Text("Name")),
-                p.Bool("Abfragen"), p.Optional("Ziel"))));
+            parameters => new J1939ClaimAction(parameters.Text("Ressource"), ParseAddress(parameters.Text("Adresse"), "Quelladresse") ?? 0x80, ParseName(parameters.Text("Name")),
+                parameters.Bool("Abfragen"), parameters.Optional("Ziel"))));
 
         c.Register(new(LinSchedule, "LIN-Fahrplan", cat, "measure",
             "Arbeitet eine LIN-Fahrplantabelle ab: je Zeile ein Frame (empfangen oder senden) mit festem Abstand. Optional mehrere Durchläufe. "
@@ -202,8 +202,8 @@ public static class BusBlocks
                 new("Durchlaeufe", "Durchläufe", ParameterKind.Number, "1"),
                 new("FehlendFail", "Fehlende Antwort = FAIL", ParameterKind.Bool, "true"),
             ],
-            p => new LinScheduleAction(p.Text("Ressource"), p.Optional("Datenbank"), p.Text("Tabelle"), Math.Max(1, (int)(p.Number("Durchlaeufe") ?? 1)),
-                p.Bool("FehlendFail"))));
+            parameters => new LinScheduleAction(parameters.Text("Ressource"), parameters.Optional("Datenbank"), parameters.Text("Tabelle"), Math.Max(1, (int)(parameters.Number("Durchlaeufe") ?? 1)),
+                parameters.Bool("FehlendFail"))));
 
         c.Register(new(DoIpDiscover, "DoIP Fahrzeugsuche", cat, "measure",
             "Sendet eine DoIP-Fahrzeugsuche (Vehicle Identification Request, UDP 13400) und sammelt die antwortenden Steuergeräte/Gateways "
@@ -217,9 +217,9 @@ public static class BusBlocks
                 new("Mindestens", "Mindestanzahl", ParameterKind.Number, Hint: "mindestens so viele Fahrzeuge erwartet"),
                 new("Ziel", "Ergebnis in Variable", ParameterKind.Variable, Hint: "Liste „VIN@0xAdresse“"),
             ],
-            p => new DoIpDiscoverAction(p.Text("Host"), (int)(p.Number("Port") ?? 13400), TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
-                p.Optional("ErwarteteVin"), p.Optional("ErwarteteAdresse") is { } a ? ParseWord(a, 0, "Erwartete Adresse") : null,
-                (int?)p.Number("Mindestens"), p.Optional("Ziel"))));
+            parameters => new DoIpDiscoverAction(parameters.Text("Host"), (int)(parameters.Number("Port") ?? 13400), TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000),
+                parameters.Optional("ErwarteteVin"), parameters.Optional("ErwarteteAdresse") is { } argument ? ParseWord(argument, 0, "Erwartete Adresse") : null,
+                (int?)parameters.Number("Mindestens"), parameters.Optional("Ziel"))));
 
         c.Register(new(OpcUaAccess, "OPC UA", cat, "measure",
             "Liest oder schreibt einen OPC-UA-Variablenknoten, ruft eine Methode auf oder wartet auf eine Datenänderung (Abo). "
@@ -239,16 +239,16 @@ public static class BusBlocks
                 new("Obergrenze", "Obergrenze", ParameterKind.Expression),
                 new("Einheit", "Einheit", ParameterKind.Text),
             ],
-            p => new OpcUaAction(p.Text("Ressource"), Array.IndexOf(OpcActions, p.Choice("Aktion")), p.Optional("Knoten"), p.Expr("Wert"),
-                p.Optional("Objekt"), p.Optional("Methode"), p.Optional("Argumente"), TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
-                p.Expr("Sollwert"), p.Optional("Ziel"), p.Expr("Untergrenze"), p.Expr("Obergrenze"), p.Text("Einheit"))));
+            parameters => new OpcUaAction(parameters.Text("Ressource"), Array.IndexOf(OpcActions, parameters.Choice("Aktion")), parameters.Optional("Knoten"), parameters.Expr("Wert"),
+                parameters.Optional("Objekt"), parameters.Optional("Methode"), parameters.Optional("Argumente"), TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000),
+                parameters.Expr("Sollwert"), parameters.Optional("Ziel"), parameters.Expr("Untergrenze"), parameters.Expr("Obergrenze"), parameters.Text("Einheit"))));
     }
 
     // ------------------------------------------------------------------ Hilfen
 
-    private static void RegisterDiagnosticBlocks(BlockCatalog c, string cat)
+    private static void RegisterDiagnosticBlocks(BlockCatalog blockCatalog, string cat)
     {
-        c.Register(new(UdsRequest, "UDS-Diagnose", cat, "measure",
+        blockCatalog.Register(new(UdsRequest, "UDS-Diagnose", cat, "measure",
             "Sendet eine Diagnoseanfrage über ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet "
             + "und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder prüft eine erwartete negative Antwort.",
             [
@@ -265,16 +265,16 @@ public static class BusBlocks
                 new("Offset", "Offset (Zahl)", ParameterKind.Number, "0"),
                 .. Evaluation(),
             ],
-            p =>
+            parameters =>
             {
-                CommunicationBlocks.CheckHex(p.Text("Anfrage"), "Anfrage");
-                return new UdsAction(p.Text("Ressource"), DiagSpec.From(p), p.Text("Anfrage"), TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
-                    TimeSpan.FromMilliseconds(p.Number("ZeitlimitLang") ?? 5000), ParseAddress(p.Optional("ErwarteteNrc"), "Erwartete NRC"),
-                    (int?)p.Number("AbByte"), (int?)p.Number("Laenge"), Array.IndexOf(UdsFormats, p.Choice("Darstellung")), p.Number("Faktor") ?? 1, p.Number("Offset") ?? 0,
-                    SignalCheck.From(p, withBytes: true));
+                CommunicationBlocks.CheckHex(parameters.Text("Anfrage"), "Anfrage");
+                return new UdsAction(parameters.Text("Ressource"), DiagSpec.From(parameters), parameters.Text("Anfrage"), TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000),
+                    TimeSpan.FromMilliseconds(parameters.Number("ZeitlimitLang") ?? 5000), ParseAddress(parameters.Optional("ErwarteteNrc"), "Erwartete NRC"),
+                    (int?)parameters.Number("AbByte"), (int?)parameters.Number("Laenge"), Array.IndexOf(UdsFormats, parameters.Choice("Darstellung")), parameters.Number("Faktor") ?? 1, parameters.Number("Offset") ?? 0,
+                    SignalCheck.From(parameters, withBytes: true));
             }));
 
-        c.Register(new(UdsSecurity, "UDS-Sicherheitszugang", cat, "arrow",
+        blockCatalog.Register(new(UdsSecurity, "UDS-Sicherheitszugang", cat, "arrow",
             "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schlüssel und sendet ihn (Stufe+1). Schlüsselverfahren "
             + "wählbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder „Ausdruck je Byte“ (s = Seedbyte, i = Index). Seed aus lauter Nullen "
             + "= bereits freigeschaltet. Negative Antwort (z. B. falscher Schlüssel) = FAIL.",
@@ -289,14 +289,14 @@ public static class BusBlocks
                 new("ZeitlimitLang", "P2* [ms]", ParameterKind.Number, "5000"),
                 new("Ziel", "Schlüssel in Variable", ParameterKind.Variable),
             ],
-            p =>
+            parameters =>
             {
-                var method = Array.IndexOf(SecurityMethods, p.Choice("Verfahren"));
-                Expression? expr = method == 4 ? p.Expr("Ausdruck") : null;
+                var method = Array.IndexOf(SecurityMethods, parameters.Choice("Verfahren"));
+                Expression? expr = method == 4 ? parameters.Expr("Ausdruck") : null;
                 if (method == 4 && expr is null) throw new BlockConfigurationException("„Ausdruck je Byte“: Ausdruck angeben.");
-                var constant = method is 0 or 1 or 3 ? CheckHexBytes(p.Optional("Konstante"), "Konstante") : [];
-                return new UdsSecurityAction(p.Text("Ressource"), DiagSpec.From(p), ParseByte(p.Text("Stufe"), "Seed-Stufe"), method, constant, expr,
-                    TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000), TimeSpan.FromMilliseconds(p.Number("ZeitlimitLang") ?? 5000), p.Optional("Ziel"));
+                var constant = method is 0 or 1 or 3 ? CheckHexBytes(parameters.Optional("Konstante"), "Konstante") : [];
+                return new UdsSecurityAction(parameters.Text("Ressource"), DiagSpec.From(parameters), ParseByte(parameters.Text("Stufe"), "Seed-Stufe"), method, constant, expr,
+                    TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000), TimeSpan.FromMilliseconds(parameters.Number("ZeitlimitLang") ?? 5000), parameters.Optional("Ziel"));
             }));
 
     }
@@ -336,30 +336,30 @@ public static class BusBlocks
     internal static ushort ParseWord(string? text, ushort fallback, string label)
     {
         if (text is null) return fallback;
-        var t = text.Trim();
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? ushort.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var v)
-            : ushort.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out v);
-        return ok ? v : throw new BlockConfigurationException($"{label}: „{text}“ ist keine 16-Bit-Adresse (z. B. 0x0E00).");
+        var text2 = text.Trim();
+        var ok = text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? ushort.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)
+            : ushort.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out number);
+        return ok ? number : throw new BlockConfigurationException($"{label}: „{text}“ ist keine 16-Bit-Adresse (z. B. 0x0E00).");
     }
 
     internal static byte? ParseAddress(string? text, string label)
     {
         if (text is null) return null;
-        var t = text.Trim();
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? byte.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)
-            : byte.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out b) || (t.Length == 2 && byte.TryParse(t, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b));
-        return ok ? b : throw new BlockConfigurationException($"{label}: „{text}“ ist kein Byte (z. B. 0xF9 oder 249).");
+        var text2 = text.Trim();
+        var ok = text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? byte.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var dataByte)
+            : byte.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out dataByte) || (text2.Length == 2 && byte.TryParse(text2, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out dataByte));
+        return ok ? dataByte : throw new BlockConfigurationException($"{label}: „{text}“ ist kein Byte (z. B. 0xF9 oder 249).");
     }
 
     internal static ulong ParseName(string text)
     {
-        var t = text.Trim();
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? ulong.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var v)
-            : ulong.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out v);
-        return ok ? v : throw new BlockConfigurationException($"NAME „{text}“ ist keine 64-Bit-Zahl (z. B. 0x00000000000000FF).");
+        var text2 = text.Trim();
+        var ok = text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? ulong.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)
+            : ulong.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out number);
+        return ok ? number : throw new BlockConfigurationException($"NAME „{text}“ ist keine 64-Bit-Zahl (z. B. 0x00000000000000FF).");
     }
 
     internal static uint ParsePgn(string text)
@@ -374,16 +374,16 @@ public static class BusBlocks
         }
     }
 
-    private static CanSignal? RawSignalFrom(BlockParameters p)
-        => p.Number("Bits") is { } bits
+    private static CanSignal? RawSignalFrom(BlockParameters parameters)
+        => parameters.Number("Bits") is { } bits
             ? (bits is < 1 or > 64 ? throw new BlockConfigurationException("Signallänge 1–64 Bit.")
-                : new CanSignal((int)(p.Number("Startbit") ?? 0), (int)bits, p.Choice("Byteorder") == CommunicationBlocks.ByteOrders[1], p.Bool("Vorzeichen"),
-                    p.Number("Faktor") ?? 1, p.Number("Offset") ?? 0))
+                : new CanSignal((int)(parameters.Number("Startbit") ?? 0), (int)bits, parameters.Choice("Byteorder") == CommunicationBlocks.ByteOrders[1], parameters.Bool("Vorzeichen"),
+                    parameters.Number("Faktor") ?? 1, parameters.Number("Offset") ?? 0))
             : null;
 
     internal static byte[] Bytes(string template, IStepContext ctx)
         => CommText.ParseHex(CommunicationBlocks.Interpolate(template, ctx,
-            v => Convert.ToInt64(v, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture)));
+            value => Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture)));
 
     internal static BusDatabase Database(IStepContext ctx, string name)
     {
@@ -391,7 +391,7 @@ public static class BusBlocks
         return def.Parsed;
     }
 
-    internal static string Hex(byte[] data) => string.Join(" ", data.Select(b => b.ToString("X2", CultureInfo.InvariantCulture)));
+    internal static string Hex(byte[] data) => string.Join(" ", data.Select(dataByte => dataByte.ToString("X2", CultureInfo.InvariantCulture)));
 
     /// <summary>Editor-Diagnose: Datenbank, Botschaft und Signal der Schrittparameter im Projekt vorhanden?</summary>
     public static IReadOnlyList<string> CheckReferences(StepDefinition step, TestDefinition definition)
@@ -425,8 +425,8 @@ public static class BusBlocks
         var message = step.Parameters.GetValueOrDefault("Botschaft") ?? (step.BlockType is LinRead or LinSend ? step.Parameters.GetValueOrDefault("Frame") : null);
         if (message is { Length: > 0 } && !(step.BlockType is LinRead or LinSend && byte.TryParse(message.Trim().Replace("0x", "", StringComparison.OrdinalIgnoreCase), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _)))
         {
-            var m = db.RequireMessage(message.Trim());
-            foreach (var (signalName, _) in SignalValues.Parse(step.Parameters.GetValueOrDefault("Werte")).Items) _ = m.RequireSignal(signalName);
+            var busMessage = db.RequireMessage(message.Trim());
+            foreach (var (signalName, _) in SignalValues.Parse(step.Parameters.GetValueOrDefault("Werte")).Items) _ = busMessage.RequireSignal(signalName);
         }
     }
 
@@ -479,7 +479,7 @@ internal sealed class SignalValues
         {
             var signal = message.RequireSignal(name);
             var label = text.Trim('"');
-            if (signal.Values.Any(v => string.Equals(v.Value, label, StringComparison.OrdinalIgnoreCase)))
+            if (signal.Values.Any(entry => string.Equals(entry.Value, label, StringComparison.OrdinalIgnoreCase)))
             {
                 result[signal.Name] = signal.ParseValue(label);
                 continue;
@@ -495,8 +495,8 @@ internal sealed class SignalValues
             }
             result[signal.Name] = value switch
             {
-                bool b => b ? 1 : 0,
-                string s => signal.ParseValue(s),
+                bool flag => flag ? 1 : 0,
+                string text2 => signal.ParseValue(text2),
                 _ => Convert.ToDouble(value, CultureInfo.InvariantCulture),
             };
         }
@@ -521,7 +521,7 @@ internal sealed record SignalCheck(ExpectedBytes? Bytes, Expression? Expected, s
             : null;
 
     private bool TargetIsText(IStepContext ctx)
-        => Target is not null && ctx.VisibleVariables().Any(v => v.Name == Target && v.Type == VarType.String);
+        => Target is not null && ctx.VisibleVariables().Any(variable => variable.Name == Target && variable.Type == VarType.String);
 
     /// <summary>Signalwert bewerten (Sollwert mit Wertetabelle, Grenzwerte) und Zielvariable setzen.</summary>
     public StepOutcome Rate(IStepContext ctx, double value, string? text, string? defaultUnit, double resolution, string what)
@@ -547,12 +547,12 @@ internal sealed record SignalCheck(ExpectedBytes? Bytes, Expression? Expected, s
     {
         var expected = Expected!.Evaluate(new ContextResolver(ctx));
         bool ok;
-        if (expected is string s && !double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
-            ok = text is not null && string.Equals(text, s, StringComparison.OrdinalIgnoreCase);
+        if (expected is string text2 && !double.TryParse(text2, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            ok = text is not null && string.Equals(text, text2, StringComparison.OrdinalIgnoreCase);
         else
         {
-            var e = expected is string es ? double.Parse(es, NumberStyles.Float, CultureInfo.InvariantCulture) : Convert.ToDouble(expected, CultureInfo.InvariantCulture);
-            ok = Math.Abs(value - e) <= Math.Max(Math.Abs(resolution) / 2, 1e-9);
+            var number = expected is string es ? double.Parse(es, NumberStyles.Float, CultureInfo.InvariantCulture) : Convert.ToDouble(expected, CultureInfo.InvariantCulture);
+            ok = Math.Abs(value - number) <= Math.Max(Math.Abs(resolution) / 2, 1e-9);
         }
         return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, (object?)text ?? value, unit.Length > 0 ? unit : null,
             Message: ok ? $"{what} = {shown}" : $"{what} = {shown}, erwartet {CommunicationBlocks.Text(expected)}");
@@ -578,7 +578,7 @@ internal sealed class SignalReadAction(string resource, string database, string 
         {
             return StepOutcome.Error(ex.Message);
         }
-        var timeout = TimeSpan.FromMilliseconds(timeoutMs ?? (message.CycleMs is > 0 and var c ? Math.Max(100, 3.0 * c) : 1000));
+        var timeout = TimeSpan.FromMilliseconds(timeoutMs ?? (message.CycleMs is > 0 and var count ? Math.Max(100, 3.0 * count) : 1000));
         var filter = db.IsJ1939 && message.Extended ? J1939.Filter(message.Pgn, null) : new CanFilter(message.Id, 0x1FFFFFFF, message.Extended);
         CanFrame frame;
         try
@@ -587,7 +587,7 @@ internal sealed class SignalReadAction(string resource, string database, string 
             {
                 var can = CommunicationBlocks.As<ICanAdapter>(adapter, "CAN");
                 can.DiscardInput(channel);
-                return await BusBlocks.ReceiveAsync(can, channel, filter, f => message.IsActive(sig, f.Data), timeout, token).ConfigureAwait(false);
+                return await BusBlocks.ReceiveAsync(can, channel, filter, canFrame => message.IsActive(sig, canFrame.Data), timeout, token).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
         catch (CommunicationTimeoutException ex)
@@ -629,16 +629,16 @@ internal sealed class MessageSendAction(string resource, string database, string
         var id = message.Id;
         if (source is { } sa && message.Extended) id = id & ~0xFFu | sa;
         var j1939 = db.IsJ1939 && message.Extended;
-        var gap = TimeSpan.FromMilliseconds(gapMs ?? (message.CycleMs is > 0 and var c ? c : 100));
+        var gap = TimeSpan.FromMilliseconds(gapMs ?? (message.CycleMs is > 0 and var count2 ? count2 : 100));
         var frame = new CanFrame(id, data, message.Extended, message.Fd, message.Fd);
         if (!j1939 || data.Length <= 8)
             if (frame.Validate() is { } error) return StepOutcome.Error(error);
         await context.UseDeviceAsync(resource, $"CAN senden {message.Name}", async (adapter, channel, token) =>
         {
             var can = CommunicationBlocks.As<ICanAdapter>(adapter, "CAN");
-            for (var i = 0; i < count; i++)
+            for (var index = 0; index < count; index++)
             {
-                if (i > 0) await context.Clock.Delay(gap, token).ConfigureAwait(false);
+                if (index > 0) await context.Clock.Delay(gap, token).ConfigureAwait(false);
                 if (j1939 && data.Length > 8)
                     await J1939.SendAsync(can, channel, J1939.PgnOf(id), data, J1939.SourceOf(id), J1939.DestinationOf(id) ?? J1939.Global, J1939.PriorityOf(id), token).ConfigureAwait(false);
                 else
@@ -646,7 +646,7 @@ internal sealed class MessageSendAction(string resource, string database, string
             }
             return 0;
         }).ConfigureAwait(false);
-        var decoded = string.Join(", ", message.Decode(data).Select(d => $"{d.Signal.Name}={d.Text ?? d.Value.ToString("0.###", CultureInfo.InvariantCulture)}"));
+        var decoded = string.Join(", ", message.Decode(data).Select(entry => $"{entry.Signal.Name}={entry.Text ?? entry.Value.ToString("0.###", CultureInfo.InvariantCulture)}"));
         return StepOutcome.Unrated(frame.DataHex, $"{message.Name}{(count > 1 ? $" {count}×" : "")}: {decoded}");
     }
 }
@@ -751,14 +751,14 @@ internal sealed class UdsAction(string resource, DiagSpec settings, string reque
     {
         if (data.Length is 0 or > 8) return StepOutcome.Error($"{shown}: Zahl braucht 1–8 Bytes (erhalten {data.Length}).");
         ulong raw = 0;
-        foreach (var b in data) raw = raw << 8 | b;
+        foreach (var dataByte in data) raw = raw << 8 | dataByte;
         double number = format == 3 && data.Length < 8 && (data[0] & 0x80) != 0 ? (long)(raw | ulong.MaxValue << data.Length * 8) : format == 3 ? (long)raw : raw;
         return check.Rate(context, number * factor + offset, null, null, factor, label);
     }
 
     /// <summary>Für „Erwartete Daten“: Vergleich mit dem Antwortbeginn (Länge des Musters).</summary>
     private byte[] PrefixOf(byte[] response)
-        => check.Bytes is { } e && response.Length >= e.Bytes.Length ? response.AsSpan(0, e.Bytes.Length).ToArray() : response;
+        => check.Bytes is { } expectedBytes && response.Length >= expectedBytes.Bytes.Length ? response.AsSpan(0, expectedBytes.Bytes.Length).ToArray() : response;
 
     private static int DefaultStart(byte service) => service switch
     {
@@ -781,8 +781,8 @@ internal sealed class UdsAction(string resource, DiagSpec settings, string reque
         }
         if (check.Low is not null || check.High is not null)
         {
-            if (CommunicationBlocks.ParseNumber(text) is not { } n) return new StepOutcome(ResultRating.Fail, text, Message: $"{shown}: kein Zahlenwert");
-            return CommunicationBlocks.Rate(ctx, n, check.Low, check.High, check.Unit, shown);
+            if (CommunicationBlocks.ParseNumber(text) is not { } number) return new StepOutcome(ResultRating.Fail, text, Message: $"{shown}: kein Zahlenwert");
+            return CommunicationBlocks.Rate(ctx, number, check.Low, check.High, check.Unit, shown);
         }
         return new StepOutcome(ResultRating.Pass, text, Message: shown);
     }
@@ -810,26 +810,26 @@ internal sealed class J1939ReceiveAction(string resource, uint? pgn, byte? sourc
             }
         }
         var group = pgn ?? message?.Pgn;
-        if (group is not { } p) return StepOutcome.Error("PGN angeben (oder Signal aus der Datenbank).");
+        if (group is not { } position) return StepOutcome.Error("PGN angeben (oder Signal aus der Datenbank).");
         J1939Message received;
         try
         {
-            received = await context.UseDeviceAsync(resource, $"J1939 PGN 0x{p:X4}", async (adapter, channel, token) =>
+            received = await context.UseDeviceAsync(resource, $"J1939 PGN 0x{position:X4}", async (adapter, channel, token) =>
             {
                 var can = CommunicationBlocks.As<ICanAdapter>(adapter, "CAN");
                 can.DiscardInput(channel);
-                if (request) await J1939.RequestAsync(can, channel, p, own, source ?? J1939.Global, token).ConfigureAwait(false);
-                return await J1939.ReceiveAsync(can, channel, p, source, own, timeout, token).ConfigureAwait(false);
+                if (request) await J1939.RequestAsync(can, channel, position, own, source ?? J1939.Global, token).ConfigureAwait(false);
+                return await J1939.ReceiveAsync(can, channel, position, source, own, timeout, token).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
         catch (CommunicationTimeoutException ex)
         {
             return check.Timeout(ex);
         }
-        return RateReceived(context, received, sig, message, p);
+        return RateReceived(context, received, sig, message, position);
     }
 
-    private StepOutcome RateReceived(IStepContext context, J1939Message received, BusSignal? sig, BusMessage? message, uint p)
+    private StepOutcome RateReceived(IStepContext context, J1939Message received, BusSignal? sig, BusMessage? message, uint pgn2)
     {
         var shown = received.ToString();
         if (check.CheckBytes(received.Data, shown) is { } mismatch) return mismatch;
@@ -846,7 +846,7 @@ internal sealed class J1939ReceiveAction(string resource, uint? pgn, byte? sourc
         {
             return new StepOutcome(ResultRating.Fail, BusBlocks.Hex(received.Data), Message: $"{shown}: {ex.Message}");
         }
-        return check.Rate(context, value, sig?.Describe(received.Data), sig?.Unit, coding.Factor, sig is null ? $"PGN 0x{p:X4}" : $"{message!.Name}.{sig.Name}");
+        return check.Rate(context, value, sig?.Describe(received.Data), sig?.Unit, coding.Factor, sig is null ? $"PGN 0x{pgn2:X4}" : $"{message!.Name}.{sig.Name}");
     }
 
     private static bool Unavailable(CanSignal coding, byte[] data)
@@ -909,13 +909,13 @@ internal static class LinFrames
     /// <summary>Frame-ID aus Zahl oder Name der LDF.</summary>
     public static (byte Id, BusMessage? Message) Resolve(string frame, BusDatabase? db)
     {
-        var t = frame.Trim();
-        if (db?.Message(t) is { } m && (m.Name.Equals(t, StringComparison.OrdinalIgnoreCase) || !char.IsDigit(t[0]))) return ((byte)m.Id, m);
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? byte.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id)
-            : byte.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
+        var text = frame.Trim();
+        if (db?.Message(text) is { } busMessage && (busMessage.Name.Equals(text, StringComparison.OrdinalIgnoreCase) || !char.IsDigit(text[0]))) return ((byte)busMessage.Id, busMessage);
+        var ok = text.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? byte.TryParse(text[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id)
+            : byte.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
         if (!ok || id > 0x3F) throw new BusDatabaseException($"LIN-Frame „{frame}“: ID 0x00–0x3F oder Name aus der LDF.");
-        return (id, db?.Messages.FirstOrDefault(x => x.Id == id));
+        return (id, db?.Messages.FirstOrDefault(busMessage2 => busMessage2.Id == id));
     }
 }
 
@@ -1000,7 +1000,7 @@ internal sealed class LinSendAction(string resource, string frame, string? datab
             await CommunicationBlocks.As<ILinAdapter>(adapter, "LIN").SendAsync(channel, id, bytes, checksum, token).ConfigureAwait(false);
             return 0;
         }).ConfigureAwait(false);
-        var decoded = message is null ? "" : " (" + string.Join(", ", message.Decode(bytes).Select(d => $"{d.Signal.Name}={d.Text ?? d.Value.ToString("0.###", CultureInfo.InvariantCulture)}")) + ")";
+        var decoded = message is null ? "" : " (" + string.Join(", ", message.Decode(bytes).Select(entry => $"{entry.Signal.Name}={entry.Text ?? entry.Value.ToString("0.###", CultureInfo.InvariantCulture)}")) + ")";
         return StepOutcome.Unrated(BusBlocks.Hex(bytes), $"LIN {message?.Name ?? $"0x{id:X2}"}: {BusBlocks.Hex(bytes)}{decoded}");
     }
 }
@@ -1023,7 +1023,7 @@ internal sealed class J1939ClaimAction(string resource, byte address, ulong name
                 return list;
             }).ConfigureAwait(false);
             if (target is not null && query)
-                CommunicationBlocks.SetTarget(context, target, string.Join("; ", participants.Select(x => $"0x{x.Address:X2}=0x{x.Name:X16}")));
+                CommunicationBlocks.SetTarget(context, target, string.Join("; ", participants.Select(namedEntry => $"0x{namedEntry.Address:X2}=0x{namedEntry.Name:X16}")));
             return StepOutcome.Unrated($"0x{name:X16}", $"Adresse 0x{address:X2} beansprucht{(query ? $" ({participants.Count} Teilnehmer gesehen)" : "")}");
         }
         catch (CommunicationException ex)
@@ -1060,27 +1060,27 @@ internal sealed class LinScheduleAction(string resource, string? database, strin
             var lin = CommunicationBlocks.As<ILinAdapter>(adapter, "LIN");
             var done = 0;
             for (var run = 0; run < runs; run++)
-                foreach (var e in entries)
+                foreach (var entry in entries)
                 {
                     token.ThrowIfCancellationRequested();
-                    if (e.Send is { } data) await lin.SendAsync(channel, e.Id, data, LinChecksum.Enhanced, token).ConfigureAwait(false);
+                    if (entry.Send is { } data) await lin.SendAsync(channel, entry.Id, data, LinChecksum.Enhanced, token).ConfigureAwait(false);
                     else
                     {
                         try
                         {
-                            await lin.RequestAsync(channel, e.Id, e.Length ?? 8, LinChecksum.Enhanced, TimeSpan.FromMilliseconds(Math.Max(10, e.GapMs)), token).ConfigureAwait(false);
+                            await lin.RequestAsync(channel, entry.Id, entry.Length ?? 8, LinChecksum.Enhanced, TimeSpan.FromMilliseconds(Math.Max(10, entry.GapMs)), token).ConfigureAwait(false);
                         }
                         catch (CommunicationTimeoutException)
                         {
-                            if (!missing.Contains(e.Name)) missing.Add(e.Name);
+                            if (!missing.Contains(entry.Name)) missing.Add(entry.Name);
                         }
                         catch (CommunicationException) // falsche Länge o. Ä.: als auffälliger Frame vermerken, Fahrplan läuft weiter
                         {
-                            if (!missing.Contains(e.Name)) missing.Add(e.Name);
+                            if (!missing.Contains(entry.Name)) missing.Add(entry.Name);
                         }
                     }
                     done++;
-                    if (e.GapMs > 0) await context.Clock.Delay(TimeSpan.FromMilliseconds(e.GapMs), token).ConfigureAwait(false);
+                    if (entry.GapMs > 0) await context.Clock.Delay(TimeSpan.FromMilliseconds(entry.GapMs), token).ConfigureAwait(false);
                 }
             return done;
         }).ConfigureAwait(false);
@@ -1104,14 +1104,14 @@ internal sealed class LinScheduleAction(string resource, string? database, strin
             frame = line[..eq].Trim();
             var rest = line[(eq + 1)..].Trim();
             var sp = rest.LastIndexOf(' ');
-            if (sp > 0 && int.TryParse(rest[(sp + 1)..], out var g)) { gap = g; rest = rest[..sp].Trim(); }
+            if (sp > 0 && int.TryParse(rest[(sp + 1)..], out var number)) { gap = number; rest = rest[..sp].Trim(); }
             send = CommText.ParseHex(rest);
         }
         else
         {
             var parts = line.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
             frame = parts[0];
-            if (parts.Length > 1 && int.TryParse(parts[1], out var g)) gap = g;
+            if (parts.Length > 1 && int.TryParse(parts[1], out var number2)) gap = number2;
         }
         var colon = frame.LastIndexOf(':');
         if (colon > 0 && int.TryParse(frame[(colon + 1)..], out var len)) { length = len; frame = frame[..colon]; }
@@ -1161,11 +1161,11 @@ internal sealed class UdsSecurityAction(string resource, DiagSpec settings, byte
         {
             if (method != 4) return SecurityKey.Compute((SecurityKey.Method)method, seed, constant);
             var key = new byte[seed.Length];
-            for (var i = 0; i < seed.Length; i++)
+            for (var index = 0; index < seed.Length; index++)
             {
-                var resolver = new ContextResolver(context, new Dictionary<string, object?> { ["s"] = (double)seed[i], ["i"] = (double)i });
+                var resolver = new ContextResolver(context, new Dictionary<string, object?> { ["s"] = (double)seed[index], ["i"] = (double)index });
                 var value = expr!.Evaluate(resolver);
-                key[i] = unchecked((byte)(long)Math.Round(Convert.ToDouble(value, CultureInfo.InvariantCulture)));
+                key[index] = unchecked((byte)(long)Math.Round(Convert.ToDouble(value, CultureInfo.InvariantCulture)));
             }
             return key;
         }
@@ -1212,12 +1212,12 @@ internal sealed class DoIpDiscoverAction(string host, int port, TimeSpan timeout
         {
             return StepOutcome.Error("DoIP-Fahrzeugsuche: " + ex.Message);
         }
-        var list = string.Join("; ", vehicles.Select(v => $"{v.Vin}@0x{v.LogicalAddress:X4}"));
+        var list = string.Join("; ", vehicles.Select(doIpVehicle => $"{doIpVehicle.Vin}@0x{doIpVehicle.LogicalAddress:X4}"));
         if (target is not null) CommunicationBlocks.SetTarget(context, target, list);
         var problems = new List<string>();
-        if (expectedVin is not null && vehicles.All(v => !string.Equals(v.Vin, expectedVin.Trim(), StringComparison.OrdinalIgnoreCase)))
+        if (expectedVin is not null && vehicles.All(doIpVehicle => !string.Equals(doIpVehicle.Vin, expectedVin.Trim(), StringComparison.OrdinalIgnoreCase)))
             problems.Add($"VIN {expectedVin.Trim()} nicht gefunden");
-        if (expectedAddress is { } addr && vehicles.All(v => v.LogicalAddress != addr))
+        if (expectedAddress is { } addr && vehicles.All(doIpVehicle => doIpVehicle.LogicalAddress != addr))
             problems.Add($"Adresse 0x{addr:X4} nicht gefunden");
         if (minimum is { } min && vehicles.Count < min)
             problems.Add($"{vehicles.Count} statt mindestens {min} Fahrzeuge");
@@ -1240,16 +1240,16 @@ internal sealed class OpcUaAction(string resource, int action, string? node, Exp
         {
             return await context.UseDeviceAsync(resource, "OPC UA " + OpcActions(action), async (adapter, channel, token) =>
             {
-                var opc = adapter is IOpcUaClient d ? d : adapter is IOpcUaDevice dev ? dev.OpcUa(channel)
+                var opc = adapter is IOpcUaClient iOpcUaClient ? iOpcUaClient : adapter is IOpcUaDevice dev ? dev.OpcUa(channel)
                     : throw new CommunicationException($"Gerät „{adapter.Name}“ ist kein OPC-UA-Gerät.");
                 await opc.ConnectAsync(token).ConfigureAwait(false);
                 switch (action)
                 {
                     case 1: // Schreiben
                         if (node is null) return StepOutcome.Error("OPC UA: Knoten angeben.");
-                        var w = value?.Evaluate(new ContextResolver(context)) ?? throw new CommunicationException("OPC UA Schreiben: Wert angeben.");
-                        await opc.WriteAsync(node, w, token).ConfigureAwait(false);
-                        return StepOutcome.Unrated(CommunicationBlocks.Text(w), $"{node} ← {CommunicationBlocks.Text(w)}");
+                        var writeValue = value?.Evaluate(new ContextResolver(context)) ?? throw new CommunicationException("OPC UA Schreiben: Wert angeben.");
+                        await opc.WriteAsync(node, writeValue, token).ConfigureAwait(false);
+                        return StepOutcome.Unrated(CommunicationBlocks.Text(writeValue), $"{node} ← {CommunicationBlocks.Text(writeValue)}");
                     case 2: // Methode
                         if (objectNode is null || method is null) return StepOutcome.Error("OPC UA Methode: Objekt- und Methodenknoten angeben.");
                         var args = string.IsNullOrWhiteSpace(arguments) ? new List<object?>()
@@ -1289,21 +1289,21 @@ internal sealed class OpcUaAction(string resource, int action, string? node, Exp
         }
     }
 
-    private static string OpcActions(int a) => a switch { 1 => "Schreiben", 2 => "Methode", 3 => "Abo", _ => "Lesen" };
+    private static string OpcActions(int opcAction) => opcAction switch { 1 => "Schreiben", 2 => "Methode", 3 => "Abo", _ => "Lesen" };
 
     private static object? Scalar(string text)
     {
         if (text.StartsWith('"') && text.EndsWith('"') && text.Length >= 2) return text[1..^1];
         if (text.Equals("true", StringComparison.OrdinalIgnoreCase)) return true;
         if (text.Equals("false", StringComparison.OrdinalIgnoreCase)) return false;
-        if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l)) return l;
-        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)) return d;
+        if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var length)) return length;
+        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)) return number;
         return text;
     }
 
     private StepOutcome Evaluate(IStepContext ctx, object? read, string label)
     {
-        if (target is not null) CommunicationBlocks.SetTarget(ctx, target, read is string s ? s : read);
+        if (target is not null) CommunicationBlocks.SetTarget(ctx, target, read is string text ? text : read);
         if (expected is not null)
         {
             return EvaluateExpected(ctx, read, label);

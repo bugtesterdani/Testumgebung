@@ -33,8 +33,8 @@ public sealed record RuntimeSnapshot(IReadOnlyList<RuntimeComponent> Components)
             var path = Path.Combine(AppContext.BaseDirectory, folder);
             if (!Directory.Exists(path)) continue;
             foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories)
-                .Where(f => folder == "toolchains" || f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".py", StringComparison.OrdinalIgnoreCase)
-                    || f.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                .Where(file => folder == "toolchains" || file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)
+                    || file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 .Order(StringComparer.Ordinal))
             {
                 using var stream = File.OpenRead(file);
@@ -42,7 +42,7 @@ public sealed record RuntimeSnapshot(IReadOnlyList<RuntimeComponent> Components)
                     Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, ct))));
             }
         }
-        var languages = ReleasePackage.CodeFiles(project.Definition).Select(f => Path.GetExtension(f.Path) switch
+        var languages = ReleasePackage.CodeFiles(project.Definition).Select(entry => Path.GetExtension(entry.Path) switch
         {
             ".py" => CodeLanguage.Python, ".cpp" => CodeLanguage.Cpp, ".txt" => CodeLanguage.LabView, _ => CodeLanguage.CSharp,
         }).Distinct();
@@ -52,7 +52,7 @@ public sealed record RuntimeSnapshot(IReadOnlyList<RuntimeComponent> Components)
             if (runtime is null) throw new ReleaseRuleException($"Ausführungsumgebung für {language} fehlt.");
             components.Add(new("CodeRuntime/" + language, await runtime.GetRuntimeInfoAsync(language, ct)));
         }
-        return new(components.OrderBy(c => c.Name, StringComparer.Ordinal).ToList());
+        return new(components.OrderBy(runtimeComponent => runtimeComponent.Name, StringComparer.Ordinal).ToList());
     }
 
     public IReadOnlyList<string> Compare(RuntimeSnapshot actual)
@@ -60,11 +60,11 @@ public sealed record RuntimeSnapshot(IReadOnlyList<RuntimeComponent> Components)
         var problems = new List<string>();
         foreach (var expected in Components)
         {
-            var found = actual.Components.FirstOrDefault(c => c.Name == expected.Name);
+            var found = actual.Components.FirstOrDefault(runtimeComponent => runtimeComponent.Name == expected.Name);
             if (found is null) problems.Add($"{expected.Name} fehlt.");
             else if (expected != found) problems.Add($"{expected.Name}: Version oder Inhalt weicht vom Freigabepaket ab.");
         }
-        foreach (var extra in actual.Components.Where(c => Components.All(e => e.Name != c.Name)))
+        foreach (var extra in actual.Components.Where(runtimeComponent => Components.All(runtimeComponent2 => runtimeComponent2.Name != runtimeComponent.Name)))
             problems.Add($"{extra.Name}: im Freigabepaket nicht erfasst.");
         return problems;
     }

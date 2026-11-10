@@ -22,7 +22,7 @@ public interface IProgramSourceProvider
 
 public sealed class ProgramSourceProviders(IEnumerable<IProgramSourceProvider> providers)
 {
-    private readonly Dictionary<string, IProgramSourceProvider> _providers = providers.ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IProgramSourceProvider> _providers = providers.ToDictionary(iProgramSourceProvider => iProgramSourceProvider.Id, StringComparer.OrdinalIgnoreCase);
     public IReadOnlyList<string> Names => _providers.Keys.ToArray();
     public IProgramSourceProvider Get(string id) => _providers.GetValueOrDefault(id)
         ?? throw new InvalidOperationException($"Versionsverwaltung '{id}' ist nicht eingerichtet.");
@@ -49,7 +49,7 @@ internal static partial class SourcePaths
     }
     public static string Relative(string path)
     {
-        if (string.IsNullOrWhiteSpace(path) || Path.IsPathRooted(path) || path.Contains(':') || path.Replace('\\','/').Split('/').Any(p => p is ".." or "." or ""))
+        if (string.IsNullOrWhiteSpace(path) || Path.IsPathRooted(path) || path.Contains(':') || path.Replace('\\','/').Split('/').Any(pathSegment => pathSegment is ".." or "." or ""))
             throw new ArgumentException("Projektpfad muss ein relativer Dateipfad innerhalb des Repositorys sein.");
         return path.Replace('\\', '/');
     }

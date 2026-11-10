@@ -20,11 +20,11 @@ public sealed record CanBusSettings(int Bitrate, bool Fd, int DataBitrate, strin
 
     public static int ParseRate(string text)
     {
-        var t = text.Trim().ToLowerInvariant().Replace("bit/s", "").Replace("bps", "").Trim();
-        var factor = t.EndsWith('m') ? 1_000_000 : t.EndsWith('k') ? 1000 : 1;
-        if (factor > 1) t = t[..^1];
-        if (!double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var v)) throw new InstrumentException($"Bitrate „{text}“ ungültig (z. B. 500k, 1M).");
-        return (int)(v * factor);
+        var text2 = text.Trim().ToLowerInvariant().Replace("bit/s", "").Replace("bps", "").Trim();
+        var factor = text2.EndsWith('m') ? 1_000_000 : text2.EndsWith('k') ? 1000 : 1;
+        if (factor > 1) text2 = text2[..^1];
+        if (!double.TryParse(text2, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) throw new InstrumentException($"Bitrate „{text}“ ungültig (z. B. 500k, 1M).");
+        return (int)(value * factor);
     }
 
     public override string ToString() => $"{Bitrate / 1000} kbit/s{(Fd ? $", FD {DataBitrate / 1000} kbit/s" : "")}";
@@ -157,7 +157,7 @@ public sealed class CanDevice : CommDevice, ICanAdapter
         {
             lock (_bufferGate)
             {
-                var index = _buffer.FindIndex(f => filters.Any(x => x.Matches(f)));
+                var index = _buffer.FindIndex(canFrame => filters.Any(canFilter => canFilter.Matches(canFrame)));
                 if (index >= 0)
                 {
                     var frame = _buffer[index];
@@ -251,7 +251,7 @@ public sealed class VirtualCanBackend(string bus) : ICanBackend
     public void Send(CanFrame frame)
     {
         if (!_open) throw new CommunicationException("Virtueller Bus nicht geöffnet.");
-        foreach (var peer in Buses[bus].Keys.Where(p => !ReferenceEquals(p, this))) peer._inbox.Writer.TryWrite(frame);
+        foreach (var peer in Buses[bus].Keys.Where(virtualCanBackend => !ReferenceEquals(virtualCanBackend, this))) peer._inbox.Writer.TryWrite(frame);
     }
 
     public CanFrame? Read(int timeoutMs)
@@ -300,13 +300,13 @@ public sealed class PcanBackend(string resource) : ICanBackend
 
     public static ushort ParseHandle(string resource)
     {
-        var r = resource.Trim().ToUpperInvariant();
-        if (r.StartsWith("0X", StringComparison.Ordinal) && ushort.TryParse(r[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var h)) return h;
-        static int N(string s, string prefix) => int.TryParse(s[prefix.Length..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) && n is >= 1 and <= 16
-            ? n : throw new InstrumentException($"PCAN-Kanal „{s}“: Nummer 1–16.");
-        if (r.StartsWith("PCAN_USBBUS", StringComparison.Ordinal)) { var n = N(r, "PCAN_USBBUS"); return (ushort)(n <= 8 ? 0x51 + n - 1 : 0x509 + n - 9); }
-        if (r.StartsWith("PCAN_PCIBUS", StringComparison.Ordinal)) { var n = N(r, "PCAN_PCIBUS"); return (ushort)(n <= 8 ? 0x41 + n - 1 : 0x409 + n - 9); }
-        if (r.StartsWith("PCAN_LANBUS", StringComparison.Ordinal)) { var n = N(r, "PCAN_LANBUS"); return (ushort)(0x801 + n - 1); }
+        var text = resource.Trim().ToUpperInvariant();
+        if (text.StartsWith("0X", StringComparison.Ordinal) && ushort.TryParse(text[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) return number;
+        static int N(string text2, string prefix) => int.TryParse(text2[prefix.Length..], NumberStyles.Integer, CultureInfo.InvariantCulture, out var count) && count is >= 1 and <= 16
+            ? count : throw new InstrumentException($"PCAN-Kanal „{text2}“: Nummer 1–16.");
+        if (text.StartsWith("PCAN_USBBUS", StringComparison.Ordinal)) { var count2 = N(text, "PCAN_USBBUS"); return (ushort)(count2 <= 8 ? 0x51 + count2 - 1 : 0x509 + count2 - 9); }
+        if (text.StartsWith("PCAN_PCIBUS", StringComparison.Ordinal)) { var count3 = N(text, "PCAN_PCIBUS"); return (ushort)(count3 <= 8 ? 0x41 + count3 - 1 : 0x409 + count3 - 9); }
+        if (text.StartsWith("PCAN_LANBUS", StringComparison.Ordinal)) { var count4 = N(text, "PCAN_LANBUS"); return (ushort)(0x801 + count4 - 1); }
         throw new InstrumentException($"PCAN-Kanal „{resource}“ unbekannt (z. B. PCAN_USBBUS1).");
     }
 
@@ -515,8 +515,8 @@ public sealed class KvaserBackend(string resource) : ICanBackend
     private readonly IKvaserApi _api = new KvaserApi();
     internal KvaserBackend(string resource, IKvaserApi api) : this(resource) => _api = api;
 
-    private readonly int _channel = int.TryParse(resource.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var c) && c >= 0
-        ? c : throw new InstrumentException($"Kvaser-Kanal „{resource}“: Kanalnummer 0, 1, …");
+    private readonly int _channel = int.TryParse(resource.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var count2) && count2 >= 0
+        ? count2 : throw new InstrumentException($"Kvaser-Kanal „{resource}“: Kanalnummer 0, 1, …");
     private int _handle = -1;
 
     public string Description => $"Kvaser Kanal {_channel}";
@@ -757,7 +757,7 @@ public sealed class VectorXlBackend(string resource) : ICanBackend
         }
     }
 
-    private static byte DlcOf(int length) => (byte)Array.IndexOf(CanFrame.FdLengths, CanFrame.FdLengths.First(l => l >= length));
+    private static byte DlcOf(int length) => (byte)Array.IndexOf(CanFrame.FdLengths, CanFrame.FdLengths.First(fdLength => fdLength >= length));
 
     public void Send(CanFrame frame)
     {

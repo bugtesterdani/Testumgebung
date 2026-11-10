@@ -70,7 +70,7 @@ public sealed class SystemPageViewModel : ObservableObject
             var path = _dialogs?.OpenFile("Sicherung öffnen", ZipFilter);
             if (path is not null) InspectBackup(path);
         });
-        RestoreCommand = new RelayCommand(Restore, () => _inspection is { IsIntact: true } && BackupFiles.Any(f => f.Selected));
+        RestoreCommand = new RelayCommand(Restore, () => _inspection is { IsIntact: true } && BackupFiles.Any(backupFileRow => backupFileRow.Selected));
     }
 
     public IReadOnlyList<BackupSource> Sources => _sources;
@@ -102,7 +102,7 @@ public sealed class SystemPageViewModel : ObservableObject
         private set => SetProperty(ref _checkSummary, value);
     }
 
-    public bool CheckPassed => Checks.Count > 0 && Checks.All(c => c.Level != CheckLevel.Error);
+    public bool CheckPassed => Checks.Count > 0 && Checks.All(systemCheckItem => systemCheckItem.Level != CheckLevel.Error);
 
     public async Task RunCheckAsync()
     {
@@ -127,9 +127,9 @@ public sealed class SystemPageViewModel : ObservableObject
                 DaqmxAvailable = context.DaqmxAvailable,
             })).ConfigureAwait(true);
             Checks.Clear();
-            foreach (var i in items.OrderByDescending(i => i.Level)) Checks.Add(i);
-            var errors = items.Count(i => i.Level == CheckLevel.Error);
-            var warnings = items.Count(i => i.Level == CheckLevel.Warning);
+            foreach (var systemCheckItem in items.OrderByDescending(systemCheckItem2 => systemCheckItem2.Level)) Checks.Add(systemCheckItem);
+            var errors = items.Count(systemCheckItem2 => systemCheckItem2.Level == CheckLevel.Error);
+            var warnings = items.Count(systemCheckItem2 => systemCheckItem2.Level == CheckLevel.Warning);
             CheckSummary = $"{DateTime.Now:dd.MM.yyyy HH:mm:ss}: {items.Count} Prüfpunkte – {errors} Fehler, {warnings} Warnung(en)."
                            + (errors == 0 ? " Bereit für den Pilotbetrieb, sofern die Warnungen bewusst akzeptiert sind." : " Fehler vor dem Pilot beheben.");
             OnPropertyChanged(nameof(CheckPassed));
@@ -169,8 +169,8 @@ public sealed class SystemPageViewModel : ObservableObject
         try
         {
             var manifest = ConfigBackup.Create(path, _sources, DateTimeOffset.Now);
-            var missing = _sources.Where(s => manifest.Files.All(f => f.Name != s.Name)).Select(s => s.Name).ToList();
-            BackupStatus = $"Gesichert: {string.Join(", ", manifest.Files.Select(f => f.Name))} → {path}"
+            var missing = _sources.Where(backupSource => manifest.Files.All(backupFileEntry => backupFileEntry.Name != backupSource.Name)).Select(backupSource => backupSource.Name).ToList();
+            BackupStatus = $"Gesichert: {string.Join(", ", manifest.Files.Select(backupFileEntry => backupFileEntry.Name))} → {path}"
                            + (missing.Count > 0 ? $" (nicht vorhanden: {string.Join(", ", missing)})" : "");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -185,10 +185,10 @@ public sealed class SystemPageViewModel : ObservableObject
         _inspection = ConfigBackup.Inspect(path);
         BackupFiles.Clear();
         BackupMessages.Clear();
-        foreach (var f in _inspection.Manifest.Files)
-            BackupFiles.Add(new BackupFileRow(f, _sources.FirstOrDefault(s => s.Name == f.Name)?.Path));
-        foreach (var p in _inspection.Problems) BackupMessages.Add("Fehler: " + p);
-        foreach (var w in _inspection.Warnings) BackupMessages.Add("Hinweis: " + w);
+        foreach (var backupFileEntry in _inspection.Manifest.Files)
+            BackupFiles.Add(new BackupFileRow(backupFileEntry, _sources.FirstOrDefault(backupSource => backupSource.Name == backupFileEntry.Name)?.Path));
+        foreach (var problem in _inspection.Problems) BackupMessages.Add("Fehler: " + problem);
+        foreach (var warning in _inspection.Warnings) BackupMessages.Add("Hinweis: " + warning);
         foreach (var row in BackupFiles) row.PropertyChanged += (_, _) => RestoreCommand.RaiseCanExecuteChanged();
         OnPropertyChanged(nameof(InspectionText));
         RestoreCommand.RaiseCanExecuteChanged();
@@ -202,7 +202,7 @@ public sealed class SystemPageViewModel : ObservableObject
             BackupStatus = "Nicht wiederhergestellt: Während einer Prüfung kann die Konfiguration nicht ersetzt werden.";
             return;
         }
-        var targets = BackupFiles.Where(f => f.Selected && f.Target is not null).ToDictionary(f => f.Name, f => f.Target!);
+        var targets = BackupFiles.Where(backupFileRow => backupFileRow.Selected && backupFileRow.Target is not null).ToDictionary(backupFileRow => backupFileRow.Name, backupFileRow => backupFileRow.Target!);
         try
         {
             var result = ConfigBackup.Restore(_restorePath, targets, DateTimeOffset.Now);

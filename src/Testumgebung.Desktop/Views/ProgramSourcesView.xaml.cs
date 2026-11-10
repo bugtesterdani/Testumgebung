@@ -16,16 +16,16 @@ public partial class ProgramSourcesView : UserControl
         var window = new SourceAuthenticationWindow(model) { Owner = Window.GetWindow(this) };
         return Task.FromResult(window.ShowDialog() == true);
     }
-    private async void OnLogin(object sender, RoutedEventArgs e) => await PromptAuthentication();
-    private async void OnTestConnection(object sender, RoutedEventArgs e)
+    private async void OnLogin(object sender, RoutedEventArgs eventArgs) => await PromptAuthentication();
+    private async void OnTestConnection(object sender, RoutedEventArgs eventArgs)
     {
         if (DataContext is ProgramSourcesViewModel model) await model.TestConnectionAsync();
     }
-    private void OnRemoveLogin(object sender, RoutedEventArgs e)
+    private void OnRemoveLogin(object sender, RoutedEventArgs eventArgs)
     {
         if (DataContext is ProgramSourcesViewModel model) model.RemoveAuthentication();
     }
-    private void OnCancelConnection(object sender, RoutedEventArgs e)
+    private void OnCancelConnection(object sender, RoutedEventArgs eventArgs)
     {
         if (DataContext is ProgramSourcesViewModel model) model.CancelSourceOperation();
     }

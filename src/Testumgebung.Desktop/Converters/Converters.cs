@@ -23,9 +23,9 @@ internal static class Brushes2
     public static readonly SolidColorBrush Running = Freeze(0xE2, 0xED, 0xFC);
     public static readonly SolidColorBrush Paused = Freeze(0xFD, 0xEC, 0xEC);
 
-    private static SolidColorBrush Freeze(byte r, byte g, byte b)
+    private static SolidColorBrush Freeze(byte red, byte green, byte blue)
     {
-        var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
+        var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
         brush.Freeze();
         return brush;
     }
@@ -48,7 +48,7 @@ public sealed class RatingToBrushConverter : IValueConverter
 public sealed class RatingToTextConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => value is ResultRating r ? r.ToDisplay() : "—";
+        => value is ResultRating rating ? rating.ToDisplay() : "—";
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
@@ -168,8 +168,8 @@ public sealed class NullToVisibilityConverter : IValueConverter
         var hasValue = value switch
         {
             null => false,
-            string s => s.Length > 0,
-            System.Collections.ICollection c => c.Count > 0,
+            string text => text.Length > 0,
+            System.Collections.ICollection iCollection => iCollection.Count > 0,
             _ => true,
         };
         if (parameter is "invert") hasValue = !hasValue;
@@ -186,7 +186,7 @@ public sealed class EnumEqualsConverter : IValueConverter
         => value?.ToString() == parameter?.ToString();
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => value is true && parameter is string s ? Enum.Parse(targetType, s) : Binding.DoNothing;
+        => value is true && parameter is string text ? Enum.Parse(targetType, text) : Binding.DoNothing;
 }
 
 /// <summary>Anzeigetexte für Enums der Gruppeneigenschaften.</summary>
@@ -239,7 +239,7 @@ public sealed class EnumDisplayConverter : IValueConverter
 public sealed class DepthToMarginConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => new Thickness(value is int d ? d * 20 : 0, 0, 0, 0);
+        => new Thickness(value is int number ? number * 20 : 0, 0, 0, 0);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
@@ -260,7 +260,7 @@ public sealed class PlotPointsConverter : IValueConverter
     {
         var points = new System.Windows.Media.PointCollection();
         if (value is IEnumerable<Testumgebung.Presentation.ViewModels.PlotPoint> list)
-            foreach (var p in list) points.Add(new Point(p.X, p.Y));
+            foreach (var plotPoint in list) points.Add(new Point(plotPoint.X, plotPoint.Y));
         points.Freeze();
         return points;
     }
@@ -278,13 +278,13 @@ public sealed class SeriesBrushConverter : IValueConverter
 
     private static System.Windows.Media.Brush Freeze(string color)
     {
-        var b = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-        b.Freeze();
-        return b;
+        var solidColorBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+        solidColorBrush.Freeze();
+        return solidColorBrush;
     }
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => Brushes[(value is int i ? i : 0) % Brushes.Length];
+        => Brushes[(value is int index ? index : 0) % Brushes.Length];
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
@@ -308,8 +308,8 @@ public sealed class BarHeightConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var fraction = value is double d ? Math.Clamp(d, 0, 1) : 0;
-        var max = double.TryParse(parameter?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var p) ? p : 80;
+        var fraction = value is double number ? Math.Clamp(number, 0, 1) : 0;
+        var max = double.TryParse(parameter?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var position) ? position : 80;
         return fraction <= 0 ? 0.0 : Math.Max(1.0, fraction * max);
     }
 

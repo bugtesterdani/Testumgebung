@@ -89,10 +89,10 @@ public sealed partial class StationViewModel
     /// <summary>Messwert setzen (gleiche Bezeichnung = aktualisieren, Reihenfolge bleibt).</summary>
     private void SetMeasurement(MeasurementRow row)
     {
-        var i = _allMeasurements.FindIndex(m => m.Name == row.Name);
-        if (i < 0) _allMeasurements.Add(row);
-        else _allMeasurements[i] = row;
-        var shown = Measurements.FirstOrDefault(m => m.Name == row.Name);
+        var index = _allMeasurements.FindIndex(measurementRow => measurementRow.Name == row.Name);
+        if (index < 0) _allMeasurements.Add(row);
+        else _allMeasurements[index] = row;
+        var shown = Measurements.FirstOrDefault(measurementRow => measurementRow.Name == row.Name);
         if (shown is not null && IsShown(row)) Measurements[Measurements.IndexOf(shown)] = row;
         else RebuildMeasurements();
         OnPropertyChanged(nameof(HiddenMeasurementsText));
@@ -103,6 +103,6 @@ public sealed partial class StationViewModel
         var wanted = _allMeasurements.Where(IsShown).ToList();
         if (wanted.SequenceEqual(Measurements)) return;
         Measurements.Clear();
-        foreach (var m in wanted) Measurements.Add(m);
+        foreach (var measurementRow in wanted) Measurements.Add(measurementRow);
     }
 }

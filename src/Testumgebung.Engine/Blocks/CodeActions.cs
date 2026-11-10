@@ -59,7 +59,7 @@ internal static class CodeInvocation
     public static ICodeRuntime Runtime(IStepContext ctx)
     {
         var runtime = ctx.CodeRuntime ?? throw new CodeExecutionException("Keine Code-Ausführungsumgebung konfiguriert (Worker).");
-        var hasVariable = ctx.VisibleVariables().Any(v => v.Name == "PythonVenv" && v.Type == VarType.String);
+        var hasVariable = ctx.VisibleVariables().Any(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String);
         return runtime.WithPythonEnvironment(ctx.ProgramPythonVenv, hasVariable ? ctx.Get("PythonVenv") as string : null);
     }
 
@@ -88,8 +88,8 @@ public sealed class CodeBlockAction(CodeLanguage language, string source, TimeSp
     {
         var runtime = CodeInvocation.Runtime(context);
         var visible = context.VisibleVariables();
-        var ports = visible.Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
-        var before = visible.ToDictionary(v => v.Name, v => (object?)context.Get(v.Name), StringComparer.Ordinal);
+        var ports = visible.Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
+        var before = visible.ToDictionary(variable => variable.Name, variable => (object?)context.Get(variable.Name), StringComparer.Ordinal);
 
         var codeHost = new StepCodeHost(context, allowVariables: true, CodeDebug.CapabilityOf(Language));
         var result = await runtime.InvokeAsync(
@@ -152,13 +152,13 @@ public sealed class LibraryBlockAction(
 
         if (!result.Cancelled)
         {
-            foreach (var port in block.Ports.Where(p => p.IsOutput))
+            foreach (var port in block.Ports.Where(port => port.IsOutput))
             {
                 var target = port.Direction == PortDirection.InOut
                     ? inputs.GetValueOrDefault(port.Name)
                     : outputs.GetValueOrDefault(port.Name);
-                if (string.IsNullOrWhiteSpace(target) || !result.Values.TryGetValue(port.Name, out var v)) continue;
-                context.Set(target.Trim(), v);
+                if (string.IsNullOrWhiteSpace(target) || !result.Values.TryGetValue(port.Name, out var value2)) continue;
+                context.Set(target.Trim(), value2);
             }
         }
         var outcome = CodeInvocation.ToOutcome(result, context);
@@ -193,11 +193,11 @@ internal static class PortBinding
     public static void Outputs(IStepContext context, IEnumerable<CodePort> ports, IReadOnlyDictionary<string, string> inputs,
         IReadOnlyDictionary<string, string> outputs, IReadOnlyDictionary<string, object?> values)
     {
-        foreach (var port in ports.Where(p => p.IsOutput))
+        foreach (var port in ports.Where(port => port.IsOutput))
         {
             var target = port.Direction == PortDirection.InOut ? inputs.GetValueOrDefault(port.Name) : outputs.GetValueOrDefault(port.Name);
-            if (string.IsNullOrWhiteSpace(target) || !values.TryGetValue(port.Name, out var v)) continue;
-            context.Set(target.Trim(), v);
+            if (string.IsNullOrWhiteSpace(target) || !values.TryGetValue(port.Name, out var value)) continue;
+            context.Set(target.Trim(), value);
         }
     }
 }

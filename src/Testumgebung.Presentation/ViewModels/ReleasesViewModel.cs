@@ -67,11 +67,11 @@ public sealed partial class ReleasesViewModel : ObservableObject
         hub.Changed += () => _ui.Post(Rebuild);
         session.Changed += () => _ui.Post(RaiseIdentity);
         editor.ProjectReplaced += () => _ui.Post(Rebuild);
-        foreach (var s in stations)
-            s.PropertyChanged += (_, e) =>
+        foreach (var station in stations)
+            station.PropertyChanged += (_, eventArgs) =>
             {
-                if (e.PropertyName == nameof(StationViewModel.AvailablePrograms)) _ui.Post(Rebuild);
-                if (e.PropertyName is nameof(StationViewModel.RunningVersionText) or nameof(StationViewModel.IsRunning)) _ui.Post(RebuildStations);
+                if (eventArgs.PropertyName == nameof(StationViewModel.AvailablePrograms)) _ui.Post(Rebuild);
+                if (eventArgs.PropertyName is nameof(StationViewModel.RunningVersionText) or nameof(StationViewModel.IsRunning)) _ui.Post(RebuildStations);
             };
         Sources = new ProgramSourcesViewModel(hub, editor, session, ui, stations);
         Rebuild();
@@ -114,10 +114,10 @@ public sealed partial class ReleasesViewModel : ObservableObject
         get => Programs.FirstOrDefault(program => program.Name == ProjectName);
         set { if (value is not null) SelectedProgramName = value.Name; }
     }
-    public string ProgramStatus => Programs.FirstOrDefault(p => p.Name == ProjectName)?.Status ?? "Kein Release vorhanden";
+    public string ProgramStatus => Programs.FirstOrDefault(releaseProgramRow => releaseProgramRow.Name == ProjectName)?.Status ?? "Kein Release vorhanden";
 
     private TestProject? DraftSource() => _editor.Project.Definition.Name == ProjectName ? _editor.Project
-        : _stations.SelectMany(s => s.Coordinator?.Setup.ExampleProjects ?? []).FirstOrDefault(p => p.Definition.Name == ProjectName);
+        : _stations.SelectMany(station => station.Coordinator?.Setup.ExampleProjects ?? []).FirstOrDefault(project => project.Definition.Name == ProjectName);
     public string StoreName => _hub.Service.Store.Name;
     public string? StoreError => _hub.Error;
 
@@ -195,7 +195,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
 
     public string UserName => _session.User?.DisplayName ?? "Nicht angemeldet";
     public string UserUpn => _session.User?.Upn ?? "";
-    public string IdentitySource => _session.User is not { } u ? "" : u.IsConfirmed ? "Firmenkonto bestätigt · Microsoft Entra ID" : _session.Provider is LocalPasswordIdentityProvider ? "Lokaler Passwortzugang (keine Entra-Bestätigung)" : "Simulierte Anmeldung (nicht bestätigt)";
+    public string IdentitySource => _session.User is not { } userIdentity ? "" : userIdentity.IsConfirmed ? "Firmenkonto bestätigt · Microsoft Entra ID" : _session.Provider is LocalPasswordIdentityProvider ? "Lokaler Passwortzugang (keine Entra-Bestätigung)" : "Simulierte Anmeldung (nicht bestätigt)";
     public bool IsConfirmed => _session.User?.IsConfirmed == true;
     public bool IsDevelopmentMode => _session.IsDevelopmentMode;
 
@@ -229,7 +229,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
                 Done($"Entwurf v{version} erstellt – Paket {info.ShortHash} ist unveränderlich.", false);
             });
             await _hub.RefreshAsync().ConfigureAwait(false);
-            _ui.Post(() => Selected = Releases.FirstOrDefault(r => r.ReleaseId == info.ReleaseId));
+            _ui.Post(() => Selected = Releases.FirstOrDefault(release => release.ReleaseId == info.ReleaseId));
             return info;
         }
         catch (Exception ex) when (ex is ReleaseRuleException or InvalidOperationException or ReleasePackageException or IOException or System.Data.Common.DbException)
@@ -245,13 +245,13 @@ public sealed partial class ReleasesViewModel : ObservableObject
         try
         {
             var checks = await _hub.Service.ReviewAsync(info, Actor(), BuildCheckAsync).ConfigureAwait(false);
-            var passed = checks.All(c => c.Passed);
+            var passed = checks.All(reviewCheck => reviewCheck.Passed);
             await _hub.RefreshAsync().ConfigureAwait(false);
             _ui.Post(() =>
             {
-                Selected = Releases.FirstOrDefault(r => r.ReleaseId == info.ReleaseId);
+                Selected = Releases.FirstOrDefault(release => release.ReleaseId == info.ReleaseId);
                 Checks.Clear();
-                foreach (var c in checks) Checks.Add(c);
+                foreach (var reviewCheck in checks) Checks.Add(reviewCheck);
                 Done(passed ? $"Entwicklungsprüfung v{info.Version} abgeschlossen – bereit zur Freigabe." : "Entwicklungsprüfung nicht bestanden.", !passed);
             });
             return passed;
@@ -272,7 +272,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
             await _hub.RefreshAsync().ConfigureAwait(false);
             _ui.Post(() =>
             {
-                Selected = Releases.FirstOrDefault(r => r.ReleaseId == info.ReleaseId);
+                Selected = Releases.FirstOrDefault(release => release.ReleaseId == info.ReleaseId);
                 Done($"Version {info.Version} ausdrücklich freigegeben. Laufende Prüflinge behalten ihre Version; neue gilt ab dem nächsten Prüfling.", false);
             });
             return true;
@@ -308,15 +308,15 @@ public sealed partial class ReleasesViewModel : ObservableObject
     /// <summary>Codeartefakte bauen (Bibliotheksbausteine und CodeBlocks im Ablauf).</summary>
     private async Task<IReadOnlyList<ReviewCheck>> BuildCheckAsync(TestProject project, CancellationToken ct)
     {
-        var d = project.Definition;
+        var definition = project.Definition;
         var requests = new List<(string Name, CodeRequest Request)>();
-        foreach (var b in d.Library) requests.Add(($"Baustein {b.Name} ({b.Language})", new CodeRequest(b.Language, b.Source, b.Ports) { Assemblies = d.Assemblies }));
-        foreach (var s in d.EnabledNodes().OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.Code))
+        foreach (var codeBlock in definition.Library) requests.Add(($"Baustein {codeBlock.Name} ({codeBlock.Language})", new CodeRequest(codeBlock.Language, codeBlock.Source, codeBlock.Ports) { Assemblies = definition.Assemblies }));
+        foreach (var step in definition.EnabledNodes().OfType<StepDefinition>().Where(step2 => step2.BlockType == BlockCatalog.Code))
         {
-            var ports = CodeBlockConverter.VisibleVariables(d, s.Id).Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
-            requests.Add(($"CodeBlock {s.Name}", new CodeRequest(BlockCatalog.ParseLanguage(s.Parameters.GetValueOrDefault("Sprache") ?? "C#"),
-                s.Parameters.GetValueOrDefault("Quelltext") ?? "", ports)
-            { Assemblies = d.Assemblies }));
+            var ports = CodeBlockConverter.VisibleVariables(definition, step.Id).Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
+            requests.Add(($"CodeBlock {step.Name}", new CodeRequest(BlockCatalog.ParseLanguage(step.Parameters.GetValueOrDefault("Sprache") ?? "C#"),
+                step.Parameters.GetValueOrDefault("Quelltext") ?? "", ports)
+            { Assemblies = definition.Assemblies }));
         }
         if (requests.Count == 0) return [new ReviewCheck("Codeartefakte", true, "Keine Codeartefakte im Paket.")];
         if (_editor.CodeRuntime is not { } runtime) return [new ReviewCheck("Codeartefakte bauen", false, "Keine Ausführungsumgebung für Code konfiguriert.")];
@@ -325,8 +325,8 @@ public sealed partial class ReleasesViewModel : ObservableObject
         {
             try
             {
-                var r = await runtime.CompileAsync(request, ct).ConfigureAwait(false);
-                checks.Add(new ReviewCheck(name, r.Success, r.Success ? $"Build OK ({r.RuntimeInfo})" : string.Join("; ", r.Diagnostics.Where(x => x.IsError).Take(3))));
+                var compileResult = await runtime.CompileAsync(request, ct).ConfigureAwait(false);
+                checks.Add(new ReviewCheck(name, compileResult.Success, compileResult.Success ? $"Build OK ({compileResult.RuntimeInfo})" : string.Join("; ", compileResult.Diagnostics.Where(diagnostic => diagnostic.IsError).Take(3))));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -338,8 +338,8 @@ public sealed partial class ReleasesViewModel : ObservableObject
 
     private string SuggestVersion()
     {
-        var versions = _hub.All.Where(r => r.ProjectName == ProjectName).Select(r => r.Version).Append(DraftSource()?.Definition.Version ?? "1.0");
-        var max = versions.Select(v => Version.TryParse(v.Count(c => c == '.') == 0 ? v + ".0" : v, out var p) ? p : new Version(0, 0)).Max()!;
+        var versions = _hub.All.Where(release => release.ProjectName == ProjectName).Select(release => release.Version).Append(DraftSource()?.Definition.Version ?? "1.0");
+        var max = versions.Select(version => Version.TryParse(version.Count(character => character == '.') == 0 ? version + ".0" : version, out var version2) ? version2 : new Version(0, 0)).Max()!;
         return $"{max.Major}.{max.Minor + 1}";
     }
 
@@ -354,10 +354,10 @@ public sealed partial class ReleasesViewModel : ObservableObject
             {
                 if (!ReferenceEquals(_selected, info)) return;
                 Package.Clear();
-                foreach (var e in opened.Manifest.Entries)
+                foreach (var manifestEntry in opened.Manifest.Entries)
                 {
-                    var ok = opened.Problems.All(p => !p.Contains($"'{e.Name}'", StringComparison.Ordinal));
-                    Package.Add(new PackageRow(e.Area, e.Name, e.Version, e.Sha256.Length > 12 ? e.Sha256[..12] + "…" : e.Sha256, ok));
+                    var ok = opened.Problems.All(problem => !problem.Contains($"'{manifestEntry.Name}'", StringComparison.Ordinal));
+                    Package.Add(new PackageRow(manifestEntry.Area, manifestEntry.Name, manifestEntry.Version, manifestEntry.Sha256.Length > 12 ? manifestEntry.Sha256[..12] + "…" : manifestEntry.Sha256, ok));
                 }
                 if (!opened.IsIntact) Done("Paket nicht unversehrt: " + string.Join("; ", opened.Problems), true);
             });
@@ -377,7 +377,7 @@ public sealed partial class ReleasesViewModel : ObservableObject
             _ui.Post(() =>
             {
                 Audit.Clear();
-                foreach (var e in entries.OrderByDescending(e => e.Sequence).Take(200)) Audit.Add(e);
+                foreach (var auditEntry in entries.OrderByDescending(auditEntry2 => auditEntry2.Sequence).Take(200)) Audit.Add(auditEntry);
                 AuditState = verify is null ? $"Hash-Kette geprüft ({entries.Count} Einträge, unverändert)" : "WARNUNG: " + verify;
             });
         }
@@ -400,13 +400,13 @@ public sealed partial class ReleasesViewModel : ObservableObject
 
     private void RebuildPrograms()
     {
-        var names = _hub.All.Select(r => r.ProjectName)
-            .Concat(_stations.SelectMany(s => s.Coordinator?.Setup.ExampleProjects ?? []).Select(p => p.Definition.Name))
-            .Append(_editor.Project.Definition.Name).Distinct().OrderBy(n => n).ToList();
+        var names = _hub.All.Select(release => release.ProjectName)
+            .Concat(_stations.SelectMany(station => station.Coordinator?.Setup.ExampleProjects ?? []).Select(project => project.Definition.Name))
+            .Append(_editor.Project.Definition.Name).Distinct().OrderBy(name => name).ToList();
         var rows = new List<ReleaseProgramRow>();
         foreach (var name in names)
         {
-            var latest = _hub.All.Where(r => r.ProjectName == name).OrderByDescending(r => r.CreatedAt).FirstOrDefault();
+            var latest = _hub.All.Where(release => release.ProjectName == name).OrderByDescending(release => release.CreatedAt).FirstOrDefault();
             var released = _hub.CurrentInfo(name);
             rows.Add(new(name, released is not null ? $"Freigegeben v{released.Version}" : latest is not null ? latest.StateText : "Entwurf · kein Release vorhanden"));
         }
@@ -416,15 +416,15 @@ public sealed partial class ReleasesViewModel : ObservableObject
     /// <summary>Do not clear a bound selector on polling: preserve rows and restore changed selections by item identity.</summary>
     private void UpdatePrograms(IReadOnlyList<ReleaseProgramRow> rows)
     {
-        for (var i = 0; i < rows.Count; i++)
+        for (var index2 = 0; index2 < rows.Count; index2++)
         {
-            var existing = Programs.FirstOrDefault(program => program.Name == rows[i].Name);
-            if (existing is null) Programs.Insert(i, rows[i]);
+            var existing = Programs.FirstOrDefault(program => program.Name == rows[index2].Name);
+            if (existing is null) Programs.Insert(index2, rows[index2]);
             else
             {
                 var index = Programs.IndexOf(existing);
-                if (index != i) Programs.Move(index, i);
-                existing.Status = rows[i].Status;
+                if (index != index2) Programs.Move(index, index2);
+                existing.Status = rows[index2].Status;
             }
         }
         while (Programs.Count > rows.Count) Programs.RemoveAt(Programs.Count - 1);
@@ -434,34 +434,34 @@ public sealed partial class ReleasesViewModel : ObservableObject
     {
         var selectedId = _selected?.ReleaseId;
         Releases.Clear();
-        foreach (var r in _hub.All.Where(r => r.ProjectName == ProjectName).OrderByDescending(r => r.CreatedAt)) Releases.Add(r);
-        var match = Releases.FirstOrDefault(r => r.ReleaseId == selectedId);
+        foreach (var release in _hub.All.Where(release2 => release2.ProjectName == ProjectName).OrderByDescending(release2 => release2.CreatedAt)) Releases.Add(release);
+        var match = Releases.FirstOrDefault(release2 => release2.ReleaseId == selectedId);
         if (match is not null && !ReferenceEquals(match, _selected)) Selected = match;
         if (_selected is null && Releases.Count > 0) Selected = Releases[0];
-        if (_selected is not null && Releases.All(r => r.ReleaseId != _selected.ReleaseId)) Selected = null;
+        if (_selected is not null && Releases.All(release2 => release2.ReleaseId != _selected.ReleaseId)) Selected = null;
     }
 
     private void RebuildStations()
     {
         StationVersions.Clear();
         var released = _hub.CurrentInfo(ProjectName);
-        foreach (var s in _stations)
+        foreach (var station in _stations)
         {
-            var text = s.IsRunning ? $"läuft auf {s.RunningVersionText}" : released is null ? "bereit · keine freigegebene Version" : $"bereit · startet mit v{released.Version}";
-            StationVersions.Add(new StationVersionRow(s.Name, text));
+            var text = station.IsRunning ? $"läuft auf {station.RunningVersionText}" : released is null ? "bereit · keine freigegebene Version" : $"bereit · startet mit v{released.Version}";
+            StationVersions.Add(new StationVersionRow(station.Name, text));
         }
     }
 
     private void BuildStages()
     {
         Stages.Clear();
-        var r = _selected;
-        string D(DateTimeOffset? t) => t is { } x ? x.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture) : "";
-        var state = r?.State ?? ReleaseState.Draft;
-        Stages.Add(new StageRow(1, "Entwurf", r is null ? "" : $"{r.CreatedBy} · {D(r.CreatedAt)}", r is not null, state == ReleaseState.Draft));
-        Stages.Add(new StageRow(2, "Entwicklungsprüfung", r?.ReviewedAt is null ? (state == ReleaseState.Draft ? "Ausstehend" : "") : $"{r.ReviewedBy} · {D(r.ReviewedAt)}",
+        var selected = _selected;
+        string D(DateTimeOffset? timestamp) => timestamp is { } timestamp2 ? timestamp2.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture) : "";
+        var state = selected?.State ?? ReleaseState.Draft;
+        Stages.Add(new StageRow(1, "Entwurf", selected is null ? "" : $"{selected.CreatedBy} · {D(selected.CreatedAt)}", selected is not null, state == ReleaseState.Draft));
+        Stages.Add(new StageRow(2, "Entwicklungsprüfung", selected?.ReviewedAt is null ? (state == ReleaseState.Draft ? "Ausstehend" : "") : $"{selected.ReviewedBy} · {D(selected.ReviewedAt)}",
             state is ReleaseState.Review or ReleaseState.Released or ReleaseState.Archived, state == ReleaseState.Review));
-        Stages.Add(new StageRow(3, state == ReleaseState.Archived ? "Archiviert" : "Freigabe", r?.ReleasedAt is null ? "Ausstehend" : $"{r.ReleasedBy} · {D(r.ReleasedAt)}",
+        Stages.Add(new StageRow(3, state == ReleaseState.Archived ? "Archiviert" : "Freigabe", selected?.ReleasedAt is null ? "Ausstehend" : $"{selected.ReleasedBy} · {D(selected.ReleasedAt)}",
             state is ReleaseState.Released or ReleaseState.Archived, state == ReleaseState.Released));
     }
 

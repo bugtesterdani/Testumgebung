@@ -157,10 +157,10 @@ public sealed class VirtualLinBackend : ILinBackend
 
     private static byte Id(string text)
     {
-        var t = text.Trim();
-        return t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? byte.Parse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture)
-            : byte.Parse(t, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        var text2 = text.Trim();
+        return text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? byte.Parse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+            : byte.Parse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture);
     }
 
     public string Description => "virtueller LIN-Bus";
@@ -173,7 +173,7 @@ public sealed class VirtualLinBackend : ILinBackend
     {
         lock (_published)
         {
-            var data = _responses.TryGetValue(id, out var r) ? r : _echo.TryGetValue(id, out var s) && _published.TryGetValue(s, out var p) ? p : null;
+            var data = _responses.TryGetValue(id, out var bytes) ? bytes : _echo.TryGetValue(id, out var dataByte) && _published.TryGetValue(dataByte, out var bytes2) ? bytes2 : null;
             return data is null ? null : data.Length == length ? data.ToArray()
                 : throw new CommunicationException($"LIN 0x{id:X2}: Slave antwortet mit {data.Length} statt {length} Bytes.");
         }
@@ -211,8 +211,8 @@ public sealed class PlinBackend(string resource) : ILinBackend
     private const byte CstClassic = 1, CstEnhanced = 2;
     private const ushort FlagResponseEnable = 0x1;
 
-    private readonly int _index = int.TryParse(resource.Trim().Replace("PLIN", "", StringComparison.OrdinalIgnoreCase), NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) && i >= 1
-        ? i : throw new InstrumentException($"PLIN-Kanal „{resource}“: Hardware 1, 2, …");
+    private readonly int _index = int.TryParse(resource.Trim().Replace("PLIN", "", StringComparison.OrdinalIgnoreCase), NumberStyles.Integer, CultureInfo.InvariantCulture, out var index) && index >= 1
+        ? index : throw new InstrumentException($"PLIN-Kanal „{resource}“: Hardware 1, 2, …");
     private byte _client;
     private ushort _hw;
     private bool _open;

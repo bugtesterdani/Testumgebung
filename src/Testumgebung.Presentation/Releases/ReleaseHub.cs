@@ -60,8 +60,8 @@ public sealed partial class ReleaseHub : IAsyncDisposable
             string? rejected = null;
             var all = await Service.ListAsync(ct).ConfigureAwait(false);
             await RefreshCatalogAsync(ct).ConfigureAwait(false);
-            foreach (var current in all.Where(r => r.State == ReleaseState.Released).GroupBy(r => r.ProjectName)
-                         .Select(g => g.OrderByDescending(r => r.ReleasedAt).First()))
+            foreach (var current in all.Where(release => release.State == ReleaseState.Released).GroupBy(release => release.ProjectName)
+                         .Select(group => group.OrderByDescending(release => release.ReleasedAt).First()))
             {
                 bool known;
                 lock (_gate) known = _released.TryGetValue(current.ProjectName, out var cached) && cached.Info.ReleaseId == current.ReleaseId;
@@ -83,7 +83,7 @@ public sealed partial class ReleaseHub : IAsyncDisposable
             lock (_gate)
             {
                 _all = all;
-                foreach (var name in _released.Keys.Where(n => all.All(r => r.ProjectName != n || r.State != ReleaseState.Released)).ToList())
+                foreach (var name in _released.Keys.Where(name => all.All(release => release.ProjectName != name || release.State != ReleaseState.Released)).ToList())
                     _released.Remove(name); // keine freigegebene Version mehr (z. B. andere Ablage)
             }
             Error = rejected;
@@ -107,7 +107,7 @@ public sealed partial class ReleaseHub : IAsyncDisposable
 
     public ReleaseInfo? CurrentInfo(string projectName)
     {
-        lock (_gate) return _released.TryGetValue(projectName, out var e) ? e.Info : null;
+        lock (_gate) return _released.TryGetValue(projectName, out var entry) ? entry.Info : null;
     }
 
     /// <summary>Regelmäßig abfragen (Freigaben anderer Prüfplätze in der gemeinsamen Datenbank).</summary>

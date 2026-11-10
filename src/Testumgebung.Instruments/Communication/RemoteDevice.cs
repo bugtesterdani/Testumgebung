@@ -58,11 +58,11 @@ public sealed class RemoteDevice(string adapter, string resource, InstrumentOpti
         AuthenticationMethod auth = key is not null ? new PrivateKeyAuthenticationMethod(user, key)
             : new PasswordAuthenticationMethod(user, Options.Text("Passwort") ?? "");
         var info = new ConnectionInfo(host, port, user, auth) { Timeout = timeout };
-        void CheckKey(object? sender, Renci.SshNet.Common.HostKeyEventArgs e)
+        void CheckKey(object? sender, Renci.SshNet.Common.HostKeyEventArgs eventArgs)
         {
-            e.CanTrust = hostKey.Check(e.HostKey);
+            eventArgs.CanTrust = hostKey.Check(eventArgs.HostKey);
             if (Options.Flag("HostKeyProtokollieren"))
-                Trace("SSH-Hostkey", $"{hostKey.Fingerprint}; {(e.CanTrust ? "akzeptiert" : "abgelehnt")}");
+                Trace("SSH-Hostkey", $"{hostKey.Fingerprint}; {(eventArgs.CanTrust ? "akzeptiert" : "abgelehnt")}");
         }
         if (request.Operation == "ssh")
         {

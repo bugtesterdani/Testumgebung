@@ -36,26 +36,26 @@ public static class ProcessBlocks
          new("Warten", "Auf Prozessende warten", ParameterKind.Bool, "true"),
          new("Zeitlimit", "Wartezeitlimit [ms]", ParameterKind.Number, "30000"),
          new("ProzessZiel", "Prozesskennung → Stringvariable", ParameterKind.Variable),
-         new("PidZiel", "Host-Prozess-ID → Intvariable", ParameterKind.Variable), .. ResultParameters()], p => CreateStart(p)));
+         new("PidZiel", "Host-Prozess-ID → Intvariable", ParameterKind.Variable), .. ResultParameters()], parameters => CreateStart(parameters)));
         catalog.Register(new(Wait, "Auf Prozess warten", "Prozesse", "wait", "Wartet auf eine Prozesskennung desselben Prüflaufs und bewertet erst danach den Exitcode.",
-        [HandleParameter(), new("Zeitlimit", "Wartezeitlimit [ms]", ParameterKind.Number, "30000"), .. ResultParameters()], p => new WaitAction(p.Text("Prozess"), Timeout(p), Results(p))));
+        [HandleParameter(), new("Zeitlimit", "Wartezeitlimit [ms]", ParameterKind.Number, "30000"), .. ResultParameters()], parameters => new WaitAction(parameters.Text("Prozess"), Timeout(parameters), Results(parameters))));
         catalog.Register(new(Status, "Prozessstatus abfragen", "Prozesse", "arrow", "Liefert einen Zwischenstand. Ein noch laufender Prozess wird nicht als PASS bewertet.",
-        [HandleParameter(), .. ResultParameters()], p => new StatusAction(p.Text("Prozess"), Results(p))));
+        [HandleParameter(), .. ResultParameters()], parameters => new StatusAction(parameters.Text("Prozess"), Results(parameters))));
         catalog.Register(new(Stop, "Prozess beenden", "Prozesse", "error", "Beendet ausdrücklich die Prozesskennung und deren Prozessbaum; kein automatisches PASS.",
-        [HandleParameter()], p => new StopAction(p.Text("Prozess"))));
+        [HandleParameter()], parameters => new StopAction(parameters.Text("Prozess"))));
         catalog.Register(new(WaitOutput, "Auf Prozessausgabe warten", "Prozesse", "wait", "Erkennt ein Signal in ungelesenem stdout oder stderr, auch ohne Zeilenumbruch. Verbraucht die Ausgabe bis zum Treffer.",
         [HandleParameter(), new("Muster", "Gesuchter Text / Regex", ParameterKind.Text, Required: true),
          new("Regex", "Regulärer Ausdruck", ParameterKind.Bool, "false"),
          new("Stream", "Ausgabestream", ParameterKind.Choice, "stdout", Choices: ["stdout", "stderr"]),
          new("TrefferZiel", "Treffer → Stringvariable", ParameterKind.Variable),
          new("Zeitlimit", "Wartezeitlimit [ms]", ParameterKind.Number, "30000")],
-         p => new OutputAction(p.Text("Prozess"), p.Text("Muster"), p.Bool("Regex"), p.Choice("Stream") == "stdout" ? ProcessOutputStream.StandardOutput : ProcessOutputStream.StandardError, p.Optional("TrefferZiel"), Timeout(p))));
+         parameters => new OutputAction(parameters.Text("Prozess"), parameters.Text("Muster"), parameters.Bool("Regex"), parameters.Choice("Stream") == "stdout" ? ProcessOutputStream.StandardOutput : ProcessOutputStream.StandardError, parameters.Optional("TrefferZiel"), Timeout(parameters))));
         catalog.Register(new(Send, "An Prozess senden", "Prozesse", "arrow", "Sendet Text an stdin und leert den Schreibpuffer. Optional stdin nach dem letzten Befehl schließen.",
         [HandleParameter(), new("Text", "Zu sendender Text", ParameterKind.Text),
          new("Zeilenende", "Zeilenende", ParameterKind.Choice, "LF", Choices: ["Keines", "LF", "CRLF"]),
          new("Schliessen", "stdin danach schließen (EOF)", ParameterKind.Bool, "false"),
          new("Zeitlimit", "Sendezeitlimit [ms]", ParameterKind.Number, "30000")],
-         p => new SendAction(p.Text("Prozess"), p.Text("Text"), p.Choice("Zeilenende"), p.Bool("Schliessen"), Timeout(p))));
+         parameters => new SendAction(parameters.Text("Prozess"), parameters.Text("Text"), parameters.Choice("Zeilenende"), parameters.Bool("Schliessen"), Timeout(parameters))));
     }
     private static ParameterDescriptor HandleParameter() => new("Prozess", "Prozesskennung", ParameterKind.Text, Required: true, Hint: "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID.");
     private static ParameterDescriptor[] ResultParameters() =>
@@ -65,22 +65,22 @@ public static class ProcessBlocks
      new("FertigZiel", "Prozess beendet → Boolvariable", ParameterKind.Variable),
      new("ErwarteteExitcodes", "Erlaubte Exitcodes", ParameterKind.Text, "0", Hint: "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt."),
      new("Protokoll", "Ausgabe protokollieren", ParameterKind.Bool, "false", Hint: "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enthält.")];
-    private static ResultTargets Results(BlockParameters p) => new(p.Optional("ExitcodeZiel"), p.Optional("StdoutZiel"), p.Optional("StderrZiel"), p.Optional("FertigZiel"), p.Text("ErwarteteExitcodes"), p.Bool("Protokoll"));
-    private static TimeSpan Timeout(BlockParameters p)
+    private static ResultTargets Results(BlockParameters parameters) => new(parameters.Optional("ExitcodeZiel"), parameters.Optional("StdoutZiel"), parameters.Optional("StderrZiel"), parameters.Optional("FertigZiel"), parameters.Text("ErwarteteExitcodes"), parameters.Bool("Protokoll"));
+    private static TimeSpan Timeout(BlockParameters parameters)
     {
-        var value = p.Number("Zeitlimit") ?? 30000;
+        var value = parameters.Number("Zeitlimit") ?? 30000;
         if (!double.IsFinite(value) || value <= 0 || value > int.MaxValue) throw new BlockConfigurationException("Zeitlimit muss zwischen 1 und 2147483647 ms liegen.");
         return TimeSpan.FromMilliseconds(value);
     }
-    private static StartAction CreateStart(BlockParameters p)
+    private static StartAction CreateStart(BlockParameters parameters)
     {
-        var limit = p.Number("Ausgabelimit") ?? 65536;
+        var limit = parameters.Number("Ausgabelimit") ?? 65536;
         if (!double.IsFinite(limit) || limit != Math.Truncate(limit) || limit is < 0 or > 1048576) throw new BlockConfigurationException("Ausgabelimit muss eine ganze Zahl zwischen 0 und 1048576 sein.");
-        var kind = (ExternalProcessKind)Array.IndexOf(Kinds, p.Choice("Art"));
-        if (kind == ExternalProcessKind.ManagedMain && p.Optional("Typ") is null) throw new BlockConfigurationException("DLL-Main benötigt einen vollständigen Typnamen.");
-        if (!p.Bool("Warten") && p.Optional("ProzessZiel") is null) throw new BlockConfigurationException("Start ohne Warten benötigt eine String-Zielvariable für die Prozesskennung.");
-        return new(p.Text("Datei"), p.Text("Argumente"), p.Text("Arbeitsverzeichnis"), p.Text("Umgebung"), kind, p.Optional("Typ"), p.Optional("Python"),
-            p.Choice("Modus") == "Gebunden", p.Bool("Fenster"), p.Bool("Ausgabe"), (int)limit, p.Text("Kodierung"), p.Bool("Warten"), Timeout(p), p.Optional("ProzessZiel"), p.Optional("PidZiel"), Results(p));
+        var kind = (ExternalProcessKind)Array.IndexOf(Kinds, parameters.Choice("Art"));
+        if (kind == ExternalProcessKind.ManagedMain && parameters.Optional("Typ") is null) throw new BlockConfigurationException("DLL-Main benötigt einen vollständigen Typnamen.");
+        if (!parameters.Bool("Warten") && parameters.Optional("ProzessZiel") is null) throw new BlockConfigurationException("Start ohne Warten benötigt eine String-Zielvariable für die Prozesskennung.");
+        return new(parameters.Text("Datei"), parameters.Text("Argumente"), parameters.Text("Arbeitsverzeichnis"), parameters.Text("Umgebung"), kind, parameters.Optional("Typ"), parameters.Optional("Python"),
+            parameters.Choice("Modus") == "Gebunden", parameters.Bool("Fenster"), parameters.Bool("Ausgabe"), (int)limit, parameters.Text("Kodierung"), parameters.Bool("Warten"), Timeout(parameters), parameters.Optional("ProzessZiel"), parameters.Optional("PidZiel"), Results(parameters));
     }
     private static string Expand(string text, IStepContext ctx) => CommunicationBlocks.Interpolate(text, ctx);
     private static string[] Arguments(string text, IStepContext ctx)
@@ -142,7 +142,7 @@ public static class ProcessBlocks
             var request = new ProcessLaunch(Kind, file, Arguments(Args, ctx), directory, Environment(Variables, ctx), Bound, Show, Capture, Limit,
                 Type is null ? null : Expand(Type, ctx), Python is null ? null : Expand(Python, ctx), Expand(Encoding, ctx));
             var options = (ctx.CodeRuntime as CodeRuntime)?.Options ?? new CodeRuntimeOptions();
-            var variable = ctx.VisibleVariables().Any(v => v.Name == "PythonVenv" && v.Type == VarType.String) ? ctx.Get("PythonVenv") as string : null;
+            var variable = ctx.VisibleVariables().Any(variable2 => variable2.Name == "PythonVenv" && variable2.Type == VarType.String) ? ctx.Get("PythonVenv") as string : null;
             var python = PythonEnvironmentResolver.Resolve(options.WorkerDirectory, ctx.ProgramPythonVenv, variable, options.PythonExecutable ?? new PythonEnvironments().LoadSelection());
             var result = ctx.Processes.Start(request, ctx.ProcessOwner, options.WorkerDirectory, python, ctx.CancellationToken);
             if (HandleTarget is not null) ctx.Set(HandleTarget, result.Handle);

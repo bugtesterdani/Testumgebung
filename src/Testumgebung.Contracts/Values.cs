@@ -55,9 +55,9 @@ public static class TypedValue
         if (target == VarType.Double) return CoerceDouble(value);
         switch (target)
         {
-            case VarType.Bool when value is bool b: return b;
-            case VarType.Int when value is long l: return l;
-            case VarType.Int when value is int i: return (long)i;
+            case VarType.Bool when value is bool flag: return flag;
+            case VarType.Int when value is long integerValue: return integerValue;
+            case VarType.Int when value is int index: return (long)index;
             case VarType.String when value is string text: return text;
             case VarType.DateTime when value is DateTime date: return date;
         }
@@ -66,10 +66,10 @@ public static class TypedValue
 
     private static object CoerceDouble(object? value) => value switch
     {
-        double d => d,
-        float f => (double)f,
-        long l => (double)l,
-        int i => (double)i,
+        double number => number,
+        float floatingPointValue => (double)floatingPointValue,
+        long integerValue => (double)integerValue,
+        int index => (double)index,
         _ => throw CoercionError(value, VarType.Double),
     };
 
@@ -84,14 +84,14 @@ public static class TypedValue
         switch (target)
         {
             case VarType.Bool:
-                if (bool.TryParse(text, out var b)) return b;
+                if (bool.TryParse(text, out var flag)) return flag;
                 break;
             case VarType.Int:
-                if (long.TryParse(text, NumberStyles.Integer, inv, out var l)) return l;
+                if (long.TryParse(text, NumberStyles.Integer, inv, out var length)) return length;
                 break;
             case VarType.Double:
-                if (double.TryParse(text, NumberStyles.Float, inv, out var d)) return d;
-                if (double.TryParse(text, NumberStyles.Float, de, out d)) return d;
+                if (double.TryParse(text, NumberStyles.Float, inv, out var number)) return number;
+                if (double.TryParse(text, NumberStyles.Float, de, out number)) return number;
                 break;
             case VarType.String:
                 return text;
@@ -112,11 +112,11 @@ public static class TypedValue
     public static string Format(object? value) => value switch
     {
         null => "null",
-        string s => $"\"{s}\"",
-        double d => d.ToString("G", CultureInfo.InvariantCulture),
-        bool b => b ? "true" : "false",
+        string text => $"\"{text}\"",
+        double number => number.ToString("G", CultureInfo.InvariantCulture),
+        bool flag => flag ? "true" : "false",
         DateTime dt => dt.ToString("O", CultureInfo.InvariantCulture),
-        IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
         _ => value.ToString() ?? string.Empty,
     };
 }

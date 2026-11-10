@@ -11,11 +11,11 @@ public sealed partial class StationViewModel
     }
     private async Task<(Testumgebung.Persistence.TestProject Project, Testumgebung.Persistence.Releases.ReleaseInfo? Release)> LoadCatalogTestAsync(Testumgebung.Persistence.Stations.AvailableTest test)
     {
-        var assignment = _releases!.Catalog!.Stations.FirstOrDefault(s => s.Station == ProgramStationId);
+        var assignment = _releases!.Catalog!.Stations.FirstOrDefault(assignment2 => assignment2.Station == ProgramStationId);
         var available = _releases.ForStation(ProgramStationId);
         // An automatic station follows a new central release even if it appeared between scan and Start.
         var followLatest = test.IsCurrent && assignment?.AutoUpdate != false;
-        var selected = available.FirstOrDefault(r => r.ProjectName == test.Name && (followLatest || r.Version == test.Version))
+        var selected = available.FirstOrDefault(release => release.ProjectName == test.Name && (followLatest || release.Version == test.Version))
             ?? throw new InvalidOperationException("Gewählte Version ist für diesen Platz nicht freigegeben. Auftrag neu auswählen.");
         var resolved = await _releases.OpenResolvedAsync(selected).ConfigureAwait(true);
         return (resolved.Project, resolved.Info);

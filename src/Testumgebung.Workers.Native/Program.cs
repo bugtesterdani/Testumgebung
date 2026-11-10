@@ -38,8 +38,8 @@ public static class Program
     {
         _out = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true };
         Console.SetOut(Console.Error);
-        CacheDirectory = Environment.GetEnvironmentVariable("TESTUMGEBUNG_CPP_CACHE") is { Length: > 0 } c
-            ? c
+        CacheDirectory = Environment.GetEnvironmentVariable("TESTUMGEBUNG_CPP_CACHE") is { Length: > 0 } path
+            ? path
             : Path.Combine(Path.GetTempPath(), "Testumgebung", "cpp");
         Directory.CreateDirectory(CacheDirectory);
         _toolchain = Toolchain.Detect(out _toolchainError);
@@ -84,7 +84,7 @@ public static class Program
     private static void Track(Task task)
     {
         Pending[task] = 0;
-        task.ContinueWith(t => Pending.TryRemove(t, out _), TaskScheduler.Default);
+        task.ContinueWith(task2 => Pending.TryRemove(task2, out _), TaskScheduler.Default);
     }
 
     private static void Guard(string id, Action action)
@@ -124,7 +124,7 @@ public static class Program
     // ------------------------------------------------------------------ Übersetzen
 
     private static List<CppVariable> ReadVariables(JsonObject msg)
-        => (msg["vars"] as JsonArray ?? []).Select(v => new CppVariable((string)v!["name"]!, (string)v["type"]!)).ToList();
+        => (msg["vars"] as JsonArray ?? []).Select(node => new CppVariable((string)node!["name"]!, (string)node["type"]!)).ToList();
 
     private sealed record Built(string? Library, IReadOnlyList<CompilerDiagnostic> Diagnostics);
 
@@ -153,8 +153,8 @@ public static class Program
     {
         var built = Build((string?)msg["source"] ?? "", ReadVariables(msg));
         var diagnostics = new JsonArray();
-        foreach (var d in built.Diagnostics)
-            diagnostics.Add(new JsonObject { ["line"] = d.Line, ["column"] = d.Column, ["severity"] = d.Severity, ["message"] = d.Message, ["code"] = d.Code });
+        foreach (var compilerDiagnostic in built.Diagnostics)
+            diagnostics.Add(new JsonObject { ["line"] = compilerDiagnostic.Line, ["column"] = compilerDiagnostic.Column, ["severity"] = compilerDiagnostic.Severity, ["message"] = compilerDiagnostic.Message, ["code"] = compilerDiagnostic.Code });
         return new JsonObject { ["t"] = "compiled", ["id"] = id, ["ok"] = built.Library is not null, ["diagnostics"] = diagnostics };
     }
 
@@ -186,7 +186,7 @@ public static class Program
         {
             lock (_strings)
             {
-                foreach (var p in _strings) NativeMemory.Free((void*)p);
+                foreach (var pointer in _strings) NativeMemory.Free((void*)pointer);
                 _strings.Clear();
             }
         }
@@ -202,7 +202,7 @@ public static class Program
         var built = Build(source, variables, instrumented);
         if (built.Library is null)
         {
-            var first = built.Diagnostics.FirstOrDefault(d => d.Severity == "error");
+            var first = built.Diagnostics.FirstOrDefault(compilerDiagnostic => compilerDiagnostic.Severity == "error");
             SendError(id, "Build fehlgeschlagen: " + (first is null ? "unbekannter Fehler" : first.Line > 0 ? $"Zeile {first.Line}: {first.Message}" : first.Message), null);
             return;
         }
@@ -362,7 +362,7 @@ public static class Program
     {
         private static Invocation S(nint ctx) => (Invocation)GCHandle.FromIntPtr(ctx).Target!;
 
-        private static string Str(byte* p) => p is null ? "" : Marshal.PtrToStringUTF8((nint)p) ?? "";
+        private static string Str(byte* pointer) => pointer is null ? "" : Marshal.PtrToStringUTF8((nint)pointer) ?? "";
 
         private static JsonNode? Value(nint ctx, byte* name) => S(ctx).Values.GetValueOrDefault(Str(name));
 
@@ -383,21 +383,21 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static double GetDouble(nint ctx, byte* name)
         {
-            try { return Value(ctx, name) is { } v ? v.GetValue<double>() : 0; }
+            try { return Value(ctx, name) is { } node ? node.GetValue<double>() : 0; }
             catch (Exception) { return double.NaN; }
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static long GetInt(nint ctx, byte* name)
         {
-            try { return Value(ctx, name) is { } v ? (long)v.GetValue<double>() : 0; }
+            try { return Value(ctx, name) is { } node ? (long)node.GetValue<double>() : 0; }
             catch (Exception) { return 0; }
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int GetBool(nint ctx, byte* name)
         {
-            try { return Value(ctx, name) is { } v && v.GetValue<bool>() ? 1 : 0; }
+            try { return Value(ctx, name) is { } node && node.GetValue<bool>() ? 1 : 0; }
             catch (Exception) { return 0; }
         }
 
@@ -406,8 +406,8 @@ public static class Program
         {
             try
             {
-                var v = Value(ctx, name);
-                return S(ctx).Utf8(v is null ? "" : v.GetValueKind() == JsonValueKind.String ? (string)v! : v.ToJsonString());
+                var node = Value(ctx, name);
+                return S(ctx).Utf8(node is null ? "" : node.GetValueKind() == JsonValueKind.String ? (string)node! : node.ToJsonString());
             }
             catch (Exception) { return S(ctx).Utf8(""); }
         }
@@ -429,13 +429,13 @@ public static class Program
         public static void SetOutcome(nint ctx, int rating, int hasValue, double value, byte* message, byte* unit, int hasLow, double low, int hasHigh, double high)
         {
             var msg = Str(message);
-            var u = Str(unit);
+            var unitText = Str(unit);
             S(ctx).Outcome = new JsonObject
             {
                 ["rating"] = rating switch { 1 => "Pass", 2 => "Fail", 3 => "Error", _ => "NResult" },
                 ["value"] = hasValue != 0 && double.IsFinite(value) ? value : null,
                 ["message"] = msg.Length == 0 ? null : msg,
-                ["unit"] = u.Length == 0 ? null : u,
+                ["unit"] = unitText.Length == 0 ? null : unitText,
                 ["low"] = hasLow != 0 ? low : null,
                 ["high"] = hasHigh != 0 ? high : null,
             };
@@ -444,9 +444,9 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int Read(nint ctx, byte* resource, double* value)
         {
-            var r = Str(resource);
+            var resourceText = Str(resource);
             double result = 0;
-            var rc = Try(ctx, () => result = Call(S(ctx).Id, "read", new JsonObject { ["resource"] = r })!.GetValue<double>());
+            var rc = Try(ctx, () => result = Call(S(ctx).Id, "read", new JsonObject { ["resource"] = resourceText })!.GetValue<double>());
             *value = result;
             return rc;
         }
@@ -454,15 +454,15 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int Write(nint ctx, byte* resource, double value)
         {
-            var r = Str(resource);
-            return Try(ctx, () => Call(S(ctx).Id, "write", new JsonObject { ["resource"] = r, ["value"] = value }));
+            var resourceText = Str(resource);
+            return Try(ctx, () => Call(S(ctx).Id, "write", new JsonObject { ["resource"] = resourceText, ["value"] = value }));
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static void Log(nint ctx, byte* message)
         {
-            var m = Str(message);
-            Try(ctx, () => Call(S(ctx).Id, "log", new JsonObject { ["message"] = m }));
+            var messageText = Str(message);
+            Try(ctx, () => Call(S(ctx).Id, "log", new JsonObject { ["message"] = messageText }));
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
@@ -471,18 +471,18 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int AskNumber(nint ctx, byte* text, int hasMin, double min, int hasMax, double max, byte* unit, double* value)
         {
-            var t = Str(text);
-            var u = Str(unit);
+            var textText = Str(text);
+            var unitText = Str(unit);
             double result = 0;
             var rc = Try(ctx, () => result = Call(S(ctx).Id, "ask", new JsonObject
             {
                 ["kind"] = "Input",
-                ["text"] = t,
+                ["text"] = textText,
                 ["type"] = "Double",
                 ["required"] = true,
                 ["min"] = hasMin != 0 ? min : null,
                 ["max"] = hasMax != 0 ? max : null,
-                ["unit"] = u.Length == 0 ? null : u,
+                ["unit"] = unitText.Length == 0 ? null : unitText,
             })!.GetValue<double>());
             *value = result;
             return rc;
@@ -491,24 +491,24 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int Confirm(nint ctx, byte* text)
         {
-            var t = Str(text);
-            return Try(ctx, () => Call(S(ctx).Id, "ask", new JsonObject { ["kind"] = "Instruction", ["text"] = t }));
+            var textText = Str(text);
+            return Try(ctx, () => Call(S(ctx).Id, "ask", new JsonObject { ["kind"] = "Instruction", ["text"] = textText }));
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int VarGet(nint ctx, byte* path, double* value)
         {
-            var p = Str(path);
+            var pathText = Str(path);
             double result = 0;
             var rc = Try(ctx, () =>
             {
-                var node = Call(S(ctx).Id, "get", new JsonObject { ["path"] = p });
+                var node = Call(S(ctx).Id, "get", new JsonObject { ["path"] = pathText });
                 result = node?.GetValueKind() switch
                 {
                     JsonValueKind.True => 1,
                     JsonValueKind.False => 0,
                     JsonValueKind.Number => node.GetValue<double>(),
-                    _ => throw new InvalidOperationException($"Variable '{p}' ist keine Zahl – VarText verwenden."),
+                    _ => throw new InvalidOperationException($"Variable '{pathText}' ist keine Zahl – VarText verwenden."),
                 };
             });
             *value = result;
@@ -519,17 +519,17 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static byte* Device(nint ctx, byte* op, byte* args)
         {
-            var o = Str(op);
-            var a = Str(args);
+            var opText = Str(op);
+            var argsText = Str(args);
             string? result = null;
             if (Try(ctx, () =>
                 {
-                    var obj = JsonNode.Parse(a) as JsonObject ?? throw new InvalidOperationException("Argumente sind kein JSON-Objekt.");
-                    var node = Call(S(ctx).Id, o, obj);
+                    var obj = JsonNode.Parse(argsText) as JsonObject ?? throw new InvalidOperationException("Argumente sind kein JSON-Objekt.");
+                    var node = Call(S(ctx).Id, opText, obj);
                     result = node switch
                     {
                         null => "",
-                        JsonObject f when f["data"] is { } d => (string?)d ?? "",
+                        JsonObject jsonObject when jsonObject["data"] is { } node2 => (string?)node2 ?? "",
                         _ when node.GetValueKind() == JsonValueKind.String => (string)node!,
                         _ => node.ToJsonString(),
                     };
@@ -540,11 +540,11 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static byte* VarGetString(nint ctx, byte* path)
         {
-            var p = Str(path);
+            var pathText = Str(path);
             string? result = null;
             if (Try(ctx, () =>
                 {
-                    var node = Call(S(ctx).Id, "get", new JsonObject { ["path"] = p });
+                    var node = Call(S(ctx).Id, "get", new JsonObject { ["path"] = pathText });
                     result = node is null ? "" : node.GetValueKind() == JsonValueKind.String ? (string)node! : node.ToJsonString();
                 }) != 0) return null;
             return S(ctx).Utf8(result!);
@@ -553,16 +553,16 @@ public static class Program
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int VarSetDouble(nint ctx, byte* path, double value)
         {
-            var p = Str(path);
-            return Try(ctx, () => Call(S(ctx).Id, "set", new JsonObject { ["path"] = p, ["value"] = value }));
+            var pathText = Str(path);
+            return Try(ctx, () => Call(S(ctx).Id, "set", new JsonObject { ["path"] = pathText, ["value"] = value }));
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         public static int VarSetString(nint ctx, byte* path, byte* value)
         {
-            var p = Str(path);
-            var v = Str(value);
-            return Try(ctx, () => Call(S(ctx).Id, "set", new JsonObject { ["path"] = p, ["value"] = v }));
+            var pathText = Str(path);
+            var valueText = Str(value);
+            return Try(ctx, () => Call(S(ctx).Id, "set", new JsonObject { ["path"] = pathText, ["value"] = valueText }));
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]

@@ -22,15 +22,15 @@ public static class Reports
         _ => null,
     };
 
-    private static string Num(double? v) => v is { } d ? d.ToString("0.####", De) : "–";
+    private static string Num(double? number2) => number2 is { } number ? number.ToString("0.####", De) : "–";
 
-    private static string ValueText(object? v) => v switch
+    private static string ValueText(object? value) => value switch
     {
         null => "–",
-        double d => d.ToString("0.#####", De),
-        bool b => b ? "ja" : "nein",
-        DateTime t => t.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss", De),
-        _ => Convert.ToString(v, De) ?? "",
+        double number => number.ToString("0.#####", De),
+        bool flag => flag ? "ja" : "nein",
+        DateTime dateTime => dateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss", De),
+        _ => Convert.ToString(value, De) ?? "",
     };
 
     private static string Limits(double? low, double? high) => low is null && high is null ? "–" : $"{Num(low)} … {Num(high)}";
@@ -60,36 +60,36 @@ public static class Reports
 
         void WriteObservations()
         {
-            var measurements = run.Events.Where(e => e.Kind == ResultEventKind.Step && !e.Cancelled && (e.LowLimit is not null || e.HighLimit is not null || e.Unit is { Length: > 0 }))
+            var measurements = run.Events.Where(resultEvent => resultEvent.Kind == ResultEventKind.Step && !resultEvent.Cancelled && (resultEvent.LowLimit is not null || resultEvent.HighLimit is not null || resultEvent.Unit is { Length: > 0 }))
                 .ToList();
             if (measurements.Count > 0)
             {
                 writer.Heading("Messwerte");
                 writer.Table([("Messung", 3.2), ("Wert", 1.4), ("Einheit", 0.8), ("Grenzwerte", 1.8), ("Ergebnis", 1)],
-                    measurements.Select(e => (IReadOnlyList<(string, PdfColor?)>)
+                    measurements.Select(resultEvent => (IReadOnlyList<(string, PdfColor?)>)
                     [
-                        (ResultAnalysis.NameOf(run, e) + (e.Iteration > 1 ? $" [{e.Iteration}]" : ""), null),
-                    (ValueText(e.Value), null), (e.Unit ?? "", null), (Limits(e.LowLimit, e.HighLimit), null),
-                    (e.Rating?.ToDisplay() ?? "–", ColorOf(e.Rating)),
+                        (ResultAnalysis.NameOf(run, resultEvent) + (resultEvent.Iteration > 1 ? $" [{resultEvent.Iteration}]" : ""), null),
+                    (ValueText(resultEvent.Value), null), (resultEvent.Unit ?? "", null), (Limits(resultEvent.LowLimit, resultEvent.HighLimit), null),
+                    (resultEvent.Rating?.ToDisplay() ?? "–", ColorOf(resultEvent.Rating)),
                     ]));
             }
 
-            var failures = run.Events.Where(e => e.Rating is ResultRating.Fail or ResultRating.Error && e.Kind is ResultEventKind.Step or ResultEventKind.Diagnostic).ToList();
+            var failures = run.Events.Where(resultEvent => resultEvent.Rating is ResultRating.Fail or ResultRating.Error && resultEvent.Kind is ResultEventKind.Step or ResultEventKind.Diagnostic).ToList();
             if (failures.Count > 0)
             {
                 writer.Heading("Abweichungen");
-                foreach (var f in failures)
-                    writer.Paragraph($"{f.Rating?.ToDisplay()} · {(f.NodeId is null ? "Ablauf" : ResultAnalysis.NameOf(run, f))}: {f.Message ?? ValueText(f.Value)}", 9, ColorOf(f.Rating));
+                foreach (var resultEvent in failures)
+                    writer.Paragraph($"{resultEvent.Rating?.ToDisplay()} · {(resultEvent.NodeId is null ? "Ablauf" : ResultAnalysis.NameOf(run, resultEvent))}: {resultEvent.Message ?? ValueText(resultEvent.Value)}", 9, ColorOf(resultEvent.Rating));
             }
 
-            var answers = run.Events.Where(e => e.Kind == ResultEventKind.OperatorAnswer).ToList();
+            var answers = run.Events.Where(resultEvent2 => resultEvent2.Kind == ResultEventKind.OperatorAnswer).ToList();
             if (answers.Count > 0)
             {
                 writer.Heading("Werkereingaben");
                 writer.Table([("Zeit", 1.2), ("Schritt", 3), ("Eingabe", 3)],
-                    answers.Select(e => (IReadOnlyList<(string, PdfColor?)>)
+                    answers.Select(resultEvent2 => (IReadOnlyList<(string, PdfColor?)>)
                     [
-                        (e.Time.LocalDateTime.ToString("HH:mm:ss", De), null), (ResultAnalysis.NameOf(run, e), null), (ValueText(e.Value), null),
+                        (resultEvent2.Time.LocalDateTime.ToString("HH:mm:ss", De), null), (ResultAnalysis.NameOf(run, resultEvent2), null), (ValueText(resultEvent2.Value), null),
                     ]));
             }
 
@@ -97,17 +97,17 @@ public static class Reports
 
         void WriteGroups()
         {
-            var groups = run.Events.Where(e => e.Kind is ResultEventKind.Group or ResultEventKind.GroupNotEntered).ToList();
+            var groups = run.Events.Where(resultEvent2 => resultEvent2.Kind is ResultEventKind.Group or ResultEventKind.GroupNotEntered).ToList();
             if (groups.Count > 0)
             {
                 writer.Heading("Ablauf");
                 writer.Table([("Gruppe", 4), ("Durchläufe", 1), ("Ergebnis", 1.2), ("Hinweis", 2.5)],
-                    groups.Select(e => (IReadOnlyList<(string, PdfColor?)>)
+                    groups.Select(resultEvent2 => (IReadOnlyList<(string, PdfColor?)>)
                     [
-                        (ResultAnalysis.NameOf(run, e), null),
-                    (e.Kind == ResultEventKind.Group ? ValueText(e.Value) : "0", null),
-                    (e.Kind == ResultEventKind.Group ? e.Rating?.ToDisplay() ?? "–" : "nicht betreten", ColorOf(e.Rating)),
-                    (e.Message ?? "", null),
+                        (ResultAnalysis.NameOf(run, resultEvent2), null),
+                    (resultEvent2.Kind == ResultEventKind.Group ? ValueText(resultEvent2.Value) : "0", null),
+                    (resultEvent2.Kind == ResultEventKind.Group ? resultEvent2.Rating?.ToDisplay() ?? "–" : "nicht betreten", ColorOf(resultEvent2.Rating)),
+                    (resultEvent2.Message ?? "", null),
                     ]));
             }
 
@@ -123,45 +123,45 @@ public static class Reports
 
         void WriteWaveforms()
         {
-            foreach (var group in run.Waveforms.GroupBy(w => w.EventSequence))
+            foreach (var group in run.Waveforms.GroupBy(waveform => waveform.EventSequence))
             {
-                var ev = run.Events.FirstOrDefault(e => e.Sequence == group.Key);
+                var ev = run.Events.FirstOrDefault(resultEvent2 => resultEvent2.Sequence == group.Key);
                 var title = ev is null ? "Kurven" : $"Kurven: {ResultAnalysis.NameOf(run, ev)}";
-                var series = group.Select(w =>
+                var series = group.Select(waveform =>
                 {
-                    var wave = w.Data;
+                    var wave = waveform.Data;
                     var indices = new List<int>();
                     // Pro PDF-Spalte Minimum/Maximum erhalten; keine Vollkopie großer Aufnahmen.
                     var width = Math.Max(1, (wave.Count + 599) / 600);
-                    for (var a = 0; a < wave.Count; a += width)
+                    for (var sampleIndex = 0; sampleIndex < wave.Count; sampleIndex += width)
                     {
-                        int min = a, max = a;
-                        for (var i = a; i < Math.Min(wave.Count, a + width); i++)
+                        int min = sampleIndex, max = sampleIndex;
+                        for (var index = sampleIndex; index < Math.Min(wave.Count, sampleIndex + width); index++)
                         {
-                            if (wave.Values[i] < wave.Values[min]) min = i;
-                            if (wave.Values[i] > wave.Values[max]) max = i;
+                            if (wave.Values[index] < wave.Values[min]) min = index;
+                            if (wave.Values[index] > wave.Values[max]) max = index;
                         }
                         indices.Add(Math.Min(min, max));
                         if (min != max) indices.Add(Math.Max(min, max));
                     }
-                    return (wave.Channel, indices.Select(i => wave.TimeOf(i) * 1000).ToArray(), indices.Select(i => wave.Values[i]).ToArray());
+                    return (wave.Channel, indices.Select(indice => wave.TimeOf(indice) * 1000).ToArray(), indices.Select(indice => wave.Values[indice]).ToArray());
                 }).ToList();
                 writer.Plot(title, series, "ms", group.First().Data.Unit);
-                writer.Paragraph(string.Join(" · ", group.Select(w => $"{w.Data.Channel}: Effektivwert {w.Data.Rms().ToString("0.###", De)} {w.Data.Unit}, {w.Data.Count} Samples")), 8, PdfColor.Gray);
+                writer.Paragraph(string.Join(" · ", group.Select(waveform => $"{waveform.Data.Channel}: Effektivwert {waveform.Data.Rms().ToString("0.###", De)} {waveform.Data.Unit}, {waveform.Data.Count} Samples")), 8, PdfColor.Gray);
             }
 
         }
 
-        var steps = run.Events.Where(e => e.Kind == ResultEventKind.Step).ToList();
+        var steps = run.Events.Where(resultEvent2 => resultEvent2.Kind == ResultEventKind.Step).ToList();
         writer.Heading("Alle Schritte");
         writer.Table([("Zeit", 1.1), ("Schritt", 3.4), ("Wert", 2), ("Ergebnis", 1), ("Meldung", 3)],
-            steps.Select(e => (IReadOnlyList<(string, PdfColor?)>)
+            steps.Select(resultEvent2 => (IReadOnlyList<(string, PdfColor?)>)
             [
-                (e.Time.LocalDateTime.ToString("HH:mm:ss", De), null),
-                (ResultAnalysis.NameOf(run, e) + (e.Iteration > 1 ? $" [{e.Iteration}]" : ""), null),
-                (ValueText(e.Value) + (e.Unit is { Length: > 0 } u ? " " + u : ""), null),
-                (e.Cancelled ? "abgebr." : e.Rating?.ToDisplay() ?? "–", ColorOf(e.Rating)),
-                (e.Message ?? "", null),
+                (resultEvent2.Time.LocalDateTime.ToString("HH:mm:ss", De), null),
+                (ResultAnalysis.NameOf(run, resultEvent2) + (resultEvent2.Iteration > 1 ? $" [{resultEvent2.Iteration}]" : ""), null),
+                (ValueText(resultEvent2.Value) + (resultEvent2.Unit is { Length: > 0 } unit ? " " + unit : ""), null),
+                (resultEvent2.Cancelled ? "abgebr." : resultEvent2.Rating?.ToDisplay() ?? "–", ColorOf(resultEvent2.Rating)),
+                (resultEvent2.Message ?? "", null),
             ]), 7.5);
 
         writer.Space(24);
@@ -172,15 +172,15 @@ public static class Reports
 
     /// <summary>Auftrag aus dem Schritt, der die Variable „Auftrag“ schreibt (falls vorhanden).</summary>
     public static string? OrderOf(ResultRun run)
-        => run.Events.Where(e => e.Kind == ResultEventKind.Diagnostic && e.Message is { } m && m.StartsWith("Aus der Auswahl übernommen: Auftrag = ", StringComparison.Ordinal))
-               .Select(e => e.Message!["Aus der Auswahl übernommen: Auftrag = ".Length..].Trim('"')).FirstOrDefault()
-           ?? run.Events.Where(e => e.Kind == ResultEventKind.Step && e.NodeId is { } id && id.Contains("auftrag", StringComparison.OrdinalIgnoreCase) && e.Value is string)
-               .Select(e => (string)e.Value!).LastOrDefault();
+        => run.Events.Where(resultEvent => resultEvent.Kind == ResultEventKind.Diagnostic && resultEvent.Message is { } text && text.StartsWith("Aus der Auswahl übernommen: Auftrag = ", StringComparison.Ordinal))
+               .Select(resultEvent => resultEvent.Message!["Aus der Auswahl übernommen: Auftrag = ".Length..].Trim('"')).FirstOrDefault()
+           ?? run.Events.Where(resultEvent => resultEvent.Kind == ResultEventKind.Step && resultEvent.NodeId is { } id && id.Contains("auftrag", StringComparison.OrdinalIgnoreCase) && resultEvent.Value is string)
+               .Select(resultEvent => (string)resultEvent.Value!).LastOrDefault();
 
     /// <summary>Auswertung: Kennzahlen, Fehler-Pareto, Prozessfähigkeit der Messwerte, Tages- und Prüfplatzübersicht.</summary>
     public static PdfDocument StatisticsReport(ResultStatistics s, string? company = null)
     {
-        string P(double? v) => v is { } d ? d.ToString("0.0 %", De) : "–";
+        string P(double? value) => value is { } number ? number.ToString("0.0 %", De) : "–";
         var writer = new PdfReportWriter("Auswertung Prüfergebnisse", $"{company ?? "Testumgebung"} · Auswertung · {s.Filter.Describe()}");
         writer.Title("Auswertung der Prüfergebnisse", s.Filter.Describe());
         writer.KeyValues(
@@ -192,7 +192,7 @@ public static class Reports
             ("First Pass Yield", P(s.FirstPassYield), null),
             ("Endausbeute", P(s.FinalYield), null),
             ("Werkerabbrüche", s.OperatorAborts.ToString(De), null),
-            ("Mittlere Prüfdauer", s.MeanDuration is { } d ? $"{d.TotalSeconds.ToString("0.0", De)} s" : "–", null),
+            ("Mittlere Prüfdauer", s.MeanDuration is { } duration ? $"{duration.TotalSeconds.ToString("0.0", De)} s" : "–", null),
         ]);
 
         WriteFailureAndMeasurementStatistics();
@@ -203,10 +203,10 @@ public static class Reports
             {
                 writer.Heading("Fehlerhäufigkeit je Schritt (Pareto)");
                 writer.Table([("Schritt", 3), ("Läufe", 0.8), ("FAIL", 0.7), ("ERROR", 0.7), ("Anteil", 0.9), ("häufigste Meldung", 4)],
-                    s.Failures.Take(25).Select(f => (IReadOnlyList<(string, PdfColor?)>)
+                    s.Failures.Take(25).Select(failureItem => (IReadOnlyList<(string, PdfColor?)>)
                     [
-                        (f.Name, null), (f.Runs.ToString(De), null), (f.Fail.ToString(De), f.Fail > 0 ? PdfColor.Fail : null),
-                        (f.Error.ToString(De), f.Error > 0 ? PdfColor.Warn : null), (P(s.Runs == 0 ? null : (double)f.Runs / s.Runs), null), (f.TypicalMessage ?? "", null),
+                        (failureItem.Name, null), (failureItem.Runs.ToString(De), null), (failureItem.Fail.ToString(De), failureItem.Fail > 0 ? PdfColor.Fail : null),
+                        (failureItem.Error.ToString(De), failureItem.Error > 0 ? PdfColor.Warn : null), (P(s.Runs == 0 ? null : (double)failureItem.Runs / s.Runs), null), (failureItem.TypicalMessage ?? "", null),
                     ]));
             }
 
@@ -214,12 +214,12 @@ public static class Reports
             {
                 writer.Heading("Messwerte und Prozessfähigkeit");
                 writer.Table([("Messwert", 2.6), ("n", 0.6), ("Min", 1), ("Max", 1), ("Mittel", 1), ("σ", 0.9), ("Grenzen", 1.6), ("außerh.", 0.8), ("Cpk", 0.8), ("Bewertung", 1.4)],
-                    s.Measurements.Select(m => (IReadOnlyList<(string, PdfColor?)>)
+                    s.Measurements.Select(measurementStatistics => (IReadOnlyList<(string, PdfColor?)>)
                     [
-                        ($"{m.Name}{(m.Unit.Length > 0 ? $" [{m.Unit}]" : "")}", null), (m.Count.ToString(De), null), (Num(m.Min), null), (Num(m.Max), null),
-                        (Num(m.Mean), null), (Num(m.StdDev), null), (Limits(m.Low, m.High), null), (m.OutOfLimits.ToString(De), m.OutOfLimits > 0 ? PdfColor.Fail : null),
-                        (m.Cpk is { } c ? c.ToString("0.00", De) : "–", null),
-                        (m.Capability, m.Cpk switch { null => null, >= 1.33 => PdfColor.Pass, >= 1.0 => PdfColor.Warn, _ => PdfColor.Fail }),
+                        ($"{measurementStatistics.Name}{(measurementStatistics.Unit.Length > 0 ? $" [{measurementStatistics.Unit}]" : "")}", null), (measurementStatistics.Count.ToString(De), null), (Num(measurementStatistics.Min), null), (Num(measurementStatistics.Max), null),
+                        (Num(measurementStatistics.Mean), null), (Num(measurementStatistics.StdDev), null), (Limits(measurementStatistics.Low, measurementStatistics.High), null), (measurementStatistics.OutOfLimits.ToString(De), measurementStatistics.OutOfLimits > 0 ? PdfColor.Fail : null),
+                        (measurementStatistics.Cpk is { } number2 ? number2.ToString("0.00", De) : "–", null),
+                        (measurementStatistics.Capability, measurementStatistics.Cpk switch { null => null, >= 1.33 => PdfColor.Pass, >= 1.0 => PdfColor.Warn, _ => PdfColor.Fail }),
                     ]), 8);
                 writer.Paragraph("Cpk = min(OG − μ, μ − UG) / 3σ über alle Werte des Zeitraums; ≥ 1,33 fähig, ≥ 1,0 bedingt fähig. Bei wenigen Werten nur als Hinweis verwenden.", 7.5, PdfColor.Gray);
             }
@@ -230,10 +230,10 @@ public static class Reports
         {
             writer.Heading("Verlauf je Tag");
             writer.Table([("Tag", 1.5), ("Läufe", 1), ("PASS", 1), ("FAIL", 1), ("ERROR", 1), ("ABORT", 1), ("Ausbeute", 1.2)],
-                s.Daily.Select(d => (IReadOnlyList<(string, PdfColor?)>)
+                s.Daily.Select(dailyCount => (IReadOnlyList<(string, PdfColor?)>)
                 [
-                    (d.Day.ToString("ddd dd.MM.yyyy", De), null), (d.Total.ToString(De), null), (d.Pass.ToString(De), null),
-                    (d.Fail.ToString(De), d.Fail > 0 ? PdfColor.Fail : null), (d.Error.ToString(De), d.Error > 0 ? PdfColor.Warn : null), (d.Abort.ToString(De), d.Abort > 0 ? PdfColor.Warn : null), (P((double)d.Pass / d.Total), null),
+                    (dailyCount.Day.ToString("ddd dd.MM.yyyy", De), null), (dailyCount.Total.ToString(De), null), (dailyCount.Pass.ToString(De), null),
+                    (dailyCount.Fail.ToString(De), dailyCount.Fail > 0 ? PdfColor.Fail : null), (dailyCount.Error.ToString(De), dailyCount.Error > 0 ? PdfColor.Warn : null), (dailyCount.Abort.ToString(De), dailyCount.Abort > 0 ? PdfColor.Warn : null), (P((double)dailyCount.Pass / dailyCount.Total), null),
                 ]));
         }
 

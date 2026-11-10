@@ -42,7 +42,7 @@ public sealed class VisualExpressionNode : ObservableObject
     }
     public ExpressionVariable? VariableChoice
     {
-        get => IsVariable ? Owner.Variables.FirstOrDefault(v => v.Path == Value) : null;
+        get => IsVariable ? Owner.Variables.FirstOrDefault(variable => variable.Path == Value) : null;
         set { if (IsVariable && value is not null) Value = value.Path; }
     }
     public VisualExpressionNode? Left => _left;
@@ -81,8 +81,8 @@ public sealed class VisualExpressionNode : ObservableObject
     internal IEnumerable<VisualExpressionNode> Walk()
     {
         yield return this;
-        if (Left is not null) foreach (var n in Left.Walk()) yield return n;
-        if (Right is not null) foreach (var n in Right.Walk()) yield return n;
+        if (Left is not null) foreach (var visualExpressionNode in Left.Walk()) yield return visualExpressionNode;
+        if (Right is not null) foreach (var visualExpressionNode2 in Right.Walk()) yield return visualExpressionNode2;
     }
     internal string Source() => Kind switch
     {

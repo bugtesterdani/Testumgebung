@@ -55,9 +55,9 @@ public sealed class SampleBuffer : IReadOnlyList<double>
             var done = 0;
             while (done < bytes.Length)
             {
-                var n = RandomAccess.Read(_file!.SafeFileHandle, bytes[done..], (long)offset * sizeof(double) + done);
-                if (n == 0) throw new EndOfStreamException("Kurvenpuffer ist unvollständig.");
-                done += n;
+                var value = RandomAccess.Read(_file!.SafeFileHandle, bytes[done..], (long)offset * sizeof(double) + done);
+                if (value == 0) throw new EndOfStreamException("Kurvenpuffer ist unvollständig.");
+                done += value;
             }
         }
         return values;

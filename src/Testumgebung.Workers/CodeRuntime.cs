@@ -119,10 +119,10 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             language = PoolKey(language);
             ObjectDisposedException.ThrowIf(_disposed == 1, this);
             var queue = _idle.GetOrAdd(language, _ => new ConcurrentQueue<WorkerProcess>());
-            while (queue.TryDequeue(out var w))
+            while (queue.TryDequeue(out var workerProcess))
             {
-                if (w.IsAlive) return w;
-                Forget(w);
+                if (workerProcess.IsAlive) return workerProcess;
+                Forget(workerProcess);
             }
             var worker = StartWorker(language);
             _all[worker] = 0;
@@ -246,7 +246,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
     public async Task<CompileResult> CompileAsync(CodeRequest request, CancellationToken cancellationToken)
     {
         var translated = Translate(request, out var pre);
-        if (pre.Any(d => d.IsError))
+        if (pre.Any(diagnostic => diagnostic.IsError))
         {
             var info = await GetRuntimeInfoAsync(CodeLanguage.Cpp, cancellationToken).ConfigureAwait(false);
             return new CompileResult(false, pre, "LabVIEW-Prototyp über " + info);
@@ -264,17 +264,17 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
         var worker = Lease(request.Language);
         var id = NewId("compile");
         var tcs = new TaskCompletionSource<CompileResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        void OnExit(WorkerProcess w) => tcs.TrySetException(new CodeExecutionException("Worker beendet: " + w.StandardError.Trim()));
+        void OnExit(WorkerProcess workerProcess) => tcs.TrySetException(new CodeExecutionException("Worker beendet: " + workerProcess.StandardError.Trim()));
         worker.Exited += OnExit;
         worker.Register(id, msg =>
         {
             if ((string?)msg["t"] == "compiled")
             {
                 var diagnostics = (msg["diagnostics"] as JsonArray ?? [])
-                    .Where(d => d is not null)
-                    .Select(d => new CodeDiagnostic(
-                        (int?)d!["line"] ?? 0, (int?)d["column"] ?? 0, (string?)d["severity"] ?? "error",
-                        (string?)d["message"] ?? "", (string?)d["code"]))
+                    .Where(node => node is not null)
+                    .Select(node => new CodeDiagnostic(
+                        (int?)node!["line"] ?? 0, (int?)node["column"] ?? 0, (string?)node["severity"] ?? "error",
+                        (string?)node["message"] ?? "", (string?)node["code"]))
                     .ToList();
                 tcs.TrySetResult(new CompileResult((bool?)msg["ok"] ?? false, diagnostics, ""));
             }
@@ -308,17 +308,17 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
     {
         cancellationToken.ThrowIfCancellationRequested();
         request = Translate(request, out var pre);
-        if (pre.FirstOrDefault(d => d.IsError) is { } blocking) throw new CodeExecutionException(blocking.Message);
+        if (pre.FirstOrDefault(diagnostic => diagnostic.IsError) is { } blocking) throw new CodeExecutionException(blocking.Message);
         var worker = Lease(request.Language);
         var id = string.IsNullOrEmpty(request.InvocationId) ? NewId("inv") : request.InvocationId;
         var tcs = new TaskCompletionSource<CodeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var killed = 0;
-        var types = request.Variables.ToDictionary(v => v.Name, v => v.Type);
+        var types = request.Variables.ToDictionary(port => port.Name, port => port.Type);
 
-        void OnExit(WorkerProcess w)
+        void OnExit(WorkerProcess workerProcess)
         {
             if (Volatile.Read(ref killed) == 1) return;
-            tcs.TrySetException(new CodeExecutionException("Worker-Prozess unerwartet beendet.", w.StandardError));
+            tcs.TrySetException(new CodeExecutionException("Worker-Prozess unerwartet beendet.", workerProcess.StandardError));
         }
 
         worker.Exited += OnExit;
@@ -411,8 +411,8 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
         var reply = new JsonObject { ["t"] = "reply", ["id"] = id, ["cid"] = cid };
         async Task HandleOperatorPromptAsync()
         {
-            var kind = Enum.TryParse<OperatorPromptKind>((string?)args["kind"], out var k) ? k : OperatorPromptKind.Instruction;
-            VarType? type = Enum.TryParse<VarType>((string?)args["type"], out var t) ? t : null;
+            var kind = Enum.TryParse<OperatorPromptKind>((string?)args["kind"], out var operatorPromptKind) ? operatorPromptKind : OperatorPromptKind.Instruction;
+            VarType? type = Enum.TryParse<VarType>((string?)args["type"], out var varType) ? varType : null;
             var prompt = new OperatorPrompt(kind, (string?)args["text"] ?? "", kind == OperatorPromptKind.Input ? type ?? VarType.String : null,
                 (bool?)args["required"] ?? false, Min: (double?)args["min"], Max: (double?)args["max"], Unit: (string?)args["unit"]);
             reply["value"] = ToJson(await host.AskAsync(prompt).ConfigureAwait(false));
@@ -524,7 +524,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
 
     private static CodeResult ParseResult(JsonObject msg, IReadOnlyDictionary<string, VarType> types)
     {
-        var rating = Enum.TryParse<ResultRating>((string?)msg["rating"], ignoreCase: true, out var r) ? r : ResultRating.NResult;
+        var rating = Enum.TryParse<ResultRating>((string?)msg["rating"], ignoreCase: true, out var rating2) ? rating2 : ResultRating.NResult;
         var values = new Dictionary<string, object?>(StringComparer.Ordinal);
         if (msg["values"] is JsonObject obj)
         {
@@ -557,14 +557,14 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
     private static JsonObject Request(string type, string id, CodeRequest request)
     {
         var vars = new JsonArray();
-        foreach (var v in request.Variables) vars.Add(new JsonObject { ["name"] = v.Name, ["type"] = v.Type.ToString() });
+        foreach (var port in request.Variables) vars.Add(new JsonObject { ["name"] = port.Name, ["type"] = port.Type.ToString() });
         return new JsonObject
         {
             ["t"] = type,
             ["id"] = id,
             ["source"] = request.Source,
             ["assemblies"] = request.Language == CodeLanguage.CSharp
-                ? new JsonArray(request.Assemblies.Select(a => (JsonNode)new JsonObject { ["name"] = a.Name, ["data"] = System.Convert.ToBase64String(a.Data) }).ToArray()) : new JsonArray(),
+                ? new JsonArray(request.Assemblies.Select(managedAssembly => (JsonNode)new JsonObject { ["name"] = managedAssembly.Name, ["data"] = System.Convert.ToBase64String(managedAssembly.Data) }).ToArray()) : new JsonArray(),
             ["vars"] = vars,
         };
     }
@@ -576,11 +576,11 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
     internal static JsonNode? ToJson(object? value) => value switch
     {
         null => null,
-        bool b => JsonValue.Create(b),
-        int i => JsonValue.Create((long)i),
-        long l => JsonValue.Create(l),
-        double d => JsonValue.Create(d),
-        string s => JsonValue.Create(s),
+        bool flag => JsonValue.Create(flag),
+        int index => JsonValue.Create((long)index),
+        long integerValue => JsonValue.Create(integerValue),
+        double number => JsonValue.Create(number),
+        string text => JsonValue.Create(text),
         DateTime dt => JsonValue.Create(dt.ToString("O", CultureInfo.InvariantCulture)),
         _ => JsonValue.Create(value.ToString()),
     };
@@ -597,7 +597,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
         if (value is IEnumerable<KeyValuePair<string, object?>> dict)
         {
             var obj = new JsonObject();
-            foreach (var (k, v) in dict) obj[k] = ToJsonDeep(v);
+            foreach (var (key, value2) in dict) obj[key] = ToJsonDeep(value2);
             return obj;
         }
         return ToJson(value);
@@ -613,7 +613,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             JsonValueKind.False => false,
             JsonValueKind.Number => node.ToJsonString() is var text && (text.Contains('.') || text.Contains('e') || text.Contains('E'))
                 ? node.GetValue<double>()
-                : long.TryParse(node.ToJsonString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var l) ? l : node.GetValue<double>(),
+                : long.TryParse(node.ToJsonString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var length) ? length : node.GetValue<double>(),
             JsonValueKind.String => (string?)node,
             _ => node.ToJsonString(),
         };
@@ -622,10 +622,10 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
     private static object Convert(JsonNode node, VarType type)
     {
         var raw = FromJson(node);
-        if (type == VarType.DateTime && raw is string s)
-            return DateTime.Parse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-        if (type == VarType.Double && raw is string ds && double.TryParse(ds, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
-            return d; // NaN/Infinity
+        if (type == VarType.DateTime && raw is string text)
+            return DateTime.Parse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+        if (type == VarType.Double && raw is string ds && double.TryParse(ds, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
+            return number; // NaN/Infinity
         if (type == VarType.Int && raw is double dbl && dbl == Math.Floor(dbl))
             return (long)dbl;
         return TypedValue.Coerce(raw, type);
@@ -638,7 +638,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
             if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
             foreach (var runtime in _pythonEnvironments.Values) runtime.Dispose();
             _pythonEnvironments.Clear();
-            foreach (var w in _all.Keys) w.Dispose();
+            foreach (var workerProcess in _all.Keys) workerProcess.Dispose();
             _all.Clear();
             _idle.Clear();
         }

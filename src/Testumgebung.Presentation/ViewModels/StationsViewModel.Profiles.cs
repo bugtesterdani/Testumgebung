@@ -64,7 +64,7 @@ public sealed partial class StationsViewModel
             var errors = profile.Validate();
             if (errors.Count > 0) throw new FormatException(string.Join(" ", errors));
             // Preserve cross-project hardware assignments, but never overwrite an existing profile.
-            if (DeviceProfiles.Any(p => p.Id == profile.Id)) profile.Id = "import-" + Guid.NewGuid().ToString("N");
+            if (DeviceProfiles.Any(customDeviceProfile => customDeviceProfile.Id == profile.Id)) profile.Id = "import-" + Guid.NewGuid().ToString("N");
             DeviceProfiles.Add(profile);
             SelectedProfile = profile;
             Error = null;
@@ -100,9 +100,9 @@ public sealed partial class StationsViewModel
 
     private void AddProfile()
     {
-        var n = 1;
-        while (DeviceProfiles.Any(p => p.Id == $"eigenes-{n}")) n++;
-        var profile = new CustomDeviceProfile { Id = $"eigenes-{n}", Name = $"Eigenes Gerät {n}" };
+        var index = 1;
+        while (DeviceProfiles.Any(customDeviceProfile => customDeviceProfile.Id == $"eigenes-{index}")) index++;
+        var profile = new CustomDeviceProfile { Id = $"eigenes-{index}", Name = $"Eigenes Gerät {index}" };
         DeviceProfiles.Add(profile);
         SelectedProfile = profile;
     }
@@ -110,7 +110,7 @@ public sealed partial class StationsViewModel
     private void RemoveProfile()
     {
         if (SelectedProfile is not { } profile) return;
-        if (_draft.Devices.Any(d => d.Adapter == profile.Adapter))
+        if (_draft.Devices.Any(device => device.Adapter == profile.Adapter))
         {
             Error = "Das Geräteprofil wird noch von einem Gerät verwendet. Zuerst dessen Adapter ändern oder das Gerät entfernen.";
             return;
@@ -122,9 +122,9 @@ public sealed partial class StationsViewModel
     private void AddProfileChannel()
     {
         if (SelectedProfile is not { } profile) return;
-        var n = 1;
-        while (profile.Channels.Any(c => c.Name == $"Kanal{n}")) n++;
-        var channel = new CustomDeviceChannel { Name = $"Kanal{n}" };
+        var index = 1;
+        while (profile.Channels.Any(customDeviceChannel => customDeviceChannel.Name == $"Kanal{index}")) index++;
+        var channel = new CustomDeviceChannel { Name = $"Kanal{index}" };
         profile.Channels.Add(channel);
         ProfileChannels.Add(channel);
     }
@@ -140,10 +140,10 @@ public sealed partial class StationsViewModel
     public bool ApplyProfiles()
     {
         if (_anyRunning()) { Error = "Geräteprofile können erst nach Ende aller Prüfungen übernommen werden."; return false; }
-        var errors = DeviceProfiles.SelectMany(p => p.Validate()).ToList();
+        var errors = DeviceProfiles.SelectMany(customDeviceProfile => customDeviceProfile.Validate()).ToList();
         if (errors.Count > 0) { Error = string.Join(" ", errors); return false; }
         Project.DeviceProfiles.Clear();
-        Project.DeviceProfiles.AddRange(DeviceProfiles.Select(p => p.Clone()));
+        Project.DeviceProfiles.AddRange(DeviceProfiles.Select(customDeviceProfile => customDeviceProfile.Clone()));
         _coordinator.Pool.Reset();
         _channelCache.Clear();
         _editor.MarkChanged();

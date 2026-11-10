@@ -12,7 +12,7 @@ public partial class LocalPasswordWindow : Window
         Loaded += (_, _) => NewPassword.Focus();
         Closed += (_, _) => { NewPassword.Clear(); Confirmation.Clear(); };
     }
-    private void OnApply(object sender, RoutedEventArgs e)
+    private void OnApply(object sender, RoutedEventArgs eventArgs)
     {
         if (NewPassword.Password.Length == 0 || NewPassword.Password != Confirmation.Password)
         { Error.Text = "Passwort eingeben und identisch wiederholen."; return; }

@@ -21,7 +21,7 @@ internal static class VisualExpressionTypes
     {
         if (!ExpressionVariableChoices.IsPath(name))
             throw new ExpressionException("Dieser Name kann nicht als Ausdrucksvariable verwendet werden.");
-        return variables.FirstOrDefault(v => v.Path == name)?.Type
+        return variables.FirstOrDefault(variable => variable.Path == name)?.Type
             ?? throw new ExpressionException($"Variable '{name}' ist hier nicht deklariert oder nicht sichtbar.");
     }
     private static VarType NumberType(string text)

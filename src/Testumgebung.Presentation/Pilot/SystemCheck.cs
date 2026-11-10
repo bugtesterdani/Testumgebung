@@ -86,19 +86,19 @@ public static class SystemCheck
         {
             items.Add(new SystemCheckItem(area, "Ergebnisordner", CheckLevel.Warning, "Dateispeicherung nicht konfiguriert – Ergebnisse nur in der Datenbank."));
         }
-        if (ctx.Services is { } s)
+        if (ctx.Services is { } resultServices)
         {
-            items.Add(Writable(area, "Wiederherstellungsordner", s.RecoveryFolder, CheckLevel.Error));
-            items.Add(Writable(area, "Outbox-Ordner", s.Outbox.Folder, CheckLevel.Error));
+            items.Add(Writable(area, "Wiederherstellungsordner", resultServices.RecoveryFolder, CheckLevel.Error));
+            items.Add(Writable(area, "Outbox-Ordner", resultServices.Outbox.Folder, CheckLevel.Error));
         }
         if (pipeline?.Journal is { } journal)
             items.Add(Writable(area, "Zwischenaufzeichnung", journal.Folder, CheckLevel.Error));
         if (ctx.StationStore is { } store)
         {
             var dir = Path.GetDirectoryName(store.Path)!;
-            var w = Writable(area, "Rechnerkonfiguration (ProgramData)", dir, CheckLevel.Info);
-            items.Add(w.Level == CheckLevel.Ok ? w with { Detail = w.Detail + " – dieses Konto darf Prüfplätze und Zugang ändern." }
-                : w with { Detail = $"{dir}: nur lesbar – erwartet für Werkerkonten; Änderungen nur durch Administratoren." });
+            var systemCheckItem = Writable(area, "Rechnerkonfiguration (ProgramData)", dir, CheckLevel.Info);
+            items.Add(systemCheckItem.Level == CheckLevel.Ok ? systemCheckItem with { Detail = systemCheckItem.Detail + " – dieses Konto darf Prüfplätze und Zugang ändern." }
+                : systemCheckItem with { Detail = $"{dir}: nur lesbar – erwartet für Werkerkonten; Änderungen nur durch Administratoren." });
         }
     }
 
@@ -141,46 +141,46 @@ public static class SystemCheck
     private static void Stations(SystemCheckContext ctx, List<SystemCheckItem> items)
     {
         const string area = "Prüfplätze";
-        if (ctx.Coordinator is not { } c) return;
-        if (c.LoadError is { } error)
+        if (ctx.Coordinator is not { } stationCoordinator) return;
+        if (stationCoordinator.LoadError is { } error)
         {
             items.Add(new SystemCheckItem(area, "Prüfplatzkonfiguration", CheckLevel.Error, error));
             return;
         }
-        var setup = c.Setup;
-        var real = setup.Devices.Where(d => !d.IsSimulation).ToList();
-        items.Add(c.IsSuggestion
+        var setup = stationCoordinator.Setup;
+        var real = setup.Devices.Where(device => !device.IsSimulation).ToList();
+        items.Add(stationCoordinator.IsSuggestion
             ? new SystemCheckItem(area, "Prüfplatzkonfiguration", CheckLevel.Warning, "Nur Vorschlag aus dem Projekt – unter „Prüfplatzkonfiguration“ prüfen und speichern.")
             : new SystemCheckItem(area, "Prüfplatzkonfiguration", CheckLevel.Ok,
                 $"{setup.Stations.Count} Prüfplatz/-plätze, {setup.Devices.Count} Gerät(e), davon {real.Count} real"));
         if (real.Count == 0)
             items.Add(new SystemCheckItem(area, "Geräte", CheckLevel.Info, "Nur Simulation – für den Pilot reale Geräte zuordnen."));
-        foreach (var d in real)
+        foreach (var device in real)
         {
-            if (string.IsNullOrWhiteSpace(d.Resource))
-                items.Add(new SystemCheckItem(area, d.Name, CheckLevel.Error, $"{d.Adapter}: keine Ressource (VISA-Adresse, LAN-Socket oder DAQmx-Gerät)."));
+            if (string.IsNullOrWhiteSpace(device.Resource))
+                items.Add(new SystemCheckItem(area, device.Name, CheckLevel.Error, $"{device.Adapter}: keine Ressource (VISA-Adresse, LAN-Socket oder DAQmx-Gerät)."));
             else
-                items.Add(new SystemCheckItem(area, d.Name, CheckLevel.Info, $"{d.Adapter} {d.Model} · {d.Resource}"));
+                items.Add(new SystemCheckItem(area, device.Name, CheckLevel.Info, $"{device.Adapter} {device.Model} · {device.Resource}"));
         }
-        var unused = setup.Stations.Where(s => s.Selection is { Enabled: true } sel && sel.UseRules && sel.Rules.Count == 0 && !sel.UseManual && !sel.UseCustom).ToList();
-        foreach (var s in unused)
-            items.Add(new SystemCheckItem(area, s.Name + " · Auswahl", CheckLevel.Error, "Nur Kennungsregeln aktiv, aber keine Regel – kein Start möglich."));
+        var unused = setup.Stations.Where(station => station.Selection is { Enabled: true } sel && sel.UseRules && sel.Rules.Count == 0 && !sel.UseManual && !sel.UseCustom).ToList();
+        foreach (var station in unused)
+            items.Add(new SystemCheckItem(area, station.Name + " · Auswahl", CheckLevel.Error, "Nur Kennungsregeln aktiv, aber keine Regel – kein Start möglich."));
     }
 
     private static async Task ProbeAsync(SystemCheckContext ctx, List<SystemCheckItem> items, CancellationToken cancellationToken)
     {
-        if (ctx.Coordinator is not { LoadError: null } c) return;
-        foreach (var d in c.Setup.Devices.Where(d => !d.IsSimulation && !string.IsNullOrWhiteSpace(d.Resource)))
+        if (ctx.Coordinator is not { LoadError: null } stationCoordinator) return;
+        foreach (var device in stationCoordinator.Setup.Devices.Where(device2 => !device2.IsSimulation && !string.IsNullOrWhiteSpace(device2.Resource)))
         {
             try
             {
-                var probe = await StationCoordinator.ProbeAsync(d, cancellationToken).WaitAsync(TimeSpan.FromSeconds(20), cancellationToken).ConfigureAwait(false);
-                items.Add(new SystemCheckItem("Geräte", d.Name, probe.Ok ? CheckLevel.Ok : CheckLevel.Error,
+                var probe = await StationCoordinator.ProbeAsync(device, cancellationToken).WaitAsync(TimeSpan.FromSeconds(20), cancellationToken).ConfigureAwait(false);
+                items.Add(new SystemCheckItem("Geräte", device.Name, probe.Ok ? CheckLevel.Ok : CheckLevel.Error,
                     probe.Identity + (probe.Details.Count > 0 ? " · " + string.Join("; ", probe.Details) : "")));
             }
             catch (TimeoutException)
             {
-                items.Add(new SystemCheckItem("Geräte", d.Name, CheckLevel.Error, "keine Antwort innerhalb von 20 s"));
+                items.Add(new SystemCheckItem("Geräte", device.Name, CheckLevel.Error, "keine Antwort innerhalb von 20 s"));
             }
         }
     }
@@ -205,9 +205,9 @@ public static class SystemCheck
     private static async Task DatabaseAsync(SystemCheckContext ctx, List<SystemCheckItem> items, CancellationToken cancellationToken)
     {
         const string area = "Datenbank";
-        if (ctx.Services is not { } s) return;
-        if (s.ApplyWarning is { } warning) items.Add(new SystemCheckItem(area, "Einstellungen", CheckLevel.Warning, warning));
-        switch (s.Database.Inner)
+        if (ctx.Services is not { } resultServices) return;
+        if (resultServices.ApplyWarning is { } warning) items.Add(new SystemCheckItem(area, "Einstellungen", CheckLevel.Warning, warning));
+        switch (resultServices.Database.Inner)
         {
             case null:
                 items.Add(new SystemCheckItem(area, "Prüfdatenbank", CheckLevel.Info, "Keine Datenbank – Ergebnisse nur als Datei; Freigaben lokal."));
@@ -227,12 +227,12 @@ public static class SystemCheck
                 items.Add(new SystemCheckItem(area, "Prüfdatenbank", CheckLevel.Warning, $"{other.Name} – nur für Vorführung/Test."));
                 break;
         }
-        var pending = s.Outbox.Pending.Count;
+        var pending = resultServices.Outbox.Pending.Count;
         items.Add(new SystemCheckItem(area, "Outbox", pending == 0 ? CheckLevel.Ok : CheckLevel.Warning,
             pending == 0 ? "leer" : $"{pending} Run(s) noch nicht übertragen"));
-        if (s.Current.Mqtt.Enabled)
-            items.Add(new SystemCheckItem(area, "MQTT", CheckLevel.Info, $"{s.Current.Mqtt.Host}:{s.Current.Mqtt.Port} – Verbindungstest unter „Einstellungen“."));
-        if (s.Pipeline.Journal is { } journal && journal.FindIncomplete() is { Count: > 0 } incomplete)
+        if (resultServices.Current.Mqtt.Enabled)
+            items.Add(new SystemCheckItem(area, "MQTT", CheckLevel.Info, $"{resultServices.Current.Mqtt.Host}:{resultServices.Current.Mqtt.Port} – Verbindungstest unter „Einstellungen“."));
+        if (resultServices.Pipeline.Journal is { } journal && journal.FindIncomplete() is { Count: > 0 } incomplete)
             items.Add(new SystemCheckItem(area, "Unvollständige Prüfläufe", CheckLevel.Warning,
                 $"{incomplete.Count} aus früheren Sitzungen – unter „Ergebnisse“ als abgebrochen speichern oder verwerfen."));
     }
@@ -250,8 +250,8 @@ public static class SystemCheck
         var configured = Environment.GetEnvironmentVariable("TESTUMGEBUNG_CXX");
         string? cxx = null;
         if (!string.IsNullOrWhiteSpace(configured))
-            cxx = ctx.RunProcess(configured, Path.GetFileNameWithoutExtension(configured).Equals("cl", StringComparison.OrdinalIgnoreCase) ? "" : "--version") is { } v
-                ? $"{v} (TESTUMGEBUNG_CXX)" : null;
+            cxx = ctx.RunProcess(configured, Path.GetFileNameWithoutExtension(configured).Equals("cl", StringComparison.OrdinalIgnoreCase) ? "" : "--version") is { } value
+                ? $"{value} (TESTUMGEBUNG_CXX)" : null;
         if (cxx is null && OperatingSystem.IsWindows())
         {
             var pf86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
@@ -269,9 +269,9 @@ public static class SystemCheck
     private static void Drivers(SystemCheckContext ctx, List<SystemCheckItem> items)
     {
         const string area = "Gerätetreiber";
-        var devices = ctx.Coordinator?.Setup.Devices.Where(d => !d.IsSimulation).ToList() ?? [];
-        var needsVisa = devices.Any(d => d.Resource is { } r && !r.Contains("SOCKET", StringComparison.OrdinalIgnoreCase)
-                                                                 && r.Contains("::", StringComparison.Ordinal) && !IsDaqmx(d));
+        var devices = ctx.Coordinator?.Setup.Devices.Where(device => !device.IsSimulation).ToList() ?? [];
+        var needsVisa = devices.Any(device => device.Resource is { } resource && !resource.Contains("SOCKET", StringComparison.OrdinalIgnoreCase)
+                                                                 && resource.Contains("::", StringComparison.Ordinal) && !IsDaqmx(device));
         var needsDaqmx = devices.Any(IsDaqmx);
         var visa = ctx.VisaAvailable();
         items.Add(new SystemCheckItem(area, "VISA", visa ? CheckLevel.Ok : needsVisa ? CheckLevel.Error : CheckLevel.Info,
@@ -283,31 +283,31 @@ public static class SystemCheck
             daq ? "nicaiu.dll gefunden" : needsDaqmx ? "NI-DAQmx fehlt, aber DAQ-Geräte sind zugeordnet." : "Nicht installiert – nur nötig für NI-DAQ-Module."));
     }
 
-    private static bool IsDaqmx(DeviceConfig d) => d.Adapter.Contains("DAQ", StringComparison.OrdinalIgnoreCase);
+    private static bool IsDaqmx(DeviceConfig device) => device.Adapter.Contains("DAQ", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Programm mit Zeitlimit starten; erste nicht leere Zeile von stdout/stderr (python --version schreibt teils auf stderr).</summary>
     public static string? FirstOutputLine(string file, string arguments)
     {
         try
         {
-            using var p = Process.Start(new ProcessStartInfo(file, arguments)
+            using var process = Process.Start(new ProcessStartInfo(file, arguments)
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             });
-            if (p is null) return null;
-            var stdout = p.StandardOutput.ReadToEndAsync();
-            var stderr = p.StandardError.ReadToEndAsync();
-            if (!p.WaitForExit(15_000))
+            if (process is null) return null;
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(15_000))
             {
-                try { p.Kill(entireProcessTree: true); }
+                try { process.Kill(entireProcessTree: true); }
                 catch (InvalidOperationException) { }
                 return null;
             }
             var text = stdout.Result + "\n" + stderr.Result;
-            return text.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? (p.ExitCode == 0 ? "" : null);
+            return text.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? (process.ExitCode == 0 ? "" : null);
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {

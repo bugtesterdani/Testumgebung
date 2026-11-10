@@ -28,10 +28,10 @@ public static class FocusBehavior
 
     public static void SetAutoFocus(DependencyObject obj, bool value) => obj.SetValue(AutoFocusProperty, value);
 
-    private static void OnAutoFocusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnAutoFocusChanged(DependencyObject element, DependencyPropertyChangedEventArgs eventArgs)
     {
-        if (d is not FrameworkElement fe) return;
-        if ((bool)e.NewValue)
+        if (element is not FrameworkElement fe) return;
+        if ((bool)eventArgs.NewValue)
         {
             fe.IsVisibleChanged += OnConditionChanged;
             fe.IsEnabledChanged += OnConditionChanged;
@@ -46,13 +46,13 @@ public static class FocusBehavior
         }
     }
 
-    private static void OnLoaded(object sender, RoutedEventArgs e) => TryFocus((FrameworkElement)sender);
+    private static void OnLoaded(object sender, RoutedEventArgs eventArgs) => TryFocus((FrameworkElement)sender);
 
-    private static void OnConditionChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private static void OnConditionChanged(object sender, DependencyPropertyChangedEventArgs eventArgs)
     {
         // Nur auf den Übergang „jetzt verfügbar“ reagieren, nicht beim Wegblenden oder Sperren –
         // sonst würde ein Klick des Werkers in ein anderes Feld sofort wieder weggezogen.
-        if (e.NewValue is false) return;
+        if (eventArgs.NewValue is false) return;
         TryFocus((FrameworkElement)sender);
     }
 

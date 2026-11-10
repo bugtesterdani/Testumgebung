@@ -73,18 +73,18 @@ public static class CommunicationBlocks
         c.Register(new(Send, "Senden", Category, "arrow",
             "Sendet Text oder Bytes an den Prüfling (RS-232/RS-485, TCP, UDP). Unbewertet.",
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), .. SendParameters()],
-            p => new StreamAction(p.Text("Ressource"), SendSpec.From(p), null) { Endpoint = p.Optional("Adresse"), Options = p.Optional("Verbindungsoptionen") }));
+            parameters => new StreamAction(parameters.Text("Ressource"), SendSpec.From(parameters), null) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
 
         c.Register(new(Receive, "Empfangen", Category, "measure",
             "Empfängt eine Antwort (bis Zeilenende, Länge oder Ruhe), prüft optional ein Muster und bewertet einen enthaltenen Zahlenwert.",
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), new("Format", "Format", ParameterKind.Choice, "Text", Choices: Formats),
                 new("Zeilenende", "Zeilenende (Text)", ParameterKind.Choice, "\\r\\n", Choices: LineEnds), .. ReceiveParameters()],
-            p => new StreamAction(p.Text("Ressource"), null, ReceiveSpec.From(p)) { Endpoint = p.Optional("Adresse"), Options = p.Optional("Verbindungsoptionen") }));
+            parameters => new StreamAction(parameters.Text("Ressource"), null, ReceiveSpec.From(parameters)) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
 
         c.Register(new(Query, "Abfrage", Category, "measure",
             "Verwirft alte Eingangsdaten, sendet einen Befehl und wertet die Antwort aus (Muster, Zahlenwert, Grenzwerte).",
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), .. SendParameters(), .. ReceiveParameters()],
-            p => new StreamAction(p.Text("Ressource"), SendSpec.From(p), ReceiveSpec.From(p)) { Endpoint = p.Optional("Adresse"), Options = p.Optional("Verbindungsoptionen") }));
+            parameters => new StreamAction(parameters.Text("Ressource"), SendSpec.From(parameters), ReceiveSpec.From(parameters)) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
 
         c.Register(new(ModbusRead, "Modbus lesen", Category, "measure",
             "Liest Register oder Bits (RTU/TCP), wandelt den Datentyp, skaliert (Wert × Faktor + Offset) und bewertet gegen Grenzwerte bzw. Sollwert.",
@@ -99,9 +99,9 @@ public static class CommunicationBlocks
                 new("Sollwert", "Sollwert", ParameterKind.Expression, Hint: "Gleichheit (z. B. für Status, Bool, Text); sonst Grenzwerte"),
                 .. Evaluation(),
             ],
-            p => new ModbusReadAction(p.Text("Ressource"), p.Text("Adresse"), ModbusCodec.ParseType(p.Choice("Datentyp")), p.Choice("Wortfolge") == WordOrders[1],
-                (int?)p.Number("Laenge"), p.Number("Faktor") ?? 1, p.Number("Offset") ?? 0, p.Expr("Sollwert"),
-                p.Optional("Ziel"), p.Expr("Untergrenze"), p.Expr("Obergrenze"), p.Text("Einheit"))));
+            parameters => new ModbusReadAction(parameters.Text("Ressource"), parameters.Text("Adresse"), ModbusCodec.ParseType(parameters.Choice("Datentyp")), parameters.Choice("Wortfolge") == WordOrders[1],
+                (int?)parameters.Number("Laenge"), parameters.Number("Faktor") ?? 1, parameters.Number("Offset") ?? 0, parameters.Expr("Sollwert"),
+                parameters.Optional("Ziel"), parameters.Expr("Untergrenze"), parameters.Expr("Obergrenze"), parameters.Text("Einheit"))));
 
         c.Register(new(ModbusWrite, "Modbus schreiben", Category, "arrow",
             "Schreibt einen Wert in Holding-Register oder Coils; optional Zurücklesen (Abweichung = FAIL).",
@@ -113,8 +113,8 @@ public static class CommunicationBlocks
                 new("Wert", "Wert", ParameterKind.Expression, "0", Required: true),
                 new("Zuruecklesen", "Zurücklesen und vergleichen", ParameterKind.Bool, "false"),
             ],
-            p => new ModbusWriteAction(p.Text("Ressource"), p.Text("Adresse"), ModbusCodec.ParseType(p.Choice("Datentyp")), p.Choice("Wortfolge") == WordOrders[1],
-                p.Expr("Wert")!, p.Bool("Zuruecklesen"))));
+            parameters => new ModbusWriteAction(parameters.Text("Ressource"), parameters.Text("Adresse"), ModbusCodec.ParseType(parameters.Choice("Datentyp")), parameters.Choice("Wortfolge") == WordOrders[1],
+                parameters.Expr("Wert")!, parameters.Bool("Zuruecklesen"))));
 
         c.Register(new(CanSend, "CAN senden", Category, "arrow",
             "Sendet einen CAN- oder CAN-FD-Rahmen. Daten in Hex; {Ausdruck} fügt ein Byte ein.",
@@ -126,10 +126,10 @@ public static class CommunicationBlocks
                 new("Brs", "Bitratenumschaltung (BRS)", ParameterKind.Bool, "false"),
                 new("Daten", "Daten (Hex)", ParameterKind.Text, "02 01 0C"),
             ],
-            p =>
+            parameters =>
             {
-                CheckHex(p.Text("Daten"), "Daten");
-                return new CanSendAction(p.Text("Ressource"), CanIdSpec.From(p, "Id", "Erweitert"), p.Bool("Fd"), p.Bool("Brs"), p.Text("Daten"));
+                CheckHex(parameters.Text("Daten"), "Daten");
+                return new CanSendAction(parameters.Text("Ressource"), CanIdSpec.From(parameters, "Id", "Erweitert"), parameters.Bool("Fd"), parameters.Bool("Brs"), parameters.Text("Daten"));
             }));
 
         c.Register(new(CanReceive, "CAN empfangen", Category, "measure",
@@ -152,13 +152,13 @@ public static class CommunicationBlocks
                 .. Evaluation(),
                 new("BeiZeitlimit", "Bei Zeitüberschreitung", ParameterKind.Choice, "ERROR", Choices: TimeoutRatings),
             ],
-            p => new CanReceiveAction(p.Text("Ressource"), CanIdSpec.From(p, "Id", "Erweitert"), p.Optional("Maske"),
-                TimeSpan.FromMilliseconds(p.Number("Zeitlimit") ?? 1000),
-                p.Optional("AnfrageId") is { } rid ? CanIdSpec.Parse(rid, false) : null, p.Text("AnfrageDaten"),
-                ExpectedBytes.Parse(p.Optional("Erwartet")),
-                p.Number("Bits") is { } bits ? new CanSignal((int)(p.Number("Startbit") ?? 0), (int)bits, p.Choice("Byteorder") == ByteOrders[1], p.Bool("Vorzeichen"),
-                    p.Number("Faktor") ?? 1, p.Number("Offset") ?? 0) : null,
-                p.Optional("Ziel"), p.Expr("Untergrenze"), p.Expr("Obergrenze"), p.Text("Einheit"), p.Choice("BeiZeitlimit") == "FAIL")));
+            parameters => new CanReceiveAction(parameters.Text("Ressource"), CanIdSpec.From(parameters, "Id", "Erweitert"), parameters.Optional("Maske"),
+                TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000),
+                parameters.Optional("AnfrageId") is { } rid ? CanIdSpec.Parse(rid, false) : null, parameters.Text("AnfrageDaten"),
+                ExpectedBytes.Parse(parameters.Optional("Erwartet")),
+                parameters.Number("Bits") is { } bits ? new CanSignal((int)(parameters.Number("Startbit") ?? 0), (int)bits, parameters.Choice("Byteorder") == ByteOrders[1], parameters.Bool("Vorzeichen"),
+                    parameters.Number("Faktor") ?? 1, parameters.Number("Offset") ?? 0) : null,
+                parameters.Optional("Ziel"), parameters.Expr("Untergrenze"), parameters.Expr("Obergrenze"), parameters.Text("Einheit"), parameters.Choice("BeiZeitlimit") == "FAIL")));
     }
 
     // ------------------------------------------------------------------ gemeinsame Hilfen
@@ -182,17 +182,17 @@ public static class CommunicationBlocks
     {
         if (!template.Contains('{')) return template;
         var sb = new StringBuilder();
-        for (var i = 0; i < template.Length; i++)
+        for (var index = 0; index < template.Length; index++)
         {
-            var ch = template[i];
-            if (ch == '{' && i + 1 < template.Length && template[i + 1] == '{') { sb.Append('{'); i++; continue; }
-            if (ch == '}' && i + 1 < template.Length && template[i + 1] == '}') { sb.Append('}'); i++; continue; }
+            var ch = template[index];
+            if (ch == '{' && index + 1 < template.Length && template[index + 1] == '{') { sb.Append('{'); index++; continue; }
+            if (ch == '}' && index + 1 < template.Length && template[index + 1] == '}') { sb.Append('}'); index++; continue; }
             if (ch != '{') { sb.Append(ch); continue; }
-            var end = template.IndexOf('}', i + 1);
+            var end = template.IndexOf('}', index + 1);
             if (end < 0) throw new FormatException($"Platzhalter ohne „}}“ in „{template}“.");
-            var value = Expression.Parse(template[(i + 1)..end]).Evaluate(new ContextResolver(ctx));
+            var value = Expression.Parse(template[(index + 1)..end]).Evaluate(new ContextResolver(ctx));
             sb.Append(format is not null ? format(value) : Text(value));
-            i = end;
+            index = end;
         }
         return sb.ToString();
     }
@@ -200,10 +200,10 @@ public static class CommunicationBlocks
     internal static string Text(object? value) => value switch
     {
         null => "",
-        string s => s,
-        double d => d.ToString("R", CultureInfo.InvariantCulture),
-        bool b => b ? "1" : "0",
-        IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
+        string text => text,
+        double number => number.ToString("R", CultureInfo.InvariantCulture),
+        bool flag => flag ? "1" : "0",
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
         _ => value.ToString() ?? "",
     };
 
@@ -217,21 +217,21 @@ public static class CommunicationBlocks
 
     internal static double? ParseNumber(string text)
     {
-        var t = text.Trim();
-        if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)) return d;
-        if (double.TryParse(t, NumberStyles.Float, CultureInfo.GetCultureInfo("de-DE"), out d)) return d;
-        if (t.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var h)) return h;
+        var text2 = text.Trim();
+        if (double.TryParse(text2, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)) return number;
+        if (double.TryParse(text2, NumberStyles.Float, CultureInfo.GetCultureInfo("de-DE"), out number)) return number;
+        if (text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number2)) return number2;
         return null;
     }
 
     /// <summary>Wert passend zum Typ der Zielvariable setzen (Text → Zahl/Bool, falls die Variable so typisiert ist).</summary>
     internal static void SetTarget(IStepContext ctx, string target, object? value)
     {
-        var type = ctx.VisibleVariables().Where(v => v.Name == target).Select(v => (VarType?)v.Type).FirstOrDefault();
-        if (type is { } t && value is string s && t != VarType.String)
-            value = TypedValue.Parse(t == VarType.Double && ParseNumber(s) is { } n ? n.ToString("R", CultureInfo.InvariantCulture) : s.Trim(), t);
-        else if (type is { } t2 && value is double d && t2 == VarType.Int)
-            value = (long)Math.Round(d);
+        var type = ctx.VisibleVariables().Where(variable => variable.Name == target).Select(variable => (VarType?)variable.Type).FirstOrDefault();
+        if (type is { } varType && value is string text && varType != VarType.String)
+            value = TypedValue.Parse(varType == VarType.Double && ParseNumber(text) is { } number ? number.ToString("R", CultureInfo.InvariantCulture) : text.Trim(), varType);
+        else if (type is { } t2 && value is double number2 && t2 == VarType.Int)
+            value = (long)Math.Round(number2);
         else if (type == VarType.String && value is not string and not null)
             value = Text(value);
         ctx.Set(target, value);
@@ -243,11 +243,11 @@ public static class CommunicationBlocks
         var resolver = new ContextResolver(ctx);
         double? lo = low is null ? null : BlockCatalog.ToDouble(low.Evaluate(resolver), "Untergrenze");
         double? hi = high is null ? null : BlockCatalog.ToDouble(high.Evaluate(resolver), "Obergrenze");
-        var u = string.IsNullOrWhiteSpace(unit) ? null : unit;
-        if (lo is null && hi is null) return new StepOutcome(ResultRating.NResult, value, u, Message: what);
+        var unit2 = string.IsNullOrWhiteSpace(unit) ? null : unit;
+        if (lo is null && hi is null) return new StepOutcome(ResultRating.NResult, value, unit2, Message: what);
         var ok = (lo is null || value >= lo) && (hi is null || value <= hi);
-        return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, value, u, lo, hi,
-            ok ? what : $"{value.ToString("0.###", CultureInfo.InvariantCulture)} {u} außerhalb {lo}–{hi} {u} · {what}");
+        return new StepOutcome(ok ? ResultRating.Pass : ResultRating.Fail, value, unit2, lo, hi,
+            ok ? what : $"{value.ToString("0.###", CultureInfo.InvariantCulture)} {unit2} außerhalb {lo}–{hi} {unit2} · {what}");
     }
 
     internal static StepOutcome Timeout(CommunicationTimeoutException ex, bool asFail, bool hex)
@@ -275,7 +275,7 @@ internal sealed record SendSpec(string Data, bool Hex, byte[] LineEnd)
 
     public byte[] Build(IStepContext ctx)
     {
-        var text = CommunicationBlocks.Interpolate(Data, ctx, Hex ? v => Convert.ToInt64(v, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture) : null);
+        var text = CommunicationBlocks.Interpolate(Data, ctx, Hex ? value => Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture) : null);
         var bytes = CommText.Parse(text, Hex);
         return [.. bytes, .. LineEnd];
     }
@@ -293,11 +293,11 @@ internal sealed record ReceiveSpec(bool Hex, string EndMode, byte[] LineEnd, int
         if (end == "Zeilenende" && (hex || p.Choice("Zeilenende") == "Keins"))
             throw new BlockConfigurationException("Antwortende „Zeilenende“ braucht Format Text und ein Zeilenende – sonst „Länge“ oder „Ruhe“.");
         Regex? pattern = null;
-        if (p.Optional("Muster") is { } m)
+        if (p.Optional("Muster") is { } message)
         {
             try
             {
-                pattern = new Regex(m, RegexOptions.CultureInvariant | RegexOptions.Singleline, TimeSpan.FromSeconds(1));
+                pattern = new Regex(message, RegexOptions.CultureInvariant | RegexOptions.Singleline, TimeSpan.FromSeconds(1));
             }
             catch (ArgumentException ex)
             {
@@ -358,19 +358,19 @@ internal sealed class StreamAction(string resource, SendSpec? send, ReceiveSpec?
         var matched = false;
         if (spec.Pattern is { } pattern)
         {
-            var m = pattern.Match(text);
-            if (!m.Success)
+            var match = pattern.Match(text);
+            if (!match.Success)
             {
                 if (spec.Target is not null) CommunicationBlocks.SetTarget(ctx, spec.Target, shown);
                 return new StepOutcome(ResultRating.Fail, shown, Message: $"Antwort passt nicht zum Muster {pattern} · {info}");
             }
             matched = true;
-            extracted = m.Groups.Count > 1 && m.Groups[1].Success ? m.Groups[1].Value : m.Value;
+            extracted = match.Groups.Count > 1 && match.Groups[1].Success ? match.Groups[1].Value : match.Value;
         }
         if (spec.Low is not null || spec.High is not null)
             return EvaluateNumber(ctx, extracted, spec, info);
         if (spec.Target is not null) CommunicationBlocks.SetTarget(ctx, spec.Target, extracted);
-        object value = CommunicationBlocks.ParseNumber(extracted) is { } n && !string.IsNullOrWhiteSpace(spec.Unit) ? n : extracted;
+        object value = CommunicationBlocks.ParseNumber(extracted) is { } number && !string.IsNullOrWhiteSpace(spec.Unit) ? number : extracted;
         return new StepOutcome(matched ? ResultRating.Pass : ResultRating.NResult, value, string.IsNullOrWhiteSpace(spec.Unit) ? null : spec.Unit, Message: info);
     }
     private static StepOutcome EvaluateNumber(IStepContext ctx, string extracted, ReceiveSpec spec, string info)
@@ -441,8 +441,8 @@ internal sealed class ModbusReadAction : IStepAction
 
         object value = raw switch
         {
-            long l when _factor != 1 || _offset != 0 => l * _factor + _offset,
-            double d => d * _factor + _offset,
+            long integerValue when _factor != 1 || _offset != 0 => integerValue * _factor + _offset,
+            double number => number * _factor + _offset,
             _ => raw,
         };
         if (_target is not null) CommunicationBlocks.SetTarget(context, _target, value);
@@ -529,10 +529,10 @@ internal sealed record CanIdSpec(uint Id, bool Extended)
 
     public static CanIdSpec Parse(string text, bool extended)
     {
-        var t = text.Trim();
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
-            ? uint.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id)
-            : uint.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
+        var text2 = text.Trim();
+        var ok = text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? uint.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id)
+            : uint.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
         if (!ok) throw new BlockConfigurationException($"CAN-ID „{text}“ ungültig (z. B. 0x7E0 oder 2016).");
         var ext = extended || id > 0x7FF;
         if (id > 0x1FFFFFFF) throw new BlockConfigurationException($"CAN-ID 0x{id:X} größer als 29 Bit.");
@@ -549,7 +549,7 @@ internal sealed record ExpectedBytes(byte?[] Bytes)
         try
         {
             return new ExpectedBytes(text.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries)
-                .Select(b => b is "**" or "??" ? (byte?)null : byte.Parse(b.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? b[2..] : b, NumberStyles.HexNumber, CultureInfo.InvariantCulture))
+                .Select(byteToken => byteToken is "**" or "??" ? (byte?)null : byte.Parse(byteToken.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? byteToken[2..] : byteToken, NumberStyles.HexNumber, CultureInfo.InvariantCulture))
                 .ToArray());
         }
         catch (FormatException)
@@ -558,9 +558,9 @@ internal sealed record ExpectedBytes(byte?[] Bytes)
         }
     }
 
-    public bool Matches(byte[] data) => data.Length == Bytes.Length && Bytes.Select((b, i) => b is null || b == data[i]).All(x => x);
+    public bool Matches(byte[] data) => data.Length == Bytes.Length && Bytes.Select((dataByte, index) => dataByte is null || dataByte == data[index]).All(flag => flag);
 
-    public override string ToString() => string.Join(" ", Bytes.Select(b => b?.ToString("X2", CultureInfo.InvariantCulture) ?? "**"));
+    public override string ToString() => string.Join(" ", Bytes.Select(dataByte => dataByte?.ToString("X2", CultureInfo.InvariantCulture) ?? "**"));
 }
 
 internal sealed class CanSendAction(string resource, CanIdSpec id, bool fd, bool brs, string data) : IStepAction
@@ -568,7 +568,7 @@ internal sealed class CanSendAction(string resource, CanIdSpec id, bool fd, bool
     public async Task<StepOutcome> ExecuteAsync(IStepContext context)
     {
         var bytes = CommText.ParseHex(CommunicationBlocks.Interpolate(data, context,
-            v => Convert.ToInt64(v, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture)));
+            value => Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture)));
         var frame = new CanFrame(id.Id, bytes, id.Extended, fd, fd && brs);
         if (frame.Validate() is { } error) return StepOutcome.Error(error);
         await context.UseDeviceAsync(resource, "CAN senden", async (adapter, channel, token) =>
@@ -598,8 +598,8 @@ internal sealed class CanReceiveAction : IStepAction
     public CanReceiveAction(string resource, CanIdSpec id, string? mask, TimeSpan timeout, CanIdSpec? requestId, string requestData,
         ExpectedBytes? expected, CanSignal? signal, string? target, Expression? low, Expression? high, string unit, bool timeoutAsFail)
     {
-        var m = mask is null ? 0x1FFFFFFFu : CanIdSpec.Parse(mask, true).Id;
-        _filter = new CanFilter(id.Id, m, id.Extended);
+        var number = mask is null ? 0x1FFFFFFFu : CanIdSpec.Parse(mask, true).Id;
+        _filter = new CanFilter(id.Id, number, id.Extended);
         if (requestId is null && !string.IsNullOrWhiteSpace(requestData)) throw new BlockConfigurationException("Anfrage-Daten ohne Anfrage-ID.");
         CommunicationBlocks.CheckHex(requestData, "Anfrage: Daten");
         if (signal is { Length: < 1 or > 64 }) throw new BlockConfigurationException("Signallänge 1–64 Bit.");
@@ -613,7 +613,7 @@ internal sealed class CanReceiveAction : IStepAction
         if (_requestId is not null)
         {
             var bytes = CommText.ParseHex(CommunicationBlocks.Interpolate(_requestData, context,
-                v => Convert.ToInt64(v, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture)));
+                value => Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString("X2", CultureInfo.InvariantCulture)));
             request = new CanFrame(_requestId.Id, bytes, _requestId.Extended);
             if (request.Validate() is { } error) return StepOutcome.Error(error);
         }

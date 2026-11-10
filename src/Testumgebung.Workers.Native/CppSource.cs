@@ -89,24 +89,24 @@ internal static class CppSource
 
         // ---- API für Nutzercode -------------------------------------------------------
         inline tu::Outcome NResult() { return tu::Outcome{}; }
-        inline tu::Outcome NResult(double v) { tu::Outcome o; o.hasValue = true; o.value = v; return o; }
-        inline tu::Outcome Pass() { tu::Outcome o; o.rating = tu::RatingPass; return o; }
-        inline tu::Outcome Pass(double v) { tu::Outcome o = Pass(); o.hasValue = true; o.value = v; return o; }
-        inline tu::Outcome Fail(const std::string& message = "") { tu::Outcome o; o.rating = tu::RatingFail; o.message = message; return o; }
-        inline tu::Outcome Fail(const std::string& message, double v) { tu::Outcome o = Fail(message); o.hasValue = true; o.value = v; return o; }
-        inline tu::Outcome Error(const std::string& message) { tu::Outcome o; o.rating = tu::RatingError; o.message = message; return o; }
-        inline tu::Outcome Measured(double v, double low, double high, const std::string& unit = "")
+        inline tu::Outcome NResult(double value) { tu::Outcome outcome; outcome.hasValue = true; outcome.value = value; return outcome; }
+        inline tu::Outcome Pass() { tu::Outcome outcome; outcome.rating = tu::RatingPass; return outcome; }
+        inline tu::Outcome Pass(double value) { tu::Outcome outcome = Pass(); outcome.hasValue = true; outcome.value = value; return outcome; }
+        inline tu::Outcome Fail(const std::string& message = "") { tu::Outcome outcome; outcome.rating = tu::RatingFail; outcome.message = message; return outcome; }
+        inline tu::Outcome Fail(const std::string& message, double value) { tu::Outcome outcome = Fail(message); outcome.hasValue = true; outcome.value = value; return outcome; }
+        inline tu::Outcome Error(const std::string& message) { tu::Outcome outcome; outcome.rating = tu::RatingError; outcome.message = message; return outcome; }
+        inline tu::Outcome Measured(double value, double low, double high, const std::string& unit = "")
         {
-            tu::Outcome o; o.hasValue = true; o.value = v; o.unit = unit;
-            o.hasLow = !std::isnan(low); o.low = low; o.hasHigh = !std::isnan(high); o.high = high;
-            bool ok = (!o.hasLow || v >= low) && (!o.hasHigh || v <= high);
-            o.rating = ok ? tu::RatingPass : tu::RatingFail;
-            if (!ok) { std::ostringstream s; s << v << " außerhalb " << low << "–" << high; o.message = s.str(); }
-            return o;
+            tu::Outcome outcome; outcome.hasValue = true; outcome.value = value; outcome.unit = unit;
+            outcome.hasLow = !std::isnan(low); outcome.low = low; outcome.hasHigh = !std::isnan(high); outcome.high = high;
+            bool ok = (!outcome.hasLow || value >= low) && (!outcome.hasHigh || value <= high);
+            outcome.rating = ok ? tu::RatingPass : tu::RatingFail;
+            if (!ok) { std::ostringstream messageStream; messageStream << value << " außerhalb " << low << "–" << high; outcome.message = messageStream.str(); }
+            return outcome;
         }
         inline bool IsCancelled() { return tu::H->cancelled(tu::H->ctx) != 0; }
         inline void ThrowIfCancelled() { if (IsCancelled()) throw tu::Cancelled{}; }
-        inline double Read(const std::string& resource) { ThrowIfCancelled(); double v = 0; tu::check(tu::H->read(tu::H->ctx, resource.c_str(), &v)); return v; }
+        inline double Read(const std::string& resource) { ThrowIfCancelled(); double value = 0; tu::check(tu::H->read(tu::H->ctx, resource.c_str(), &value)); return value; }
         inline void Write(const std::string& resource, double value) { ThrowIfCancelled(); tu::check(tu::H->write(tu::H->ctx, resource.c_str(), value)); }
         inline void Log(const std::string& message) { tu::H->log(tu::H->ctx, message.c_str()); }
         inline void Sleep(int milliseconds)
@@ -117,17 +117,17 @@ internal static class CppSource
         }
         inline double AskNumber(const std::string& text, double min = NAN, double max = NAN, const std::string& unit = "")
         {
-            double v = 0;
-            tu::check(tu::H->ask_number(tu::H->ctx, text.c_str(), !std::isnan(min), min, !std::isnan(max), max, unit.c_str(), &v));
-            return v;
+            double value = 0;
+            tu::check(tu::H->ask_number(tu::H->ctx, text.c_str(), !std::isnan(min), min, !std::isnan(max), max, unit.c_str(), &value));
+            return value;
         }
         inline void Confirm(const std::string& text) { tu::check(tu::H->confirm(tu::H->ctx, text.c_str())); }
-        inline double Var(const std::string& path) { double v = 0; tu::check(tu::H->var_get(tu::H->ctx, path.c_str(), &v)); return v; }
+        inline double Var(const std::string& path) { double value = 0; tu::check(tu::H->var_get(tu::H->ctx, path.c_str(), &value)); return value; }
         inline std::string VarText(const std::string& path)
         {
-            const char* s = tu::H->var_get_string(tu::H->ctx, path.c_str());
-            if (!s) throw tu::HostError(tu::H->last_error(tu::H->ctx));
-            return s;
+            const char* text = tu::H->var_get_string(tu::H->ctx, path.c_str());
+            if (!text) throw tu::HostError(tu::H->last_error(tu::H->ctx));
+            return text;
         }
         inline void SetVar(const std::string& path, double value) { tu::check(tu::H->var_set_double(tu::H->ctx, path.c_str(), value)); }
         inline void SetVar(const std::string& path, const std::string& value) { tu::check(tu::H->var_set_string(tu::H->ctx, path.c_str(), value.c_str())); }
@@ -135,14 +135,14 @@ internal static class CppSource
 
         // ---- Kommunikation mit dem Prüfling (zentrale Vermittlung, Reservierungen gelten). Bytes als Hex-Text "0102FF". ----
         namespace tu {
-            inline std::string json(const std::string& s)
+            inline std::string json(const std::string& text)
             {
                 std::string out = "\"";
-                for (unsigned char c : s)
+                for (unsigned char character : text)
                 {
-                    if (c == '"' || c == '\\') { out += '\\'; out += (char)c; }
-                    else if (c < 0x20) { char buf[8]; std::snprintf(buf, sizeof buf, "\\u%04x", c); out += buf; }
-                    else out += (char)c;
+                    if (character == '"' || character == '\\') { out += '\\'; out += (char)character; }
+                    else if (character < 0x20) { char buf[8]; std::snprintf(buf, sizeof buf, "\\u%04x", character); out += buf; }
+                    else out += (char)character;
                 }
                 return out + "\"";
             }
@@ -150,11 +150,11 @@ internal static class CppSource
             {
                 ThrowIfCancelled();
                 std::string args = "{\"resource\":" + json(resource) + (fields.empty() ? "" : "," + fields) + "}";
-                const char* r = H->device(H->ctx, op.c_str(), args.c_str());
-                if (!r) throw HostError(H->last_error(H->ctx));
-                return r;
+                const char* response = H->device(H->ctx, op.c_str(), args.c_str());
+                if (!response) throw HostError(H->last_error(H->ctx));
+                return response;
             }
-            inline std::string num(double v) { std::ostringstream s; s.imbue(std::locale::classic()); s << v; return s.str(); }
+            inline std::string num(double value) { std::ostringstream numberStream; numberStream.imbue(std::locale::classic()); numberStream << value; return numberStream.str(); }
         }
         inline void CommSend(const std::string& resource, const std::string& text) { tu::device("comm.send", resource, "\"data\":" + tu::json(text)); }
         inline std::string CommReceive(const std::string& resource, int timeoutMs = 1000, const std::string& end = "\r\n")
@@ -163,9 +163,9 @@ internal static class CppSource
         { return tu::device("comm.query", resource, "\"data\":" + tu::json(text) + ",\"timeout\":" + std::to_string(timeoutMs) + ",\"end\":" + tu::json(end)); }
         inline double ModbusRead(const std::string& resource, const std::string& address, const std::string& type = "UInt16")
         {
-            std::string r = tu::device("modbus.read", resource, "\"address\":" + tu::json(address) + ",\"type\":" + tu::json(type));
-            if (r == "true") return 1; if (r == "false") return 0;
-            std::istringstream s(r); s.imbue(std::locale::classic()); double v = 0; s >> v; return v;
+            std::string response = tu::device("modbus.read", resource, "\"address\":" + tu::json(address) + ",\"type\":" + tu::json(type));
+            if (response == "true") return 1; if (response == "false") return 0;
+            std::istringstream responseStream(response); responseStream.imbue(std::locale::classic()); double registerValue = 0; responseStream >> registerValue; return registerValue;
         }
         inline void ModbusWrite(const std::string& resource, const std::string& address, double value, const std::string& type = "UInt16")
         { tu::device("modbus.write", resource, "\"address\":" + tu::json(address) + ",\"value\":" + tu::num(value) + ",\"type\":" + tu::json(type)); }
@@ -202,20 +202,20 @@ internal static class CppSource
                 return out + "}";
             }
         }
-        inline void __tu_dbg_var(const char* n, bool v) { tu::dbgSet(n, v ? "true" : "false"); }
-        inline void __tu_dbg_var(const char* n, long long v) { tu::dbgSet(n, std::to_string(v)); }
-        inline void __tu_dbg_var(const char* n, int v) { tu::dbgSet(n, std::to_string(v)); }
-        inline void __tu_dbg_var(const char* n, unsigned v) { tu::dbgSet(n, std::to_string(v)); }
-        inline void __tu_dbg_var(const char* n, double v) { tu::dbgSet(n, tu::num(v)); }
-        inline void __tu_dbg_var(const char* n, const std::string& v) { tu::dbgSet(n, tu::json(v)); }
-        inline void __tu_dbg_var(const char* n, const char* v) { tu::dbgSet(n, tu::json(std::string(v))); }
+        inline void __tu_dbg_var(const char* name, bool value) { tu::dbgSet(name, value ? "true" : "false"); }
+        inline void __tu_dbg_var(const char* name, long long value) { tu::dbgSet(name, std::to_string(value)); }
+        inline void __tu_dbg_var(const char* name, int value) { tu::dbgSet(name, std::to_string(value)); }
+        inline void __tu_dbg_var(const char* name, unsigned value) { tu::dbgSet(name, std::to_string(value)); }
+        inline void __tu_dbg_var(const char* name, double value) { tu::dbgSet(name, tu::num(value)); }
+        inline void __tu_dbg_var(const char* name, const std::string& value) { tu::dbgSet(name, tu::json(value)); }
+        inline void __tu_dbg_var(const char* name, const char* value) { tu::dbgSet(name, tu::json(std::string(value))); }
         template <class T, class = void> struct __tu_streamable : std::false_type {};
         template <class T> struct __tu_streamable<T, std::void_t<decltype(std::declval<std::ostringstream&>() << std::declval<const T&>())>> : std::true_type {};
-        template <class T> inline void __tu_dbg_var(const char* n, const T& v)
+        template <class T> inline void __tu_dbg_var(const char* name, const T& value)
         {
             if constexpr (__tu_streamable<T>::value) {
-                std::ostringstream s; s.imbue(std::locale::classic()); s << v; tu::dbgSet(n, tu::json(s.str()));
-            } else tu::dbgSet(n, tu::json("<native Inspektion mit GDB>"));
+                std::ostringstream valueStream; valueStream.imbue(std::locale::classic()); valueStream << value; tu::dbgSet(name, tu::json(valueStream.str()));
+            } else tu::dbgSet(name, tu::json("<native Inspektion mit GDB>"));
         }
         #if defined(_WIN32)
         extern "C" __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId(void);
@@ -252,7 +252,7 @@ internal static class CppSource
     ];
 
     public static bool IsIdentifier(string name)
-        => name.Length > 0 && (char.IsAsciiLetter(name[0]) || name[0] == '_') && name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_')
+        => name.Length > 0 && (char.IsAsciiLetter(name[0]) || name[0] == '_') && name.All(name2 => char.IsAsciiLetterOrDigit(name2) || name2 == '_')
            && !Keywords.Contains(name) && !name.StartsWith("__", StringComparison.Ordinal) && !name.StartsWith("tu_", StringComparison.Ordinal);
 
     private static string CppType(string type) => type switch
@@ -269,22 +269,22 @@ internal static class CppSource
     public static string Generate(string userCode, IEnumerable<CppVariable> variables, bool instrument = false)
     {
         if (instrument) userCode = CppInstrument.Instrument(userCode);
-        var vars = variables.Where(v => IsIdentifier(v.Name)).ToList();
+        var vars = variables.Where(cppVariable => IsIdentifier(cppVariable.Name)).ToList();
         var sb = new StringBuilder(Prelude);
         sb.AppendLine("TU_EXPORT int tu_invoke(const tu_host* host)");
         sb.AppendLine("{");
         sb.AppendLine("    tu::H = host;");
         sb.AppendLine("    tu::dbgEnabled = host->dbg_active != 0;");
         sb.AppendLine("    tu::dbgVars.clear();");
-        foreach (var v in vars)
+        foreach (var cppVariable in vars)
         {
-            var name = Literal(v.Name);
-            sb.AppendLine(v.Type switch
+            var name = Literal(cppVariable.Name);
+            sb.AppendLine(cppVariable.Type switch
             {
-                "Bool" => $"    bool {v.Name} = host->get_bool(host->ctx, {name}) != 0;",
-                "Int" => $"    long long {v.Name} = host->get_int(host->ctx, {name});",
-                "Double" => $"    double {v.Name} = host->get_double(host->ctx, {name});",
-                _ => $"    std::string {v.Name} = host->get_string(host->ctx, {name});",
+                "Bool" => $"    bool {cppVariable.Name} = host->get_bool(host->ctx, {name}) != 0;",
+                "Int" => $"    long long {cppVariable.Name} = host->get_int(host->ctx, {name});",
+                "Double" => $"    double {cppVariable.Name} = host->get_double(host->ctx, {name});",
+                _ => $"    std::string {cppVariable.Name} = host->get_string(host->ctx, {name});",
             });
         }
         sb.AppendLine("    try");
@@ -295,15 +295,15 @@ internal static class CppSource
         sb.AppendLine("#line 1 \"Wrapper\"");
         sb.AppendLine("            return NResult();");
         sb.AppendLine("        }();");
-        foreach (var v in vars)
+        foreach (var cppVariable2 in vars)
         {
-            var name = Literal(v.Name);
-            sb.AppendLine(v.Type switch
+            var name = Literal(cppVariable2.Name);
+            sb.AppendLine(cppVariable2.Type switch
             {
-                "Bool" => $"        host->set_bool(host->ctx, {name}, {v.Name} ? 1 : 0);",
-                "Int" => $"        host->set_int(host->ctx, {name}, {v.Name});",
-                "Double" => $"        host->set_double(host->ctx, {name}, {v.Name});",
-                _ => $"        host->set_string(host->ctx, {name}, {v.Name}.c_str());",
+                "Bool" => $"        host->set_bool(host->ctx, {name}, {cppVariable2.Name} ? 1 : 0);",
+                "Int" => $"        host->set_int(host->ctx, {name}, {cppVariable2.Name});",
+                "Double" => $"        host->set_double(host->ctx, {name}, {cppVariable2.Name});",
+                _ => $"        host->set_string(host->ctx, {name}, {cppVariable2.Name}.c_str());",
             });
         }
         sb.AppendLine("        host->set_outcome(host->ctx, __o.rating, __o.hasValue ? 1 : 0, __o.value, __o.message.c_str(), __o.unit.c_str(),");
@@ -311,7 +311,7 @@ internal static class CppSource
         sb.AppendLine("        return 0;");
         sb.AppendLine("    }");
         sb.AppendLine("    catch (const tu::Cancelled&) { return 2; }");
-        sb.AppendLine("    catch (const std::exception& e) { std::string m = std::string(\"C++-Ausnahme: \") + e.what(); host->set_outcome(host->ctx, 3, 0, 0, m.c_str(), \"\", 0, 0, 0, 0); return 1; }");
+        sb.AppendLine("    catch (const std::exception& error) { std::string message = std::string(\"C++-Ausnahme: \") + error.what(); host->set_outcome(host->ctx, 3, 0, 0, message.c_str(), \"\", 0, 0, 0, 0); return 1; }");
         sb.AppendLine("    catch (...) { host->set_outcome(host->ctx, 3, 0, 0, \"Unbekannte C++-Ausnahme\", \"\", 0, 0, 0, 0); return 1; }");
         sb.AppendLine("}");
         return sb.ToString();
@@ -336,9 +336,9 @@ internal static class CppInstrument
         var inBlockComment = false;
         var inPreprocessor = false;
         var lastSig = '\0';
-        for (var i = 0; i < lines.Length; i++)
+        for (var index = 0; index < lines.Length; index++)
         {
-            var line = lines[i];
+            var line = lines[index];
             var startInComment = inBlockComment;
             var trimmed = line.TrimStart();
             var indent = line[..(line.Length - trimmed.Length)];
@@ -347,11 +347,11 @@ internal static class CppInstrument
             var emitted = line;
             if (boundary && !isPreproc && !IsContinuation(trimmed) && HasCode(line, startInComment))
             {
-                emitted = indent + "__tu_dbg_line(" + (i + 1) + "); " + trimmed;
+                emitted = indent + "__tu_dbg_line(" + (index + 1) + "); " + trimmed;
                 if (AssignedName(line, startInComment) is { } name) emitted += " __tu_dbg_var(\"" + name + "\", " + name + ");";
             }
             sb.Append(emitted);
-            if (i < lines.Length - 1) sb.Append('\n');
+            if (index < lines.Length - 1) sb.Append('\n');
             if (isPreproc) inPreprocessor = line.TrimEnd().EndsWith('\\');
             else Scan(line, ref inBlockComment, ref lastSig);
         }
@@ -375,17 +375,17 @@ internal static class CppInstrument
     private static bool HasCode(string line, bool inBlockComment)
     {
         var block = inBlockComment;
-        for (var i = 0; i < line.Length; i++)
+        for (var index = 0; index < line.Length; index++)
         {
-            var c = line[i];
+            var character = line[index];
             if (block)
             {
-                if (c == '*' && FollowedBy(line, i, '/')) { block = false; i++; }
+                if (character == '*' && FollowedBy(line, index, '/')) { block = false; index++; }
                 continue;
             }
-            if (c == '/' && FollowedBy(line, i, '/')) return false;
-            if (c == '/' && FollowedBy(line, i, '*')) { block = true; i++; continue; }
-            if (!char.IsWhiteSpace(c)) return true;
+            if (character == '/' && FollowedBy(line, index, '/')) return false;
+            if (character == '/' && FollowedBy(line, index, '*')) { block = true; index++; continue; }
+            if (!char.IsWhiteSpace(character)) return true;
         }
         return false;
     }
@@ -393,38 +393,38 @@ internal static class CppInstrument
     /// <summary>Zustand über die Zeile fortschreiben: Blockkommentar offen? und letztes Code-Zeichen (für die Anweisungsgrenze).</summary>
     private static void Scan(string line, ref bool inBlockComment, ref char lastSig)
     {
-        for (var i = 0; i < line.Length; i++)
+        for (var index = 0; index < line.Length; index++)
         {
-            var c = line[i];
+            var character = line[index];
             if (inBlockComment)
             {
-                if (c == '*' && FollowedBy(line, i, '/')) { inBlockComment = false; i++; }
+                if (character == '*' && FollowedBy(line, index, '/')) { inBlockComment = false; index++; }
                 continue;
             }
-            if (c == '/' && FollowedBy(line, i, '/')) return;
-            if (c == '/' && FollowedBy(line, i, '*')) { inBlockComment = true; i++; continue; }
-            if (c is '"' or '\'')
+            if (character == '/' && FollowedBy(line, index, '/')) return;
+            if (character == '/' && FollowedBy(line, index, '*')) { inBlockComment = true; index++; continue; }
+            if (character is '"' or '\'')
             {
-                var quote = c;
-                SkipQuotedText(line, ref i, quote);
+                var quote = character;
+                SkipQuotedText(line, ref index, quote);
                 lastSig = quote; // Zeichenkette zählt als Code (kein Anweisungsende)
                 continue;
             }
-            if (!char.IsWhiteSpace(c)) lastSig = c;
+            if (!char.IsWhiteSpace(character)) lastSig = character;
         }
     }
 
-    private static bool FollowedBy(ReadOnlySpan<char> text, int i, char next)
-        => i + 1 < text.Length && text[i + 1] == next;
+    private static bool FollowedBy(ReadOnlySpan<char> text, int index, char next)
+        => index + 1 < text.Length && text[index + 1] == next;
 
-    private static void SkipQuotedText(string line, ref int i, char quote)
+    private static void SkipQuotedText(string line, ref int index, char quote)
     {
-        i++;
-        while (i < line.Length)
+        index++;
+        while (index < line.Length)
         {
-            if (line[i] == '\\') { i += 2; continue; }
-            if (line[i] == quote) break;
-            i++;
+            if (line[index] == '\\') { index += 2; continue; }
+            if (line[index] == quote) break;
+            index++;
         }
     }
 
@@ -434,54 +434,54 @@ internal static class CppInstrument
         // Nur Code-Zeichen betrachten (Kommentare/Strings entfernen), Positionen auf die Originalzeile bezogen.
         var code = Decomment(line, inBlockComment);
         var depth = 0;
-        for (var i = 0; i < code.Length; i++)
+        for (var index = 0; index < code.Length; index++)
         {
-            var c = code[i];
-            if (c is '(' or '[') depth++;
-            else if (c is ')' or ']') depth--;
-            else if (c == ';' && depth == 0) return null; // Anweisung endete ohne top-level '='
-            else if (c == '=' && depth == 0)
+            var character = code[index];
+            if (character is '(' or '[') depth++;
+            else if (character is ')' or ']') depth--;
+            else if (character == ';' && depth == 0) return null; // Anweisung endete ohne top-level '='
+            else if (character == '=' && depth == 0)
             {
-                if (!IsSimpleAssignment(code, i)) continue;
-                if (!HasAssignmentTerminator(code, i)) return null;
-                return AssignedIdentifier(code, i);
+                if (!IsSimpleAssignment(code, index)) continue;
+                if (!HasAssignmentTerminator(code, index)) return null;
+                return AssignedIdentifier(code, index);
             }
         }
         return null;
     }
 
-    private static bool IsSimpleAssignment(string code, int i)
+    private static bool IsSimpleAssignment(string code, int index)
     {
-        var previous = i > 0 ? code[i - 1] : '\0';
-        var next = i + 1 < code.Length ? code[i + 1] : '\0';
+        var previous = index > 0 ? code[index - 1] : '\0';
+        var next = index + 1 < code.Length ? code[index + 1] : '\0';
         return next != '=' && "=<>!+-*/%&|^".IndexOf(previous) < 0;
     }
 
-    private static bool HasAssignmentTerminator(string code, int i)
+    private static bool HasAssignmentTerminator(string code, int index)
     {
         // ';' nach dem '=' auf Top-Ebene?
         var hasSemicolon = false;
         var d2 = 0;
-        for (var j = i + 1; j < code.Length; j++)
+        for (var innerIndex = index + 1; innerIndex < code.Length; innerIndex++)
         {
-            if (code[j] is '(' or '[') d2++;
-            else if (code[j] is ')' or ']') d2--;
-            else if (code[j] == ';' && d2 == 0) { hasSemicolon = true; break; }
+            if (code[innerIndex] is '(' or '[') d2++;
+            else if (code[innerIndex] is ')' or ']') d2--;
+            else if (code[innerIndex] == ';' && d2 == 0) { hasSemicolon = true; break; }
         }
         return hasSemicolon;
     }
 
-    private static string? AssignedIdentifier(string code, int i)
+    private static string? AssignedIdentifier(string code, int index)
     {
         // LHS-Bezeichner links von '='
-        var k = i - 1;
-        while (k >= 0 && char.IsWhiteSpace(code[k])) k--;
-        var end = k;
-        while (k >= 0 && (char.IsLetterOrDigit(code[k]) || code[k] == '_')) k--;
-        if (k == end) return null; // kein Bezeichner
-        var before = k >= 0 ? code[k] : '\0';
+        var previousIndex = index - 1;
+        while (previousIndex >= 0 && char.IsWhiteSpace(code[previousIndex])) previousIndex--;
+        var end = previousIndex;
+        while (previousIndex >= 0 && (char.IsLetterOrDigit(code[previousIndex]) || code[previousIndex] == '_')) previousIndex--;
+        if (previousIndex == end) return null; // kein Bezeichner
+        var before = previousIndex >= 0 ? code[previousIndex] : '\0';
         if (before is '.' or '>' or ':') return null; // Member/Qualifizierung → nicht erfassen
-        var name = code[(k + 1)..(end + 1)];
+        var name = code[(previousIndex + 1)..(end + 1)];
         return CppSource.IsIdentifier(name) ? name : null;
     }
 
@@ -490,34 +490,34 @@ internal static class CppInstrument
     {
         var chars = line.ToCharArray();
         var block = inBlockComment;
-        for (var i = 0; i < chars.Length; i++)
+        for (var index = 0; index < chars.Length; index++)
         {
-            var c = chars[i];
+            var character = chars[index];
             if (block)
             {
-                var star = c == '*' && FollowedBy(chars, i, '/');
-                chars[i] = ' ';
-                if (star) { chars[i + 1] = ' '; i++; block = false; }
+                var star = character == '*' && FollowedBy(chars, index, '/');
+                chars[index] = ' ';
+                if (star) { chars[index + 1] = ' '; index++; block = false; }
                 continue;
             }
-            if (c == '/' && FollowedBy(chars, i, '/')) { for (var j = i; j < chars.Length; j++) chars[j] = ' '; break; }
-            if (c == '/' && FollowedBy(chars, i, '*')) { chars[i] = chars[i + 1] = ' '; i++; block = true; continue; }
-            if (c is '"' or '\'')
+            if (character == '/' && FollowedBy(chars, index, '/')) { for (var innerIndex = index; innerIndex < chars.Length; innerIndex++) chars[innerIndex] = ' '; break; }
+            if (character == '/' && FollowedBy(chars, index, '*')) { chars[index] = chars[index + 1] = ' '; index++; block = true; continue; }
+            if (character is '"' or '\'')
             {
-                BlankQuotedText(chars, ref i, c);
+                BlankQuotedText(chars, ref index, character);
             }
         }
         return new string(chars);
     }
-    private static void BlankQuotedText(char[] chars, ref int i, char quote)
+    private static void BlankQuotedText(char[] chars, ref int index, char quote)
     {
-        chars[i] = ' ';
-        i++;
-        while (i < chars.Length)
+        chars[index] = ' ';
+        index++;
+        while (index < chars.Length)
         {
-            if (chars[i] == '\\') { if (i + 1 < chars.Length) chars[i + 1] = ' '; chars[i] = ' '; i += 2; continue; }
-            if (chars[i] == quote) { chars[i] = ' '; break; }
-            chars[i] = ' '; i++;
+            if (chars[index] == '\\') { if (index + 1 < chars.Length) chars[index + 1] = ' '; chars[index] = ' '; index += 2; continue; }
+            if (chars[index] == quote) { chars[index] = ' '; break; }
+            chars[index] = ' '; index++;
         }
     }
 

@@ -103,13 +103,13 @@ public static class AuditChain
     {
         var previous = Genesis;
         long expected = 1;
-        foreach (var e in entries.OrderBy(e => e.Sequence))
+        foreach (var auditEntry in entries.OrderBy(auditEntry2 => auditEntry2.Sequence))
         {
-            if (e.Sequence != expected) return $"Eintrag {expected} fehlt (gefunden: {e.Sequence}).";
-            if (e.PreviousHash != previous) return $"Eintrag {e.Sequence}: Verkettung unterbrochen.";
-            if (ComputeHash(e.Sequence, e.Time, e.User, e.Action, e.Details, e.ReleaseId, e.PreviousHash) != e.Hash)
-                return $"Eintrag {e.Sequence}: Inhalt verändert.";
-            previous = e.Hash;
+            if (auditEntry.Sequence != expected) return $"Eintrag {expected} fehlt (gefunden: {auditEntry.Sequence}).";
+            if (auditEntry.PreviousHash != previous) return $"Eintrag {auditEntry.Sequence}: Verkettung unterbrochen.";
+            if (ComputeHash(auditEntry.Sequence, auditEntry.Time, auditEntry.User, auditEntry.Action, auditEntry.Details, auditEntry.ReleaseId, auditEntry.PreviousHash) != auditEntry.Hash)
+                return $"Eintrag {auditEntry.Sequence}: Inhalt verändert.";
+            previous = auditEntry.Hash;
             expected++;
         }
         return null;

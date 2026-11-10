@@ -27,8 +27,8 @@ public sealed record StatisticsFilter
 
     public bool Matches(ResultRun run)
     {
-        if (From is { } f && run.Started < f) return false;
-        if (To is { } t && run.Started > t) return false;
+        if (From is { } timestamp && run.Started < timestamp) return false;
+        if (To is { } timestamp2 && run.Started > timestamp2) return false;
         if (!string.IsNullOrWhiteSpace(Test) && !string.Equals(run.TestName, Test, StringComparison.OrdinalIgnoreCase)) return false;
         if (!string.IsNullOrWhiteSpace(Version) && run.TestVersion != Version) return false;
         if (!string.IsNullOrWhiteSpace(Station) && run.Station != Station) return false;
@@ -44,8 +44,8 @@ public sealed record StatisticsFilter
     public string Describe()
     {
         var parts = new List<string>();
-        if (From is { } f) parts.Add($"ab {f.LocalDateTime:dd.MM.yyyy HH:mm}");
-        if (To is { } t) parts.Add($"bis {t.LocalDateTime:dd.MM.yyyy HH:mm}");
+        if (From is { } timestamp) parts.Add($"ab {timestamp.LocalDateTime:dd.MM.yyyy HH:mm}");
+        if (To is { } timestamp2) parts.Add($"bis {timestamp2.LocalDateTime:dd.MM.yyyy HH:mm}");
         if (!string.IsNullOrWhiteSpace(Test)) parts.Add($"Test {Test}{(string.IsNullOrWhiteSpace(Version) ? "" : " v" + Version)}");
         if (!string.IsNullOrWhiteSpace(Station)) parts.Add(Station!);
         if (!string.IsNullOrWhiteSpace(DutPattern)) parts.Add($"Kennung {DutPattern}");
@@ -73,10 +73,10 @@ public sealed record MeasurementStatistics(string NodeId, string Name, string Un
         var counts = new int[bins];
         if (Values.Count == 0) return counts;
         var range = Max - Min;
-        foreach (var v in Values)
+        foreach (var value in Values)
         {
-            var i = range <= 0 ? bins / 2 : (int)Math.Min(bins - 1, (v - Min) / range * bins);
-            counts[i]++;
+            var index = range <= 0 ? bins / 2 : (int)Math.Min(bins - 1, (value - Min) / range * bins);
+            counts[index]++;
         }
         return counts;
     }
@@ -137,65 +137,65 @@ public static class ResultAnalysis
         var files = Directory.GetFiles(folder, "*" + ResultFile.Extension);
         var runs = new List<ResultRun>();
         var problems = new List<string>();
-        for (var i = 0; i < files.Length; i++)
+        for (var index = 0; index < files.Length; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                var content = ResultFile.Read(files[i]);
-                var r = content.Run;
-                runs.Add(r.CopyWith(r.FilteredFor, r.Events, [], []));
-                if (content.Problems.Count > 0) problems.Add($"{Path.GetFileName(files[i])}: {string.Join("; ", content.Problems)}");
+                var content = ResultFile.Read(files[index]);
+                var run = content.Run;
+                runs.Add(run.CopyWith(run.FilteredFor, run.Events, [], []));
+                if (content.Problems.Count > 0) problems.Add($"{Path.GetFileName(files[index])}: {string.Join("; ", content.Problems)}");
             }
             catch (ResultFileException ex)
             {
-                problems.Add($"{Path.GetFileName(files[i])}: {ex.Message}");
+                problems.Add($"{Path.GetFileName(files[index])}: {ex.Message}");
             }
-            progress?.Report((i + 1, files.Length));
+            progress?.Report((index + 1, files.Length));
         }
-        return new LoadedResults(runs.OrderBy(r => r.Started).ToList(), problems, files.Length);
+        return new LoadedResults(runs.OrderBy(run2 => run2.Started).ToList(), problems, files.Length);
     }
 
     public static ResultStatistics Compute(IEnumerable<ResultRun> all, StatisticsFilter filter)
     {
-        var runs = all.Where(filter.Matches).OrderBy(r => r.Started).ToList();
-        var withId = runs.Where(r => !string.IsNullOrWhiteSpace(r.DutId)).GroupBy(r => r.DutId, StringComparer.Ordinal).ToList();
-        var durations = runs.Where(r => r.Ended > r.Started).Select(r => (r.Ended - r.Started).TotalSeconds).ToList();
+        var runs = all.Where(filter.Matches).OrderBy(run => run.Started).ToList();
+        var withId = runs.Where(run => !string.IsNullOrWhiteSpace(run.DutId)).GroupBy(run => run.DutId, StringComparer.Ordinal).ToList();
+        var durations = runs.Where(run => run.Ended > run.Started).Select(run => (run.Ended - run.Started).TotalSeconds).ToList();
 
         return new ResultStatistics
         {
             Filter = filter,
             Runs = runs.Count,
-            Pass = runs.Count(r => HasOutcome(r, ResultRating.Pass)),
-            Fail = runs.Count(r => HasOutcome(r, ResultRating.Fail)),
-            Error = runs.Count(r => HasOutcome(r, ResultRating.Error)),
-            NResult = runs.Count(r => HasOutcome(r, ResultRating.NResult)),
-            OperatorAborts = runs.Count(r => r.OperatorAbort),
-            DevelopmentRuns = runs.Count(r => r.IsDevelopmentRun),
+            Pass = runs.Count(run => HasOutcome(run, ResultRating.Pass)),
+            Fail = runs.Count(run => HasOutcome(run, ResultRating.Fail)),
+            Error = runs.Count(run => HasOutcome(run, ResultRating.Error)),
+            NResult = runs.Count(run => HasOutcome(run, ResultRating.NResult)),
+            OperatorAborts = runs.Count(run => run.OperatorAbort),
+            DevelopmentRuns = runs.Count(run => run.IsDevelopmentRun),
             Duts = withId.Count,
-            Retests = withId.Sum(g => g.Count() - 1),
-            FirstPassYield = withId.Count == 0 ? null : (double)withId.Count(g => HasOutcome(g.First(), ResultRating.Pass)) / withId.Count,
-            FinalYield = withId.Count == 0 ? null : (double)withId.Count(g => HasOutcome(g.Last(), ResultRating.Pass)) / withId.Count,
+            Retests = withId.Sum(group => group.Count() - 1),
+            FirstPassYield = withId.Count == 0 ? null : (double)withId.Count(group => HasOutcome(group.First(), ResultRating.Pass)) / withId.Count,
+            FinalYield = withId.Count == 0 ? null : (double)withId.Count(group => HasOutcome(group.Last(), ResultRating.Pass)) / withId.Count,
             MeanDuration = durations.Count == 0 ? null : TimeSpan.FromSeconds(durations.Average()),
             First = runs.FirstOrDefault()?.Started,
             Last = runs.LastOrDefault()?.Started,
             Measurements = MeasurementsOf(runs),
             Failures = FailuresOf(runs),
-            Daily = runs.GroupBy(r => DateOnly.FromDateTime(r.Started.LocalDateTime)).OrderBy(g => g.Key)
-                .Select(g => new DailyCount(g.Key, g.Count(r => HasOutcome(r, ResultRating.Pass)), g.Count(r => HasOutcome(r, ResultRating.Fail)),
-                    g.Count(r => HasOutcome(r, ResultRating.Error)), g.Count(r => HasOutcome(r, ResultRating.NResult)), g.Count(r => r.OperatorAbort))).ToList(),
-            Stations = runs.GroupBy(r => r.Station).OrderBy(g => g.Key, StringComparer.Ordinal)
-                .Select(g => new StationCount(g.Key, g.Count(), g.Count(r => HasOutcome(r, ResultRating.Pass)), (double)g.Count(r => HasOutcome(r, ResultRating.Pass)) / g.Count())).ToList(),
+            Daily = runs.GroupBy(run => DateOnly.FromDateTime(run.Started.LocalDateTime)).OrderBy(group => group.Key)
+                .Select(group => new DailyCount(group.Key, group.Count(run => HasOutcome(run, ResultRating.Pass)), group.Count(run => HasOutcome(run, ResultRating.Fail)),
+                    group.Count(run => HasOutcome(run, ResultRating.Error)), group.Count(run => HasOutcome(run, ResultRating.NResult)), group.Count(run => run.OperatorAbort))).ToList(),
+            Stations = runs.GroupBy(run => run.Station).OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => new StationCount(group.Key, group.Count(), group.Count(run => HasOutcome(run, ResultRating.Pass)), (double)group.Count(run => HasOutcome(run, ResultRating.Pass)) / group.Count())).ToList(),
         };
     }
 
     private static bool HasOutcome(ResultRun run, ResultRating rating) => !run.OperatorAbort && run.Rating == rating;
 
     public static string NameOf(ResultRun run, ResultEvent e)
-        => run.Structure.FirstOrDefault(n => n.Id == e.NodeId)?.Name ?? (e.Path.LastIndexOf(" > ", StringComparison.Ordinal) is var i and >= 0 ? e.Path[(i + 3)..] : e.Path);
+        => run.Structure.FirstOrDefault(resultNode => resultNode.Id == e.NodeId)?.Name ?? (e.Path.LastIndexOf(" > ", StringComparison.Ordinal) is var index and >= 0 ? e.Path[(index + 3)..] : e.Path);
 
-    private static bool IsMeasurement(ResultEvent e)
-        => e.Kind == ResultEventKind.Step && !e.Cancelled && e.Value is double or long && (e.LowLimit is not null || e.HighLimit is not null || !string.IsNullOrEmpty(e.Unit));
+    private static bool IsMeasurement(ResultEvent resultEvent)
+        => resultEvent.Kind == ResultEventKind.Step && !resultEvent.Cancelled && resultEvent.Value is double or long && (resultEvent.LowLimit is not null || resultEvent.HighLimit is not null || !string.IsNullOrEmpty(resultEvent.Unit));
 
     private static IReadOnlyList<MeasurementStatistics> MeasurementsOf(IReadOnlyList<ResultRun> runs)
     {
@@ -203,23 +203,23 @@ public static class ResultAnalysis
         var order = 0;
         foreach (var run in runs)
         {
-            foreach (var e in run.Events.Where(IsMeasurement))
+            foreach (var resultEvent in run.Events.Where(IsMeasurement))
             {
-                var key = e.NodeId ?? e.Path;
-                var value = Convert.ToDouble(e.Value, CultureInfo.InvariantCulture);
-                if (!map.TryGetValue(key, out var m)) m = (NameOf(run, e), e.Unit ?? "", [], null, null, order++);
-                m.Values.Add(value);
-                m = m with { Low = e.LowLimit ?? m.Low, High = e.HighLimit ?? m.High, Unit = string.IsNullOrEmpty(m.Unit) ? e.Unit ?? "" : m.Unit };
-                map[key] = m;
+                var key = resultEvent.NodeId ?? resultEvent.Path;
+                var value = Convert.ToDouble(resultEvent.Value, CultureInfo.InvariantCulture);
+                if (!map.TryGetValue(key, out var namedEntry)) namedEntry = (NameOf(run, resultEvent), resultEvent.Unit ?? "", [], null, null, order++);
+                namedEntry.Values.Add(value);
+                namedEntry = namedEntry with { Low = resultEvent.LowLimit ?? namedEntry.Low, High = resultEvent.HighLimit ?? namedEntry.High, Unit = string.IsNullOrEmpty(namedEntry.Unit) ? resultEvent.Unit ?? "" : namedEntry.Unit };
+                map[key] = namedEntry;
             }
         }
         return map.OrderBy(kv => kv.Value.Order).Select(kv =>
         {
             var (name, unit, values, low, high, _) = kv.Value;
             var mean = values.Average();
-            var sd = values.Count > 1 ? Math.Sqrt(values.Sum(v => (v - mean) * (v - mean)) / (values.Count - 1)) : 0;
+            var sd = values.Count > 1 ? Math.Sqrt(values.Sum(value2 => (value2 - mean) * (value2 - mean)) / (values.Count - 1)) : 0;
             var (cp, cpk) = Capability(values.Count, mean, sd, low, high);
-            var outside = values.Count(v => (low is { } l3 && v < l3) || (high is { } h3 && v > h3));
+            var outside = values.Count(value2 => (low is { } l3 && value2 < l3) || (high is { } h3 && value2 > h3));
             return new MeasurementStatistics(kv.Key, name, unit, values.Count, values.Min(), values.Max(), mean, sd, low, high, outside, cp, cpk, values);
         }).ToList();
     }
@@ -229,7 +229,7 @@ public static class ResultAnalysis
         double? cp = null, cpk = null;
         if (count >= 2 && sd > 0)
         {
-            if (low is { } l && high is { } h) cp = (h - l) / (6 * sd);
+            if (low is { } lowerValue && high is { } upperValue) cp = (upperValue - lowerValue) / (6 * sd);
             var parts = new List<double>();
             if (high is { } h2) parts.Add((h2 - mean) / (3 * sd));
             if (low is { } l2) parts.Add((mean - l2) / (3 * sd));
@@ -243,24 +243,24 @@ public static class ResultAnalysis
         var map = new Dictionary<string, (string Name, int Fail, int Error, HashSet<string> Runs, Dictionary<string, int> Messages)>(StringComparer.Ordinal);
         foreach (var run in runs)
         {
-            foreach (var e in run.Events.Where(e => e.Kind is ResultEventKind.Step or ResultEventKind.Diagnostic && e.Rating is ResultRating.Fail or ResultRating.Error))
+            foreach (var resultEvent in run.Events.Where(resultEvent2 => resultEvent2.Kind is ResultEventKind.Step or ResultEventKind.Diagnostic && resultEvent2.Rating is ResultRating.Fail or ResultRating.Error))
             {
-                var key = e.NodeId ?? "(Ablauf)";
-                if (!map.TryGetValue(key, out var m)) m = (e.NodeId is null ? "Ablauf" : NameOf(run, e), 0, 0, [], []);
-                if (e.Rating == ResultRating.Fail) m.Fail++;
-                else m.Error++;
-                m.Runs.Add(run.RunId);
-                if (!string.IsNullOrWhiteSpace(e.Message))
+                var key = resultEvent.NodeId ?? "(Ablauf)";
+                if (!map.TryGetValue(key, out var namedEntry)) namedEntry = (resultEvent.NodeId is null ? "Ablauf" : NameOf(run, resultEvent), 0, 0, [], []);
+                if (resultEvent.Rating == ResultRating.Fail) namedEntry.Fail++;
+                else namedEntry.Error++;
+                namedEntry.Runs.Add(run.RunId);
+                if (!string.IsNullOrWhiteSpace(resultEvent.Message))
                 {
-                    var msg = e.Message.Length > 120 ? e.Message[..120] : e.Message;
-                    m.Messages[msg] = m.Messages.GetValueOrDefault(msg) + 1;
+                    var msg = resultEvent.Message.Length > 120 ? resultEvent.Message[..120] : resultEvent.Message;
+                    namedEntry.Messages[msg] = namedEntry.Messages.GetValueOrDefault(msg) + 1;
                 }
-                map[key] = m;
+                map[key] = namedEntry;
             }
         }
         return map.Select(kv => new FailureItem(kv.Key, kv.Value.Name, kv.Value.Fail, kv.Value.Error, kv.Value.Runs.Count,
-                kv.Value.Messages.OrderByDescending(x => x.Value).Select(x => x.Key).FirstOrDefault()))
-            .OrderByDescending(f => f.Runs).ThenByDescending(f => f.Total).ToList();
+                kv.Value.Messages.OrderByDescending(entry => entry.Value).Select(entry => entry.Key).FirstOrDefault()))
+            .OrderByDescending(failureItem => failureItem.Runs).ThenByDescending(failureItem => failureItem.Total).ToList();
     }
 
     // ------------------------------------------------------------------ CSV (Excel, deutsch: Semikolon, Dezimalkomma)
@@ -275,21 +275,21 @@ public static class ResultAnalysis
         return sb.ToString();
     }
 
-    private static string Cell(object? v)
+    private static string Cell(object? value)
     {
-        var s = v switch
+        var text = value switch
         {
             null => "",
-            double d => double.IsNaN(d) ? "" : d.ToString("0.######", De),
-            float f => ((double)f).ToString("0.######", De),
-            long or int => Convert.ToString(v, De)!,
-            DateTimeOffset t => t.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss", De),
-            DateTime t => t.ToString("dd.MM.yyyy HH:mm:ss", De),
-            bool b => b ? "ja" : "nein",
-            ResultRating r => r.ToDisplay(),
-            _ => v.ToString() ?? "",
+            double number => double.IsNaN(number) ? "" : number.ToString("0.######", De),
+            float floatingPointValue => ((double)floatingPointValue).ToString("0.######", De),
+            long or int => Convert.ToString(value, De)!,
+            DateTimeOffset timestamp => timestamp.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss", De),
+            DateTime dateTime => dateTime.ToString("dd.MM.yyyy HH:mm:ss", De),
+            bool flag => flag ? "ja" : "nein",
+            ResultRating rating => rating.ToDisplay(),
+            _ => value.ToString() ?? "",
         };
-        return s.IndexOfAny([';', '"', '\n', '\r']) >= 0 ? "\"" + s.Replace("\"", "\"\"") + "\"" : s;
+        return text.IndexOfAny([';', '"', '\n', '\r']) >= 0 ? "\"" + text.Replace("\"", "\"\"") + "\"" : text;
     }
 
     /// <summary>Messwertstatistik, Fehlerhäufigkeit und Tagesübersicht in einer CSV-Datei (Abschnitte durch Leerzeilen getrennt).</summary>
@@ -303,13 +303,13 @@ public static class ResultAnalysis
             Array.Empty<object?>(),
             new object?[] { "Messwert", "Einheit", "Anzahl", "Min", "Max", "Mittelwert", "Standardabweichung", "Untergrenze", "Obergrenze", "außerhalb", "Cp", "Cpk", "Bewertung" },
         };
-        rows.AddRange(s.Measurements.Select(m => new object?[] { m.Name, m.Unit, m.Count, m.Min, m.Max, m.Mean, m.StdDev, m.Low, m.High, m.OutOfLimits, m.Cp, m.Cpk, m.Capability }));
+        rows.AddRange(s.Measurements.Select(measurementStatistics => new object?[] { measurementStatistics.Name, measurementStatistics.Unit, measurementStatistics.Count, measurementStatistics.Min, measurementStatistics.Max, measurementStatistics.Mean, measurementStatistics.StdDev, measurementStatistics.Low, measurementStatistics.High, measurementStatistics.OutOfLimits, measurementStatistics.Cp, measurementStatistics.Cpk, measurementStatistics.Capability }));
         rows.Add(Array.Empty<object?>());
         rows.Add(["Schritt", "FAIL", "ERROR", "betroffene Prüfläufe", "häufigste Meldung"]);
-        rows.AddRange(s.Failures.Select(f => new object?[] { f.Name, f.Fail, f.Error, f.Runs, f.TypicalMessage }));
+        rows.AddRange(s.Failures.Select(failureItem => new object?[] { failureItem.Name, failureItem.Fail, failureItem.Error, failureItem.Runs, failureItem.TypicalMessage }));
         rows.Add(Array.Empty<object?>());
         rows.Add(["Tag", "PASS", "FAIL", "ERROR", "NRESULT", "ABORT"]);
-        rows.AddRange(s.Daily.Select(d => new object?[] { d.Day.ToString("dd.MM.yyyy", De), d.Pass, d.Fail, d.Error, d.Other, d.Abort }));
+        rows.AddRange(s.Daily.Select(dailyCount => new object?[] { dailyCount.Day.ToString("dd.MM.yyyy", De), dailyCount.Pass, dailyCount.Fail, dailyCount.Error, dailyCount.Other, dailyCount.Abort }));
         return Csv(rows);
     }
 
@@ -322,10 +322,10 @@ public static class ResultAnalysis
             Array.Empty<object?>(),
             new object?[] { "Nr", "Zeit", "Art", "Schritt", "Pfad", "Iteration", "Wert", "Einheit", "Untergrenze", "Obergrenze", "Bewertung", "Meldung" },
         };
-        rows.AddRange(run.Events.Select(e => new object?[]
+        rows.AddRange(run.Events.Select(resultEvent => new object?[]
         {
-            e.Sequence, e.Time, KindText(e.Kind), e.NodeId is null ? "" : NameOf(run, e), e.Path, e.Iteration, e.Value, e.Unit, e.LowLimit, e.HighLimit,
-            e.Rating?.ToDisplay(), e.Message,
+            resultEvent.Sequence, resultEvent.Time, KindText(resultEvent.Kind), resultEvent.NodeId is null ? "" : NameOf(run, resultEvent), resultEvent.Path, resultEvent.Iteration, resultEvent.Value, resultEvent.Unit, resultEvent.LowLimit, resultEvent.HighLimit,
+            resultEvent.Rating?.ToDisplay(), resultEvent.Message,
         }));
         return Csv(rows);
     }

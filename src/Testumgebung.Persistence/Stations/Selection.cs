@@ -30,20 +30,20 @@ public sealed class SelectionRule
 
     public bool Matches(string id)
     {
-        var p = Pattern.Trim();
-        if (p.Length == 0) return false;
-        if (p.StartsWith("re:", StringComparison.OrdinalIgnoreCase))
+        var path = Pattern.Trim();
+        if (path.Length == 0) return false;
+        if (path.StartsWith("re:", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
-                return Regex.IsMatch(id, p[3..], RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+                return Regex.IsMatch(id, path[3..], RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
             }
             catch (ArgumentException)
             {
                 return false;
             }
         }
-        var regex = "^" + string.Concat(p.Select(ch => ch switch
+        var regex = "^" + string.Concat(path.Select(ch => ch switch
         {
             '*' => ".*",
             '?' => ".",
@@ -110,16 +110,16 @@ public static class TestSelector
 {
     public static IReadOnlyDictionary<string, string> ParseParameters(string? text)
         => (text ?? "").Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Split('=', 2, StringSplitOptions.TrimEntries)).Where(x => x.Length == 2 && x[0].Length > 0)
-            .GroupBy(x => x[0]).ToDictionary(g => g.Key, g => g.Last()[1], StringComparer.Ordinal);
+            .Select(entry => entry.Split('=', 2, StringSplitOptions.TrimEntries)).Where(parts => parts.Length == 2 && parts[0].Length > 0)
+            .GroupBy(parts => parts[0]).ToDictionary(group => group.Key, group => group.Last()[1], StringComparer.Ordinal);
 
     /// <summary>Test + Version unter den verfügbaren auflösen (leer/„aktuell“ = aktuelle Freigabe).</summary>
     public static AvailableTest? Resolve(IReadOnlyList<AvailableTest> tests, string test, string? version)
     {
-        var candidates = tests.Where(t => string.Equals(t.Name, test.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+        var candidates = tests.Where(program => string.Equals(program.Name, test.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
         if (string.IsNullOrWhiteSpace(version) || version.Trim().StartsWith("aktuell", StringComparison.OrdinalIgnoreCase))
-            return candidates.FirstOrDefault(t => t.IsCurrent);
-        return candidates.FirstOrDefault(t => t.Version == version.Trim());
+            return candidates.FirstOrDefault(program => program.IsCurrent);
+        return candidates.FirstOrDefault(program => program.Version == version.Trim());
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public static class TestSelector
     /// </summary>
     public static SelectionOutcome Select(SelectionConfig config, string id, string? order, IReadOnlyList<AvailableTest> tests, TestSelectionValue? custom = null, string? customError = null)
     {
-        var manual = config.UseManual ? tests.Where(t => t.IsCurrent).ToList() : [];
+        var manual = config.UseManual ? tests.Where(program => program.IsCurrent).ToList() : [];
         SelectionOutcome Fail(SelectionState state, string reason, IReadOnlyList<AvailableTest>? candidates = null)
             => new(state, null, order, new Dictionary<string, string>(), "", $"{config.NoMatchMessage}: {reason}",
                 candidates ?? manual, config.UseManual);
@@ -153,15 +153,15 @@ public static class TestSelector
 
         SelectionOutcome? SelectByRules()
         {
-            var hits = config.Rules.Where(r => r.Matches(id)).OrderBy(r => r.Priority).ToList();
+            var hits = config.Rules.Where(selectionRule => selectionRule.Matches(id)).OrderBy(selectionRule => selectionRule.Priority).ToList();
             if (hits.Count > 0)
             {
-                var best = hits.Where(r => r.Priority == hits[0].Priority).ToList();
-                var targets = best.Select(r => (Rule: r, Test: Resolve(tests, r.Test, r.Version))).ToList();
-                var distinct = targets.Select(t => t.Test?.Title ?? $"{t.Rule.Test} {t.Rule.Version}").Distinct().ToList();
+                var best = hits.Where(selectionRule => selectionRule.Priority == hits[0].Priority).ToList();
+                var targets = best.Select(selectionRule => (Rule: selectionRule, Test: Resolve(tests, selectionRule.Test, selectionRule.Version))).ToList();
+                var distinct = targets.Select(entry => entry.Test?.Title ?? $"{entry.Rule.Test} {entry.Rule.Version}").Distinct().ToList();
                 if (distinct.Count > 1)
                     return Fail(SelectionState.Ambiguous, $"Die Kennung passt zu mehreren Tests ({string.Join(", ", distinct)}).",
-                        targets.Select(t => t.Test).OfType<AvailableTest>().Distinct().ToList() is { Count: > 0 } c && config.UseManual ? c : manual);
+                        targets.Select(entry => entry.Test).OfType<AvailableTest>().Distinct().ToList() is { Count: > 0 } availableTestItems && config.UseManual ? availableTestItems : manual);
                 var (rule, test) = targets[0];
                 if (test is null)
                     return Fail(SelectionState.None, $"Regel {rule.Pattern} → „{rule.Test}“{(string.IsNullOrWhiteSpace(rule.Version) ? "" : " v" + rule.Version)} ist nicht freigegeben.");
@@ -211,12 +211,12 @@ public static class TestSelector
         }, runId: $"{baseOptions.StationName.Replace(' ', '-')}-Auswahl-{DateTime.Now:HHmmss}");
         TestSelectionValue? value = null;
         string? error = null;
-        run.EventRaised += e =>
+        run.EventRaised += engineEvent =>
         {
-            if (e is StepCompleted { Value: TestSelectionValue v } sc)
+            if (engineEvent is StepCompleted { Value: TestSelectionValue testSelectionValue } sc)
             {
                 if (sc.Rating == ResultRating.Error) error = sc.Message ?? "Baustein „Test auswählen“ meldet ERROR.";
-                else value = v;
+                else value = testSelectionValue;
             }
         };
         using var reg = cancellationToken.Register(run.RequestAbort);

@@ -14,7 +14,7 @@ public partial class DebugView : UserControl
     public DebugView() => InitializeComponent();
 
     /// <summary>Wert beim Verlassen des Feldes übernehmen (Typprüfung im ViewModel).</summary>
-    private void OnValueLostFocus(object sender, RoutedEventArgs e)
+    private void OnValueLostFocus(object sender, RoutedEventArgs eventArgs)
     {
         if ((sender as FrameworkElement)?.DataContext is DebugVariableRowViewModel row) row.Commit();
     }

@@ -13,7 +13,7 @@ public sealed record ContractCheckStep(string Name, bool Passed, string Detail);
 
 public sealed record ContractCheckResult(IReadOnlyList<ContractCheckStep> Steps)
 {
-    public bool Passed => Steps.Count > 0 && Steps.All(s => s.Passed);
+    public bool Passed => Steps.Count > 0 && Steps.All(contractCheckStep => contractCheckStep.Passed);
 }
 
 /// <summary>
@@ -54,16 +54,16 @@ public static class DatabaseContractCheck
             {
                 sw.Restart();
                 await db.StoreAsync(run, cancellationToken).ConfigureAwait(false);
-                var c = await db.CountAsync(id, cancellationToken).ConfigureAwait(false);
-                Expect(c == Expected, $"Zeilen {c} ≠ erwartet {Expected}");
-                return $"{c.Steps} Schritte, {c.Measurements} Messwerte, {c.WaveformChunks} Kurvenblöcke in {sw.ElapsedMilliseconds} ms";
+                var storedRunCounts = await db.CountAsync(id, cancellationToken).ConfigureAwait(false);
+                Expect(storedRunCounts == Expected, $"Zeilen {storedRunCounts} ≠ erwartet {Expected}");
+                return $"{storedRunCounts.Steps} Schritte, {storedRunCounts.Measurements} Messwerte, {storedRunCounts.WaveformChunks} Kurvenblöcke in {sw.ElapsedMilliseconds} ms";
             }).ConfigureAwait(false);
 
             await Step("Idempotente Wiederholung", async () =>
             {
                 await db.StoreAsync(run, cancellationToken).ConfigureAwait(false);
-                var c = await db.CountAsync(id, cancellationToken).ConfigureAwait(false);
-                Expect(c == Expected, $"Nach Wiederholung {c} – Duplikate!");
+                var storedRunCounts = await db.CountAsync(id, cancellationToken).ConfigureAwait(false);
+                Expect(storedRunCounts == Expected, $"Nach Wiederholung {storedRunCounts} – Duplikate!");
                 return "Zweites Speichern erzeugt keine Duplikate.";
             }).ConfigureAwait(false);
 
@@ -83,8 +83,8 @@ public static class DatabaseContractCheck
                     db.AfterCommit = previous;
                 }
                 await db.StoreAsync(lost, cancellationToken).ConfigureAwait(false); // Wiederholung aus der Outbox
-                var c = await db.CountAsync(lostId, cancellationToken).ConfigureAwait(false);
-                Expect(c.Runs == 1 && c == Expected, $"Nach Wiederholung {c}");
+                var storedRunCounts = await db.CountAsync(lostId, cancellationToken).ConfigureAwait(false);
+                Expect(storedRunCounts.Runs == 1 && storedRunCounts == Expected, $"Nach Wiederholung {storedRunCounts}");
                 return "Commit erfolgt, Antwort verloren, Wiederholung ohne Duplikat.";
             }).ConfigureAwait(false);
 
@@ -118,7 +118,7 @@ public static class DatabaseContractCheck
     public static ResultRun SampleRun(string runId)
     {
         var t0 = new DateTimeOffset(2026, 10, 2, 10, 0, 0, TimeSpan.FromHours(2));
-        var samples = Enumerable.Range(0, SqlRunDatabase.SamplesPerChunk + 1000).Select(i => Math.Sin(i * 0.01) * 325.27 + 1e-9 * i).ToArray();
+        var samples = Enumerable.Range(0, SqlRunDatabase.SamplesPerChunk + 1000).Select(index => Math.Sin(index * 0.01) * 325.27 + 1e-9 * index).ToArray();
         var wave = new Waveform("Spannung_L1", "V", 10000, t0, samples, Quality: "Vertragstest", SyncGroup: "s1");
         return new ResultRun
         {

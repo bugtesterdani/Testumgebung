@@ -92,9 +92,9 @@ public sealed class OpcUaNotifier(OpcUaNotifyOptions options) : QueuedNotifier(o
                     Value = new DataValue(Variant.From(fields[name])),
                 });
             var response = await session.WriteAsync(null, [.. writes], cancellationToken).ConfigureAwait(false);
-            var bad = (response.Results.ToArray() ?? []).Select((r, i) => (Code: r, Field: OpcUaNotifyOptions.FieldNames[i])).Where(x => StatusCode.IsBad(x.Code)).ToList();
+            var bad = (response.Results.ToArray() ?? []).Select((statusCode, index) => (Code: statusCode, Field: OpcUaNotifyOptions.FieldNames[index])).Where(entry => StatusCode.IsBad(entry.Code)).ToList();
             if (bad.Count > 0)
-                throw new InvalidOperationException("Schreiben abgelehnt: " + string.Join(", ", bad.Select(b => $"{options.NodeFor(b.Field)} {b.Code.SymbolicId}")));
+                throw new InvalidOperationException("Schreiben abgelehnt: " + string.Join(", ", bad.Select(entry => $"{options.NodeFor(entry.Field)} {entry.Code.SymbolicId}")));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

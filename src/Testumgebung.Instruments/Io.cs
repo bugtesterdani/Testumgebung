@@ -103,10 +103,10 @@ public sealed class TcpSocketIo : IInstrumentIo
         var stream = await StreamAsync(timeout, cancellationToken).ConfigureAwait(false);
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(timeout);
-        int n;
+        int count;
         try
         {
-            n = await stream.ReadAsync(_buffer, cts.Token).ConfigureAwait(false);
+            count = await stream.ReadAsync(_buffer, cts.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -123,12 +123,12 @@ public sealed class TcpSocketIo : IInstrumentIo
             Drop();
             throw new InstrumentException("Verbindung unterbrochen: " + ex.Message, ex);
         }
-        if (n == 0)
+        if (count == 0)
         {
             Drop();
             throw new InstrumentException($"{Resource}: Verbindung vom Gerät geschlossen.");
         }
-        return new IoChunk(_buffer[..n], false);
+        return new IoChunk(_buffer[..count], false);
     }
 
     /// <summary>Socket-Verbindungen kennen kein Device Clear: Verbindung neu aufbauen verwirft alte Antworten.</summary>
@@ -312,8 +312,8 @@ internal static class Visa
     private static readonly Lazy<IntPtr> Library = new(() =>
     {
         string[] names = Environment.Is64BitProcess ? ["visa64", "visa64.dll", "nivisa64", "ktvisa64"] : ["visa32", "visa32.dll"];
-        foreach (var n in names)
-            if (NativeLibrary.TryLoad(n, typeof(Visa).Assembly, null, out var h)) return h;
+        foreach (var name in names)
+            if (NativeLibrary.TryLoad(name, typeof(Visa).Assembly, null, out var handle)) return handle;
         return IntPtr.Zero;
     });
 
@@ -391,7 +391,7 @@ internal static class Visa
             try
             {
                 result.Add(Encoding.ASCII.GetString(desc).TrimEnd('\0'));
-                for (var i = 1; i < count; i++)
+                for (var index = 1; index < count; index++)
                 {
                     Array.Clear(desc);
                     if (api.FindNext(list, desc) < 0) break;
@@ -413,14 +413,14 @@ public static class InstrumentIo
 {
     public static IInstrumentIo Open(string resource)
     {
-        var r = resource.Trim();
-        var parts = r.Split("::", StringSplitOptions.TrimEntries);
+        var resource2 = resource.Trim();
+        var parts = resource2.Split("::", StringSplitOptions.TrimEntries);
         if (parts.Length == 4 && parts[0].StartsWith("TCPIP", StringComparison.OrdinalIgnoreCase)
                               && parts[3].Equals("SOCKET", StringComparison.OrdinalIgnoreCase) && int.TryParse(parts[2], out var port))
-            return new TcpSocketIo(r, parts[1], port);
-        if (!r.Contains("::", StringComparison.Ordinal) && r.LastIndexOf(':') is var colon and > 0
-            && int.TryParse(r[(colon + 1)..], out var p2))
-            return new TcpSocketIo(r, r[..colon], p2);
-        return new VisaIo(r);
+            return new TcpSocketIo(resource2, parts[1], port);
+        if (!resource2.Contains("::", StringComparison.Ordinal) && resource2.LastIndexOf(':') is var colon and > 0
+            && int.TryParse(resource2[(colon + 1)..], out var p2))
+            return new TcpSocketIo(resource2, resource2[..colon], p2);
+        return new VisaIo(resource2);
     }
 }

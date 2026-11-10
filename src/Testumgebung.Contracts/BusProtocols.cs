@@ -37,35 +37,35 @@ public sealed record IsoTpSettings(uint TxId, uint RxId, bool Extended = false, 
 
     /// <summary>„0x7E0/0x7E8“ zur Anzeige.</summary>
     public override string ToString()
-        => $"0x{TxId:X}{(TxAddress is { } t ? $"[{t:X2}]" : "")}→0x{RxId:X}{(RxAddress is { } r ? $"[{r:X2}]" : "")}";
+        => $"0x{TxId:X}{(TxAddress is { } dataByte ? $"[{dataByte:X2}]" : "")}→0x{RxId:X}{(RxAddress is { } dataByte2 ? $"[{dataByte2:X2}]" : "")}";
 }
 
 /// <summary>ISO-TP: Segmentierung (Einzel-, Erst-, Folgerahmen) mit Flusssteuerung über eine CAN-Schnittstelle.</summary>
 public static class IsoTp
 {
-    private static CanFilter Rx(IsoTpSettings s) => new(s.RxId, 0x1FFFFFFF, s.Extended);
+    private static CanFilter Rx(IsoTpSettings isoTpSettings) => new(isoTpSettings.RxId, 0x1FFFFFFF, isoTpSettings.Extended);
 
-    private static byte[] Pad(IsoTpSettings s, List<byte> data)
+    private static byte[] Pad(IsoTpSettings isoTpSettings, List<byte> data)
     {
-        if (s.TxAddress is { } address) data.Insert(0, address);
-        var target = s.Fd ? CanFrame.FdLengths.First(l => l >= Math.Max(8, data.Count)) : 8;
-        while (data.Count < target) data.Add(s.Padding);
+        if (isoTpSettings.TxAddress is { } address) data.Insert(0, address);
+        var target = isoTpSettings.Fd ? CanFrame.FdLengths.First(fdLength => fdLength >= Math.Max(8, data.Count)) : 8;
+        while (data.Count < target) data.Add(isoTpSettings.Padding);
         return [.. data];
     }
 
-    private static Task SendFrame(ICanAdapter can, string channel, IsoTpSettings s, List<byte> data, CancellationToken token)
-        => can.SendAsync(channel, new CanFrame(s.TxId, Pad(s, data), s.Extended, s.Fd, s.Fd), token);
+    private static Task SendFrame(ICanAdapter can, string channel, IsoTpSettings isoTpSettings, List<byte> data, CancellationToken token)
+        => can.SendAsync(channel, new CanFrame(isoTpSettings.TxId, Pad(isoTpSettings, data), isoTpSettings.Extended, isoTpSettings.Fd, isoTpSettings.Fd), token);
 
     /// <summary>Nächster Rahmen auf der Antwort-ID mit passendem Adressbyte; liefert die Daten ohne Adressbyte.</summary>
-    private static async Task<byte[]> ReceiveFrameAsync(ICanAdapter can, string channel, IsoTpSettings s, TimeSpan timeout, CancellationToken token)
+    private static async Task<byte[]> ReceiveFrameAsync(ICanAdapter can, string channel, IsoTpSettings isoTpSettings, TimeSpan timeout, CancellationToken token)
     {
         var deadline = DateTime.UtcNow + timeout;
         for (var skipped = 0; ; skipped++)
         {
             var remaining = deadline - DateTime.UtcNow;
-            if (remaining <= TimeSpan.Zero || skipped > 1000) throw new CommunicationTimeoutException($"ISO-TP {s}: kein Rahmen.", []);
-            var frame = await can.ReceiveAsync(channel, Rx(s), remaining, token).ConfigureAwait(false);
-            if (s.RxAddress is not { } address) return frame.Data;
+            if (remaining <= TimeSpan.Zero || skipped > 1000) throw new CommunicationTimeoutException($"ISO-TP {isoTpSettings}: kein Rahmen.", []);
+            var frame = await can.ReceiveAsync(channel, Rx(isoTpSettings), remaining, token).ConfigureAwait(false);
+            if (isoTpSettings.RxAddress is not { } address) return frame.Data;
             if (frame.Data.Length > 0 && frame.Data[0] == address) return frame.Data[1..];
         }
     }
@@ -120,29 +120,29 @@ public static class IsoTp
             _ => Task.Delay(127, token),
         };
 
-    private static async Task<(int BlockSize, byte Separation)> WaitFlowControlAsync(ICanAdapter can, string channel, IsoTpSettings s, CancellationToken token)
+    private static async Task<(int BlockSize, byte Separation)> WaitFlowControlAsync(ICanAdapter can, string channel, IsoTpSettings isoTpSettings, CancellationToken token)
     {
         for (var waits = 0; waits < 10; waits++)
         {
             byte[] fc;
             try
             {
-                fc = await ReceiveFrameAsync(can, channel, s, s.FrameTimeout, token).ConfigureAwait(false);
+                fc = await ReceiveFrameAsync(can, channel, isoTpSettings, isoTpSettings.FrameTimeout, token).ConfigureAwait(false);
             }
             catch (CommunicationTimeoutException)
             {
-                throw new CommunicationTimeoutException($"ISO-TP {s}: keine Flusssteuerung der Gegenstelle (N_Bs {s.FrameTimeout.TotalMilliseconds:0} ms).", []);
+                throw new CommunicationTimeoutException($"ISO-TP {isoTpSettings}: keine Flusssteuerung der Gegenstelle (N_Bs {isoTpSettings.FrameTimeout.TotalMilliseconds:0} ms).", []);
             }
             if (fc.Length < 3 || fc[0] >> 4 != 3) continue; // anderer Rahmen auf der Antwort-ID
             switch (fc[0] & 0x0F)
             {
                 case 0: return (fc[1], fc[2]);
                 case 1: continue; // WAIT
-                case 2: throw new CommunicationException($"ISO-TP {s}: Gegenstelle meldet Überlauf (Nachricht zu lang).");
-                default: throw new CommunicationException($"ISO-TP {s}: ungültige Flusssteuerung {Convert.ToHexString(fc)}.");
+                case 2: throw new CommunicationException($"ISO-TP {isoTpSettings}: Gegenstelle meldet Überlauf (Nachricht zu lang).");
+                default: throw new CommunicationException($"ISO-TP {isoTpSettings}: ungültige Flusssteuerung {Convert.ToHexString(fc)}.");
             }
         }
-        throw new CommunicationException($"ISO-TP {s}: Gegenstelle hält die Übertragung an (zu viele WAIT).");
+        throw new CommunicationException($"ISO-TP {isoTpSettings}: Gegenstelle hält die Übertragung an (zu viele WAIT).");
     }
 
     /// <summary>Nächste vollständige Nachricht empfangen; sendet die Flusssteuerung (Blockgröße und Pause laut Einstellungen, 0 = alle ohne Pause).</summary>
@@ -153,61 +153,61 @@ public static class IsoTp
         {
             var remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero) remaining = TimeSpan.FromMilliseconds(1);
-            byte[] d;
+            byte[] bytes;
             try
             {
-                d = await ReceiveFrameAsync(can, channel, s, remaining, token).ConfigureAwait(false);
+                bytes = await ReceiveFrameAsync(can, channel, s, remaining, token).ConfigureAwait(false);
             }
             catch (CommunicationTimeoutException ex)
             {
                 throw new CommunicationTimeoutException($"ISO-TP {s}: keine Antwort innerhalb von {timeout.TotalMilliseconds:0} ms.", ex.Partial);
             }
-            if (d.Length == 0) continue;
-            switch (d[0] >> 4)
+            if (bytes.Length == 0) continue;
+            switch (bytes[0] >> 4)
             {
                 case 0:
                     {
-                        var length = d[0] & 0x0F;
+                        var length = bytes[0] & 0x0F;
                         var start = 1;
-                        if (length == 0 && d.Length > 8) { length = d[1]; start = 2; }
-                        if (length == 0 || start + length > d.Length) throw new CommunicationException($"ISO-TP {s}: ungültiger Einzelrahmen {Convert.ToHexString(d)}.");
-                        return d.AsSpan(start, length).ToArray();
+                        if (length == 0 && bytes.Length > 8) { length = bytes[1]; start = 2; }
+                        if (length == 0 || start + length > bytes.Length) throw new CommunicationException($"ISO-TP {s}: ungültiger Einzelrahmen {Convert.ToHexString(bytes)}.");
+                        return bytes.AsSpan(start, length).ToArray();
                     }
                 case 1:
-                    return await ReceiveSegmentedAsync(can, channel, s, d, token).ConfigureAwait(false);
+                    return await ReceiveSegmentedAsync(can, channel, s, bytes, token).ConfigureAwait(false);
                 default:
                     continue; // Folgerahmen/Flusssteuerung ohne Anfang: verwerfen
             }
         }
     }
 
-    private static async Task<byte[]> ReceiveSegmentedAsync(ICanAdapter can, string channel, IsoTpSettings s, byte[] d, CancellationToken token)
+    private static async Task<byte[]> ReceiveSegmentedAsync(ICanAdapter can, string channel, IsoTpSettings isoTpSettings, byte[] firstFrame, CancellationToken token)
     {
-        var length = (d[0] & 0x0F) << 8 | d[1];
+        var length = (firstFrame[0] & 0x0F) << 8 | firstFrame[1];
         var start = 2;
-        if (length == 0) { length = d[2] << 24 | d[3] << 16 | d[4] << 8 | d[5]; start = 6; }
-        if (length < 8) throw new CommunicationException($"ISO-TP {s}: Erstrahmen mit Länge {length}.");
+        if (length == 0) { length = firstFrame[2] << 24 | firstFrame[3] << 16 | firstFrame[4] << 8 | firstFrame[5]; start = 6; }
+        if (length < 8) throw new CommunicationException($"ISO-TP {isoTpSettings}: Erstrahmen mit Länge {length}.");
         var result = new List<byte>(length);
-        result.AddRange(d.Skip(start).Take(length));
-        await SendFrame(can, channel, s, [0x30, s.BlockSize, s.SeparationTime], token).ConfigureAwait(false);
+        result.AddRange(firstFrame.Skip(start).Take(length));
+        await SendFrame(can, channel, isoTpSettings, [0x30, isoTpSettings.BlockSize, isoTpSettings.SeparationTime], token).ConfigureAwait(false);
         var expected = 1;
         while (result.Count < length)
         {
             byte[] cf;
             try
             {
-                cf = await ReceiveFrameAsync(can, channel, s, s.FrameTimeout, token).ConfigureAwait(false);
+                cf = await ReceiveFrameAsync(can, channel, isoTpSettings, isoTpSettings.FrameTimeout, token).ConfigureAwait(false);
             }
             catch (CommunicationTimeoutException)
             {
-                throw new CommunicationTimeoutException($"ISO-TP {s}: Folgerahmen {expected} fehlt ({result.Count}/{length} Bytes).", [.. result]);
+                throw new CommunicationTimeoutException($"ISO-TP {isoTpSettings}: Folgerahmen {expected} fehlt ({result.Count}/{length} Bytes).", [.. result]);
             }
             if (cf.Length == 0 || cf[0] >> 4 != 2) continue;
             if ((cf[0] & 0x0F) != (expected & 0x0F))
-                throw new CommunicationException($"ISO-TP {s}: Folgerahmen {cf[0] & 0x0F} statt {expected & 0x0F} (Reihenfolge).");
+                throw new CommunicationException($"ISO-TP {isoTpSettings}: Folgerahmen {cf[0] & 0x0F} statt {expected & 0x0F} (Reihenfolge).");
             result.AddRange(cf.Skip(1).Take(length - result.Count));
-            if (s.BlockSize > 0 && expected % s.BlockSize == 0 && result.Count < length)
-                await SendFrame(can, channel, s, [0x30, s.BlockSize, s.SeparationTime], token).ConfigureAwait(false);
+            if (isoTpSettings.BlockSize > 0 && expected % isoTpSettings.BlockSize == 0 && result.Count < length)
+                await SendFrame(can, channel, isoTpSettings, [0x30, isoTpSettings.BlockSize, isoTpSettings.SeparationTime], token).ConfigureAwait(false);
             expected++;
         }
         return [.. result];
@@ -277,7 +277,7 @@ public static class Uds
         var seedResponse = await RequestAsync(transport, [0x27, level], p2, p2Star, token).ConfigureAwait(false);
         if (seedResponse.Length < 2) throw new CommunicationException("Sicherheitszugang: leere Seed-Antwort.");
         var seed = seedResponse[2..];
-        if (seed.Length == 0 || seed.All(b => b == 0)) return []; // bereits freigeschaltet
+        if (seed.Length == 0 || seed.All(seed2 => seed2 == 0)) return []; // bereits freigeschaltet
         var computed = key(seed);
         await RequestAsync(transport, [0x27, (byte)(level + 1), .. computed], p2, p2Star, token).ConfigureAwait(false);
         return computed;
@@ -384,21 +384,21 @@ public static class SecurityKey
         switch (method)
         {
             case Method.Invert:
-                return seed.Select(b => (byte)~b).ToArray();
+                return seed.Select(seed2 => (byte)~seed2).ToArray();
             case Method.Xor:
                 if (parameter.Length == 0) throw new CommunicationException("Sicherheitszugang XOR: Konstante fehlt.");
-                return seed.Select((b, i) => (byte)(b ^ parameter[i % parameter.Length])).ToArray();
+                return seed.Select((dataByte, index) => (byte)(dataByte ^ parameter[index % parameter.Length])).ToArray();
             case Method.Add:
                 if (parameter.Length == 0) throw new CommunicationException("Sicherheitszugang Addition: Konstante fehlt.");
-                return seed.Select((b, i) => (byte)(b + parameter[i % parameter.Length])).ToArray();
+                return seed.Select((dataByte, index) => (byte)(dataByte + parameter[index % parameter.Length])).ToArray();
             default:
                 var key = new byte[seed.Length];
                 var add = parameter.Length > 0 ? parameter[0] : (byte)0;
-                for (var i = 0; i < seed.Length; i++)
+                for (var index = 0; index < seed.Length; index++)
                 {
-                    var v = (byte)(seed[i] + add);
-                    v = (byte)((v << 1 | v >> 7) & 0xFF);
-                    key[i] = (byte)(v ^ (parameter.Length > 1 ? parameter[1] : 0x5A));
+                    var dataByte = (byte)(seed[index] + add);
+                    dataByte = (byte)((dataByte << 1 | dataByte >> 7) & 0xFF);
+                    key[index] = (byte)(dataByte ^ (parameter.Length > 1 ? parameter[1] : 0x5A));
                 }
                 return key;
         }
@@ -411,7 +411,7 @@ public static class SecurityKey
 public sealed record J1939Message(uint Pgn, byte Source, byte? Destination, int Priority, byte[] Data, string Transport)
 {
     public override string ToString()
-        => $"PGN 0x{Pgn:X4} ({Pgn}) von 0x{Source:X2}{(Destination is { } d ? $" an 0x{d:X2}" : "")}{(Transport.Length > 0 ? $" [{Transport}]" : "")}: {string.Join(" ", Data.Select(b => b.ToString("X2", CultureInfo.InvariantCulture)))}";
+        => $"PGN 0x{Pgn:X4} ({Pgn}) von 0x{Source:X2}{(Destination is { } dataByte ? $" an 0x{dataByte:X2}" : "")}{(Transport.Length > 0 ? $" [{Transport}]" : "")}: {string.Join(" ", Data.Select(dataByte2 => dataByte2.ToString("X2", CultureInfo.InvariantCulture)))}";
 }
 
 /// <summary>J1939: 29-Bit-ID aus Priorität, PGN, Ziel- und Quelladresse; Anforderung (PGN 59904); Transportprotokoll.</summary>
@@ -442,8 +442,8 @@ public static class J1939
     public static uint Id(uint pgn, byte source, byte destination = Global, int priority = 6)
     {
         if (pgn > 0x3FFFF) throw new ArgumentException($"PGN 0x{pgn:X} größer als 18 Bit.");
-        var p = IsPdu1(pgn) ? pgn & 0x3FF00 | destination : pgn;
-        return (uint)(priority & 7) << 26 | p << 8 | source;
+        var position = IsPdu1(pgn) ? pgn & 0x3FF00 | destination : pgn;
+        return (uint)(priority & 7) << 26 | position << 8 | source;
     }
 
     /// <summary>Empfangsfilter für eine PGN (Priorität und bei PDU1 die Zieladresse egal), optional nur von einer Quelle.</summary>
@@ -475,15 +475,15 @@ public static class J1939
         if (data.Length > 1785) throw new CommunicationException("J1939-Transportprotokoll: höchstens 1785 Bytes.");
         var packets = (data.Length + 6) / 7;
         var size = new[] { (byte)data.Length, (byte)(data.Length >> 8) };
-        byte[] Packet(int n) => [(byte)n, .. Enumerable.Range(0, 7).Select(i => (n - 1) * 7 + i < data.Length ? data[(n - 1) * 7 + i] : (byte)0xFF)];
+        byte[] Packet(int count2) => [(byte)count2, .. Enumerable.Range(0, 7).Select(index => (count2 - 1) * 7 + index < data.Length ? data[(count2 - 1) * 7 + index] : (byte)0xFF)];
 
         if (destination == Global)
         {
             await can.SendAsync(channel, new CanFrame(Id(TpCmPgn, source, Global, 7), [CmBam, .. size, (byte)packets, 0xFF, .. Pgn3(pgn)], true), token).ConfigureAwait(false);
-            for (var n = 1; n <= packets; n++)
+            for (var index = 1; index <= packets; index++)
             {
                 await Task.Delay(bamGap ?? TimeSpan.FromMilliseconds(50), token).ConfigureAwait(false);
-                await can.SendAsync(channel, new CanFrame(Id(TpDtPgn, source, Global, 7), Packet(n), true), token).ConfigureAwait(false);
+                await can.SendAsync(channel, new CanFrame(Id(TpDtPgn, source, Global, 7), Packet(index), true), token).ConfigureAwait(false);
             }
             return;
         }
@@ -508,8 +508,8 @@ public static class J1939
                 case CmCts:
                     var count = cm.Data[1];
                     var next = cm.Data[2];
-                    for (var n = next; n < next + count && n <= packets; n++)
-                        await can.SendAsync(channel, new CanFrame(Id(TpDtPgn, source, destination, 7), Packet(n), true), token).ConfigureAwait(false);
+                    for (var index2 = next; index2 < next + count && index2 <= packets; index2++)
+                        await can.SendAsync(channel, new CanFrame(Id(TpDtPgn, source, destination, 7), Packet(index2), true), token).ConfigureAwait(false);
                     break;
                 case CmEndOfMsgAck:
                     return;
@@ -539,7 +539,7 @@ public static class J1939
             }
             catch (CommunicationTimeoutException ex)
             {
-                throw new CommunicationTimeoutException($"J1939: PGN 0x{pgn:X4}{(source is { } s ? $" von 0x{s:X2}" : "")} nicht innerhalb von {timeout.TotalMilliseconds:0} ms.", ex.Partial);
+                throw new CommunicationTimeoutException($"J1939: PGN 0x{pgn:X4}{(source is { } dataByte ? $" von 0x{dataByte:X2}" : "")} nicht innerhalb von {timeout.TotalMilliseconds:0} ms.", ex.Partial);
             }
             var framePgn = PgnOf(frame.Id);
             if (framePgn == pgn)
@@ -567,10 +567,10 @@ public static class J1939
 
     private static async Task<byte[]> CollectAsync(ICanAdapter can, string channel, byte sender, byte? destination, int size, int packets, CancellationToken token)
     {
-        var filter = destination is { } d ? new CanFilter(Id(TpDtPgn, sender, d, 0), 0x03FFFFFF, true) : Filter(TpDtPgn, sender);
+        var filter = destination is { } dataByte ? new CanFilter(Id(TpDtPgn, sender, dataByte, 0), 0x03FFFFFF, true) : Filter(TpDtPgn, sender);
         var buffer = new byte[packets * 7];
         var received = new bool[packets];
-        for (var k = 0; k < packets; k++)
+        for (var previousIndex = 0; previousIndex < packets; previousIndex++)
         {
             CanFrame dt;
             try
@@ -579,13 +579,13 @@ public static class J1939
             }
             catch (CommunicationTimeoutException)
             {
-                throw new CommunicationTimeoutException($"J1939-Transportprotokoll: Paket {k + 1} von {packets} fehlt (T1).", buffer.Take(k * 7).ToArray());
+                throw new CommunicationTimeoutException($"J1939-Transportprotokoll: Paket {previousIndex + 1} von {packets} fehlt (T1).", buffer.Take(previousIndex * 7).ToArray());
             }
             if (dt.Data.Length < 8 || dt.Data[0] is 0 || dt.Data[0] > packets) throw new CommunicationException($"J1939-Transportprotokoll: ungültiges Datenpaket {dt.DataHex}.");
             dt.Data.AsSpan(1, 7).CopyTo(buffer.AsSpan((dt.Data[0] - 1) * 7));
             received[dt.Data[0] - 1] = true;
         }
-        if (received.Any(r => !r)) throw new CommunicationException("J1939-Transportprotokoll: Pakete doppelt bzw. fehlend.");
+        if (received.Any(received2 => !received2)) throw new CommunicationException("J1939-Transportprotokoll: Pakete doppelt bzw. fehlend.");
         return buffer.AsSpan(0, Math.Min(size, buffer.Length)).ToArray();
     }
 
@@ -596,9 +596,9 @@ public static class J1939
 
     public static ulong NameOf(ReadOnlySpan<byte> data)
     {
-        ulong v = 0;
-        for (var i = Math.Min(8, data.Length) - 1; i >= 0; i--) v = v << 8 | data[i];
-        return v;
+        ulong number = 0;
+        for (var index = Math.Min(8, data.Length) - 1; index >= 0; index--) number = number << 8 | data[index];
+        return number;
     }
 
     /// <summary>
@@ -644,14 +644,14 @@ public static class J1939
         await RequestAsync(can, channel, AddressClaimPgn, source, Global, token).ConfigureAwait(false);
         var result = new List<(byte, ulong)>();
         var deadline = DateTime.UtcNow + collect;
-        for (var n = 0; n < 512; n++)
+        for (var index = 0; index < 512; index++)
         {
             var remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero) break;
             try
             {
-                var f = await can.ReceiveAsync(channel, Filter(AddressClaimPgn, null), remaining, token).ConfigureAwait(false);
-                var entry = (SourceOf(f.Id), NameOf(f.Data));
+                var canFrame = await can.ReceiveAsync(channel, Filter(AddressClaimPgn, null), remaining, token).ConfigureAwait(false);
+                var entry = (SourceOf(canFrame.Id), NameOf(canFrame.Data));
                 if (!result.Contains(entry)) result.Add(entry);
             }
             catch (CommunicationTimeoutException)
@@ -659,18 +659,18 @@ public static class J1939
                 break;
             }
         }
-        return [.. result.OrderBy(r => r.Item1)];
+        return [.. result.OrderBy(entry2 => entry2.Item1)];
     }
 
     /// <summary>„0xFEF1“, „65265“ oder „FEF1h“ → PGN.</summary>
     public static uint ParsePgn(string text)
     {
-        var t = text.Trim();
-        var ok = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? uint.TryParse(t[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var v)
-            : t.EndsWith('h') ? uint.TryParse(t[..^1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out v)
-            : uint.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out v);
-        if (!ok || v > 0x3FFFF) throw new FormatException($"PGN „{text}“ ungültig (z. B. 0xFEF1 oder 65265).");
-        return v;
+        var text2 = text.Trim();
+        var ok = text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? uint.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)
+            : text2.EndsWith('h') ? uint.TryParse(text2[..^1], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out number)
+            : uint.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out number);
+        if (!ok || number > 0x3FFFF) throw new FormatException($"PGN „{text}“ ungültig (z. B. 0xFEF1 oder 65265).");
+        return number;
     }
 }
 
@@ -682,7 +682,7 @@ public static class Lin
     public static byte ProtectedId(byte id)
     {
         if (id > 0x3F) throw new ArgumentException($"LIN-ID {id} größer als 63.");
-        int Bit(int n) => id >> n & 1;
+        int Bit(int count) => id >> count & 1;
         var p0 = Bit(0) ^ Bit(1) ^ Bit(2) ^ Bit(4);
         var p1 = 1 ^ (Bit(1) ^ Bit(3) ^ Bit(4) ^ Bit(5));
         return (byte)(id | p0 << 6 | p1 << 7);
@@ -694,9 +694,9 @@ public static class Lin
     public static byte Checksum(byte id, ReadOnlySpan<byte> data, LinChecksum checksum)
     {
         var sum = Effective(id, checksum) == LinChecksum.Enhanced ? ProtectedId(id) : 0;
-        foreach (var b in data)
+        foreach (var dataByte in data)
         {
-            sum += b;
+            sum += dataByte;
             if (sum > 0xFF) sum -= 0xFF;
         }
         return (byte)~sum;
@@ -757,7 +757,7 @@ public sealed class DoIpTransport(IByteStreamAdapter stream, string channel, DoI
         return (type, payload);
     }
 
-    private static byte[] U16(ushort v) => [(byte)(v >> 8), (byte)v];
+    private static byte[] U16(ushort u16) => [(byte)(u16 >> 8), (byte)u16];
 
     public static string DescribeActivation(byte code) => code switch
     {
@@ -824,16 +824,16 @@ public sealed class DoIpTransport(IByteStreamAdapter stream, string channel, DoI
         {
             var remaining = deadline - DateTime.UtcNow;
             if (remaining <= TimeSpan.Zero) throw new CommunicationTimeoutException($"{settings}: keine Antwort innerhalb von {timeout.TotalMilliseconds:0} ms.", []);
-            (ushort Type, byte[] Payload) m;
+            (ushort Type, byte[] Payload) entry;
             try
             {
-                m = await ReadAsync(stream, channel, remaining, cancellationToken).ConfigureAwait(false);
+                entry = await ReadAsync(stream, channel, remaining, cancellationToken).ConfigureAwait(false);
             }
             catch (CommunicationTimeoutException ex)
             {
                 throw new CommunicationTimeoutException($"{settings}: keine Antwort innerhalb von {timeout.TotalMilliseconds:0} ms.", ex.Partial);
             }
-            switch (m.Type)
+            switch (entry.Type)
             {
                 case AliveCheckRequest:
                     await AnswerAliveAsync(cancellationToken).ConfigureAwait(false);
@@ -841,14 +841,14 @@ public sealed class DoIpTransport(IByteStreamAdapter stream, string channel, DoI
                 case DiagnosticAck:
                     continue;
                 case DiagnosticNack:
-                    var code = m.Payload.Length > 4 ? m.Payload[4] : (byte)0;
+                    var code = entry.Payload.Length > 4 ? entry.Payload[4] : (byte)0;
                     throw new CommunicationException($"{settings}: Diagnosenachricht abgelehnt – 0x{code:X2} {DescribeNack(code)}.");
                 case GenericNack:
-                    throw new CommunicationException($"{settings}: allgemeine Ablehnung (Code 0x{(m.Payload.Length > 0 ? m.Payload[0] : 0):X2}).");
-                case DiagnosticMessage when m.Payload.Length > 4:
-                    var source = (ushort)(m.Payload[0] << 8 | m.Payload[1]);
+                    throw new CommunicationException($"{settings}: allgemeine Ablehnung (Code 0x{(entry.Payload.Length > 0 ? entry.Payload[0] : 0):X2}).");
+                case DiagnosticMessage when entry.Payload.Length > 4:
+                    var source = (ushort)(entry.Payload[0] << 8 | entry.Payload[1]);
                     if (source != settings.EcuAddress) continue; // anderes Steuergerät
-                    return m.Payload[4..];
+                    return entry.Payload[4..];
                 default:
                     continue;
             }
@@ -889,11 +889,11 @@ public static class DoIpDiscovery
         if (frame.Length < 8 || (byte)~frame[0] != frame[1]) return null;
         var type = (ushort)(frame[2] << 8 | frame[3]);
         if (type != VehicleAnnouncement) return null;
-        var p = frame.AsSpan(8);
-        if (p.Length < 32) return null;
-        var vin = System.Text.Encoding.ASCII.GetString(p[..17]).TrimEnd('\0', ' ');
-        var address = (ushort)(p[17] << 8 | p[18]);
-        return new DoIpVehicle(vin, address, p.Slice(19, 6).ToArray(), p.Slice(25, 6).ToArray(), p[31]);
+        var parameter = frame.AsSpan(8);
+        if (parameter.Length < 32) return null;
+        var vin = System.Text.Encoding.ASCII.GetString(parameter[..17]).TrimEnd('\0', ' ');
+        var address = (ushort)(parameter[17] << 8 | parameter[18]);
+        return new DoIpVehicle(vin, address, parameter.Slice(19, 6).ToArray(), parameter.Slice(25, 6).ToArray(), parameter[31]);
     }
 
     /// <summary>Anfrage senden und bis zum Zeitlimit alle antwortenden Fahrzeuge sammeln (je logische Adresse einmal).</summary>
@@ -915,7 +915,7 @@ public static class DoIpDiscovery
             {
                 break;
             }
-            if (Parse(datagram) is { } v && found.All(f => f.LogicalAddress != v.LogicalAddress)) found.Add(v);
+            if (Parse(datagram) is { } doIpVehicle && found.All(doIpVehicle2 => doIpVehicle2.LogicalAddress != doIpVehicle.LogicalAddress)) found.Add(doIpVehicle);
         }
         return found;
     }
@@ -933,7 +933,7 @@ public sealed class UdpDatagramChannel : IDatagramChannel, IDisposable
         _client.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
         var broadcast = host is "255.255.255.255" or "" || host.EndsWith(".255", StringComparison.Ordinal);
         var address = broadcast && !IPAddress.TryParse(host, out _) ? IPAddress.Broadcast
-            : IPAddress.TryParse(host, out var ip) ? ip : Dns.GetHostAddresses(host).First(a => a.AddressFamily == AddressFamily.InterNetwork);
+            : IPAddress.TryParse(host, out var ip) ? ip : Dns.GetHostAddresses(host).First(ipAddress => ipAddress.AddressFamily == AddressFamily.InterNetwork);
         _target = new IPEndPoint(address, port);
     }
 

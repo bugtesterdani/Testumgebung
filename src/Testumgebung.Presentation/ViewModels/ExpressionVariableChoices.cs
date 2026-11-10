@@ -30,7 +30,7 @@ public static class ExpressionVariableChoices
 
     private static void AddGroupVariables(GroupDefinition group, string prefix, List<ExpressionVariable> result, HashSet<string> names, bool writable)
     {
-        foreach (var variable in group.Variables.Where(v => !writable || !v.Name.StartsWith("_BlockZweig_", StringComparison.Ordinal)))
+        foreach (var variable in group.Variables.Where(variable => !writable || !variable.Name.StartsWith("_BlockZweig_", StringComparison.Ordinal)))
             Add(result, names, prefix, variable.Name, variable.Type, group.Name);
         if (!writable) Add(result, names, prefix, Scope.GroupResultVariable, VarType.String, group.Name);
         if (group.Resources.Count > 0) Add(result, names, prefix, TestRun.ResourcesAcquiredVariable, VarType.Bool, group.Name);

@@ -36,7 +36,7 @@ public static class LockOrderAnalysis
     /// <summary>Alle Erweiterungskanten eines Ablaufs (inklusive Exit-Gruppen und grafischer Bausteine).</summary>
     public static IReadOnlyList<LockEdge> Edges(TestDefinition definition, Func<string, string>? keyOf = null, string station = "Ablauf")
     {
-        keyOf ??= n => n;
+        keyOf ??= name => name;
         var edges = new List<LockEdge>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
         Visit(definition.Root, new Dictionary<string, string>(StringComparer.Ordinal), definition.Root.Name, []);
@@ -63,16 +63,16 @@ public static class LockOrderAnalysis
         {
             if (group.Disabled) return;
             var added = AddResourceEdges(group, held, path);
-            foreach (var child in group.Children.Where(c => !c.Disabled))
+            foreach (var child in group.Children.Where(node => !node.Disabled))
             {
                 switch (child)
                 {
-                    case GroupDefinition g:
-                        Visit(g, added, path + " › " + g.Name, blockStack);
+                    case GroupDefinition group2:
+                        Visit(group2, added, path + " › " + group2.Name, blockStack);
                         break;
-                    case StepDefinition s when s.BlockType == Blocks.BlockCatalog.GroupBlock
-                                               && s.Parameters.GetValueOrDefault("Baustein") is { } id
-                                               && definition.GroupLibrary.FirstOrDefault(b => b.Id == id) is { } block
+                    case StepDefinition step when step.BlockType == Blocks.BlockCatalog.GroupBlock
+                                               && step.Parameters.GetValueOrDefault("Baustein") is { } id
+                                               && definition.GroupLibrary.FirstOrDefault(groupBlock => groupBlock.Id == id) is { } block
                                                && blockStack.Add(id):
                         Visit(block.Body, added, path + " › " + block.Name, blockStack);
                         blockStack.Remove(id);
@@ -86,11 +86,11 @@ public static class LockOrderAnalysis
     /// <summary>Erster Zyklus der Kanten (Reihenfolge im Zyklus) oder null.</summary>
     public static LockCycle? FindCycle(IEnumerable<LockEdge> edges)
     {
-        var graph = edges.GroupBy(e => e.Held, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+        var graph = edges.GroupBy(lockEdge => lockEdge.Held, StringComparer.Ordinal).ToDictionary(group => group.Key, group => group.ToList(), StringComparer.Ordinal);
         var state = new Dictionary<string, int>(StringComparer.Ordinal); // 1 = auf dem Pfad, 2 = fertig
         var stack = new List<LockEdge>();
 
-        foreach (var start in graph.Keys.OrderBy(k => k, StringComparer.Ordinal))
+        foreach (var start in graph.Keys.OrderBy(key => key, StringComparer.Ordinal))
             if (!state.ContainsKey(start) && Dfs(start) is { } cycle) return cycle;
         return null;
 
@@ -99,15 +99,15 @@ public static class LockOrderAnalysis
             state[node] = 1;
             if (graph.TryGetValue(node, out var outgoing))
             {
-                foreach (var e in outgoing)
+                foreach (var lockEdge in outgoing)
                 {
-                    stack.Add(e);
-                    if (state.TryGetValue(e.Acquired, out var st) && st == 1)
+                    stack.Add(lockEdge);
+                    if (state.TryGetValue(lockEdge.Acquired, out var st) && st == 1)
                     {
-                        var from = stack.FindIndex(x => x.Held == e.Acquired);
+                        var from = stack.FindIndex(lockEdge2 => lockEdge2.Held == lockEdge.Acquired);
                         return new LockCycle(stack.Skip(from).ToList());
                     }
-                    if (!state.ContainsKey(e.Acquired) && Dfs(e.Acquired) is { } found) return found;
+                    if (!state.ContainsKey(lockEdge.Acquired) && Dfs(lockEdge.Acquired) is { } found) return found;
                     stack.RemoveAt(stack.Count - 1);
                 }
             }

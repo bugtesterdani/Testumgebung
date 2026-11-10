@@ -21,17 +21,17 @@ public static class LiveLogBlocks
          new("Statusvorlage", "Status bei Zahlentreffer", ParameterKind.Text, "{current} / {total}"),
          new("EndeRegex", "Optionales Ende-Muster", ParameterKind.Text, Hint: "Datei: z. B. ^FERTIG$; Prozess: sonst bis Ende des Streams."),
          new("Zeitlimit", "Gesamtzeitlimit [ms]", ParameterKind.Number, "300000")], Create));
-    private static IStepAction Create(BlockParameters p)
+    private static IStepAction Create(BlockParameters parameters)
     {
-        var timeout = p.Number("Zeitlimit") ?? 300000;
+        var timeout = parameters.Number("Zeitlimit") ?? 300000;
         if (!double.IsFinite(timeout) || timeout < 1 || timeout > int.MaxValue) throw new BlockConfigurationException("Zeitlimit muss zwischen 1 und 2147483647 ms liegen.");
         // Validate rules before any file or process is touched.
-        try { _ = new LiveProgressParser(p.Text("Textregeln"), p.Text("ZahlenRegex"), p.Text("Statusvorlage"), p.Text("EndeRegex")); }
+        try { _ = new LiveProgressParser(parameters.Text("Textregeln"), parameters.Text("ZahlenRegex"), parameters.Text("Statusvorlage"), parameters.Text("EndeRegex")); }
         catch (Exception ex) when (ex is ArgumentException or System.Text.Json.JsonException) { throw new BlockConfigurationException(ex.Message); }
-        var source = p.Choice("Quelle");
-        var address = p.Text(source == "Datei" ? "Datei" : "Prozess");
+        var source = parameters.Choice("Quelle");
+        var address = parameters.Text(source == "Datei" ? "Datei" : "Prozess");
         if (string.IsNullOrWhiteSpace(address)) throw new BlockConfigurationException("Dateipfad bzw. Prozesskennung fehlt.");
-        return new MonitorAction(source, address, p.Bool("AbEnde"), p.Text("Kodierung"), p.Text("Mitschrift"), p.Text("Textregeln"), p.Text("ZahlenRegex"), p.Text("Statusvorlage"), p.Text("EndeRegex"), TimeSpan.FromMilliseconds(timeout));
+        return new MonitorAction(source, address, parameters.Bool("AbEnde"), parameters.Text("Kodierung"), parameters.Text("Mitschrift"), parameters.Text("Textregeln"), parameters.Text("ZahlenRegex"), parameters.Text("Statusvorlage"), parameters.Text("EndeRegex"), TimeSpan.FromMilliseconds(timeout));
     }
     private sealed record MonitorAction(string Source, string Address, bool FromEnd, string Encoding, string Log,
         string Rules, string Numbers, string Status, string End, TimeSpan Timeout) : IStepAction

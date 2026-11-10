@@ -100,10 +100,10 @@ internal sealed partial class Toolchain
     {
         try
         {
-            var r = Run(command, arguments, null, TimeSpan.FromSeconds(20));
-            var line = r.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "";
-            var m = VersionNumber().Match(line);
-            return m.Success ? m.Value : line;
+            var result = Run(command, arguments, null, TimeSpan.FromSeconds(20));
+            var line = result.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "";
+            var match = VersionNumber().Match(line);
+            return match.Success ? match.Value : line;
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or FileNotFoundException)
         {
@@ -123,8 +123,8 @@ internal sealed partial class Toolchain
         if (!File.Exists(vswhere)) return null;
         try
         {
-            var r = Run(vswhere, "-latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath", null, TimeSpan.FromSeconds(20));
-            var path = r.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+            var result = Run(vswhere, "-latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath", null, TimeSpan.FromSeconds(20));
+            var path = result.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
             if (path is null) return null;
             var vcvars = Path.Combine(path, "VC", "Auxiliary", "Build", "vcvars64.bat");
             return File.Exists(vcvars) ? vcvars : null;
@@ -160,10 +160,10 @@ internal sealed partial class Toolchain
         var result = Run(command.File, command.Args, dir, TimeSpan.FromMinutes(3));
         var diagnostics = Parse(result.Output);
         var ok = result.ExitCode == 0 && File.Exists(outputPath);
-        if (!ok && !diagnostics.Any(d => d.Severity == "error"))
+        if (!ok && !diagnostics.Any(compilerDiagnostic => compilerDiagnostic.Severity == "error"))
         {
             var first = result.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .FirstOrDefault(l => l.Contains("error", StringComparison.OrdinalIgnoreCase)) ?? $"Compiler beendet mit Code {result.ExitCode}.";
+                .FirstOrDefault(line => line.Contains("error", StringComparison.OrdinalIgnoreCase)) ?? $"Compiler beendet mit Code {result.ExitCode}.";
             diagnostics = [.. diagnostics, new CompilerDiagnostic(0, 0, "error", first, null)];
         }
         return new BuildOutput(ok, ok ? outputPath : null, diagnostics, result.Output);
@@ -176,21 +176,21 @@ internal sealed partial class Toolchain
         foreach (var raw in output.Split('\n'))
         {
             var line = raw.TrimEnd('\r');
-            var m = GccLine().Match(line);
-            if (m.Success)
+            var match = GccLine().Match(line);
+            if (match.Success)
             {
-                if (!IsUserFile(m.Groups["file"].Value)) continue;
-                list.Add(new CompilerDiagnostic(int.Parse(m.Groups["line"].Value), int.Parse(m.Groups["col"].Value),
-                    m.Groups["sev"].Value.Contains("error") ? "error" : "warning", m.Groups["msg"].Value.Trim(), null));
+                if (!IsUserFile(match.Groups["file"].Value)) continue;
+                list.Add(new CompilerDiagnostic(int.Parse(match.Groups["line"].Value), int.Parse(match.Groups["col"].Value),
+                    match.Groups["sev"].Value.Contains("error") ? "error" : "warning", match.Groups["msg"].Value.Trim(), null));
                 continue;
             }
-            m = MsvcLine().Match(line);
-            if (m.Success)
+            match = MsvcLine().Match(line);
+            if (match.Success)
             {
-                if (!IsUserFile(m.Groups["file"].Value)) continue;
-                list.Add(new CompilerDiagnostic(int.Parse(m.Groups["line"].Value),
-                    m.Groups["col"].Success ? int.Parse(m.Groups["col"].Value) : 0,
-                    m.Groups["sev"].Value.Contains("error") ? "error" : "warning", m.Groups["msg"].Value.Trim(), m.Groups["code"].Value));
+                if (!IsUserFile(match.Groups["file"].Value)) continue;
+                list.Add(new CompilerDiagnostic(int.Parse(match.Groups["line"].Value),
+                    match.Groups["col"].Success ? int.Parse(match.Groups["col"].Value) : 0,
+                    match.Groups["sev"].Value.Contains("error") ? "error" : "warning", match.Groups["msg"].Value.Trim(), match.Groups["code"].Value));
             }
         }
         return list;
@@ -214,8 +214,8 @@ internal sealed partial class Toolchain
         using var process = Process.Start(info) ?? throw new InvalidOperationException($"'{file}' konnte nicht gestartet werden.");
         var sb = new StringBuilder();
         var lockObj = new object();
-        process.OutputDataReceived += (_, e) => { if (e.Data is not null) lock (lockObj) sb.AppendLine(e.Data); };
-        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) lock (lockObj) sb.AppendLine(e.Data); };
+        process.OutputDataReceived += (_, eventArgs) => { if (eventArgs.Data is not null) lock (lockObj) sb.AppendLine(eventArgs.Data); };
+        process.ErrorDataReceived += (_, eventArgs) => { if (eventArgs.Data is not null) lock (lockObj) sb.AppendLine(eventArgs.Data); };
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         if (!process.WaitForExit(timeout))

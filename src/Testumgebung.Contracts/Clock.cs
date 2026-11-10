@@ -84,7 +84,7 @@ public sealed class VirtualClock(DateTimeOffset start, bool autoAdvance) : IPara
         {
             var reg = cancellationToken.Register(() =>
             {
-                lock (_gate) _timers.RemoveAll(t => t.Tcs == tcs);
+                lock (_gate) _timers.RemoveAll(entry => entry.Tcs == tcs);
                 tcs.TrySetCanceled(cancellationToken);
             });
             tcs.Task.ContinueWith(_ => reg.Dispose(), TaskScheduler.Default);
@@ -133,8 +133,8 @@ public sealed class VirtualClock(DateTimeOffset start, bool autoAdvance) : IPara
         lock (_gate)
         {
             _now += duration;
-            due = _timers.Where(t => t.Due <= _now).Select(t => t.Tcs).ToList();
-            _timers.RemoveAll(t => t.Due <= _now);
+            due = _timers.Where(entry => entry.Due <= _now).Select(entry => entry.Tcs).ToList();
+            _timers.RemoveAll(entry => entry.Due <= _now);
         }
         foreach (var tcs in due) tcs.TrySetResult();
     }

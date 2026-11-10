@@ -156,9 +156,9 @@ public sealed class SessionService
     /// <summary>Optionale Inaktivitätssperre: meldet ab (Rechte weg), der Test läuft unverändert weiter.</summary>
     public bool CheckInactivity()
     {
-        if (User is null || Config is not { InactivityMinutes: > 0 } c) return false;
-        if (_clock.Now - _lastActivity < TimeSpan.FromMinutes(c.InactivityMinutes)) return false;
-        _ = SignOutAsync($"Automatische Abmeldung nach {c.InactivityMinutes} min Inaktivität");
+        if (User is null || Config is not { InactivityMinutes: > 0 } accessConfig) return false;
+        if (_clock.Now - _lastActivity < TimeSpan.FromMinutes(accessConfig.InactivityMinutes)) return false;
+        _ = SignOutAsync($"Automatische Abmeldung nach {accessConfig.InactivityMinutes} min Inaktivität");
         return true;
     }
 

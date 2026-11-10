@@ -12,8 +12,8 @@ public sealed partial class EditorViewModel
 {
     private bool _visualBlocks;
     private Testumgebung.Presentation.Mvvm.RelayCommand? _selectBlockCommand;
-    public Testumgebung.Presentation.Mvvm.RelayCommand SelectBlockCommand => _selectBlockCommand ??= new(p =>
-    { if (p is NodeViewModel node && ReferenceEquals(FindNode(node.Id), node)) SelectedNode = node; });
+    public Testumgebung.Presentation.Mvvm.RelayCommand SelectBlockCommand => _selectBlockCommand ??= new(parameter =>
+    { if (parameter is NodeViewModel node && ReferenceEquals(FindNode(node.Id), node)) SelectedNode = node; });
     public bool VisualBlocks { get => _visualBlocks; set { if (SetProperty(ref _visualBlocks, value)) OnPropertyChanged(nameof(Palette)); } }
 
     public static IReadOnlyList<PaletteItem> ControlBlocks { get; } =
@@ -83,7 +83,7 @@ public sealed partial class EditorViewModel
         if (Project.Definition.Find(groupId) is not GroupDefinition group) return "Gruppe nicht gefunden.";
         name = name.Trim();
         if (!ExpressionVariableChoices.IsPath(name)) return "Einen Variablennamen eingeben, z. B. Spannung oder Zaehler.";
-        if (group.Variables.Any(v => v.Name == name)) return "Dieser Name ist in der Gruppe bereits vergeben.";
+        if (group.Variables.Any(variable => variable.Name == name)) return "Dieser Name ist in der Gruppe bereits vergeben.";
         if (name.StartsWith("_BlockZweig_", StringComparison.Ordinal)) return "Diesen Namen verwendet die Wenn/Sonst-Vorlage intern.";
         var row = new VariableRowViewModel(new(name, type, null), () => { }) { Initial = initial };
         var definition = row.ToDefinition();

@@ -42,12 +42,12 @@ public sealed class OpcUaDevice : CommDevice, IOpcUaDevice
         }
     }
 
-    private static object? ParseValue(string t)
-        => t.Equals("true", StringComparison.OrdinalIgnoreCase) ? true
-            : t.Equals("false", StringComparison.OrdinalIgnoreCase) ? false
-            : long.TryParse(t, out var l) ? l
-            : double.TryParse(t, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d) ? d
-            : t.Trim('"');
+    private static object? ParseValue(string text)
+        => text.Equals("true", StringComparison.OrdinalIgnoreCase) ? true
+            : text.Equals("false", StringComparison.OrdinalIgnoreCase) ? false
+            : long.TryParse(text, out var length) ? length
+            : double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var number) ? number
+            : text.Trim('"');
 
     public override async Task<InstrumentProbe> ProbeAsync(CancellationToken cancellationToken)
     {

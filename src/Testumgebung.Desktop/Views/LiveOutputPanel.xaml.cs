@@ -4,5 +4,5 @@ namespace Testumgebung.Desktop.Views;
 public partial class LiveOutputPanel : UserControl
 {
     public LiveOutputPanel() => InitializeComponent();
-    private void OutputChanged(object sender, TextChangedEventArgs e) => ((TextBox)sender).ScrollToEnd();
+    private void OutputChanged(object sender, TextChangedEventArgs eventArgs) => ((TextBox)sender).ScrollToEnd();
 }

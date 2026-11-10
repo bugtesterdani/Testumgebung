@@ -32,9 +32,9 @@ public sealed class CustomDeviceProfile : System.ComponentModel.INotifyPropertyC
     {
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(Id) || string.IsNullOrWhiteSpace(Name)) errors.Add("Geräteprofil: ID und Name erforderlich.");
-        if (Channels is null || Channels.Any(c => c is null)) { errors.Add("Ungültige Kanalliste."); return errors; }
+        if (Channels is null || Channels.Any(customDeviceChannel => customDeviceChannel is null)) { errors.Add("Ungültige Kanalliste."); return errors; }
         if (Channels.Count == 0) errors.Add("Mindestens einen Kanal definieren.");
-        if (Channels.Select(c => c.Name?.Trim() ?? "").Distinct(StringComparer.OrdinalIgnoreCase).Count() != Channels.Count)
+        if (Channels.Select(customDeviceChannel => customDeviceChannel.Name?.Trim() ?? "").Distinct(StringComparer.OrdinalIgnoreCase).Count() != Channels.Count)
             errors.Add("Kanalnamen müssen eindeutig sein.");
         foreach (var channel in Channels) errors.AddRange(channel.Validate());
         if (ProbeQuery is null || SafeCommands is null) errors.Add("Befehlsfelder dürfen nicht null sein.");
@@ -42,10 +42,10 @@ public sealed class CustomDeviceProfile : System.ComponentModel.INotifyPropertyC
         return errors;
     }
 
-    public IReadOnlyList<InstrumentChannel> InstrumentChannels() => Channels.Select(c => new InstrumentChannel(
-        c.Name, c.Unit, c.Min, c.Max,
-        (string.IsNullOrWhiteSpace(c.ReadQuery) ? (ChannelAccess)0 : ChannelAccess.Read) |
-        (string.IsNullOrWhiteSpace(c.WriteCommand) ? (ChannelAccess)0 : ChannelAccess.Write), c.Description)).ToList();
+    public IReadOnlyList<InstrumentChannel> InstrumentChannels() => Channels.Select(customDeviceChannel => new InstrumentChannel(
+        customDeviceChannel.Name, customDeviceChannel.Unit, customDeviceChannel.Min, customDeviceChannel.Max,
+        (string.IsNullOrWhiteSpace(customDeviceChannel.ReadQuery) ? (ChannelAccess)0 : ChannelAccess.Read) |
+        (string.IsNullOrWhiteSpace(customDeviceChannel.WriteCommand) ? (ChannelAccess)0 : ChannelAccess.Write), customDeviceChannel.Description)).ToList();
 }
 
 public sealed class CustomDeviceChannel

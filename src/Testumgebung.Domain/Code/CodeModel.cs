@@ -69,8 +69,8 @@ public sealed record CodeDiagnostic(int Line, int Column, string Severity, strin
 
 public sealed record CompileResult(bool Success, IReadOnlyList<CodeDiagnostic> Diagnostics, string RuntimeInfo)
 {
-    public int Errors => Diagnostics.Count(d => d.IsError);
-    public int Warnings => Diagnostics.Count(d => !d.IsError);
+    public int Errors => Diagnostics.Count(diagnostic => diagnostic.IsError);
+    public int Warnings => Diagnostics.Count(diagnostic => !diagnostic.IsError);
 }
 
 /// <summary>

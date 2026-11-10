@@ -42,7 +42,7 @@ public static class Program
     private static void Track(Task task)
     {
         Pending[task] = 0;
-        task.ContinueWith(t => Pending.TryRemove(t, out _), TaskScheduler.Default);
+        task.ContinueWith(task2 => Pending.TryRemove(task2, out _), TaskScheduler.Default);
     }
 
     public static Task<int> Main(string[] args)
@@ -91,7 +91,7 @@ public static class Program
                     Track(Task.Run(() => Invoke(id, msg, cts.Token)).ContinueWith(_ => Running.TryRemove(id, out var _), TaskScheduler.Default));
                     break;
                 case "cancel":
-                    if (Running.TryGetValue(id, out var c)) c.Cancel();
+                    if (Running.TryGetValue(id, out var cancellation)) cancellation.Cancel();
                     break;
                 case "reply":
                     if (Calls.TryRemove((string?)msg["cid"] ?? "", out var tcs)) tcs.TrySetResult(msg);
@@ -133,14 +133,14 @@ public static class Program
 
     private static List<Variable> ReadVariables(JsonObject msg)
         => (msg["vars"] as JsonArray ?? [])
-            .Select(v => new Variable((string)v!["name"]!, (string)v["type"]!))
+            .Select(node => new Variable((string)node!["name"]!, (string)node["type"]!))
             .ToList();
 
     private static JsonObject CompileMessage(string id, JsonObject msg)
     {
         var block = Compile((string?)msg["source"] ?? "", ReadVariables(msg), ReadAssemblies(msg));
         var diagnostics = new JsonArray();
-        foreach (var d in block.Diagnostics) diagnostics.Add(ToJson(d));
+        foreach (var diagnostic in block.Diagnostics) diagnostics.Add(ToJson(diagnostic));
         return new JsonObject
         {
             ["t"] = "compiled",
@@ -150,17 +150,17 @@ public static class Program
         };
     }
 
-    private static JsonObject ToJson(Diagnostic d)
+    private static JsonObject ToJson(Diagnostic diagnostic)
     {
-        var span = d.Location.GetMappedLineSpan();
+        var span = diagnostic.Location.GetMappedLineSpan();
         var inUserCode = span.Path == "CodeBlock";
         return new JsonObject
         {
             ["line"] = inUserCode ? span.StartLinePosition.Line + 1 : 0,
             ["column"] = inUserCode ? span.StartLinePosition.Character + 1 : 0,
-            ["severity"] = d.Severity == DiagnosticSeverity.Error ? "error" : "warning",
-            ["message"] = d.GetMessage(System.Globalization.CultureInfo.GetCultureInfo("de-DE")),
-            ["code"] = d.Id,
+            ["severity"] = diagnostic.Severity == DiagnosticSeverity.Error ? "error" : "warning",
+            ["message"] = diagnostic.GetMessage(System.Globalization.CultureInfo.GetCultureInfo("de-DE")),
+            ["code"] = diagnostic.Id,
         };
     }
 
@@ -192,26 +192,26 @@ public static class Program
             if (!pe.HasMetadata || !pe.GetMetadataReader().IsAssembly) throw new BadImageFormatException("Keine .NET-DLL: " + item["name"]);
             var metadata = pe.GetMetadataReader();
             var name = metadata.GetString(metadata.GetAssemblyDefinition().Name);
-            if (result.Any(a => a.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException("DLL doppelt: " + name);
+            if (result.Any(assemblyImage => assemblyImage.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException("DLL doppelt: " + name);
             result.Add(new(name, data));
         }
-        return result.OrderBy(a => a.Name, StringComparer.Ordinal).ToList();
+        return result.OrderBy(assemblyImage => assemblyImage.Name, StringComparer.Ordinal).ToList();
     }
 
     private sealed class DependencyContext(string name, IReadOnlyList<AssemblyImage> assemblies) : AssemblyLoadContext(name, isCollectible: true)
     {
         protected override Assembly? Load(AssemblyName assemblyName)
         {
-            var image = assemblies.FirstOrDefault(a => a.Name.Equals(assemblyName.Name, StringComparison.OrdinalIgnoreCase));
+            var image = assemblies.FirstOrDefault(assemblyImage => assemblyImage.Name.Equals(assemblyName.Name, StringComparison.OrdinalIgnoreCase));
             return image is null ? null : LoadFromStream(new MemoryStream(image.Data, writable: false));
         }
     }
 
     private static CompiledBlock Compile(string source, List<Variable> variables, List<AssemblyImage> assemblies, bool instrument = false)
     {
-        var fields = variables.Where(v => IsIdentifier(v.Name) && CSharpTypes.Contains(v.Type)).ToDictionary(v => v.Name);
-        var key = Hash(source + "\u0001" + string.Join(";", fields.Values.Select(v => v.Name + ":" + v.Type)) + "\u0001" + (instrument ? "dbg" : "")
-            + "\u0001" + string.Join(";", assemblies.Select(a => a.Name + ":" + Convert.ToHexString(SHA256.HashData(a.Data)))));
+        var fields = variables.Where(variable => IsIdentifier(variable.Name) && CSharpTypes.Contains(variable.Type)).ToDictionary(variable => variable.Name);
+        var key = Hash(source + "\u0001" + string.Join(";", fields.Values.Select(variable => variable.Name + ":" + variable.Type)) + "\u0001" + (instrument ? "dbg" : "")
+            + "\u0001" + string.Join(";", assemblies.Select(assemblyImage => assemblyImage.Name + ":" + Convert.ToHexString(SHA256.HashData(assemblyImage.Data)))));
         return Cache.GetOrAdd(key, _ =>
         {
             var sb = new StringBuilder();
@@ -222,7 +222,7 @@ public static class Program
             sb.AppendLine("#pragma warning disable CS0162, CS8321");
             sb.AppendLine("public sealed class __UserBlock : BlockBase");
             sb.AppendLine("{");
-            foreach (var f in fields.Values) sb.AppendLine($"    public {ClrType(f.Type)} {f.Name};");
+            foreach (var variable in fields.Values) sb.AppendLine($"    public {ClrType(variable.Type)} {variable.Name};");
             sb.AppendLine("    public override Outcome Run()");
             sb.AppendLine("    {");
             sb.AppendLine("#line 1 \"CodeBlock\"");
@@ -247,7 +247,7 @@ public static class Program
             var compilation = CSharpCompilation.Create(
                 "CodeBlock_" + key[..12],
                 trees,
-                References.Value.Concat(assemblies.Select(a => MetadataReference.CreateFromImage(a.Data))),
+                References.Value.Concat(assemblies.Select(assemblyImage => MetadataReference.CreateFromImage(assemblyImage.Data))),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Disable,
                     optimizationLevel: OptimizationLevel.Debug));
 
@@ -255,8 +255,8 @@ public static class Program
             using var pdb = new MemoryStream();
             var result = compilation.Emit(pe, pdb, options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb));
             var diagnostics = result.Diagnostics
-                .Where(d => d.Severity is DiagnosticSeverity.Error or DiagnosticSeverity.Warning)
-                .OrderBy(d => d.Severity == DiagnosticSeverity.Error ? 0 : 1)
+                .Where(diagnostic => diagnostic.Severity is DiagnosticSeverity.Error or DiagnosticSeverity.Warning)
+                .OrderBy(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error ? 0 : 1)
                 .ToList();
             if (!result.Success) return new CompiledBlock(null, diagnostics, fields);
 
@@ -273,10 +273,10 @@ public static class Program
         var tpa = (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? "")
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
         return tpa
-            .Where(p => Path.GetFileName(p).StartsWith("System", StringComparison.OrdinalIgnoreCase)
-                        || Path.GetFileName(p).Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase)
-                        || Path.GetFileName(p).Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase))
-            .Select(p => (MetadataReference)MetadataReference.CreateFromFile(p))
+            .Where(tpa2 => Path.GetFileName(tpa2).StartsWith("System", StringComparison.OrdinalIgnoreCase)
+                        || Path.GetFileName(tpa2).Equals("netstandard.dll", StringComparison.OrdinalIgnoreCase)
+                        || Path.GetFileName(tpa2).Equals("mscorlib.dll", StringComparison.OrdinalIgnoreCase))
+            .Select(tpa2 => (MetadataReference)MetadataReference.CreateFromFile(tpa2))
             .ToArray();
     }
 
@@ -296,7 +296,7 @@ public static class Program
             var plain = Compile(source, variables, assemblies);
             if (plain.Assembly is null)
             {
-                var first = plain.Diagnostics.FirstOrDefault(d => d.Severity == DiagnosticSeverity.Error);
+                var first = plain.Diagnostics.FirstOrDefault(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
                 SendError(id, "Build fehlgeschlagen: " + (first is null ? "unbekannter Fehler" : FormatDiagnostic(first)), null);
                 return;
             }
@@ -366,7 +366,7 @@ public static class Program
 
     private static void SetupDebugger(Type type, object instance, JsonObject debug)
     {
-        var bps = (debug["breakpoints"] as JsonArray ?? []).Select(n => n!.GetValue<int>()).ToArray();
+        var bps = (debug["breakpoints"] as JsonArray ?? []).Select(node => node!.GetValue<int>()).ToArray();
         var entry = debug["entry"] != null && debug["entry"]!.GetValue<bool>();
         var step = debug["step"] != null && debug["step"]!.GetValue<bool>();
         type.GetMethod("__DbgSetup", BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)!
@@ -375,10 +375,10 @@ public static class Program
             .Invoke(instance, null);
     }
 
-    private static string FormatDiagnostic(Diagnostic d)
+    private static string FormatDiagnostic(Diagnostic diagnostic)
     {
-        var span = d.Location.GetMappedLineSpan();
-        return span.Path == "CodeBlock" ? $"Zeile {span.StartLinePosition.Line + 1}: {d.GetMessage()}" : d.GetMessage();
+        var span = diagnostic.Location.GetMappedLineSpan();
+        return span.Path == "CodeBlock" ? $"Zeile {span.StartLinePosition.Line + 1}: {diagnostic.GetMessage()}" : diagnostic.GetMessage();
     }
 
     /// <summary>Zeilennummer im Nutzercode aus dem Stacktrace (#line-Zuordnung, eingebettetes PDB).</summary>
@@ -409,15 +409,15 @@ public static class Program
     internal static JsonNode? ToJson(object? value) => value switch
     {
         null => null,
-        bool b => JsonValue.Create(b),
-        int i => JsonValue.Create((long)i),
-        long l => JsonValue.Create(l),
-        double d when double.IsFinite(d) => JsonValue.Create(d),
-        double d => JsonValue.Create(d.ToString(System.Globalization.CultureInfo.InvariantCulture)),
-        float f => JsonValue.Create((double)f),
-        string s => JsonValue.Create(s),
+        bool flag => JsonValue.Create(flag),
+        int index => JsonValue.Create((long)index),
+        long integerValue => JsonValue.Create(integerValue),
+        double number when double.IsFinite(number) => JsonValue.Create(number),
+        double number2 => JsonValue.Create(number2.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+        float floatingPointValue => JsonValue.Create((double)floatingPointValue),
+        string text => JsonValue.Create(text),
         DateTime dt => JsonValue.Create(dt.ToString("O", System.Globalization.CultureInfo.InvariantCulture)),
-        Enum e => JsonValue.Create(e.ToString()),
+        Enum enumValue => JsonValue.Create(enumValue.ToString()),
         _ => JsonValue.Create(value.ToString()),
     };
 }
@@ -438,10 +438,10 @@ internal sealed class DebugRewriter : CSharpSyntaxRewriter
         var visited = (BlockSyntax)base.VisitBlock(node)!;
         var statements = new List<StatementSyntax>();
         foreach (var name in LoopNames(node)) statements.Add(Hook($"__DbgVar(\"{name}\", {name});"));
-        for (var i = 0; i < node.Statements.Count; i++)
+        for (var index = 0; index < node.Statements.Count; index++)
         {
-            var original = node.Statements[i];
-            var current = visited.Statements[i];
+            var original = node.Statements[index];
+            var current = visited.Statements[index];
             var span = original.GetLocation().GetMappedLineSpan();
             if (span.IsValid && span.Path == "CodeBlock")
             {
@@ -465,7 +465,7 @@ internal sealed class DebugRewriter : CSharpSyntaxRewriter
         if (block.GetLocation().GetMappedLineSpan().Path != "CodeBlock") return [];
         return block.Parent switch
         {
-            ForStatementSyntax { Declaration: { } declaration } => declaration.Variables.Select(v => v.Identifier.Text),
+            ForStatementSyntax { Declaration: { } declaration } => declaration.Variables.Select(variableDeclaratorSyntax => variableDeclaratorSyntax.Identifier.Text),
             ForEachStatementSyntax each => [each.Identifier.Text],
             _ => [],
         };
@@ -478,8 +478,8 @@ internal sealed class DebugRewriter : CSharpSyntaxRewriter
     {
         if (statement is LocalDeclarationStatementSyntax declaration)
         {
-            foreach (var v in declaration.Declaration.Variables)
-                if (v.Initializer is not null) yield return v.Identifier.Text;
+            foreach (var variableDeclaratorSyntax in declaration.Declaration.Variables)
+                if (variableDeclaratorSyntax.Initializer is not null) yield return variableDeclaratorSyntax.Identifier.Text;
         }
         else if (statement is ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax { Left: IdentifierNameSyntax identifier } })
         {
