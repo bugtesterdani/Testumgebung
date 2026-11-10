@@ -11,6 +11,7 @@ namespace Testumgebung.Presentation.ViewModels;
 
 public sealed class PythonEnvironmentViewModel : ObservableObject
 {
+    private const string ZipFilter = "Python-Umgebung (*.zip)|*.zip";
     private readonly CodeRuntime? _runtime;
     private readonly PythonEnvironments _environments;
     private readonly Func<bool> _anyRunning;
@@ -20,19 +21,31 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
     private string _status = "Eine temporäre Kopie erstellen, Pakete in der Konsole installieren und danach die Umgebung aktivieren.";
 
     public PythonEnvironmentViewModel(CodeRuntime? runtime, Func<bool> anyRunning, PythonEnvironments? environments = null,
-        Action<ProcessStartInfo>? openConsole = null)
+        Action<ProcessStartInfo>? openConsole = null, IFileDialogService? dialogs = null)
     {
         _runtime = runtime;
         _anyRunning = anyRunning;
         _environments = environments ?? new PythonEnvironments(runtime?.Options.WorkerDirectory);
         _openConsole = openConsole ?? (start => Process.Start(start)?.Dispose());
         _createdExecutable = _environments.LoadSelection();
+        ExportCommand = new RelayCommand(() =>
+        {
+            var path = dialogs?.SaveFile("Python-Umgebung exportieren", ZipFilter, "Testumgebung-Python.zip");
+            if (path is not null) _ = ExportAsync(path);
+        }, () => !_busy && dialogs is not null && PythonEnvironments.CanExport(_createdExecutable));
+        ImportCommand = new RelayCommand(() =>
+        {
+            var path = dialogs?.OpenFile("Python-Umgebung importieren", ZipFilter);
+            if (path is not null) _ = ImportAsync(path);
+        }, () => !_busy && dialogs is not null);
         CreateCommand = new RelayCommand(() => _ = CreateAsync(), () => !_busy);
         OpenConsoleCommand = new RelayCommand(OpenConsole, () => !_busy && _createdExecutable is not null);
         UseEnvironmentCommand = new RelayCommand(() => Select(_createdExecutable), () => !_busy && _runtime is not null && _createdExecutable is not null);
         UseBundledCommand = new RelayCommand(() => Select(null), () => !_busy && _runtime is not null);
     }
 
+    public RelayCommand ExportCommand { get; }
+    public RelayCommand ImportCommand { get; }
     public RelayCommand CreateCommand { get; }
     public RelayCommand OpenConsoleCommand { get; }
     public RelayCommand UseEnvironmentCommand { get; }
@@ -56,6 +69,31 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
         { Status = "Python-Umgebung konnte nicht erstellt oder geöffnet werden: " + ex.Message; }
+        finally { _busy = false; Refresh(); }
+    }
+
+    public Task ExportAsync(string path) => RunArchiveActionAsync("exportiert", async () =>
+    {
+        var executable = _createdExecutable ?? throw new InvalidOperationException("Zuerst eine Python-Umgebung erstellen oder importieren.");
+        await Task.Run(() => _environments.Export(executable, path));
+        return "Python-Umgebung exportiert: " + path;
+    });
+
+    public Task ImportAsync(string path) => RunArchiveActionAsync("importiert", async () =>
+    {
+        _createdExecutable = await Task.Run(() => _environments.Import(path));
+        return "Python-Umgebung importiert. Mit „Diese Umgebung verwenden“ aktivieren.";
+    });
+
+    private async Task RunArchiveActionAsync(string action, Func<Task<string>> operation)
+    {
+        if (_busy) return;
+        _busy = true;
+        Refresh();
+        Status = $"Python-Umgebung wird {action} …";
+        try { Status = await operation(); }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or InvalidOperationException)
+        { Status = $"Python-Umgebung konnte nicht {action} werden: {ex.Message}"; }
         finally { _busy = false; Refresh(); }
     }
 
@@ -88,6 +126,8 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
     private void Refresh()
     {
         OnPropertyChanged(nameof(EnvironmentPath));
+        ExportCommand.RaiseCanExecuteChanged();
+        ImportCommand.RaiseCanExecuteChanged();
         CreateCommand.RaiseCanExecuteChanged();
         OpenConsoleCommand.RaiseCanExecuteChanged();
         UseEnvironmentCommand.RaiseCanExecuteChanged();

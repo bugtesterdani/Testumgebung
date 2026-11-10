@@ -84,6 +84,11 @@
                             <Button Style="{StaticResource OutlineButton}" Command="{Binding UseEnvironmentCommand}" Content="Diese Umgebung verwenden" Margin="0,0,0,8" />
                             <Button Style="{StaticResource OutlineButton}" Command="{Binding UseBundledCommand}" Content="Mitgeliefertes Python verwenden" Margin="0,0,0,8" />
                         </WrapPanel>
+                        <WrapPanel>
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding ExportCommand}" Content="Umgebung exportieren" Margin="0,0,8,8" />
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding ImportCommand}" Content="Umgebung importieren" Margin="0,0,0,8" />
+                        </WrapPanel>
+                        <TextBlock Text="ZIP-Dateien enthalten ausführbare Python-Dateien und installierte Pakete. Verwende ZIP-Dateien aus vertrauenswürdigen Quellen." TextWrapping="Wrap" Style="{StaticResource Caption}" Margin="0,0,0,8" />
                         <TextBlock Text="Allgemeine Python-Vorgabe" FontWeight="SemiBold" />
                         <TextBlock Text="Auswahlprogramm und die Variable PythonVenv haben Vorrang." TextWrapping="Wrap" Style="{StaticResource Caption}" />
                         <TextBlock Text="{Binding ActiveInterpreter}" TextWrapping="Wrap" Style="{StaticResource Caption}" Margin="0,0,0,8" />

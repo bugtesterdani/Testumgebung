@@ -58,7 +58,7 @@ public sealed class SystemPageViewModel : ObservableObject
         _anyRunning = anyRunning;
         _ui = ui;
         _afterRestore = afterRestore;
-        Python = new PythonEnvironmentViewModel(pythonRuntime, anyRunning);
+        Python = new PythonEnvironmentViewModel(pythonRuntime, anyRunning, dialogs: dialogs);
         RunCheckCommand = new RelayCommand(() => _ = RunCheckAsync(), () => !_busy);
         BackupCommand = new RelayCommand(() =>
         {

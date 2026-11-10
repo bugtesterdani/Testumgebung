@@ -76,3 +76,14 @@ return Pass();
 Alternativ kann das Auswahlprogramm den Pfad als Prüfparameter `PythonVenv=C:\Pruefumgebungen\Gemeinsam` übergeben. Die Variable muss im Testprogramm vorhanden sein. Sie wird vor jedem Python-Aufruf erneut ausgewertet; eine Änderung wirkt ab dem nächsten Python-Schritt. Eine gültige Umgebung aus `pythonVenv` im Auswahlprogramm hat weiterhin Vorrang. Für Start, Loop und End die Variable im Hauptablauf anlegen; eine nur im Loop angelegte Variable ist außerhalb dieses Ordners nicht sichtbar.
 
 Mehrere Prüfplätze können gleichzeitig unterschiedliche Umgebungen nutzen. Ein Ablauf ändert weder die Vorgabe noch die Umgebung anderer Prüfplätze. Die Anzeige unter System & Sicherung zeigt die allgemeine Vorgabe; den tatsächlich verwendeten Interpreter kann ein Python-Codeblock mit `import sys; return Pass(sys.executable)` ausgeben.
+
+### Python-Umgebung auf einen anderen Prüfplatz übertragen
+
+**Umgebung exportieren** erstellt aus der angezeigten portablen Umgebung ein ZIP mit Python und den installierten
+Paketen. **Umgebung importieren** entpackt das ZIP in einen neuen Ordner im lokalen Windows-Benutzerprofil.
+**Diese Umgebung verwenden** aktiviert die importierte Kopie. Die bisher aktive Umgebung läuft bis dahin weiter.
+
+Der Transfer funktioniert zwischen Windows-x64-Prüfplätzen und benötigt keine erneute pip-Installation.
+Pakete, die Dateien außerhalb des Umgebungsordners, fest eingetragene absolute Pfade oder zusätzliche
+Systemkomponenten benötigen, brauchen diese Voraussetzungen auch am Ziel. Verwende nur ZIP-Dateien aus
+vertrauenswürdigen Quellen.
