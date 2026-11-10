@@ -42,6 +42,12 @@ ersten Wert auffüllen bzw. abschneiden), Abtastrate ändern (linear interpolier
 Kanäle umbenennen. Jeder Schritt steht in der Historie der Kurve. **Keine** Operation geschieht implizit – weder beim
 Import noch bei der Ausgabe.
 
+Ab Version 1.2.5 lassen sich in der Arbeitskopie Kurvenpunkte direkt im Diagramm vertikal ziehen.
+Ein Druck aufs Mausrad oder Strg+Klick setzt oder löst einen Fixpunkt. Die Änderung läuft bis
+zu den nächsten Fixpunkten desselben Kanals aus. Ohne Fixpunkt auf einer Seite bleibt dort der
+direkte Nachbar unverändert. Fixpunkte gehören zur Bearbeitungsansicht. In der gespeicherten
+Version stehen weiterhin die Zeitpunkte und Messwerte im bestehenden Format.
+
 ## Ausgabe
 
 * `IWaveformOutputAdapter`: `LoadAsync`, `TransferAsync`, `StartAsync`, `StopAsync` mit Zustand
