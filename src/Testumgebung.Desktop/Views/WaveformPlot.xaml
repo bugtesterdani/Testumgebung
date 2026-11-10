@@ -73,7 +73,9 @@
                 <Grid>
                     <Viewbox Stretch="Fill" Margin="6">
                         <Grid x:Name="PlotSurface" Width="1000" Height="260" Background="Transparent" Cursor="Cross"
-                              MouseLeftButtonDown="OnMouseDown" MouseMove="OnMouseMove" MouseLeftButtonUp="OnMouseUp" MouseWheel="OnWheel">
+                              MouseLeftButtonDown="OnMouseDown" MouseMove="OnMouseMove" MouseLeftButtonUp="OnMouseUp" MouseWheel="OnWheel"
+                              PreviewMouseDown="OnPreviewMouseDown" LostMouseCapture="OnLostMouseCapture"
+                              Focusable="True" KeyDown="OnPlotKeyDown" ClipToBounds="True">
                             <Line X1="0" X2="1000" Y1="65" Y2="65" Stroke="#EEF1F5" StrokeThickness="1" />
                             <Line X1="0" X2="1000" Y1="130" Y2="130" Stroke="#EEF1F5" StrokeThickness="1" />
                             <Line X1="0" X2="1000" Y1="195" Y2="195" Stroke="#EEF1F5" StrokeThickness="1" />
@@ -91,6 +93,22 @@
                                                   Stroke="{Binding ColorIndex, Converter={StaticResource SeriesBrush}}" StrokeThickness="1.6" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Polyline DataContext="{Binding PointEditor.Preview}" IsHitTestVisible="False"
+                                      Points="{Binding Points, Converter={StaticResource PlotPoints}}"
+                                      Stroke="{Binding ColorIndex, Converter={StaticResource SeriesBrush}}" StrokeThickness="3"
+                                      StrokeDashArray="4 2" />
+                            <ItemsControl ItemsSource="{Binding PointEditor.Markers}" IsHitTestVisible="False">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter">
+                                    <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                    <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                                </Style></ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Polygon Points="6,0 12,6 6,12 0,6" Fill="#FFD84D" Stroke="#242424" StrokeThickness="1.5">
+                                        <Polygon.RenderTransform><TranslateTransform X="-6" Y="-6" /></Polygon.RenderTransform>
+                                    </Polygon>
+                                </DataTemplate></ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <!-- Only received measurements get dots; interpolated grid points remain lines. -->
                             <ItemsControl ItemsSource="{Binding SampleMarkers}" IsHitTestVisible="False">

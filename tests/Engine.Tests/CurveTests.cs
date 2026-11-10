@@ -476,6 +476,78 @@ public sealed class CurveTests : IDisposable
     }
 
     [Fact]
+    public void CurvePointEditIsLocalToTheTimeWeightedPinsAndOneUndoStep()
+    {
+        var editor = new EditorViewModel(SampleProjects.AcPruefung());
+        var curve = new CurveDefinition
+        {
+            Id = "Limit", Name = "Grenzkurve", Version = "0.1",
+            Times = [0, 1, 2, 4, 5, 8, 9, 10],
+            Channels = [new("U", "V", [2, 2, 2, 2, 2, 2, 2, 2]), new("I", "A", [0, 0, 0, 0, 0, 0, 0, 0])],
+        };
+        editor.Project.Definition.Curves.Add(curve);
+        var vm = new CurvesViewModel(editor, null, () => "Tester", () => null, ImmediateDispatcher.Instance);
+        vm.SelectedCurve = vm.Curves.Single(item => item.Curve == curve);
+        Assert.False(vm.PointEditor.CanEdit);
+        vm.NewFromSelectedCommand.Execute(null);
+
+        var points = vm.PointEditor;
+        points.IsEnabled = true;
+        var line = vm.Plot.Series.Single(series => series.Channel == "U").Points;
+        Assert.True(points.TogglePin(line[1].X, line[1].Y));
+        Assert.True(points.TogglePin(line[6].X, line[6].Y));
+        Assert.Equal(2, points.Markers.Count);
+        Assert.False(points.BeginDrag(line[1].X, line[1].Y));
+
+        Assert.True(points.BeginDrag(line[3].X, line[3].Y));
+        points.MoveDrag(line[3].Y - 30);
+        Assert.NotNull(points.Preview);
+        Assert.Same(curve, vm.Working);
+        points.CancelDrag();
+        Assert.Null(points.Preview);
+        Assert.False(vm.UndoCommand.CanExecute(null));
+
+        Assert.True(points.BeginDrag(line[3].X, line[3].Y));
+        points.EndDrag(line[3].Y - 30);
+        var edited = vm.Working!;
+        var samples = edited.Channels[0].Samples;
+        var delta = samples[3] - 2;
+        Assert.True(delta > 0);
+        double[] expected = [2, 2, 2 + delta / 3, 2 + delta, 2 + delta * 0.8, 2 + delta * 0.2, 2, 2];
+        Assert.All(expected.Zip(samples), pair => Assert.Equal(pair.First, pair.Second, precision: 10));
+        Assert.Same(curve.Times, edited.Times);
+        Assert.Same(curve.Channels[1], edited.Channels[1]);
+
+        vm.UndoCommand.Execute(null);
+        Assert.Same(curve, vm.Working);
+        Assert.Equal(2, points.Pins.Count);
+        Assert.True(points.TogglePin(line[1].X, line[1].Y));
+        Assert.Single(points.Pins).RemoveCommand.Execute(null);
+        Assert.Empty(points.Markers);
+
+        Assert.True(points.BeginDrag(line[3].X, line[3].Y));
+        points.EndDrag(line[3].Y + 30);
+        Assert.True(vm.Working!.Channels[0].Samples[3] < 2);
+        Assert.All(vm.Working.Channels[0].Samples.Where((_, index) => index != 3), value => Assert.Equal(2, value));
+        var updatedLine = vm.Plot.Series.Single(series => series.Channel == "U").Points;
+        var serializer = new ProjectSerializer();
+        var beforePin = serializer.Serialize(editor.Project);
+        Assert.True(points.TogglePin(updatedLine[1].X, updatedLine[1].Y));
+        Assert.Equal(beforePin, serializer.Serialize(editor.Project));
+        vm.SaveVersion();
+        Assert.Null(vm.Error);
+        Assert.Empty(points.Pins);
+        Assert.False(points.CanEdit);
+        Assert.Single(vm.SelectedCurve!.Curve.History);
+        Assert.StartsWith("Punkt U bei", vm.SelectedCurve.Curve.History[0]);
+        var saved = vm.SelectedCurve.Curve;
+        var reloaded = serializer.Deserialize(serializer.Serialize(editor.Project)).Definition.Curves.Find(saved.Id, saved.Version);
+        Assert.NotNull(reloaded);
+        Assert.Equal(saved.ContentHash(), reloaded.ContentHash());
+        Assert.Equal(saved.History, reloaded.History);
+    }
+
+    [Fact]
     public void Kurvenseite_Editor_Bearbeitung_Eignung_und_unveraenderliche_Versionen()
     {
         var editor = new EditorViewModel(SampleProjects.AcPruefung());

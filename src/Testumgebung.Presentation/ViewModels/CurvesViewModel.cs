@@ -145,6 +145,8 @@ public sealed class CurvesViewModel : ObservableObject
         _user = user;
         _resultFiles = resultFiles;
         _ui = ui;
+        PointEditor = new CurvePointEditor(Plot, movePoint => Edit(movePoint, zoomToFit: false));
+        Plot.PointEditor = PointEditor;
 
         GeneratorKinds =
         [
@@ -174,7 +176,7 @@ public sealed class CurvesViewModel : ObservableObject
         {
             if (e.PropertyName == nameof(WaveformPlotViewModel.ViewText)) OnPropertyChanged(nameof(TrimToViewText));
         };
-        _editor.ProjectReplaced += Reload;
+        _editor.ProjectReplaced += OnProjectReplaced;
         Reload();
     }
 
@@ -206,6 +208,7 @@ public sealed class CurvesViewModel : ObservableObject
     /// <summary>Datei- oder Messkurvenimport: Vorschau und Zuordnung anzeigen.</summary>
     public bool IsImportTab => _tab is CurveTab.File or CurveTab.Measurement;
 
+    public CurvePointEditor PointEditor { get; }
     public WaveformPlotViewModel Plot { get; } = new();
 
     public string? Error
@@ -260,6 +263,22 @@ public sealed class CurvesViewModel : ObservableObject
     }
 
     public RelayCommand NewFromSelectedCommand { get; }
+
+    private void OnProjectReplaced()
+    {
+        Reload();
+        if (_selected is { } selected)
+        {
+            Show(selected.Curve, editable: false);
+            return;
+        }
+
+        _working = null;
+        _undo.Clear();
+        PointEditor.UseCurve(null, reset: true);
+        Plot.Clear();
+        UpdateWorking();
+    }
 
     private void Reload()
     {
@@ -325,6 +344,7 @@ public sealed class CurvesViewModel : ObservableObject
             _working = null;
             _undo.Clear();
         }
+        PointEditor.UseCurve(_working, reset: true);
         Plot.SetData(curve, keepView: editable);
         UpdateWorking();
     }
@@ -344,6 +364,7 @@ public sealed class CurvesViewModel : ObservableObject
     {
         if (newCurve) _undo.Clear();
         _working = curve;
+        PointEditor.UseCurve(curve, reset: newCurve);
         Plot.SetData(curve, keepView: !newCurve);
         UpdateWorking();
     }
@@ -584,6 +605,7 @@ public sealed class CurvesViewModel : ObservableObject
         ApplyImportCommand.RaiseCanExecuteChanged();
         OnPropertiesChanged(nameof(Table), nameof(HasTable), nameof(Preview), nameof(TableInfo), nameof(TimeMode), nameof(IsExplicitTime),
             nameof(TimeColumn), nameof(TimeFactor), nameof(ImportRate), nameof(QualityColumn));
+        PointEditor.UseCurve(null, reset: true);
         // Vorschau ohne Übernahme: Rohdaten der vorgeschlagenen Zuordnung
         try
         {
@@ -660,13 +682,13 @@ public sealed class CurvesViewModel : ObservableObject
     public RelayCommand ResampleCommand { get; }
     public RelayCommand UndoCommand { get; }
 
-    private void Edit(Func<CurveDefinition, CurveDefinition> op) => Try(() =>
+    private void Edit(Func<CurveDefinition, CurveDefinition> operation, bool zoomToFit = true) => Try(() =>
     {
         if (_working is null) return;
-        var next = op(_working);
+        var next = operation(_working);
         _undo.Push(_working);
         SetWorking(next, newCurve: false);
-        Plot.SetView(0, next.Duration);
+        if (zoomToFit) Plot.SetView(0, next.Duration);
         Status = "Bearbeitet: " + next.History[^1];
     });
 
@@ -709,6 +731,7 @@ public sealed class CurvesViewModel : ObservableObject
             _description.Trim().Length > 0 ? _description.Trim() : null);
         Library.Add(saved);
         _editor.MarkChanged();
+        PointEditor.UseCurve(null, reset: true);
         _working = null;
         _undo.Clear();
         Reload();

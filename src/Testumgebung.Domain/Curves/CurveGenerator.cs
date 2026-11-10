@@ -157,6 +157,39 @@ public static class CurveOps
 {
     private static string N(double v) => v.ToString("0.######", CultureInfo.InvariantCulture);
 
+    /// <summary>Verschiebt einen Messwert und blendet die Änderung zeitlinear zu den unveränderten Randpunkten aus.</summary>
+    public static CurveDefinition MovePoint(CurveDefinition curve, int channelIndex, int pointIndex,
+        int leftBoundary, int rightBoundary, double delta)
+    {
+        if (!double.IsFinite(delta) || leftBoundary < 0 || leftBoundary > pointIndex
+            || rightBoundary < pointIndex || rightBoundary >= curve.Count)
+            throw new ArgumentException("Ungültige Punktverschiebung.");
+
+        var channels = curve.Channels.ToList();
+        var channel = channels[channelIndex];
+        var samples = (double[])channel.Samples.Clone();
+        var pointTime = curve.TimeOf(pointIndex);
+        var leftTime = curve.TimeOf(leftBoundary);
+        var rightTime = curve.TimeOf(rightBoundary);
+        for (var sampleIndex = leftBoundary; sampleIndex <= rightBoundary; sampleIndex++)
+        {
+            var weight = PointMoveWeight(curve.TimeOf(sampleIndex), pointTime, leftTime, rightTime);
+            if (weight == 0) continue;
+            samples[sampleIndex] += delta * weight;
+            if (!double.IsFinite(samples[sampleIndex])) throw new ArgumentException("Punktwert außerhalb des gültigen Bereichs.");
+        }
+        channels[channelIndex] = channel with { Samples = samples };
+        return curve.Derive($"Punkt {channel.Id} bei {N(pointTime * 1000)} ms → {N(samples[pointIndex])} {channel.Unit}", channels);
+    }
+
+    /// <summary>Gewichtung für Vorschau und gespeicherte Werte, unabhängig von der Achsenskalierung.</summary>
+    public static double PointMoveWeight(double position, double point, double left, double right)
+    {
+        if (position == point) return 1;
+        if (position <= left || position >= right) return 0;
+        return position < point ? (position - left) / (point - left) : (right - position) / (right - point);
+    }
+
     /// <summary>Zuschnitt auf [von, bis) in Sekunden; die Zeitbasis beginnt danach wieder bei 0.</summary>
     public static CurveDefinition Trim(CurveDefinition c, double from, double to)
     {

@@ -99,6 +99,8 @@ public sealed class WaveformPlotViewModel : ObservableObject
         ClearCursorCommand = new RelayCommand(() => CursorTime = null, () => _cursor is not null);
     }
 
+    public CurvePointEditor? PointEditor { get; internal set; }
+
     public ObservableCollection<PlotChannel> Channels { get; } = [];
     public ObservableCollection<PlotSeries> Series { get; } = [];
     public ObservableCollection<PlotAxisLabel> YLabels { get; } = [];
@@ -240,6 +242,19 @@ public sealed class WaveformPlotViewModel : ObservableObject
         var t = TimeAtX(x);
         var f = zoomIn ? 0.8 : 1.25;
         SetView(t - (t - _viewStart) * f, t + (_viewEnd - t) * f);
+    }
+
+    internal double XAtTime(double time) => (time - _viewStart) / Math.Max(_viewEnd - _viewStart, 1e-12) * PlotWidth;
+
+    internal double YAtValue(double value) => Y(value);
+
+    internal double ValueDelta(double verticalPixels) => -verticalPixels * (_yMax - _yMin) / PlotHeight;
+
+    internal int NearestSample(double time)
+    {
+        var previous = IndexAt(time);
+        var next = previous + 1;
+        return next < Count && time - TimeOf(previous) > TimeOf(next) - time ? next : previous;
     }
 
     private int IndexAt(double t)
