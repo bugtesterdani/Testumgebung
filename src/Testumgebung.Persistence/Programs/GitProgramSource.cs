@@ -9,7 +9,7 @@ public sealed class GitProgramSource(string executable = "git", bool allowLocalR
     public async Task<SourceSnapshot> ExportAsync(ProgramSource source, string? revision, CancellationToken ct = default)
     {
         SourcePaths.Validate(source, allowLocalRepositories);
-        if (source.Line.Any(c => char.IsWhiteSpace(c) || c is '~' or '^' or ':' or '?' or '*' or '[' or '\\') || source.Line.Contains("..")) throw new ArgumentException("Ungültiger Git-Branch.");
+        if (source.Line.Any(line => char.IsWhiteSpace(line) || line is '~' or '^' or ':' or '?' or '*' or '[' or '\\') || source.Line.Contains("..")) throw new ArgumentException("Ungültiger Git-Branch.");
         if (!string.IsNullOrEmpty(revision) && !SourcePaths.GitHash().IsMatch(revision)) throw new ArgumentException("Vollständigen Git-Commit-Hash angeben.");
         var directory = SourcePaths.Temporary();
         try

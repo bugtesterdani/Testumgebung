@@ -113,9 +113,9 @@ internal static class ExternalProcessHost
 
     private static MethodInfo SelectMain(Type type)
     {
-        var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(m => m.Name == "Main" && !m.ContainsGenericParameters
-            && (m.GetParameters().Length == 0 || m.GetParameters() is [{ ParameterType: var parameter }] && parameter == typeof(string[]))
-            && (m.ReturnType == typeof(void) || m.ReturnType == typeof(int) || m.ReturnType == typeof(Task) || m.ReturnType == typeof(Task<int>))).ToList();
+        var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(methodInfo => methodInfo.Name == "Main" && !methodInfo.ContainsGenericParameters
+            && (methodInfo.GetParameters().Length == 0 || methodInfo.GetParameters() is [{ ParameterType: var parameter }] && parameter == typeof(string[]))
+            && (methodInfo.ReturnType == typeof(void) || methodInfo.ReturnType == typeof(int) || methodInfo.ReturnType == typeof(Task) || methodInfo.ReturnType == typeof(Task<int>))).ToList();
         return methods.Count == 1 ? methods[0] : throw new InvalidOperationException("Genau eine public static Main() oder Main(string[]) mit void, int, Task oder Task<int> erforderlich.");
     }
 

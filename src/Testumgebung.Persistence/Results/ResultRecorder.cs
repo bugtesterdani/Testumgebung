@@ -53,33 +53,33 @@ public sealed class ResultRecorder
         {
             switch (node)
             {
-                case GroupDefinition g:
-                    list.Add(new ResultNode(g.Id, parent, g.Name, isExit ? "exit" : "gruppe", null, g.Description));
-                    foreach (var c in g.Children) Add(c, g.Id, false);
-                    if (g.ExitGroup is not null) Add(g.ExitGroup, g.Id, true);
+                case GroupDefinition group:
+                    list.Add(new ResultNode(group.Id, parent, group.Name, isExit ? "exit" : "gruppe", null, group.Description));
+                    foreach (var node2 in group.Children) Add(node2, group.Id, false);
+                    if (group.ExitGroup is not null) Add(group.ExitGroup, group.Id, true);
                     break;
-                case StepDefinition s:
-                    list.Add(new ResultNode(s.Id, parent, s.Name, "schritt", s.BlockType, s.Description));
+                case StepDefinition step:
+                    list.Add(new ResultNode(step.Id, parent, step.Name, "schritt", step.BlockType, step.Description));
                     break;
             }
         }
     }
 
-    private void OnEvent(EngineEvent e)
+    private void OnEvent(EngineEvent engineEvent)
     {
         lock (_gate)
         {
-            switch (e)
+            switch (engineEvent)
             {
-                case DutRunStarted d:
+                case DutRunStarted dutRunStarted:
                     if (!ReferenceEquals(_structureOf, _run.Definition))
                     {
                         // Neue Version ab diesem Prüfling (V01): Struktur der aktiven Definition
                         _structure = BuildStructure(_run.Definition);
                         _structureOf = _run.Definition;
                     }
-                    _current = new Builder(d.DutRunId);
-                    BeginJournal(d);
+                    _current = new Builder(dutRunStarted.DutRunId);
+                    BeginJournal(dutRunStarted);
                     return;
                 case DutRunCompleted dc when _current is not null:
                     var result = _current.Build(this, dc);
@@ -93,40 +93,40 @@ public sealed class ResultRecorder
                     return;
             }
             if (_current is null) return;
-            _current.Add(e);
+            _current.Add(engineEvent);
             if (_writer is not null)
                 for (; _written < _current.Events.Count; _written++) _writer.Append(_current.Events[_written]);
         }
     }
 
-    private void BeginJournal(DutRunStarted d)
+    private void BeginJournal(DutRunStarted dutRunStarted)
     {
         CloseJournal();
         if (_journal is null) return;
         var def = _run.Definition;
-        var dutGroup = def.AllNodes().OfType<GroupDefinition>().FirstOrDefault(g => g.Id == d.NodeId);
+        var dutGroup = def.AllNodes().OfType<GroupDefinition>().FirstOrDefault(group => group.Id == dutRunStarted.NodeId);
         var idVariable = dutGroup?.DutIdVariable ?? "Kennung";
         var header = new JournalHeader
         {
-            RunId = d.DutRunId,
-            StationRunId = d.RunId,
+            RunId = dutRunStarted.DutRunId,
+            StationRunId = dutRunStarted.RunId,
             Station = _run.Options.StationName,
             TestName = def.Name,
             TestVersion = def.Version,
-            Started = d.Time,
-            Order = d.Order,
+            Started = dutRunStarted.Time,
+            Order = dutRunStarted.Order,
             DutId = _run.Options.Presets?.GetValueOrDefault(idVariable) as string,
             DutIdWriters = def.AllNodes().OfType<StepDefinition>()
-                .Where(s => (s.Parameters.TryGetValue("Ziel", out var target) && target == idVariable)
-                            || s.Action is Testumgebung.Engine.Blocks.SetValueAction { Target: var t } && t == idVariable).Select(s => s.Id).ToList(),
+                .Where(step => (step.Parameters.TryGetValue("Ziel", out var target) && target == idVariable)
+                            || step.Action is Testumgebung.Engine.Blocks.SetValueAction { Target: var text } && text == idVariable).Select(step => step.Id).ToList(),
             Structure = _structure,
         };
         if (_resolver is not null)
         {
-            foreach (var n in def.AllNodes())
+            foreach (var node in def.AllNodes())
             {
-                if (!_resolver.IsEnabled(n.Id, StorageTarget.File)) header.ExcludedFromFile.Add(n.Id);
-                if (!_resolver.IsEnabled(n.Id, StorageTarget.Database)) header.ExcludedFromDatabase.Add(n.Id);
+                if (!_resolver.IsEnabled(node.Id, StorageTarget.File)) header.ExcludedFromFile.Add(node.Id);
+                if (!_resolver.IsEnabled(node.Id, StorageTarget.Database)) header.ExcludedFromDatabase.Add(node.Id);
             }
         }
         _writer = _journal.Begin(header);
@@ -143,12 +143,12 @@ public sealed class ResultRecorder
     internal static object? StorableValue(object? value) => value switch
     {
         null or bool or long or double or string => value,
-        int i => (long)i,
-        float f => (double)f,
+        int index => (long)index,
+        float floatingPointValue => (double)floatingPointValue,
         DateTime dt => dt,
         DateTimeOffset dto => dto.UtcDateTime,
         WaveformSet or Waveform => null,
-        IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
         _ => value.ToString(),
     };
 
@@ -212,17 +212,17 @@ public sealed class ResultRecorder
             var waves = sc.Value switch
             {
                 WaveformSet set => set.Channels,
-                Waveform w => [w],
+                Waveform waveform => [waveform],
                 _ => null,
             };
             if (waves is not null)
             {
                 ids = [];
-                foreach (var w in waves)
+                foreach (var waveform2 in waves)
                 {
-                    var id = $"{sc.NodeId}#{seq}/{w.Channel}";
+                    var id = $"{sc.NodeId}#{seq}/{waveform2.Channel}";
                     ids.Add(id);
-                    _waveforms.Add(new ResultWaveform(id, seq, sc.NodeId, w));
+                    _waveforms.Add(new ResultWaveform(id, seq, sc.NodeId, waveform2));
                 }
             }
             _events.Add(new ResultEvent(seq, ResultEventKind.Step, sc.NodeId, sc.Path, sc.Iteration, sc.Time, sc.Rating,
@@ -300,13 +300,13 @@ public static class ResultFilter
     /// </summary>
     public static ResultRun Apply(ResultRun run, StorageResolver resolver, StorageTarget values, StorageTarget waveforms, string label)
     {
-        var keptWaves = run.Waveforms.Where(w => resolver.IsEnabled(w.NodeId, waveforms)).ToList();
-        var keptIds = keptWaves.Select(w => w.Id).ToHashSet(StringComparer.Ordinal);
+        var keptWaves = run.Waveforms.Where(waveform => resolver.IsEnabled(waveform.NodeId, waveforms)).ToList();
+        var keptIds = keptWaves.Select(waveform => waveform.Id).ToHashSet(StringComparer.Ordinal);
         var events = run.Events
-            .Where(e => resolver.IsEnabled(e.NodeId, values))
-            .Select(e => e.WaveformIds is null ? e : e with { WaveformIds = e.WaveformIds.Where(keptIds.Contains).ToList() })
+            .Where(resultEvent => resolver.IsEnabled(resultEvent.NodeId, values))
+            .Select(resultEvent => resultEvent.WaveformIds is null ? resultEvent : resultEvent with { WaveformIds = resultEvent.WaveformIds.Where(keptIds.Contains).ToList() })
             .ToList();
-        var usedAttachments = events.Select(e => e.AttachmentId).OfType<string>().ToHashSet(StringComparer.Ordinal);
-        return run.CopyWith(label, events, keptWaves, run.Attachments.Where(a => usedAttachments.Contains(a.Id)).ToList());
+        var usedAttachments = events.Select(resultEvent => resultEvent.AttachmentId).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        return run.CopyWith(label, events, keptWaves, run.Attachments.Where(resultAttachment => usedAttachments.Contains(resultAttachment.Id)).ToList());
     }
 }

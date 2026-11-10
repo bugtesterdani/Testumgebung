@@ -97,8 +97,8 @@ public sealed class Scenario
     {
         if (Simulation is null || Answers is null || Expect is null)
             throw new InvalidDataException("„simulation“, „answers“ und „expect“ dürfen nicht null sein.");
-        if (Expect.Steps is null || Expect.Duts is null || Answers.Any(a => a is null)
-            || Expect.Steps.Any(s => s is null) || Expect.Duts.Any(d => d is null))
+        if (Expect.Steps is null || Expect.Duts is null || Answers.Any(scenarioAnswer => scenarioAnswer is null)
+            || Expect.Steps.Any(stepExpectation => stepExpectation is null) || Expect.Duts.Any(dutExpectation => dutExpectation is null))
             throw new InvalidDataException("Szenario-Listen und ihre Einträge dürfen nicht null sein.");
         foreach (var (name, value) in Simulation)
             if (!SimulationValues(value, out _)) problems.Add($"„simulation.{name}“ muss eine endliche Zahl oder eine Liste endlicher Zahlen sein.");
@@ -107,12 +107,12 @@ public sealed class Scenario
     private void CheckAnswers(List<string> problems)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var a in Answers)
+        foreach (var scenarioAnswer in Answers)
         {
-            if (string.IsNullOrWhiteSpace(a.Step) || !seen.Add(a.Step)) problems.Add("Antwort ohne eindeutigen „step“.");
-            if ((a.Value is null) == (a.Values is null)) problems.Add($"Antwort für „{a.Step}“: genau eines von „value“ oder „values“ angeben.");
-            if (a.Values is { Count: 0 }) problems.Add($"Antwort für „{a.Step}“: „values“ ist leer.");
-            var values = a.Values ?? (a.Value is { } v ? [v] : []);
+            if (string.IsNullOrWhiteSpace(scenarioAnswer.Step) || !seen.Add(scenarioAnswer.Step)) problems.Add("Antwort ohne eindeutigen „step“.");
+            if ((scenarioAnswer.Value is null) == (scenarioAnswer.Values is null)) problems.Add($"Antwort für „{scenarioAnswer.Step}“: genau eines von „value“ oder „values“ angeben.");
+            if (scenarioAnswer.Values is { Count: 0 }) problems.Add($"Antwort für „{scenarioAnswer.Step}“: „values“ ist leer.");
+            var values = scenarioAnswer.Values ?? (scenarioAnswer.Value is { } element ? [element] : []);
             foreach (var value in values) _ = AnswerText(value);
         }
     }
@@ -120,9 +120,9 @@ public sealed class Scenario
     private void CheckExpectations(List<string> problems)
     {
         foreach (var step in Expect.Steps) CheckStepExpectation(step, problems);
-        foreach (var rating in Expect.Steps.Select(s => s.Rating))
+        foreach (var rating in Expect.Steps.Select(stepExpectation => stepExpectation.Rating))
             if (rating is not null && Ratings.Parse(rating.Trim()) is null) problems.Add($"Unbekannte Bewertung „{rating}“ (PASS, FAIL, ERROR, NRESULT).");
-        foreach (var outcome in Expect.Duts.Select(d => d.Rating).Append(Expect.Status))
+        foreach (var outcome in Expect.Duts.Select(dutExpectation => dutExpectation.Rating).Append(Expect.Status))
             if (outcome is not null && !IsOutcome(outcome)) problems.Add($"Unbekannter Gesamtstatus „{outcome}“ (PASS, FAIL, ERROR, NRESULT, ABORT; bisheriger Zusatz + WERROR wird weiterhin unterstützt).");
     }
 
@@ -133,13 +133,13 @@ public sealed class Scenario
         return parts.Length == 2 && Ratings.Parse(parts[0]) is not null && parts[1] == "WERROR";
     }
 
-    private static void CheckStepExpectation(StepExpectation s, List<string> problems)
+    private static void CheckStepExpectation(StepExpectation stepExpectation, List<string> problems)
     {
-        if (string.IsNullOrWhiteSpace(s.Step)) problems.Add("Erwartung ohne „step“.");
-        if (s.Rating is null && s.Value is null && s.Count is null) problems.Add($"Erwartung für „{s.Step}“: „rating“, „value“ oder „count“ angeben.");
-        if (s.Occurrence is < 1 || s.Count is < 0 || s.Tolerance < 0 || !double.IsFinite(s.Tolerance))
-            problems.Add($"Erwartung für „{s.Step}“: ungültige occurrence, count oder tolerance.");
-        if (s.Value is { } value) _ = AnswerText(value);
+        if (string.IsNullOrWhiteSpace(stepExpectation.Step)) problems.Add("Erwartung ohne „step“.");
+        if (stepExpectation.Rating is null && stepExpectation.Value is null && stepExpectation.Count is null) problems.Add($"Erwartung für „{stepExpectation.Step}“: „rating“, „value“ oder „count“ angeben.");
+        if (stepExpectation.Occurrence is < 1 || stepExpectation.Count is < 0 || stepExpectation.Tolerance < 0 || !double.IsFinite(stepExpectation.Tolerance))
+            problems.Add($"Erwartung für „{stepExpectation.Step}“: ungültige occurrence, count oder tolerance.");
+        if (stepExpectation.Value is { } value) _ = AnswerText(value);
     }
 
     public static bool SimulationValues(JsonElement element, out IReadOnlyList<double> values)

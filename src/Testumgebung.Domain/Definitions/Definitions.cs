@@ -155,13 +155,13 @@ public sealed class GroupDefinition(string id, string name) : NodeDefinition(id,
         foreach (var child in Children)
         {
             yield return child;
-            if (child is GroupDefinition g)
-                foreach (var d in g.Descendants()) yield return d;
+            if (child is GroupDefinition group)
+                foreach (var node in group.Descendants()) yield return node;
         }
         if (ExitGroup is not null)
         {
             yield return ExitGroup;
-            foreach (var d in ExitGroup.Descendants()) yield return d;
+            foreach (var node2 in ExitGroup.Descendants()) yield return node2;
         }
     }
 }
@@ -210,16 +210,16 @@ public sealed class TestDefinition
     public List<BusDatabaseDefinition> BusDatabases { get; } = [];
 
     public BusDatabaseDefinition? FindBusDatabase(string name)
-        => BusDatabases.FirstOrDefault(d => d.Name == name) ?? BusDatabases.FirstOrDefault(d => string.Equals(d.Name, name, StringComparison.OrdinalIgnoreCase));
+        => BusDatabases.FirstOrDefault(database => database.Name == name) ?? BusDatabases.FirstOrDefault(database => string.Equals(database.Name, name, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Hauptablauf: Kinder = Init, Loop; Exit-Gruppe = Finalization.</summary>
     public GroupDefinition Root { get; }
 
     /// <summary>Hauptablauf und alle Körper grafischer Bausteine.</summary>
-    public IEnumerable<GroupDefinition> AllRoots => GroupLibrary.Select(b => b.Body).Prepend(Root);
+    public IEnumerable<GroupDefinition> AllRoots => GroupLibrary.Select(groupBlock => groupBlock.Body).Prepend(Root);
 
     /// <summary>Alle Knoten in Hauptablauf und Bausteinkörpern.</summary>
-    public IEnumerable<NodeDefinition> AllNodes() => AllRoots.SelectMany(r => r.Descendants().Prepend(r));
+    public IEnumerable<NodeDefinition> AllNodes() => AllRoots.SelectMany(group => group.Descendants().Prepend(group));
 
     /// <summary>Aktive Definitionsknoten, einschließlich der vorhandenen Bibliothekskörper. Deaktivierte Teilbäume entfallen.</summary>
     public IEnumerable<NodeDefinition> EnabledNodes() => AllRoots.SelectMany(EnabledTree);
@@ -231,13 +231,13 @@ public sealed class TestDefinition
         foreach (var child in group.Children.Concat(group.ExitGroup is null ? [] : [group.ExitGroup]))
             foreach (var descendant in EnabledTree(child)) yield return descendant;
     }
-    public bool IsDisabled(string id) => Find(id)?.Disabled == true || AncestorsOf(id).Any(g => g.Disabled);
+    public bool IsDisabled(string id) => Find(id)?.Disabled == true || AncestorsOf(id).Any(group => group.Disabled);
 
-    public NodeDefinition? Find(string id) => AllNodes().FirstOrDefault(n => n.Id == id);
+    public NodeDefinition? Find(string id) => AllNodes().FirstOrDefault(node => node.Id == id);
 
     /// <summary>Grafischer Baustein, zu dessen Körper der Knoten gehört (null = Hauptablauf).</summary>
     public GroupBlockDefinition? OwningGroupBlock(string id)
-        => GroupLibrary.FirstOrDefault(b => b.Body.Id == id || b.Body.Descendants().Any(n => n.Id == id));
+        => GroupLibrary.FirstOrDefault(groupBlock => groupBlock.Body.Id == id || groupBlock.Body.Descendants().Any(node => node.Id == id));
 
     /// <summary>Elternkette (vom Wurzelknoten bis zum direkten Elternteil) eines Knotens.</summary>
     public IReadOnlyList<GroupDefinition> AncestorsOf(string id)
@@ -250,10 +250,10 @@ public sealed class TestDefinition
         }
         throw new KeyNotFoundException($"Knoten '{id}' nicht gefunden.");
 
-        static bool Search(GroupDefinition g, string id, List<GroupDefinition> path)
+        static bool Search(GroupDefinition group, string id, List<GroupDefinition> path)
         {
-            path.Add(g);
-            foreach (var child in g.Children.Concat(g.ExitGroup is null ? [] : [g.ExitGroup]))
+            path.Add(group);
+            foreach (var child in group.Children.Concat(group.ExitGroup is null ? [] : [group.ExitGroup]))
             {
                 if (child.Id == id) return true;
                 if (child is GroupDefinition cg && Search(cg, id, path)) return true;
@@ -269,7 +269,7 @@ public sealed class TestDefinition
         if (group.Repetition is { Mode: RepeatMode.Duration, StopWithinIteration: true })
             diagnostics.Add($"Gruppe '{group.Name}': Bei paralleler Ausführung gilt die Zeitspanne zwischen vollständigen Iterationen, nicht zwischen einzelnen Schritten.");
         if (ReferenceEquals(group, Root)) diagnostics.Add("Der Hauptablauf muss Init, Loop und Finalization nacheinander ausführen.");
-        if (group.Children.OfType<GroupDefinition>().Any(g => g.IsDutRun || g.Descendants().OfType<GroupDefinition>().Any(c => c.IsDutRun)))
+        if (group.Children.OfType<GroupDefinition>().Any(group2 => group2.IsDutRun || group2.Descendants().OfType<GroupDefinition>().Any(group3 => group3.IsDutRun)))
             diagnostics.Add($"Gruppe '{group.Name}': Prüflingsdurchläufe dürfen nicht parallel betreten werden. Parallelität innerhalb eines Prüflings oder getrennte Prüfplätze verwenden.");
     }
 
@@ -278,33 +278,33 @@ public sealed class TestDefinition
     {
         var diagnostics = new List<string>();
         var all = AllNodes().ToList();
-        if (new[] { Root, Init, Loop, Finalization }.Any(g => g.Disabled))
+        if (new[] { Root, Init, Loop, Finalization }.Any(group => group.Disabled))
             diagnostics.Add("Hauptablauf, Init, Loop und Finalization dürfen nicht deaktiviert werden; einzelne Kinder deaktivieren.");
-        foreach (var dup in GroupLibrary.GroupBy(b => b.Id).Where(g => g.Count() > 1))
+        foreach (var dup in GroupLibrary.GroupBy(groupBlock => groupBlock.Id).Where(group => group.Count() > 1))
             diagnostics.Add($"Baustein-Id '{dup.Key}' ist mehrfach vergeben.");
-        foreach (var block in GroupLibrary.Where(b => b.Ports.Any(p => p.Name == Scope.GroupResultVariable)))
+        foreach (var block in GroupLibrary.Where(groupBlock => groupBlock.Ports.Any(port => port.Name == Scope.GroupResultVariable)))
             diagnostics.Add($"Baustein '{block.Name}': '{Scope.GroupResultVariable}' ist für die Systemvariable reserviert und kein grafischer Portname.");
-        foreach (var dup in all.GroupBy(n => n.Id).Where(g => g.Count() > 1))
+        foreach (var dup in all.GroupBy(node => node.Id).Where(group => group.Count() > 1))
             diagnostics.Add($"Knoten-Id '{dup.Key}' ist mehrfach vergeben.");
-        foreach (var g in all.OfType<GroupDefinition>())
+        foreach (var group in all.OfType<GroupDefinition>())
         {
-            ValidateParallel(g, diagnostics);
-            var r = g.Repetition;
-            if (r.Mode == RepeatMode.Count && r.Count < 1) diagnostics.Add($"Gruppe '{g.Name}': Anzahl muss ≥ 1 sein.");
-            if (r.Mode == RepeatMode.Duration && r.Duration <= TimeSpan.Zero) diagnostics.Add($"Gruppe '{g.Name}': Zeitspanne muss > 0 sein.");
-            if (r.Mode is RepeatMode.While or RepeatMode.Until)
+            ValidateParallel(group, diagnostics);
+            var repetition = group.Repetition;
+            if (repetition.Mode == RepeatMode.Count && repetition.Count < 1) diagnostics.Add($"Gruppe '{group.Name}': Anzahl muss ≥ 1 sein.");
+            if (repetition.Mode == RepeatMode.Duration && repetition.Duration <= TimeSpan.Zero) diagnostics.Add($"Gruppe '{group.Name}': Zeitspanne muss > 0 sein.");
+            if (repetition.Mode is RepeatMode.While or RepeatMode.Until)
             {
-                if (string.IsNullOrWhiteSpace(r.Expression)) diagnostics.Add($"Gruppe '{g.Name}': Wiederholungsausdruck fehlt.");
+                if (string.IsNullOrWhiteSpace(repetition.Expression)) diagnostics.Add($"Gruppe '{group.Name}': Wiederholungsausdruck fehlt.");
                 else
                 {
-                    try { Expression.Parse(r.Expression); }
-                    catch (ExpressionException ex) { diagnostics.Add($"Gruppe '{g.Name}': {ex.Message}"); }
+                    try { Expression.Parse(repetition.Expression); }
+                    catch (ExpressionException ex) { diagnostics.Add($"Gruppe '{group.Name}': {ex.Message}"); }
                 }
             }
-            if (g.Variables.Any(v => v.Name == Scope.GroupResultVariable))
-                diagnostics.Add($"Gruppe '{g.Name}': '{Scope.GroupResultVariable}' ist eine schreibgeschützte Systemvariable.");
-            foreach (var dupVar in g.Variables.GroupBy(v => v.Name).Where(x => x.Count() > 1))
-                diagnostics.Add($"Gruppe '{g.Name}': Variable '{dupVar.Key}' doppelt definiert.");
+            if (group.Variables.Any(variable => variable.Name == Scope.GroupResultVariable))
+                diagnostics.Add($"Gruppe '{group.Name}': '{Scope.GroupResultVariable}' ist eine schreibgeschützte Systemvariable.");
+            foreach (var dupVar in group.Variables.GroupBy(variable => variable.Name).Where(group2 => group2.Count() > 1))
+                diagnostics.Add($"Gruppe '{group.Name}': Variable '{dupVar.Key}' doppelt definiert.");
         }
         return diagnostics;
     }

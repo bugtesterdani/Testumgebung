@@ -16,7 +16,7 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
     IByteStreamAdapter, IModbusAdapter, ICanAdapter, ILinAdapter, IOpcUaDevice
 {
     IOpcUaClient IOpcUaDevice.OpcUa(string channel)
-        => _comm.TryGetValue(channel, out var e) && e is IOpcUaClient c ? c
+        => _comm.TryGetValue(channel, out var entry) && entry is IOpcUaClient iOpcUaClient ? iOpcUaClient
             : throw new CommunicationException($"Kanal '{channel}' der Simulation ist kein OPC-UA-Server.");
 
     // ------------------------------------------------------------------ Kommunikation (simulierter Prüfling je Kanal)
@@ -30,10 +30,10 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
         return this;
     }
 
-    public object? CommunicationEndpoint(string channel) => _comm.TryGetValue(channel, out var e) ? e : null;
+    public object? CommunicationEndpoint(string channel) => _comm.TryGetValue(channel, out var entry) ? entry : null;
 
     private T Comm<T>(string channel) where T : class
-        => _comm.TryGetValue(channel, out var e) && e is T t ? t
+        => _comm.TryGetValue(channel, out var entry) && entry is T t2 ? t2
             : throw new CommunicationException($"Kanal '{channel}' der Simulation ist keine passende Kommunikationsschnittstelle ({typeof(T).Name[1..].Replace("Adapter", "")}).");
 
     Task IByteStreamAdapter.SendAsync(string channel, ReadOnlyMemory<byte> data, CancellationToken cancellationToken)
@@ -99,7 +99,7 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
     }
 
     private OutputSlot Slot(string channel)
-        => _outputs2.TryGetValue(channel, out var s) ? s : throw new InvalidOperationException($"Kanal '{channel}' ist kein Kurvenausgang.");
+        => _outputs2.TryGetValue(channel, out var outputSlot) ? outputSlot : throw new InvalidOperationException($"Kanal '{channel}' ist kein Kurvenausgang.");
 
     public OutputCapabilities GetOutputCapabilities(string channel) => Slot(channel).Caps;
 
@@ -114,8 +114,8 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
         lock (slot)
         {
             if (slot.State == OutputState.Running) throw new OutputSequenceException("Ausgabe läuft – erst stoppen, dann neue Kurve laden.");
-            var errors = OutputSuitability.Check(slot.Caps, curve).Where(i => i.IsError).ToList();
-            if (errors.Count > 0) throw new OutputSequenceException("Gerät ungeeignet: " + string.Join(" ", errors.Select(e => e.Text)));
+            var errors = OutputSuitability.Check(slot.Caps, curve).Where(issue => issue.IsError).ToList();
+            if (errors.Count > 0) throw new OutputSequenceException("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
             slot.Loaded = curve;
             slot.State = OutputState.Loaded;
         }
@@ -145,12 +145,12 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
         {
             if (slot.State is not (OutputState.Transferred or OutputState.Stopped) || slot.InDevice is not { } curve)
                 throw new OutputSequenceException("Starten erst nach dem Übertragen einer Kurve.");
-            for (var i = 0; i < curve.Channels.Count; i++)
+            for (var index2 = 0; index2 < curve.Channels.Count; index2++)
             {
-                if (!slot.Feedback.TryGetValue(curve.Channels[i].Id, out var input)) continue;
+                if (!slot.Feedback.TryGetValue(curve.Channels[index2].Id, out var input)) continue;
                 if (!slot.Saved.ContainsKey(input)) slot.Saved[input] = _waveforms.TryGetValue(input, out var old) ? old : null;
-                var index = i;
-                _waveforms[input] = t => curve.ValueAt(index, t);
+                var index = index2;
+                _waveforms[input] = time => curve.ValueAt(index, time);
             }
             slot.State = OutputState.Running;
         }
@@ -184,7 +184,7 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
 
     /// <summary>Sinus mit Effektivwert, Frequenz und Phasenlage (Grad).</summary>
     public void SetSine(string channel, double rms, double frequency = 50, double phaseDegrees = 0)
-        => SetWaveform(channel, t => rms * Math.Sqrt(2) * Math.Sin(2 * Math.PI * frequency * t - phaseDegrees * Math.PI / 180));
+        => SetWaveform(channel, time => rms * Math.Sqrt(2) * Math.Sin(2 * Math.PI * frequency * time - phaseDegrees * Math.PI / 180));
 
     public IClock? Clock { get; set; }
 
@@ -198,14 +198,14 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
         var list = new List<Waveform>();
         foreach (var channel in channels)
         {
-            if (!_waveforms.TryGetValue(channel, out var f))
+            if (!_waveforms.TryGetValue(channel, out var callback))
                 throw new InvalidOperationException($"Kanal '{channel}' liefert keine Kurven.");
             using var writer = new SampleBufferWriter(samples);
             for (var offset = 0; offset < samples; offset += SampleBuffer.BlockSize)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var data = new double[Math.Min(SampleBuffer.BlockSize, samples - offset)];
-                for (var i = 0; i < data.Length; i++) data[i] = f((offset + i) / sampleRate);
+                for (var index = 0; index < data.Length; index++) data[index] = callback((offset + index) / sampleRate);
                 writer.Append(data);
             }
             list.Add(new Waveform(channel, GetCapabilities(channel).Unit, sampleRate, start, writer.Complete(), Quality: "simuliert", SyncGroup: sync));
@@ -232,16 +232,16 @@ public sealed class SimulationAdapter(string name = "Simulation") : IHardwareAda
 
     public void SetInput(string channel, Func<double> generator) => _inputs[channel] = generator;
 
-    public double? GetOutput(string channel) => _outputs.TryGetValue(channel, out var v) ? v : null;
+    public double? GetOutput(string channel) => _outputs.TryGetValue(channel, out var value) ? value : null;
 
     public ChannelCapabilities GetCapabilities(string channel)
-        => _caps.TryGetValue(channel, out var c) ? c : new ChannelCapabilities("", double.MinValue, double.MaxValue);
+        => _caps.TryGetValue(channel, out var channelCapabilities) ? channelCapabilities : new ChannelCapabilities("", double.MinValue, double.MaxValue);
 
     public Task<double> ReadAsync(string channel, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_inputs.TryGetValue(channel, out var gen)) return Task.FromResult(gen());
-        if (_outputs.TryGetValue(channel, out var o)) return Task.FromResult(o);
+        if (_outputs.TryGetValue(channel, out var number)) return Task.FromResult(number);
         return Task.FromResult(0.0);
     }
 
@@ -272,19 +272,19 @@ public sealed class HardwareRegistry
     }
 
     public ResourceBinding Resolve(string name)
-        => _bindings.TryGetValue(name, out var b)
-            ? b
+        => _bindings.TryGetValue(name, out var binding)
+            ? binding
             : throw new KeyNotFoundException($"Ressource '{name}' ist in der Prüfplatzkonfiguration nicht zugeordnet.");
 
     public bool TryResolve(string name, out ResourceBinding binding) => _bindings.TryGetValue(name, out binding!);
 
     /// <summary>Sperrschlüssel eines abstrakten Namens (nicht zugeordnete Namen sperren unter ihrem Namen).</summary>
-    public string LockKeyOf(string name) => _bindings.TryGetValue(name, out var b) ? b.Key : name;
+    public string LockKeyOf(string name) => _bindings.TryGetValue(name, out var binding) ? binding.Key : name;
 
     /// <summary>Anzeigename eines Sperrschlüssels (abstrakte Namen, die ihn verwenden).</summary>
     public string DisplayOf(string key)
     {
-        var names = _bindings.Values.Where(b => b.Key == key).Select(b => b.Name).ToList();
+        var names = _bindings.Values.Where(binding => binding.Key == key).Select(binding => binding.Name).ToList();
         return names.Count == 0 ? key : string.Join("/", names);
     }
 

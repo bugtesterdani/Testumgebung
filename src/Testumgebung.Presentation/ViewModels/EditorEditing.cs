@@ -232,7 +232,7 @@ public sealed partial class EditorViewModel
             _ = old;
         }
         if (obj["children"] is JsonArray children)
-            foreach (var c in children) Renumber(c!);
+            foreach (var node2 in children) Renumber(node2!);
         if (obj["exit"] is JsonObject exit) Renumber(exit);
     }
 
@@ -267,29 +267,29 @@ public sealed partial class EditorViewModel
             SearchStatus = null;
             return;
         }
-        bool Has(string? s) => s is not null && s.Contains(text, StringComparison.OrdinalIgnoreCase);
-        foreach (var n in AllNodes())
+        bool Has(string? text2) => text2 is not null && text2.Contains(text, StringComparison.OrdinalIgnoreCase);
+        foreach (var node in AllNodes())
         {
             var where = new List<string>();
-            if (Has(n.Name)) where.Add("Name");
-            if (Has(n.Definition.Description)) where.Add("Beschreibung");
-            if (n.Step is { } s) SearchStep(s, where);
-            if (n.Group is { } g)
+            if (Has(node.Name)) where.Add("Name");
+            if (Has(node.Definition.Description)) where.Add("Beschreibung");
+            if (node.Step is { } step) SearchStep(step, where);
+            if (node.Group is { } group)
             {
-                foreach (var v in g.Variables.Where(v => Has(v.Name))) where.Add("Variable " + v.Name);
-                if (Has(g.EntryCondition)) where.Add("Bedingung");
-                foreach (var r in g.Resources.Where(Has)) where.Add("Reservierung " + r);
+                foreach (var variable in group.Variables.Where(variable2 => Has(variable2.Name))) where.Add("Variable " + variable.Name);
+                if (Has(group.EntryCondition)) where.Add("Bedingung");
+                foreach (var resource in group.Resources.Where(Has)) where.Add("Reservierung " + resource);
             }
-            if (where.Count > 0) SearchHits.Add(new SearchHit(n, string.Join(", ", where.Distinct())));
+            if (where.Count > 0) SearchHits.Add(new SearchHit(node, string.Join(", ", where.Distinct())));
         }
         SearchStatus = SearchHits.Count == 0 ? "Keine Treffer" : $"{SearchHits.Count} Treffer";
     }
 
-    private void SearchStep(StepDefinition s, List<string> where)
+    private void SearchStep(StepDefinition step, List<string> where)
     {
         bool Has(string? value) => value is not null && value.Contains(_searchText.Trim(), StringComparison.OrdinalIgnoreCase);
-        if (s.BlockType is { } t && (Has(t) || (Catalog.TryGet(t, out var d) && Has(d.DisplayName)))) where.Add("Baustein");
-        foreach (var (key, value) in s.Parameters)
+        if (step.BlockType is { } text && (Has(text) || (Catalog.TryGet(text, out var block) && Has(block.DisplayName)))) where.Add("Baustein");
+        foreach (var (key, value) in step.Parameters)
             if (Has(value)) where.Add(key == "Code" ? "Code" : $"{key} = {value}");
     }
 
@@ -306,7 +306,7 @@ public sealed partial class EditorViewModel
     public void Reveal(string id)
     {
         if (FindNode(id) is not { } node) return;
-        for (var p = node.Parent; p is not null; p = p.Parent) p.IsExpanded = true;
+        for (var parent = node.Parent; parent is not null; parent = parent.Parent) parent.IsExpanded = true;
         SelectedNode = node;
     }
 }

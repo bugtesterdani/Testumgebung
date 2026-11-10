@@ -187,36 +187,36 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
 
     public AppSettings Deserialize(string json)
     {
-        var s = JsonSerializer.Deserialize<AppSettings>(json, Json) ?? new AppSettings();
-        s.Database ??= new DatabaseSettings();
-        s.Outbox ??= new OutboxSettings();
-        s.Mqtt ??= new MqttSettings();
-        s.Http ??= new HttpNotifySettings();
-        s.OpcUa ??= new OpcUaSettings();
-        RestoreSecrets(s);
-        return s;
+        var appSettings = JsonSerializer.Deserialize<AppSettings>(json, Json) ?? new AppSettings();
+        appSettings.Database ??= new DatabaseSettings();
+        appSettings.Outbox ??= new OutboxSettings();
+        appSettings.Mqtt ??= new MqttSettings();
+        appSettings.Http ??= new HttpNotifySettings();
+        appSettings.OpcUa ??= new OpcUaSettings();
+        RestoreSecrets(appSettings);
+        return appSettings;
     }
-    private void RestoreSecrets(AppSettings s)
+    private void RestoreSecrets(AppSettings appSettings)
     {
-        if (s.Http.ProtectedHeaderValue is { Length: > 0 } hv)
+        if (appSettings.Http.ProtectedHeaderValue is { Length: > 0 } hv)
         {
-            s.Http.HeaderValue = protector.Unprotect(hv);
-            if (s.Http.HeaderValue is null) Warnings.Add("HTTP-Kopfwert nicht entschlüsselbar – bitte neu eingeben.");
+            appSettings.Http.HeaderValue = protector.Unprotect(hv);
+            if (appSettings.Http.HeaderValue is null) Warnings.Add("HTTP-Kopfwert nicht entschlüsselbar – bitte neu eingeben.");
         }
-        if (s.OpcUa.ProtectedPassword is { Length: > 0 } opw)
+        if (appSettings.OpcUa.ProtectedPassword is { Length: > 0 } opw)
         {
-            s.OpcUa.Password = protector.Unprotect(opw);
-            if (s.OpcUa.Password is null) Warnings.Add("OPC-UA-Passwort nicht entschlüsselbar – bitte neu eingeben.");
+            appSettings.OpcUa.Password = protector.Unprotect(opw);
+            if (appSettings.OpcUa.Password is null) Warnings.Add("OPC-UA-Passwort nicht entschlüsselbar – bitte neu eingeben.");
         }
-        if (s.Database.ProtectedConnectionString is { Length: > 0 } cs)
+        if (appSettings.Database.ProtectedConnectionString is { Length: > 0 } cs)
         {
-            s.Database.ConnectionString = protector.Unprotect(cs) ?? "";
-            if (s.Database.ConnectionString.Length == 0) Warnings.Add("Verbindungsstring nicht entschlüsselbar (anderer Benutzer?) – bitte neu eingeben.");
+            appSettings.Database.ConnectionString = protector.Unprotect(cs) ?? "";
+            if (appSettings.Database.ConnectionString.Length == 0) Warnings.Add("Verbindungsstring nicht entschlüsselbar (anderer Benutzer?) – bitte neu eingeben.");
         }
-        if (s.Mqtt.ProtectedPassword is { Length: > 0 } pw)
+        if (appSettings.Mqtt.ProtectedPassword is { Length: > 0 } pw)
         {
-            s.Mqtt.Password = protector.Unprotect(pw);
-            if (s.Mqtt.Password is null) Warnings.Add("MQTT-Passwort nicht entschlüsselbar – bitte neu eingeben.");
+            appSettings.Mqtt.Password = protector.Unprotect(pw);
+            if (appSettings.Mqtt.Password is null) Warnings.Add("MQTT-Passwort nicht entschlüsselbar – bitte neu eingeben.");
         }
     }
 

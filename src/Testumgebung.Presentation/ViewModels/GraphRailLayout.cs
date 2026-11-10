@@ -9,10 +9,10 @@ public sealed class GraphRailLayout
     public double Allocate(double minimumX, double startY, double endY)
     {
         var top = Math.Min(startY, endY); var bottom = Math.Max(startY, endY);
-        var x = minimumX;
-        while (_rails.Any(rail => Math.Abs(rail.X - x) < Spacing && rail.Top <= bottom && top <= rail.Bottom))
-            x += Spacing;
-        _rails.Add((x, top, bottom));
-        return x;
+        var minimumXValue = minimumX;
+        while (_rails.Any(rail => Math.Abs(rail.X - minimumXValue) < Spacing && rail.Top <= bottom && top <= rail.Bottom))
+            minimumXValue += Spacing;
+        _rails.Add((minimumXValue, top, bottom));
+        return minimumXValue;
     }
 }

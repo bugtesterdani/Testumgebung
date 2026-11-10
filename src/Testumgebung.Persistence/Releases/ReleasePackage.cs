@@ -77,10 +77,10 @@ public static class ReleasePackage
         {
             void Add(string name, string content)
             {
-                var e = zip.CreateEntry(name, CompressionLevel.Optimal);
-                e.LastWriteTime = ZipTime;
-                using var w = new StreamWriter(e.Open(), new UTF8Encoding(false));
-                w.Write(content);
+                var zipArchiveEntry = zip.CreateEntry(name, CompressionLevel.Optimal);
+                zipArchiveEntry.LastWriteTime = ZipTime;
+                using var streamWriter = new StreamWriter(zipArchiveEntry.Open(), new UTF8Encoding(false));
+                streamWriter.Write(content);
             }
             Add("manifest.json", JsonSerializer.Serialize(manifest, Json));
             Add("projekt.tproj.json", json);
@@ -163,26 +163,26 @@ public static class ReleasePackage
     {
         foreach (var expected in manifest.Entries)
         {
-            var found = actual.FirstOrDefault(a => a.Area == expected.Area && a.Name == expected.Name && a.Version == expected.Version);
+            var found = actual.FirstOrDefault(manifestEntry => manifestEntry.Area == expected.Area && manifestEntry.Name == expected.Name && manifestEntry.Version == expected.Version);
             if (found is null) problems.Add($"{expected.Area} '{expected.Name}' fehlt im Paket.");
             else if (found.Sha256 != expected.Sha256) problems.Add($"{expected.Area} '{expected.Name}': Hash stimmt nicht.");
         }
-        foreach (var extra in actual.Where(a => manifest.Entries.All(e => e.Area != a.Area || e.Name != a.Name || e.Version != a.Version)))
+        foreach (var extra in actual.Where(manifestEntry => manifest.Entries.All(manifestEntry2 => manifestEntry2.Area != manifestEntry.Area || manifestEntry2.Name != manifestEntry.Name || manifestEntry2.Version != manifestEntry.Version)))
             problems.Add($"{extra.Area} '{extra.Name}' ist nicht im Manifest.");
     }
 
     private static string Read(ZipArchive zip, string name)
     {
-        var e = zip.GetEntry(name) ?? throw new ReleasePackageException($"'{name}' fehlt im Paket.");
-        using var r = new StreamReader(e.Open(), Encoding.UTF8);
-        return r.ReadToEnd();
+        var zipArchiveEntry = zip.GetEntry(name) ?? throw new ReleasePackageException($"'{name}' fehlt im Paket.");
+        using var reader = new StreamReader(zipArchiveEntry.Open(), Encoding.UTF8);
+        return reader.ReadToEnd();
     }
 
     /// <summary>Bereichshashes aus dem kanonischen Projekt-JSON.</summary>
     public static IReadOnlyList<ManifestEntry> ComputeEntries(string projectJson, TestProject project)
     {
         var root = JsonNode.Parse(projectJson)!.AsObject();
-        var d = project.Definition;
+        var definition = project.Definition;
         var list = new List<ManifestEntry>();
 
         var flow = root.DeepClone().AsObject();
@@ -192,26 +192,26 @@ public static class ReleasePackage
         flow.Remove("simulation");
         flow.Remove("simulationOutputs");
         flow.Remove("curves");
-        list.Add(new ManifestEntry("Ablauf", d.Name, d.Version, Sha256(flow.ToJsonString())));
+        list.Add(new ManifestEntry("Ablauf", definition.Name, definition.Version, Sha256(flow.ToJsonString())));
 
         AddBlockEntries(root["library"] as JsonArray, list);
         AddBlockEntries(root["groupLibrary"] as JsonArray, list);
 
-        foreach (var a in d.Assemblies.OrderBy(a => a.Name, StringComparer.Ordinal))
-            list.Add(new ManifestEntry("Codeartefakte", "DLL/" + a.Name, "", Sha256(a.Data)));
+        foreach (var managedAssembly in definition.Assemblies.OrderBy(managedAssembly2 => managedAssembly2.Name, StringComparer.Ordinal))
+            list.Add(new ManifestEntry("Codeartefakte", "DLL/" + managedAssembly.Name, "", Sha256(managedAssembly.Data)));
 
-        foreach (var lang in CodeFiles(d).GroupBy(f => LanguageOf(f.Path)).OrderBy(g => g.Key, StringComparer.Ordinal))
+        foreach (var lang in CodeFiles(definition).GroupBy(entry => LanguageOf(entry.Path)).OrderBy(group => group.Key, StringComparer.Ordinal))
         {
-            var combined = string.Join("\n\u0000\n", lang.OrderBy(f => f.Path, StringComparer.Ordinal).Select(f => f.Path + "\n" + f.Source));
-            list.Add(new ManifestEntry("Codeartefakte", $"{lang.Key} ({lang.Count()} Quelle(n))", d.Version, Sha256(combined)));
+            var combined = string.Join("\n\u0000\n", lang.OrderBy(entry => entry.Path, StringComparer.Ordinal).Select(entry => entry.Path + "\n" + entry.Source));
+            list.Add(new ManifestEntry("Codeartefakte", $"{lang.Key} ({lang.Count()} Quelle(n))", definition.Version, Sha256(combined)));
         }
 
         if (root["curves"] is JsonArray curves && curves.Count > 0)
-            foreach (var c in curves)
-                list.Add(new ManifestEntry("Kurven", (string?)c!["name"] ?? (string)c["id"]!, (string?)c["version"] ?? "", Sha256(c.ToJsonString())));
+            foreach (var node in curves)
+                list.Add(new ManifestEntry("Kurven", (string?)node!["name"] ?? (string)node["id"]!, (string?)node["version"] ?? "", Sha256(node.ToJsonString())));
         else
             list.Add(new ManifestEntry("Kurven", "keine", "", Sha256("")));
-        list.Add(new ManifestEntry("Definitionen", "Hardwareprofil (Simulation)", d.Version,
+        list.Add(new ManifestEntry("Definitionen", "Hardwareprofil (Simulation)", definition.Version,
             Sha256((root["simulation"]?.ToJsonString() ?? "[]") + (root["simulationOutputs"]?.ToJsonString() ?? ""))));
         return list;
     }
@@ -219,28 +219,28 @@ public static class ReleasePackage
     private static void AddBlockEntries(JsonArray? blocks, List<ManifestEntry> list)
     {
         if (blocks is null) return;
-        foreach (var b in blocks)
-            list.Add(new ManifestEntry("Bausteine", (string?)b!["name"] ?? (string)b["id"]!, (string?)b["version"] ?? "", Sha256(b.ToJsonString())));
+        foreach (var node in blocks)
+            list.Add(new ManifestEntry("Bausteine", (string?)node!["name"] ?? (string)node["id"]!, (string?)node["version"] ?? "", Sha256(node.ToJsonString())));
     }
 
     /// <summary>Quelltexte aller Bibliotheksbausteine und CodeBlocks im Ablauf.</summary>
     public static IEnumerable<(string Path, string Source)> CodeFiles(TestDefinition d)
     {
-        foreach (var b in d.Library)
-            yield return ($"code/bausteine/{Safe(b.Id)}{Extension(b.Language)}", b.Source);
-        foreach (var s in d.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType == "code"))
+        foreach (var codeBlock in d.Library)
+            yield return ($"code/bausteine/{Safe(codeBlock.Id)}{Extension(codeBlock.Language)}", codeBlock.Source);
+        foreach (var step in d.AllNodes().OfType<StepDefinition>().Where(step2 => step2.BlockType == "code"))
         {
-            var lang = s.Parameters.GetValueOrDefault("Sprache") switch
+            var lang = step.Parameters.GetValueOrDefault("Sprache") switch
             {
                 "Python" => CodeLanguage.Python,
                 "C++" => CodeLanguage.Cpp,
                 _ => CodeLanguage.CSharp,
             };
-            yield return ($"code/ablauf/{Safe(s.Id)}{Extension(lang)}", s.Parameters.GetValueOrDefault("Quelltext") ?? "");
+            yield return ($"code/ablauf/{Safe(step.Id)}{Extension(lang)}", step.Parameters.GetValueOrDefault("Quelltext") ?? "");
         }
     }
 
-    private static string Extension(CodeLanguage l) => l switch
+    private static string Extension(CodeLanguage codeLanguage) => codeLanguage switch
     {
         CodeLanguage.Python => ".py",
         CodeLanguage.Cpp => ".cpp",
@@ -256,7 +256,7 @@ public static class ReleasePackage
         _ => "C#",
     };
 
-    private static string Safe(string id) => new(id.Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' or '.' ? c : '_').ToArray());
+    private static string Safe(string id) => new(id.Select(character => char.IsLetterOrDigit(character) || character is '-' or '_' or '.' ? character : '_').ToArray());
 }
 
 /// <summary>
@@ -274,17 +274,17 @@ public static class DefinitionCompatibility
             reason = "anderer Prüfablauf";
             return false;
         }
-        var a = Outer(serializer.Serialize(current), out var dutA, out var usedA, out var curvesA);
-        var b = Outer(serializer.Serialize(next), out var dutB, out var usedB, out var curvesB);
+        var jsonObject = Outer(serializer.Serialize(current), out var dutA, out var usedA, out var curvesA);
+        var jsonObject2 = Outer(serializer.Serialize(next), out var dutB, out var usedB, out var curvesB);
         if (dutA is null || dutA != dutB)
         {
             reason = "Prüflingsgruppe geändert";
             return false;
         }
-        if (!SameOuterFlow(a, b, out reason)) return false;
+        if (!SameOuterFlow(jsonObject, jsonObject2, out reason)) return false;
         foreach (var id in curvesA.Union(curvesB))
         {
-            if (Curve(a, id) != Curve(b, id))
+            if (Curve(jsonObject, id) != Curve(jsonObject2, id))
             {
                 reason = $"Kurve '{id}' wird außerhalb des Prüflings verwendet und wurde geändert";
                 return false;
@@ -292,7 +292,7 @@ public static class DefinitionCompatibility
         }
         foreach (var id in usedA.Union(usedB))
         {
-            if (Block(a, id) != Block(b, id))
+            if (Block(jsonObject, id) != Block(jsonObject2, id))
             {
                 reason = $"Baustein '{id}' wird außerhalb des Prüflings verwendet und wurde geändert";
                 return false;
@@ -302,7 +302,7 @@ public static class DefinitionCompatibility
         return true;
     }
 
-    private static bool SameOuterFlow(JsonObject a, JsonObject b, out string reason)
+    private static bool SameOuterFlow(JsonObject jsonObject, JsonObject jsonObject2, out string reason)
     {
         (string Key, string Reason)[] properties =
         [
@@ -313,7 +313,7 @@ public static class DefinitionCompatibility
             ("loop", "Loop außerhalb des Prüflings geändert"),
         ];
         foreach (var (key, message) in properties)
-            if (a[key]?.ToJsonString() != b[key]?.ToJsonString()) { reason = message; return false; }
+            if (jsonObject[key]?.ToJsonString() != jsonObject2[key]?.ToJsonString()) { reason = message; return false; }
         reason = "";
         return true;
     }
@@ -321,13 +321,13 @@ public static class DefinitionCompatibility
     private static string? Curve(JsonObject root, string idAtVersion)
     {
         var parts = idAtVersion.Split('@');
-        var versions = (root["curves"] as JsonArray)?.Where(c => (string?)c?["id"] == parts[0]).ToList() ?? [];
-        var pick = parts.Length > 1 && parts[1].Length > 0 ? versions.FirstOrDefault(c => (string?)c?["version"] == parts[1]) : versions.LastOrDefault();
+        var versions = (root["curves"] as JsonArray)?.Where(node => (string?)node?["id"] == parts[0]).ToList() ?? [];
+        var pick = parts.Length > 1 && parts[1].Length > 0 ? versions.FirstOrDefault(node => (string?)node?["version"] == parts[1]) : versions.LastOrDefault();
         return pick?.ToJsonString();
     }
 
     private static string? Block(JsonObject root, string id)
-        => (root["library"] as JsonArray)?.Concat((root["groupLibrary"] as JsonArray) ?? []).FirstOrDefault(b => (string?)b?["id"] == id)?.ToJsonString();
+        => (root["library"] as JsonArray)?.Concat((root["groupLibrary"] as JsonArray) ?? []).FirstOrDefault(node => (string?)node?["id"] == id)?.ToJsonString();
 
     /// <summary>JSON ohne Prüflingsinhalt; liefert die Id der Prüflingsgruppe und die außerhalb verwendeten Bausteine.</summary>
     private static JsonObject Outer(string json, out string? dutId, out HashSet<string> usedOutside, out HashSet<string> curvesOutside)
@@ -342,23 +342,23 @@ public static class DefinitionCompatibility
         var used = new HashSet<string>(StringComparer.Ordinal);
         void Walk(JsonNode? node)
         {
-            if (node is not JsonObject o) return;
-            if (o["dutRun"]?.GetValue<bool>() == true)
+            if (node is not JsonObject jsonObject) return;
+            if (jsonObject["dutRun"]?.GetValue<bool>() == true)
             {
-                found ??= (string?)o["id"];
-                foreach (var key in o.Select(kv => kv.Key).Where(k => k is not ("id" or "art")).ToList()) o.Remove(key);
+                found ??= (string?)jsonObject["id"];
+                foreach (var key in jsonObject.Select(kv => kv.Key).Where(key2 => key2 is not ("id" or "art")).ToList()) jsonObject.Remove(key);
                 return;
             }
-            CollectReferences(o);
-            if (o["children"] is JsonArray children) foreach (var c in children) Walk(c);
-            Walk(o["exit"]);
+            CollectReferences(jsonObject);
+            if (jsonObject["children"] is JsonArray children) foreach (var node2 in children) Walk(node2);
+            Walk(jsonObject["exit"]);
         }
-        void CollectReferences(JsonObject o)
+        void CollectReferences(JsonObject jsonObject2)
         {
-            if (((string?)o["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && o["parameters"] is JsonObject trace && (string?)trace["Grenzkurven"] is { } limits)
+            if (((string?)jsonObject2["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && jsonObject2["parameters"] is JsonObject trace && (string?)trace["Grenzkurven"] is { } limits)
                 foreach (var key in limits.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) curves.Add(key.Contains('@') ? key : key + "@");
-            if (o["parameters"] is JsonObject p && (string?)p["Baustein"] is { Length: > 0 } b) used.Add(b);
-            if (o["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
+            if (jsonObject2["parameters"] is JsonObject jsonObject3 && (string?)jsonObject3["Baustein"] is { Length: > 0 } bufferText) used.Add(bufferText);
+            if (jsonObject2["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
         }
 
         Walk(root["init"]);

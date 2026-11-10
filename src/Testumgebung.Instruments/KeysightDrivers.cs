@@ -14,18 +14,18 @@ public sealed class InstrumentOptions(IReadOnlyDictionary<string, string>? value
 {
     private readonly Dictionary<string, string> _values = new(values ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase);
 
-    public string? Text(string key) => _values.TryGetValue(key, out var v) && !string.IsNullOrWhiteSpace(v) ? v.Trim() : null;
+    public string? Text(string key) => _values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value.Trim() : null;
 
     public double? Number(string key)
-        => Text(key) is { } t && double.TryParse(t.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : null;
+        => Text(key) is { } text && double.TryParse(text.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) ? number : null;
 
-    public bool Flag(string key) => Text(key) is { } t && (t == "1" || t.Equals("ja", StringComparison.OrdinalIgnoreCase) || t.Equals("true", StringComparison.OrdinalIgnoreCase));
+    public bool Flag(string key) => Text(key) is { } text && (text == "1" || text.Equals("ja", StringComparison.OrdinalIgnoreCase) || text.Equals("true", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>„L1=1;L2=2“ → Wörterbuch.</summary>
     public Dictionary<string, string> Map(string key)
         => (Text(key) ?? "").Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Split('=', 2, StringSplitOptions.TrimEntries)).Where(x => x.Length == 2)
-            .ToDictionary(x => x[0], x => x[1], StringComparer.Ordinal);
+            .Select(entry => entry.Split('=', 2, StringSplitOptions.TrimEntries)).Where(parts => parts.Length == 2)
+            .ToDictionary(parts => parts[0], parts => parts[1], StringComparer.Ordinal);
 }
 
 internal static class Scpi
@@ -83,13 +83,13 @@ public sealed class Keysight3446xDmm : ScpiInstrument
 
     protected override async Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct)
     {
-        var f = Function(channel.Name);
-        if (_function != f)
+        var fileName = Function(channel.Name);
+        if (_function != fileName)
         {
-            await Session.WriteAsync(f == "FREQ" ? "CONF:FREQ" : $"CONF:{f} AUTO", ct).ConfigureAwait(false);
-            if (_options.Number("NPLC") is { } nplc && f is "VOLT:DC" or "CURR:DC" or "RES" or "FRES")
-                await Session.WriteAsync($"{f}:NPLC {Scpi.N(nplc)}", ct).ConfigureAwait(false);
-            _function = f;
+            await Session.WriteAsync(fileName == "FREQ" ? "CONF:FREQ" : $"CONF:{fileName} AUTO", ct).ConfigureAwait(false);
+            if (_options.Number("NPLC") is { } nplc && fileName is "VOLT:DC" or "CURR:DC" or "RES" or "FRES")
+                await Session.WriteAsync($"{fileName}:NPLC {Scpi.N(nplc)}", ct).ConfigureAwait(false);
+            _function = fileName;
         }
         // Lange Integrationszeiten / Autorange: großzügiges Zeitlimit für die Messung
         return await Session.QueryDoubleAsync("READ?", ct, Session.Timeout + TimeSpan.FromSeconds(10)).ConfigureAwait(false);
@@ -137,49 +137,49 @@ public sealed class KeysightE36300Supply : ScpiInstrument
             _ => [(6, 5), (25, 1), (25, 1)],
         };
         var list = new List<InstrumentChannel>();
-        for (var i = 0; i < outputs.Length; i++)
+        for (var index = 0; index < outputs.Length; index++)
         {
-            var (v, a) = outputs[i];
-            var n = i + 1;
-            list.Add(new($"CH{n}", "V", Math.Min(0, v), Math.Max(0, v), ChannelAccess.ReadWrite, $"Ausgang {n}: Spannung setzen / messen"));
-            list.Add(new($"CH{n}:I", "A", 0, a, ChannelAccess.ReadWrite, $"Ausgang {n}: Strombegrenzung setzen / Strom messen"));
-            list.Add(new($"CH{n}:OUT", "bool", 0, 1, ChannelAccess.ReadWrite, $"Ausgang {n} ein (1) / aus (0)"));
+            var (value, current) = outputs[index];
+            var count = index + 1;
+            list.Add(new($"CH{count}", "V", Math.Min(0, value), Math.Max(0, value), ChannelAccess.ReadWrite, $"Ausgang {count}: Spannung setzen / messen"));
+            list.Add(new($"CH{count}:I", "A", 0, current, ChannelAccess.ReadWrite, $"Ausgang {count}: Strombegrenzung setzen / Strom messen"));
+            list.Add(new($"CH{count}:OUT", "bool", 0, 1, ChannelAccess.ReadWrite, $"Ausgang {count} ein (1) / aus (0)"));
         }
         Channels = list;
     }
 
     public override IReadOnlyList<InstrumentChannel> Channels { get; }
 
-    private static int Number(InstrumentChannel c) => c.Name[2] - '0';
+    private static int Number(InstrumentChannel channel) => channel.Name[2] - '0';
 
-    private static string Legacy(int n) => n switch { 1 => "P6V", 2 => "P25V", _ => "N25V" };
+    private static string Legacy(int channelIndex) => channelIndex switch { 1 => "P6V", 2 => "P25V", _ => "N25V" };
 
     protected override async Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct)
     {
-        var n = Number(channel);
+        var count = Number(channel);
         if (channel.Name.EndsWith(":OUT", StringComparison.OrdinalIgnoreCase))
-            return await Session.QueryDoubleAsync(_legacy ? "OUTP?" : $"OUTP? (@{n})", ct).ConfigureAwait(false);
+            return await Session.QueryDoubleAsync(_legacy ? "OUTP?" : $"OUTP? (@{count})", ct).ConfigureAwait(false);
         var what = channel.Name.EndsWith(":I", StringComparison.OrdinalIgnoreCase) ? "CURR" : "VOLT";
-        return await Session.QueryDoubleAsync(_legacy ? $"MEAS:{what}? {Legacy(n)}" : $"MEAS:{what}? (@{n})", ct).ConfigureAwait(false);
+        return await Session.QueryDoubleAsync(_legacy ? $"MEAS:{what}? {Legacy(count)}" : $"MEAS:{what}? (@{count})", ct).ConfigureAwait(false);
     }
 
     protected override async Task WriteChannelAsync(InstrumentChannel channel, double value, CancellationToken ct)
     {
-        var n = Number(channel);
+        var count = Number(channel);
         if (channel.Name.EndsWith(":OUT", StringComparison.OrdinalIgnoreCase))
         {
-            await Session.WriteAsync(_legacy ? $"OUTP {Scpi.OnOff(value)}" : $"OUTP {Scpi.OnOff(value)},(@{n})", ct).ConfigureAwait(false);
+            await Session.WriteAsync(_legacy ? $"OUTP {Scpi.OnOff(value)}" : $"OUTP {Scpi.OnOff(value)},(@{count})", ct).ConfigureAwait(false);
             return;
         }
         var what = channel.Name.EndsWith(":I", StringComparison.OrdinalIgnoreCase) ? "CURR" : "VOLT";
         if (_legacy)
         {
-            await Session.WriteAsync($"INST:NSEL {n}", ct).ConfigureAwait(false);
+            await Session.WriteAsync($"INST:NSEL {count}", ct).ConfigureAwait(false);
             await Session.WriteAsync($"{what} {Scpi.N(value)}", ct).ConfigureAwait(false);
         }
         else
         {
-            await Session.WriteAsync($"{what} {Scpi.N(value)},(@{n})", ct).ConfigureAwait(false);
+            await Session.WriteAsync($"{what} {Scpi.N(value)},(@{count})", ct).ConfigureAwait(false);
         }
     }
 
@@ -286,17 +286,17 @@ public sealed class Keysight33500Generator : ScpiInstrument, IWaveformOutputAdap
         _limit = _highZ ? 10 : 5;
         var map = options.Map("Kurvenkanäle");
         if (map.Count == 0) map = _count == 2 ? new() { ["L1"] = "1", ["L2"] = "2" } : new() { ["L1"] = "1" };
-        _map = map.Where(kv => int.TryParse(kv.Value, out var n) && n >= 1 && n <= _count).ToDictionary(kv => kv.Key, kv => int.Parse(kv.Value, CultureInfo.InvariantCulture), StringComparer.Ordinal);
+        _map = map.Where(kv => int.TryParse(kv.Value, out var count) && count >= 1 && count <= _count).ToDictionary(kv => kv.Key, kv => int.Parse(kv.Value, CultureInfo.InvariantCulture), StringComparer.Ordinal);
         MaxSamples = (int)(options.Number("Speicher") ?? (model.StartsWith("336", StringComparison.Ordinal) ? 4_000_000 : 1_000_000));
         MaxRate = model.StartsWith("336", StringComparison.Ordinal) ? 1e9 : 250e6;
         var list = new List<InstrumentChannel>();
-        for (var n = 1; n <= _count; n++)
+        for (var index = 1; index <= _count; index++)
         {
-            list.Add(new($"CH{n}:FREQ", "Hz", 1e-6, model.StartsWith("336", StringComparison.Ordinal) ? 120e6 : 30e6, ChannelAccess.ReadWrite, $"Kanal {n}: Frequenz"));
-            list.Add(new($"CH{n}:AMPL", "Vss", 1e-3, 2 * _limit, ChannelAccess.ReadWrite, $"Kanal {n}: Amplitude (Spitze-Spitze)"));
-            list.Add(new($"CH{n}:OFFS", "V", -_limit, _limit, ChannelAccess.ReadWrite, $"Kanal {n}: Offset"));
-            list.Add(new($"CH{n}:DC", "V", -_limit, _limit, ChannelAccess.Write, $"Kanal {n}: Gleichspannung ausgeben (FUNC DC)"));
-            list.Add(new($"CH{n}:OUT", "bool", 0, 1, ChannelAccess.ReadWrite, $"Kanal {n}: Ausgang ein/aus"));
+            list.Add(new($"CH{index}:FREQ", "Hz", 1e-6, model.StartsWith("336", StringComparison.Ordinal) ? 120e6 : 30e6, ChannelAccess.ReadWrite, $"Kanal {index}: Frequenz"));
+            list.Add(new($"CH{index}:AMPL", "Vss", 1e-3, 2 * _limit, ChannelAccess.ReadWrite, $"Kanal {index}: Amplitude (Spitze-Spitze)"));
+            list.Add(new($"CH{index}:OFFS", "V", -_limit, _limit, ChannelAccess.ReadWrite, $"Kanal {index}: Offset"));
+            list.Add(new($"CH{index}:DC", "V", -_limit, _limit, ChannelAccess.Write, $"Kanal {index}: Gleichspannung ausgeben (FUNC DC)"));
+            list.Add(new($"CH{index}:OUT", "bool", 0, 1, ChannelAccess.ReadWrite, $"Kanal {index}: Ausgang ein/aus"));
         }
         list.Add(new(OutputChannel, "V", -_limit, _limit, ChannelAccess.WaveformOutput, "Kurvenausgabe: " + string.Join(", ", _map.Select(kv => $"{kv.Key}→Kanal {kv.Value}"))));
         Channels = list;
@@ -306,33 +306,33 @@ public sealed class Keysight33500Generator : ScpiInstrument, IWaveformOutputAdap
     public int MaxSamples { get; }
     public double MaxRate { get; }
 
-    private static (int N, string Kind) Parse(InstrumentChannel c) => (c.Name[2] - '0', c.Name[(c.Name.IndexOf(':') + 1)..]);
+    private static (int N, string Kind) Parse(InstrumentChannel channel) => (channel.Name[2] - '0', channel.Name[(channel.Name.IndexOf(':') + 1)..]);
 
     protected override async Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct)
     {
-        var (n, kind) = Parse(channel);
+        var (count, kind) = Parse(channel);
         return kind switch
         {
-            "FREQ" => await Session.QueryDoubleAsync($"SOUR{n}:FREQ?", ct).ConfigureAwait(false),
-            "AMPL" => await Session.QueryDoubleAsync($"SOUR{n}:VOLT?", ct).ConfigureAwait(false),
-            "OFFS" => await Session.QueryDoubleAsync($"SOUR{n}:VOLT:OFFS?", ct).ConfigureAwait(false),
-            _ => await Session.QueryDoubleAsync($"OUTP{n}?", ct).ConfigureAwait(false),
+            "FREQ" => await Session.QueryDoubleAsync($"SOUR{count}:FREQ?", ct).ConfigureAwait(false),
+            "AMPL" => await Session.QueryDoubleAsync($"SOUR{count}:VOLT?", ct).ConfigureAwait(false),
+            "OFFS" => await Session.QueryDoubleAsync($"SOUR{count}:VOLT:OFFS?", ct).ConfigureAwait(false),
+            _ => await Session.QueryDoubleAsync($"OUTP{count}?", ct).ConfigureAwait(false),
         };
     }
 
     protected override async Task WriteChannelAsync(InstrumentChannel channel, double value, CancellationToken ct)
     {
-        var (n, kind) = Parse(channel);
+        var (count, kind) = Parse(channel);
         switch (kind)
         {
-            case "FREQ": await Session.WriteAsync($"SOUR{n}:FREQ {Scpi.N(value)}", ct).ConfigureAwait(false); break;
-            case "AMPL": await Session.WriteAsync($"SOUR{n}:VOLT {Scpi.N(value)}", ct).ConfigureAwait(false); break;
-            case "OFFS": await Session.WriteAsync($"SOUR{n}:VOLT:OFFS {Scpi.N(value)}", ct).ConfigureAwait(false); break;
+            case "FREQ": await Session.WriteAsync($"SOUR{count}:FREQ {Scpi.N(value)}", ct).ConfigureAwait(false); break;
+            case "AMPL": await Session.WriteAsync($"SOUR{count}:VOLT {Scpi.N(value)}", ct).ConfigureAwait(false); break;
+            case "OFFS": await Session.WriteAsync($"SOUR{count}:VOLT:OFFS {Scpi.N(value)}", ct).ConfigureAwait(false); break;
             case "DC":
-                await Session.WriteAsync($"SOUR{n}:FUNC DC", ct).ConfigureAwait(false);
-                await Session.WriteAsync($"SOUR{n}:VOLT:OFFS {Scpi.N(value)}", ct).ConfigureAwait(false);
+                await Session.WriteAsync($"SOUR{count}:FUNC DC", ct).ConfigureAwait(false);
+                await Session.WriteAsync($"SOUR{count}:VOLT:OFFS {Scpi.N(value)}", ct).ConfigureAwait(false);
                 break;
-            default: await Session.WriteAsync($"OUTP{n} {Scpi.OnOff(value)}", ct).ConfigureAwait(false); break;
+            default: await Session.WriteAsync($"OUTP{count} {Scpi.OnOff(value)}", ct).ConfigureAwait(false); break;
         }
     }
 
@@ -366,8 +366,8 @@ public sealed class Keysight33500Generator : ScpiInstrument, IWaveformOutputAdap
         lock (_gate)
         {
             if (_state == OutputState.Running) throw new OutputSequenceException("Ausgabe läuft – erst stoppen, dann neue Kurve laden.");
-            var errors = OutputSuitability.Check(GetOutputCapabilities(channel), curve).Where(i => i.IsError).ToList();
-            if (errors.Count > 0) throw new OutputSequenceException("Gerät ungeeignet: " + string.Join(" ", errors.Select(e => e.Text)));
+            var errors = OutputSuitability.Check(GetOutputCapabilities(channel), curve).Where(issue => issue.IsError).ToList();
+            if (errors.Count > 0) throw new OutputSequenceException("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
             _loaded = curve;
             _state = OutputState.Loaded;
         }
@@ -385,30 +385,30 @@ public sealed class Keysight33500Generator : ScpiInstrument, IWaveformOutputAdap
         }
         foreach (var data in curve.Channels)
         {
-            var n = _map[data.Id];
-            await Session.WriteAsync($"OUTP{n}:LOAD {(_highZ ? "INF" : "50")}", cancellationToken).ConfigureAwait(false);
+            var count = _map[data.Id];
+            await Session.WriteAsync($"OUTP{count}:LOAD {(_highZ ? "INF" : "50")}", cancellationToken).ConfigureAwait(false);
             var min = data.Samples.Min();
             var max = data.Samples.Max();
             if (max - min < 1e-3)
             {
-                await Session.WriteAsync($"SOUR{n}:FUNC DC", cancellationToken).ConfigureAwait(false);
-                await Session.WriteAsync($"SOUR{n}:VOLT:OFFS {Scpi.N((max + min) / 2)}", cancellationToken).ConfigureAwait(false);
+                await Session.WriteAsync($"SOUR{count}:FUNC DC", cancellationToken).ConfigureAwait(false);
+                await Session.WriteAsync($"SOUR{count}:VOLT:OFFS {Scpi.N((max + min) / 2)}", cancellationToken).ConfigureAwait(false);
                 continue;
             }
             var amplitude = max - min;
             var offset = (max + min) / 2;
             var block = new byte[data.Samples.Length * 4];
-            for (var i = 0; i < data.Samples.Length; i++)
-                BinaryPrimitives.WriteSingleLittleEndian(block.AsSpan(i * 4), (float)Math.Clamp((data.Samples[i] - offset) / (amplitude / 2), -1, 1));
-            var name = $"TU{n}";
-            await Session.WriteAsync($"SOUR{n}:DATA:VOL:CLE", cancellationToken).ConfigureAwait(false);
+            for (var index = 0; index < data.Samples.Length; index++)
+                BinaryPrimitives.WriteSingleLittleEndian(block.AsSpan(index * 4), (float)Math.Clamp((data.Samples[index] - offset) / (amplitude / 2), -1, 1));
+            var name = $"TU{count}";
+            await Session.WriteAsync($"SOUR{count}:DATA:VOL:CLE", cancellationToken).ConfigureAwait(false);
             await Session.WriteAsync("FORM:BORD SWAP", cancellationToken).ConfigureAwait(false);
-            await Session.WriteBlockAsync($"SOUR{n}:DATA:ARB {name},", block, cancellationToken).ConfigureAwait(false);
-            await Session.WriteAsync($"SOUR{n}:FUNC:ARB {name}", cancellationToken).ConfigureAwait(false);
-            await Session.WriteAsync($"SOUR{n}:FUNC:ARB:SRAT {Scpi.N(curve.SampleRate)}", cancellationToken).ConfigureAwait(false);
-            await Session.WriteAsync($"SOUR{n}:FUNC ARB", cancellationToken).ConfigureAwait(false);
-            await Session.WriteAsync($"SOUR{n}:VOLT {Scpi.N(amplitude)}", cancellationToken).ConfigureAwait(false);
-            await Session.WriteAsync($"SOUR{n}:VOLT:OFFS {Scpi.N(offset)}", cancellationToken).ConfigureAwait(false);
+            await Session.WriteBlockAsync($"SOUR{count}:DATA:ARB {name},", block, cancellationToken).ConfigureAwait(false);
+            await Session.WriteAsync($"SOUR{count}:FUNC:ARB {name}", cancellationToken).ConfigureAwait(false);
+            await Session.WriteAsync($"SOUR{count}:FUNC:ARB:SRAT {Scpi.N(curve.SampleRate)}", cancellationToken).ConfigureAwait(false);
+            await Session.WriteAsync($"SOUR{count}:FUNC ARB", cancellationToken).ConfigureAwait(false);
+            await Session.WriteAsync($"SOUR{count}:VOLT {Scpi.N(amplitude)}", cancellationToken).ConfigureAwait(false);
+            await Session.WriteAsync($"SOUR{count}:VOLT:OFFS {Scpi.N(offset)}", cancellationToken).ConfigureAwait(false);
         }
         // Zwei Kanäle: Arbiträrkurven phasengleich neu starten (gemeinsame Zeitbasis L1/L2)
         if (curve.Channels.Count > 1) await Session.WriteAsync("FUNC:ARB:SYNC", cancellationToken).ConfigureAwait(false);
@@ -442,15 +442,15 @@ public sealed class Keysight33500Generator : ScpiInstrument, IWaveformOutputAdap
         {
             if (_state != OutputState.Running) throw new OutputSequenceException("Ausgabe läuft nicht.");
         }
-        foreach (var n in _map.Values.Distinct())
-            await Session.WriteAsync($"OUTP{n} OFF", SafeToken(cancellationToken)).ConfigureAwait(false);
+        foreach (var distinct in _map.Values.Distinct())
+            await Session.WriteAsync($"OUTP{distinct} OFF", SafeToken(cancellationToken)).ConfigureAwait(false);
         lock (_gate) _state = OutputState.Stopped;
     }
 
     public override async Task SafeStateAsync(CancellationToken cancellationToken)
     {
         var token = SafeToken(cancellationToken);
-        for (var n = 1; n <= _count; n++) await Session.WriteAsync($"OUTP{n} OFF", token).ConfigureAwait(false);
+        for (var index = 1; index <= _count; index++) await Session.WriteAsync($"OUTP{index} OFF", token).ConfigureAwait(false);
         lock (_gate)
             if (_state == OutputState.Running) _state = OutputState.Stopped;
     }
@@ -482,15 +482,15 @@ public sealed class KeysightInfiniiVisionScope : ScpiInstrument, IWaveformAdapte
         var digits = new string(model.Where(char.IsDigit).ToArray());
         _count = digits.Length >= 4 && digits[3] is '2' or '4' ? digits[3] - '0' : 4;
         var list = new List<InstrumentChannel>();
-        for (var n = 1; n <= _count; n++)
+        for (var index = 1; index <= _count; index++)
         {
-            list.Add(new($"CHAN{n}", "V", -300, 300, ChannelAccess.Waveform, $"Kanal {n}: Kurvenaufnahme"));
-            list.Add(new($"CHAN{n}:VRMS", "V", 0, 300, ChannelAccess.Read, $"Kanal {n}: Effektivwert (AC, Bildschirm)"));
-            list.Add(new($"CHAN{n}:VPP", "V", 0, 600, ChannelAccess.Read, $"Kanal {n}: Spitze-Spitze"));
-            list.Add(new($"CHAN{n}:VAVG", "V", -300, 300, ChannelAccess.Read, $"Kanal {n}: Mittelwert"));
-            list.Add(new($"CHAN{n}:FREQ", "Hz", 0, 1e9, ChannelAccess.Read, $"Kanal {n}: Frequenz"));
-            list.Add(new($"CHAN{n}:SCALE", "V/div", 1e-3, 10, ChannelAccess.ReadWrite, $"Kanal {n}: Vertikalskala"));
-            list.Add(new($"CHAN{n}:OFFSET", "V", -300, 300, ChannelAccess.ReadWrite, $"Kanal {n}: Offset"));
+            list.Add(new($"CHAN{index}", "V", -300, 300, ChannelAccess.Waveform, $"Kanal {index}: Kurvenaufnahme"));
+            list.Add(new($"CHAN{index}:VRMS", "V", 0, 300, ChannelAccess.Read, $"Kanal {index}: Effektivwert (AC, Bildschirm)"));
+            list.Add(new($"CHAN{index}:VPP", "V", 0, 600, ChannelAccess.Read, $"Kanal {index}: Spitze-Spitze"));
+            list.Add(new($"CHAN{index}:VAVG", "V", -300, 300, ChannelAccess.Read, $"Kanal {index}: Mittelwert"));
+            list.Add(new($"CHAN{index}:FREQ", "Hz", 0, 1e9, ChannelAccess.Read, $"Kanal {index}: Frequenz"));
+            list.Add(new($"CHAN{index}:SCALE", "V/div", 1e-3, 10, ChannelAccess.ReadWrite, $"Kanal {index}: Vertikalskala"));
+            list.Add(new($"CHAN{index}:OFFSET", "V", -300, 300, ChannelAccess.ReadWrite, $"Kanal {index}: Offset"));
         }
         list.Add(new("TIMEBASE", "s/div", 1e-9, 50, ChannelAccess.ReadWrite, "Zeitbasis"));
         Channels = list;
@@ -499,7 +499,7 @@ public sealed class KeysightInfiniiVisionScope : ScpiInstrument, IWaveformAdapte
     public override IReadOnlyList<InstrumentChannel> Channels { get; }
 
     private static (string Source, string Kind) Split(string name)
-        => name.IndexOf(':') is var i and > 0 ? (name[..i], name[(i + 1)..]) : (name, "");
+        => name.IndexOf(':') is var index and > 0 ? (name[..index], name[(index + 1)..]) : (name, "");
 
     protected override async Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct)
     {
@@ -530,8 +530,8 @@ public sealed class KeysightInfiniiVisionScope : ScpiInstrument, IWaveformAdapte
     public async Task<WaveformSet> CaptureAsync(IReadOnlyList<string> channels, double sampleRate, int samples, CancellationToken cancellationToken)
     {
         if (channels.Count == 0) throw new InstrumentException("Keine Kanäle für die Aufnahme.");
-        var sources = channels.Select(c => Channel(c)).ToList();
-        if (sources.Any(c => !c.Access.HasFlag(ChannelAccess.Waveform)))
+        var sources = channels.Select(channel => Channel(channel)).ToList();
+        if (sources.Any(channel => !channel.Access.HasFlag(ChannelAccess.Waveform)))
             throw new InstrumentException($"{Model}: Kurvenaufnahme nur auf CHAN1…CHAN{_count}.");
         var duration = samples / sampleRate;
         var setup = $":TIM:REF LEFT;:TIM:SCAL {Scpi.N(duration / 10)};:WAV:POIN:MODE RAW";
@@ -541,7 +541,7 @@ public sealed class KeysightInfiniiVisionScope : ScpiInstrument, IWaveformAdapte
         await Session.WriteAsync(setup, cancellationToken).ConfigureAwait(false);
         var start = DateTimeOffset.Now;
         // Eine Erfassung für alle Kanäle → gemeinsame Zeitbasis
-        await Session.WriteAsync(":DIG " + string.Join(",", sources.Select(s => s.Name)), cancellationToken).ConfigureAwait(false);
+        await Session.WriteAsync(":DIG " + string.Join(",", sources.Select(channel => channel.Name)), cancellationToken).ConfigureAwait(false);
         await Session.WaitCompleteAsync(TimeSpan.FromSeconds(10) + TimeSpan.FromSeconds(duration * 4), cancellationToken).ConfigureAwait(false);
         var sync = $"{Model}-{Interlocked.Increment(ref _captures)}";
         var result = new List<Waveform>();
@@ -549,7 +549,7 @@ public sealed class KeysightInfiniiVisionScope : ScpiInstrument, IWaveformAdapte
         {
             await Session.WriteAsync($":WAV:SOUR {src.Name};:WAV:FORM WORD;:WAV:BYT LSBF;:WAV:UNS 0;:WAV:POIN {samples}", cancellationToken).ConfigureAwait(false);
             var pre = (await Session.QueryAsync(":WAV:PRE?", cancellationToken).ConfigureAwait(false)).Split(',')
-                .Select(x => double.Parse(x, NumberStyles.Float, CultureInfo.InvariantCulture)).ToArray();
+                .Select(field => double.Parse(field, NumberStyles.Float, CultureInfo.InvariantCulture)).ToArray();
             if (pre.Length < 10) throw new InstrumentException($":WAV:PRE? lieferte {pre.Length} statt 10 Werte.");
             var (xinc, xorig, yinc, yorig, yref) = (pre[4], pre[5], pre[7], pre[8], pre[9]);
             SampleBufferWriter? writer = null;

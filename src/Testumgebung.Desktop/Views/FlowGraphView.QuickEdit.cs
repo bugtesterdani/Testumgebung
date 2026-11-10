@@ -31,7 +31,7 @@ public partial class FlowGraphView
         DockPanel.SetDock(button, Dock.Right); heading.Children.Add(button);
     }
 
-    private void OnAddBlock(object sender, RoutedEventArgs e)
+    private void OnAddBlock(object sender, RoutedEventArgs eventArgs)
     {
         if (IsRunning) return;
         var key = "node:" + Editor?.SelectedNode?.Id;
@@ -39,7 +39,7 @@ public partial class FlowGraphView
         fields?.AddGraphBlock(Editor?.SelectedNode);
     }
 
-    private void OnNormalView(object sender, RoutedEventArgs e)
+    private void OnNormalView(object sender, RoutedEventArgs eventArgs)
     {
         if (Editor is not { } editor) return;
         var selected = editor.SelectedNode ?? editor.Nodes.FirstOrDefault();
@@ -47,7 +47,7 @@ public partial class FlowGraphView
         FindEditorHost()?.ShowGraphDetails(selected);
     }
 
-    private void OnViewMenu(object sender, RoutedEventArgs e)
+    private void OnViewMenu(object sender, RoutedEventArgs eventArgs)
     {
         if (sender is not Button button) return;
         var menu = new ContextMenu();

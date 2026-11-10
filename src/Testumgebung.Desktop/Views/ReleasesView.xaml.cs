@@ -9,7 +9,7 @@ namespace Testumgebung.Desktop.Views;
 
 public partial class ReleasesView : UserControl
 {
-    private void OnOpenSources(object sender, System.Windows.RoutedEventArgs e)
+    private void OnOpenSources(object sender, System.Windows.RoutedEventArgs eventArgs)
     {
         if (DataContext is not Testumgebung.Presentation.ViewModels.ShellViewModel { ReleasesPage: { } page }) return;
         _ = page.Sources.RefreshAsync();

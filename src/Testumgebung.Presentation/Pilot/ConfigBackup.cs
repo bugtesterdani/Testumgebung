@@ -76,12 +76,12 @@ public static class ConfigBackup
                 if (!File.Exists(source.Path)) continue;
                 var data = File.ReadAllBytes(source.Path);
                 var entry = zip.CreateEntry(source.Name, CompressionLevel.Optimal);
-                using (var s = entry.Open()) s.Write(data);
+                using (var stream = entry.Open()) stream.Write(data);
                 manifest.Files.Add(new BackupFileEntry(source.Name, source.Description, Convert.ToHexStringLower(SHA256.HashData(data)), data.Length,
                     HasProtectedSecrets(data)));
             }
-            var m = zip.CreateEntry(ManifestName);
-            using var ms = m.Open();
+            var zipArchiveEntry = zip.CreateEntry(ManifestName);
+            using var ms = zipArchiveEntry.Open();
             JsonSerializer.Serialize(ms, manifest, Json);
         }
         File.Move(temp, zipPath, overwrite: true);
@@ -99,18 +99,18 @@ public static class ConfigBackup
             using var zip = ZipFile.OpenRead(zipPath);
             manifest = ReadManifest(zip);
             if (manifest is null) return new BackupInspection(new BackupManifest(), ["Keine Sicherung der Testumgebung (sicherung.json fehlt)."], []);
-            foreach (var f in manifest.Files)
+            foreach (var backupFileEntry in manifest.Files)
             {
-                if (zip.GetEntry(f.Name) is not { } entry)
+                if (zip.GetEntry(backupFileEntry.Name) is not { } entry)
                 {
-                    problems.Add($"{f.Name}: fehlt im Archiv.");
+                    problems.Add($"{backupFileEntry.Name}: fehlt im Archiv.");
                     continue;
                 }
                 var data = ReadAll(entry);
-                if (Convert.ToHexStringLower(SHA256.HashData(data)) != f.Sha256) problems.Add($"{f.Name}: Prüfsumme stimmt nicht (beschädigt oder verändert).");
-                else if (!IsJson(data)) problems.Add($"{f.Name}: kein gültiges JSON.");
-                if (f.ContainsProtectedSecrets && (manifest.Machine != Environment.MachineName || manifest.User != Environment.UserName))
-                    warnings.Add($"{f.Name}: Kennwörter/Verbindungsstring sind per DPAPI an {manifest.User}@{manifest.Machine} gebunden – nach dem Wiederherstellen unter „Einstellungen“ neu eingeben.");
+                if (Convert.ToHexStringLower(SHA256.HashData(data)) != backupFileEntry.Sha256) problems.Add($"{backupFileEntry.Name}: Prüfsumme stimmt nicht (beschädigt oder verändert).");
+                else if (!IsJson(data)) problems.Add($"{backupFileEntry.Name}: kein gültiges JSON.");
+                if (backupFileEntry.ContainsProtectedSecrets && (manifest.Machine != Environment.MachineName || manifest.User != Environment.UserName))
+                    warnings.Add($"{backupFileEntry.Name}: Kennwörter/Verbindungsstring sind per DPAPI an {manifest.User}@{manifest.Machine} gebunden – nach dem Wiederherstellen unter „Einstellungen“ neu eingeben.");
             }
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException)
@@ -131,10 +131,10 @@ public static class ConfigBackup
         var restored = new List<string>();
         var copies = new List<string>();
         using var zip = ZipFile.OpenRead(zipPath);
-        foreach (var f in inspection.Manifest.Files)
+        foreach (var backupFileEntry in inspection.Manifest.Files)
         {
-            if (!targets.TryGetValue(f.Name, out var target)) continue;
-            var data = ReadAll(zip.GetEntry(f.Name)!);
+            if (!targets.TryGetValue(backupFileEntry.Name, out var target)) continue;
+            var data = ReadAll(zip.GetEntry(backupFileEntry.Name)!);
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target)!);
             if (File.Exists(target))
             {
@@ -159,9 +159,9 @@ public static class ConfigBackup
 
     private static byte[] ReadAll(ZipArchiveEntry entry)
     {
-        using var s = entry.Open();
+        using var stream = entry.Open();
         using var ms = new MemoryStream();
-        s.CopyTo(ms);
+        stream.CopyTo(ms);
         return ms.ToArray();
     }
 

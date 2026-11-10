@@ -118,7 +118,7 @@ public sealed class StreamDevice : CommDevice, IByteStreamAdapter, IConfigurable
         => LockedAsync(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var signature = string.Join("\n", options.OrderBy(p => p.Key).Select(p => p.Key + "=" + p.Value));
+            var signature = string.Join("\n", options.OrderBy(entry => entry.Key).Select(entry => entry.Key + "=" + entry.Value));
             if (Resource == endpoint && signature == _configuration) return 0;
             var updated = options.Count == 0 ? Options : new InstrumentOptions(options);
             var transport = Adapter switch
@@ -139,16 +139,16 @@ public sealed class StreamDevice : CommDevice, IByteStreamAdapter, IConfigurable
             return 0;
         }, cancellationToken);
 
-    private static TcpTransport Tcp(string resource, InstrumentOptions o)
+    private static TcpTransport Tcp(string resource, InstrumentOptions instrumentOptions)
     {
         var (host, port) = Endpoints.Parse(resource, 23);
-        return new TcpTransport(host, port, TimeSpan.FromMilliseconds(o.Number("Verbindungszeit") ?? 3000), TlsSettings.From(host, o));
+        return new TcpTransport(host, port, TimeSpan.FromMilliseconds(instrumentOptions.Number("Verbindungszeit") ?? 3000), TlsSettings.From(host, instrumentOptions));
     }
 
-    private static UdpTransport Udp(string resource, InstrumentOptions o)
+    private static UdpTransport Udp(string resource, InstrumentOptions instrumentOptions)
     {
         var (host, port) = Endpoints.Parse(resource, 5000);
-        return new UdpTransport(host, port, (int)(o.Number("Lokaler Port") ?? 0));
+        return new UdpTransport(host, port, (int)(instrumentOptions.Number("Lokaler Port") ?? 0));
     }
 
     public override string Name => $"{Adapter} {_transport.Description}";
@@ -297,14 +297,14 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
         }
         catch (FormatException)
         {
-            return byte.TryParse(channel, NumberStyles.Integer, CultureInfo.InvariantCulture, out var u) && u is >= 1 and <= 247;
+            return byte.TryParse(channel, NumberStyles.Integer, CultureInfo.InvariantCulture, out var dataByte) && dataByte is >= 1 and <= 247;
         }
     }
 
     private byte Unit(string channel)
     {
-        var c = channel.Split('/')[0].Trim();
-        return byte.TryParse(c, NumberStyles.Integer, CultureInfo.InvariantCulture, out var u) && u <= 247 ? u : _defaultUnit;
+        var parts = channel.Split('/')[0].Trim();
+        return byte.TryParse(parts, NumberStyles.Integer, CultureInfo.InvariantCulture, out var dataByte) && dataByte <= 247 ? dataByte : _defaultUnit;
     }
 
     private (byte Unit, ModbusArea Area, int Address, ModbusDataType Type) ParsePoint(string channel)
@@ -338,9 +338,9 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
     public override async Task WriteAsync(string channel, double value, CancellationToken cancellationToken)
     {
         var (unit, area, address, type) = Point(channel);
-        var u = unit.ToString(CultureInfo.InvariantCulture);
-        if (area == ModbusArea.Coil) await WriteBitsAsync(u, address, [value >= 0.5], cancellationToken).ConfigureAwait(false);
-        else if (area == ModbusArea.HoldingRegister) await WriteRegistersAsync(u, address, ModbusCodec.Encode(type is ModbusDataType.Float32 or ModbusDataType.Float64 ? value : Math.Round(value), type, LowWordFirst), cancellationToken).ConfigureAwait(false);
+        var text = unit.ToString(CultureInfo.InvariantCulture);
+        if (area == ModbusArea.Coil) await WriteBitsAsync(text, address, [value >= 0.5], cancellationToken).ConfigureAwait(false);
+        else if (area == ModbusArea.HoldingRegister) await WriteRegistersAsync(text, address, ModbusCodec.Encode(type is ModbusDataType.Float32 or ModbusDataType.Float64 ? value : Math.Round(value), type, LowWordFirst), cancellationToken).ConfigureAwait(false);
         else throw new CommunicationException($"{channel}: nur Holding-Register und Coils sind schreibbar.");
     }
 
@@ -367,7 +367,7 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
         };
         var data = await TransactAsync(Unit(channel), function, [.. U16(address), .. U16(count)], cancellationToken).ConfigureAwait(false);
         if (data.Length < 1 || data[0] != count * 2 || data.Length != 1 + count * 2) throw new CommunicationException($"Modbus: Antwortlänge {data.Length} passt nicht zu {count} Registern.");
-        return Enumerable.Range(0, count).Select(i => (ushort)((data[1 + 2 * i] << 8) | data[2 + 2 * i])).ToArray();
+        return Enumerable.Range(0, count).Select(index => (ushort)((data[1 + 2 * index] << 8) | data[2 + 2 * index])).ToArray();
     }
 
     public async Task<bool[]> ReadBitsAsync(string channel, ModbusArea area, int address, int count, CancellationToken cancellationToken)
@@ -381,7 +381,7 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
         };
         var data = await TransactAsync(Unit(channel), function, [.. U16(address), .. U16(count)], cancellationToken).ConfigureAwait(false);
         if (data.Length < 1 || data[0] != (count + 7) / 8) throw new CommunicationException("Modbus: Antwortlänge passt nicht zur Bitanzahl.");
-        return Enumerable.Range(0, count).Select(i => (data[1 + i / 8] >> (i % 8) & 1) != 0).ToArray();
+        return Enumerable.Range(0, count).Select(index => (data[1 + index / 8] >> (index % 8) & 1) != 0).ToArray();
     }
 
     public async Task WriteRegistersAsync(string channel, int address, IReadOnlyList<ushort> values, CancellationToken cancellationToken)
@@ -390,7 +390,7 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
         if (values.Count == 1)
             await TransactAsync(Unit(channel), 6, [.. U16(address), .. U16(values[0])], cancellationToken).ConfigureAwait(false);
         else
-            await TransactAsync(Unit(channel), 16, [.. U16(address), .. U16(values.Count), (byte)(values.Count * 2), .. values.SelectMany(v => U16(v))], cancellationToken).ConfigureAwait(false);
+            await TransactAsync(Unit(channel), 16, [.. U16(address), .. U16(values.Count), (byte)(values.Count * 2), .. values.SelectMany(number => U16(number))], cancellationToken).ConfigureAwait(false);
     }
 
     public async Task WriteBitsAsync(string channel, int address, IReadOnlyList<bool> values, CancellationToken cancellationToken)
@@ -402,12 +402,12 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
             return;
         }
         var packed = new byte[(values.Count + 7) / 8];
-        for (var i = 0; i < values.Count; i++)
-            if (values[i]) packed[i / 8] |= (byte)(1 << (i % 8));
+        for (var index = 0; index < values.Count; index++)
+            if (values[index]) packed[index / 8] |= (byte)(1 << (index % 8));
         await TransactAsync(Unit(channel), 15, [.. U16(address), .. U16(values.Count), (byte)packed.Length, .. packed], cancellationToken).ConfigureAwait(false);
     }
 
-    private static byte[] U16(int v) => [(byte)(v >> 8), (byte)v];
+    private static byte[] U16(int u16) => [(byte)(u16 >> 8), (byte)u16];
 
     /// <summary>Anfrage senden, Antwort-PDU-Daten (ohne Funktionscode) liefern; Wiederholung bei Zeitüberschreitung/Prüfsummenfehler.</summary>
     private Task<byte[]> TransactAsync(byte unit, byte function, byte[] data, CancellationToken cancellationToken)
@@ -433,7 +433,7 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
                     _receiver.Discard();
                 }
             }
-            throw last is CommunicationTimeoutException t ? t : new CommunicationException($"Modbus: {last!.Message}", last);
+            throw last is CommunicationTimeoutException error ? error : new CommunicationException($"Modbus: {last!.Message}", last);
         }, cancellationToken);
 
     private async Task<byte[]> TcpAsync(byte unit, byte function, byte[] data, CancellationToken ct)
@@ -515,10 +515,10 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
     public static ushort Crc16(ReadOnlySpan<byte> data)
     {
         ushort crc = 0xFFFF;
-        foreach (var b in data)
+        foreach (var dataByte in data)
         {
-            crc ^= b;
-            for (var i = 0; i < 8; i++) crc = (crc & 1) != 0 ? (ushort)((crc >> 1) ^ 0xA001) : (ushort)(crc >> 1);
+            crc ^= dataByte;
+            for (var index = 0; index < 8; index++) crc = (crc & 1) != 0 ? (ushort)((crc >> 1) ^ 0xA001) : (ushort)(crc >> 1);
         }
         return crc;
     }
@@ -530,8 +530,8 @@ public sealed class ModbusDevice : CommDevice, IModbusAdapter
         foreach (var item in list.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = item.Split('=', 2, StringSplitOptions.TrimEntries);
-            if (parts.Length == 2 && double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
-                await WriteAsync(parts[0], v, token).ConfigureAwait(false);
+            if (parts.Length == 2 && double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+                await WriteAsync(parts[0], value, token).ConfigureAwait(false);
         }
     }
 

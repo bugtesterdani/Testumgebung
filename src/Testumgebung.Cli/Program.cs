@@ -87,16 +87,16 @@ namespace Testumgebung.Cli
         {
             var positional = 0;
             var junitSeen = false;
-            for (var i = 1; i < args.Length; i++)
+            for (var index = 1; index < args.Length; index++)
             {
-                if (args[i] == "--junit" && args[0] != "simulate" && !junitSeen)
+                if (args[index] == "--junit" && args[0] != "simulate" && !junitSeen)
                 {
                     junitSeen = true;
-                    if (++i == args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--", StringComparison.Ordinal))
+                    if (++index == args.Length || string.IsNullOrWhiteSpace(args[index]) || args[index].StartsWith("--", StringComparison.Ordinal))
                         throw new ArgumentException("--junit braucht einen Dateipfad.");
                 }
-                else if (args[i].StartsWith("--", StringComparison.Ordinal))
-                    throw new ArgumentException($"Unbekannte oder doppelte Option „{args[i]}“.");
+                else if (args[index].StartsWith("--", StringComparison.Ordinal))
+                    throw new ArgumentException($"Unbekannte oder doppelte Option „{args[index]}“.");
                 else positional++;
             }
             if (positional != 1) throw new ArgumentException("Genau einen Projekt-, Szenario- oder Ordnerpfad angeben.");
@@ -104,19 +104,19 @@ namespace Testumgebung.Cli
 
         private static string Single(string[] args)
         {
-            for (var i = 1; i < args.Length; i++)
+            for (var index = 1; index < args.Length; index++)
             {
-                if (args[i] == "--junit") { i++; continue; }
-                if (!File.Exists(args[i]) && !Directory.Exists(args[i])) throw new IOException($"Nicht gefunden: {args[i]}");
-                return Path.GetFullPath(args[i]);
+                if (args[index] == "--junit") { index++; continue; }
+                if (!File.Exists(args[index]) && !Directory.Exists(args[index])) throw new IOException($"Nicht gefunden: {args[index]}");
+                return Path.GetFullPath(args[index]);
             }
             throw new ArgumentException("Pfad fehlt.");
         }
 
         private static string? Option(string[] args, string name)
         {
-            var i = Array.IndexOf(args, name);
-            return i < 0 ? null : args[i + 1];
+            var index = Array.IndexOf(args, name);
+            return index < 0 ? null : args[index + 1];
         }
 
         /// <summary>Projekte und Szenarien unter einem Pfad: Ordner rekursiv, Projektdatei mit den Szenarien im selben Ordnerbaum.</summary>
@@ -125,7 +125,7 @@ namespace Testumgebung.Cli
             static IEnumerable<string> Find(string dir, string pattern) => Directory.EnumerateFiles(dir, pattern, new EnumerationOptions
             {
                 RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.Hidden | FileAttributes.System,
-            }).Where(f => !f.Split(Path.DirectorySeparatorChar).Any(p => p is "bin" or "obj" or "node_modules")).Order(StringComparer.Ordinal);
+            }).Where(fileName => !fileName.Split(Path.DirectorySeparatorChar).Any(pathSegment => pathSegment is "bin" or "obj" or "node_modules")).Order(StringComparer.Ordinal);
 
             if (Directory.Exists(path)) return (Find(path, "*.tproj.json").ToList(), includeScenarios ? Find(path, "*.tsim.json").ToList() : []);
             if (path.EndsWith(".tsim.json", StringComparison.OrdinalIgnoreCase))
@@ -133,7 +133,7 @@ namespace Testumgebung.Cli
             if (path.EndsWith(".tproj.json", StringComparison.OrdinalIgnoreCase))
             {
                 var scenarios = includeScenarios ? Find(Path.GetDirectoryName(path)!, "*.tsim.json")
-                    .Where(s => ReferencesProject(s, path)).ToList() : [];
+                    .Where(text => ReferencesProject(text, path)).ToList() : [];
                 return ([path], scenarios);
             }
             throw new ArgumentException($"Erwartet einen Ordner, eine *.tproj.json oder eine *.tsim.json: {path}");
@@ -201,7 +201,7 @@ namespace Testumgebung.Cli
                 var fresh = new ProjectSerializer().Load(scenario.ProjectPath); // jeder Lauf mit unveränderter Projektdatei
                 await ScenarioRunner.RunAsync(scenario, fresh, runtime!, report, printTrace: false).ConfigureAwait(false);
             }
-            foreach (var project in projects.Where(p => valid[p] && !covered.Contains(p)))
+            foreach (var project in projects.Where(project => valid[project] && !covered.Contains(project)))
                 report.Skip(ProjectChecks.SuiteName(project), "Szenarien",
                     "keine *.tsim.json für dieses Projekt – Ablauf wurde nur geprüft und gebaut, nicht simuliert (Format: testumgebung-cli anleitung szenario).");
         }

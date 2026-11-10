@@ -17,7 +17,7 @@ public sealed class CurveEnvelope
         ValidateChannels(curve, lower, upper, unit);
         _times = Enumerable.Range(0, curve.Count).Select(curve.TimeOf).ToArray();
         _lower = lower.Samples.ToArray(); _upper = upper.Samples.ToArray();
-        for (var i = 0; i < _times.Length; i++) ValidatePoint(i);
+        for (var index = 0; index < _times.Length; index++) ValidatePoint(index);
         Key = curve.Key; Hash = curve.ContentHash();
     }
     private static void ValidateDefinition(CurveDefinition curve)
@@ -27,18 +27,18 @@ public sealed class CurveEnvelope
         if (curve.Times is null && (!double.IsFinite(curve.SampleRate) || curve.SampleRate <= 0)) throw new ArgumentException("Grenzkurve benötigt eine gültige Zeitbasis.");
     }
     private static CurveChannel FindChannel(CurveDefinition curve, string name)
-        => curve.Channels.SingleOrDefault(c => c.Id.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException($"Grenzkurvenkanal {name} fehlt.");
+        => curve.Channels.SingleOrDefault(curveChannel => curveChannel.Id.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException($"Grenzkurvenkanal {name} fehlt.");
     private static void ValidateChannels(CurveDefinition curve, CurveChannel lower, CurveChannel upper, string unit)
     {
         if (lower.Unit != unit || upper.Unit != unit) throw new ArgumentException("Einheit der Grenzkurven passt nicht zur Aufnahme.");
-        if (lower.Samples.Length != curve.Count || upper.Samples.Length != curve.Count || (curve.Times is { } t && t.Length != curve.Count))
+        if (lower.Samples.Length != curve.Count || upper.Samples.Length != curve.Count || (curve.Times is { } samples && samples.Length != curve.Count))
             throw new ArgumentException("Grenzkurve hat inkonsistente Kanallängen.");
     }
-    private void ValidatePoint(int i)
+    private void ValidatePoint(int pointIndex)
     {
-        if (!double.IsFinite(_times[i]) || !double.IsFinite(_lower[i]) || !double.IsFinite(_upper[i]) || _lower[i] > _upper[i])
+        if (!double.IsFinite(_times[pointIndex]) || !double.IsFinite(_lower[pointIndex]) || !double.IsFinite(_upper[pointIndex]) || _lower[pointIndex] > _upper[pointIndex])
             throw new ArgumentException("Grenzkurve enthält ungültige Werte oder eine Untergrenze oberhalb der Obergrenze.");
-        if (_times[i] < 0 || (i > 0 && _times[i] <= _times[i - 1])) throw new ArgumentException("Grenzkurvenzeiten müssen nichtnegativ und streng steigend sein.");
+        if (_times[pointIndex] < 0 || (pointIndex > 0 && _times[pointIndex] <= _times[pointIndex - 1])) throw new ArgumentException("Grenzkurvenzeiten müssen nichtnegativ und streng steigend sein.");
     }
     public (double Lower, double Upper) At(double time)
     {
@@ -50,16 +50,16 @@ public sealed class CurveEnvelope
         yield return start;
         var found = Array.BinarySearch(_times, start);
         var first = Math.Max(1, found >= 0 ? found : ~found);
-        for (var i = first; i < _times.Length && _times[i - 1] <= end; i++)
+        for (var index = first; index < _times.Length && _times[index - 1] <= end; index++)
         {
-            if (_times[i] > start && _times[i] < end) yield return _times[i];
+            if (_times[index] > start && _times[index] < end) yield return _times[index];
             foreach (var values in new[] { _lower, _upper })
             {
-                if (Math.Sign(values[i - 1]) == Math.Sign(values[i])) continue;
+                if (Math.Sign(values[index - 1]) == Math.Sign(values[index])) continue;
                 // Scaled weights avoid overflow when limits have opposite signs.
-                var scale = Math.Max(Math.Abs(values[i - 1]), Math.Abs(values[i]));
-                var left = Math.Abs(values[i - 1]) / scale; var right = Math.Abs(values[i]) / scale;
-                var zero = _times[i - 1] + (_times[i] - _times[i - 1]) * (left / (left + right));
+                var scale = Math.Max(Math.Abs(values[index - 1]), Math.Abs(values[index]));
+                var left = Math.Abs(values[index - 1]) / scale; var right = Math.Abs(values[index]) / scale;
+                var zero = _times[index - 1] + (_times[index] - _times[index - 1]) * (left / (left + right));
                 if (zero > start && zero < end) yield return zero;
             }
         }
@@ -79,8 +79,8 @@ public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTra
 {
     public EnvelopeEarlyStop? EarlyStop { get; init; }
     public bool Finished { get; init; }
-    public bool Passed => EarlyStop is null && Complete && Channels.All(c => c.ViolationCount == 0);
-    public int Violations => Channels.Sum(c => c.ViolationCount);
+    public bool Passed => EarlyStop is null && Complete && Channels.All(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount == 0);
+    public int Violations => Channels.Sum(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount);
 }
 
 /// <summary>One finite recording with a common receipt-time base for all channels.</summary>
@@ -106,7 +106,7 @@ internal sealed class EnvelopeRecording
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
         if (stopPercent is { } percent && (!double.IsFinite(percent) || percent < 0)) throw new ArgumentException("FAIL-Abbruchabweichung muss endlich und >= 0 sein.");
         _stopPercent = stopPercent;
-        _channels = channels.ToArray(); _envelopes = channels.Select(c => new CurveEnvelope(c.Limits, c.Unit)).ToArray();
+        _channels = channels.ToArray(); _envelopes = channels.Select(traceChannelDefinition => new CurveEnvelope(traceChannelDefinition.Limits, traceChannelDefinition.Unit)).ToArray();
         ValidateDuration(duration, minimumDuration);
         _duration = duration;
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
@@ -114,7 +114,7 @@ internal sealed class EnvelopeRecording
     }
     private static void ValidateChannels(IReadOnlyList<TraceChannelDefinition> channels)
     {
-        if (channels.Count is < 1 or > 8 || channels.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(c => string.IsNullOrWhiteSpace(c.Name) || c.Name.Contains(" · ", StringComparison.Ordinal)))
+        if (channels.Count is < 1 or > 8 || channels.Select(traceChannelDefinition => traceChannelDefinition.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(traceChannelDefinition => string.IsNullOrWhiteSpace(traceChannelDefinition.Name) || traceChannelDefinition.Name.Contains(" · ", StringComparison.Ordinal)))
             throw new ArgumentException("1 bis 8 eindeutig benannte Messkanäle erforderlich.");
     }
     private static void ValidateAcquisition(int maxPoints, double maxGap, double minimumDuration)
@@ -132,7 +132,7 @@ internal sealed class EnvelopeRecording
     private static double TimeTolerance(double value) => Math.Max(1, value) * 1e-12;
     public void CheckUnits(IReadOnlyList<string> units)
     {
-        if (units.Count != _channels.Length || units.Where((unit, i) => unit != _channels[i].Unit).Any()) throw new ArgumentException("Geräteeinheiten passen nicht zur Aufnahme; keine automatische Umrechnung.");
+        if (units.Count != _channels.Length || units.Where((unit, index) => unit != _channels[index].Unit).Any()) throw new ArgumentException("Geräteeinheiten passen nicht zur Aufnahme; keine automatische Umrechnung.");
     }
     public void Invalidate() => _faulted = true;
     public double Elapsed(DateTimeOffset now) => (now - _start).TotalSeconds;
@@ -141,7 +141,7 @@ internal sealed class EnvelopeRecording
         if (_duration is { } end && Math.Abs(time - end) <= TimeTolerance(end)) time = end;
         try { Validate(time, values); }
         catch { _faulted = true; throw; }
-        _times.Add(time); for (var i = 0; i < values.Count; i++) _values[i].Add(values[i]);
+        _times.Add(time); for (var index = 0; index < values.Count; index++) _values[index].Add(values[index]);
         var alreadyFailed = HasViolation;
         CheckSegment();
         if (Ended || (HasViolation && !alreadyFailed)) return true;
@@ -154,7 +154,7 @@ internal sealed class EnvelopeRecording
         if (_duration is { } duration && time > duration) throw new ArgumentException("Messzeit liegt nach der eingestellten Aufnahmedauer.");
         if (_faulted) throw new InvalidOperationException("Aufnahme ist nach einem Datenfehler ungültig; neu starten.");
         if (_times.Count >= _maxPoints) throw new InvalidOperationException("Maximale Messpunktzahl erreicht.");
-        if (values.Count != _channels.Length || values.Any(v => !double.IsFinite(v)) || !double.IsFinite(time) || time < 0)
+        if (values.Count != _channels.Length || values.Any(value => !double.IsFinite(value)) || !double.IsFinite(time) || time < 0)
             throw new ArgumentException("Für jeden Kanal einen endlichen Messwert und eine nichtnegative Zeit angeben.");
         if (_times.Count > 0 && (time <= _times[^1] || time - _times[^1] > _maxGap + Math.Max(1, _maxGap) * 1e-12)) throw new ArgumentException("Zeitpunkte müssen streng steigen und dürfen die maximale Messlücke nicht überschreiten.");
         foreach (var envelope in _envelopes) _ = envelope.At(time);
@@ -163,7 +163,7 @@ internal sealed class EnvelopeRecording
     {
         var complete = stopped && EarlyStop is null && !_faulted && HasFullDuration();
         if (_times.Count == 0) return new(new([]), [], false);
-        var grid = _envelopes.SelectMany(e => e.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(t => t >= _times[0] && t <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
+        var grid = _envelopes.SelectMany(curveEnvelope => curveEnvelope.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(concat => concat >= _times[0] && concat <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
         var waves = new List<Waveform>(); var metadata = new List<EnvelopeTraceMetadata>();
         for (var channel = 0; channel < _channels.Length; channel++) EvaluateChannel(channel, grid, complete, waves, metadata);
         return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended };
@@ -173,17 +173,17 @@ internal sealed class EnvelopeRecording
         var definition = _channels[channel]; var envelope = _envelopes[channel];
         var measured = new double[grid.Length]; var lower = new double[grid.Length]; var upper = new double[grid.Length];
         var violations = new List<double>(); var details = new List<EnvelopeViolation>(); double maximum = 0;
-        for (var i = 0; i < grid.Length; i++)
+        for (var index = 0; index < grid.Length; index++)
         {
-            measured[i] = _times.Count == 1 ? _values[channel][0] : CurveEnvelope.Interpolate(_times, _values[channel], grid[i]);
-            (lower[i], upper[i]) = envelope.At(grid[i]);
-            if (!Inside(measured[i], lower[i], upper[i]))
+            measured[index] = _times.Count == 1 ? _values[channel][0] : CurveEnvelope.Interpolate(_times, _values[channel], grid[index]);
+            (lower[index], upper[index]) = envelope.At(grid[index]);
+            if (!Inside(measured[index], lower[index], upper[index]))
             {
-                violations.Add(grid[i]); details.Add(new(grid[i], measured[i], lower[i], upper[i], Math.Max(0, Math.Max(lower[i] - measured[i], measured[i] - upper[i]))));
+                violations.Add(grid[index]); details.Add(new(grid[index], measured[index], lower[index], upper[index], Math.Max(0, Math.Max(lower[index] - measured[index], measured[index] - upper[index]))));
             }
-            maximum = Math.Max(maximum, Math.Max(lower[i] - measured[i], measured[i] - upper[i]));
+            maximum = Math.Max(maximum, Math.Max(lower[index] - measured[index], measured[index] - upper[index]));
         }
-        if (measured.Any(v => !double.IsFinite(v)) || !double.IsFinite(maximum)) throw new ArgumentException("Wertebereich der Kurvenauswertung überschritten.");
+        if (measured.Any(measured2 => !double.IsFinite(measured2)) || !double.IsFinite(maximum)) throw new ArgumentException("Wertebereich der Kurvenauswertung überschritten.");
         var info = new EnvelopeTraceMetadata(envelope.Key, envelope.Hash, definition.Name, _times.ToArray(), violations.ToArray(), violations.Count, maximum, complete) { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration };
         metadata.Add(info);
         waves.Add(new(definition.Name, definition.Unit, 0, _start, measured, grid, info.Encode()));
@@ -260,8 +260,8 @@ public sealed class EnvelopeRecordings
     {
         lock (_gate)
         {
-            var keys = _recordings.Keys.Where(k => k.Owner == owner).ToArray();
-            var results = keys.Where(k => !_recordings[k].Ended).Select(k => Incomplete(_recordings[k])).ToArray();
+            var keys = _recordings.Keys.Where(namedEntry => namedEntry.Owner == owner).ToArray();
+            var results = keys.Where(namedEntry => !_recordings[namedEntry].Ended).Select(namedEntry => Incomplete(_recordings[namedEntry])).ToArray();
             foreach (var key in keys) _recordings.Remove(key);
             return results;
         }

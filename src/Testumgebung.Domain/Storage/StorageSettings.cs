@@ -104,8 +104,8 @@ public sealed class StorageResolver
         IReadOnlyList<GroupDefinition> ancestors;
         try { ancestors = _definition.AncestorsOf(nodeId); }
         catch (KeyNotFoundException) { return (true, null); }
-        for (var i = ancestors.Count - 1; i >= 0; i--)
-            if (ancestors[i].Storage.Get(target) is { } v) return (v, ancestors[i].Name);
+        for (var index = ancestors.Count - 1; index >= 0; index--)
+            if (ancestors[index].Storage.Get(target) is { } flag) return (flag, ancestors[index].Name);
         return (true, "Standard");
     }
 

@@ -18,12 +18,12 @@ public static class CurveFormula
 {
     public static Func<double, double> Compile(string source)
     {
-        var p = new Parser(source);
-        var f = p.ParseExpression();
-        p.ExpectEnd();
+        var parser = new Parser(source);
+        var callback = parser.ParseExpression();
+        parser.ExpectEnd();
         // Probelauf: Syntax- und Laufzeitfehler früh melden
-        _ = f(0);
-        return f;
+        _ = callback(0);
+        return callback;
     }
 
     private sealed class Parser(string src)
@@ -36,8 +36,8 @@ public static class CurveFormula
             while (true)
             {
                 Skip();
-                if (Peek('+')) { _pos++; var l = left; var r = ParseTerm(); left = t => l(t) + r(t); }
-                else if (Peek('-')) { _pos++; var l = left; var r = ParseTerm(); left = t => l(t) - r(t); }
+                if (Peek('+')) { _pos++; var left2 = left; var callback = ParseTerm(); left = time => left2(time) + callback(time); }
+                else if (Peek('-')) { _pos++; var left3 = left; var callback2 = ParseTerm(); left = time => left3(time) - callback2(time); }
                 else return left;
             }
         }
@@ -48,8 +48,8 @@ public static class CurveFormula
             while (true)
             {
                 Skip();
-                if (Peek('*')) { _pos++; var l = left; var r = ParseUnary(); left = t => l(t) * r(t); }
-                else if (Peek('/')) { _pos++; var l = left; var r = ParseUnary(); left = t => l(t) / r(t); }
+                if (Peek('*')) { _pos++; var left2 = left; var callback = ParseUnary(); left = time => left2(time) * callback(time); }
+                else if (Peek('/')) { _pos++; var left3 = left; var callback2 = ParseUnary(); left = time => left3(time) / callback2(time); }
                 else return left;
             }
         }
@@ -57,42 +57,42 @@ public static class CurveFormula
         private Func<double, double> ParseUnary()
         {
             Skip();
-            if (Peek('-')) { _pos++; var x = ParseUnary(); return t => -x(t); }
+            if (Peek('-')) { _pos++; var callback = ParseUnary(); return time => -callback(time); }
             if (Peek('+')) { _pos++; return ParseUnary(); }
             return ParsePower();
         }
 
         private Func<double, double> ParsePower()
         {
-            var b = ParsePrimary();
+            var callback = ParsePrimary();
             Skip();
-            if (!Peek('^')) return b;
+            if (!Peek('^')) return callback;
             _pos++;
-            var e = ParseUnary(); // rechtsassoziativ
-            return t => Math.Pow(b(t), e(t));
+            var callback2 = ParseUnary(); // rechtsassoziativ
+            return time => Math.Pow(callback(time), callback2(time));
         }
 
         private Func<double, double> ParsePrimary()
         {
             Skip();
             if (_pos >= src.Length) throw Error("Ausdruck unvollständig");
-            var c = src[_pos];
-            if (c == '(')
+            var character = src[_pos];
+            if (character == '(')
             {
                 _pos++;
                 var inner = ParseExpression();
                 Expect(')');
                 return inner;
             }
-            if (char.IsDigit(c) || c == '.')
+            if (char.IsDigit(character) || character == '.')
             {
                 return ParseNumber();
             }
-            if (char.IsLetter(c))
+            if (char.IsLetter(character))
             {
                 return ParseNamedValue();
             }
-            throw Error($"Unerwartetes Zeichen '{c}'");
+            throw Error($"Unerwartetes Zeichen '{character}'");
         }
 
         private Func<double, double> ParseNumber()
@@ -101,8 +101,8 @@ public static class CurveFormula
             while (_pos < src.Length && (char.IsDigit(src[_pos]) || src[_pos] == '.')) _pos++;
             ParseExponent();
             var text = src[start.._pos];
-            if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var v)) throw Error($"Zahl '{text}' ungültig");
-            return _ => v;
+            if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) throw Error($"Zahl '{text}' ungültig");
+            return _ => value;
         }
 
         private void ParseExponent()
@@ -136,32 +136,32 @@ public static class CurveFormula
             }
             return name switch
             {
-                "t" => t => t,
+                "t" => time => time,
                 "pi" => _ => Math.PI,
                 "e" => _ => Math.E,
                 _ => throw Error($"Unbekannter Name '{name}' (erlaubt: t, pi, e)"),
             };
         }
 
-        private Func<double, double> Function(string name, List<Func<double, double>> a)
+        private Func<double, double> Function(string name, List<Func<double, double>> items)
         {
-            void Args(int n)
+            void Args(int count)
             {
-                if (a.Count != n) throw Error($"{name} erwartet {n} Argument(e)");
+                if (items.Count != count) throw Error($"{name} erwartet {count} Argument(e)");
             }
             switch (name)
             {
-                case "min": Args(2); return t => Math.Min(a[0](t), a[1](t));
-                case "max": Args(2); return t => Math.Max(a[0](t), a[1](t));
-                case "pow": Args(2); return t => Math.Pow(a[0](t), a[1](t));
-                case "mod": Args(2); return t => { var m = a[1](t); var r = a[0](t) % m; return r < 0 ? r + m : r; };
-                case "clamp": Args(3); return t => Math.Clamp(a[0](t), a[1](t), a[2](t));
+                case "min": Args(2); return time => Math.Min(items[0](time), items[1](time));
+                case "max": Args(2); return time => Math.Max(items[0](time), items[1](time));
+                case "pow": Args(2); return time => Math.Pow(items[0](time), items[1](time));
+                case "mod": Args(2); return time => { var measurement = items[1](time); var ratio = items[0](time) % measurement; return ratio < 0 ? ratio + measurement : ratio; };
+                case "clamp": Args(3); return time => Math.Clamp(items[0](time), items[1](time), items[2](time));
             }
             Args(1);
-            var x = a[0];
-            if (!UnaryFunctions.TryGetValue(name, out var f))
+            var callback = items[0];
+            if (!UnaryFunctions.TryGetValue(name, out var callback2))
                 throw Error($"Unbekannte Funktion '{name}'");
-            return t => f(x(t));
+            return time => callback2(callback(time));
         }
 
         private static readonly IReadOnlyDictionary<string, Func<double, double>> UnaryFunctions =
@@ -180,9 +180,9 @@ public static class CurveFormula
                 ["log10"] = Math.Log10,
                 ["floor"] = Math.Floor,
                 ["ceil"] = Math.Ceiling,
-                ["round"] = v => Math.Round(v, MidpointRounding.AwayFromZero),
-                ["sign"] = v => Math.Sign(v),
-                ["step"] = v => v < 0 ? 0 : 1,
+                ["round"] = value => Math.Round(value, MidpointRounding.AwayFromZero),
+                ["sign"] = value => Math.Sign(value),
+                ["step"] = value => value < 0 ? 0 : 1,
             };
 
         public void ExpectEnd()
@@ -191,14 +191,14 @@ public static class CurveFormula
             if (_pos < src.Length) throw Error($"Unerwartetes '{src[_pos..]}'");
         }
 
-        private void Expect(char c)
+        private void Expect(char expectedCharacter)
         {
             Skip();
-            if (!Peek(c)) throw Error($"'{c}' erwartet");
+            if (!Peek(expectedCharacter)) throw Error($"'{expectedCharacter}' erwartet");
             _pos++;
         }
 
-        private bool Peek(char c) => _pos < src.Length && src[_pos] == c;
+        private bool Peek(char expectedCharacter) => _pos < src.Length && src[_pos] == expectedCharacter;
 
         private void Skip()
         {

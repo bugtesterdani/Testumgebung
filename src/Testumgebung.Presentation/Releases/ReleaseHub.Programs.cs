@@ -25,19 +25,19 @@ public sealed partial class ReleaseHub
     public IReadOnlyList<ReleaseInfo> ForStation(string station)
     {
         if (Catalog is null) return All;
-        if (Catalog.Stations.Any(s => s.Station == station))
+        if (Catalog.Stations.Any(assignment => assignment.Station == station))
         {
             try { var chosen = ResolveStation(station, ""); return chosen is null ? [] : [chosen.Release]; }
             catch (InvalidOperationException) { return []; }
         }
-        var available = All.Where(r => r.State == ReleaseState.Released).ToList();
+        var available = All.Where(release => release.State == ReleaseState.Released).ToList();
         if (Catalog.DefaultReleaseId is not null)
         {
             try
             {
                 if (ResolveStation(station, "") is { } standard)
                 {
-                    available.RemoveAll(r => r.ProjectName == standard.Release.ProjectName); available.Add(standard.Release);
+                    available.RemoveAll(release => release.ProjectName == standard.Release.ProjectName); available.Add(standard.Release);
                 }
             }
             catch (InvalidOperationException) { return []; }

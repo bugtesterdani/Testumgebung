@@ -52,7 +52,7 @@ public sealed class BreakpointPropertiesViewModel : ObservableObject
     public IReadOnlyList<BreakpointMode> Modes => IsCode ? [BreakpointMode.Always, BreakpointMode.Expression] : Enum.GetValues<BreakpointMode>();
     public bool UsesExpression => Mode == BreakpointMode.Expression;
     public string? Error { get => _error; private set => SetProperty(ref _error, value); }
-    private int LineNumber => int.TryParse(_line, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n > 0 ? n : 0;
+    private int LineNumber => int.TryParse(_line, NumberStyles.None, CultureInfo.InvariantCulture, out var count) && count > 0 ? count : 0;
     public string Line
     {
         get => _line;

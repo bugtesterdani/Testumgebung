@@ -131,7 +131,7 @@ public sealed class OutboxService : IAsyncDisposable
     {
         get
         {
-            lock (_gate) return _entries.Values.OrderBy(e => e.Created).ToList();
+            lock (_gate) return _entries.Values.OrderBy(outboxEntry => outboxEntry.Created).ToList();
         }
     }
 
@@ -194,10 +194,10 @@ public sealed class OutboxService : IAsyncDisposable
         lock (_gate)
         {
             var now = _clock.Now;
-            due = _entries.Values.Where(e => !_inFlight.Contains(e.RunId) && (force || e.NextAttempt <= now)).OrderBy(e => e.Created).ToList();
-            foreach (var e in due) _inFlight.Add(e.RunId);
+            due = _entries.Values.Where(outboxEntry => !_inFlight.Contains(outboxEntry.RunId) && (force || outboxEntry.NextAttempt <= now)).OrderBy(outboxEntry => outboxEntry.Created).ToList();
+            foreach (var outboxEntry in due) _inFlight.Add(outboxEntry.RunId);
         }
-        foreach (var e in due) await AttemptAsync(e, initial: false).ConfigureAwait(false);
+        foreach (var outboxEntry2 in due) await AttemptAsync(outboxEntry2, initial: false).ConfigureAwait(false);
     }
 
     /// <summary>Lädt die Outbox einmalig vom Datenträger (Fortsetzen nach Neustart).</summary>
@@ -216,7 +216,7 @@ public sealed class OutboxService : IAsyncDisposable
             try
             {
                 var state = Path.ChangeExtension(file, ".json");
-                if (File.Exists(state) && JsonSerializer.Deserialize<OutboxEntry>(File.ReadAllText(state), Json) is { } s) entry = s;
+                if (File.Exists(state) && JsonSerializer.Deserialize<OutboxEntry>(File.ReadAllText(state), Json) is { } outboxEntry) entry = outboxEntry;
                 else
                 {
                     var head = ResultFile.Read(file).Run;
@@ -243,7 +243,7 @@ public sealed class OutboxService : IAsyncDisposable
                 TimeSpan wait;
                 lock (_gate)
                 {
-                    var next = _entries.Values.Where(e => !_inFlight.Contains(e.RunId)).Select(e => e.NextAttempt).DefaultIfEmpty(_clock.Now + Options.RetryInterval).Min();
+                    var next = _entries.Values.Where(outboxEntry => !_inFlight.Contains(outboxEntry.RunId)).Select(outboxEntry => outboxEntry.NextAttempt).DefaultIfEmpty(_clock.Now + Options.RetryInterval).Min();
                     wait = next - _clock.Now;
                 }
                 if (wait < TimeSpan.FromMilliseconds(10)) wait = TimeSpan.FromMilliseconds(10);
@@ -338,11 +338,11 @@ public sealed class OutboxService : IAsyncDisposable
         return TimeSpan.FromMilliseconds(Math.Min(ms, Options.MaxRetryInterval.TotalMilliseconds));
     }
 
-    private void Notify(RunNotification n)
+    private void Notify(RunNotification runNotification)
     {
-        try { _notifier?.Notify(n); }
+        try { _notifier?.Notify(runNotification); }
         catch (Exception) { /* Meldeweg ist best effort und darf nie stören. */ }
-        try { Notified?.Invoke(n); }
+        try { Notified?.Invoke(runNotification); }
         catch (Exception) { }
     }
 
@@ -352,10 +352,10 @@ public sealed class OutboxService : IAsyncDisposable
         try
         {
             Directory.CreateDirectory(damaged);
-            foreach (var f in new[] { DataFile(runId), StateFile(runId) })
+            foreach (var fileName in new[] { DataFile(runId), StateFile(runId) })
             {
-                var src = Path.Combine(Folder, f);
-                if (File.Exists(src)) File.Move(src, Path.Combine(damaged, f), overwrite: true);
+                var src = Path.Combine(Folder, fileName);
+                if (File.Exists(src)) File.Move(src, Path.Combine(damaged, fileName), overwrite: true);
             }
         }
         catch (IOException) { }
@@ -368,9 +368,9 @@ public sealed class OutboxService : IAsyncDisposable
 
     private void DeleteFiles(string runId)
     {
-        foreach (var f in new[] { DataFile(runId), StateFile(runId) })
+        foreach (var fileName in new[] { DataFile(runId), StateFile(runId) })
         {
-            try { File.Delete(Path.Combine(Folder, f)); }
+            try { File.Delete(Path.Combine(Folder, fileName)); }
             catch (IOException) { }
         }
     }
@@ -380,7 +380,7 @@ public sealed class OutboxService : IAsyncDisposable
     private static string StateFile(string runId) => SafeName(runId) + ".json";
 
     private static string SafeName(string runId)
-        => new(runId.Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' or '.' ? c : '_').ToArray());
+        => new(runId.Select(runId2 => char.IsLetterOrDigit(runId2) || runId2 is '-' or '_' or '.' ? runId2 : '_').ToArray());
 }
 
 /// <summary>Datenbank, deren Ausfall sich zur Vorführung simulieren lässt.</summary>
@@ -440,7 +440,7 @@ public sealed class FolderRunDatabase(string folder) : IRunDatabase, ISimulatedD
     {
         if (Offline) throw new IOException("Datenbank nicht erreichbar (simuliert offline).");
         var loaded = Testumgebung.Persistence.Reports.ResultAnalysis.Load(Folder, null, cancellationToken);
-        IReadOnlyList<ResultRun> runs = loaded.Runs.Where(query.Matches).OrderBy(r => r.Started).Take(query.Limit).ToList();
+        IReadOnlyList<ResultRun> runs = loaded.Runs.Where(query.Matches).OrderBy(run => run.Started).Take(query.Limit).ToList();
         return Task.FromResult(runs);
     }
 
@@ -466,7 +466,7 @@ public sealed class FolderRunDatabase(string folder) : IRunDatabase, ISimulatedD
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (Offline) throw new IOException("Datenbank nicht erreichbar (simuliert offline).");
-        var name = new string(run.RunId.Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' ? c : '_').ToArray()) + ResultFile.Extension;
+        var name = new string(run.RunId.Select(runId => char.IsLetterOrDigit(runId) || runId is '-' or '_' ? runId : '_').ToArray()) + ResultFile.Extension;
         if (File.Exists(Path.Combine(Folder, name))) return Task.CompletedTask; // idempotent
         ResultFileStore.WriteAtomic(Folder, name, stream => ResultFile.Write(stream, run));
         return Task.CompletedTask;
@@ -505,7 +505,7 @@ public sealed class SwitchableRunDatabase : IRunDatabase, ISimulatedDatabase, IR
         get => _inner is ISimulatedDatabase { Offline: true };
         set
         {
-            if (_inner is ISimulatedDatabase s) s.Offline = value;
+            if (_inner is ISimulatedDatabase iSimulatedDatabase) iSimulatedDatabase.Offline = value;
         }
     }
 

@@ -108,7 +108,7 @@ public sealed record CanFrame(uint Id, byte[] Data, bool Extended = false, bool 
 
     public string DataHex => Convert.ToHexString(Data);
 
-    public override string ToString() => $"{(Extended ? Id.ToString("X8") : Id.ToString("X3"))}{(Fd ? " FD" : "")}{(Remote ? " RTR" : "")} [{Data.Length}] {string.Join(" ", Data.Select(b => b.ToString("X2")))}";
+    public override string ToString() => $"{(Extended ? Id.ToString("X8") : Id.ToString("X3"))}{(Fd ? " FD" : "")}{(Remote ? " RTR" : "")} [{Data.Length}] {string.Join(" ", Data.Select(dataByte => dataByte.ToString("X2")))}";
 
     /// <summary>Gültigkeit prüfen (Länge, ID-Bereich).</summary>
     public string? Validate()

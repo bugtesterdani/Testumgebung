@@ -59,8 +59,8 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
 
     public async Task<ReleaseInfo?> CurrentReleasedAsync(string projectName, CancellationToken ct = default)
         => (await Store.ListAsync(ct).ConfigureAwait(false))
-            .Where(r => r.ProjectName == projectName && r.State == ReleaseState.Released)
-            .OrderByDescending(r => r.ReleasedAt)
+            .Where(release => release.ProjectName == projectName && release.State == ReleaseState.Released)
+            .OrderByDescending(release => release.ReleasedAt)
             .FirstOrDefault();
 
     /// <summary>Paket laden und vollständig prüfen (Paket-Hash und alle Bereichshashes).</summary>
@@ -95,7 +95,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         var issues = project.Definition.Validate();
         if (issues.Count > 0) throw new ReleaseRuleException("Ablauf ist nicht gültig: " + string.Join("; ", issues));
         var existing = await Store.ListAsync(ct).ConfigureAwait(false);
-        if (existing.Any(r => r.ProjectName == project.Definition.Name && r.Version == version))
+        if (existing.Any(release => release.ProjectName == project.Definition.Name && release.Version == version))
             throw new ReleaseRuleException($"Version {version} existiert bereits – Pakete sind unveränderlich, bitte neue Version vergeben.");
 
         var copy = _serializer.Clone(project);
@@ -132,8 +132,8 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         }
         if (buildCheck is not null && opened.IsIntact) checks.AddRange(await buildCheck(opened.Project, ct).ConfigureAwait(false));
 
-        var passed = checks.All(c => c.Passed);
-        var report = string.Join("\n", checks.Select(c => $"{(c.Passed ? "OK" : "FEHLER")} {c.Name}: {c.Detail}"));
+        var passed = checks.All(reviewCheck => reviewCheck.Passed);
+        var report = string.Join("\n", checks.Select(reviewCheck => $"{(reviewCheck.Passed ? "OK" : "FEHLER")} {reviewCheck.Name}: {reviewCheck.Detail}"));
         var now = _clock.Now;
         if (passed)
         {
@@ -144,7 +144,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         else
         {
             await Store.AppendAuditAsync(new AuditDraft(now, actor.User, "Entwicklungsprüfung nicht bestanden",
-                $"Paket v{info.Version}: {string.Join("; ", checks.Where(c => !c.Passed).Select(c => c.Name))}", info.ReleaseId), ct).ConfigureAwait(false);
+                $"Paket v{info.Version}: {string.Join("; ", checks.Where(reviewCheck => !reviewCheck.Passed).Select(reviewCheck => reviewCheck.Name))}", info.ReleaseId), ct).ConfigureAwait(false);
         }
         Changed?.Invoke();
         return checks;

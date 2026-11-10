@@ -58,7 +58,7 @@ public sealed class PairedStationsViewModel : ObservableObject
                 first.Selection.AdoptSharedOrder(TestSelector.Manual(single, single.Candidates[0], Order.Trim()));
             if (first.Selection.Outcome is not { CanStart: true, Test: { } test } outcome)
             { Status = first.Selection.ResultText + " Bitte die Zuordnung unter Auswahl & Auftrag eindeutig konfigurieren."; return; }
-            if (!second.AvailableTests().Any(t => t.Name == test.Name && t.Version == test.Version))
+            if (!second.AvailableTests().Any(program => program.Name == test.Name && program.Version == test.Version))
             { Status = "Das ausgewählte Testprogramm ist für die zweite Seite nicht verfügbar."; return; }
             // Beide Projekte vor dem ersten Start prüfen; keine einseitig gestartete falsche Zuordnung.
             var loadedFirst = await first.LoadTestAsync(test).ConfigureAwait(true);
@@ -98,10 +98,10 @@ public sealed class PairedStationsViewModel : ObservableObject
     {
         var errors = definition.Validate();
         if (errors.Count > 0) throw new InvalidOperationException(string.Join(" ", errors));
-        if (!definition.Root.Variables.Any(v => v.Name == "Auftrag" && v.Type == Testumgebung.Contracts.VarType.String))
+        if (!definition.Root.Variables.Any(variable => variable.Name == "Auftrag" && variable.Type == Testumgebung.Contracts.VarType.String))
             throw new InvalidOperationException("Hauptablauf benötigt die String-Variable Auftrag.");
-        var duts = definition.Loop.Descendants().OfType<GroupDefinition>().Where(g => g.IsDutRun).ToList();
-        if (duts.Count == 0 || duts.Any(d => !d.Variables.Any(v => v.Name == d.DutIdVariable && v.Type == Testumgebung.Contracts.VarType.String)))
+        var duts = definition.Loop.Descendants().OfType<GroupDefinition>().Where(group => group.IsDutRun).ToList();
+        if (duts.Count == 0 || duts.Any(group => !group.Variables.Any(variable => variable.Name == group.DutIdVariable && variable.Type == Testumgebung.Contracts.VarType.String)))
             throw new InvalidOperationException("Loop benötigt einen Prüflingstest mit eigener String-Seriennummer.");
         foreach (var dut in duts) ValidateSerialInput(dut);
     }

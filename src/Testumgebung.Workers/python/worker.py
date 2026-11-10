@@ -49,10 +49,10 @@ def _reader():
             msg = json.loads(line)
         except ValueError:
             continue
-        t = msg.get("t")
-        if t == "cancel":
+        messageType = msg.get("t")
+        if messageType == "cancel":
             _cancelled.add(msg.get("id"))
-        elif t == "reply":
+        elif messageType == "reply":
             _replies.put(msg)
         else:
             _requests.put(msg)
@@ -91,7 +91,7 @@ def _valid(name, type_):
 
 
 def _compile(source, variables):
-    names = [v["name"] for v in variables if _valid(v["name"], v["type"])]
+    names = [variable["name"] for variable in variables if _valid(variable["name"], variable["type"])]
     key = (source, tuple(names))
     if key in _cache:
         return _cache[key]
@@ -170,7 +170,7 @@ def _api(ctx):
 
     def dev(op, resource, **kw):
         args = {"resource": resource}
-        args.update({k: v for k, v in kw.items() if v is not None})
+        args.update({k: variable for k, variable in kw.items() if variable is not None})
         return ctx.call(op, args)
 
     def data_arg(data, hex):
@@ -179,15 +179,15 @@ def _api(ctx):
         return str(data), bool(hex)
 
     def comm_send(resource, data, hex=False):
-        d, h = data_arg(data, hex)
-        dev("comm.send", resource, data=d, hex=h)
+        hexData, h = data_arg(data, hex)
+        dev("comm.send", resource, data=hexData, hex=h)
 
     def comm_receive(resource, timeout_ms=1000, end="\r\n", length=None, hex=False):
         return dev("comm.receive", resource, timeout=timeout_ms, end=end, length=length, hex=hex)
 
     def comm_query(resource, data, timeout_ms=1000, end="\r\n", length=None, hex=False):
-        d, h = data_arg(data, hex)
-        return dev("comm.query", resource, data=d, hex=h, timeout=timeout_ms, end=end, length=length)
+        hexData, h = data_arg(data, hex)
+        return dev("comm.query", resource, data=hexData, hex=h, timeout=timeout_ms, end=end, length=length)
 
     def modbus_read(resource, address, type="UInt16", low_first=False, length=None):
         return dev("modbus.read", resource, address=address, type=type, lowFirst=low_first, length=length)
@@ -196,40 +196,40 @@ def _api(ctx):
         dev("modbus.write", resource, address=address, value=_out(value), type=type, lowFirst=low_first)
 
     def can_send(resource, id, data=b"", extended=False, fd=False):
-        d, _ = data_arg(data, True)
-        dev("can.send", resource, id=int(id), data=d, extended=extended, fd=fd)
+        hexData, _ = data_arg(data, True)
+        dev("can.send", resource, id=int(id), data=hexData, extended=extended, fd=fd)
 
     def can_receive(resource, id, mask=None, timeout_ms=1000, extended=None, discard=False):
-        f = dev("can.receive", resource, id=int(id), mask=mask, timeout=timeout_ms, extended=extended, discard=discard)
-        if isinstance(f, str):
-            f = json.loads(f)
-        f["bytes"] = bytes.fromhex(f.get("data", ""))
-        return f
+        frame = dev("can.receive", resource, id=int(id), mask=mask, timeout=timeout_ms, extended=extended, discard=discard)
+        if isinstance(frame, str):
+            frame = json.loads(frame)
+        frame["bytes"] = bytes.fromhex(frame.get("data", ""))
+        return frame
 
     def uds(resource, request, tx=0x7E0, rx=0x7E8, timeout_ms=1000, extended=False, fd=False, timeout_pending_ms=5000,
             transport="can", tester=0x0E00, ecu=0x1000, tx_address=None, rx_address=None):
-        d, _ = data_arg(request, True)
-        return bytes.fromhex(dev("uds", resource, request=d, tx=int(tx), rx=int(rx), timeout=timeout_ms, extended=extended, fd=fd,
+        hexData, _ = data_arg(request, True)
+        return bytes.fromhex(dev("uds", resource, request=hexData, tx=int(tx), rx=int(rx), timeout=timeout_ms, extended=extended, fd=fd,
                                  timeoutPending=timeout_pending_ms, transport=transport, tester=tester, ecu=ecu,
                                  txAddress=tx_address, rxAddress=rx_address))
 
     def j1939_send(resource, pgn, data, source=0xF9, destination=0xFF, priority=6):
-        d, _ = data_arg(data, True)
-        dev("j1939.send", resource, pgn=int(pgn), data=d, source=source, destination=destination, priority=priority)
+        hexData, _ = data_arg(data, True)
+        dev("j1939.send", resource, pgn=int(pgn), data=hexData, source=source, destination=destination, priority=priority)
 
     def j1939_receive(resource, pgn, source=None, request=False, own=0xF9, timeout_ms=1000):
-        m = dev("j1939.receive", resource, pgn=int(pgn), source=source, request=request, own=own, timeout=timeout_ms)
-        if isinstance(m, str):
-            m = json.loads(m)
-        m["bytes"] = bytes.fromhex(m.get("data", ""))
-        return m
+        message = dev("j1939.receive", resource, pgn=int(pgn), source=source, request=request, own=own, timeout=timeout_ms)
+        if isinstance(message, str):
+            message = json.loads(message)
+        message["bytes"] = bytes.fromhex(message.get("data", ""))
+        return message
 
     def lin_read(resource, id, length=8, classic=False, timeout_ms=100):
         return bytes.fromhex(dev("lin.read", resource, id=int(id), length=length, classic=classic, timeout=timeout_ms))
 
     def lin_write(resource, id, data, classic=False):
-        d, _ = data_arg(data, True)
-        dev("lin.write", resource, id=int(id), data=d, classic=classic)
+        hexData, _ = data_arg(data, True)
+        dev("lin.write", resource, id=int(id), data=hexData, classic=classic)
 
     def opcua_read(resource, node):
         return dev("opcua.read", resource, node=node)
@@ -238,8 +238,8 @@ def _api(ctx):
         dev("opcua.write", resource, node=node, value=_out(value))
 
     def opcua_call(resource, object, method, args=None):
-        a = ";".join(str(x) for x in args) if args else ""
-        out = dev("opcua.call", resource, object=object, method=method, args=a)
+        argumentsText = ";".join(str(argument) for argument in args) if args else ""
+        out = dev("opcua.call", resource, object=object, method=method, args=argumentsText)
         return out
 
     return {
@@ -289,10 +289,10 @@ def _api(ctx):
 def _dbg_snapshot(frame, offset, api_names):
     """Lokale Variablen des Nutzercodes am Haltepunkt (ohne API-Namen und interne Namen)."""
     snap = {}
-    for k, v in list(frame.f_locals.items()):
+    for k, variable in list(frame.f_locals.items()):
         if k.startswith("__") or k in api_names:
             continue
-        snap[k] = _out(v)
+        snap[k] = _out(variable)
     return snap
 
 
@@ -342,7 +342,7 @@ def _invoke(msg):
     if code is None:
         send({"t": "error", "id": inv, "message": f"Build fehlgeschlagen: Zeile {error['line']}: {error['message']}"})
         return
-    types = {v["name"]: v["type"] for v in variables}
+    types = {variable["name"]: variable["type"] for variable in variables}
     values = msg.get("values", {}) or {}
     ctx = Context(inv)
     capture = {}
@@ -363,7 +363,7 @@ def _invoke(msg):
 
     try:
         exec(code, namespace)
-        args = [_convert(values.get(n), types[n]) for n in names]
+        args = [_convert(values.get(name), types[name]) for name in names]
         if tracer is not None:
             sys.settrace(tracer)
         try:
@@ -394,13 +394,13 @@ def _invoke(msg):
         "unit": result.get("unit"),
         "low": result.get("low"),
         "high": result.get("high"),
-        "values": {n: _out(capture.get(n)) for n in names if n in capture},
+        "values": {name: _out(capture.get(name)) for name in names if name in capture},
         "cancelled": False,
     })
 
 
 def main():
-    packages = sorted((d.metadata.get("Name", "").lower(), d.version) for d in importlib.metadata.distributions())
+    packages = sorted((distribution.metadata.get("Name", "").lower(), distribution.version) for distribution in importlib.metadata.distributions())
     package_hash = hashlib.sha256(json.dumps(packages, separators=(",", ":")).encode()).hexdigest()
     with open(sys.executable, "rb") as interpreter:
         executable_hash = hashlib.sha256(interpreter.read()).hexdigest()
@@ -408,13 +408,13 @@ def main():
     threading.Thread(target=_reader, daemon=True).start()
     while True:
         msg = _requests.get()
-        t = msg.get("t")
-        if t == "compile":
+        messageType = msg.get("t")
+        if messageType == "compile":
             code, _, _, error = _compile(msg.get("source", ""), msg.get("vars", []))
             send({"t": "compiled", "id": msg.get("id"), "ok": code is not None, "diagnostics": [error] if error else []})
-        elif t == "invoke":
+        elif messageType == "invoke":
             _invoke(msg)
-        elif t == "exit":
+        elif messageType == "exit":
             break
 
 

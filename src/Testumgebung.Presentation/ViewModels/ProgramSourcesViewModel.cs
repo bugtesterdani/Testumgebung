@@ -45,7 +45,7 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     public ObservableCollection<ProgramSource> Sources { get; } = [];
     public ObservableCollection<ReleaseInfo> Versions { get; } = [];
     public IReadOnlyList<string> Providers => _hub.Service.SourceProviders.Names;
-    public IReadOnlyList<string> StationNames => _stations.Select(s => s.Name).ToArray();
+    public IReadOnlyList<string> StationNames => _stations.Select(station => station.Name).ToArray();
     public string GitClient { get; set; } = "git";
     public string SvnClient { get; set; } = "svn";
     public string Provider { get; set; } = "Git";
@@ -63,13 +63,13 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     }
     private void LoadAssignmentFields()
     {
-        var assignment = _catalog.Stations.FirstOrDefault(s => s.Station == StationKey);
+        var assignment = _catalog.Stations.FirstOrDefault(assignment2 => assignment2.Station == StationKey);
         if (assignment is null) return;
-        Selected = Sources.FirstOrDefault(s => s.Id == assignment.SourceId);
-        AutoUpdate = assignment.AutoUpdate; SelectedVersion = Versions.FirstOrDefault(r => r.ReleaseId == assignment.ReleaseId) ?? Versions.FirstOrDefault();
+        Selected = Sources.FirstOrDefault(source => source.Id == assignment.SourceId);
+        AutoUpdate = assignment.AutoUpdate; SelectedVersion = Versions.FirstOrDefault(release => release.ReleaseId == assignment.ReleaseId) ?? Versions.FirstOrDefault();
         OnPropertiesChanged(nameof(AutoUpdate), nameof(SelectedVersion));
     }
-    private string StationKey => _stations.FirstOrDefault(s => s.Name == StationName)?.ProgramStationId ?? "";
+    private string StationKey => _stations.FirstOrDefault(station => station.Name == StationName)?.ProgramStationId ?? "";
     public string ComputerName => "Rechner: " + Environment.MachineName;
     public bool AutoUpdate { get; set; } = true;
     public bool MaintenanceConfirmed { get; set; }
@@ -77,8 +77,8 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     public ReleaseInfo? SelectedVersion { get; set; }
     public string? Status { get => _status; private set => SetProperty(ref _status, value); }
     public string SchemaText => _ready ? "Programmkatalog-Schema v1 bereit" : "Programmkatalog nicht eingerichtet. Datenbank auf Programmkatalog-Schema v1 aktualisieren.";
-    public string DefaultText => _catalog.DefaultReleaseId is { } id ? _hub.All.FirstOrDefault(r => r.ReleaseId == id)?.SourceTitle ?? id : "Kein zentrales Standardprogramm";
-    public string AssignmentText => string.Join("\n", _catalog.Stations.Select(s => $"{s.Station}: {_catalog.Source(s.SourceId)?.Name} / {_catalog.Source(s.SourceId)?.Line} · {(s.AutoUpdate ? "automatisch" : "festgesetzt: " + s.ReleaseId)}"));
+    public string DefaultText => _catalog.DefaultReleaseId is { } id ? _hub.All.FirstOrDefault(release => release.ReleaseId == id)?.SourceTitle ?? id : "Kein zentrales Standardprogramm";
+    public string AssignmentText => string.Join("\n", _catalog.Stations.Select(assignment => $"{assignment.Station}: {_catalog.Source(assignment.SourceId)?.Name} / {_catalog.Source(assignment.SourceId)?.Line} · {(assignment.AutoUpdate ? "automatisch" : "festgesetzt: " + assignment.ReleaseId)}"));
     public ProgramSource? Selected
     {
         get => _selected;
@@ -104,8 +104,8 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     private void RebuildVersions()
     {
         Versions.Clear();
-        foreach (var release in _hub.All.Where(r => r.ReleasedAt is not null && r.State is ReleaseState.Released or ReleaseState.Archived)
-                     .Where(r => Selected is null || r.Source?.Source == Selected).OrderByDescending(r => r.ReleasedAt)) Versions.Add(release);
+        foreach (var release in _hub.All.Where(release => release.ReleasedAt is not null && release.State is ReleaseState.Released or ReleaseState.Archived)
+                     .Where(release => Selected is null || release.Source?.Source == Selected).OrderByDescending(release => release.ReleasedAt)) Versions.Add(release);
         SelectedVersion = Versions.FirstOrDefault(); OnPropertyChanged(nameof(SelectedVersion));
     }
     private void RaiseCommands()
@@ -142,13 +142,13 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
         _ready = await Store.IsReadyAsync();
         _catalog = _ready ? await Store.ReadAsync() : ProgramCatalog.Empty;
         var id = Selected?.Id; Sources.Clear(); foreach (var source in _catalog.Sources) Sources.Add(source);
-        Selected = Sources.FirstOrDefault(s => s.Id == id) ?? Sources.FirstOrDefault();
+        Selected = Sources.FirstOrDefault(source => source.Id == id) ?? Sources.FirstOrDefault();
         RebuildVersions(); LoadAssignmentFields(); OnPropertiesChanged(nameof(SchemaText), nameof(DefaultText), nameof(AssignmentText));
     }
     public Task UpgradeAsync() => Execute(async () =>
     {
         Require(true);
-        if (_stations.Any(s => s.IsRunning) || !MaintenanceConfirmed || !BackupConfirmed) throw new InvalidOperationException("Alle Plätze in Wartung nehmen, Sicherung bestätigen und lokale Prüfungen beenden.");
+        if (_stations.Any(station => station.IsRunning) || !MaintenanceConfirmed || !BackupConfirmed) throw new InvalidOperationException("Alle Plätze in Wartung nehmen, Sicherung bestätigen und lokale Prüfungen beenden.");
         await Store.UpgradeAsync(); await _hub.Service.AuditAsync(Actor().User, "Programmkatalog-Schema v1 eingerichtet", "Wartung und Sicherung bestätigt"); await LoadAsync(); Status = "Programmkatalog-Schema v1 eingerichtet. Bestehende Ergebnis- und Freigabetabellen bleiben erhalten.";
     });
     private Task Save(ProgramCatalog catalog, string action) => SaveCore(catalog, action);
@@ -161,10 +161,10 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     {
         Require(); var source = new ProgramSource(Selected?.Id ?? Guid.NewGuid().ToString("N"), Name.Trim(), Provider, Repository.Trim(), Line.Trim(), ProjectPath.Trim());
         ProgramSourceValidation.Validate(source);
-        if (Selected is not null && Selected != source && _hub.All.Any(r => r.Source?.Source.Id == source.Id))
+        if (Selected is not null && Selected != source && _hub.All.Any(release => release.Source?.Source.Id == source.Id))
             throw new InvalidOperationException("Diese Quelle hat bereits Freigaben. Für eine andere Linie oder Repository-Konfiguration eine neue Quelle anlegen.");
-        await Save(_catalog with { Sources = [.. _catalog.Sources.Where(s => s.Id != source.Id), source] }, "Programmquelle gespeichert");
-        Selected = Sources.Single(s => s.Id == source.Id);
+        await Save(_catalog with { Sources = [.. _catalog.Sources.Where(source2 => source2.Id != source.Id), source] }, "Programmquelle gespeichert");
+        Selected = Sources.Single(source2 => source2.Id == source.Id);
     });
     public Task SaveAssignmentAsync() => Execute(async () =>
     {
@@ -172,9 +172,9 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
         if (!StationNames.Contains(StationName)) throw new InvalidOperationException("Prüfplatz auswählen.");
         if (!AutoUpdate && SelectedVersion?.Source?.Source != source) throw new InvalidOperationException("Freigegebene feste Version der Quelle auswählen.");
         var assignment = new ProgramAssignment(StationKey, source.Id, AutoUpdate, AutoUpdate ? null : SelectedVersion!.ReleaseId);
-        await Save(_catalog with { Stations = [.. _catalog.Stations.Where(s => s.Station != StationKey), assignment] }, "Platzzuordnung gespeichert");
+        await Save(_catalog with { Stations = [.. _catalog.Stations.Where(assignment2 => assignment2.Station != StationKey), assignment] }, "Platzzuordnung gespeichert");
     });
-    public Task ClearAssignmentAsync() => Execute(async () => { Require(true); await Save(_catalog with { Stations = _catalog.Stations.Where(s => s.Station != StationKey).ToArray() }, "Platzzuordnung entfernt"); });
+    public Task ClearAssignmentAsync() => Execute(async () => { Require(true); await Save(_catalog with { Stations = _catalog.Stations.Where(assignment => assignment.Station != StationKey).ToArray() }, "Platzzuordnung entfernt"); });
     public Task SetDefaultAsync() => Execute(async () =>
     {
         Require(true); var release = SelectedVersion ?? throw new InvalidOperationException("Freigegebene Standardversion auswählen.");
@@ -196,7 +196,7 @@ public sealed partial class ProgramSourcesViewModel : ObservableObject
     {
         try
         {
-            Require(); var station = _stations.Single(s => s.Name == StationName);
+            Require(); var station = _stations.Single(station2 => station2.Name == StationName);
             if (station.IsRunning) throw new InvalidOperationException("Lokale Prüfung zuerst beenden.");
             var file = Path.GetFullPath(LocalProject); var project = new ProjectSerializer().Load(file);
             _editor.Load(project, file); station.UseDraft = true;

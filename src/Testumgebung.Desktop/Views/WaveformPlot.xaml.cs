@@ -14,8 +14,8 @@ namespace Testumgebung.Desktop.Views;
 public partial class WaveformPlot : UserControl
 {
     public static readonly DependencyProperty ShowToolbarProperty = DependencyProperty.Register(
-        nameof(ShowToolbar), typeof(bool), typeof(WaveformPlot), new PropertyMetadata(true, (d, e) =>
-            ((WaveformPlot)d).Toolbar.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed));
+        nameof(ShowToolbar), typeof(bool), typeof(WaveformPlot), new PropertyMetadata(true, (definition, entry) =>
+            ((WaveformPlot)definition).Toolbar.Visibility = (bool)entry.NewValue ? Visibility.Visible : Visibility.Collapsed));
 
     private Point? _start;
 
@@ -29,12 +29,12 @@ public partial class WaveformPlot : UserControl
 
     private WaveformPlotViewModel? Vm => DataContext as WaveformPlotViewModel;
 
-    private void OnMouseDown(object sender, MouseButtonEventArgs e)
+    private void OnMouseDown(object sender, MouseButtonEventArgs eventArgs)
     {
-        var position = e.GetPosition(PlotSurface);
-        if (Vm?.PointEditor is not { IsEnabled: true } editor || e.ClickCount == 2)
+        var position = eventArgs.GetPosition(PlotSurface);
+        if (Vm?.PointEditor is not { IsEnabled: true } editor || eventArgs.ClickCount == 2)
         {
-            BeginGesture(position, e.ClickCount);
+            BeginGesture(position, eventArgs.ClickCount);
             return;
         }
 
@@ -44,28 +44,28 @@ public partial class WaveformPlot : UserControl
             if (!PlotSurface.CaptureMouse()) editor.CancelDrag();
         }
         else Vm?.SetCursorAtX(position.X);
-        e.Handled = true;
+        eventArgs.Handled = true;
     }
 
-    private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+    private void OnPreviewMouseDown(object sender, MouseButtonEventArgs eventArgs)
     {
-        var isPinGesture = e.ChangedButton == MouseButton.Middle
-            || (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
+        var isPinGesture = eventArgs.ChangedButton == MouseButton.Middle
+            || (eventArgs.ChangedButton == MouseButton.Left && Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
         if (!isPinGesture || Vm?.PointEditor is not { IsEnabled: true } editor) return;
-        var position = e.GetPosition(PlotSurface);
+        var position = eventArgs.GetPosition(PlotSurface);
         editor.TogglePin(position.X, position.Y);
-        e.Handled = true;
+        eventArgs.Handled = true;
     }
 
-    private void OnPlotKeyDown(object sender, KeyEventArgs e)
+    private void OnPlotKeyDown(object sender, KeyEventArgs eventArgs)
     {
-        if (e.Key != Key.Escape || Vm?.PointEditor is not { IsDragging: true } editor) return;
+        if (eventArgs.Key != Key.Escape || Vm?.PointEditor is not { IsDragging: true } editor) return;
         editor.CancelDrag();
         PlotSurface.ReleaseMouseCapture();
-        e.Handled = true;
+        eventArgs.Handled = true;
     }
 
-    private void OnLostMouseCapture(object sender, MouseEventArgs e)
+    private void OnLostMouseCapture(object sender, MouseEventArgs eventArgs)
     {
         Vm?.PointEditor?.CancelDrag();
         _start = null;
@@ -84,30 +84,30 @@ public partial class WaveformPlot : UserControl
         PlotSurface.CaptureMouse();
     }
 
-    private void OnMouseMove(object sender, MouseEventArgs e)
+    private void OnMouseMove(object sender, MouseEventArgs eventArgs)
     {
-        var position = e.GetPosition(PlotSurface);
+        var position = eventArgs.GetPosition(PlotSurface);
         if (Vm?.PointEditor is { IsDragging: true } editor)
         {
             editor.MoveDrag(position.Y);
             return;
         }
-        MoveGesture(position.X, e.LeftButton == MouseButtonState.Pressed);
+        MoveGesture(position.X, eventArgs.LeftButton == MouseButtonState.Pressed);
     }
 
     internal void MoveGesture(double positionX, bool pressed)
     {
-        if (_start is not { } s || !pressed) return;
-        var x = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
-        if (Math.Abs(x - s.X) < 4) return;
-        Canvas.SetLeft(DragRect, Math.Min(x, s.X));
-        DragRect.Width = Math.Abs(x - s.X);
+        if (_start is not { } point || !pressed) return;
+        var xValue = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
+        if (Math.Abs(xValue - point.X) < 4) return;
+        Canvas.SetLeft(DragRect, Math.Min(xValue, point.X));
+        DragRect.Width = Math.Abs(xValue - point.X);
         DragRect.Visibility = Visibility.Visible;
     }
 
-    private void OnMouseUp(object sender, MouseButtonEventArgs e)
+    private void OnMouseUp(object sender, MouseButtonEventArgs eventArgs)
     {
-        var position = e.GetPosition(PlotSurface);
+        var position = eventArgs.GetPosition(PlotSurface);
         if (Vm?.PointEditor is { IsDragging: true } editor)
         {
             editor.EndDrag(position.Y);
@@ -123,16 +123,16 @@ public partial class WaveformPlot : UserControl
         _start = null;
         PlotSurface.ReleaseMouseCapture();
         DragRect.Visibility = Visibility.Collapsed;
-        if (start is not { } s || Vm is not { } vm) return;
-        var x = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
-        if (Math.Abs(x - s.X) >= 4) vm.ZoomToX(s.X, x);
-        else vm.SetCursorAtX(x);
+        if (start is not { } point || Vm is not { } vm) return;
+        var xValue = Math.Clamp(positionX, 0, WaveformPlotViewModel.PlotWidth);
+        if (Math.Abs(xValue - point.X) >= 4) vm.ZoomToX(point.X, xValue);
+        else vm.SetCursorAtX(xValue);
     }
 
-    private void OnWheel(object sender, MouseWheelEventArgs e)
+    private void OnWheel(object sender, MouseWheelEventArgs eventArgs)
     {
         if (Vm is not { HasData: true } vm) return;
-        if (vm.PointEditor is not { IsDragging: true }) vm.WheelZoom(e.GetPosition(PlotSurface).X, e.Delta > 0);
-        e.Handled = true;
+        if (vm.PointEditor is not { IsDragging: true }) vm.WheelZoom(eventArgs.GetPosition(PlotSurface).X, eventArgs.Delta > 0);
+        eventArgs.Handled = true;
     }
 }

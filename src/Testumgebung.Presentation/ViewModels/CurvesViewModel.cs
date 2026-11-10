@@ -159,11 +159,11 @@ public sealed class CurvesViewModel : ObservableObject
         RefreshResultFilesCommand = new RelayCommand(RefreshResultFiles);
         OpenResultFileCommand = new RelayCommand(OpenResultFileDialog);
         ApplyImportCommand = new RelayCommand(ApplyImport, () => _table is not null);
-        TrimCommand = new RelayCommand(() => Edit(c => CurveOps.Trim(c, Ms(_trimFromMs, "Zuschnitt von") / 1000, Ms(_trimToMs, "Zuschnitt bis") / 1000)), HasWorking);
-        TrimToViewCommand = new RelayCommand(() => Edit(c => CurveOps.Trim(c, Plot.ViewStart, Plot.ViewEnd)), HasWorking);
-        ScaleCommand = new RelayCommand(() => Edit(c => CurveOps.Scale(c, Num(_scaleFactor, "Faktor"), _scaleChannel == AllChannels ? null : _scaleChannel)), HasWorking);
-        ShiftCommand = new RelayCommand(() => Edit(c => CurveOps.Shift(c, Num(_shiftMs, "Verschiebung") / 1000)), HasWorking);
-        ResampleCommand = new RelayCommand(() => Edit(c => CurveOps.Resample(c, Num(_resampleHz, "Abtastrate"))), HasWorking);
+        TrimCommand = new RelayCommand(() => Edit(curve => CurveOps.Trim(curve, Ms(_trimFromMs, "Zuschnitt von") / 1000, Ms(_trimToMs, "Zuschnitt bis") / 1000)), HasWorking);
+        TrimToViewCommand = new RelayCommand(() => Edit(curve => CurveOps.Trim(curve, Plot.ViewStart, Plot.ViewEnd)), HasWorking);
+        ScaleCommand = new RelayCommand(() => Edit(curve => CurveOps.Scale(curve, Num(_scaleFactor, "Faktor"), _scaleChannel == AllChannels ? null : _scaleChannel)), HasWorking);
+        ShiftCommand = new RelayCommand(() => Edit(curve => CurveOps.Shift(curve, Num(_shiftMs, "Verschiebung") / 1000)), HasWorking);
+        ResampleCommand = new RelayCommand(() => Edit(curve => CurveOps.Resample(curve, Num(_resampleHz, "Abtastrate"))), HasWorking);
         UndoCommand = new RelayCommand(Undo, () => _undo.Count > 0);
         SaveVersionCommand = new RelayCommand(SaveVersion, HasWorking);
         NewFromSelectedCommand = new RelayCommand(() => { if (_selected is not null) OpenForEditing(_selected.Curve); }, () => _selected is not null);
@@ -172,9 +172,9 @@ public sealed class CurvesViewModel : ObservableObject
         StartCommand = new RelayCommand(() => _ = OutputAsync(CurveCommand.Start), () => CanOutput);
         StopCommand = new RelayCommand(() => _ = OutputAsync(CurveCommand.Stop), () => _testSim is not null && !_outputBusy);
 
-        Plot.PropertyChanged += (_, e) =>
+        Plot.PropertyChanged += (_, eventArgs) =>
         {
-            if (e.PropertyName == nameof(WaveformPlotViewModel.ViewText)) OnPropertyChanged(nameof(TrimToViewText));
+            if (eventArgs.PropertyName == nameof(WaveformPlotViewModel.ViewText)) OnPropertyChanged(nameof(TrimToViewText));
         };
         _editor.ProjectReplaced += OnProjectReplaced;
         Reload();
@@ -244,21 +244,21 @@ public sealed class CurvesViewModel : ObservableObject
     /// <summary>Herkunft, Historie und Hash der gewählten Version.</summary>
     public IReadOnlyList<string> SelectedDetails => _selected is null ? [] : Details(_selected.Curve, _selected.Usage);
 
-    private static List<string> Details(CurveDefinition c, string? usage)
+    private static List<string> Details(CurveDefinition curve, string? usage)
     {
         var list = new List<string>
         {
-            $"Kennung: {c.Id}  ·  Version {c.Version}",
-            $"Herkunft: {OriginText(c.Origin)} – {c.SourceText}",
-            $"Erstellt: {c.CreatedBy}, {c.CreatedAt.ToLocalTime():dd.MM.yyyy HH:mm}",
-            string.Create(CultureInfo.InvariantCulture, $"Zeitbasis: {(c.HasExplicitTimes ? $"explizite Zeitpunkte ({c.Count})" : $"{c.SampleRate:0.##} Hz")} · Dauer {WaveformPlotViewModel.FormatTime(c.Duration)}"),
-            "Kanäle: " + string.Join(", ", c.Channels.Select(ch => string.Create(CultureInfo.InvariantCulture, $"{ch.Id} [{ch.Unit}] {ch.Min:0.##}…{ch.Max:0.##}"))),
-            "SHA-256: " + c.ContentHash()[..16] + "…",
+            $"Kennung: {curve.Id}  ·  Version {curve.Version}",
+            $"Herkunft: {OriginText(curve.Origin)} – {curve.SourceText}",
+            $"Erstellt: {curve.CreatedBy}, {curve.CreatedAt.ToLocalTime():dd.MM.yyyy HH:mm}",
+            string.Create(CultureInfo.InvariantCulture, $"Zeitbasis: {(curve.HasExplicitTimes ? $"explizite Zeitpunkte ({curve.Count})" : $"{curve.SampleRate:0.##} Hz")} · Dauer {WaveformPlotViewModel.FormatTime(curve.Duration)}"),
+            "Kanäle: " + string.Join(", ", curve.Channels.Select(ch => string.Create(CultureInfo.InvariantCulture, $"{ch.Id} [{ch.Unit}] {ch.Min:0.##}…{ch.Max:0.##}"))),
+            "SHA-256: " + curve.ContentHash()[..16] + "…",
         };
-        if (c.Quality is { Length: > 0 } q) list.Add("Qualität: " + q);
-        if (!string.IsNullOrEmpty(c.Description)) list.Add("Beschreibung: " + c.Description);
+        if (curve.Quality is { Length: > 0 } text) list.Add("Qualität: " + text);
+        if (!string.IsNullOrEmpty(curve.Description)) list.Add("Beschreibung: " + curve.Description);
         if (usage is { Length: > 0 }) list.Add("Verwendet in: " + usage);
-        list.AddRange(c.History.Select(h => "• " + h));
+        list.AddRange(curve.History.Select(history => "• " + history));
         return list;
     }
 
@@ -285,9 +285,9 @@ public sealed class CurvesViewModel : ObservableObject
         var keep = _selected?.Curve.Key;
         Curves.Clear();
         var usage = Usage();
-        foreach (var c in Library.Versions.OrderBy(v => v.Id, StringComparer.OrdinalIgnoreCase).ThenBy(v => v.Version, VersionComparer.Instance))
-            Curves.Add(new CurveListItem(c, string.Join(", ", usage.Where(u => u.Key == c.Key).Select(u => u.Step))));
-        _selected = Curves.FirstOrDefault(c => c.Curve.Key == keep);
+        foreach (var curve in Library.Versions.OrderBy(curve2 => curve2.Id, StringComparer.OrdinalIgnoreCase).ThenBy(curve2 => curve2.Version, VersionComparer.Instance))
+            Curves.Add(new CurveListItem(curve, string.Join(", ", usage.Where(entry => entry.Key == curve.Key).Select(entry => entry.Step))));
+        _selected = Curves.FirstOrDefault(curveListItem => curveListItem.Curve.Key == keep);
         OnPropertiesChanged(nameof(SelectedCurve), nameof(SelectedDetails), nameof(HasCurves));
         RefreshOutputs();
     }
@@ -298,11 +298,11 @@ public sealed class CurvesViewModel : ObservableObject
     private List<(string Key, string Step)> Usage()
     {
         var list = new List<(string, string)>();
-        foreach (var s in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.CurveLoad))
+        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(step2 => step2.BlockType == BlockCatalog.CurveLoad))
         {
-            var id = s.Parameters.GetValueOrDefault("Kurve") ?? "";
-            var version = s.Parameters.GetValueOrDefault("Version");
-            if (Library.Find(id, version) is { } c) list.Add((c.Key, s.Name));
+            var id = step.Parameters.GetValueOrDefault("Kurve") ?? "";
+            var version = step.Parameters.GetValueOrDefault("Version");
+            if (Library.Find(id, version) is { } curve) list.Add((curve.Key, step.Name));
         }
         AddTraceUsage(list);
         return list;
@@ -310,7 +310,7 @@ public sealed class CurvesViewModel : ObservableObject
 
     private void AddTraceUsage(List<(string Key, string Step)> list)
     {
-        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(s => s.BlockType is TraceBlocks.Start or TraceBlocks.Record))
+        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(step => step.BlockType is TraceBlocks.Start or TraceBlocks.Record))
             foreach (var key in (step.Parameters.GetValueOrDefault("Grenzkurven") ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
             {
                 var separator = key.LastIndexOf('@');
@@ -376,13 +376,13 @@ public sealed class CurvesViewModel : ObservableObject
         ChannelChoices.Add(AllChannels);
         if (current is not null)
         {
-            foreach (var c in current.Channels) ChannelChoices.Add(c.Id);
+            foreach (var curveChannel in current.Channels) ChannelChoices.Add(curveChannel.Id);
             _trimToMs = (current.Duration * 1000).ToString("0.###", CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(_resampleHz)) _resampleHz = current.SampleRate.ToString("0.##", CultureInfo.InvariantCulture);
         }
         if (!ChannelChoices.Contains(_scaleChannel)) _scaleChannel = AllChannels;
-        foreach (var c in new[] { TrimCommand, TrimToViewCommand, ScaleCommand, ShiftCommand, ResampleCommand, SaveVersionCommand })
-            c.RaiseCanExecuteChanged();
+        foreach (var relayCommand in new[] { TrimCommand, TrimToViewCommand, ScaleCommand, ShiftCommand, ResampleCommand, SaveVersionCommand })
+            relayCommand.RaiseCanExecuteChanged();
         UndoCommand.RaiseCanExecuteChanged();
         OnPropertiesChanged(nameof(Working), nameof(IsEditing), nameof(WorkingDetails), nameof(WorkingTitle), nameof(TrimToMs),
             nameof(ScaleChannel), nameof(ResampleHz));
@@ -432,7 +432,7 @@ public sealed class CurvesViewModel : ObservableObject
         Amplitude = Num(_genAmplitude, "Amplitude"),
         Frequency = Num(_genFrequency, "Frequenz"),
         Offset = Num(_genOffset, "Offset"),
-        Phases = List(_genPhases).Select(p => Num(p, "Phase")).ToList(),
+        Phases = List(_genPhases).Select(list => Num(list, "Phase")).ToList(),
         RampStart = Num(_genRampStart, "Rampe Start"),
         RampEnd = Num(_genRampEnd, "Rampe Ende"),
         Steps = _genSteps,
@@ -483,7 +483,7 @@ public sealed class CurvesViewModel : ObservableObject
         ImportPath = path;
         Sheets.Clear();
         if (Path.GetExtension(path).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
-            foreach (var s in Xlsx.SheetNames(File.ReadAllBytes(path))) Sheets.Add(s);
+            foreach (var text in Xlsx.SheetNames(File.ReadAllBytes(path))) Sheets.Add(text);
         _selectedSheet = Sheets.FirstOrDefault();
         OnPropertiesChanged(nameof(SelectedSheet), nameof(HasSheets));
         SetTable(table);
@@ -499,7 +499,7 @@ public sealed class CurvesViewModel : ObservableObject
     {
         ResultFiles.Clear();
         if (_resultFiles() is { } store)
-            foreach (var f in store.List()) ResultFiles.Add(f);
+            foreach (var resultFileInfo in store.List()) ResultFiles.Add(resultFileInfo);
         Status = ResultFiles.Count == 0 ? "Keine Ergebnisdateien im Ergebnisordner." : $"{ResultFiles.Count} Ergebnisdatei(en).";
     });
 
@@ -524,7 +524,7 @@ public sealed class CurvesViewModel : ObservableObject
         _resultContent = ResultFile.Read(path);
         ImportPath = path;
         ResultSources.Clear();
-        foreach (var s in ResultFileSource.List(_resultContent)) ResultSources.Add(s);
+        foreach (var waveformSource in ResultFileSource.List(_resultContent)) ResultSources.Add(waveformSource);
         if (ResultSources.Count == 0) Status = "Die Ergebnisdatei enthält keine Kurven.";
         SelectedSource = ResultSources.FirstOrDefault();
     });
@@ -549,7 +549,7 @@ public sealed class CurvesViewModel : ObservableObject
     public IReadOnlyList<Choice<TimeBaseMode>> TimeModes { get; }
 
     public string TableInfo => _table is null ? "" : string.Create(CultureInfo.InvariantCulture,
-        $"{_table.Format} · {_table.SourceName} · {_table.Rows} Zeilen · {_table.Columns.Count} Spalten{(_table.SampleRate is { } r ? $" · Abtastrate laut Datei {r:0.##} Hz" : "")} · SHA-256 {_table.Sha256[..12]}…");
+        $"{_table.Format} · {_table.SourceName} · {_table.Rows} Zeilen · {_table.Columns.Count} Spalten{(_table.SampleRate is { } ratio ? $" · Abtastrate laut Datei {ratio:0.##} Hz" : "")} · SHA-256 {_table.Sha256[..12]}…");
 
     public TimeBaseMode TimeMode
     {
@@ -573,10 +573,10 @@ public sealed class CurvesViewModel : ObservableObject
         Mapping.Clear();
         foreach (var col in table.Columns)
         {
-            var m = suggested.Channels.FirstOrDefault(c => c.SourceColumn == col.Name);
+            var channelMapping = suggested.Channels.FirstOrDefault(channelMapping2 => channelMapping2.SourceColumn == col.Name);
             var isMeta = col.Name == table.TimeColumn || col.Name == table.QualityColumn;
             if (isMeta) continue;
-            Mapping.Add(new MappingRow(col, m is not null, m?.TargetChannel ?? col.Name, m?.Unit ?? col.Unit ?? ""));
+            Mapping.Add(new MappingRow(col, channelMapping is not null, channelMapping?.TargetChannel ?? col.Name, channelMapping?.Unit ?? col.Unit ?? ""));
         }
     }
 
@@ -587,19 +587,19 @@ public sealed class CurvesViewModel : ObservableObject
         BuildMappingRows(table, suggested);
         ColumnChoices.Clear();
         ColumnChoices.Add(NoColumn);
-        foreach (var c in table.Columns) ColumnChoices.Add(c.Name);
+        foreach (var importColumn in table.Columns) ColumnChoices.Add(importColumn.Name);
         _timeMode = suggested.Mode;
         _timeColumn = suggested.TimeColumn ?? NoColumn;
         _timeFactor = suggested.TimeFactor.ToString("0.#########", CultureInfo.InvariantCulture);
         _importRate = suggested.SampleRate?.ToString("0.###", CultureInfo.InvariantCulture) ?? "";
         _qualityColumn = suggested.QualityColumn ?? NoColumn;
         ImportWarnings.Clear();
-        foreach (var w in table.Warnings) ImportWarnings.Add(w);
+        foreach (var warning in table.Warnings) ImportWarnings.Add(warning);
         _preview = BuildPreview(table);
         ImportSummary.Clear();
         try
         {
-            foreach (var s in CurveImport.Summarize(table, CurrentImportSettings())) ImportSummary.Add(s);
+            foreach (var channelSummary in CurveImport.Summarize(table, CurrentImportSettings())) ImportSummary.Add(channelSummary);
         }
         catch (CurveImportException) { /* Zuordnung noch unvollständig */ }
         ApplyImportCommand.RaiseCanExecuteChanged();
@@ -623,17 +623,17 @@ public sealed class CurvesViewModel : ObservableObject
     private static DataView BuildPreview(ImportTable table)
     {
         var dt = new DataTable();
-        foreach (var c in table.Columns)
+        foreach (var importColumn in table.Columns)
         {
-            var name = c.Unit is { Length: > 0 } u ? $"{c.Name} [{u}]" : c.Name;
+            var name = importColumn.Unit is { Length: > 0 } unit ? $"{importColumn.Name} [{unit}]" : importColumn.Name;
             while (dt.Columns.Contains(name)) name += "'";
             dt.Columns.Add(name, typeof(string));
         }
         foreach (var row in table.PreviewRows.Take(200))
         {
-            var r = dt.NewRow();
-            for (var i = 0; i < Math.Min(row.Length, dt.Columns.Count); i++) r[i] = row[i];
-            dt.Rows.Add(r);
+            var dataRow = dt.NewRow();
+            for (var index = 0; index < Math.Min(row.Length, dt.Columns.Count); index++) dataRow[index] = row[index];
+            dt.Rows.Add(dataRow);
         }
         return dt.DefaultView;
     }
@@ -644,7 +644,7 @@ public sealed class CurvesViewModel : ObservableObject
         _timeColumn == NoColumn ? null : _timeColumn,
         _timeMode == TimeBaseMode.ExplicitTimes ? Num(_timeFactor, "Zeitfaktor") : 1,
         _timeMode == TimeBaseMode.FixedRate && _importRate.Trim().Length > 0 ? Num(_importRate, "Abtastrate") : null,
-        Mapping.Where(m => m.Include).Select(m => new ChannelMapping(m.Source, m.Target.Trim(), m.Unit.Trim())).ToList(),
+        Mapping.Where(mappingRow => mappingRow.Include).Select(mappingRow => new ChannelMapping(mappingRow.Source, mappingRow.Target.Trim(), mappingRow.Unit.Trim())).ToList(),
         _qualityColumn == NoColumn ? null : _qualityColumn);
 
     private void ApplyImport() => Try(() =>
@@ -660,7 +660,7 @@ public sealed class CurvesViewModel : ObservableObject
         }
         var curve = CurveImport.ToCurve(_table, settings, Id(), name, CurveVersion.Trim(), _user(), DateTimeOffset.Now);
         ImportSummary.Clear();
-        foreach (var s in CurveImport.Summarize(_table, settings)) ImportSummary.Add(s);
+        foreach (var channelSummary in CurveImport.Summarize(_table, settings)) ImportSummary.Add(channelSummary);
         SetWorking(curve, newCurve: true);
         Status = $"Übernommen: {curve.SourceText}" + (curve.Origin == CurveOrigin.Measurement ? " – die Ergebnisdatei bleibt unverändert." : "");
     });
@@ -735,7 +735,7 @@ public sealed class CurvesViewModel : ObservableObject
         _working = null;
         _undo.Clear();
         Reload();
-        SelectedCurve = Curves.FirstOrDefault(c => c.Curve.Key == saved.Key);
+        SelectedCurve = Curves.FirstOrDefault(curveListItem => curveListItem.Curve.Key == saved.Key);
         Tab = CurveTab.Library;
         CurveVersion = Library.NextVersion(id);
         Status = $"Version {saved.Key} gespeichert. Sie wird mit dem nächsten Release-Paket freigegeben; „Kurve laden“-Schritte wählen sie über Kurve und Version.";
@@ -757,9 +757,9 @@ public sealed class CurvesViewModel : ObservableObject
     }
 
     public ObservableCollection<SuitabilityIssue> Suitability { get; } = [];
-    public bool IsSuitable => Suitability.Count > 0 && Suitability.All(i => !i.IsError);
-    public string CapabilitiesText => _testOutput is { } o
-        ? string.Create(CultureInfo.InvariantCulture, $"{o.Name}: {o.Unit} {o.Min:0.##}…{o.Max:0.##}, Kanäle {o.Channels}, Abtastraten {o.SampleRates} Hz{(o.ExplicitTimes ? ", explizite Zeit" : "")}, max. {o.MaxSamples} Samples")
+    public bool IsSuitable => Suitability.Count > 0 && Suitability.All(issue => !issue.IsError);
+    public string CapabilitiesText => _testOutput is { } output
+        ? string.Create(CultureInfo.InvariantCulture, $"{output.Name}: {output.Unit} {output.Min:0.##}…{output.Max:0.##}, Kanäle {output.Channels}, Abtastraten {output.SampleRates} Hz{(output.ExplicitTimes ? ", explizite Zeit" : "")}, max. {output.MaxSamples} Samples")
         : "";
 
     public ObservableCollection<string> OutputLog { get; } = [];
@@ -782,7 +782,7 @@ public sealed class CurvesViewModel : ObservableObject
     {
         var keep = _selectedOutput;
         Outputs.Clear();
-        foreach (var o in _editor.Project.SimulationOutputs) Outputs.Add(o.Name);
+        foreach (var output in _editor.Project.SimulationOutputs) Outputs.Add(output.Name);
         _selectedOutput = Outputs.Contains(keep ?? "") ? keep : Outputs.FirstOrDefault();
         OnPropertyChanged(nameof(SelectedOutput));
         ResetTestOutput();
@@ -792,7 +792,7 @@ public sealed class CurvesViewModel : ObservableObject
     private void ResetTestOutput()
     {
         _testSim = null;
-        _testOutput = _editor.Project.SimulationOutputs.FirstOrDefault(o => o.Name == _selectedOutput);
+        _testOutput = _editor.Project.SimulationOutputs.FirstOrDefault(output => output.Name == _selectedOutput);
         OutputLog.Clear();
         OutputStateText = _testOutput is null ? "Kein Ausgabegerät im Projekt" : "Leerlauf";
         OnPropertyChanged(nameof(CapabilitiesText));
@@ -801,16 +801,16 @@ public sealed class CurvesViewModel : ObservableObject
 
     private void RaiseOutput()
     {
-        foreach (var c in new[] { LoadCommand, TransferCommand, StartCommand, StopCommand }) c.RaiseCanExecuteChanged();
+        foreach (var relayCommand in new[] { LoadCommand, TransferCommand, StartCommand, StopCommand }) relayCommand.RaiseCanExecuteChanged();
     }
 
     private void CheckSuitability()
     {
         Suitability.Clear();
-        if (Current is { } c && _testOutput is not null)
+        if (Current is { } curve && _testOutput is not null)
         {
             var sim = EnsureSim();
-            foreach (var i in OutputSuitability.Check(sim.GetOutputCapabilities(_testOutput.Channel), c.ToOutput())) Suitability.Add(i);
+            foreach (var issue in OutputSuitability.Check(sim.GetOutputCapabilities(_testOutput.Channel), curve.ToOutput())) Suitability.Add(issue);
         }
         OnPropertyChanged(nameof(IsSuitable));
         RaiseOutput();
@@ -868,11 +868,11 @@ public sealed class CurvesViewModel : ObservableObject
     {
         if (_testOutput is null || Current is not { SampleRate: > 0 } curve) return;
         var pairs = _testOutput.Feedback.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Split('=', 2, StringSplitOptions.TrimEntries)).Where(x => x.Length == 2).ToList();
+            .Select(entry => entry.Split('=', 2, StringSplitOptions.TrimEntries)).Where(parts => parts.Length == 2).ToList();
         if (pairs.Count == 0) return;
-        var set = await sim.CaptureAsync(pairs.Select(p => p[1]).ToList(), curve.SampleRate, Math.Max(1, curve.Count), CancellationToken.None).ConfigureAwait(true);
-        Log("Rückmessung: " + string.Join(", ", set.Channels.Select((w, i) =>
-            string.Create(CultureInfo.InvariantCulture, $"{pairs[i][0]}→{w.Channel} {w.Rms():0.##} {_testOutput.Unit} eff."))));
+        var set = await sim.CaptureAsync(pairs.Select(parts => parts[1]).ToList(), curve.SampleRate, Math.Max(1, curve.Count), CancellationToken.None).ConfigureAwait(true);
+        Log("Rückmessung: " + string.Join(", ", set.Channels.Select((waveform, index) =>
+            string.Create(CultureInfo.InvariantCulture, $"{pairs[index][0]}→{waveform.Channel} {waveform.Rms():0.##} {_testOutput.Unit} eff."))));
     }
 
     private static string StateText(OutputState state, string? key) => state switch
@@ -910,8 +910,8 @@ public sealed class CurvesViewModel : ObservableObject
     /// <summary>Zahl mit Punkt oder Komma.</summary>
     public static double Num(string text, string what)
     {
-        var t = text.Trim().Replace(',', '.');
-        if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) && double.IsFinite(v)) return v;
+        var text2 = text.Trim().Replace(',', '.');
+        if (double.TryParse(text2, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && double.IsFinite(value)) return value;
         throw new FormatException($"{what}: „{text}“ ist keine Zahl.");
     }
 

@@ -65,7 +65,7 @@ internal static class Prelude
                     _dbgEntry = entry;
                     _dbgStep = step;
                     _dbgBreakpoints.Clear();
-                    if (breakpoints != null) foreach (var b in breakpoints) _dbgBreakpoints.Add(b);
+                    if (breakpoints != null) foreach (var breakpoint in breakpoints) _dbgBreakpoints.Add(breakpoint);
                 }
 
                 /// <summary>Bei Eintritt anhalten (vom Worker vor Run aufgerufen, wenn konfiguriert).</summary>
@@ -88,15 +88,15 @@ internal static class Prelude
                 private void __DbgEmit(int line, string kind)
                 {
                     var vars = new JsonObject();
-                    foreach (var f in GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
-                        vars[f.Name] = ToNode(f.GetValue(this));
+                    foreach (var field in GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                        vars[field.Name] = ToNode(field.GetValue(this));
                     foreach (var kv in _dbgLocals) vars[kv.Key] = ToNode(kv.Value);
                     var reply = _call(_id, "debug.at", new JsonObject { ["line"] = line, ["kind"] = kind, ["vars"] = vars });
                     if (reply is JsonObject obj)
                     {
                         _dbgBreakpoints.Clear();
                         if (obj["breakpoints"] is JsonArray arr)
-                            foreach (var b in arr) if (b != null) _dbgBreakpoints.Add(b.GetValue<int>());
+                            foreach (var breakpoint in arr) if (breakpoint != null) _dbgBreakpoints.Add(breakpoint.GetValue<int>());
                         _dbgStep = obj["step"] != null && obj["step"].GetValue<bool>();
                         if ((string)obj["cmd"] == "stop") throw new DebugStopException();
                     }
@@ -202,8 +202,8 @@ internal static class Prelude
                 /// <summary>Modbus-Wert lesen, z. B. ModbusRead("Pruefling_Modbus", "IR10", "Float32").</summary>
                 protected double ModbusRead(string resource, string address, string type = "UInt16", bool lowWordFirst = false)
                 {
-                    var v = Dev("modbus.read", resource, new JsonObject { ["address"] = address, ["type"] = type, ["lowFirst"] = lowWordFirst });
-                    return v.GetValueKind() == System.Text.Json.JsonValueKind.True ? 1 : v.GetValueKind() == System.Text.Json.JsonValueKind.False ? 0 : v.GetValue<double>();
+                    var registerValue = Dev("modbus.read", resource, new JsonObject { ["address"] = address, ["type"] = type, ["lowFirst"] = lowWordFirst });
+                    return registerValue.GetValueKind() == System.Text.Json.JsonValueKind.True ? 1 : registerValue.GetValueKind() == System.Text.Json.JsonValueKind.False ? 0 : registerValue.GetValue<double>();
                 }
 
                 protected string ModbusReadText(string resource, string address, int length)
@@ -218,8 +218,8 @@ internal static class Prelude
                 /// <summary>Nächsten Rahmen mit ID (und Maske) empfangen.</summary>
                 protected CanMessage CanReceive(string resource, uint id, uint? mask = null, int timeoutMs = 1000)
                 {
-                    var f = Dev("can.receive", resource, new JsonObject { ["id"] = id, ["mask"] = mask, ["timeout"] = timeoutMs });
-                    return new CanMessage(f["id"].GetValue<uint>(), Convert.FromHexString(f["data"].GetValue<string>()), f["extended"].GetValue<bool>());
+                    var frame = Dev("can.receive", resource, new JsonObject { ["id"] = id, ["mask"] = mask, ["timeout"] = timeoutMs });
+                    return new CanMessage(frame["id"].GetValue<uint>(), Convert.FromHexString(frame["data"].GetValue<string>()), frame["extended"].GetValue<bool>());
                 }
 
                 /// <summary>UDS-Anfrage über ISO-TP; liefert die positive Antwort. Negative Antwort = Ausnahme mit NRC im Text.</summary>
@@ -231,8 +231,8 @@ internal static class Prelude
 
                 protected CanMessage J1939Receive(string resource, uint pgn, byte? source = null, bool request = false, int timeoutMs = 1000)
                 {
-                    var m = Dev("j1939.receive", resource, new JsonObject { ["pgn"] = pgn, ["source"] = source, ["request"] = request, ["timeout"] = timeoutMs });
-                    return new CanMessage(0, Convert.FromHexString(m["data"].GetValue<string>()), true, m["pgn"].GetValue<uint>(), m["source"].GetValue<byte>());
+                    var message = Dev("j1939.receive", resource, new JsonObject { ["pgn"] = pgn, ["source"] = source, ["request"] = request, ["timeout"] = timeoutMs });
+                    return new CanMessage(0, Convert.FromHexString(message["data"].GetValue<string>()), true, message["pgn"].GetValue<uint>(), message["source"].GetValue<byte>());
                 }
 
                 protected byte[] LinRead(string resource, int id, int length = 8, bool classicChecksum = false, int timeoutMs = 100)
@@ -251,12 +251,12 @@ internal static class Prelude
                 private static JsonNode ToNode(object value) => value switch
                 {
                     null => null,
-                    bool b => JsonValue.Create(b),
-                    int i => JsonValue.Create((long)i),
-                    long l => JsonValue.Create(l),
-                    double d => JsonValue.Create(d),
-                    float f => JsonValue.Create((double)f),
-                    string s => JsonValue.Create(s),
+                    bool booleanValue => JsonValue.Create(booleanValue),
+                    int integerValue => JsonValue.Create((long)integerValue),
+                    long longValue => JsonValue.Create(longValue),
+                    double doubleValue => JsonValue.Create(doubleValue),
+                    float floatingPointValue => JsonValue.Create((double)floatingPointValue),
+                    string text => JsonValue.Create(text),
                     DateTime dt => JsonValue.Create(dt.ToString("O", CultureInfo.InvariantCulture)),
                     _ => JsonValue.Create(value.ToString()),
                 };

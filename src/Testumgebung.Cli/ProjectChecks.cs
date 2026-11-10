@@ -41,8 +41,8 @@ public static class ProjectChecks
         {
             var errors = BlockCatalog.Default.Rebuild(step);
             if (errors.Count == 0) continue;
-            blockErrors.AddRange(errors.Select(e => $"Schritt {step.Id} ({step.BlockType}): {e}"));
-            if (step.BlockType is { } type && !hints.Any(h => h.StartsWith(type + " ", StringComparison.Ordinal)))
+            blockErrors.AddRange(errors.Select(error => $"Schritt {step.Id} ({step.BlockType}): {error}"));
+            if (step.BlockType is { } type && !hints.Any(hint => hint.StartsWith(type + " ", StringComparison.Ordinal)))
                 hints.Add(CatalogText.Describe(type));
         }
         if (blockErrors.Count > 0)
@@ -74,16 +74,16 @@ public static class ProjectChecks
     public static async Task BuildAsync(string path, TestProject project, ICodeRuntime runtime, Report report, CancellationToken cancellationToken)
     {
         var suite = SuiteName(path);
-        var d = project.Definition;
+        var definition = project.Definition;
         var requests = new List<(string Name, CodeRequest Request)>();
-        foreach (var b in d.Library)
-            requests.Add(($"Build Baustein {b.Id} ({b.Language})", new CodeRequest(b.Language, b.Source, b.Ports) { Assemblies = d.Assemblies }));
-        foreach (var s in d.EnabledNodes().OfType<StepDefinition>().Where(s => s.BlockType == BlockCatalog.Code))
+        foreach (var codeBlock in definition.Library)
+            requests.Add(($"Build Baustein {codeBlock.Id} ({codeBlock.Language})", new CodeRequest(codeBlock.Language, codeBlock.Source, codeBlock.Ports) { Assemblies = definition.Assemblies }));
+        foreach (var step in definition.EnabledNodes().OfType<StepDefinition>().Where(step2 => step2.BlockType == BlockCatalog.Code))
         {
-            var ports = CodeBlockConverter.VisibleVariables(d, s.Id).Select(v => new CodePort(v.Name, v.Type, PortDirection.InOut)).ToList();
-            var language = s.Parameters.GetValueOrDefault("Sprache") ?? "C#";
-            requests.Add(($"Build CodeBlock {s.Id} ({language})",
-                new CodeRequest(BlockCatalog.ParseLanguage(language), s.Parameters.GetValueOrDefault("Quelltext") ?? "", ports) { Assemblies = d.Assemblies }));
+            var ports = CodeBlockConverter.VisibleVariables(definition, step.Id).Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
+            var language = step.Parameters.GetValueOrDefault("Sprache") ?? "C#";
+            requests.Add(($"Build CodeBlock {step.Id} ({language})",
+                new CodeRequest(BlockCatalog.ParseLanguage(language), step.Parameters.GetValueOrDefault("Quelltext") ?? "", ports) { Assemblies = definition.Assemblies }));
         }
         if (requests.Count == 0)
         {
@@ -95,9 +95,9 @@ public static class ProjectChecks
             try
             {
                 var result = await runtime.CompileAsync(request, cancellationToken).ConfigureAwait(false);
-                var lines = result.Diagnostics.Select(x => $"{(x.IsError ? "Fehler" : "Warnung")} {x}").ToList();
+                var lines = result.Diagnostics.Select(diagnostic => $"{(diagnostic.IsError ? "Fehler" : "Warnung")} {diagnostic}").ToList();
                 if (result.Success) report.Pass(suite, name, $"{result.Warnings} Warnung(en)", lines.Count > 0 ? string.Join(Environment.NewLine, lines) : null);
-                else report.Fail(suite, name, string.Join(Environment.NewLine, lines.Where(l => l.StartsWith("Fehler", StringComparison.Ordinal)).Take(20)));
+                else report.Fail(suite, name, string.Join(Environment.NewLine, lines.Where(line => line.StartsWith("Fehler", StringComparison.Ordinal)).Take(20)));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

@@ -34,7 +34,7 @@ public sealed partial class ProgramSourcesViewModel
             var credentials = Selected is null ? null : _authentication.Get(Selected);
             LoginMode = credentials?.Mode ?? SourceLoginMode.External; LoginUsername = credentials?.Username ?? "";
             RememberLogin = Selected is not null && _authentication.IsRemembered(Selected);
-            LoginStatus = LoginChoices.FirstOrDefault(c => c.Mode == LoginMode)?.Title ?? "Zugangsmethode prüfen";
+            LoginStatus = LoginChoices.FirstOrDefault(sourceLoginChoice => sourceLoginChoice.Mode == LoginMode)?.Title ?? "Zugangsmethode prüfen";
         }
         catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException) { LoginStatus = ex.Message; }
         OnPropertiesChanged(nameof(LoginChoices), nameof(LoginMode), nameof(LoginUsername), nameof(RememberLogin), nameof(LoginStatus));

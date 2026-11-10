@@ -105,7 +105,7 @@ public sealed class Scope : IValueResolver
     public static Scope CreateFor(GroupDefinition group, Scope? parent)
     {
         var scope = new Scope(group.Name, parent, group.IsInterfaceBoundary, group.Id);
-        foreach (var v in group.Variables) scope.Define(v);
+        foreach (var variable in group.Variables) scope.Define(variable);
         scope.DefineComputed(GroupResultVariable, VarType.String, () => scope.GroupResult.Rating.ToDisplay());
         return scope;
     }
@@ -142,7 +142,7 @@ public sealed class Scope : IValueResolver
     /// <summary>Löst einen Variablennamen (optional mit <c>../</c>-Präfixen) auf.</summary>
     public Variable Lookup(string path)
     {
-        if (TryLookup(path, out var v, out var error)) return v;
+        if (TryLookup(path, out var variable, out var error)) return variable;
         throw new VariableNotFoundException(error!);
     }
 
@@ -159,7 +159,7 @@ public sealed class Scope : IValueResolver
         }
 
         Scope? start = this;
-        for (var i = 0; i < levels; i++)
+        for (var index = 0; index < levels; index++)
         {
             if (start!.IsInterfaceBoundary || start.Parent is null)
             {
@@ -169,10 +169,10 @@ public sealed class Scope : IValueResolver
             start = start.Parent;
         }
 
-        for (var s = start; s is not null; s = s.Parent)
+        for (var start2 = start; start2 is not null; start2 = start2.Parent)
         {
-            if (s.TryGetLocal(name, out variable)) return true;
-            if (s.IsInterfaceBoundary) break;
+            if (start2.TryGetLocal(name, out variable)) return true;
+            if (start2.IsInterfaceBoundary) break;
         }
 
         error = $"Variable '{path}' ist ab Gruppe '{GroupName}' nicht definiert.";
@@ -190,18 +190,18 @@ public sealed class Scope : IValueResolver
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
         var result = new List<Variable>();
-        for (var s = this; s is not null; s = s.Parent)
+        for (var scope = this; scope is not null; scope = scope.Parent)
         {
-            foreach (var v in s.Variables.OrderBy(v => v.Name, StringComparer.Ordinal))
-                if (seen.Add(v.Name)) result.Add(v);
-            if (s.IsInterfaceBoundary) break;
+            foreach (var variable in scope.Variables.OrderBy(variable2 => variable2.Name, StringComparer.Ordinal))
+                if (seen.Add(variable.Name)) result.Add(variable);
+            if (scope.IsInterfaceBoundary) break;
         }
         return result;
     }
 
     /// <summary>Lesbarer Debug-Schnappschuss (kein aktiver Scope).</summary>
     public ScopeSnapshot Snapshot()
-        => new(Id, GroupId, GroupName, Variables.Select(v => new VariableSnapshot(v.Name, v.Type, v.Value, GroupName)).ToList());
+        => new(Id, GroupId, GroupName, Variables.Select(variable => new VariableSnapshot(variable.Name, variable.Type, variable.Value, GroupName)).ToList());
 
     /// <summary>Beim Verlassen der Gruppe: Variablen verworfen; erneuter Eintritt erzeugt einen neuen Scope.</summary>
     public void Discard() => IsDiscarded = true;

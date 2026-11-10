@@ -97,7 +97,7 @@ public static class InstrumentCatalog
 
     public static bool IsCommunication(string adapter) => CommunicationAdapters.Contains(adapter);
 
-    public static InstrumentFamily? Family(string adapter) => Families.FirstOrDefault(f => f.Adapter == adapter);
+    public static InstrumentFamily? Family(string adapter) => Families.FirstOrDefault(instrumentFamily => instrumentFamily.Adapter == adapter);
 
     private enum AdapterKind { Unknown, DaqIo, Dmm, Supply, AcSource, ThreePhase, Generator, Scope, Daqmx, DaqmxReplica, Stream, Remote, Modbus, Can, Lin, OpcUa, Chroma, Eaq }
 
@@ -169,8 +169,8 @@ public static class InstrumentCatalog
         var addresses = resource.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         if (addresses.Length != 3) throw new InstrumentException("Dreiphasige AC-Quelle: drei VISA-Adressen mit „;“ getrennt angeben (L1;L2;L3).");
         var opts = new InstrumentOptions(options);
-        var phases = addresses.Select(a => (IInstrumentDriver)new KeysightAc6800Source(Model(model, KeysightAc6800Source.Models),
-            new ScpiSession(a, TimeSpan.FromMilliseconds(timeoutMs ?? 5000)), opts)).ToList();
+        var phases = addresses.Select(address => (IInstrumentDriver)new KeysightAc6800Source(Model(model, KeysightAc6800Source.Models),
+            new ScpiSession(address, TimeSpan.FromMilliseconds(timeoutMs ?? 5000)), opts)).ToList();
         return new ThreePhaseAcSource(resource, phases);
     }
 
@@ -187,7 +187,7 @@ public static class InstrumentCatalog
         var list = new List<string>();
         try
         {
-            list.AddRange(visaResources().Select(r => "VISA: " + r));
+            list.AddRange(visaResources().Select(visaResource => "VISA: " + visaResource));
         }
         catch (InstrumentException ex)
         {
@@ -197,10 +197,10 @@ public static class InstrumentCatalog
         {
             try
             {
-                foreach (var d in daqDevices())
+                foreach (var daqDevice in daqDevices())
                 {
-                    var info = deviceInfo(d);
-                    list.Add($"NI-DAQmx: {d} – {info.ProductType}{(info.IsSimulated ? " (simuliert)" : "")}");
+                    var info = deviceInfo(daqDevice);
+                    list.Add($"NI-DAQmx: {daqDevice} – {info.ProductType}{(info.IsSimulated ? " (simuliert)" : "")}");
                 }
             }
             catch (InstrumentException ex)

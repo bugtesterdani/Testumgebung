@@ -23,7 +23,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
 
     public string ProfileSignature => _profile.Signature();
     public override IReadOnlyList<InstrumentChannel> Channels { get; }
-    private CustomDeviceChannel Definition(InstrumentChannel channel) => _profile.Channels.First(c => c.Name == channel.Name);
+    private CustomDeviceChannel Definition(InstrumentChannel channel) => _profile.Channels.First(customDeviceChannel => customDeviceChannel.Name == channel.Name);
     protected override async Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct)
     {
         var response = (await Session.QueryAsync(Definition(channel).ReadQuery, ct).ConfigureAwait(false)).Trim();
@@ -43,7 +43,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
     public override async Task SafeStateAsync(CancellationToken cancellationToken)
     {
         var commands = _profile.SafeCommands.Split(['\r', '\n'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (commands.Length == 0 && Channels.Any(c => c.Access.HasFlag(ChannelAccess.Write)))
+        if (commands.Length == 0 && Channels.Any(channel => channel.Access.HasFlag(ChannelAccess.Write)))
             throw new InstrumentException($"{Model}: keine Befehle für den sicheren Zustand definiert.");
         var failures = new List<Exception>();
         foreach (var command in commands)
@@ -51,7 +51,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
             try { await Session.WriteAsync(command, cancellationToken).ConfigureAwait(false); }
             catch (Exception ex) when (ex is InstrumentException or TimeoutException or IOException) { failures.Add(ex); }
         }
-        if (failures.Count > 0) throw new InstrumentException(string.Join("; ", failures.Select(e => e.Message)));
+        if (failures.Count > 0) throw new InstrumentException(string.Join("; ", failures.Select(error => error.Message)));
     }
 
     public override async Task<InstrumentProbe> ProbeAsync(CancellationToken cancellationToken)
@@ -61,7 +61,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
         try
         {
             var identity = await Session.QueryAsync(_profile.ProbeQuery, cancellationToken).ConfigureAwait(false);
-            return new(!string.IsNullOrWhiteSpace(identity), identity, ["Kanäle: " + string.Join(", ", Channels.Select(c => c.Name))], Log);
+            return new(!string.IsNullOrWhiteSpace(identity), identity, ["Kanäle: " + string.Join(", ", Channels.Select(channel => channel.Name))], Log);
         }
         catch (Exception ex) when (ex is InstrumentException or TimeoutException or IOException)
         {

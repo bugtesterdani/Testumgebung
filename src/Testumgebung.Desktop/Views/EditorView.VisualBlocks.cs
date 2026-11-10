@@ -36,7 +36,7 @@ public partial class EditorView
         if (field is null) return;
         var project = editor.Project;
         var variables = ExpressionVariableChoices.ForNode(project.Definition, node.Id, field.VariableOnly);
-        if (field.VariableOnly && field.Expected is { } expected) variables = variables.Where(v => v.Type == expected).ToList();
+        if (field.VariableOnly && field.Expected is { } expected) variables = variables.Where(variable => variable.Type == expected).ToList();
         var bindingIdentity = BindingIdentity(node);
         var model = new ExpressionBuilderViewModel(field.Read(), variables, field.Expected, field.VariableOnly, field.AllowEmpty);
         slot.Content = new InlineExpressionEditor(model, field.Read, source => editor.ApplyVisualEdit(() => field.Write(source)),
@@ -53,19 +53,19 @@ public partial class EditorView
     }
     private static InlineBlockEditor? InlineAncestor(DependencyObject element)
     {
-        for (DependencyObject? p = element; p is not null; p = VisualTreeHelper.GetParent(p))
-            if (p is InlineBlockEditor block) return block;
+        for (DependencyObject? element2 = element; element2 is not null; element2 = VisualTreeHelper.GetParent(element2))
+            if (element2 is InlineBlockEditor block) return block;
         return null;
     }
-    private void OnInlinePortExpression(object sender, RoutedEventArgs e)
+    private void OnInlinePortExpression(object sender, RoutedEventArgs eventArgs)
     {
         if (sender is not Expander { Content: null } slot) return;
         if (InlineAncestor(slot) is { } block) OpenInlineExpression(block, slot);
     }
-    private void OnInlineProject(object sender, RoutedEventArgs e)
-    { if (ReferenceEquals(sender, e.OriginalSource) && Editor is { } editor) ProjectInline.Content = new ProjectPropertiesViewModel(editor); }
+    private void OnInlineProject(object sender, RoutedEventArgs eventArgs)
+    { if (ReferenceEquals(sender, eventArgs.OriginalSource) && Editor is { } editor) ProjectInline.Content = new ProjectPropertiesViewModel(editor); }
 
-    private void OnExpressionBuilder(object sender, RoutedEventArgs e)
+    private void OnExpressionBuilder(object sender, RoutedEventArgs eventArgs)
     {
         FlushPendingInputs(PropertyEditor);
         if (Editor is null || sender is not FrameworkElement element) return;
@@ -77,7 +77,7 @@ public partial class EditorView
         var field = ExpressionFieldFor(element, node);
         if (field is null) return;
         var variables = ExpressionVariableChoices.ForNode(Editor.Project.Definition, node.Id, field.VariableOnly);
-        if (field.VariableOnly && field.Expected is { } expected) variables = variables.Where(v => v.Type == expected).ToList();
+        if (field.VariableOnly && field.Expected is { } expected) variables = variables.Where(variable => variable.Type == expected).ToList();
         var original = field.Read();
         var model = new ExpressionBuilderViewModel(original, variables, field.Expected, field.VariableOnly, field.AllowEmpty);
         var project = Editor.Project;
@@ -94,7 +94,7 @@ public partial class EditorView
     private static void FlushPendingInputs(DependencyObject root)
     {
         var children = Enumerable.Range(0, VisualTreeHelper.GetChildrenCount(root))
-            .Select(i => VisualTreeHelper.GetChild(root, i)).ToArray();
+            .Select(index => VisualTreeHelper.GetChild(root, index)).ToArray();
         if (root is TextBox { IsReadOnly: false } text && text.GetBindingExpression(TextBox.TextProperty) is { IsDirty: true } binding)
             binding.UpdateSource();
         if (root is NumberedCodeEditor code && code.GetBindingExpression(NumberedCodeEditor.TextProperty) is { IsDirty: true } codeBinding)
@@ -109,18 +109,18 @@ public partial class EditorView
 
     private ExpressionField? ExpressionFieldFor(FrameworkElement element, NodeViewModel node) => element.DataContext switch
     {
-        ParameterRowViewModel row when row.HasVisualBuilder => new(row.Label, () => row.Value, v => row.Value = v,
+        ParameterRowViewModel row when row.HasVisualBuilder => new(row.Label, () => row.Value, value => row.Value = value,
             ParameterType(row, node), row.IsVariable, !row.Descriptor.Required),
         GroupPropertiesViewModel group => GroupField(group, element.Tag as string),
-        PortBindingViewModel port => new(port.Name, () => port.Value, v => port.Value = v, port.Port.Type,
+        PortBindingViewModel port => new(port.Name, () => port.Value, value => port.Value = value, port.Port.Type,
             port.Port.Direction != Testumgebung.Domain.Code.PortDirection.Input, port.Port.Direction == Testumgebung.Domain.Code.PortDirection.Output),
         _ => null
     };
 
     private static ExpressionField? GroupField(GroupPropertiesViewModel group, string? kind) => kind switch
     {
-        "entry" => new("Eintrittsbedingung", () => group.EntryCondition, v => group.EntryCondition = v, VarType.Bool, false, true),
-        "repeat" => new("Wiederholungsbedingung", () => group.RepeatExpression, v => group.RepeatExpression = v, VarType.Bool, false, false),
+        "entry" => new("Eintrittsbedingung", () => group.EntryCondition, value => group.EntryCondition = value, VarType.Bool, false, true),
+        "repeat" => new("Wiederholungsbedingung", () => group.RepeatExpression, value => group.RepeatExpression = value, VarType.Bool, false, false),
         _ => null
     };
 
@@ -131,16 +131,16 @@ public partial class EditorView
         if (node.Step?.BlockType == BlockCatalog.SetValue && row.Descriptor.Name == "Ausdruck")
         {
             var target = node.Step.Parameters.GetValueOrDefault("Ziel");
-            return ExpressionVariableChoices.ForNode(Editor!.Project.Definition, node.Id).FirstOrDefault(v => v.Path == target)?.Type;
+            return ExpressionVariableChoices.ForNode(Editor!.Project.Definition, node.Id).FirstOrDefault(variable => variable.Path == target)?.Type;
         }
         return row.Descriptor.Name is "Untergrenze" or "Obergrenze" ? VarType.Double : null;
     }
 
-    private void OnDeclareVariable(object sender, RoutedEventArgs e)
+    private void OnDeclareVariable(object sender, RoutedEventArgs eventArgs)
     {
         if (Editor is not { } editor) return;
         var project = editor.Project;
-        var scopes = editor.AllNodes().Where(n => n.Group is not null).Select(n => n.Group!).Prepend(editor.Project.Definition.Root).ToList();
+        var scopes = editor.AllNodes().Where(node => node.Group is not null).Select(node => node.Group!).Prepend(editor.Project.Definition.Root).ToList();
         var group = new ComboBox { ItemsSource = scopes, DisplayMemberPath = "Name", SelectedItem = editor.SelectedNode?.Group ?? editor.SelectedNode?.Parent?.Group ?? editor.Project.Definition.Root };
         var name = new TextBox();
         var type = new ComboBox { ItemsSource = Enum.GetValues<VarType>(), SelectedItem = VarType.Double };
@@ -165,34 +165,34 @@ public partial class EditorView
         window.ShowDialog();
     }
 
-    private void OnPaletteMouseDown(object sender, MouseButtonEventArgs e)
-    { _paletteStart = e.GetPosition(this); _paletteDrag = (sender as FrameworkElement)?.DataContext as PaletteItem; }
-    private void OnPaletteMouseMove(object sender, MouseEventArgs e)
+    private void OnPaletteMouseDown(object sender, MouseButtonEventArgs eventArgs)
+    { _paletteStart = eventArgs.GetPosition(this); _paletteDrag = (sender as FrameworkElement)?.DataContext as PaletteItem; }
+    private void OnPaletteMouseMove(object sender, MouseEventArgs eventArgs)
     {
-        if (!VisualDragGesture.CanStart(e.LeftButton, _paletteDrag, _paletteStart, e.GetPosition(this))) return;
+        if (!VisualDragGesture.CanStart(eventArgs.LeftButton, _paletteDrag, _paletteStart, eventArgs.GetPosition(this))) return;
         var item = _paletteDrag; _paletteDrag = null;
         DragDrop.DoDragDrop((DependencyObject)sender, item, DragDropEffects.Copy);
     }
 
-    private bool TryGetPaletteTarget(DragEventArgs e, out PaletteItem item, out NodeViewModel parent, out int index)
+    private bool TryGetPaletteTarget(DragEventArgs eventArgs, out PaletteItem item, out NodeViewModel parent, out int index)
     {
         item = null!; parent = null!; index = 0;
-        if (e.Data.GetData(typeof(PaletteItem)) is not PaletteItem palette || !ResolveDropPosition(e, out parent, out index)) return false;
-        if (Editor!.Palette.SelectMany(c => c.Items).All(p => p != palette)) return false;
+        if (eventArgs.Data.GetData(typeof(PaletteItem)) is not PaletteItem palette || !ResolveDropPosition(eventArgs, out parent, out index)) return false;
+        if (Editor!.Palette.SelectMany(paletteCategory => paletteCategory.Items).All(paletteItem => paletteItem != palette)) return false;
         item = palette; return Editor.CanInsertAt(parent, index);
     }
 
-    private bool ResolveDropPosition(DragEventArgs e, out NodeViewModel parent, out int index)
+    private bool ResolveDropPosition(DragEventArgs eventArgs, out NodeViewModel parent, out int index)
     {
         parent = null!; index = 0;
-        var card = CardFrom(e.OriginalSource as DependencyObject);
+        var card = CardFrom(eventArgs.OriginalSource as DependencyObject);
         if (Editor is null || card?.DataContext is not NodeViewModel target) return false;
-        var y = e.GetPosition(card).Y / Math.Max(1, card.ActualHeight);
-        var into = card.Name == "EmptySlot" || target.IsSection || target.IsExit || target.IsGroup && y is > 0.25 and < 0.75;
+        var verticalFraction = eventArgs.GetPosition(card).Y / Math.Max(1, card.ActualHeight);
+        var into = card.Name == "EmptySlot" || target.IsSection || target.IsExit || target.IsGroup && verticalFraction is > 0.25 and < 0.75;
         if (into) { parent = target; index = target.Group!.Children.Count; return true; }
         if (target.Parent is null) return false;
         parent = target.Parent; index = parent.Group!.Children.IndexOf(target.Definition);
         if (index < 0) return false;
-        if (y >= 0.5) index++; return true;
+        if (verticalFraction >= 0.5) index++; return true;
     }
 }

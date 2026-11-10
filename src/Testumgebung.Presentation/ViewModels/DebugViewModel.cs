@@ -97,7 +97,7 @@ public sealed class DebugViewModel : ObservableObject
         CodeContinueCommand = new RelayCommand(() => { Controller.CodeContinue(); ClearCodePause(); }, () => IsCodePaused);
         CodeStepCommand = new RelayCommand(() => Controller.CodeStepLine(), () => IsCodePaused);
         CodeStopCommand = new RelayCommand(() => { Controller.CodeStop(); ClearCodePause(); }, () => IsCodePaused);
-        Controller.CodeLinePaused += p => _ui.Post(() => OnCodePaused(p));
+        Controller.CodeLinePaused += codeLinePause => _ui.Post(() => OnCodePaused(codeLinePause));
     }
 
     public DebugController Controller { get; } = new();
@@ -169,7 +169,7 @@ public sealed class DebugViewModel : ObservableObject
     {
         _codePause = pause;
         CodeVariables.Clear();
-        foreach (var v in pause.Variables) CodeVariables.Add(v);
+        foreach (var codeDebugVariable in pause.Variables) CodeVariables.Add(codeDebugVariable);
         Mark(pause.NodeId, RunMarker.Paused);
         OnPropertiesChanged(nameof(IsCodePaused), nameof(CodeLine), nameof(CodeNodeName), nameof(CodePositionText), nameof(CodeCapabilityText));
         CodeContinueCommand.RaiseCanExecuteChanged();
@@ -220,8 +220,8 @@ public sealed class DebugViewModel : ObservableObject
         {
             if (_pause is null) return "";
             if (_pause.IsGroup) return $"{_pause.LeftScopeSnapshot?.Variables.Count ?? 0} lokale Variablen (Schnappschuss)";
-            return _lastStep.TryGetValue(_pause.NodeId, out var s)
-                ? $"{_pause.NodeName} = {FormatValue(s.Value)}{(s.Unit is null ? "" : " " + s.Unit)}"
+            return _lastStep.TryGetValue(_pause.NodeId, out var stepCompleted)
+                ? $"{_pause.NodeName} = {FormatValue(stepCompleted.Value)}{(stepCompleted.Unit is null ? "" : " " + stepCompleted.Unit)}"
                 : "—";
         }
     }
@@ -256,13 +256,13 @@ public sealed class DebugViewModel : ObservableObject
             case StepStarted st:
                 Mark(st.NodeId, RunMarker.Running);
                 break;
-            case Paused p:
-                _pause = p.Info;
-                Mark(p.Info.NodeId, RunMarker.Paused);
+            case Paused paused:
+                _pause = paused.Info;
+                Mark(paused.Info.NodeId, RunMarker.Paused);
                 RefreshVariables();
                 Snapshot.Clear();
-                foreach (var v in p.Info.LeftScopeSnapshot?.Variables ?? []) Snapshot.Add(v);
-                Patch.Select(PatchNodeId ?? p.Info.NodeId);
+                foreach (var variableSnapshot in paused.Info.LeftScopeSnapshot?.Variables ?? []) Snapshot.Add(variableSnapshot);
+                Patch.Select(PatchNodeId ?? paused.Info.NodeId);
                 RaisePause();
                 break;
             case Resumed:
@@ -272,8 +272,8 @@ public sealed class DebugViewModel : ObservableObject
                 Patch.Select(null);
                 RaisePause();
                 break;
-            case DevelopmentEvent d:
-                DevelopmentLog.Insert(0, new DevelopmentLogEntry(d.Time, d.User, d.Kind, d.Details));
+            case DevelopmentEvent developmentEvent:
+                DevelopmentLog.Insert(0, new DevelopmentLogEntry(developmentEvent.Time, developmentEvent.User, developmentEvent.Kind, developmentEvent.Details));
                 break;
         }
     }
@@ -300,7 +300,7 @@ public sealed class DebugViewModel : ObservableObject
     public void RefreshVariables()
     {
         Variables.Clear();
-        foreach (var v in Controller.ActiveVariables()) Variables.Add(new DebugVariableRowViewModel(this, v));
+        foreach (var debugVariable in Controller.ActiveVariables()) Variables.Add(new DebugVariableRowViewModel(this, debugVariable));
     }
 
     /// <summary>Setzt eine Variable; liefert Fehlertext oder null.</summary>
@@ -341,7 +341,7 @@ public sealed class DebugViewModel : ObservableObject
         }
 
         var run = createRun();
-        run.EventRaised += e => _ui.Post(() => Handle(e));
+        run.EventRaised += engineEvent => _ui.Post(() => Handle(engineEvent));
         try
         {
             var isGroup = run.Definition.Find(nodeId) is Domain.Definitions.GroupDefinition;
@@ -349,7 +349,7 @@ public sealed class DebugViewModel : ObservableObject
                 ? await run.ExecuteGroupTargetedAsync(nodeId, context, _user()).ConfigureAwait(false)
                 : await run.ExecuteStepTargetedAsync(nodeId, context, _user()).ConfigureAwait(false);
             var text = result.Executed
-                ? $"Ausgeführt: {result.Rating.ToDisplay()}" + (_lastStepText(run, nodeId) is { } v ? $" ({v})" : "")
+                ? $"Ausgeführt: {result.Rating.ToDisplay()}" + (_lastStepText(run, nodeId) is { } value ? $" ({value})" : "")
                 : $"Verweigert – {result.RefusalReason}";
             _ui.Post(() => TargetResult = text);
         }
@@ -361,10 +361,10 @@ public sealed class DebugViewModel : ObservableObject
 
     private static string? _lastStepText(TestRun run, string nodeId)
     {
-        var s = run.Events.OfType<StepCompleted>().LastOrDefault(e => e.NodeId == nodeId);
-        if (s is null) return null;
-        var text = FormatValue(s.Value) + (s.Unit is null ? "" : " " + s.Unit);
-        return s.Message is null ? text : $"{text}; {s.Message}";
+        var stepCompleted = run.Events.OfType<StepCompleted>().LastOrDefault(stepCompleted2 => stepCompleted2.NodeId == nodeId);
+        if (stepCompleted is null) return null;
+        var text = FormatValue(stepCompleted.Value) + (stepCompleted.Unit is null ? "" : " " + stepCompleted.Unit);
+        return stepCompleted.Message is null ? text : $"{text}; {stepCompleted.Message}";
     }
 
     internal static Dictionary<string, object> ParseContext(string text)
@@ -393,8 +393,8 @@ public sealed class DebugViewModel : ObservableObject
     internal static string FormatValue(object? value) => value switch
     {
         null => "—",
-        double d => d.ToString("0.###", CultureInfo.GetCultureInfo("de-DE")),
-        string s => s,
+        double number => number.ToString("0.###", CultureInfo.GetCultureInfo("de-DE")),
+        string text => text,
         _ => TypedValue.Format(value),
     };
 
@@ -478,15 +478,15 @@ public sealed class PatchEditorViewModel : ObservableObject
         Rows.Add(new PatchRowViewModel("name", "Bezeichnung", Engine.Blocks.ParameterKind.Text, node.Name));
         switch (node)
         {
-            case Domain.Definitions.StepDefinition { BlockType: { } type } step when Engine.Blocks.BlockCatalog.Default.TryGet(type, out var d):
-                foreach (var p in d.Parameters)
-                    Rows.Add(new PatchRowViewModel("param:" + p.Name, p.Label, p.Kind, step.Parameters.GetValueOrDefault(p.Name) ?? p.Default, p.Choices));
-                foreach (var (k, v) in step.Parameters.Where(kv => d.Parameters.All(p => p.Name != kv.Key)))
-                    Rows.Add(new PatchRowViewModel("param:" + k, k, Engine.Blocks.ParameterKind.Text, v));
-                Title = $"{d.DisplayName}: {node.Name}";
+            case Domain.Definitions.StepDefinition { BlockType: { } type } step when Engine.Blocks.BlockCatalog.Default.TryGet(type, out var block):
+                foreach (var parameter in block.Parameters)
+                    Rows.Add(new PatchRowViewModel("param:" + parameter.Name, parameter.Label, parameter.Kind, step.Parameters.GetValueOrDefault(parameter.Name) ?? parameter.Default, parameter.Choices));
+                foreach (var (key, value) in step.Parameters.Where(kv => block.Parameters.All(parameter2 => parameter2.Name != kv.Key)))
+                    Rows.Add(new PatchRowViewModel("param:" + key, key, Engine.Blocks.ParameterKind.Text, value));
+                Title = $"{block.DisplayName}: {node.Name}";
                 break;
-            case Domain.Definitions.GroupDefinition g:
-                Rows.Add(new PatchRowViewModel("condition", "Eintrittsbedingung", Engine.Blocks.ParameterKind.Expression, g.EntryCondition ?? ""));
+            case Domain.Definitions.GroupDefinition group:
+                Rows.Add(new PatchRowViewModel("condition", "Eintrittsbedingung", Engine.Blocks.ParameterKind.Expression, group.EntryCondition ?? ""));
                 Title = $"Gruppe: {node.Name}";
                 break;
             default:
@@ -497,7 +497,7 @@ public sealed class PatchEditorViewModel : ObservableObject
     }
 
     private List<PatchChange> Changes()
-        => Rows.Where(r => r.IsChanged).Select(r => new PatchChange(_nodeId!, r.Property, r.Value)).ToList();
+        => Rows.Where(patchRowViewModel => patchRowViewModel.IsChanged).Select(patchRowViewModel => new PatchChange(_nodeId!, patchRowViewModel.Property, patchRowViewModel.Value)).ToList();
 
     /// <summary>„Patch prüfen“.</summary>
     public bool Validate()

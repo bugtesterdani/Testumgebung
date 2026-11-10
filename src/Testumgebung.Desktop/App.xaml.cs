@@ -29,14 +29,14 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnLastWindowClose;
     }
 
-    private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)
+    private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs eventArgs)
     {
-        var path = FaultLog.Write(e.Exception);
-        e.Handled = true;
+        var path = FaultLog.Write(eventArgs.Exception);
+        eventArgs.Handled = true;
         // Nach einem unbekannten UI-Fehler keinen weiteren Prüfablauf mehr zulassen.
         if (Current.MainWindow is MainWindow window) window.CloseAfterFault();
         else Current.Shutdown(-1);
-        MessageBox.Show(e.Exception.Message + "\n\nDie Anwendung wird kontrolliert beendet."
+        MessageBox.Show(eventArgs.Exception.Message + "\n\nDie Anwendung wird kontrolliert beendet."
             + (path is null ? "\nFehlerprotokoll konnte nicht gespeichert werden." : "\nFehlerprotokoll: " + path),
             "Unerwarteter Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
     }

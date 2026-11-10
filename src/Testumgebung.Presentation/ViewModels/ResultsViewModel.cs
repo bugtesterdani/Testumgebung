@@ -54,30 +54,30 @@ public sealed class ResultDocumentViewModel : ObservableObject
     {
         Path = path;
         Content = content;
-        var r = content.Run;
+        var run = content.Run;
         Header =
         [
-            new("Prüfling", r.DutId == "" ? "ohne Kennung" : r.DutId),
-            new("Fertigungsauftrag", r.Order == "" ? "—" : r.Order),
-            new("Bewertung", r.Status.ToString()),
-            new("Test", $"{r.TestName} v{r.TestVersion}"),
-            new("Prüfplatz", r.Station),
-            new("Start", r.Started.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture)),
-            new("Ende", r.Ended.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture)),
-            new("Dauer", $"{(r.Ended - r.Started).TotalSeconds.ToString("0.0", CultureInfo.InvariantCulture)} s"),
-            new("Run-ID", r.RunId),
-            new("Gefiltert für", r.FilteredFor == "" ? "—" : r.FilteredFor),
-            new("Entwicklungslauf", r.IsDevelopmentRun ? "ja" : "nein"),
+            new("Prüfling", run.DutId == "" ? "ohne Kennung" : run.DutId),
+            new("Fertigungsauftrag", run.Order == "" ? "—" : run.Order),
+            new("Bewertung", run.Status.ToString()),
+            new("Test", $"{run.TestName} v{run.TestVersion}"),
+            new("Prüfplatz", run.Station),
+            new("Start", run.Started.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture)),
+            new("Ende", run.Ended.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture)),
+            new("Dauer", $"{(run.Ended - run.Started).TotalSeconds.ToString("0.0", CultureInfo.InvariantCulture)} s"),
+            new("Run-ID", run.RunId),
+            new("Gefiltert für", run.FilteredFor == "" ? "—" : run.FilteredFor),
+            new("Entwicklungslauf", run.IsDevelopmentRun ? "ja" : "nein"),
             new("Format", $"v{content.FormatVersion}, {content.FileSize / 1024.0:0.0} KiB"),
         ];
         Problems = content.Problems;
-        foreach (var e in r.Events.Where(e => e.Kind != ResultEventKind.Group || e.Rating is not null)) Events.Add(ToRow(e));
-        foreach (var g in r.Waveforms.GroupBy(w => w.EventSequence))
+        foreach (var resultEvent in run.Events.Where(resultEvent2 => resultEvent2.Kind != ResultEventKind.Group || resultEvent2.Rating is not null)) Events.Add(ToRow(resultEvent));
+        foreach (var group in run.Waveforms.GroupBy(waveform => waveform.EventSequence))
         {
-            var ev = r.Events.FirstOrDefault(e => e.Sequence == g.Key);
-            var title = ev is null ? $"Kurven #{g.Key}" : LastSegment(ev.Path);
-            var list = g.ToList();
-            WaveformGroups.Add(new WaveformGroup(g.Key, $"{title} – {list.Count} Kanal/Kanäle, {list[0].Data.Count} Samples", list));
+            var ev = run.Events.FirstOrDefault(resultEvent2 => resultEvent2.Sequence == group.Key);
+            var title = ev is null ? $"Kurven #{group.Key}" : LastSegment(ev.Path);
+            var list = group.ToList();
+            WaveformGroups.Add(new WaveformGroup(group.Key, $"{title} – {list.Count} Kanal/Kanäle, {list[0].Data.Count} Samples", list));
         }
         SelectedGroup = WaveformGroups.FirstOrDefault();
     }
@@ -118,43 +118,43 @@ public sealed class ResultDocumentViewModel : ObservableObject
             OnPropertyChanged(nameof(PlotRange));
             return;
         }
-        var waves = _selectedGroup.Waveforms.Select(w => w.Data).ToList();
-        var min = waves.Min(w => w.Count == 0 ? 0 : w.Values.Min());
-        var max = waves.Max(w => w.Count == 0 ? 0 : w.Values.Max());
+        var waves = _selectedGroup.Waveforms.Select(waveform => waveform.Data).ToList();
+        var min = waves.Min(waveform => waveform.Count == 0 ? 0 : waveform.Values.Min());
+        var max = waves.Max(waveform => waveform.Count == 0 ? 0 : waveform.Values.Max());
         if (max - min < 1e-12) { max += 1; min -= 1; }
-        var duration = waves.Max(w => w.Count == 0 ? 0 : w.TimeOf(w.Count - 1));
+        var duration = waves.Max(waveform => waveform.Count == 0 ? 0 : waveform.TimeOf(waveform.Count - 1));
         if (duration <= 0) duration = 1;
-        var i = 0;
-        foreach (var w in waves)
+        var index = 0;
+        foreach (var waveform in waves)
         {
-            var step = Math.Max(1, w.Count / MaxPlotPoints);
+            var step = Math.Max(1, waveform.Count / MaxPlotPoints);
             var points = new List<PlotPoint>();
-            for (var k = 0; k < w.Count; k += step)
-                points.Add(new PlotPoint(w.TimeOf(k) / duration * PlotWidth, PlotHeight - (w.Values[k] - min) / (max - min) * PlotHeight));
-            Plot.Add(new PlotSeries(w.Channel, i++, points,
-                string.Create(CultureInfo.InvariantCulture, $"{w.Channel}: eff. {w.Rms():0.###} {w.Unit}")));
+            for (var index2 = 0; index2 < waveform.Count; index2 += step)
+                points.Add(new PlotPoint(waveform.TimeOf(index2) / duration * PlotWidth, PlotHeight - (waveform.Values[index2] - min) / (max - min) * PlotHeight));
+            Plot.Add(new PlotSeries(waveform.Channel, index++, points,
+                string.Create(CultureInfo.InvariantCulture, $"{waveform.Channel}: eff. {waveform.Rms():0.###} {waveform.Unit}")));
         }
         PlotRange = string.Create(CultureInfo.InvariantCulture,
             $"{min:0.###} … {max:0.###} {waves[0].Unit} · {duration * 1000:0.#} ms · {waves[0].SampleRate:0.##} Hz");
         OnPropertyChanged(nameof(PlotRange));
     }
 
-    private static ResultEventRow ToRow(ResultEvent e)
+    private static ResultEventRow ToRow(ResultEvent resultEvent)
     {
-        var kind = EventKindText(e);
-        var value = e.WaveformIds is { Count: > 0 } ids ? $"{ids.Count} Kurve(n)" : FormatValue(e.Value);
-        var limits = e.LowLimit is null && e.HighLimit is null ? "—" : $"{Format.Number(e.LowLimit)} – {Format.Number(e.HighLimit)}";
-        var message = e.Cancelled ? "Abgebrochen" + (e.Message is null ? "" : ": " + e.Message) : e.Message ?? "";
-        if (e.AttachmentId is not null) message = (message + " [Bild eingebettet]").Trim();
-        return new ResultEventRow(e.Time.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture), kind, e.Path == "" ? "—" : e.Path, value,
-            e.Unit ?? "", limits, e.Rating, message, e.Iteration > 1 ? e.Iteration.ToString(CultureInfo.InvariantCulture) : "");
+        var kind = EventKindText(resultEvent);
+        var value = resultEvent.WaveformIds is { Count: > 0 } ids ? $"{ids.Count} Kurve(n)" : FormatValue(resultEvent.Value);
+        var limits = resultEvent.LowLimit is null && resultEvent.HighLimit is null ? "—" : $"{Format.Number(resultEvent.LowLimit)} – {Format.Number(resultEvent.HighLimit)}";
+        var message = resultEvent.Cancelled ? "Abgebrochen" + (resultEvent.Message is null ? "" : ": " + resultEvent.Message) : resultEvent.Message ?? "";
+        if (resultEvent.AttachmentId is not null) message = (message + " [Bild eingebettet]").Trim();
+        return new ResultEventRow(resultEvent.Time.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture), kind, resultEvent.Path == "" ? "—" : resultEvent.Path, value,
+            resultEvent.Unit ?? "", limits, resultEvent.Rating, message, resultEvent.Iteration > 1 ? resultEvent.Iteration.ToString(CultureInfo.InvariantCulture) : "");
     }
 
-    private static string EventKindText(ResultEvent e)
+    private static string EventKindText(ResultEvent resultEvent)
     {
-        return e.Kind switch
+        return resultEvent.Kind switch
         {
-            ResultEventKind.Step => e.LowLimit is not null || e.HighLimit is not null ? "Messung" : "Schritt",
+            ResultEventKind.Step => resultEvent.LowLimit is not null || resultEvent.HighLimit is not null ? "Messung" : "Schritt",
             ResultEventKind.Group => "Gruppe",
             ResultEventKind.GroupNotEntered => "Nicht betreten",
             ResultEventKind.OperatorShown => "Werkeranzeige",
@@ -162,24 +162,24 @@ public sealed class ResultDocumentViewModel : ObservableObject
             ResultEventKind.Diagnostic => "Hinweis",
             ResultEventKind.Development => "Entwicklung",
             ResultEventKind.Abort => "Werkerabbruch",
-            _ => e.Kind.ToString(),
+            _ => resultEvent.Kind.ToString(),
         };
     }
 
-    private static string FormatValue(object? v) => v switch
+    private static string FormatValue(object? value) => value switch
     {
         null => "—",
-        double d => Format.Number(d),
-        bool b => b ? "true" : "false",
+        double number => Format.Number(number),
+        bool flag => flag ? "true" : "false",
         DateTime dt => dt.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
-        IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
-        _ => v.ToString() ?? "",
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
+        _ => value.ToString() ?? "",
     };
 
     private static string LastSegment(string path)
     {
-        var i = path.LastIndexOf(" > ", StringComparison.Ordinal);
-        return i < 0 ? path : path[(i + 3)..];
+        var index = path.LastIndexOf(" > ", StringComparison.Ordinal);
+        return index < 0 ? path : path[(index + 3)..];
     }
 }
 
@@ -202,11 +202,11 @@ public sealed class ResultsViewModel : ObservableObject
         _currentUser = currentUser ?? (() => Environment.UserName);
         ReportPdfCommand = new RelayCommand(() =>
         {
-            if (_document is { } d && _dialogs?.SaveFile("Prüfbericht als PDF", "PDF (*.pdf)|*.pdf", Path.ChangeExtension(d.FileName, ".pdf")) is { } p) ExportReport(p);
+            if (_document is { } resultDocumentViewModel && _dialogs?.SaveFile("Prüfbericht als PDF", "PDF (*.pdf)|*.pdf", Path.ChangeExtension(resultDocumentViewModel.FileName, ".pdf")) is { } path) ExportReport(path);
         }, () => _document is not null);
         ReportCsvCommand = new RelayCommand(() =>
         {
-            if (_document is { } d && _dialogs?.SaveFile("Prüfdaten als CSV", "CSV für Excel (*.csv)|*.csv", Path.ChangeExtension(d.FileName, ".csv")) is { } p) ExportCsv(p);
+            if (_document is { } resultDocumentViewModel && _dialogs?.SaveFile("Prüfdaten als CSV", "CSV für Excel (*.csv)|*.csv", Path.ChangeExtension(resultDocumentViewModel.FileName, ".csv")) is { } path) ExportCsv(path);
         }, () => _document is not null);
         RecoverCommand = new RelayCommand(() => _ = RecoverSelectedAsync(), () => _selectedIncomplete is not null && !_recovering);
         DiscardIncompleteCommand = new RelayCommand(DiscardSelected, () => _selectedIncomplete is not null && !_recovering);
@@ -215,18 +215,18 @@ public sealed class ResultsViewModel : ObservableObject
         RetryNowCommand = new RelayCommand(() => _ = Outbox?.RetryNowAsync(), () => Outbox is not null && Outbox.Pending.Count > 0);
         OpenFolderCommand = new RelayCommand(() =>
         {
-            if (Files?.Folder is { } f)
+            if (Files?.Folder is { } fileName)
             {
-                Directory.CreateDirectory(f);
-                _dialogs?.OpenExternal(f);
+                Directory.CreateDirectory(fileName);
+                _dialogs?.OpenExternal(fileName);
             }
         }, () => Files is not null);
         if (Outbox is not null)
         {
             Outbox.Changed += () => _ui.Post(RefreshOutbox);
-            Outbox.Notified += n => _ui.Post(() =>
+            Outbox.Notified += runNotification => _ui.Post(() =>
             {
-                Notifications.Insert(0, n);
+                Notifications.Insert(0, runNotification);
                 while (Notifications.Count > MaxNotifications) Notifications.RemoveAt(Notifications.Count - 1);
             });
         }
@@ -246,10 +246,10 @@ public sealed class ResultsViewModel : ObservableObject
     /// <summary>Prüfbericht (PDF) der geöffneten Ergebnisdatei.</summary>
     public void ExportReport(string path)
     {
-        if (_document is not { } d) return;
+        if (_document is not { } resultDocumentViewModel) return;
         try
         {
-            Testumgebung.Persistence.Reports.Reports.TestReport(d.Content.Run, d.Path).Save(path);
+            Testumgebung.Persistence.Reports.Reports.TestReport(resultDocumentViewModel.Content.Run, resultDocumentViewModel.Path).Save(path);
             Error = null;
             _dialogs?.OpenExternal(path);
         }
@@ -261,10 +261,10 @@ public sealed class ResultsViewModel : ObservableObject
 
     public void ExportCsv(string path)
     {
-        if (_document is not { } d) return;
+        if (_document is not { } resultDocumentViewModel) return;
         try
         {
-            Testumgebung.Persistence.Reports.ResultAnalysis.SaveCsv(path, Testumgebung.Persistence.Reports.ResultAnalysis.RunCsv(d.Content.Run));
+            Testumgebung.Persistence.Reports.ResultAnalysis.SaveCsv(path, Testumgebung.Persistence.Reports.ResultAnalysis.RunCsv(resultDocumentViewModel.Content.Run));
             Error = null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -303,8 +303,8 @@ public sealed class ResultsViewModel : ObservableObject
     {
         var selected = _selectedIncomplete?.Path;
         Incomplete.Clear();
-        foreach (var r in Pipeline?.Journal?.FindIncomplete() ?? []) Incomplete.Add(r);
-        _selectedIncomplete = Incomplete.FirstOrDefault(r => r.Path == selected) ?? Incomplete.FirstOrDefault();
+        foreach (var incompleteRun in Pipeline?.Journal?.FindIncomplete() ?? []) Incomplete.Add(incompleteRun);
+        _selectedIncomplete = Incomplete.FirstOrDefault(incompleteRun2 => incompleteRun2.Path == selected) ?? Incomplete.FirstOrDefault();
         OnPropertiesChanged(nameof(SelectedIncomplete), nameof(HasIncomplete), nameof(IncompleteSummary));
         RecoverCommand.RaiseCanExecuteChanged();
         DiscardIncompleteCommand.RaiseCanExecuteChanged();
@@ -321,7 +321,7 @@ public sealed class ResultsViewModel : ObservableObject
             var report = await Pipeline.RecoverAsync(run, DateTimeOffset.Now, _currentUser()).ConfigureAwait(true);
             RecoveryStatus = report.FileFailed && report.File?.Path is null && report.Database is not { Stored: true }
                 ? $"{run.Title}: nicht gespeichert – {report.File?.Error ?? report.Database?.Error}"
-                : $"{run.Title}: als abgebrochen (ERROR) gespeichert{(report.File?.Path is { } p ? " – " + Path.GetFileName(p) : "")}.";
+                : $"{run.Title}: als abgebrochen (ERROR) gespeichert{(report.File?.Path is { } path ? " – " + Path.GetFileName(path) : "")}.";
         }
         finally
         {
@@ -341,7 +341,7 @@ public sealed class ResultsViewModel : ObservableObject
     public string RecoveryFolderSummary => PendingRecoveryCount switch
     {
         0 => "",
-        var n => $"{n} Ergebnisdatei(en) liegen im Wiederherstellungsordner {Files?.RecoveryFolder} – der Ergebnisordner war beim Speichern nicht erreichbar.",
+        var count => $"{count} Ergebnisdatei(en) liegen im Wiederherstellungsordner {Files?.RecoveryFolder} – der Ergebnisordner war beim Speichern nicht erreichbar.",
     };
 
     /// <summary>Dateien in den Ergebnisordner zurückkopieren.</summary>
@@ -389,7 +389,7 @@ public sealed class ResultsViewModel : ObservableObject
     public bool HasDatabase => Outbox is not null && Pipeline!.DatabaseEnabled;
     public bool CanSimulateOutage => Outbox?.Database switch
     {
-        SwitchableRunDatabase s => s.CanSimulateOutage,
+        SwitchableRunDatabase switchableRunDatabase => switchableRunDatabase.CanSimulateOutage,
         ISimulatedDatabase => true,
         _ => false,
     };
@@ -444,14 +444,14 @@ public sealed class ResultsViewModel : ObservableObject
         ResultFiles.Clear();
         try
         {
-            foreach (var f in Files?.List() ?? []) ResultFiles.Add(f);
+            foreach (var resultFileInfo in Files?.List() ?? []) ResultFiles.Add(resultFileInfo);
             Error = null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Error = ex.Message;
         }
-        _selectedFile = ResultFiles.FirstOrDefault(f => f.Path == selected);
+        _selectedFile = ResultFiles.FirstOrDefault(resultFileInfo2 => resultFileInfo2.Path == selected);
         OnPropertiesChanged(nameof(SelectedFile), nameof(PendingRecoveryCount), nameof(RecoveryFolderSummary));
         RestoreRecoveryCommand?.RaiseCanExecuteChanged();
         RefreshOutbox();
@@ -481,7 +481,7 @@ public sealed class ResultsViewModel : ObservableObject
     private void RefreshOutbox()
     {
         Pending.Clear();
-        foreach (var e in Outbox?.Pending ?? []) Pending.Add(e);
+        foreach (var outboxEntry in Outbox?.Pending ?? []) Pending.Add(outboxEntry);
         OnPropertiesChanged(nameof(OutboxSummary), nameof(DatabaseOffline), nameof(DatabaseName), nameof(CanSimulateOutage), nameof(HasDatabase));
         RetryNowCommand.RaiseCanExecuteChanged();
     }

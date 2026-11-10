@@ -15,7 +15,7 @@ public partial class FlowGraphView
     {
         Wires.Children.Clear();
         if (Scene is null) return;
-        var byId = Scene.Cards.ToDictionary(c => c.Id);
+        var byId = Scene.Cards.ToDictionary(graphCard => graphCard.Id);
         var rails = new GraphRailLayout();
         foreach (var link in Scene.Links) DrawLink(link, byId, rails);
     }
@@ -39,13 +39,13 @@ public partial class FlowGraphView
     private double OutsideGroup(NodeViewModel owner)
     {
         var descendants = owner.SelfAndDescendants().ToHashSet();
-        return Scene!.Cards.Where(c => descendants.Contains(c.Owner)).Max(c => Canvas.GetLeft(_cards[c.Id]) + c.Width) + 70;
+        return Scene!.Cards.Where(graphCard => descendants.Contains(graphCard.Owner)).Max(graphCard => Canvas.GetLeft(_cards[graphCard.Id]) + graphCard.Width) + 70;
     }
     private Point OutputPoint(GraphCard from, GraphLinkKind kind)
     {
         var expected = kind switch { GraphLinkKind.Then => GraphSocketKind.Then, GraphLinkKind.Else => GraphSocketKind.Else, GraphLinkKind.Parallel => GraphSocketKind.Parallel, _ => (GraphSocketKind?)null };
-        var circles = _ports[from.Id].Children.OfType<StackPanel>().SelectMany(p => p.Children.OfType<Ellipse>()).ToList();
-        var circle = circles.FirstOrDefault(c => c.Tag is GraphSocket socket && socket.Kind == expected) ?? circles.FirstOrDefault();
+        var circles = _ports[from.Id].Children.OfType<StackPanel>().SelectMany(parameter => parameter.Children.OfType<Ellipse>()).ToList();
+        var circle = circles.FirstOrDefault(circle2 => circle2.Tag is GraphSocket socket && socket.Kind == expected) ?? circles.FirstOrDefault();
         if (circle is not null && circle.IsArrangeValid)
         {
             var local = circle.TranslatePoint(new Point(8, 16), _cards[from.Id]);
@@ -78,30 +78,30 @@ public partial class FlowGraphView
     }
     private static Brush LinkBrush(GraphLinkKind kind) => kind switch
     { GraphLinkKind.Then => Brushes.SeaGreen, GraphLinkKind.Else => Brushes.DarkOrange, GraphLinkKind.Parallel => Brushes.BlueViolet, GraphLinkKind.Repeat => Brushes.Teal, GraphLinkKind.Exit => Brushes.Sienna, _ => Brushes.RoyalBlue };
-    private void OnOutputDown(object sender, MouseButtonEventArgs e)
+    private void OnOutputDown(object sender, MouseButtonEventArgs eventArgs)
     {
         if (IsRunning || sender is not Ellipse { Tag: GraphSocket socket } circle) return;
         _connecting = socket; _wireStart = circle.TranslatePoint(new Point(8, 8), World);
-        Mouse.Capture(Viewport, CaptureMode.SubTree); e.Handled = true;
+        Mouse.Capture(Viewport, CaptureMode.SubTree); eventArgs.Handled = true;
         Status.Text = "Zum Eingang eines Blocks ziehen. Bei Dann/Sonst wird der Zielblock in den passenden Zweig eingefügt.";
     }
-    private void OnPointerDown(object sender, MouseButtonEventArgs e)
+    private void OnPointerDown(object sender, MouseButtonEventArgs eventArgs)
     {
-        var empty = ReferenceEquals(e.OriginalSource, Viewport) || ReferenceEquals(e.OriginalSource, World) || ReferenceEquals(e.OriginalSource, Wires);
-        if (e.ChangedButton != MouseButton.Middle && !(e.ChangedButton == MouseButton.Left && empty)) return;
-        _pan = e.GetPosition(Viewport); Mouse.Capture(Viewport, CaptureMode.SubTree); Viewport.Cursor = Cursors.ScrollAll; e.Handled = true;
+        var empty = ReferenceEquals(eventArgs.OriginalSource, Viewport) || ReferenceEquals(eventArgs.OriginalSource, World) || ReferenceEquals(eventArgs.OriginalSource, Wires);
+        if (eventArgs.ChangedButton != MouseButton.Middle && !(eventArgs.ChangedButton == MouseButton.Left && empty)) return;
+        _pan = eventArgs.GetPosition(Viewport); Mouse.Capture(Viewport, CaptureMode.SubTree); Viewport.Cursor = Cursors.ScrollAll; eventArgs.Handled = true;
     }
-    private void OnPointerMove(object sender, MouseEventArgs e)
+    private void OnPointerMove(object sender, MouseEventArgs eventArgs)
     {
-        var point = e.GetPosition(Viewport);
+        var point = eventArgs.GetPosition(Viewport);
         if (_pan is { } previous)
-        { Camera.Pan(point.X - previous.X, point.Y - previous.Y); _pan = point; ApplyCamera(); e.Handled = true; }
+        { Camera.Pan(point.X - previous.X, point.Y - previous.Y); _pan = point; ApplyCamera(); eventArgs.Handled = true; }
         if (_connecting is null) return;
-        DrawLinks(); DrawWire(_wireStart, e.GetPosition(World), Brushes.DeepPink, ""); e.Handled = true;
+        DrawLinks(); DrawWire(_wireStart, eventArgs.GetPosition(World), Brushes.DeepPink, ""); eventArgs.Handled = true;
     }
-    private void OnPointerUp(object sender, MouseButtonEventArgs e)
+    private void OnPointerUp(object sender, MouseButtonEventArgs eventArgs)
     {
-        if (_connecting is not null) { FinishConnection(HitInput(e.GetPosition(World))); e.Handled = true; }
+        if (_connecting is not null) { FinishConnection(HitInput(eventArgs.GetPosition(World))); eventArgs.Handled = true; }
         _pan = null; Viewport.Cursor = Cursors.Arrow; Viewport.ReleaseMouseCapture();
     }
     internal bool FinishConnection(NodeViewModel? target)
@@ -116,7 +116,7 @@ public partial class FlowGraphView
             if (element is Ellipse { Tag: NodeViewModel node }) return node;
         return null;
     }
-    private void OnCaptureLost(object sender, MouseEventArgs e)
+    private void OnCaptureLost(object sender, MouseEventArgs eventArgs)
     { _pan = null; _connecting = null; Viewport.Cursor = Cursors.Arrow; DrawLinks(); }
     private Border? _highlighted;
     private void UpdateDebug()
@@ -144,12 +144,12 @@ public partial class FlowGraphView
     }
     private GraphCard? PausedCard(string id, bool group)
     {
-        var direct = Scene!.Cards.FirstOrDefault(c => c.Owner.Id == id && c.Junction == group)
-            ?? Scene.Cards.FirstOrDefault(c => c.Owner.Id == id)
-            ?? Scene.Cards.FirstOrDefault(c => c.Owner.Children.Any(n => n.Id == id && n.IsTemplateDecision));
+        var direct = Scene!.Cards.FirstOrDefault(graphCard => graphCard.Owner.Id == id && graphCard.Junction == group)
+            ?? Scene.Cards.FirstOrDefault(graphCard => graphCard.Owner.Id == id)
+            ?? Scene.Cards.FirstOrDefault(graphCard => graphCard.Owner.Children.Any(node => node.Id == id && node.IsTemplateDecision));
         if (direct is not null) return direct;
         var branch = Editor?.FindNode(id)?.SelfAndDescendants().ToHashSet();
-        return Scene.Cards.LastOrDefault(c => branch?.Contains(c.Owner) == true);
+        return Scene.Cards.LastOrDefault(graphCard => branch?.Contains(graphCard.Owner) == true);
     }
     private void FocusCard(GraphCard card)
     {

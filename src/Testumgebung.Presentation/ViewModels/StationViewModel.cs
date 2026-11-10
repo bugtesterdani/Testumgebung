@@ -249,7 +249,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     public static TimeSpan WarningDuration { get; } = TimeSpan.FromSeconds(10);
 
     /// <summary>Wartezeit bis zum Ausblenden einer Warnung (Echtzeit der Oberfläche; in Tests ersetzbar).</summary>
-    public Func<TimeSpan, Task> WarningDelay { get; set; } = d => Task.Delay(d);
+    public Func<TimeSpan, Task> WarningDelay { get; set; } = duration => Task.Delay(duration);
 
     /// <summary>Letzte gespeicherte Ergebnisdatei.</summary>
     public string? LastResultFile
@@ -304,11 +304,11 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     /// <summary>Aktuell freigegebene Version des Ablaufs (Kopfzeile „Aktive Prüfsoftware“).</summary>
     public string ReleasedVersionText => _releases is null ? "" :
-        _releases.CurrentInfo(_projectSource().Definition.Name) is { } r ? $"v{r.Version} · Freigegeben" : "keine freigegebene Version";
+        _releases.CurrentInfo(_projectSource().Definition.Name) is { } release ? $"v{release.Version} · Freigegeben" : "keine freigegebene Version";
 
     public string RunningVersionText => RunningVersion.Length == 0 ? ""
         : _runIsDraft ? $"Entwurf v{RunningVersion} (nicht freigegeben)"
-        : ActiveRelease is { } r ? $"v{r.Version} · Freigegeben" : $"v{RunningVersion}";
+        : ActiveRelease is { } release ? $"v{release.Version} · Freigegeben" : $"v{RunningVersion}";
 
     /// <summary>
     /// <see cref="IVersionSource"/>: neue Freigabe erst beim nächsten Prüfling (V01), nur wenn verträglich;
@@ -384,7 +384,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
                 (release.Source is { } source ? $" · {source.Source.Provider}={source.Revision} · Repository={source.RepositoryIdentity} · Linie={source.Source.Line}" : "");
         var task = StoreResultAsync(recorded, resolver);
         lock (_storageGate) _storageTasks.Add(task);
-        _ = task.ContinueWith(t => { lock (_storageGate) _storageTasks.Remove(t); },
+        _ = task.ContinueWith(task2 => { lock (_storageGate) _storageTasks.Remove(task2); },
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
     public bool CanStart => !IsRunning && (!Selection.IsActive || Selection.CanStart || Selection.CanSubmitOrder);
@@ -493,7 +493,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         private set => SetProperty(ref _error, value);
     }
 
-    public int CurrentStepIndex => Overview.FirstOrDefault(o => o.State == ItemState.Running)?.Number ?? Overview.Count(o => o.State == ItemState.Done);
+    public int CurrentStepIndex => Overview.FirstOrDefault(overviewItemViewModel => overviewItemViewModel.State == ItemState.Running)?.Number ?? Overview.Count(overviewItemViewModel => overviewItemViewModel.State == ItemState.Done);
 
     public LiveOutputCollection LiveOutputs { get; } = new();
 
@@ -501,9 +501,9 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         ? ""
         : $"Durchlauf {Math.Max(DutCount, 1)} • Schritt {Math.Max(CurrentStepIndex, 1)} von {Overview.Count}";
 
-    public double DutProgress => Overview.Count == 0 ? 0 : 100.0 * Overview.Count(o => o.State is ItemState.Done or ItemState.Skipped) / Overview.Count;
+    public double DutProgress => Overview.Count == 0 ? 0 : 100.0 * Overview.Count(overviewItemViewModel => overviewItemViewModel.State is ItemState.Done or ItemState.Skipped) / Overview.Count;
 
-    public OperatorContentViewModel? ActiveContent => Contents.LastOrDefault(c => c.IsAwaiting) ?? Contents.LastOrDefault();
+    public OperatorContentViewModel? ActiveContent => Contents.LastOrDefault(operatorContentViewModel => operatorContentViewModel.IsAwaiting) ?? Contents.LastOrDefault();
 
     // ------------------------------------------------------------------ Steuerung
 
@@ -694,7 +694,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         }
         // Engine-Ereignisse kommen aus dem Ausführungskontext. Observable Collections und
         // gebundene Eigenschaften werden erst über den UI-Dispatcher geändert.
-        _run.EventRaised += e => _ui.Post(() => Handle(e));
+        _run.EventRaised += engineEvent => _ui.Post(() => Handle(engineEvent));
         RunningVersion = project.Definition.Version;
         OnPropertyChanged(nameof(RunningVersionText));
         Hint = "Prüfung läuft.";
@@ -739,15 +739,15 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void CompleteRunDisplay(RunStatus status, IReadOnlyList<string> safeProblems)
     {
-        foreach (var p in safeProblems)
-            AddProtocol(new ProtocolEntry(DateTimeOffset.Now, ProtocolKind.Error, "Sicherer Zustand", "—", "", "", ResultRating.Error, p));
+        foreach (var safeProblem in safeProblems)
+            AddProtocol(new ProtocolEntry(DateTimeOffset.Now, ProtocolKind.Error, "Sicherer Zustand", "—", "", "", ResultRating.Error, safeProblem));
         if (safeProblems.Count > 0) Error = "Sicherer Zustand nicht für alle Geräte bestätigt – Geräte prüfen: " + string.Join(" ", safeProblems);
         LastStatus = status;
         State = EngineState.Completed;
         StatusText = "Bereit";
         StatusKind = StationStatusKind.Idle;
         Hint = $"Ablauf beendet: {status}. Neuer Start möglich.";
-        foreach (var c in Contents) c.Cancel();
+        foreach (var operatorContentViewModel in Contents) operatorContentViewModel.Cancel();
         Contents.Clear();
         _contentById.Clear();
         OnPropertyChanged(nameof(ActiveContent));
@@ -809,9 +809,9 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     private string Holders(IReadOnlyList<string> names)
     {
         var registry = _run?.Options.Hardware;
-        var keys = names.Select(n => registry?.LockKeyOf(n) ?? n).ToHashSet(StringComparer.Ordinal);
-        var owners = _resources.Snapshot().Where(o => keys.Contains(o.Resource) && o.OwnerRunId is not null && o.OwnerRunId != _run?.RunId)
-            .Select(o => o.OwnerName ?? o.OwnerRunId!).Distinct().ToList();
+        var keys = names.Select(name => registry?.LockKeyOf(name) ?? name).ToHashSet(StringComparer.Ordinal);
+        var owners = _resources.Snapshot().Where(ownership => keys.Contains(ownership.Resource) && ownership.OwnerRunId is not null && ownership.OwnerRunId != _run?.RunId)
+            .Select(ownership => ownership.OwnerName ?? ownership.OwnerRunId!).Distinct().ToList();
         return owners.Count == 0 ? "" : $" (belegt von {string.Join(", ", owners)})";
     }
 
@@ -846,43 +846,43 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             var item = new OverviewItemViewModel(child.Id, ++number, child.Name);
             Overview.Add(item);
             _overviewByNode[child.Id] = item;
-            if (child is GroupDefinition g)
-                foreach (var d in g.Descendants()) _overviewByNode[d.Id] = item;
+            if (child is GroupDefinition group)
+                foreach (var node in group.Descendants()) _overviewByNode[node.Id] = item;
         }
 
         _dutIdWriters.Clear();
         _orderWriters.Clear();
-        foreach (var s in definition.AllNodes().OfType<StepDefinition>())
+        foreach (var step in definition.AllNodes().OfType<StepDefinition>())
         {
-            if (!s.Parameters.TryGetValue("Ziel", out var target)) continue;
-            if (target == dut.DutIdVariable) _dutIdWriters.Add(s.Id);
-            if (target == "Auftrag") _orderWriters.Add(s.Id);
+            if (!step.Parameters.TryGetValue("Ziel", out var target)) continue;
+            if (target == dut.DutIdVariable) _dutIdWriters.Add(step.Id);
+            if (target == "Auftrag") _orderWriters.Add(step.Id);
         }
         OnPropertiesChanged(nameof(ProgressText), nameof(DutProgress));
     }
 
     private static GroupDefinition? FindDutGroup(GroupDefinition group)
-        => group.IsDutRun ? group : group.Children.OfType<GroupDefinition>().Select(FindDutGroup).FirstOrDefault(g => g is not null);
+        => group.IsDutRun ? group : group.Children.OfType<GroupDefinition>().Select(FindDutGroup).FirstOrDefault(group2 => group2 is not null);
 
     private void BuildExitSequence(TestRun run)
     {
         ExitSequence.Clear();
         var number = 0;
-        var frames = run.ExecutionStack.Where(f => f.IsGroup).Reverse();
-        foreach (var f in frames)
+        var frames = run.ExecutionStack.Where(frame => frame.IsGroup).Reverse();
+        foreach (var frame in frames)
         {
-            if (run.Definition.Find(f.NodeId) is not GroupDefinition { ExitGroup: { } exit } g) continue;
-            var description = string.Join(", ", exit.Children.Take(3).Select(c => c.Name));
-            var name = g == run.Definition.Root ? "Hauptablauf Finalization" : $"{exit.Name} ({g.Name})";
+            if (run.Definition.Find(frame.NodeId) is not GroupDefinition { ExitGroup: { } exit } group) continue;
+            var description = string.Join(", ", exit.Children.Take(3).Select(node => node.Name));
+            var name = group == run.Definition.Root ? "Hauptablauf Finalization" : $"{exit.Name} ({group.Name})";
             ExitSequence.Add(new ExitItemViewModel(exit.Id, ++number, name, description));
         }
     }
 
     // ------------------------------------------------------------------ Ereignisse der Engine
 
-    private void HandleInteractionAndResources(EngineEvent e)
+    private void HandleInteractionAndResources(EngineEvent engineEvent)
     {
-        switch (e)
+        switch (engineEvent)
         {
             case OperatorContentShown os:
                 HandleOperatorContentShown(os);
@@ -892,8 +892,8 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
                 HandleOperatorContentCleared(cl);
                 break;
 
-            case OperatorAbortRequested a:
-                HandleOperatorAbortRequested(a);
+            case OperatorAbortRequested operatorAbortRequested:
+                HandleOperatorAbortRequested(operatorAbortRequested);
                 break;
 
             case ResourceWaitStarted rw:
@@ -931,20 +931,20 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         }
     }
 
-    private void Handle(EngineEvent e)
+    private void Handle(EngineEvent engineEvent)
     {
-        switch (e)
+        switch (engineEvent)
         {
             case TraceUpdated trace:
                 LiveWaveform.SetData(trace.Data);
                 LiveWaveformTitle = LiveWaveform.HasEnvelopeViolation ? "Messwertverlauf · FAIL festgestellt · Aufnahme läuft" : "Messwertverlauf · Aufnahme läuft";
                 break;
-            case StateChanged s:
-                HandleStateChanged(s);
+            case StateChanged stateChanged:
+                HandleStateChanged(stateChanged);
                 break;
 
-            case DutRunStarted d:
-                HandleDutRunStarted(d);
+            case DutRunStarted dutRunStarted:
+                HandleDutRunStarted(dutRunStarted);
                 break;
 
             case StepStarted st:
@@ -976,20 +976,20 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
                 break;
 
             default:
-                HandleInteractionAndResources(e);
+                HandleInteractionAndResources(engineEvent);
                 break;
 
         }
-        Debug.Handle(e);
+        Debug.Handle(engineEvent);
     }
 
-    private void HandleStateChanged(StateChanged s)
+    private void HandleStateChanged(StateChanged stateChanged)
     {
-        State = s.State;
+        State = stateChanged.State;
         UpdateStatus();
     }
 
-    private void HandleDutRunStarted(DutRunStarted d)
+    private void HandleDutRunStarted(DutRunStarted dutRunStarted)
     {
         LiveOutputs.Clear();
         DutCount++;
@@ -997,12 +997,12 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         DutWerror = false;
         CurrentDutId = "—";
         ClearMeasurements();
-        foreach (var o in Overview)
+        foreach (var overviewItemViewModel in Overview)
         {
-            o.State = ItemState.Pending;
-            o.Rating = ResultRating.NResult;
+            overviewItemViewModel.State = ItemState.Pending;
+            overviewItemViewModel.Rating = ResultRating.NResult;
         }
-        AddProtocol(new ProtocolEntry(d.Time, ProtocolKind.Run, $"Durchlauf {DutCount} – Prüfling gestartet", "—", "", "", null, "Läuft", IsHeader: true));
+        AddProtocol(new ProtocolEntry(dutRunStarted.Time, ProtocolKind.Run, $"Durchlauf {DutCount} – Prüfling gestartet", "—", "", "", null, "Läuft", IsHeader: true));
     }
 
     private void HandleStepStarted(StepStarted st)
@@ -1021,7 +1021,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     private void HandleDisabledNode(NodeSkipped skipped)
     {
         var ids = _run?.Definition.Find(skipped.NodeId) is GroupDefinition group
-            ? group.Descendants().Select(n => n.Id).Append(group.Id) : [skipped.NodeId];
+            ? group.Descendants().Select(node => node.Id).Append(group.Id) : [skipped.NodeId];
         foreach (var id in ids)
         {
             if (_overviewByNode.TryGetValue(id, out var item)) item.State = ItemState.Skipped;
@@ -1044,10 +1044,10 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
             ci.State = ItemState.Done;
             ci.Rating = gc.Rating;
         }
-        if (ExitSequence.FirstOrDefault(x => x.NodeId == gc.NodeId) is { State: not ItemState.Aborted } x)
+        if (ExitSequence.FirstOrDefault(exitItemViewModel => exitItemViewModel.NodeId == gc.NodeId) is { State: not ItemState.Aborted } exitItemViewModel)
         {
-            x.State = ItemState.Done;
-            x.Rating = gc.Rating;
+            exitItemViewModel.State = ItemState.Done;
+            exitItemViewModel.Rating = gc.Rating;
         }
     }
 
@@ -1069,22 +1069,22 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private void HandleOperatorContentCleared(OperatorContentCleared cl)
     {
-        foreach (var c in Contents.Where(c => c.Prompt.GroupScopeId == cl.GroupScopeId).ToList())
+        foreach (var operatorContentViewModel in Contents.Where(operatorContentViewModel2 => operatorContentViewModel2.Prompt.GroupScopeId == cl.GroupScopeId).ToList())
         {
-            Contents.Remove(c);
-            _contentById.Remove(c.DisplayId);
+            Contents.Remove(operatorContentViewModel);
+            _contentById.Remove(operatorContentViewModel.DisplayId);
         }
         OnPropertyChanged(nameof(ActiveContent));
     }
 
-    private void HandleOperatorAbortRequested(OperatorAbortRequested a)
+    private void HandleOperatorAbortRequested(OperatorAbortRequested operatorAbortRequested)
     {
-        AbortCount = a.Number;
+        AbortCount = operatorAbortRequested.Number;
         DutWerror = true;
-        Hint = a.Number == 1
+        Hint = operatorAbortRequested.Number == 1
             ? "Werkerabbruch: reguläre Schritte gestoppt, Abschlussgruppen laufen von innen nach außen."
-            : $"Erneuter Abbruch ({a.Number}): {a.Effect}";
-        AddProtocol(new ProtocolEntry(a.Time, ProtocolKind.Abort, $"Werkerabbruch angefordert ({a.Number})", "—", "", "", null, "ABORT"));
+            : $"Erneuter Abbruch ({operatorAbortRequested.Number}): {operatorAbortRequested.Effect}";
+        AddProtocol(new ProtocolEntry(operatorAbortRequested.Time, ProtocolKind.Abort, $"Werkerabbruch angefordert ({operatorAbortRequested.Number})", "—", "", "", null, "ABORT"));
         UpdateStatus();
     }
 
@@ -1190,15 +1190,15 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     {
         if (!_overviewByNode.TryGetValue(nodeId, out var item)) return;
         item.State = state;
-        if (rating is { } r) item.Rating = r;
+        if (rating is { } rating2) item.Rating = rating2;
         OnPropertiesChanged(nameof(ProgressText), nameof(DutProgress));
     }
 
     private void SetExitState(string nodeId, ItemState state, ResultRating? rating)
     {
-        if (ExitSequence.FirstOrDefault(x => x.NodeId == nodeId) is not { } x) return;
-        x.State = state;
-        if (rating is not null) x.Rating = rating;
+        if (ExitSequence.FirstOrDefault(exitItemViewModel => exitItemViewModel.NodeId == nodeId) is not { } exitItemViewModel) return;
+        exitItemViewModel.State = state;
+        if (rating is not null) exitItemViewModel.Rating = rating;
     }
 
     private void UpdateStatus()
@@ -1230,16 +1230,16 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private static string Last(string path)
     {
-        var i = path.LastIndexOf(" > ", StringComparison.Ordinal);
-        return i < 0 ? path : path[(i + 3)..];
+        var index = path.LastIndexOf(" > ", StringComparison.Ordinal);
+        return index < 0 ? path : path[(index + 3)..];
     }
 
     private static string FormatValue(object? value) => value switch
     {
         null => "—",
-        double d => Format.Number(d),
-        bool b => b ? "true" : "false",
-        string s => s,
+        double number => Format.Number(number),
+        bool flag => flag ? "true" : "false",
+        string text => text,
         DateTime dt => dt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
         _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "",
     };
@@ -1306,7 +1306,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     {
         if (prompt.DisplayMode == OperatorDisplayMode.ReplacePrevious)
         {
-            foreach (var old in Contents.Where(c => c.Prompt.DisplayMode == OperatorDisplayMode.ReplacePrevious && !c.IsAwaiting).ToList())
+            foreach (var old in Contents.Where(operatorContentViewModel => operatorContentViewModel.Prompt.DisplayMode == OperatorDisplayMode.ReplacePrevious && !operatorContentViewModel.IsAwaiting).ToList())
             {
                 Contents.Remove(old);
                 _contentById.Remove(old.DisplayId);

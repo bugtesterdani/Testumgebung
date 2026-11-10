@@ -90,25 +90,25 @@ public abstract class QueuedNotifier : IRunNotifier, IAsyncDisposable
     /// <summary>Testmeldung direkt (Knopf „testen“); Ausnahme bei Fehler.</summary>
     public async Task<string> SendTestAsync(CancellationToken cancellationToken)
     {
-        var n = NotificationPayload.TestNotification();
+        var notification = NotificationPayload.TestNotification();
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(Timeout);
-        await SendAsync(n, cts.Token).ConfigureAwait(false);
-        return $"Testmeldung gesendet ({Channel} → {TargetFor(n)}).";
+        await SendAsync(notification, cts.Token).ConfigureAwait(false);
+        return $"Testmeldung gesendet ({Channel} → {TargetFor(notification)}).";
     }
 
     private async Task SendLoopAsync()
     {
         try
         {
-            await foreach (var n in _queue.Reader.ReadAllAsync(_cts.Token).ConfigureAwait(false))
+            await foreach (var runNotification in _queue.Reader.ReadAllAsync(_cts.Token).ConfigureAwait(false))
             {
                 string? error = null;
                 try
                 {
                     using var attempt = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
                     attempt.CancelAfter(Timeout);
-                    await SendAsync(n, attempt.Token).ConfigureAwait(false);
+                    await SendAsync(runNotification, attempt.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (_cts.IsCancellationRequested)
                 {
@@ -122,7 +122,7 @@ public abstract class QueuedNotifier : IRunNotifier, IAsyncDisposable
                 {
                     error = ex.Message; // verworfen – keine Wiederholung
                 }
-                try { Delivered?.Invoke(new NotifyDelivery(Channel, n, TargetFor(n), error is null, error, DateTimeOffset.Now)); }
+                try { Delivered?.Invoke(new NotifyDelivery(Channel, runNotification, TargetFor(runNotification), error is null, error, DateTimeOffset.Now)); }
                 catch (Exception) { }
             }
         }
@@ -154,7 +154,7 @@ public sealed record HttpNotifyOptions
 
     public string? Validate()
     {
-        if (!Uri.TryCreate(Url.Replace("{", "x").Replace("}", "x"), UriKind.Absolute, out var u) || u.Scheme is not ("http" or "https"))
+        if (!Uri.TryCreate(Url.Replace("{", "x").Replace("}", "x"), UriKind.Absolute, out var address) || address.Scheme is not ("http" or "https"))
             return "URL muss mit http:// oder https:// beginnen.";
         if (!string.IsNullOrWhiteSpace(HeaderName) && (HeaderName.Contains(':') || HeaderName.Contains(' ')))
             return "Kopfname ohne Doppelpunkt und Leerzeichen angeben (z. B. Authorization).";
@@ -247,9 +247,9 @@ public sealed class CompositeNotifier(IReadOnlyList<IRunNotifier> targets) : IRu
 
     public void Notify(RunNotification notification)
     {
-        foreach (var t in Targets)
+        foreach (var iRunNotifier in Targets)
         {
-            try { t.Notify(notification); }
+            try { iRunNotifier.Notify(notification); }
             catch (Exception) { /* best effort */ }
         }
     }

@@ -28,7 +28,7 @@ public static class GroupBlockConverter
     public static CodeDependencies Analyze(TestDefinition definition, GroupDefinition group, BlockCatalog catalog)
     {
         var outside = CodeBlockConverter.VisibleVariables(definition, group.Id);
-        var outsideTypes = outside.ToDictionary(v => v.Name, v => v.Type, StringComparer.Ordinal);
+        var outsideTypes = outside.ToDictionary(variable => variable.Name, variable => variable.Type, StringComparer.Ordinal);
         var usage = new Dictionary<string, Usage>(StringComparer.Ordinal);
         var warnings = new List<string>();
 
@@ -40,9 +40,9 @@ public static class GroupBlockConverter
                 return;
             }
             if (locals.Contains(name) || !outsideTypes.ContainsKey(name)) return;
-            var u = usage.TryGetValue(name, out var existing) ? existing : usage[name] = new Usage();
-            if (write) u.Write = true;
-            else u.Read = true;
+            var usage2 = usage.TryGetValue(name, out var existing) ? existing : usage[name] = new Usage();
+            if (write) usage2.Write = true;
+            else usage2.Read = true;
         }
 
         void Expr(string? text, HashSet<string> locals)
@@ -50,7 +50,7 @@ public static class GroupBlockConverter
             if (string.IsNullOrWhiteSpace(text)) return;
             try
             {
-                foreach (var n in Expression.Parse(text).ReferencedNames) Note(n, false, locals);
+                foreach (var referencedName in Expression.Parse(text).ReferencedNames) Note(referencedName, false, locals);
             }
             catch (ExpressionException)
             {
@@ -58,18 +58,18 @@ public static class GroupBlockConverter
             }
         }
 
-        void Walk(GroupDefinition g, HashSet<string> parentLocals)
+        void Walk(GroupDefinition group2, HashSet<string> parentLocals)
         {
             var locals = new HashSet<string>(parentLocals, StringComparer.Ordinal);
             // Jede Gruppe besitzt ihr eigenes Ergebnis; es ist keine äußere Port-Abhängigkeit.
             locals.Add(Scope.GroupResultVariable);
-            foreach (var v in g.Variables) locals.Add(v.Name);
-            if (g.Resources.Count > 0) locals.Add(TestRun.ResourcesAcquiredVariable);
-            Expr(g.EntryCondition, locals);
-            Expr(g.Repetition.Expression, locals);
-            if (g.IsDutRun) Note(g.DutIdVariable, true, locals);
+            foreach (var variable in group2.Variables) locals.Add(variable.Name);
+            if (group2.Resources.Count > 0) locals.Add(TestRun.ResourcesAcquiredVariable);
+            Expr(group2.EntryCondition, locals);
+            Expr(group2.Repetition.Expression, locals);
+            if (group2.IsDutRun) Note(group2.DutIdVariable, true, locals);
 
-            foreach (var child in g.Children.Concat(g.ExitGroup is null ? [] : [g.ExitGroup]))
+            foreach (var child in group2.Children.Concat(group2.ExitGroup is null ? [] : [group2.ExitGroup]))
             {
                 if (child is GroupDefinition cg)
                 {
@@ -79,15 +79,15 @@ public static class GroupBlockConverter
                 if (child is not StepDefinition { BlockType: { } type } step) continue;
                 if (type == BlockCatalog.Code)
                 {
-                    var visible = locals.Select(n => (n, VarType.Double))
-                        .Concat(outside.Where(o => !locals.Contains(o.Name)))
+                    var visible = locals.Select(local => (n: local, VarType.Double))
+                        .Concat(outside.Where(variable2 => !locals.Contains(variable2.Name)))
                         .ToList();
                     var lang = BlockCatalog.ParseLanguage(step.Parameters.GetValueOrDefault("Sprache") ?? "C#");
                     var deps = CodeBlockConverter.Analyze(lang, step.Parameters.GetValueOrDefault("Quelltext") ?? "", visible);
-                    foreach (var p in deps.Ports)
+                    foreach (var port in deps.Ports)
                     {
-                        if (p.IsInput) Note(p.Name, false, locals);
-                        if (p.IsOutput) Note(p.Name, true, locals);
+                        if (port.IsInput) Note(port.Name, false, locals);
+                        if (port.IsOutput) Note(port.Name, true, locals);
                     }
                     warnings.AddRange(deps.Warnings);
                     continue;
@@ -111,12 +111,12 @@ public static class GroupBlockConverter
 
         Walk(group, []);
         var ports = outside
-            .Where(o => usage.ContainsKey(o.Name))
-            .Select(o =>
+            .Where(variable2 => usage.ContainsKey(variable2.Name))
+            .Select(variable2 =>
             {
-                var u = usage[o.Name];
-                var direction = u.Read && u.Write ? PortDirection.InOut : u.Write ? PortDirection.Output : PortDirection.Input;
-                return new CodePort(o.Name, o.Type, direction);
+                var usage3 = usage[variable2.Name];
+                var direction = usage3.Read && usage3.Write ? PortDirection.InOut : usage3.Write ? PortDirection.Output : PortDirection.Input;
+                return new CodePort(variable2.Name, variable2.Type, direction);
             })
             .ToList();
         return new CodeDependencies(ports, warnings.Distinct().ToList());
@@ -160,10 +160,10 @@ public static class GroupBlockConverter
         block.Ports.AddRange(deps.Ports);
 
         var parameters = new Dictionary<string, string> { ["Baustein"] = blockId };
-        foreach (var p in deps.Ports)
+        foreach (var port in deps.Ports)
         {
-            if (p.IsInput) parameters[BlockCatalog.InputBindingPrefix + p.Name] = p.Name;
-            if (p.Direction == PortDirection.Output) parameters[BlockCatalog.OutputBindingPrefix + p.Name] = p.Name;
+            if (port.IsInput) parameters[BlockCatalog.InputBindingPrefix + port.Name] = port.Name;
+            if (port.Direction == PortDirection.Output) parameters[BlockCatalog.OutputBindingPrefix + port.Name] = port.Name;
         }
         var step = catalog.Create(BlockCatalog.GroupBlock, originalId, group.Name, parameters);
         step.Description = group.Description;

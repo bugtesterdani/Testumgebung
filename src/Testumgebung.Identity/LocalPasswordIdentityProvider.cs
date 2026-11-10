@@ -12,7 +12,7 @@ public sealed class LocalPasswordIdentityProvider(AccessConfig config, Func<(str
     {
         var input = credentials();
         var upn = input.User.Contains('@') ? input.User.Trim() : SimulatedIdentityProvider.ToUpn(input.User.Trim());
-        var entry = config.Users.FirstOrDefault(u => string.Equals(u.Upn.Trim(), upn, StringComparison.OrdinalIgnoreCase));
+        var entry = config.Users.FirstOrDefault(user => string.Equals(user.Upn.Trim(), upn, StringComparison.OrdinalIgnoreCase));
         var valid = entry is not null && await Task.Run(() => LocalPasswordHash.Verify(input.Password, entry.PasswordHash), cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (!config.UsesLocalPasswords || config.LoadError is not null || !valid) throw new SignInException("Benutzername oder Passwort ist ungültig.");
@@ -21,7 +21,7 @@ public sealed class LocalPasswordIdentityProvider(AccessConfig config, Func<(str
     public Task SignOutAsync(UserIdentity identity, CancellationToken cancellationToken) => Task.CompletedTask;
     internal static bool Matches(UserIdentity identity, AccessConfig config)
     {
-        var user = config.Users.FirstOrDefault(u => string.Equals(u.Upn.Trim(), identity.Upn, StringComparison.OrdinalIgnoreCase));
+        var user = config.Users.FirstOrDefault(user2 => string.Equals(user2.Upn.Trim(), identity.Upn, StringComparison.OrdinalIgnoreCase));
         return identity.Source == Source && !identity.IsConfirmed && user is not null && LocalPasswordHash.IsValid(user.PasswordHash)
             && identity.ObjectId == Fingerprint(user);
     }

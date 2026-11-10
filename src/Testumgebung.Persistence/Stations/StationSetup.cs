@@ -52,8 +52,8 @@ public sealed class DeviceConfig
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var line in value.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
             {
-                var i = line.IndexOf('=');
-                if (i > 0) map[line[..i].Trim()] = line[(i + 1)..].Trim();
+                var index = line.IndexOf('=');
+                if (index > 0) map[line[..index].Trim()] = line[(index + 1)..].Trim();
             }
             Options = map.Count == 0 ? null : map;
         }
@@ -99,9 +99,9 @@ public sealed class StationSetup
     public List<DeviceConfig> Devices { get; set; } = [];
     public List<StationConfig> Stations { get; set; } = [];
 
-    public DeviceConfig? Device(string id) => Devices.FirstOrDefault(d => d.Id == id);
+    public DeviceConfig? Device(string id) => Devices.FirstOrDefault(device => device.Id == id);
 
-    public StationConfig? Station(string name) => Stations.FirstOrDefault(s => s.Name == name);
+    public StationConfig? Station(string name) => Stations.FirstOrDefault(station => station.Name == name);
 
     /// <summary>Sperrschlüssel eines zugeordneten Kanals; lokale Geräte sind je Prüfplatz eigene Instanzen.</summary>
     public string LockKey(string station, ResourceAssignment a) => Device(a.Device) switch
@@ -117,8 +117,8 @@ public sealed class StationSetup
     /// <summary>Name → Sperrschlüssel für einen Prüfplatz (nicht zugeordnete Namen sperren unter ihrem Namen).</summary>
     public Func<string, string> KeyOf(string station)
     {
-        var map = (Station(station)?.Resources ?? []).ToDictionary(a => a.Name, a => LockKey(station, a), StringComparer.Ordinal);
-        return n => map.TryGetValue(n, out var k) ? k : n;
+        var map = (Station(station)?.Resources ?? []).ToDictionary(assignment => assignment.Name, assignment => LockKey(station, assignment), StringComparer.Ordinal);
+        return name => map.TryGetValue(name, out var key) ? key : name;
     }
 
     /// <summary>Vorschlag aus dem Projekt: gesperrte Ressourcen auf ein gemeinsames Gerät, alles andere je Prüfplatz.</summary>
@@ -151,32 +151,32 @@ public sealed class StationSetup
     /// <summary>Zuordnungsvorschläge für Projektressourcen, die noch fehlen.</summary>
     public static IEnumerable<ResourceAssignment> Suggest(TestProject project, IEnumerable<ResourceAssignment> existing)
     {
-        var have = existing.Select(a => a.Name).ToHashSet(StringComparer.Ordinal);
-        foreach (var r in project.Simulation.Where(r => have.Add(r.Name)))
-            yield return new ResourceAssignment { Name = r.Name, Device = r.RequiresLock ? SharedSimulation : LocalSimulation, Channel = r.Channel, RequiresLock = r.RequiresLock };
-        foreach (var o in project.SimulationOutputs.Where(o => have.Add(o.Name)))
-            yield return new ResourceAssignment { Name = o.Name, Device = o.RequiresLock ? SharedSimulation : LocalSimulation, Channel = o.Channel, RequiresLock = o.RequiresLock };
-        foreach (var c in project.SimulationComm.Where(c => have.Add(c.Name)))
-            yield return new ResourceAssignment { Name = c.Name, Device = c.RequiresLock ? SharedSimulation : LocalSimulation, Channel = c.Channel, RequiresLock = c.RequiresLock };
+        var have = existing.Select(assignment => assignment.Name).ToHashSet(StringComparer.Ordinal);
+        foreach (var resource in project.Simulation.Where(resource2 => have.Add(resource2.Name)))
+            yield return new ResourceAssignment { Name = resource.Name, Device = resource.RequiresLock ? SharedSimulation : LocalSimulation, Channel = resource.Channel, RequiresLock = resource.RequiresLock };
+        foreach (var output in project.SimulationOutputs.Where(output2 => have.Add(output2.Name)))
+            yield return new ResourceAssignment { Name = output.Name, Device = output.RequiresLock ? SharedSimulation : LocalSimulation, Channel = output.Channel, RequiresLock = output.RequiresLock };
+        foreach (var communication in project.SimulationComm.Where(communication2 => have.Add(communication2.Name)))
+            yield return new ResourceAssignment { Name = communication.Name, Device = communication.RequiresLock ? SharedSimulation : LocalSimulation, Channel = communication.Channel, RequiresLock = communication.RequiresLock };
     }
 
     /// <summary>Alle Namen, die der Ablauf verwendet (Gruppenreservierungen, Schrittparameter, Simulationsprofil).</summary>
     public static IReadOnlyList<string> UsedResources(TestProject project)
     {
         var names = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var n in project.Definition.EnabledNodes())
+        foreach (var node in project.Definition.EnabledNodes())
         {
-            if (n is GroupDefinition g) foreach (var r in g.Resources) names.Add(r);
-            if (n is StepDefinition s)
+            if (node is GroupDefinition group) foreach (var resource in group.Resources) names.Add(resource);
+            if (node is StepDefinition step)
             {
-                if (s.Parameters.GetValueOrDefault("Ressource") is { Length: > 0 } one) names.Add(one.Trim());
-                if (s.Parameters.GetValueOrDefault("Ressourcen") is { Length: > 0 } many)
-                    foreach (var r in many.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) names.Add(r);
+                if (step.Parameters.GetValueOrDefault("Ressource") is { Length: > 0 } one) names.Add(one.Trim());
+                if (step.Parameters.GetValueOrDefault("Ressourcen") is { Length: > 0 } many)
+                    foreach (var entry in many.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) names.Add(entry);
             }
         }
-        foreach (var r in project.Simulation) names.Add(r.Name);
-        foreach (var o in project.SimulationOutputs) names.Add(o.Name);
-        foreach (var c in project.SimulationComm) names.Add(c.Name);
+        foreach (var resource2 in project.Simulation) names.Add(resource2.Name);
+        foreach (var output in project.SimulationOutputs) names.Add(output.Name);
+        foreach (var communication in project.SimulationComm) names.Add(communication.Name);
         return names.ToList();
     }
 

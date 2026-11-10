@@ -84,7 +84,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             Name = def.Name,
             Version = def.Version,
             Description = project.Description,
-            Assemblies = def.Assemblies.Count == 0 ? null : def.Assemblies.OrderBy(a => a.Name, StringComparer.Ordinal).ToList(),
+            Assemblies = def.Assemblies.Count == 0 ? null : def.Assemblies.OrderBy(managedAssembly => managedAssembly.Name, StringComparer.Ordinal).ToList(),
             Variables = def.Root.Variables.Select(ToDto).ToList(),
             Init = ToDto(def.Init),
             Loop = ToDto(def.Loop),
@@ -94,23 +94,23 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             SimulationComm = project.SimulationComm.Count == 0 ? null : project.SimulationComm.ToList(),
             DeviceProfiles = project.DeviceProfiles.Count == 0 ? null : project.DeviceProfiles.ToList(),
             Library = def.Library.Count == 0 ? null : def.Library.Select(ToDto).ToList(),
-            GroupLibrary = def.GroupLibrary.Count == 0 ? null : def.GroupLibrary.Select(b => new GroupBlockDto
+            GroupLibrary = def.GroupLibrary.Count == 0 ? null : def.GroupLibrary.Select(groupBlock => new GroupBlockDto
             {
-                Id = b.Id,
-                Name = b.Name,
-                Version = b.Version,
-                Description = b.Description,
-                Ports = b.Ports.Select(ToDto).ToList(),
-                Body = ToDto(b.Body),
+                Id = groupBlock.Id,
+                Name = groupBlock.Name,
+                Version = groupBlock.Version,
+                Description = groupBlock.Description,
+                Ports = groupBlock.Ports.Select(ToDto).ToList(),
+                Body = ToDto(groupBlock.Body),
             }).ToList(),
             Curves = def.Curves.Versions.Count == 0 ? null : def.Curves.Versions.Select(ToDto).ToList(),
             OperatorLayout = def.Layout.IsDefault ? null : def.Layout.Clone(),
-            BusDatabases = def.BusDatabases.Count == 0 ? null : def.BusDatabases.Select(b => new BusDatabaseDto
+            BusDatabases = def.BusDatabases.Count == 0 ? null : def.BusDatabases.Select(database => new BusDatabaseDto
             {
-                Name = b.Name,
-                Format = b.Format == Testumgebung.Contracts.BusDatabaseFormat.Ldf ? "LDF" : "DBC",
-                FileName = b.FileName,
-                Content = b.Content,
+                Name = database.Name,
+                Format = database.Format == Testumgebung.Contracts.BusDatabaseFormat.Ldf ? "LDF" : "DBC",
+                FileName = database.FileName,
+                Content = database.Content,
             }).ToList(),
         };
         return JsonSerializer.Serialize(dto, Options);
@@ -132,7 +132,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         if (dto.Init is null || dto.Loop is null || dto.Finalization is null) throw new ProjectFormatException("Init, Loop oder Finalization fehlt.");
 
         var def = new TestDefinition(dto.Name ?? "Unbenannt", dto.Version ?? "0.1", FromDto(dto.Init), FromDto(dto.Loop), FromDto(dto.Finalization));
-        foreach (var v in dto.Variables ?? []) def.Root.Variables.Add(FromDto(v, "Hauptablauf"));
+        foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
         if (dto.Simulation is not null) project.Simulation.AddRange(dto.Simulation);
@@ -150,7 +150,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             if (profile is null) throw new ProjectFormatException("Ungültiges Geräteprofil.");
             var errors = profile.Validate();
             if (errors.Count > 0) throw new ProjectFormatException(string.Join(" ", errors));
-            if (project.DeviceProfiles.Any(p => p.Id == profile.Id)) throw new ProjectFormatException("Geräteprofil-ID ist mehrfach vergeben.");
+            if (project.DeviceProfiles.Any(customDeviceProfile => customDeviceProfile.Id == profile.Id)) throw new ProjectFormatException("Geräteprofil-ID ist mehrfach vergeben.");
             project.DeviceProfiles.Add(profile);
         }
     }
@@ -158,31 +158,31 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     private void ReadLibraries(ProjectDto dto, TestDefinition def)
     {
         ReadManagedAssemblies(dto, def);
-        foreach (var b in dto.Library ?? []) def.Library.Add(FromDto(b));
+        foreach (var libraryBlockDto in dto.Library ?? []) def.Library.Add(FromDto(libraryBlockDto));
         ReadGroupLibrary(dto, def);
-        foreach (var c in dto.Curves ?? []) def.Curves.Add(FromDto(c));
+        foreach (var curveDto in dto.Curves ?? []) def.Curves.Add(FromDto(curveDto));
         if (dto.OperatorLayout is { } layout) def.Layout = layout.Clone();
-        foreach (var b in dto.BusDatabases ?? [])
+        foreach (var busDatabaseDto in dto.BusDatabases ?? [])
         {
-            var name = Require(b.Name, "Busdatenbank-name");
-            if (def.BusDatabases.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
+            var name = Require(busDatabaseDto.Name, "Busdatenbank-name");
+            if (def.BusDatabases.Any(database => string.Equals(database.Name, name, StringComparison.OrdinalIgnoreCase)))
                 throw new ProjectFormatException($"Busdatenbank '{name}' ist doppelt.");
-            var format = string.Equals(b.Format, "LDF", StringComparison.OrdinalIgnoreCase) ? Testumgebung.Contracts.BusDatabaseFormat.Ldf : Testumgebung.Contracts.BusDatabaseFormat.Dbc;
-            def.BusDatabases.Add(new BusDatabaseDefinition(name, format, b.Content ?? "", b.FileName));
+            var format = string.Equals(busDatabaseDto.Format, "LDF", StringComparison.OrdinalIgnoreCase) ? Testumgebung.Contracts.BusDatabaseFormat.Ldf : Testumgebung.Contracts.BusDatabaseFormat.Dbc;
+            def.BusDatabases.Add(new BusDatabaseDefinition(name, format, busDatabaseDto.Content ?? "", busDatabaseDto.FileName));
         }
     }
 
     private void ReadGroupLibrary(ProjectDto dto, TestDefinition def)
     {
-        foreach (var g in dto.GroupLibrary ?? [])
+        foreach (var groupBlockDto in dto.GroupLibrary ?? [])
         {
-            if (g.Body is null) throw new ProjectFormatException($"Grafischer Baustein '{g.Name}': Körper fehlt.");
-            var block = new GroupBlockDefinition(Require(g.Id, "Baustein-id"), g.Name ?? g.Id!, FromDto(g.Body))
+            if (groupBlockDto.Body is null) throw new ProjectFormatException($"Grafischer Baustein '{groupBlockDto.Name}': Körper fehlt.");
+            var block = new GroupBlockDefinition(Require(groupBlockDto.Id, "Baustein-id"), groupBlockDto.Name ?? groupBlockDto.Id!, FromDto(groupBlockDto.Body))
             {
-                Version = g.Version ?? "0.1",
-                Description = g.Description,
+                Version = groupBlockDto.Version ?? "0.1",
+                Description = groupBlockDto.Description,
             };
-            foreach (var p in g.Ports ?? []) block.Ports.Add(FromDto(p, block.Name));
+            foreach (var portDto in groupBlockDto.Ports ?? []) block.Ports.Add(FromDto(portDto, block.Name));
             def.GroupLibrary.Add(block);
         }
     }
@@ -193,7 +193,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         {
             try { ManagedAssemblyImport.Validate(assembly); }
             catch (ArgumentException ex) { throw new ProjectFormatException(ex.Message); }
-            if (def.Assemblies.Any(a => a.Name.Equals(assembly.Name, StringComparison.OrdinalIgnoreCase)))
+            if (def.Assemblies.Any(managedAssembly => managedAssembly.Name.Equals(assembly.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new ProjectFormatException("DLL doppelt: " + assembly.Name);
             def.Assemblies.Add(assembly);
         }
@@ -213,78 +213,78 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
 
     // ------------------------------------------------------------------ Abbildung
 
-    private static GroupDto ToDto(GroupDefinition g) => new()
+    private static GroupDto ToDto(GroupDefinition group) => new()
     {
-        Id = g.Id,
-        Disabled = g.Disabled ? true : null,
-        BreakpointRule = g.BreakpointRule == BreakpointRule.Default ? null : g.BreakpointRule,
-        CodeBreakpointRules = g.CodeBreakpointRules.Count == 0 ? null : g.CodeBreakpointRules,
-        Name = g.Name,
-        Description = g.Description,
-        Variables = g.Variables.Select(ToDto).ToList(),
-        Condition = g.EntryCondition,
+        Id = group.Id,
+        Disabled = group.Disabled ? true : null,
+        BreakpointRule = group.BreakpointRule == BreakpointRule.Default ? null : group.BreakpointRule,
+        CodeBreakpointRules = group.CodeBreakpointRules.Count == 0 ? null : group.CodeBreakpointRules,
+        Name = group.Name,
+        Description = group.Description,
+        Variables = group.Variables.Select(ToDto).ToList(),
+        Condition = group.EntryCondition,
         Repeat = new RepeatDto
         {
-            Mode = g.Repetition.Mode,
-            Count = g.Repetition.Mode == RepeatMode.Count ? g.Repetition.Count : null,
-            DurationMs = g.Repetition.Mode == RepeatMode.Duration ? g.Repetition.Duration.TotalMilliseconds : null,
-            Expression = g.Repetition.Expression,
-            StopWithinIteration = g.Repetition.StopWithinIteration ? true : null,
+            Mode = group.Repetition.Mode,
+            Count = group.Repetition.Mode == RepeatMode.Count ? group.Repetition.Count : null,
+            DurationMs = group.Repetition.Mode == RepeatMode.Duration ? group.Repetition.Duration.TotalMilliseconds : null,
+            Expression = group.Repetition.Expression,
+            StopWithinIteration = group.Repetition.StopWithinIteration ? true : null,
         },
-        ResultBeforeRepeat = g.ResultBeforeRepeat,
-        Parallel = g.Parallel ? true : null,
-        Exit = g.ExitGroup is null ? null : ToDto(g.ExitGroup),
-        Resources = g.Resources.Count == 0 ? null : g.Resources.ToList(),
-        ResourceTimeoutMs = g.ResourceTimeout?.TotalMilliseconds,
-        InterfaceBoundary = g.IsInterfaceBoundary ? true : null,
-        DutRun = g.IsDutRun ? true : null,
-        DutIdVariable = g.IsDutRun ? g.DutIdVariable : null,
-        Children = g.Children.Select(ToDto).ToList(),
-        Storage = ToDto(g.Storage),
+        ResultBeforeRepeat = group.ResultBeforeRepeat,
+        Parallel = group.Parallel ? true : null,
+        Exit = group.ExitGroup is null ? null : ToDto(group.ExitGroup),
+        Resources = group.Resources.Count == 0 ? null : group.Resources.ToList(),
+        ResourceTimeoutMs = group.ResourceTimeout?.TotalMilliseconds,
+        InterfaceBoundary = group.IsInterfaceBoundary ? true : null,
+        DutRun = group.IsDutRun ? true : null,
+        DutIdVariable = group.IsDutRun ? group.DutIdVariable : null,
+        Children = group.Children.Select(ToDto).ToList(),
+        Storage = ToDto(group.Storage),
     };
 
-    private static StorageDto? ToDto(StorageSettings s) => s.IsInherit ? null : new StorageDto
+    private static StorageDto? ToDto(StorageSettings storageSettings) => storageSettings.IsInherit ? null : new StorageDto
     {
-        Display = s.Display,
-        File = s.File,
-        FileWaveforms = s.FileWaveforms,
-        Database = s.Database,
-        DatabaseWaveforms = s.DatabaseWaveforms,
+        Display = storageSettings.Display,
+        File = storageSettings.File,
+        FileWaveforms = storageSettings.FileWaveforms,
+        Database = storageSettings.Database,
+        DatabaseWaveforms = storageSettings.DatabaseWaveforms,
     };
 
-    private static StorageSettings FromDto(StorageDto? d)
-        => d is null ? StorageSettings.Inherit : new StorageSettings(d.Display, d.File, d.FileWaveforms, d.Database, d.DatabaseWaveforms);
+    private static StorageSettings FromDto(StorageDto? storageDto)
+        => storageDto is null ? StorageSettings.Inherit : new StorageSettings(storageDto.Display, storageDto.File, storageDto.FileWaveforms, storageDto.Database, storageDto.DatabaseWaveforms);
 
-    private static LibraryBlockDto ToDto(CodeBlockDefinition b) => new()
+    private static LibraryBlockDto ToDto(CodeBlockDefinition codeBlock) => new()
     {
-        Id = b.Id,
-        Name = b.Name,
-        Version = b.Version,
-        Description = b.Description,
-        Language = b.Language,
-        Source = b.Source,
-        Ports = b.Ports.Select(ToDto).ToList(),
+        Id = codeBlock.Id,
+        Name = codeBlock.Name,
+        Version = codeBlock.Version,
+        Description = codeBlock.Description,
+        Language = codeBlock.Language,
+        Source = codeBlock.Source,
+        Ports = codeBlock.Ports.Select(ToDto).ToList(),
     };
 
-    private static PortDto ToDto(CodePort p) => new()
+    private static PortDto ToDto(CodePort port) => new()
     {
-        Name = p.Name,
-        Type = p.Type,
-        Direction = p.Direction,
-        Unit = p.Unit,
-        Description = p.Description,
-        TestValue = p.TestValue is null ? null : FormatInitial(TypedValue.Coerce(p.TestValue, p.Type)),
+        Name = port.Name,
+        Type = port.Type,
+        Direction = port.Direction,
+        Unit = port.Unit,
+        Description = port.Description,
+        TestValue = port.TestValue is null ? null : FormatInitial(TypedValue.Coerce(port.TestValue, port.Type)),
     };
 
-    private static CodePort FromDto(PortDto p, string blockName)
+    private static CodePort FromDto(PortDto portDto, string blockName)
     {
         object? test = null;
-        if (p.TestValue is not null)
+        if (portDto.TestValue is not null)
         {
-            try { test = TypedValue.Parse(p.TestValue, p.Type); }
-            catch (TypeMismatchException ex) { throw new ProjectFormatException($"Baustein '{blockName}', Port '{p.Name}': {ex.Message}"); }
+            try { test = TypedValue.Parse(portDto.TestValue, portDto.Type); }
+            catch (TypeMismatchException ex) { throw new ProjectFormatException($"Baustein '{blockName}', Port '{portDto.Name}': {ex.Message}"); }
         }
-        return new CodePort(Require(p.Name, "Portname"), p.Type, p.Direction, p.Unit, p.Description, test);
+        return new CodePort(Require(portDto.Name, "Portname"), portDto.Type, portDto.Direction, portDto.Unit, portDto.Description, test);
     }
 
     private static CodeBlockDefinition FromDto(LibraryBlockDto dto)
@@ -296,52 +296,52 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             Language = dto.Language,
             Source = dto.Source ?? "",
         };
-        foreach (var p in dto.Ports ?? []) block.Ports.Add(FromDto(p, block.Name));
+        foreach (var portDto in dto.Ports ?? []) block.Ports.Add(FromDto(portDto, block.Name));
         return block;
     }
 
-    private static VariableDto ToDto(VariableDefinition v) => new()
+    private static VariableDto ToDto(VariableDefinition variable) => new()
     {
-        Name = v.Name,
-        Type = v.Type,
-        Initial = v.Initial is null ? null : FormatInitial(TypedValue.Coerce(v.Initial, v.Type)),
+        Name = variable.Name,
+        Type = variable.Type,
+        Initial = variable.Initial is null ? null : FormatInitial(TypedValue.Coerce(variable.Initial, variable.Type)),
     };
 
-    private static VariableDefinition FromDto(VariableDto v, string group)
+    private static VariableDefinition FromDto(VariableDto variableDto, string group)
     {
         object? initial = null;
-        if (v.Initial is not null)
+        if (variableDto.Initial is not null)
         {
-            try { initial = TypedValue.Parse(v.Initial, v.Type); }
-            catch (TypeMismatchException ex) { throw new ProjectFormatException($"Gruppe '{group}', Variable '{v.Name}': {ex.Message}"); }
+            try { initial = TypedValue.Parse(variableDto.Initial, variableDto.Type); }
+            catch (TypeMismatchException ex) { throw new ProjectFormatException($"Gruppe '{group}', Variable '{variableDto.Name}': {ex.Message}"); }
         }
-        return new VariableDefinition(Require(v.Name, "Variablenname"), v.Type, initial);
+        return new VariableDefinition(Require(variableDto.Name, "Variablenname"), variableDto.Type, initial);
     }
 
     private static string FormatInitial(object value) => value is string text ? text : TypedValue.Format(value);
 
     private static NodeDto ToDto(NodeDefinition node) => node switch
     {
-        GroupDefinition g => ToDto(g),
-        StepDefinition s when s.BlockType is not null => new StepDto
+        GroupDefinition group => ToDto(group),
+        StepDefinition step when step.BlockType is not null => new StepDto
         {
-            Id = s.Id,
-            Disabled = s.Disabled ? true : null,
-            BreakpointRule = s.BreakpointRule == BreakpointRule.Default ? null : s.BreakpointRule,
-            CodeBreakpointRules = s.CodeBreakpointRules.Count == 0 ? null : s.CodeBreakpointRules,
-            Name = s.Name,
-            Description = s.Description,
-            Block = s.BlockType,
-            Parameters = new Dictionary<string, string>(s.Parameters),
-            Storage = ToDto(s.Storage),
+            Id = step.Id,
+            Disabled = step.Disabled ? true : null,
+            BreakpointRule = step.BreakpointRule == BreakpointRule.Default ? null : step.BreakpointRule,
+            CodeBreakpointRules = step.CodeBreakpointRules.Count == 0 ? null : step.CodeBreakpointRules,
+            Name = step.Name,
+            Description = step.Description,
+            Block = step.BlockType,
+            Parameters = new Dictionary<string, string>(step.Parameters),
+            Storage = ToDto(step.Storage),
         },
-        StepDefinition s => throw new ProjectFormatException($"Schritt '{s.Name}' ({s.Id}) stammt nicht aus dem Bausteinkatalog und kann nicht gespeichert werden."),
+        StepDefinition step2 => throw new ProjectFormatException($"Schritt '{step2.Name}' ({step2.Id}) stammt nicht aus dem Bausteinkatalog und kann nicht gespeichert werden."),
         _ => throw new ProjectFormatException($"Unbekannter Knotentyp {node.GetType().Name}."),
     };
 
     private GroupDefinition FromDto(GroupDto dto)
     {
-        var g = new GroupDefinition(Require(dto.Id, "id"), dto.Name ?? dto.Id!)
+        var group = new GroupDefinition(Require(dto.Id, "id"), dto.Name ?? dto.Id!)
         {
             Description = dto.Description,
             Disabled = dto.Disabled == true,
@@ -353,32 +353,32 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             DutIdVariable = dto.DutIdVariable ?? "Kennung",
             Storage = FromDto(dto.Storage),
         };
-        RestoreDebugRules(g, dto);
+        RestoreDebugRules(group, dto);
         try
         {
-            g.EntryCondition = string.IsNullOrWhiteSpace(dto.Condition) ? null : dto.Condition;
+            group.EntryCondition = string.IsNullOrWhiteSpace(dto.Condition) ? null : dto.Condition;
         }
         catch (Exception ex)
         {
-            throw new ProjectFormatException($"Gruppe '{g.Name}': Bedingung ungültig – {ex.Message}");
+            throw new ProjectFormatException($"Gruppe '{group.Name}': Bedingung ungültig – {ex.Message}");
         }
 
-        var r = dto.Repeat ?? new RepeatDto();
-        g.Repetition = new Repetition(r.Mode, r.Count ?? 1, TimeSpan.FromMilliseconds(r.DurationMs ?? 0), r.Expression, r.StopWithinIteration == true);
+        var repeatDto = dto.Repeat ?? new RepeatDto();
+        group.Repetition = new Repetition(repeatDto.Mode, repeatDto.Count ?? 1, TimeSpan.FromMilliseconds(repeatDto.DurationMs ?? 0), repeatDto.Expression, repeatDto.StopWithinIteration == true);
 
-        foreach (var v in dto.Variables ?? []) g.Variables.Add(FromDto(v, g.Name));
-        if (dto.Resources is not null) g.Resources.AddRange(dto.Resources);
-        if (dto.Exit is not null) g.ExitGroup = FromDto(dto.Exit);
+        foreach (var variableDto in dto.Variables ?? []) group.Variables.Add(FromDto(variableDto, group.Name));
+        if (dto.Resources is not null) group.Resources.AddRange(dto.Resources);
+        if (dto.Exit is not null) group.ExitGroup = FromDto(dto.Exit);
         foreach (var child in dto.Children ?? [])
         {
-            g.Children.Add(child switch
+            group.Children.Add(child switch
             {
                 GroupDto cg => FromDto(cg),
-                StepDto s => FromStep(s),
+                StepDto stepDto => FromStep(stepDto),
                 _ => throw new ProjectFormatException("Unbekannter Knotentyp."),
             });
         }
-        return g;
+        return group;
     }
 
     private StepDefinition FromStep(StepDto dto)
@@ -410,67 +410,67 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         { throw new ProjectFormatException($"Haltebedingung in '{node.Name}' ungültig: {ex.Message}"); }
     }
 
-    private static CurveDto ToDto(CurveDefinition c) => new()
+    private static CurveDto ToDto(CurveDefinition curve) => new()
     {
-        Id = c.Id,
-        Name = c.Name,
-        Version = c.Version,
-        Description = c.Description,
-        SampleRate = c.SampleRate,
-        Times = c.Times is null ? null : Doubles(c.Times),
-        Channels = c.Channels.Select(ch => new CurveChannelDto { Id = ch.Id, Unit = ch.Unit, Samples = Doubles(ch.Samples) }).ToList(),
-        Origin = c.Origin,
-        Source = c.SourceText,
-        History = c.History.Count == 0 ? null : c.History.ToList(),
-        CreatedBy = c.CreatedBy,
-        CreatedAt = c.CreatedAt,
-        Quality = c.Quality,
-        Sha256 = c.ContentHash(),
+        Id = curve.Id,
+        Name = curve.Name,
+        Version = curve.Version,
+        Description = curve.Description,
+        SampleRate = curve.SampleRate,
+        Times = curve.Times is null ? null : Doubles(curve.Times),
+        Channels = curve.Channels.Select(ch => new CurveChannelDto { Id = ch.Id, Unit = ch.Unit, Samples = Doubles(ch.Samples) }).ToList(),
+        Origin = curve.Origin,
+        Source = curve.SourceText,
+        History = curve.History.Count == 0 ? null : curve.History.ToList(),
+        CreatedBy = curve.CreatedBy,
+        CreatedAt = curve.CreatedAt,
+        Quality = curve.Quality,
+        Sha256 = curve.ContentHash(),
     };
 
-    private static CurveDefinition FromDto(CurveDto d)
+    private static CurveDefinition FromDto(CurveDto curveDto)
     {
-        var name = d.Name ?? d.Id ?? "?";
+        var name = curveDto.Name ?? curveDto.Id ?? "?";
         double[] Read(string? b64, string what)
         {
             try
             {
                 var bytes = Convert.FromBase64String(b64 ?? "");
                 if (bytes.Length % 8 != 0) throw new FormatException();
-                var v = new double[bytes.Length / 8];
-                for (var i = 0; i < v.Length; i++) v[i] = System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(i * 8));
-                return v;
+                var samples = new double[bytes.Length / 8];
+                for (var index = 0; index < samples.Length; index++) samples[index] = System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(index * 8));
+                return samples;
             }
             catch (FormatException)
             {
                 throw new ProjectFormatException($"Kurve '{name}': {what} nicht lesbar.");
             }
         }
-        var c = new CurveDefinition
+        var curve = new CurveDefinition
         {
-            Id = Require(d.Id, "Kurven-id"),
+            Id = Require(curveDto.Id, "Kurven-id"),
             Name = name,
-            Version = Require(d.Version, "Kurvenversion"),
-            Description = d.Description,
-            SampleRate = d.SampleRate,
-            Times = d.Times is null ? null : Read(d.Times, "Zeitpunkte"),
-            Channels = (d.Channels ?? []).Select(ch => new CurveChannel(Require(ch.Id, "Kanal"), ch.Unit ?? "", Read(ch.Samples, $"Kanal {ch.Id}"))).ToList(),
-            Origin = d.Origin,
-            SourceText = d.Source ?? "",
-            History = d.History ?? [],
-            CreatedBy = d.CreatedBy ?? "",
-            CreatedAt = d.CreatedAt,
-            Quality = d.Quality,
+            Version = Require(curveDto.Version, "Kurvenversion"),
+            Description = curveDto.Description,
+            SampleRate = curveDto.SampleRate,
+            Times = curveDto.Times is null ? null : Read(curveDto.Times, "Zeitpunkte"),
+            Channels = (curveDto.Channels ?? []).Select(ch => new CurveChannel(Require(ch.Id, "Kanal"), ch.Unit ?? "", Read(ch.Samples, $"Kanal {ch.Id}"))).ToList(),
+            Origin = curveDto.Origin,
+            SourceText = curveDto.Source ?? "",
+            History = curveDto.History ?? [],
+            CreatedBy = curveDto.CreatedBy ?? "",
+            CreatedAt = curveDto.CreatedAt,
+            Quality = curveDto.Quality,
         };
-        if (d.Sha256 is { } hash && hash != c.ContentHash())
-            throw new ProjectFormatException($"Kurve '{name}' v{c.Version}: Inhalt passt nicht zum gespeicherten Hash (verändert?).");
-        return c;
+        if (curveDto.Sha256 is { } hash && hash != curve.ContentHash())
+            throw new ProjectFormatException($"Kurve '{name}' v{curve.Version}: Inhalt passt nicht zum gespeicherten Hash (verändert?).");
+        return curve;
     }
 
     private static string Doubles(double[] values)
     {
         var bytes = new byte[values.Length * 8];
-        for (var i = 0; i < values.Length; i++) System.Buffers.Binary.BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(i * 8), values[i]);
+        for (var index = 0; index < values.Length; index++) System.Buffers.Binary.BinaryPrimitives.WriteDoubleLittleEndian(bytes.AsSpan(index * 8), values[index]);
         return Convert.ToBase64String(bytes);
     }
 

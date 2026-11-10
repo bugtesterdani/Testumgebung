@@ -73,7 +73,7 @@ public sealed class HardwareAccessJournal(IResourceManager resources, IClock? cl
         {
             access = new Active(++_sequence, runId, station, binding.Name, binding.Key, operation, locked, _clock.Now);
             if (!_active.TryGetValue(binding.Key, out var list)) _active[binding.Key] = list = [];
-            var other = list.FirstOrDefault(a => a.RunId != runId);
+            var other = list.FirstOrDefault(active => active.RunId != runId);
             if (other is not null)
                 access.Conflict = $"gleichzeitig mit {other.Station} ({other.Resource}, {other.Operation})";
             else if (locked && !resources.IsHeldBy(binding.Key, runId))

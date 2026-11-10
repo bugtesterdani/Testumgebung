@@ -293,7 +293,7 @@ public static class SchemaScript
         foreach (var (version, statements) in dialect.Migrations)
         {
             sb.Append("-- Version ").Append(version).Append('\n');
-            foreach (var s in statements) sb.Append(s.Trim()).Append(";\n\n");
+            foreach (var statement in statements) sb.Append(statement.Trim()).Append(";\n\n");
             sb.Append($"INSERT INTO tu_schema_version (version, applied_utc) VALUES ({version}, 'manuell');\n\n");
         }
         return sb.ToString();

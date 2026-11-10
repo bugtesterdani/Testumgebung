@@ -52,13 +52,13 @@ public sealed class SimulatedOpcUaServer : IOpcUaClient
 
     internal static object? ParseValue(string text)
     {
-        var t = text.Trim();
-        if (t.StartsWith('"') && t.EndsWith('"') && t.Length >= 2) return t[1..^1];
-        if (t.Equals("true", StringComparison.OrdinalIgnoreCase)) return true;
-        if (t.Equals("false", StringComparison.OrdinalIgnoreCase)) return false;
-        if (long.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l)) return l;
-        if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var d)) return d;
-        return t;
+        var text2 = text.Trim();
+        if (text2.StartsWith('"') && text2.EndsWith('"') && text2.Length >= 2) return text2[1..^1];
+        if (text2.Equals("true", StringComparison.OrdinalIgnoreCase)) return true;
+        if (text2.Equals("false", StringComparison.OrdinalIgnoreCase)) return false;
+        if (long.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out var length)) return length;
+        if (double.TryParse(text2, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)) return number;
+        return text2;
     }
 
     public Task ConnectAsync(CancellationToken cancellationToken)
@@ -85,20 +85,20 @@ public sealed class SimulatedOpcUaServer : IOpcUaClient
         if (!_nodes.ContainsKey(nodeId)) throw new OpcUaException($"OPC-UA-Simulation: Knoten „{nodeId}“ unbekannt (nicht beschreibbar).");
         _nodes[nodeId] = value;
         if (_subscriptions.TryGetValue(nodeId, out var subs))
-            lock (subs) foreach (var s in subs) s.Push(value);
+            lock (subs) foreach (var subscription in subs) subscription.Push(value);
         return Task.FromResult(0);
     }
 
     public Task<IReadOnlyList<object?>> CallAsync(string objectNodeId, string methodNodeId, IReadOnlyList<object?> arguments, CancellationToken cancellationToken)
     {
         EnsureConnected();
-        var method = _methods.FirstOrDefault(m => m.Objekt == objectNodeId && m.Node == methodNodeId)
+        var method = _methods.FirstOrDefault(method2 => method2.Objekt == objectNodeId && method2.Node == methodNodeId)
             ?? throw new OpcUaException($"OPC-UA-Simulation: Methode „{methodNodeId}“ an „{objectNodeId}“ unbekannt.");
         IReadOnlyList<object?> result = method.Kind switch
         {
             "konstante" => [method.Constant],
             "spiegeln" => [.. arguments.Reverse()],
-            _ => [arguments.Sum(a => Convert.ToDouble(a, CultureInfo.InvariantCulture))],
+            _ => [arguments.Sum(argument => Convert.ToDouble(argument, CultureInfo.InvariantCulture))],
         };
         return Task.FromResult(result);
     }

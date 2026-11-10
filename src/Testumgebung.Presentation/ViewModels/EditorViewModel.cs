@@ -43,21 +43,21 @@ public sealed partial class EditorViewModel : ObservableObject
         Project = project;
 
         _palette = Catalog.All
-            .Where(b => b.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download))
-            .GroupBy(b => b.Category)
-            .Select(g => new PaletteCategory(g.Key, g.Select(b => new PaletteItem(b.Type, b.DisplayName, b.Description, IconFor(b.Type))).ToList()))
+            .Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download))
+            .GroupBy(block => block.Category)
+            .Select(group => new PaletteCategory(group.Key, group.Select(block => new PaletteItem(block.Type, block.DisplayName, block.Description, IconFor(block.Type))).ToList()))
             .Append(new PaletteCategory("Struktur", [new PaletteItem(null, "Gruppe", "Untergruppe mit Variablen, Bedingung, Wiederholung und Exit-Gruppe.", NodeIcon.Group)]))
             .Append(new PaletteCategory("Steuerung", ControlBlocks))
             .ToList();
 
-        InsertCommand = new RelayCommand(p => { if (p is PaletteItem item) Insert(item); });
+        InsertCommand = new RelayCommand(parameter => { if (parameter is PaletteItem item) Insert(item); });
         DeleteCommand = new RelayCommand(() => Delete(SelectedNode), () => CanDelete(SelectedNode));
         MoveUpCommand = new RelayCommand(() => MoveBy(SelectedNode, -1), () => SelectedNode?.CanMove == true);
         MoveDownCommand = new RelayCommand(() => MoveBy(SelectedNode, +1), () => SelectedNode?.CanMove == true);
         IndentCommand = new RelayCommand(() => Indent(SelectedNode), () => SelectedNode?.CanMove == true);
         OutdentCommand = new RelayCommand(() => Outdent(SelectedNode), () => SelectedNode?.CanMove == true);
-        ToggleEnabledCommand = new RelayCommand(() => { if (SelectedNode is { } n) SetNodeEnabled(n, n.Definition.Disabled); }, () => SelectedNode is { IsSection: false });
-        ToggleBreakpointCommand = new RelayCommand(p => ToggleBreakpoint(p as NodeViewModel ?? SelectedNode), _ => _breakpoints is not null);
+        ToggleEnabledCommand = new RelayCommand(() => { if (SelectedNode is { } node) SetNodeEnabled(node, node.Definition.Disabled); }, () => SelectedNode is { IsSection: false });
+        ToggleBreakpointCommand = new RelayCommand(parameter => ToggleBreakpoint(parameter as NodeViewModel ?? SelectedNode), _ => _breakpoints is not null);
         ShowProjectCommand = new RelayCommand(() => SelectedNode = null);
         NewCommand = new RelayCommand(NewProject);
         OpenCommand = new RelayCommand(Open, () => _dialogs is not null);
@@ -161,8 +161,8 @@ public sealed partial class EditorViewModel : ObservableObject
             if (_selected is not null) _selected.IsSelected = true;
             OnPropertyChanged();
             Properties = _selected?.InlineProperties ?? new ProjectPropertiesViewModel(this);
-            foreach (var c in new[] { DeleteCommand, MoveUpCommand, MoveDownCommand, IndentCommand, OutdentCommand, ToggleBreakpointCommand, ToggleEnabledCommand, CopyCommand, CutCommand, DuplicateCommand })
-                c.RaiseCanExecuteChanged();
+            foreach (var relayCommand in new[] { DeleteCommand, MoveUpCommand, MoveDownCommand, IndentCommand, OutdentCommand, ToggleBreakpointCommand, ToggleEnabledCommand, CopyCommand, CutCommand, DuplicateCommand })
+                relayCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -180,22 +180,22 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             _breakpoints = value;
             SynchronizeBreakpointRules();
-            foreach (var n in AllNodes()) n.HasBreakpoint = value?.HasBreakpoint(n.Id) ?? false;
+            foreach (var node in AllNodes()) node.HasBreakpoint = value?.HasBreakpoint(node.Id) ?? false;
             ToggleBreakpointCommand.RaiseCanExecuteChanged();
             Properties?.Options?.Refresh();
         }
     }
 
-    public IEnumerable<NodeViewModel> AllNodes() => Nodes.SelectMany(n => n.SelfAndDescendants());
+    public IEnumerable<NodeViewModel> AllNodes() => Nodes.SelectMany(node => node.SelfAndDescendants());
 
-    public NodeViewModel? FindNode(string id) => AllNodes().FirstOrDefault(n => n.Id == id);
+    public NodeViewModel? FindNode(string id) => AllNodes().FirstOrDefault(node => node.Id == id);
 
     // ------------------------------------------------------------------ Struktur
 
     /// <summary>Baut die Kartenliste aus der Definition neu auf; Auf-/Zuklappzustand und Auswahl bleiben erhalten.</summary>
     public void RebuildTree(string? selectId = null)
     {
-        var expanded = AllNodes().ToDictionary(n => n.Id, n => n.IsExpanded);
+        var expanded = AllNodes().ToDictionary(node => node.Id, node => node.IsExpanded);
         selectId ??= SelectedNode?.Id;
         _selected = null;
         Nodes.Clear();
@@ -210,16 +210,16 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             var node = new NodeViewModel(block.Body, null, isSection: true)
             {
-                Note = $"Baustein v{block.Version} · " + (block.Ports.Count == 0 ? "ohne Ports" : string.Join(", ", block.Ports.Select(p => p.Name))),
+                Note = $"Baustein v{block.Version} · " + (block.Ports.Count == 0 ? "ohne Ports" : string.Join(", ", block.Ports.Select(port => port.Name))),
             };
             AddChildren(node);
             Nodes.Add(node);
         }
-        foreach (var n in AllNodes())
+        foreach (var node2 in AllNodes())
         {
-            n.Editor = this;
-            if (expanded.TryGetValue(n.Id, out var e)) n.IsExpanded = e;
-            n.HasBreakpoint = _breakpoints?.HasBreakpoint(n.Id) ?? false;
+            node2.Editor = this;
+            if (expanded.TryGetValue(node2.Id, out var enabled)) node2.IsExpanded = enabled;
+            node2.HasBreakpoint = _breakpoints?.HasBreakpoint(node2.Id) ?? false;
         }
         SynchronizeBreakpointRules();
         Renumber();
@@ -230,18 +230,18 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private static void AddChildren(NodeViewModel node)
     {
-        if (node.Group is not { } g) return;
-        foreach (var child in g.Children)
+        if (node.Group is not { } group) return;
+        foreach (var child in group.Children)
         {
-            var c = new NodeViewModel(child, node);
-            AddChildren(c);
-            node.Children.Add(c);
+            var node2 = new NodeViewModel(child, node);
+            AddChildren(node2);
+            node.Children.Add(node2);
         }
-        if (g.ExitGroup is { } exit)
+        if (group.ExitGroup is { } exit)
         {
-            var e = new NodeViewModel(exit, node, isExit: true);
-            AddChildren(e);
-            node.Children.Add(e);
+            var node3 = new NodeViewModel(exit, node, isExit: true);
+            AddChildren(node3);
+            node.Children.Add(node3);
         }
     }
 
@@ -255,11 +255,11 @@ public sealed partial class EditorViewModel : ObservableObject
 
         static void Number(NodeViewModel parent, string prefix)
         {
-            var i = 0;
-            foreach (var c in parent.Children)
+            var index = 0;
+            foreach (var node in parent.Children)
             {
-                c.Number = c.IsExit ? $"{prefix}E" : $"{prefix}{++i}";
-                Number(c, c.Number + ".");
+                node.Number = node.IsExit ? $"{prefix}E" : $"{prefix}{++index}";
+                Number(node, node.Number + ".");
             }
         }
     }
@@ -268,15 +268,15 @@ public sealed partial class EditorViewModel : ObservableObject
     public void Validate()
     {
         Diagnostics.Clear();
-        foreach (var d in Project.Definition.Validate()) Diagnostics.Add(d);
-        foreach (var n in AllNodes())
+        foreach (var validate in Project.Definition.Validate()) Diagnostics.Add(validate);
+        foreach (var node in AllNodes())
         {
-            n.Diagnostic = null;
-            if (n.Step is { } s)
+            node.Diagnostic = null;
+            if (node.Step is { } step)
             {
-                var diag = DiagnosticsFor(s).FirstOrDefault();
-                n.Diagnostic = diag;
-                if (diag is not null && !n.IsInactive) Diagnostics.Add($"{n.Number} {n.Name}: {diag}");
+                var diag = DiagnosticsFor(step).FirstOrDefault();
+                node.Diagnostic = diag;
+                if (diag is not null && !node.IsInactive) Diagnostics.Add($"{node.Number} {node.Name}: {diag}");
             }
         }
         OnPropertyChanged(nameof(HasDiagnostics));
@@ -291,7 +291,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var id = step.Parameters.GetValueOrDefault("Baustein");
         if (string.IsNullOrWhiteSpace(id)) return ["Kein Baustein aus der Bibliothek gewählt."];
         if (list.Count > 0) return list;
-        var block = BlockRefsFor(step.BlockType).FirstOrDefault(b => b.Id == id);
+        var block = BlockRefsFor(step.BlockType).FirstOrDefault(blockRef => blockRef.Id == id);
         if (block is null) return [$"Baustein '{id}' ist nicht in der Bibliothek."];
         if (step.BlockType == BlockCatalog.GroupBlock && Project.Definition.OwningGroupBlock(step.Id) is { } owner && owner.Id == id)
             return ["Ein grafischer Baustein darf sich nicht selbst aufrufen."];
@@ -325,10 +325,10 @@ public sealed partial class EditorViewModel : ObservableObject
 
     /// <summary>Auswählbare Bausteine für einen Baustein-Schritt (Code- oder Gruppenbausteine).</summary>
     public IReadOnlyList<BlockRef> BlockRefsFor(string? blockType) => blockType == BlockCatalog.GroupBlock
-        ? Project.Definition.GroupLibrary.Select(b => new BlockRef(b.Id, b.Name,
-            $"Grafisch · v{b.Version}{(string.IsNullOrWhiteSpace(b.Description) ? "" : " · " + b.Description)}", b.Ports)).ToList()
-        : Library.Select(b => new BlockRef(b.Id, b.Name,
-            $"{BlockCatalog.LanguageText(b.Language)} · v{b.Version}{(string.IsNullOrWhiteSpace(b.Description) ? "" : " · " + b.Description)}", b.Ports)).ToList();
+        ? Project.Definition.GroupLibrary.Select(groupBlock => new BlockRef(groupBlock.Id, groupBlock.Name,
+            $"Grafisch · v{groupBlock.Version}{(string.IsNullOrWhiteSpace(groupBlock.Description) ? "" : " · " + groupBlock.Description)}", groupBlock.Ports)).ToList()
+        : Library.Select(codeBlock => new BlockRef(codeBlock.Id, codeBlock.Name,
+            $"{BlockCatalog.LanguageText(codeBlock.Language)} · v{codeBlock.Version}{(string.IsNullOrWhiteSpace(codeBlock.Description) ? "" : " · " + codeBlock.Description)}", codeBlock.Ports)).ToList();
 
     public bool CanCreateGroupBlock(NodeViewModel? node)
         => node is { IsGroup: true, IsSection: false, IsExit: false, Parent: not null };
@@ -341,7 +341,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (!CanCreateGroupBlock(node)) return ["Diese Gruppe kann nicht umgewandelt werden."];
         var id = NewLibraryId(node.Name);
-        while (Project.Definition.GroupLibrary.Any(b => b.Id == id) || Project.Definition.Find(id + ".koerper") is not null) id += "-g";
+        while (Project.Definition.GroupLibrary.Any(groupBlock => groupBlock.Id == id) || Project.Definition.Find(id + ".koerper") is not null) id += "-g";
         var (_, step, warnings) = GroupBlockConverter.Convert(Project.Definition, node.Group!, id, Catalog);
         MarkChanged();
         RebuildTree(selectId: step.Id);
@@ -391,17 +391,17 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public string NewLibraryId(string name)
     {
-        var baseId = new string(name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray()).Trim('-');
+        var baseId = new string(name.ToLowerInvariant().Select(toLowerInvariant => char.IsLetterOrDigit(toLowerInvariant) ? toLowerInvariant : '-').ToArray()).Trim('-');
         if (baseId.Length == 0) baseId = "baustein";
         var id = baseId;
-        var n = 1;
-        while (Library.Any(b => b.Id == id)) id = $"{baseId}-{++n}";
+        var index = 1;
+        while (Library.Any(codeBlock => codeBlock.Id == id)) id = $"{baseId}-{++index}";
         return id;
     }
 
     public string NewId(string prefix)
     {
-        var existing = new HashSet<string>(Project.Definition.AllNodes().Select(n => n.Id));
+        var existing = new HashSet<string>(Project.Definition.AllNodes().Select(node => node.Id));
         string id;
         do id = $"{prefix}{++_idCounter}";
         while (existing.Contains(id));
@@ -471,9 +471,9 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (node?.CanMove != true) return;
         var list = node.Parent!.Group!.Children;
-        var i = list.IndexOf(node.Definition) + delta;
-        if (i < 0 || i >= list.Count) return;
-        Move(node, node.Parent, delta > 0 ? i + 1 : i);
+        var index = list.IndexOf(node.Definition) + delta;
+        if (index < 0 || index >= list.Count) return;
+        Move(node, node.Parent, delta > 0 ? index + 1 : index);
     }
 
     /// <summary>In die vorherige Geschwistergruppe einrücken.</summary>
@@ -481,9 +481,9 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         if (node?.CanMove != true) return;
         var list = node.Parent!.Group!.Children;
-        var i = list.IndexOf(node.Definition);
-        if (i <= 0 || list[i - 1] is not GroupDefinition) return;
-        var target = node.Parent.Children.First(c => c.Definition == list[i - 1]);
+        var index = list.IndexOf(node.Definition);
+        if (index <= 0 || list[index - 1] is not GroupDefinition) return;
+        var target = node.Parent.Children.First(node2 => node2.Definition == list[index - 1]);
         Move(node, target, target.Group!.Children.Count);
     }
 

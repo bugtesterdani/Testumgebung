@@ -11,7 +11,7 @@ internal static class NativeBreakpointContext
     {
         if (!inspect || e.Kind != "line" || e.InspectNativeAsync is null) return e;
         var native = await e.InspectNativeAsync(token).ConfigureAwait(false);
-        var values = e.Variables.ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal);
+        var values = e.Variables.ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
         foreach (var (name, value) in native.Variables) values[name] = Scalar(value);
         return e with { Variables = values, InspectNativeAsync = _ => Task.FromResult(native) };
     }

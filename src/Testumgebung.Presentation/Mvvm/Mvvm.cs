@@ -27,7 +27,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
 
     protected void OnPropertiesChanged(params string[] names)
     {
-        foreach (var n in names) OnPropertyChanged(n);
+        foreach (var name in names) OnPropertyChanged(name);
     }
 }
 

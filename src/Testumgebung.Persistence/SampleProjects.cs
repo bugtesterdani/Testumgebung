@@ -18,9 +18,9 @@ public static class SampleProjects
 {
     public static TestProject AcPruefung(BlockCatalog? catalog = null)
     {
-        var c = catalog ?? BlockCatalog.Default;
-        StepDefinition S(string type, string id, string name, params (string Key, string Value)[] p)
-            => c.Create(type, id, name, p.ToDictionary(x => x.Key, x => x.Value));
+        var blockCatalog = catalog ?? BlockCatalog.Default;
+        StepDefinition S(string type, string id, string name, params (string Key, string Value)[] entry)
+            => blockCatalog.Create(type, id, name, entry.ToDictionary(entry2 => entry2.Key, entry2 => entry2.Value));
 
         var init = new GroupDefinition("init", "Test Start / Init")
             .Add(
@@ -119,39 +119,39 @@ public static class SampleProjects
         var random = new Random(seed);
         var adapter = new SimulationAdapter();
         var registry = new HardwareRegistry();
-        foreach (var r in project.Simulation)
+        foreach (var resource in project.Simulation)
         {
-            adapter.Channel(r.Channel, new ChannelCapabilities(r.Unit, r.Min, r.Max));
-            if (r.Noise > 0)
+            adapter.Channel(resource.Channel, new ChannelCapabilities(resource.Unit, resource.Min, resource.Max));
+            if (resource.Noise > 0)
             {
-                var value = r.Value;
-                var noise = r.Noise;
-                adapter.SetInput(r.Channel, () =>
+                var value = resource.Value;
+                var noise = resource.Noise;
+                adapter.SetInput(resource.Channel, () =>
                 {
                     lock (random) return Math.Round(value + (random.NextDouble() * 2 - 1) * noise, 3);
                 });
             }
-            else if (r.Value != 0)
+            else if (resource.Value != 0)
             {
-                adapter.SetInput(r.Channel, r.Value);
+                adapter.SetInput(resource.Channel, resource.Value);
             }
-            if (r.Frequency > 0) adapter.SetSine(r.Channel, r.Value, r.Frequency, r.Phase);
-            registry.Bind(r.Name, adapter, r.Channel, r.RequiresLock);
+            if (resource.Frequency > 0) adapter.SetSine(resource.Channel, resource.Value, resource.Frequency, resource.Phase);
+            registry.Bind(resource.Name, adapter, resource.Channel, resource.RequiresLock);
         }
-        foreach (var o in project.SimulationOutputs)
+        foreach (var output in project.SimulationOutputs)
         {
-            var rates = o.SampleRates.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => double.Parse(x, CultureInfo.InvariantCulture)).ToList();
-            var feedback = o.Feedback.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Split('=', 2, StringSplitOptions.TrimEntries)).Where(x => x.Length == 2).ToDictionary(x => x[0], x => x[1]);
-            adapter.ConfigureOutput(o.Channel, new OutputCapabilities($"{o.Name} (Simulation)", o.Unit, o.Min, o.Max,
-                o.Channels.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), rates, o.ExplicitTimes, o.MaxSamples), feedback);
-            registry.Bind(o.Name, adapter, o.Channel, o.RequiresLock);
+            var rates = output.SampleRates.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(entry => double.Parse(entry, CultureInfo.InvariantCulture)).ToList();
+            var feedback = output.Feedback.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(entry => entry.Split('=', 2, StringSplitOptions.TrimEntries)).Where(parts => parts.Length == 2).ToDictionary(parts => parts[0], parts => parts[1]);
+            adapter.ConfigureOutput(output.Channel, new OutputCapabilities($"{output.Name} (Simulation)", output.Unit, output.Min, output.Max,
+                output.Channels.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), rates, output.ExplicitTimes, output.MaxSamples), feedback);
+            registry.Bind(output.Name, adapter, output.Channel, output.RequiresLock);
         }
-        foreach (var c in project.SimulationComm)
+        foreach (var communication in project.SimulationComm)
         {
-            adapter.ConfigureCommunication(c.Channel, Testumgebung.Hardware.CommSimulation.Create(c.Kind, c.Rules, seed));
-            registry.Bind(c.Name, adapter, c.Channel, c.RequiresLock);
+            adapter.ConfigureCommunication(communication.Channel, Testumgebung.Hardware.CommSimulation.Create(communication.Kind, communication.Rules, seed));
+            registry.Bind(communication.Name, adapter, communication.Channel, communication.RequiresLock);
         }
         return (adapter, registry);
     }

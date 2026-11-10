@@ -52,8 +52,8 @@ public sealed class SimulatedIdentityProvider(Func<string> displayName) : IIdent
     public static string ToUpn(string name)
     {
         var local = new string(name.ToLowerInvariant().Replace(" ", "", StringComparison.Ordinal)
-            .Select(c => c switch { 'ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 's', _ => c })
-            .Where(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_').ToArray());
+            .Select(replace => replace switch { 'ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 's', _ => replace })
+            .Where(replace => char.IsAsciiLetterOrDigit(replace) || replace is '.' or '-' or '_').ToArray());
         return local + "@simuliert.local";
     }
 }
@@ -120,7 +120,7 @@ public sealed class AccessConfig
     [JsonIgnore]
     public bool SupportsLocalDevelopment => AllowLocalDevelopment && !AllowLocalPasswords && LoadError is null
         && string.IsNullOrWhiteSpace(ClientId) && string.IsNullOrWhiteSpace(TenantId)
-        && RightsSource.Equals("Lokal", StringComparison.OrdinalIgnoreCase) && Users.Any(u => u.Develop);
+        && RightsSource.Equals("Lokal", StringComparison.OrdinalIgnoreCase) && Users.Any(user => user.Develop);
 
     /// <summary>
     /// Rechtequelle (Abschnitt 15): „Lokal“ (Liste je Prüfplatz, Standard), „AppRollen“ (zentral über Entra-App-Rollen) oder
@@ -155,7 +155,7 @@ public sealed class AccessConfig
     [JsonIgnore] public bool UsesEntra => !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(TenantId);
 
     public UserRights RightsFor(string upn)
-        => Users.FirstOrDefault(u => string.Equals(u.Upn.Trim(), upn.Trim(), StringComparison.OrdinalIgnoreCase))?.Rights ?? UserRights.None;
+        => Users.FirstOrDefault(user => string.Equals(user.Upn.Trim(), upn.Trim(), StringComparison.OrdinalIgnoreCase))?.Rights ?? UserRights.None;
 }
 
 public sealed class AccessConfigStore(string path)

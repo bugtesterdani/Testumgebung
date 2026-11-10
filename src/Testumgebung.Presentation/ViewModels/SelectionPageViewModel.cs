@@ -42,9 +42,9 @@ public sealed class SelectionRuleRow(SelectionRule rule, SelectionPageViewModel 
         get => string.IsNullOrWhiteSpace(Rule.Version) ? "aktuelle freigegebene" : Rule.Version;
         set
         {
-            var v = string.IsNullOrWhiteSpace(value) || value.Trim().StartsWith("aktuell", StringComparison.OrdinalIgnoreCase) ? null : value.Trim();
-            if (Rule.Version == v) return;
-            Rule.Version = v;
+            var value2 = string.IsNullOrWhiteSpace(value) || value.Trim().StartsWith("aktuell", StringComparison.OrdinalIgnoreCase) ? null : value.Trim();
+            if (Rule.Version == value2) return;
+            Rule.Version = value2;
             OnPropertiesChanged(nameof(Version), nameof(ReleasedText), nameof(IsReleased));
             owner.Edited();
         }
@@ -129,7 +129,7 @@ public sealed class SelectionPageViewModel : ObservableObject
     }
 
     public IReadOnlyList<AvailableTest> Tests => _tests();
-    public IReadOnlyList<string> TestNames => Tests.Select(t => t.Name).Distinct().ToList();
+    public IReadOnlyList<string> TestNames => Tests.Select(program => program.Name).Distinct().ToList();
 
     public RelayCommand AddRuleCommand { get; }
     public RelayCommand RemoveRuleCommand { get; }
@@ -172,7 +172,7 @@ public sealed class SelectionPageViewModel : ObservableObject
     private void RefreshStations()
     {
         StationNames.Clear();
-        foreach (var s in _coordinator.Setup.Stations) StationNames.Add(s.Name);
+        foreach (var station in _coordinator.Setup.Stations) StationNames.Add(station.Name);
         if (_selectedStation is null || !StationNames.Contains(_selectedStation)) _selectedStation = StationNames.FirstOrDefault();
         OnPropertyChanged(nameof(SelectedStation));
     }
@@ -185,7 +185,7 @@ public sealed class SelectionPageViewModel : ObservableObject
             ? new SelectionConfig { UseManual = true, UseRules = true }
             : System.Text.Json.JsonSerializer.Deserialize<SelectionConfig>(System.Text.Json.JsonSerializer.Serialize(current))!;
         Rules.Clear();
-        foreach (var r in _draft.Rules.OrderBy(r => r.Priority)) Rules.Add(new SelectionRuleRow(r, this));
+        foreach (var selectionRule in _draft.Rules.OrderBy(selectionRule2 => selectionRule2.Priority)) Rules.Add(new SelectionRuleRow(selectionRule, this));
         IsDirty = false;
         Error = null;
         _simulation = null;
@@ -246,9 +246,9 @@ public sealed class SelectionPageViewModel : ObservableObject
         get => _draft.CustomProject ?? "";
         set
         {
-            var v = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-            if (_draft.CustomProject == v) return;
-            _draft.CustomProject = v;
+            var value2 = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            if (_draft.CustomProject == value2) return;
+            _draft.CustomProject = value2;
             OnPropertyChanged();
             Edited();
         }
@@ -274,7 +274,7 @@ public sealed class SelectionPageViewModel : ObservableObject
     {
         var rule = new SelectionRule
         {
-            Priority = _draft.Rules.Count == 0 ? 1 : _draft.Rules.Max(r => r.Priority) + 1,
+            Priority = _draft.Rules.Count == 0 ? 1 : _draft.Rules.Max(selectionRule => selectionRule.Priority) + 1,
             Pattern = "SN-*",
             Test = TestNames.FirstOrDefault() ?? "",
         };
@@ -315,7 +315,7 @@ public sealed class SelectionPageViewModel : ObservableObject
     public string SimulationTest => _simulation?.Test?.Title ?? "—";
     public string SimulationOrder => _simulation?.Order ?? "—";
     public string SimulationSource => _simulation?.Source ?? "";
-    public string SimulationParameters => _simulation is { Parameters.Count: > 0 } s ? string.Join(", ", s.Parameters.Select(kv => $"{kv.Key} = {kv.Value}")) : "—";
+    public string SimulationParameters => _simulation is { Parameters.Count: > 0 } selectionOutcome ? string.Join(", ", selectionOutcome.Parameters.Select(kv => $"{kv.Key} = {kv.Value}")) : "—";
 
     private void RaiseSimulation() => OnPropertiesChanged(nameof(Simulation), nameof(SimulationOk), nameof(HasSimulation), nameof(SimulationText),
         nameof(SimulationTest), nameof(SimulationOrder), nameof(SimulationSource), nameof(SimulationParameters));
@@ -379,7 +379,7 @@ public sealed class SelectionPageViewModel : ObservableObject
             Error = "Für den eigenen Auswahlablauf eine Projektdatei wählen.";
             return;
         }
-        var bad = _draft.Rules.Where(r => string.IsNullOrWhiteSpace(r.Pattern) || string.IsNullOrWhiteSpace(r.Test)).ToList();
+        var bad = _draft.Rules.Where(selectionRule => string.IsNullOrWhiteSpace(selectionRule.Pattern) || string.IsNullOrWhiteSpace(selectionRule.Test)).ToList();
         if (_useSelection && _draft.UseRules && bad.Count > 0)
         {
             Error = "Jede Regel braucht ein Kennungsmuster und eine Testkennung.";
