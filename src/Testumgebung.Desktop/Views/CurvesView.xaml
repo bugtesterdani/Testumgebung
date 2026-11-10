@@ -268,6 +268,21 @@
 
                     <!-- Vorschau -->
                     <TextBlock Style="{StaticResource SectionTitle}" Text="Vorschau" Margin="0,8,0,4" />
+                    <StackPanel Visibility="{Binding PointEditor.CanEdit, Converter={StaticResource BoolVis}}" Margin="0,0,0,6">
+                        <CheckBox Content="Kurvenpunkte bearbeiten" IsChecked="{Binding PointEditor.IsEnabled}" />
+                        <StackPanel Visibility="{Binding PointEditor.IsEnabled, Converter={StaticResource BoolVis}}">
+                            <TextBlock TextWrapping="Wrap" Text="Kurvenlinie mit der linken Maustaste greifen und nach oben oder unten ziehen. Mausrad drücken oder Strg+Klick setzt oder löst einen Fixpunkt. Esc verwirft die laufende Verschiebung." />
+                            <ItemsControl ItemsSource="{Binding PointEditor.Pins}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveCommand}" Margin="0,4,6,0"
+                                            ToolTip="Fixpunkt lösen">
+                                        <TextBlock><Run Text="◆ " /><Run Text="{Binding Label, Mode=OneWay}" /><Run Text="  ×" /></TextBlock>
+                                    </Button>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
                     <views:WaveformPlot DataContext="{Binding Plot}" Height="340" />
 
                     <!-- Bearbeitung -->
