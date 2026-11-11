@@ -48,6 +48,12 @@ zu den nächsten Fixpunkten desselben Kanals aus. Ohne Fixpunkt auf einer Seite 
 direkte Nachbar unverändert. Fixpunkte gehören zur Bearbeitungsansicht. In der gespeicherten
 Version stehen weiterhin die Zeitpunkte und Messwerte im bestehenden Format.
 
+Ab Version 1.2.6 öffnet **Punktetabelle öffnen …** in der Arbeitskopie ein eigenes Fenster.
+Dort lassen sich je Linie Zeit in Sekunden und Wert bearbeiten sowie Punkte hinzufügen oder entfernen.
+**Übernehmen** aktualisiert die Arbeitskopie und erzeugt einen Rückgängig-Schritt. Die dauerhafte
+Speicherung erfolgt über **Version speichern**. Die Linien teilen weiterhin ein Zeitraster. Zeitpunkte
+anderer Linien können in der bearbeiteten Linie als interpolierte Werte sichtbar bleiben.
+
 ## Ausgabe
 
 * `IWaveformOutputAdapter`: `LoadAsync`, `TransferAsync`, `StartAsync`, `StopAsync` mit Zustand
