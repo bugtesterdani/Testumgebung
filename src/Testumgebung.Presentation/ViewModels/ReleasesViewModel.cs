@@ -402,7 +402,8 @@ public sealed partial class ReleasesViewModel : ObservableObject
     {
         var names = _hub.All.Select(release => release.ProjectName)
             .Concat(_stations.SelectMany(station => station.Coordinator?.Setup.ExampleProjects ?? []).Select(project => project.Definition.Name))
-            .Append(_editor.Project.Definition.Name).Distinct().OrderBy(name => name).ToList();
+            .Append(_editor.Project.Definition.Name).Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct().OrderBy(name => name).ToList();
         var rows = new List<ReleaseProgramRow>();
         foreach (var name in names)
         {

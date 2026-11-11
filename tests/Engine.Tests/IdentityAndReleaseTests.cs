@@ -429,6 +429,8 @@ public sealed class IdentityAndReleaseTests : IDisposable
         step.Parameters["Untergrenze"] = "225";
         BlockCatalog.Default.Rebuild(step);
         await Release(shell, ui, "1.7");
+        Assert.Null(hub.CurrentInfo(null));
+        Assert.Null(hub.CurrentInfo(" "));
         Assert.Equal("1.7", hub.CurrentInfo("AC-Prüfung")!.Version);
 
         await Rest(ui, s);

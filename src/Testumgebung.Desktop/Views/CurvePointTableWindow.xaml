@@ -51,13 +51,13 @@
             <Label Content="_Seite" Target="{Binding ElementName=PageInput}" VerticalAlignment="Center" />
             <TextBox x:Name="PageInput" Width="64" VerticalContentAlignment="Center" />
             <TextBlock x:Name="PageTotal" VerticalAlignment="Center" Margin="6,0" />
-            <Button Style="{StaticResource ToolButton}" Content="Öffnen" Click="JumpPage" />
+            <Button x:Name="Jump" Style="{StaticResource ToolButton}" Content="Öffnen" Click="JumpPage" />
         </WrapPanel>
 
         <DockPanel Grid.Row="5" Margin="0,12,0,0">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
                 <Button Style="{StaticResource OutlineButton}" Content="Abbrechen" IsCancel="True" Margin="0,0,8,0" />
-                <Button Style="{StaticResource PrimaryButton}" Content="Übernehmen" Click="Apply" />
+                <Button x:Name="ApplyChanges" Style="{StaticResource PrimaryButton}" Content="Übernehmen" Click="Apply" />
             </StackPanel>
             <TextBlock x:Name="Error" Style="{StaticResource ErrorText}" TextWrapping="Wrap" Margin="0,0,8,0" />
         </DockPanel>

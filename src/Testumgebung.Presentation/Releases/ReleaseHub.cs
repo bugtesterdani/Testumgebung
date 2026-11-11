@@ -105,8 +105,9 @@ public sealed partial class ReleaseHub : IAsyncDisposable
         return (entry.Info, _serializer.Deserialize(entry.Json));
     }
 
-    public ReleaseInfo? CurrentInfo(string projectName)
+    public ReleaseInfo? CurrentInfo(string? projectName)
     {
+        if (string.IsNullOrWhiteSpace(projectName)) return null;
         lock (_gate) return _released.TryGetValue(projectName, out var entry) ? entry.Info : null;
     }
 
