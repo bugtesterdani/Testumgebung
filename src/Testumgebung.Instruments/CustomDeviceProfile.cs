@@ -14,7 +14,8 @@ public enum CustomDeviceInterface
     USB,
     LAN,
     GPIB,
-    VISA
+    VISA,
+    RS485
 }
 
 /// <summary>Portable, project-owned definition of a numeric text-protocol instrument.</summary>
@@ -80,7 +81,9 @@ public sealed class CustomDeviceChannel
     public string WriteCommand { get; set; } = "";
     public string Description { get; set; } = "";
 
-    public IReadOnlyList<string> Validate(bool splitCommandSequences = false)
+    public IReadOnlyList<string> Validate() => Validate(splitCommandSequences: false);
+
+    internal IReadOnlyList<string> Validate(bool splitCommandSequences)
     {
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(Name)) errors.Add("Kanalname fehlt.");

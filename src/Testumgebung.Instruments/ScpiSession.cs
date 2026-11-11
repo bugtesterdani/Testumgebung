@@ -123,15 +123,48 @@ public sealed class ScpiSession : IDisposable
         {
             await PrepareAsync(ct).ConfigureAwait(false);
             await SendAsync(command, ct).ConfigureAwait(false);
-            var reply = await ReceiveAsync(timeout ?? Timeout, ct).ConfigureAwait(false);
-            var text = Encoding.ASCII.GetString(reply).TrimEnd('\r', '\n');
-            Note("← " + (text.Length > 200 ? text[..200] + "…" : text));
-            return text;
+            return await ReceiveTextAsync(timeout ?? Timeout, ct).ConfigureAwait(false);
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    internal async Task<string> ExecuteCustomAsync(
+        IReadOnlyList<CustomCommand> commands, bool readReply, CancellationToken ct, List<Exception>? failures = null)
+    {
+        await _gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            foreach (var command in commands)
+            {
+                try
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await PrepareAsync(ct).ConfigureAwait(false);
+                    await SendAsync(command.Text, ct, command.Ending).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (failures is not null && ex is InstrumentException or TimeoutException or IOException)
+                {
+                    failures.Add(ex);
+                }
+            }
+
+            return readReply ? await ReceiveTextAsync(Timeout, ct).ConfigureAwait(false) : "";
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task<string> ReceiveTextAsync(TimeSpan timeout, CancellationToken ct)
+    {
+        var reply = await ReceiveAsync(timeout, ct).ConfigureAwait(false);
+        var text = Encoding.ASCII.GetString(reply).TrimEnd('\r', '\n');
+        Note("← " + (text.Length > 200 ? text[..200] + "…" : text));
+        return text;
     }
 
     public async Task<double> QueryDoubleAsync(string command, CancellationToken ct = default, TimeSpan? timeout = null)
@@ -265,10 +298,13 @@ public sealed class ScpiSession : IDisposable
         _dirty = false;
     }
 
-    private Task SendAsync(string command, CancellationToken ct)
+    private Task SendAsync(string command, CancellationToken ct, string? ending = null)
     {
         Note("→ " + command);
-        return Guard(() => Io.WriteAsync(Encoding.ASCII.GetBytes(command + "\n"), Timeout, ct));
+        var data = Encoding.ASCII.GetBytes(command + (ending ?? "\n"));
+        return Guard(() => ending is not null && Io is SerialInstrumentIo serial
+            ? serial.WriteExactAsync(data, Timeout, ct)
+            : Io.WriteAsync(data, Timeout, ct));
     }
 
     private async Task Guard(Func<Task> io)

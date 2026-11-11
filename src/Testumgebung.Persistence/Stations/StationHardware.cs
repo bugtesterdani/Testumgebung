@@ -200,6 +200,9 @@ public static class StationHardware
                 }
                 if (string.IsNullOrWhiteSpace(device2.Resource))
                     issues.Add(new(ConfigSeverity.Error, null, null, $"Gerät „{device2.Name}“: keine Ressource angegeben.", "z. B. " + family.ResourceExample));
+                else if (ProjectInstruments.Profile(project, device2.Adapter) is { } profile &&
+                         ProjectInstruments.ResourceError(profile.Interface, device2.Resource) is { } resourceError)
+                    issues.Add(new(ConfigSeverity.Error, null, null, $"Gerät „{device2.Name}“: {resourceError}"));
                 if (!string.IsNullOrWhiteSpace(device2.Model) && !family.Models.Contains(device2.Model) && family.Adapter != InstrumentCatalog.DaqmxReplica && family.Adapter != DaqmxDevice.AdapterName)
                     issues.Add(new(ConfigSeverity.Warning, null, null, $"Gerät „{device2.Name}“: Modell {device2.Model} ist nicht erprobt – Kanalsatz und Grenzen der Familie werden verwendet."));
                 channelsOf[device2.Id] = ChannelsOf(device2, project);

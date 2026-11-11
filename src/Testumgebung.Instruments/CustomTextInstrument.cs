@@ -26,7 +26,9 @@ public sealed class CustomTextInstrument : ScpiInstrument
     private CustomDeviceChannel Definition(InstrumentChannel channel) => _profile.Channels.First(customDeviceChannel => customDeviceChannel.Name == channel.Name);
     protected override async Task<double> ReadChannelAsync(InstrumentChannel channel, CancellationToken ct)
     {
-        var response = (await Session.QueryAsync(Definition(channel).ReadQuery, ct).ConfigureAwait(false)).Trim();
+        var definition = Definition(channel);
+        var commands = ChannelCommands(definition, definition.ReadQuery, definition.ReadEndings);
+        var response = (await Session.ExecuteCustomAsync(commands, readReply: true, ct).ConfigureAwait(false)).Trim();
         if (response.Equals("ON", StringComparison.OrdinalIgnoreCase)) return 1;
         if (response.Equals("OFF", StringComparison.OrdinalIgnoreCase)) return 0;
         if (!double.TryParse(response, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) || !double.IsFinite(value))
@@ -37,20 +39,24 @@ public sealed class CustomTextInstrument : ScpiInstrument
     protected override Task WriteChannelAsync(InstrumentChannel channel, double value, CancellationToken ct)
     {
         if (!double.IsFinite(value)) throw new ArgumentOutOfRangeException(nameof(value), "Wert muss endlich sein.");
-        return Session.WriteAsync(Definition(channel).WriteCommand.Replace("{value}", value.ToString("G17", CultureInfo.InvariantCulture), StringComparison.Ordinal), ct);
+        var definition = Definition(channel);
+        var command = definition.WriteCommand.Replace("{value}", value.ToString("G17", CultureInfo.InvariantCulture), StringComparison.Ordinal);
+        return Session.ExecuteCustomAsync(ChannelCommands(definition, command, definition.WriteEndings), readReply: false, ct);
     }
+
+    private CustomCommand[] ChannelCommands(CustomDeviceChannel channel, string commands, string endings) =>
+    [
+        ..CustomCommandSequence.Parse(channel.SelectCommands, channel.SelectEndings, split: true),
+        ..CustomCommandSequence.Parse(commands, endings, _profile.SplitCommandSequences)
+    ];
 
     public override async Task SafeStateAsync(CancellationToken cancellationToken)
     {
-        var commands = _profile.SafeCommands.Split(['\r', '\n'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var commands = CustomCommandSequence.Parse(_profile.SafeCommands, _profile.SafeEndings, _profile.SplitCommandSequences, multiline: true);
         if (commands.Length == 0 && Channels.Any(channel => channel.Access.HasFlag(ChannelAccess.Write)))
             throw new InstrumentException($"{Model}: keine Befehle für den sicheren Zustand definiert.");
         var failures = new List<Exception>();
-        foreach (var command in commands)
-        {
-            try { await Session.WriteAsync(command, cancellationToken).ConfigureAwait(false); }
-            catch (Exception ex) when (ex is InstrumentException or TimeoutException or IOException) { failures.Add(ex); }
-        }
+        await Session.ExecuteCustomAsync(commands, readReply: false, cancellationToken, failures).ConfigureAwait(false);
         if (failures.Count > 0) throw new InstrumentException(string.Join("; ", failures.Select(error => error.Message)));
     }
 
@@ -60,7 +66,8 @@ public sealed class CustomTextInstrument : ScpiInstrument
             return new(false, "Identität nicht geprüft", ["Im Geräteprofil eine lesende Prüfabfrage definieren."], Log);
         try
         {
-            var identity = await Session.QueryAsync(_profile.ProbeQuery, cancellationToken).ConfigureAwait(false);
+            var commands = CustomCommandSequence.Parse(_profile.ProbeQuery, _profile.ProbeEndings, _profile.SplitCommandSequences);
+            var identity = await Session.ExecuteCustomAsync(commands, readReply: true, cancellationToken).ConfigureAwait(false);
             return new(!string.IsNullOrWhiteSpace(identity), identity, ["Kanäle: " + string.Join(", ", Channels.Select(channel => channel.Name))], Log);
         }
         catch (Exception ex) when (ex is InstrumentException or TimeoutException or IOException)
