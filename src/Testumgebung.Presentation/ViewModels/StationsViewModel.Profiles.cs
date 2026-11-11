@@ -22,12 +22,18 @@ public sealed partial class StationsViewModel
             if (!SetProperty(ref _selectedProfile, value)) return;
             ProfileChannels.Clear();
             foreach (var channel in value?.Channels ?? []) ProfileChannels.Add(channel);
+            SelectedProfileChannel = ProfileChannels.FirstOrDefault();
             OnPropertyChanged(nameof(HasSelectedProfile));
         }
     }
     public bool HasSelectedProfile => SelectedProfile is not null;
     public ObservableCollection<CustomDeviceChannel> ProfileChannels { get; } = [];
-    public CustomDeviceChannel? SelectedProfileChannel { get; set; }
+    private CustomDeviceChannel? _selectedProfileChannel;
+    public CustomDeviceChannel? SelectedProfileChannel
+    {
+        get => _selectedProfileChannel;
+        set => SetProperty(ref _selectedProfileChannel, value);
+    }
     public RelayCommand AddProfileCommand { get; private set; } = null!;
     public RelayCommand RemoveProfileCommand { get; private set; } = null!;
     public RelayCommand ApplyProfilesCommand { get; private set; } = null!;
@@ -102,7 +108,7 @@ public sealed partial class StationsViewModel
     {
         var index = 1;
         while (DeviceProfiles.Any(customDeviceProfile => customDeviceProfile.Id == $"eigenes-{index}")) index++;
-        var profile = new CustomDeviceProfile { Id = $"eigenes-{index}", Name = $"Eigenes Gerät {index}" };
+        var profile = new CustomDeviceProfile { Id = $"eigenes-{index}", Name = $"Eigenes Gerät {index}", SplitCommandSequences = true };
         DeviceProfiles.Add(profile);
         SelectedProfile = profile;
     }
@@ -127,6 +133,7 @@ public sealed partial class StationsViewModel
         var channel = new CustomDeviceChannel { Name = $"Kanal{index}" };
         profile.Channels.Add(channel);
         ProfileChannels.Add(channel);
+        SelectedProfileChannel = channel;
     }
 
     private void RemoveProfileChannel()
@@ -134,7 +141,7 @@ public sealed partial class StationsViewModel
         if (SelectedProfileChannel is not { } channel || SelectedProfile is null) return;
         SelectedProfile.Channels.Remove(channel);
         ProfileChannels.Remove(channel);
-        SelectedProfileChannel = null;
+        SelectedProfileChannel = ProfileChannels.FirstOrDefault();
     }
 
     public bool ApplyProfiles()

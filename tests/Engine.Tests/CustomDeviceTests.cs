@@ -19,19 +19,149 @@ public sealed class CustomDeviceTests
     {
         public string Resource => "test";
         public List<string> Commands { get; } = [];
+        public List<string> Frames { get; } = [];
         public string Reply = "12.5";
+        public Func<CancellationToken, Task>? BeforeReply;
         public string? Fail;
         public Task WriteAsync(byte[] data, TimeSpan timeout, CancellationToken ct)
         {
-            ct.ThrowIfCancellationRequested(); var command = Encoding.ASCII.GetString(data).Trim(); Commands.Add(command);
+            ct.ThrowIfCancellationRequested();
+            var frame = Encoding.ASCII.GetString(data);
+            Frames.Add(frame);
+            var command = frame.Trim();
+            Commands.Add(command);
             if (command == Fail) throw new InstrumentException("wire failed");
             return Task.CompletedTask;
         }
-        public Task<IoChunk> ReadAsync(TimeSpan timeout, CancellationToken ct) => Task.FromResult(new IoChunk(Encoding.ASCII.GetBytes(Reply + "\n"), true));
+        public async Task<IoChunk> ReadAsync(TimeSpan timeout, CancellationToken ct)
+        {
+            if (BeforeReply is { } wait) await wait(ct);
+            return new IoChunk(Encoding.ASCII.GetBytes(Reply + "\n"), true);
+        }
         public Task ClearAsync(CancellationToken ct) => Task.CompletedTask;
         public void Dispose() { }
     }
     private static CustomTextInstrument Driver(CustomDeviceProfile profile, Wire wire) => new(profile, new ScpiSession("test", () => wire));
+
+    [Fact]
+    public async Task Channel_selection_and_sequences_send_independent_endings()
+    {
+        var profile = Profile();
+        profile.SplitCommandSequences = true;
+        profile.Interface = CustomDeviceInterface.LAN;
+        profile.ProbeQuery = "REMOTE; ID?";
+        profile.ProbeEndings = "KEINS, LF";
+        profile.SafeCommands = "OFF; STOP";
+        profile.SafeEndings = "CR, KEINS";
+        var channel = profile.Channels[0];
+        channel.Name = "CH1";
+        channel.SelectCommands = "MODE; CH1";
+        channel.SelectEndings = "CR, CRLF";
+        channel.ReadQuery = "TRIGGER; V?";
+        channel.ReadEndings = "KEINS, LF";
+        channel.WriteCommand = "V {value}; APPLY";
+        channel.WriteEndings = "LF, CRLF";
+        profile.Channels.Add(new()
+        {
+            Name = "CH2", SelectCommands = "CH2", SelectEndings = "LF", ReadQuery = "V?", ReadEndings = "CR"
+        });
+
+        var project = Project();
+        project.DeviceProfiles.Add(profile);
+        var serializer = new ProjectSerializer();
+        var restored = Assert.Single(serializer.Deserialize(serializer.Serialize(project)).DeviceProfiles);
+        Assert.Equal(profile.Signature(), restored.Signature());
+
+        var wire = new Wire();
+        using var driver = Driver(restored, wire);
+        Assert.Equal(12.5, await driver.ReadAsync("CH1", default));
+        Assert.Equal(12.5, await driver.ReadAsync("CH2", default));
+        await driver.WriteAsync("CH1", 7.5, default);
+        Assert.True((await driver.ProbeAsync(default)).Ok);
+        await driver.SafeStateAsync(default);
+        Assert.Equal(new[]
+        {
+            "MODE\r", "CH1\r\n", "TRIGGER", "V?\n",
+            "CH2\n", "V?\r",
+            "MODE\r", "CH1\r\n", "V 7.5\n", "APPLY\r\n",
+            "REMOTE", "ID?\n", "OFF\r", "STOP"
+        }, wire.Frames);
+    }
+
+    [Fact]
+    public async Task Channel_selection_and_read_reply_hold_the_same_session_lock()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var reading = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var wire = new Wire { BeforeReply = ct => { reading.TrySetResult(); return release.Task.WaitAsync(ct); } };
+        var profile = Profile();
+        profile.Channels[0].SelectCommands = "CH1";
+        profile.Channels.Add(new() { Name = "CH2", SelectCommands = "CH2", WriteCommand = "V {value}" });
+        using var driver = Driver(profile, wire);
+
+        var read = driver.ReadAsync("VOLT", timeout.Token);
+        await reading.Task.WaitAsync(timeout.Token);
+        var write = driver.WriteAsync("CH2", 2, timeout.Token);
+        Assert.False(write.IsCompleted);
+        Assert.Equal(new[] { "CH1", "V?" }, wire.Commands);
+        release.SetResult();
+        await read;
+        await write;
+        Assert.Equal(new[] { "CH1", "V?", "CH2", "V 2" }, wire.Commands);
+    }
+
+    [Fact]
+    public async Task Older_profiles_preserve_semicolon_commands_and_default_endings()
+    {
+        const string json = """
+            {"Id":"legacy","Name":"Legacy","SafeCommands":"OFF; STOP\r\nRESET",
+             "Channels":[{"Name":"CH1","ReadQuery":"CONF; READ?","WriteCommand":"SET {value}; APPLY"}]}
+            """;
+        var profile = System.Text.Json.JsonSerializer.Deserialize<CustomDeviceProfile>(json)!;
+        var wire = new Wire();
+        using var driver = Driver(profile, wire);
+        Assert.Equal(12.5, await driver.ReadAsync("CH1", default));
+        await driver.WriteAsync("CH1", 2, default);
+        await driver.SafeStateAsync(default);
+        Assert.Equal(new[] { "CONF; READ?\n", "SET 2; APPLY\n", "OFF; STOP\n", "RESET\n" }, wire.Frames);
+    }
+
+    [Theory]
+    [InlineData(CustomDeviceInterface.RS232, "COM9", "localhost:5025")]
+    [InlineData(CustomDeviceInterface.RS485, "COM9", "ASRL1::INSTR")]
+    [InlineData(CustomDeviceInterface.USB, "COM8", "localhost:5025")]
+    [InlineData(CustomDeviceInterface.USB, "USB0::0x1234::0x5678::ABC::INSTR", "GPIB0::1::INSTR")]
+    [InlineData(CustomDeviceInterface.LAN, "localhost:5025", "COM9")]
+    [InlineData(CustomDeviceInterface.GPIB, "GPIB0::1::INSTR", "USB0::ABC::INSTR")]
+    public void Explicit_interface_validates_station_resource(CustomDeviceInterface connection, string valid, string invalid)
+    {
+        var profile = Profile();
+        profile.Interface = connection;
+        var project = Project();
+        project.DeviceProfiles.Add(profile);
+        var setup = StationSetup.Default(project, 1);
+        var device = new DeviceConfig { Id = "custom", Name = "Meter", Adapter = profile.Adapter, Resource = valid };
+        setup.Devices.Add(device);
+        using var driver = ProjectInstruments.Create(project, device);
+        Assert.Equal(valid, driver.Resource);
+        Assert.DoesNotContain(StationHardware.Check(setup, project), issue => issue.Text.Contains("passt nicht"));
+        device.Resource = invalid;
+        Assert.Throws<InstrumentException>(() => ProjectInstruments.Create(project, device));
+        Assert.Contains(StationHardware.Check(setup, project), issue => issue.IsError && issue.Text.Contains("passt nicht"));
+    }
+
+    [Theory]
+    [InlineData("CRLF")]
+    [InlineData("LF, invalid")]
+    [InlineData("LF, CR, LF")]
+    public void Sequences_reject_invalid_endings(string endings)
+    {
+        var profile = Profile();
+        profile.Channels[0].SelectCommands = "MODE; CH1";
+        profile.Channels[0].SelectEndings = endings;
+        Assert.NotEmpty(profile.Validate());
+    }
 
     [Theory]
     [InlineData("12.5", 12.5)] [InlineData("ON", 1)] [InlineData("off", 0)] [InlineData("1e-3", .001)]

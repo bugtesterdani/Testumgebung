@@ -1,5 +1,7 @@
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Testumgebung.Contracts;
+using Testumgebung.Instruments;
 using Testumgebung.Instruments.Communication;
 
 namespace Testumgebung.Engine.Tests;
@@ -29,6 +31,21 @@ public sealed class SerialTransportContractTests
         public bool WriteFile(SafeFileHandle handle, byte[] buffer, int count, out int written, IntPtr overlapped)
         { Written = buffer.ToArray(); written = PartialWrite ? count - 1 : count; return Fail != "write"; }
         public bool CancelIoEx(SafeFileHandle handle, IntPtr overlapped) { Cancels++; return true; }
+    }
+
+    [Theory]
+    [InlineData("", "OUT")]
+    [InlineData("\n", "OUT\n")]
+    [InlineData("\r", "OUT\r")]
+    [InlineData("\r\n", "OUT\r\n")]
+    [InlineData(null, "OUT\r")]
+    public async Task Custom_commands_use_exact_bytes_or_the_serial_default(string? ending, string expected)
+    {
+        var api = new Api();
+        var transport = new SerialTransport(new SerialSettings("COM_TEST"), api);
+        using var session = new ScpiSession(() => new SerialInstrumentIo("COM_TEST", transport, "CR"));
+        await session.ExecuteCustomAsync([new("OUT", ending)], readReply: false, default);
+        Assert.Equal(expected, Encoding.ASCII.GetString(api.Written));
     }
 
     public static IEnumerable<object[]> Configurations()

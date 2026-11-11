@@ -1,6 +1,7 @@
 <UserControl x:Class="Testumgebung.Desktop.Views.StationsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:instruments="clr-namespace:Testumgebung.Instruments;assembly=Testumgebung.Instruments">
     <!-- Prüfplatzkonfiguration (Abbildung „Prüfplatz: Hardware und Ressourcen“): Geräte und Signale | Ressourcen-Details,
          Reservierungen je Gruppe mit Wartestatus | Konfigurationsprüfung, Zugriffsprotokoll gemeinsamer Geräte -->
     <UserControl.Resources>
@@ -155,31 +156,69 @@
                         <ComboBox ItemsSource="{Binding DeviceProfiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name" Margin="0,8,0,8" />
                         <StackPanel Visibility="{Binding HasSelectedProfile, Converter={StaticResource BoolVis}}">
                             <Grid DataContext="{Binding SelectedProfile}">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="160" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="160" /><ColumnDefinition Width="*" /><ColumnDefinition Width="145" /></Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <TextBlock Text="Name" Style="{StaticResource Label}" />
-                                <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
+                                <TextBox Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Name, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
                                 <TextBlock Grid.Row="1" Text="Beschreibung" Style="{StaticResource Label}" />
-                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Description, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
-                                <TextBlock Grid.Row="2" Text="Lesende Prüfabfrage" Style="{StaticResource Label}" />
-                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ProbeQuery, UpdateSourceTrigger=LostFocus}" ToolTip="Optional, z. B. *IDN?. Beim Gerätetest wird ausschließlich diese Abfrage gesendet." Margin="0,0,0,6" />
-                                <TextBlock Grid.Row="3" Text="Sicherer Zustand" Style="{StaticResource Label}" />
-                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SafeCommands, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" MinHeight="48" ToolTip="Ein Befehl je Zeile, z. B. OUTP OFF. Wird bei der bestehenden Geräteabschaltung verwendet." />
+                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Description, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
+                                <TextBlock Grid.Row="2" Text="Schnittstelle" Style="{StaticResource Label}" />
+                                <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                                          ItemsSource="{x:Static instruments:CustomDeviceProfile.Interfaces}" SelectedItem="{Binding Interface}"
+                                          AutomationProperties.Name="Schnittstelle" Margin="0,0,0,6" />
+                                <CheckBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" IsChecked="{Binding SplitCommandSequences}"
+                                          Content="Befehle bei Semikolon und Leerzeichen trennen" Margin="0,0,0,6" />
+                                <TextBlock Grid.Row="4" Text="Lesende Prüfabfrage" Style="{StaticResource Label}" />
+                                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding ProbeQuery, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding ProbeEndings, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Zeilenenden der Prüfabfrage" Margin="6,0,0,6" />
+                                <TextBlock Grid.Row="5" Text="Sicherer Zustand" Style="{StaticResource Label}" />
+                                <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SafeCommands, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="48" />
+                                <TextBox Grid.Row="5" Grid.Column="2" Text="{Binding SafeEndings, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Zeilenenden für den sicheren Zustand" Margin="6,0,0,0" />
                             </Grid>
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                       Text="Zeilenenden rechts eintragen. Je Befehl LF, CR, CRLF, KEINS oder STANDARD, durch Kommas getrennt (z. B. CRLF, LF). Leere Felder verwenden das Zeilenende der Verbindung. Bei Abfragen liefert der letzte Befehl die Antwort." />
                             <DataGrid ItemsSource="{Binding ProfileChannels}" SelectedItem="{Binding SelectedProfileChannel}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MaxHeight="240" Margin="0,8,0,4">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Kanal" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="*" />
                                     <DataGridTextColumn Header="Einheit" Binding="{Binding Unit, UpdateSourceTrigger=LostFocus}" Width="60" />
                                     <DataGridTextColumn Header="Minimum" Binding="{Binding Min, UpdateSourceTrigger=LostFocus}" Width="85" />
                                     <DataGridTextColumn Header="Maximum" Binding="{Binding Max, UpdateSourceTrigger=LostFocus}" Width="85" />
-                                    <DataGridTextColumn Header="Leseabfrage" Binding="{Binding ReadQuery, UpdateSourceTrigger=LostFocus}" Width="1.3*" />
-                                    <DataGridTextColumn Header="Schreibbefehl mit {value}" Binding="{Binding WriteCommand, UpdateSourceTrigger=LostFocus}" Width="1.5*" />
                                 </DataGrid.Columns>
                             </DataGrid>
                             <WrapPanel>
                                 <Button Style="{StaticResource ToolButton}" Command="{Binding AddProfileChannelCommand}" Content="+ Kanal" />
                                 <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveProfileChannelCommand}" Content="Kanal entfernen" />
                             </WrapPanel>
+                            <ContentControl Content="{Binding SelectedProfileChannel}"
+                                            Visibility="{Binding SelectedProfileChannel, Converter={StaticResource NullVis}}" Margin="0,6,0,0">
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="160" /><ColumnDefinition Width="*" /><ColumnDefinition Width="145" /></Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                            <TextBlock Text="Kanalauswahl" Style="{StaticResource Label}" />
+                                            <TextBox Grid.Column="1" Text="{Binding SelectCommands, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Vor jedem Lesen und Schreiben. Mehrere Befehle mit Semikolon und Leerzeichen trennen." />
+                                            <TextBox Grid.Column="2" Text="{Binding SelectEndings, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="Zeilenenden der Kanalauswahl" Margin="6,0,0,0" />
+                                            <TextBlock Grid.Row="1" Text="Leseabfrage" Style="{StaticResource Label}" />
+                                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ReadQuery, UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding ReadEndings, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="Zeilenenden der Leseabfrage" Margin="6,0,0,0" />
+                                            <TextBlock Grid.Row="2" Text="Schreibbefehl" Style="{StaticResource Label}" />
+                                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding WriteCommand, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Platzhalter {value} für den zu schreibenden Wert verwenden." />
+                                            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding WriteEndings, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="Zeilenenden des Schreibbefehls" Margin="6,0,0,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
                         </StackPanel>
                     </StackPanel>
                 </Border>
