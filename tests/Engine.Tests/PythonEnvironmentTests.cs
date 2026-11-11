@@ -98,8 +98,22 @@ public sealed class PythonEnvironmentTests
             Assert.Contains("Successfully installed", await Python(executable, "-m", "pip", "install", "--no-index", "--disable-pip-version-check", wheel));
             service.SaveSelection(executable);
             Assert.Equal(executable, service.LoadSelection());
+            var archive = Path.Combine(root, "environment.zip");
+            var vm = new PythonEnvironmentViewModel(runtime, () => false, service);
+            await vm.ExportAsync(archive);
+            Assert.True(File.Exists(archive), vm.Status);
+            await vm.ImportAsync(archive);
+            Assert.Contains("importiert", vm.Status);
+            Assert.NotEqual(directory, vm.EnvironmentPath);
+            Assert.Equal(executable, service.LoadSelection());
+            Assert.Null(runtime.Options.PythonExecutable);
+            var imported = Path.Combine(vm.EnvironmentPath, "python.exe");
+            Assert.Equal(vm.EnvironmentPath, PythonEnvironments.ConsoleStartInfo(imported).WorkingDirectory);
+
             await runtime.GetRuntimeInfoAsync(CodeLanguage.Python, CancellationToken.None);
-            runtime.SelectPython(executable);
+            vm.UseEnvironmentCommand.Execute(null);
+            Assert.Equal(imported, runtime.Options.PythonExecutable);
+            Assert.Equal(imported, service.LoadSelection());
             var step = BlockCatalog.Default.Create(BlockCatalog.Code, "probe", "Probe", new Dictionary<string, string>
             { ["Sprache"] = "Python", ["Quelltext"] = "import tu_console_probe\nreturn Pass(tu_console_probe.VALUE)" });
             var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { CodeRuntime = runtime, Clock = new VirtualClock() });
@@ -142,6 +156,30 @@ public sealed class PythonEnvironmentTests
             File.Delete(interpreter);
             vm.UseEnvironmentCommand.Execute(null); Assert.Contains("entfernt", vm.Status);
             vm.OpenConsole(); Assert.Contains("nicht geöffnet", vm.Status);
+        }
+        finally { await DeleteTestDirectoryAsync(root); }
+    }
+
+    [Fact]
+    public async Task Invalid_zip_does_not_leave_a_partial_environment_or_change_selection()
+    {
+        var root = Temp();
+        Directory.CreateDirectory(root);
+        try
+        {
+            var environments = Path.Combine(root, "environments");
+            var service = new PythonEnvironments(environmentRoot: environments, selectionFile: Path.Combine(root, "selection.json"));
+            var vm = new PythonEnvironmentViewModel(null, () => false, service);
+            var archive = Path.Combine(root, "invalid.zip");
+            using (var zip = ZipFile.Open(archive, ZipArchiveMode.Create))
+                Add(zip, "../escape.txt", "outside");
+            await vm.ImportAsync(archive);
+            Assert.Contains("konnte nicht", vm.Status);
+            Assert.Empty(Directory.GetDirectories(environments));
+            Assert.False(File.Exists(Path.Combine(environments, "escape.txt")));
+            Assert.Null(service.LoadSelection());
+            await vm.ExportAsync(Path.Combine(root, "export.zip"));
+            Assert.Contains("konnte nicht", vm.Status);
         }
         finally { await DeleteTestDirectoryAsync(root); }
     }
