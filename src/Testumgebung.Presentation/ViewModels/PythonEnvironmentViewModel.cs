@@ -13,6 +13,7 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
 {
     private const string ZipFilter = "Python-Umgebung (*.zip)|*.zip";
     private readonly CodeRuntime? _runtime;
+    private readonly IFileDialogService? _dialogs;
     private readonly PythonEnvironments _environments;
     private readonly Func<bool> _anyRunning;
     private readonly Action<ProcessStartInfo> _openConsole;
@@ -24,20 +25,13 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
         Action<ProcessStartInfo>? openConsole = null, IFileDialogService? dialogs = null)
     {
         _runtime = runtime;
+        _dialogs = dialogs;
         _anyRunning = anyRunning;
         _environments = environments ?? new PythonEnvironments(runtime?.Options.WorkerDirectory);
         _openConsole = openConsole ?? (start => Process.Start(start)?.Dispose());
         _createdExecutable = _environments.LoadSelection();
-        ExportCommand = new RelayCommand(() =>
-        {
-            var path = dialogs?.SaveFile("Python-Umgebung exportieren", ZipFilter, "Testumgebung-Python.zip");
-            if (path is not null) _ = ExportAsync(path);
-        }, () => !_busy && dialogs is not null && PythonEnvironments.CanExport(_createdExecutable));
-        ImportCommand = new RelayCommand(() =>
-        {
-            var path = dialogs?.OpenFile("Python-Umgebung importieren", ZipFilter);
-            if (path is not null) _ = ImportAsync(path);
-        }, () => !_busy && dialogs is not null);
+        ExportCommand = new RelayCommand(ExportFromDialog, CanExport);
+        ImportCommand = new RelayCommand(ImportFromDialog, CanImport);
         CreateCommand = new RelayCommand(() => _ = CreateAsync(), () => !_busy);
         OpenConsoleCommand = new RelayCommand(OpenConsole, () => !_busy && _createdExecutable is not null);
         UseEnvironmentCommand = new RelayCommand(() => Select(_createdExecutable), () => !_busy && _runtime is not null && _createdExecutable is not null);
@@ -70,6 +64,22 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
         { Status = "Python-Umgebung konnte nicht erstellt oder geöffnet werden: " + ex.Message; }
         finally { _busy = false; Refresh(); }
+    }
+
+    private bool CanImport() => !_busy && _dialogs is not null;
+
+    private bool CanExport() => CanImport() && PythonEnvironments.CanExport(_createdExecutable);
+
+    private void ExportFromDialog()
+    {
+        var path = _dialogs!.SaveFile("Python-Umgebung exportieren", ZipFilter, "Testumgebung-Python.zip");
+        if (path is not null) _ = ExportAsync(path);
+    }
+
+    private void ImportFromDialog()
+    {
+        var path = _dialogs!.OpenFile("Python-Umgebung importieren", ZipFilter);
+        if (path is not null) _ = ImportAsync(path);
     }
 
     public Task ExportAsync(string path) => RunArchiveActionAsync("exportiert", async () =>
