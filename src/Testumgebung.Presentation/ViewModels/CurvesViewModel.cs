@@ -692,6 +692,12 @@ public sealed class CurvesViewModel : ObservableObject
         Status = "Bearbeitet: " + next.History[^1];
     });
 
+    public void ApplyPointTable(CurveDefinition source, CurveDefinition edited)
+    {
+        if (ReferenceEquals(_working, source) && !ReferenceEquals(source, edited))
+            Edit(_ => edited);
+    }
+
     private void Undo()
     {
         if (_undo.Count == 0) return;

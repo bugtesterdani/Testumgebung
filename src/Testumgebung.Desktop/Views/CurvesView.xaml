@@ -269,7 +269,10 @@
                     <!-- Vorschau -->
                     <TextBlock Style="{StaticResource SectionTitle}" Text="Vorschau" Margin="0,8,0,4" />
                     <StackPanel Visibility="{Binding PointEditor.CanEdit, Converter={StaticResource BoolVis}}" Margin="0,0,0,6">
-                        <CheckBox Content="Kurvenpunkte bearbeiten" IsChecked="{Binding PointEditor.IsEnabled}" />
+                        <WrapPanel Margin="0,0,0,6">
+                            <Button Style="{StaticResource OutlineButton}" Content="Punktetabelle öffnen …" Click="OpenPointTable" Margin="0,0,12,0" />
+                            <CheckBox Content="Punkte im Diagramm bearbeiten" IsChecked="{Binding PointEditor.IsEnabled}" VerticalAlignment="Center" />
+                        </WrapPanel>
                         <StackPanel Visibility="{Binding PointEditor.IsEnabled, Converter={StaticResource BoolVis}}">
                             <TextBlock TextWrapping="Wrap" Text="Kurvenlinie mit der linken Maustaste greifen und nach oben oder unten ziehen. Mausrad drücken oder Strg+Klick setzt oder löst einen Fixpunkt. Esc verwirft die laufende Verschiebung." />
                             <ItemsControl ItemsSource="{Binding PointEditor.Pins}">

@@ -182,6 +182,63 @@ public static class CurveOps
         return curve.Derive($"Punkt {channel.Id} bei {N(pointTime * 1000)} ms → {N(samples[pointIndex])} {channel.Unit}", channels);
     }
 
+    /// <summary>Ersetzt die Stützpunkte eines Kanals. Andere Kanäle behalten ihren Verlauf auf dem gemeinsamen Raster.</summary>
+    public static CurveDefinition ReplacePoints(CurveDefinition curve, int channelIndex, (double Time, double Value)[] points)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(channelIndex);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(channelIndex, curve.Channels.Count);
+        if (points.Length is 0 or > CurveGenerator.MaxSamples)
+            throw new ArgumentException("Die Linie muss mindestens einen Punkt enthalten und darf die maximale Punktzahl nicht überschreiten.");
+        var ordered = points;
+        for (var i = 1; i < points.Length; i++)
+        {
+            if (points[i].Time >= points[i - 1].Time) continue;
+            ordered = points.OrderBy(point => point.Time).ToArray();
+            break;
+        }
+        var sameGrid = ordered.Length == curve.Count;
+        for (var i = 0; i < ordered.Length; i++)
+        {
+            var (time, value) = ordered[i];
+            if (!double.IsFinite(time) || !double.IsFinite(value))
+                throw new ArgumentException("Zeit und Wert müssen endliche Zahlen sein.");
+            if (i > 0 && time <= ordered[i - 1].Time)
+                throw new ArgumentException($"Die Zeit {N(time)} s ist mehrfach vorhanden.");
+            sameGrid = sameGrid && time == curve.TimeOf(i);
+        }
+
+        var channel = curve.Channels[channelIndex];
+        var operation = $"Stützpunkte von {channel.Id} bearbeitet ({ordered.Length} Punkte)";
+        if (sameGrid)
+        {
+            var channels = curve.Channels.ToArray();
+            channels[channelIndex] = channel with { Samples = ordered.Select(point => point.Value).ToArray() };
+            return curve.Derive(operation, channels);
+        }
+
+        var originalTimes = curve.Times ?? Enumerable.Range(0, curve.Count).Select(curve.TimeOf).ToArray();
+        var pointTimes = ordered.Select(point => point.Time).ToArray();
+        var times = curve.Channels.Count == 1 ? pointTimes : originalTimes.Union(pointTimes).Order().ToArray();
+        if (times.Length > CurveGenerator.MaxSamples || !double.IsFinite(times[^1] - times[0]))
+            throw new ArgumentException("Das gemeinsame Zeitraster liegt außerhalb des gültigen Bereichs.");
+
+        var selected = curve.Derive(operation,
+            [channel with { Samples = ordered.Select(point => point.Value).ToArray() }], times: pointTimes);
+        var samples = curve.Channels.Select((line, index) => line with
+        {
+            Samples = times.Select(time =>
+            {
+                if (index == channelIndex) return selected.ValueAt(0, time);
+                var originalIndex = Array.BinarySearch(originalTimes, time);
+                return originalIndex >= 0 ? line.Samples[originalIndex] : curve.ValueAt(index, time);
+            }).ToArray()
+        }).ToArray();
+        var result = curve.Derive(operation, samples, times: times);
+        if (!double.IsFinite(result.Duration) || samples.Any(line => line.Samples.Any(value => !double.IsFinite(value))))
+            throw new ArgumentException("Das Zeitraster oder interpolierte Werte liegen außerhalb des gültigen Bereichs.");
+        return result;
+    }
+
     /// <summary>Gewichtung für Vorschau und gespeicherte Werte, unabhängig von der Achsenskalierung.</summary>
     public static double PointMoveWeight(double position, double point, double left, double right)
     {
