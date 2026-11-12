@@ -53,6 +53,12 @@ Alle drei manuellen Bausteine in denselben Prüflingstest legen:
 
 Ohne festgelegtes Zeitfenster prüft **Mindestdauer** weiterhin die Zeit zwischen erstem und letztem Messpunkt; `0` bewertet nur den aufgezeichneten Abschnitt. Ein Punkt nach der eingestellten Dauer ist ungültig. Bei manuell vorgegebenen Zeiten für den Abschlusspunkt exakt die Dauer liefern; es wird kein fehlender Messwert extrapoliert.
 
+Im Baustein **Messpunkt ergänzen** kann optional **Vorzeitiges Ende → Boolvariable** gesetzt werden. Der Wert
+ist nur dann `true`, wenn dieser Messpunkt die Aufnahme aufgrund der Zusatzabweichung vorzeitig beendet.
+Damit können reguläre Folgeschritte über eine Gruppenbedingung übersprungen werden, während die
+Exit-Gruppe die Aufnahme abschließt. Ein gewöhnliches FAIL innerhalb der Zusatzgrenze setzt das Ziel auf
+`false`. Übersprungene Messpunkte ändern die Variable nicht.
+
 ## Messzeit beim Umschalten pausieren
 
 Bei einer manuell gesteuerten Aufnahme vor dem Umschalten den Baustein **Messzeit pausieren / fortsetzen**
