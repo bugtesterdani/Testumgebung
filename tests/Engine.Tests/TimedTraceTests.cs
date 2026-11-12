@@ -24,6 +24,38 @@ public sealed class TimedTraceTests
         BlockCatalog.Default.Rebuild(step); return step;
     }
     [Theory]
+    [InlineData(-0.1, false)]
+    [InlineData(-0.2, false)]
+    [InlineData(-0.21, true)]
+    [InlineData(6.61, true)]
+    public async Task Explicit_abort_band_replaces_percentage_and_is_shown(double value, bool early)
+    {
+        var normal = Band();
+        var abort = new CurveDefinition
+        {
+            Id = "abort", Name = "Abbruch", Version = "1", SampleRate = 1, Times = [0, 2],
+            Channels = [new("Untergrenze", "V", [-0.2, -0.2]), new("Obergrenze", "V", [6.6, 6.6])]
+        };
+        normal.Channels[0].Samples.AsSpan().Fill(0);
+        var capture = Capture((TraceBlocks.AbortCurvesParameter, "abort@1"), ("AbweichungProzent", "0"),
+            ("Werte", value.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        var definition = Test(Group("loop").Add(capture));
+        definition.Curves.Add(normal);
+        definition.Curves.Add(abort);
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+
+        Assert.Equal(ResultRating.Fail, (await run.RunAsync().Within()).Rating);
+        var step = run.Steps("capture").Single();
+        var data = Assert.IsType<WaveformSet>(step.Value);
+        var info = EnvelopeTraceMetadata.Decode(data.Channels[0].Quality)!;
+        Assert.Equal(early ? "abort@1" : null, info.EarlyStop?.AbortCurve);
+        Assert.Equal(early ? 1 : 5, info.OriginalTimes.Length);
+        Assert.Contains(data.Channels, channel => channel.Channel.Contains("Abbruch-Untergrenze"));
+        Assert.Contains(data.Channels, channel => channel.Channel.Contains("Abbruch-Obergrenze"));
+        if (early) Assert.Contains("Abbruchgrenzkurve abort@1", step.Message);
+    }
+
+    [Theory]
     [InlineData(3.999, false)] [InlineData(3.599, true)]
     [InlineData(6.001, false)] [InlineData(6.601, true)]
     [InlineData(3.6, false)] [InlineData(6.6, false)]
@@ -179,12 +211,15 @@ public sealed class TimedTraceTests
     public void Timed_limit_references_are_visible_and_prevent_an_incompatible_init_version_swap()
     {
         var dut = Group("dut").Var("Kennung", VarType.String); dut.IsDutRun = true;
-        var definition = Test(Group("loop").Add(dut), Group("init").Add(Capture())); definition.Curves.Add(Band());
+        var definition = Test(Group("loop").Add(dut), Group("init").Add(Capture((TraceBlocks.AbortCurvesParameter, "band@2"))));
+        definition.Curves.Add(Band());
+        definition.Curves.Add(Band().WithVersion("2"));
         var original = new TestProject(definition); var changed = new ProjectSerializer().Clone(original);
-        changed.Definition.Curves.Find("band", "1")!.Channels[1].Samples[0] = 7;
+        changed.Definition.Curves.Find("band", "2")!.Channels[1].Samples[0] = 7;
         Assert.False(Testumgebung.Persistence.Releases.DefinitionCompatibility.CanSwapAtDut(original, changed, out var reason)); Assert.Contains("Kurve", reason);
         var editor = new EditorViewModel(original);
         var curves = new CurvesViewModel(editor, null, () => "fixture", () => null, Testumgebung.Presentation.Mvvm.ImmediateDispatcher.Instance);
-        Assert.Contains("capture", curves.Curves.Single().Usage);
+        Assert.Equal(2, curves.Curves.Count);
+        Assert.All(curves.Curves, curve => Assert.Contains("capture", curve.Usage));
     }
 }

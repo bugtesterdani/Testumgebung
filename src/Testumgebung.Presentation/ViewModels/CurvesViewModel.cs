@@ -311,13 +311,19 @@ public sealed class CurvesViewModel : ObservableObject
     private void AddTraceUsage(List<(string Key, string Step)> list)
     {
         foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(step => step.BlockType is TraceBlocks.Start or TraceBlocks.Record))
-            foreach (var key in (step.Parameters.GetValueOrDefault("Grenzkurven") ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            foreach (var key in TraceCurveKeys(step))
             {
                 var separator = key.LastIndexOf('@');
                 if (Library.Find(separator < 0 ? key : key[..separator], separator < 0 ? null : key[(separator + 1)..]) is { } limit)
                     list.Add((limit.Key, step.Name));
             }
     }
+
+    private static IEnumerable<string> TraceCurveKeys(StepDefinition step)
+        => new[] { "Grenzkurven", TraceBlocks.AbortCurvesParameter }
+            .SelectMany(parameter => (step.Parameters.GetValueOrDefault(parameter) ?? "")
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            .Distinct(StringComparer.Ordinal);
 
     // ------------------------------------------------------------------ Arbeitskopie
 
