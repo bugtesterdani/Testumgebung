@@ -91,6 +91,8 @@ internal sealed class EnvelopeRecording
     private readonly List<double> _times = [];
     private readonly List<double>[] _values;
     private readonly DateTimeOffset _start;
+    private DateTimeOffset? _pausedAt;
+    private TimeSpan _pausedDuration;
     private readonly int _maxPoints;
     private readonly double _maxGap, _minimumDuration;
     private readonly bool _touchAllowed;
@@ -135,7 +137,20 @@ internal sealed class EnvelopeRecording
         if (units.Count != _channels.Length || units.Where((unit, index) => unit != _channels[index].Unit).Any()) throw new ArgumentException("Geräteeinheiten passen nicht zur Aufnahme; keine automatische Umrechnung.");
     }
     public void Invalidate() => _faulted = true;
-    public double Elapsed(DateTimeOffset now) => (now - _start).TotalSeconds;
+    public bool IsPaused => _pausedAt.HasValue;
+
+    public void SetPaused(bool paused, DateTimeOffset now)
+    {
+        if (paused)
+            _pausedAt ??= now;
+        else if (_pausedAt is { } pausedAt)
+        {
+            _pausedDuration += now - pausedAt;
+            _pausedAt = null;
+        }
+    }
+
+    public double Elapsed(DateTimeOffset now) => ((_pausedAt ?? now) - _start - _pausedDuration).TotalSeconds;
     public bool Add(double time, IReadOnlyList<double> values, DateTimeOffset now)
     {
         if (_duration is { } end && Math.Abs(time - end) <= TimeTolerance(end)) time = end;
@@ -241,9 +256,23 @@ public sealed class EnvelopeRecordings
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)
     {
-        lock (_gate) { var recording = Get(owner, name); return recording.Add(time ?? recording.Elapsed(now), values, now) ? recording.Evaluate(recording.Ended) : null; }
+        lock (_gate)
+        {
+            var recording = Get(owner, name);
+            if (recording.IsPaused) return null;
+            return recording.Add(time ?? recording.Elapsed(now), values, now) ? recording.Evaluate(recording.Ended) : null;
+        }
     }
     public void CheckUnits(string owner, string name, IReadOnlyList<string> units) { lock (_gate) Get(owner, name).CheckUnits(units); }
+    public void SetPaused(string owner, string name, bool paused, DateTimeOffset now)
+    {
+        lock (_gate)
+        {
+            var recording = Get(owner, name);
+            if (!recording.Ended) recording.SetPaused(paused, now);
+        }
+    }
+    public bool IsPaused(string owner, string name) { lock (_gate) return Get(owner, name).IsPaused; }
     public bool IsEnded(string owner, string name) { lock (_gate) return Get(owner, name).Ended; }
     public bool HasViolation(string owner, string name) { lock (_gate) return Get(owner, name).HasViolation; }
     public void Invalidate(string owner, string name) { lock (_gate) { if (_recordings.TryGetValue((owner, name), out var recording)) recording.Invalidate(); } }
