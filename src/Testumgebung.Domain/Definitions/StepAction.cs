@@ -17,6 +17,9 @@ public sealed record StepOutcome(
     double? HighLimit = null,
     string? Message = null)
 {
+    /// <summary>Beendet nach diesem Ergebnis die regulären Schritte des aktuellen Prüflings.</summary>
+    public bool ExitDut { get; init; }
+
     public static StepOutcome Unrated(object? value = null, string? message = null) => new(ResultRating.NResult, value, Message: message);
     public static StepOutcome Pass(object? value = null) => new(ResultRating.Pass, value);
     public static StepOutcome Fail(string? message = null, object? value = null) => new(ResultRating.Fail, value, Message: message);

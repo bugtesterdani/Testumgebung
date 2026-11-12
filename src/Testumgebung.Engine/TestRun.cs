@@ -313,6 +313,15 @@ public sealed class TestRun
 
     private sealed record NodeResult(ResultRating Rating, ScopeSnapshot? Snapshot);
 
+    private sealed class DutFlow
+    {
+        public volatile bool ExitRequested;
+    }
+
+    private readonly AsyncLocal<DutFlow?> _dutFlow = new();
+
+    private bool DutExitPending(ExecutionPhase phase) => !phase.IsExit && _dutFlow.Value?.ExitRequested == true;
+
     /// <summary>
     /// Führt ein Element aus und überträgt seine Bewertung an die Eltern – bei Haltepunkt erst nach dem Fortsetzen.
     /// </summary>
@@ -320,6 +329,7 @@ public sealed class TestRun
         NodeDefinition node, Scope? parentScope, ExecutionPhase phase, ResultAccumulator parent,
         string parentPath, int parentIteration, bool forceEnter, bool isExit = false)
     {
+        if (DutExitPending(phase)) return;
         if (node.Disabled)
         {
             Emit(new NodeSkipped("Deaktiviert") { Time = Clock.Now, RunId = RunId, NodeId = node.Id, Path = Combine(parentPath, node.Name), Iteration = parentIteration });
@@ -355,7 +365,7 @@ public sealed class TestRun
     private async Task<bool> PauseAfterNodeAsync(NodeDefinition node, Scope? parentScope, ExecutionPhase phase, string parentPath,
         int iteration, PendingResult pending, ResultAccumulator parent, int executions, NodeResult result)
     {
-        if (Options.Debugger is not { } dbg || parentScope is null || phase.IsCancelled) return false;
+        if (Options.Debugger is not { } dbg || parentScope is null || phase.IsCancelled || DutExitPending(phase)) return false;
         var info = new PauseInfo(node.Id, node.Name, Combine(parentPath, node.Name), iteration, node is GroupDefinition,
             pending.Rating, parent.Rating, executions, result.Snapshot);
         // Decide once at arrival. False conditions must not wait behind a paused sibling.
@@ -393,7 +403,7 @@ public sealed class TestRun
 
     private async Task<ResultRating?> ExecuteStepAsync(StepDefinition step, Scope scope, ExecutionPhase phase, string path, int iteration)
     {
-        if (phase.IsCancelled) return null;
+        if (phase.IsCancelled || DutExitPending(phase)) return null;
 
         Emit(new StepStarted { Time = Clock.Now, RunId = RunId, NodeId = step.Id, Path = path, Iteration = iteration });
         PushFrame(new ExecutionFrame(step.Id, step.Name, path, iteration, phase.IsExit, false, null));
@@ -430,6 +440,8 @@ public sealed class TestRun
             Path = path,
             Iteration = iteration,
         });
+        if (outcome.ExitDut && !phase.IsExit && _dutFlow.Value is { } flow)
+            flow.ExitRequested = true;
         return outcome.Rating;
     }
 
@@ -473,7 +485,7 @@ public sealed class TestRun
 
     private bool CanEnterGroup(GroupDefinition group, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
-        if (phase.IsCancelled && !forceEnter) return false;
+        if ((phase.IsCancelled || DutExitPending(phase)) && !forceEnter) return false;
         if (group.IsDutRun && !isExit && Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
         {
             Emit(new GroupNotEntered($"Prüflingsanzahl {limit} erreicht") { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = Combine(parentPath, group.Name), Iteration = parentIteration });
@@ -619,6 +631,8 @@ public sealed class TestRun
             return regularAllowed;
         }
 
+        var previousDutFlow = _dutFlow.Value;
+        if (dutRunId is not null) _dutFlow.Value = new DutFlow();
         try
         {
             var regularAllowed = await AcquireGroupResourcesAsync();
@@ -630,6 +644,7 @@ public sealed class TestRun
         }
         finally
         {
+            _dutFlow.Value = previousDutFlow;
             FinishRecordings(group, scope.Id, path, parentIteration, accumulator);
             if (group.IsDutRun) Processes.CloseOwner(scope.Id);
             // 6. Sperren freigeben (nach Exit), Prüflingstest abschließen, Scope verwerfen
@@ -712,7 +727,7 @@ public sealed class TestRun
             var first = true;
             foreach (var child in group.Children)
             {
-                if (phase.IsCancelled) break;
+                if (phase.IsCancelled || DutExitPending(phase)) break;
                 if (!first && repetition is { Mode: RepeatMode.Duration, StopWithinIteration: true } && Clock.Now - start >= repetition.Duration)
                 {
                     Emit(new Diagnostic(group.Id, $"Zeitspanne {repetition.Duration.TotalSeconds:0.###} s abgelaufen – restliche Schritte von Iteration {iteration} übersprungen.")
@@ -746,7 +761,7 @@ public sealed class TestRun
             return true;
         }
 
-        while (!phase.IsCancelled)
+        while (!phase.IsCancelled && !DutExitPending(phase))
         {
             if (!CanRepeat()) break;
 
@@ -767,7 +782,7 @@ public sealed class TestRun
 
             await ExecuteIterationChildrenAsync();
 
-            if (repetition.Mode == RepeatMode.Until && !phase.IsCancelled)
+            if (repetition.Mode == RepeatMode.Until && !phase.IsCancelled && !DutExitPending(phase))
             {
                 if (!TryEvaluate(repeatExpression!, scope, group, accumulator, out var untilValue) || untilValue) break;
             }
