@@ -74,7 +74,10 @@ public sealed class CurveEnvelope
     }
 }
 
-public sealed record TraceChannelDefinition(string Name, string Unit, CurveDefinition Limits);
+public sealed record TraceChannelDefinition(string Name, string Unit, CurveDefinition Limits)
+{
+    public CurveDefinition? AbortLimits { get; init; }
+}
 public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTraceMetadata> Channels, bool Complete)
 {
     public EnvelopeEarlyStop? EarlyStop { get; init; }
@@ -88,6 +91,7 @@ internal sealed class EnvelopeRecording
 {
     private readonly TraceChannelDefinition[] _channels;
     private readonly CurveEnvelope[] _envelopes;
+    private readonly CurveEnvelope?[] _abortEnvelopes;
     private readonly List<double> _times = [];
     private readonly List<double>[] _values;
     private readonly DateTimeOffset _start;
@@ -109,6 +113,8 @@ internal sealed class EnvelopeRecording
         if (stopPercent is { } percent && (!double.IsFinite(percent) || percent < 0)) throw new ArgumentException("FAIL-Abbruchabweichung muss endlich und >= 0 sein.");
         _stopPercent = stopPercent;
         _channels = channels.ToArray(); _envelopes = channels.Select(traceChannelDefinition => new CurveEnvelope(traceChannelDefinition.Limits, traceChannelDefinition.Unit)).ToArray();
+        _abortEnvelopes = channels.Select(channel => channel.AbortLimits is { } limits
+            ? new CurveEnvelope(limits, channel.Unit) : null).ToArray();
         ValidateDuration(duration, minimumDuration);
         _duration = duration;
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
@@ -129,7 +135,7 @@ internal sealed class EnvelopeRecording
         if (duration is not { } value) return;
         if (!double.IsFinite(value) || value <= 0 || minimumDuration > value)
             throw new ArgumentException("Messdauer muss endlich und > 0 sein und mindestens der Mindestdauer entsprechen.");
-        foreach (var envelope in _envelopes) { _ = envelope.At(0); _ = envelope.At(value); }
+        foreach (var envelope in AllEnvelopes()) { _ = envelope.At(0); _ = envelope.At(value); }
     }
     private static double TimeTolerance(double value) => Math.Max(1, value) * 1e-12;
     public void CheckUnits(IReadOnlyList<string> units)
@@ -172,15 +178,19 @@ internal sealed class EnvelopeRecording
         if (values.Count != _channels.Length || values.Any(value => !double.IsFinite(value)) || !double.IsFinite(time) || time < 0)
             throw new ArgumentException("Für jeden Kanal einen endlichen Messwert und eine nichtnegative Zeit angeben.");
         if (_times.Count > 0 && (time <= _times[^1] || time - _times[^1] > _maxGap + Math.Max(1, _maxGap) * 1e-12)) throw new ArgumentException("Zeitpunkte müssen streng steigen und dürfen die maximale Messlücke nicht überschreiten.");
-        foreach (var envelope in _envelopes) _ = envelope.At(time);
+        foreach (var envelope in AllEnvelopes()) _ = envelope.At(time);
     }
     public TraceEvaluation Evaluate(bool stopped)
     {
         var complete = stopped && EarlyStop is null && !_faulted && HasFullDuration();
         if (_times.Count == 0) return new(new([]), [], false);
-        var grid = _envelopes.SelectMany(curveEnvelope => curveEnvelope.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(concat => concat >= _times[0] && concat <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
+        var grid = AllEnvelopes().SelectMany(curveEnvelope => curveEnvelope.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(concat => concat >= _times[0] && concat <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
         var waves = new List<Waveform>(); var metadata = new List<EnvelopeTraceMetadata>();
-        for (var channel = 0; channel < _channels.Length; channel++) EvaluateChannel(channel, grid, complete, waves, metadata);
+        for (var channel = 0; channel < _channels.Length; channel++)
+        {
+            EvaluateChannel(channel, grid, complete, waves, metadata);
+            AppendAbortLines(channel, grid, waves);
+        }
         return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended };
     }
     private void EvaluateChannel(int channel, double[] grid, bool complete, List<Waveform> waves, List<EnvelopeTraceMetadata> metadata)
@@ -205,23 +215,61 @@ internal sealed class EnvelopeRecording
         waves.Add(new(definition.Name + " · Untergrenze (" + envelope.Key + ")", definition.Unit, 0, _start, lower, grid));
         waves.Add(new(definition.Name + " · Obergrenze (" + envelope.Key + ")", definition.Unit, 0, _start, upper, grid));
     }
+    private IEnumerable<CurveEnvelope> AllEnvelopes() => _envelopes.Concat(_abortEnvelopes.OfType<CurveEnvelope>());
+
+    private void AppendAbortLines(int channel, double[] grid, List<Waveform> waves)
+    {
+        if (_abortEnvelopes[channel] is not { } limits) return;
+        var definition = _channels[channel];
+        var samples = grid.Select(limits.At).ToArray();
+        waves.Add(new(definition.Name + " · Abbruch-Untergrenze (" + limits.Key + ")", definition.Unit, 0, _start,
+            samples.Select(bounds => bounds.Lower).ToArray(), grid));
+        waves.Add(new(definition.Name + " · Abbruch-Obergrenze (" + limits.Key + ")", definition.Unit, 0, _start,
+            samples.Select(bounds => bounds.Upper).ToArray(), grid));
+    }
+
     /// <summary>Inspect only the newly received segment, including hidden violations between samples.</summary>
     private void CheckSegment()
     {
-        var start = _times.Count > 1 ? _times[^2] : _times[0]; var end = _times[^1];
+        var start = _times.Count > 1 ? _times[^2] : _times[0];
+        var end = _times[^1];
         for (var channel = 0; channel < _channels.Length; channel++)
         {
-            foreach (var time in _envelopes[channel].Checkpoints(start, end).Distinct().Order())
-            {
-                var value = _times.Count == 1 ? _values[channel][0] : CurveEnvelope.Interpolate(_times, _values[channel], time);
-                var (lower, upper) = _envelopes[channel].At(time);
-                if (!Inside(value, lower, upper)) HasViolation = true;
-                if (_stopPercent is not { } percent || !BeyondStopLimit(value, lower, upper, percent)) continue;
-                EarlyStop = new(percent, _channels[channel].Name, time, value, lower, upper);
-                return;
-            }
+            var normal = _envelopes[channel];
+            if (!HasViolation)
+                HasViolation = normal.Checkpoints(start, end).Any(time => IsNormalViolation(normal, channel, time));
+            EarlyStop = FindEarlyStop(channel, start, end);
+            if (EarlyStop is null) continue;
+            HasViolation = true;
+            return;
         }
     }
+
+    private bool IsNormalViolation(CurveEnvelope envelope, int channel, double time)
+    {
+        var (lower, upper) = envelope.At(time);
+        return !Inside(MeasuredAt(channel, time), lower, upper);
+    }
+
+    private EnvelopeEarlyStop? FindEarlyStop(int channel, double start, double end)
+    {
+        var abort = _abortEnvelopes[channel];
+        if (abort is null && _stopPercent is null) return null;
+        var limits = abort ?? _envelopes[channel];
+        var percent = abort is null ? _stopPercent!.Value : 0;
+        foreach (var time in limits.Checkpoints(start, end).Distinct().Order())
+        {
+            var value = MeasuredAt(channel, time);
+            var (lower, upper) = limits.At(time);
+            if (BeyondStopLimit(value, lower, upper, percent))
+                return new(percent, _channels[channel].Name, time, value, lower, upper) { AbortCurve = abort?.Key };
+        }
+        return null;
+    }
+
+    private double MeasuredAt(int channel, double time) => _times.Count == 1 ? _values[channel][0]
+        : CurveEnvelope.Interpolate(_times, _values[channel], time);
+
     private bool HasFullDuration()
     {
         if (_times.Count < 2) return false;
