@@ -235,23 +235,21 @@ public sealed class EnvelopeTraceTests
     [InlineData("25", false)]
     public async Task Point_output_distinguishes_early_end_from_an_ordinary_fail(string percent, bool early)
     {
-        var loop = Group("loop").Var("Early", VarType.Bool, "false");
+        var loop = Group("loop").Var("Early", VarType.Bool, false).Var("Observed", VarType.Bool, false);
         loop.Add(Block(TraceBlocks.Start, "begin", ("Grenzkurven", "band@1"), ("FailAbbruch", "true"), ("AbweichungProzent", percent)),
             Block(TraceBlocks.Point, "first", ("Werte", "5"), ("Zeit", "0")),
             Block(TraceBlocks.Point, "middle", ("Werte", "12"), ("Zeit", "1"), ("VorzeitigesEndeZiel", "Early")),
-            Steps.Code("check", "Check flag", ctx =>
-            {
-                Assert.Equal(early, ctx.Get("Early"));
-                return StepOutcome.Unrated();
-            }),
+            Block(BlockCatalog.SetValue, "check", ("Ziel", "Observed"), ("Ausdruck", "Early")),
             Block(TraceBlocks.Stop, "close"));
         var definition = Test(loop);
         definition.Curves.Add(Band());
         var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
 
-        Assert.Equal(ResultRating.Fail, (await run.RunAsync().Within()).Rating);
+        var status = await run.RunAsync().Within();
+        Assert.True(status.Rating == ResultRating.Fail, string.Join(" | ", run.Events.OfType<StepCompleted>()
+            .Select(step => $"{step.NodeId}: {step.Rating} {step.Message}")));
         Assert.Equal(ResultRating.Fail, run.Steps("middle").Single().Rating);
-        Assert.Equal(ResultRating.NResult, run.Steps("check").Single().Rating);
+        Assert.Equal(early, Assert.IsType<bool>(run.Steps("check").Single().Value));
     }
 
     [Theory]
