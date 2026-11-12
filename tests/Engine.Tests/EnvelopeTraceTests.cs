@@ -35,6 +35,51 @@ public sealed class EnvelopeTraceTests
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
     [Fact]
+    public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
+    {
+        var recordings = Start(gap: 1.1);
+        recordings.SetPaused("owner", "trace", false, Now);
+        recordings.Add("owner", "trace", null, [11], Now);
+        recordings.SetPaused("owner", "trace", true, Now.AddSeconds(0.5));
+        recordings.SetPaused("owner", "trace", true, Now.AddSeconds(2));
+        Assert.True(recordings.IsPaused("owner", "trace"));
+        Assert.Null(recordings.Add("owner", "trace", 99, [5], Now.AddSeconds(4)));
+        recordings.SetPaused("owner", "trace", false, Now.AddSeconds(10.5));
+        Assert.False(recordings.IsPaused("owner", "trace"));
+        recordings.Add("owner", "trace", null, [5], Now.AddSeconds(11));
+
+        var result = recordings.Stop("owner", "trace");
+        Assert.True(result.Complete);
+        Assert.False(result.Passed);
+        Assert.Equal(new double[] { 0, 1 }, result.Channels[0].OriginalTimes);
+    }
+
+    [Fact]
+    public async Task Pause_block_skips_reads_and_resumes_the_same_recording()
+    {
+        var clock = new VirtualClock();
+        var loop = Group("loop").Add(
+            Block(TraceBlocks.Start, "start", ("Grenzkurven", "band@1"), ("MaxLuecke", "1.1")),
+            Block(TraceBlocks.Point, "first", ("Werte", "5")),
+            Block(TraceBlocks.PauseTime, "pause", ("Aktion", "Pausieren")),
+            Block(BlockCatalog.Wait, "switch", ("Dauer", "3000")),
+            Block(TraceBlocks.Point, "skip", ("Werte", "undefined")),
+            Block(TraceBlocks.PauseTime, "resume", ("Aktion", "Fortsetzen")),
+            Block(BlockCatalog.Wait, "settle", ("Dauer", "1000")),
+            Block(TraceBlocks.Point, "second", ("Werte", "7")),
+            Block(TraceBlocks.Stop, "stop"));
+        var definition = Test(loop);
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = clock });
+
+        Assert.Equal(ResultRating.Pass, (await run.RunAsync().Within()).Rating);
+        Assert.Equal(ResultRating.NResult, run.Steps("skip").Single().Rating);
+        var data = Assert.IsType<WaveformSet>(run.Steps("stop").Single().Value);
+        Assert.Equal(new double[] { 0, 1 }, EnvelopeTraceMetadata.Decode(data.Channels[0].Quality)!.OriginalTimes);
+        Assert.Equal(new double[] { 5, 7 }, data.Channels[0].Values);
+    }
+
+    [Fact]
     public void Single_sample_series_are_visible_without_trace_metadata()
     {
         var plot = new WaveformPlotViewModel();

@@ -4229,6 +4229,35 @@
       ]
     },
     {
+      "type": "verlauf.messzeit",
+      "displayName": "Messzeit pausieren / fortsetzen",
+      "category": "Messwertverl\u00E4ufe",
+      "description": "H\u00E4lt die automatische Messzeit einer manuellen Aufnahme an. Bisherige Punkte und Grenzverletzungen bleiben erhalten.",
+      "parameters": [
+        {
+          "name": "Aufnahme",
+          "label": "Aufnahmekennung",
+          "kind": "Text",
+          "default": "Verlauf",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Aktion",
+          "label": "Aktion",
+          "kind": "Choice",
+          "default": "Pausieren",
+          "required": false,
+          "choices": [
+            "Pausieren",
+            "Fortsetzen"
+          ],
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "verlauf.punkt",
       "displayName": "Messpunkt erg\u00E4nzen",
       "category": "Messwertverl\u00E4ufe",

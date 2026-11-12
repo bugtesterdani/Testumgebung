@@ -53,6 +53,17 @@ Alle drei manuellen Bausteine in denselben Prüflingstest legen:
 
 Ohne festgelegtes Zeitfenster prüft **Mindestdauer** weiterhin die Zeit zwischen erstem und letztem Messpunkt; `0` bewertet nur den aufgezeichneten Abschnitt. Ein Punkt nach der eingestellten Dauer ist ungültig. Bei manuell vorgegebenen Zeiten für den Abschlusspunkt exakt die Dauer liefern; es wird kein fehlender Messwert extrapoliert.
 
+## Messzeit beim Umschalten pausieren
+
+Bei einer manuell gesteuerten Aufnahme vor dem Umschalten den Baustein **Messzeit pausieren / fortsetzen**
+mit **Pausieren** und der Aufnahmekennung ausführen. Danach denselben Baustein mit **Fortsetzen** ausführen.
+**Messpunkt ergänzen** verwendet bei leerem Feld **Zeit** die verstrichene Aufnahmezeit ohne Pausen.
+Explizit eingetragene Zeitwerte werden unverändert ausgewertet. Während einer Pause liest der Messpunktschritt
+keine Geräte und ergänzt keine Punkte. Der Verlauf und die bisherige Grenzbewertung bleiben erhalten.
+Die Pause gilt für manuell gesteuerte Aufnahmen zwischen einzelnen Messpunkten.
+
+Die [Demo mit simuliertem Spannungsmessgerät](beispiele/werkerkurve-messzeitpause.tproj.json) zeigt im Szenario **Kurve** eine dreisekündige Umschaltung.
+
 ## Bewertung, Abbruch und Grenzen
 
 Messkurve und Grenzlinien werden stückweise linear verbunden. Die normale Bewertung berücksichtigt alle Messzeiten und alle dazwischenliegenden Grenzstützpunkte. So werden Verletzungen zwischen Messpunkten erkannt. Die Zusatzabweichung berücksichtigt außerdem Nulldurchgänge der Grenzen. Eine Verletzung zwischen Messpunkten kann erst beim Empfang des nächsten Punkts erkannt werden.

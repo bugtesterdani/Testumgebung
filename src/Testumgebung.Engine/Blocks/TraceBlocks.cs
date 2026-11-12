@@ -8,6 +8,8 @@ namespace Testumgebung.Engine.Blocks;
 public static class TraceBlocks
 {
     public const string Start = "verlauf.start", Point = "verlauf.punkt", Stop = "verlauf.bewerten", Record = "verlauf.aufnehmen";
+    public const string PauseTime = "verlauf.messzeit";
+
     public static void Register(BlockCatalog catalog)
     {
         catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
@@ -16,6 +18,10 @@ public static class TraceBlocks
                 var settings = new TraceRecordingSettings(parameters);
                 return new DelegateAction(ctx => { settings.Begin(ctx); return Task.FromResult(StepOutcome.Unrated(message: "Messwertaufzeichnung begonnen.")); });
             }));
+        catalog.Register(new(PauseTime, "Messzeit pausieren / fortsetzen", "Messwertverläufe", "wait",
+            "Hält die automatische Messzeit einer manuellen Aufnahme an. Bisherige Punkte und Grenzverletzungen bleiben erhalten.",
+            [Name(), new("Aktion", "Aktion", ParameterKind.Choice, "Pausieren", Choices: ["Pausieren", "Fortsetzen"])],
+            CreatePauseTime));
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
             new[] { Name() }.Concat(ReaderParameters()).Append(new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression)).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
@@ -46,12 +52,24 @@ public static class TraceBlocks
      new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
      new("FailAbbruch", "Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)", ParameterKind.Bool, "false"),
      new("AbweichungProzent", "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10")];
+    private static IStepAction CreatePauseTime(BlockParameters parameters)
+    {
+        var name = parameters.Text("Aufnahme");
+        var paused = parameters.Choice("Aktion") == "Pausieren";
+        return new DelegateAction(ctx =>
+        {
+            ctx.Recordings.SetPaused(ctx.ProcessOwner, name, paused, ctx.Clock.Now);
+            return Task.FromResult(StepOutcome.Unrated(message: paused ? "Messzeit pausiert." : "Messzeit fortgesetzt."));
+        });
+    }
+
     private static IStepAction CreatePoint(BlockParameters parameters)
     {
         var reader = new TraceSampleReader(parameters); var time = parameters.Expr("Zeit"); var name = parameters.Text("Aufnahme");
         return new DelegateAction(async ctx =>
         {
             if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
+            if (ctx.Recordings.IsPaused(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Messzeit pausiert; keine Messung.");
             try
             {
                 double? xValue = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(new ContextResolver(ctx)), "Zeit");
