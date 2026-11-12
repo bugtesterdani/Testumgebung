@@ -144,7 +144,7 @@
                 <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionTitle}" Text="Eigene Geräteprofile im Projekt" />
-                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Text="Kanäle und Textbefehle für RS-232, TCP oder VISA definieren. Zahlen werden mit Dezimalpunkt übertragen; Antworten müssen Zahlen oder ON/OFF sein." Margin="0,0,0,8" />
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Text="Kanäle und Textbefehle für RS-232, TCP oder VISA definieren. Zahlen werden mit Dezimalpunkt übertragen; Antworten können Zahlen mit der eingetragenen Einheit oder ON/OFF sein." Margin="0,0,0,8" />
                         <WrapPanel>
                             <Button Style="{StaticResource ToolButton}" Command="{Binding AddProfileCommand}" Content="+ Geräteprofil" />
                             <Button Style="{StaticResource ToolButton}" Command="{Binding RemoveProfileCommand}" Content="Profil entfernen" />

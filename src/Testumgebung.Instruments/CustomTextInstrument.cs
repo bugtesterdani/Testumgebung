@@ -31,9 +31,22 @@ public sealed class CustomTextInstrument : ScpiInstrument
         var response = (await Session.ExecuteCustomAsync(commands, readReply: true, ct).ConfigureAwait(false)).Trim();
         if (response.Equals("ON", StringComparison.OrdinalIgnoreCase)) return 1;
         if (response.Equals("OFF", StringComparison.OrdinalIgnoreCase)) return 0;
-        if (!double.TryParse(response, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) || !double.IsFinite(value))
+        if (!TryReadNumber(response, channel.Unit, out var value))
             throw new InstrumentException($"{Model}, {channel.Name}: keine endliche Zahl in Antwort „{response}“.");
         return value;
+    }
+
+    private static bool TryReadNumber(string response, string? unit, out double value)
+    {
+        if (double.TryParse(response, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            return double.IsFinite(value);
+
+        var suffix = unit?.Trim();
+        if (string.IsNullOrEmpty(suffix) || !response.EndsWith(suffix, StringComparison.Ordinal))
+            return false;
+
+        var number = response.AsSpan(0, response.Length - suffix.Length);
+        return double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out value) && double.IsFinite(value);
     }
 
     protected override Task WriteChannelAsync(InstrumentChannel channel, double value, CancellationToken ct)

@@ -164,6 +164,7 @@ public sealed class CustomDeviceTests
     }
 
     [Theory]
+    [InlineData("43.50V", 43.5)] [InlineData("12 V", 12)] [InlineData("-1.25e-2V", -.0125)]
     [InlineData("12.5", 12.5)] [InlineData("ON", 1)] [InlineData("off", 0)] [InlineData("1e-3", .001)]
     public async Task Numeric_reads_and_explicit_writes_use_only_profile_commands(string reply, double expected)
     {
@@ -178,7 +179,7 @@ public sealed class CustomDeviceTests
         await driver.SafeStateAsync(default); Assert.Equal(new[] { "OFF", "STOP" }, wire.Commands.TakeLast(2));
     }
     [Theory]
-    [InlineData("NaN")] [InlineData("Infinity")] [InlineData("12 V")] [InlineData("")]
+    [InlineData("NaN")] [InlineData("Infinity")] [InlineData("12 A")] [InlineData("12 mV")] [InlineData("NaN V")] [InlineData("EA Elektro-Automatik,EL 9080")] [InlineData("")]
     public async Task Invalid_read_responses_fail_without_fabricating_values(string reply)
     {
         using var driver = Driver(Profile(), new Wire { Reply = reply });
