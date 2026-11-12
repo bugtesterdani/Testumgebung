@@ -322,6 +322,13 @@ public sealed class TestRun
 
     private bool DutExitPending(ExecutionPhase phase) => !phase.IsExit && _dutFlow.Value?.ExitRequested == true;
 
+    private bool CanContinue(ExecutionPhase phase) => !phase.IsCancelled && !DutExitPending(phase);
+
+    private bool ShouldFinishIteration(Repetition repetition, ExecutionPhase phase, Expression? condition,
+        Scope scope, GroupDefinition group, ResultAccumulator accumulator)
+        => repetition.Mode == RepeatMode.Until && CanContinue(phase)
+            && (!TryEvaluate(condition!, scope, group, accumulator, out var done) || done);
+
     /// <summary>
     /// Führt ein Element aus und überträgt seine Bewertung an die Eltern – bei Haltepunkt erst nach dem Fortsetzen.
     /// </summary>
@@ -727,7 +734,7 @@ public sealed class TestRun
             var first = true;
             foreach (var child in group.Children)
             {
-                if (phase.IsCancelled || DutExitPending(phase)) break;
+                if (!CanContinue(phase)) break;
                 if (!first && repetition is { Mode: RepeatMode.Duration, StopWithinIteration: true } && Clock.Now - start >= repetition.Duration)
                 {
                     Emit(new Diagnostic(group.Id, $"Zeitspanne {repetition.Duration.TotalSeconds:0.###} s abgelaufen – restliche Schritte von Iteration {iteration} übersprungen.")
@@ -761,7 +768,7 @@ public sealed class TestRun
             return true;
         }
 
-        while (!phase.IsCancelled && !DutExitPending(phase))
+        while (CanContinue(phase))
         {
             if (!CanRepeat()) break;
 
@@ -782,10 +789,7 @@ public sealed class TestRun
 
             await ExecuteIterationChildrenAsync();
 
-            if (repetition.Mode == RepeatMode.Until && !phase.IsCancelled && !DutExitPending(phase))
-            {
-                if (!TryEvaluate(repeatExpression!, scope, group, accumulator, out var untilValue) || untilValue) break;
-            }
+            if (ShouldFinishIteration(repetition, phase, repeatExpression, scope, group, accumulator)) break;
         }
         return iteration;
     }
