@@ -35,6 +35,17 @@ public sealed class EnvelopeTraceTests
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
     [Fact]
+    public void Single_sample_series_are_visible_without_trace_metadata()
+    {
+        var plot = new WaveformPlotViewModel();
+        plot.SetData([new PlotSource("Spannung", "V", [0]), new PlotSource("Obergrenze", "V", [0.5])], 1, [0]);
+        Assert.Equal(2, plot.SampleMarkers.Count);
+        Assert.All(plot.SampleMarkers, marker => Assert.True(marker.X > 0));
+        plot.Channels[0].IsVisible = false;
+        Assert.Equal(1, Assert.Single(plot.SampleMarkers).ColorIndex);
+    }
+
+    [Fact]
     public void A_violation_between_measured_points_is_detected_at_the_limit_knot()
     {
         var r = Start(Band(upper: [10, 1, 10])); r.Add("owner", "trace", 0, [5], Now); r.Add("owner", "trace", 2, [5], Now.AddSeconds(2));

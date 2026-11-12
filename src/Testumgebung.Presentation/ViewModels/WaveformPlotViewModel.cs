@@ -356,6 +356,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
             }
         }
         UpdateSampleMarkers();
+        ShowSingleSampleMarkers();
         UpdateViolationMarkers();
         UpdateRmsLabels();
         UpdateCursor();
@@ -381,6 +382,18 @@ public sealed class WaveformPlotViewModel : ObservableObject
             }
         }
     }
+    // A polyline with only one vertex is invisible. Draw that sample even without trace metadata.
+    private void ShowSingleSampleMarkers()
+    {
+        if (_pointTrace || Count != 1) return;
+        foreach (var series in Series)
+        {
+            if (series.Points.Count != 1) continue;
+            var point = series.Points[0];
+            SampleMarkers.Add(new(Math.Clamp(point.X, 4, PlotWidth - 4), point.Y, series.ColorIndex));
+        }
+    }
+
     private void UpdateViolationMarkers()
     {
         if (_viewEnd <= _viewStart) return;
