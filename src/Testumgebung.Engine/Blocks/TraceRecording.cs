@@ -101,9 +101,10 @@ internal sealed class TimedTraceAction : IStepAction
     private readonly TraceSampleReader _reader;
     private readonly double _interval, _duration;
     private readonly string? _target;
-    public TimedTraceAction(TraceRecordingSettings settings, TraceSampleReader reader, double interval, string? target)
+    private readonly bool _exitDut;
+    public TimedTraceAction(TraceRecordingSettings settings, TraceSampleReader reader, double interval, string? target, bool exitDut)
     {
-        _settings = settings; _reader = reader; _target = target; _interval = interval;
+        _settings = settings; _reader = reader; _target = target; _interval = interval; _exitDut = exitDut;
         _duration = settings.Duration ?? throw new BlockConfigurationException("Zeitgesteuerte Messung benötigt eine Dauer > 0.");
         if (!double.IsFinite(interval) || interval < 1e-7 || _duration > TimeSpan.MaxValue.TotalSeconds)
             throw new BlockConfigurationException("Endliche Dauer und Abfrageintervall >= 0,0000001 s angeben.");
@@ -129,7 +130,7 @@ internal sealed class TimedTraceAction : IStepAction
             }
             var result = ctx.Recordings.Stop(ctx.ProcessOwner, _settings.Name, !ctx.IsOperatorAborted);
             TraceBlocks.WriteDetails(ctx, _target, result);
-            return TraceBlocks.Outcome(result, true);
+            return TraceBlocks.Outcome(result, true, _exitDut);
         }
         catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, _settings.Name); throw; }
     }

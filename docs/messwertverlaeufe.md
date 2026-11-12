@@ -84,6 +84,16 @@ Die Pause gilt für manuell gesteuerte Aufnahmen zwischen einzelnen Messpunkten.
 
 Die [Demo mit simuliertem Spannungsmessgerät](beispiele/werkerkurve-messzeitpause.tproj.json) zeigt im Szenario **Kurve** eine dreisekündige Umschaltung.
 
+## Bei vorzeitigem Messende direkt zum Exit
+
+In **Messpunkt ergänzen** oder **Messwertverlauf aufnehmen** die Option
+**Bei vorzeitigem Ende zur Prüflings-Exit-Gruppe** aktivieren. Wenn die Prozentgrenze oder
+die Abbruchgrenzkurve die Aufnahme vorzeitig beendet, hält der Baustein den Messwert und FAIL fest.
+Die Ablaufsteuerung überspringt weitere reguläre Schritte und Wiederholungen des aktuellen Prüflings.
+Sie führt dessen Exit-Gruppe sowie die Exit-Gruppen bereits betretener Untergruppen aus.
+Bereits laufende parallele Schritte dürfen ihre aktuelle Ausführung abschließen.
+Ein normales FAIL ohne vorzeitiges Messende und ein reguläres Aufnahmeende lösen den Wechsel nicht aus.
+
 ## Bewertung, Abbruch und Grenzen
 
 Messkurve und Grenzlinien werden stückweise linear verbunden. Die normale Bewertung berücksichtigt alle Messzeiten und alle dazwischenliegenden Grenzstützpunkte. So werden Verletzungen zwischen Messpunkten erkannt. Die Zusatzabweichung berücksichtigt außerdem Nulldurchgänge der Grenzen. Eine Verletzung zwischen Messpunkten kann erst beim Empfang des nächsten Punkts erkannt werden.

@@ -1,0 +1,550 @@
+{
+  "format": "testumgebung.projekt",
+  "formatVersion": 1,
+  "name": "Demo: direkter Wechsel zur Exit-Gruppe",
+  "version": "1.4",
+  "description": "Kurve und Fruehes Ende verwenden dieselben Gerätebefehle, Wartezeiten und Messpunkte. Im Szenario Fruehes Ende wird Normal auf 3,099 V gesetzt. Die Zusatzabweichung lässt sich in Messwertverlauf beginnen ändern.",
+  "variables": [],
+  "init": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "init",
+    "name": "Vorbereitung"
+  },
+  "loop": {
+    "variables": [
+      {
+        "name": "Normal",
+        "type": "Double",
+        "initial": "4.2"
+      }
+    ],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [
+      {
+        "art": "gruppe",
+        "variables": [
+          {
+            "name": "Kennung",
+            "type": "String"
+          },
+          {
+            "name": "Szenario",
+            "type": "String",
+            "initial": "PASS"
+          },
+          {
+            "name": "Details",
+            "type": "String",
+            "initial": ""
+          },
+          {
+            "name": "NaechsterSchrittErreicht",
+            "type": "Bool",
+            "initial": "false"
+          }
+        ],
+        "repeat": {
+          "mode": "Once"
+        },
+        "resultBeforeRepeat": "Keep",
+        "dutRun": true,
+        "dutIdVariable": "Kennung",
+        "children": [
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Eingabe",
+              "Text": "Demo-Seriennummer eingeben (z. B. DEMO-001). Es wird keine Hardware angesteuert.",
+              "Bild": "",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Standardwert": "DEMO-001",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "",
+              "Warten": "true",
+              "Ziel": "Kennung",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "demo-serial",
+            "name": "Demo-Seriennummer erfassen"
+          },
+          {
+            "art": "schritt",
+            "block": "werker",
+            "parameters": {
+              "Art": "Auswahl",
+              "Text": "Kurve und Fruehes Ende nutzen denselben Messablauf. Nur der mittlere Wert Normal ist anders: 4,2 V oder 3,099 V. PASS und FAIL sind die konstanten Vergleichsfälle.",
+              "Bild": "",
+              "Datentyp": "Text",
+              "Pflicht": "true",
+              "Standardwert": "Kurve",
+              "Min": "",
+              "Max": "",
+              "Einheit": "",
+              "ErlaubteWerte": "PASS;FAIL;Fruehes Ende;Kurve",
+              "Warten": "true",
+              "Ziel": "Szenario",
+              "Anzeige": "Vorherigen Inhalt ersetzen"
+            },
+            "id": "demo-scenario",
+            "name": "Beispiel auswählen"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"PASS\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "5"
+                },
+                "id": "demo-pass-value",
+                "name": "Simulation: 5 V am DMM bereitstellen"
+              }
+            ],
+            "id": "demo-pass",
+            "name": "PASS"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"FAIL\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "3.999"
+                },
+                "id": "demo-fail-value",
+                "name": "Simulation: 3.999 V am DMM bereitstellen"
+              }
+            ],
+            "id": "demo-fail",
+            "name": "FAIL"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"Fruehes Ende\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "wert.setzen",
+                "parameters": {
+                  "Ziel": "Normal",
+                  "Ausdruck": "3.099"
+                },
+                "id": "schritt1",
+                "name": "Wert setzen"
+              }
+            ],
+            "id": "demo-early",
+            "name": "Fruehes Ende"
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "Szenario == \"PASS\" || Szenario == \"FAIL\"",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "verlauf.aufnehmen",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Kanaele": "Spannung",
+                  "Einheiten": "V",
+                  "Grenzkurven": "demo-spannungsband@1",
+                  "Dauer": "5",
+                  "MaxPunkte": "100",
+                  "MaxLuecke": "1",
+                  "MinDauer": "0",
+                  "Beruehren": "true",
+                  "FailAbbruch": "true",
+                  "AbweichungProzent": "10",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Intervall": "0.5",
+                  "ErgebnisZiel": "Details"
+                },
+                "id": "demo-capture",
+                "name": "5 Sekunden messen – 4 bis 6 V, Zusatzgrenze 10 %"
+              }
+            ],
+            "id": "demo-timed",
+            "name": "Zeitgesteuerte Aufnahme",
+            "description": "Normale Grenzverletzungen bleiben FAIL. Die Zusatzabweichung beendet nur diese Aufnahme, nicht die folgenden Schritte."
+          },
+          {
+            "art": "gruppe",
+            "variables": [],
+            "condition": "((Szenario == \"Kurve\") || (Szenario == \"Fruehes Ende\"))",
+            "repeat": {
+              "mode": "Once"
+            },
+            "resultBeforeRepeat": "Keep",
+            "children": [
+              {
+                "art": "schritt",
+                "block": "verlauf.start",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Kanaele": "Spannung",
+                  "Einheiten": "V",
+                  "Grenzkurven": "demo-spannungsband@1",
+                  "Dauer": "5",
+                  "MaxPunkte": "100",
+                  "MaxLuecke": "1.5",
+                  "MinDauer": "0",
+                  "Beruehren": "true",
+                  "FailAbbruch": "true",
+                  "AbweichungProzent": "10"
+                },
+                "id": "demo-begin",
+                "name": "Manuelle Kurve beginnen"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "5"
+                },
+                "id": "demo-point-0-value",
+                "name": "Simulation: 5 V am DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Zeit": "0"
+                },
+                "id": "demo-point-0",
+                "name": "Messpunkt 0 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-1",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "5.4"
+                },
+                "id": "demo-point-1-value",
+                "name": "Simulation: 5.4 V am DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Zeit": "1"
+                },
+                "id": "demo-point-1",
+                "name": "Messpunkt 1 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-2",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "Normal"
+                },
+                "id": "demo-point-2-value",
+                "name": "Simulation: 4.7 V am DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Zeit": "2",
+                  "BeiVorzeitigemEndeZurExitGruppe": "true"
+                },
+                "id": "demo-point-2",
+                "name": "Messpunkt 2 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-3",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "5.8"
+                },
+                "id": "demo-point-3-value",
+                "name": "Simulation: 5.8 V am DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Zeit": "3"
+                },
+                "id": "demo-point-3",
+                "name": "Messpunkt 3 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-4",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "5.1"
+                },
+                "id": "demo-point-4-value",
+                "name": "Simulation: 5.1 V am DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Zeit": "4"
+                },
+                "id": "demo-point-4",
+                "name": "Messpunkt 4 s"
+              },
+              {
+                "art": "schritt",
+                "block": "warten",
+                "parameters": {
+                  "Dauer": "1000"
+                },
+                "id": "demo-wait-5",
+                "name": "Eine Sekunde bis zum nächsten Punkt"
+              },
+              {
+                "art": "schritt",
+                "block": "analog.ausgeben",
+                "parameters": {
+                  "Ressource": "Demo_DMM_Spannung",
+                  "Wert": "5.4"
+                },
+                "id": "demo-point-5-value",
+                "name": "Simulation: 5.4 V am DMM bereitstellen"
+              },
+              {
+                "art": "schritt",
+                "block": "verlauf.punkt",
+                "parameters": {
+                  "Aufnahme": "DemoSpannung",
+                  "Quelle": "Geräte",
+                  "Werte": "",
+                  "Ressourcen": "Demo_DMM_Spannung",
+                  "Zeit": "5"
+                },
+                "id": "demo-point-5",
+                "name": "Messpunkt 5 s"
+              }
+            ],
+            "id": "demo-manual",
+            "name": "Sichtbarer Kurvenverlauf aus Einzelpunkten",
+            "exit": {
+              "art": "gruppe",
+              "id": "demo-close-manual",
+              "name": "Manuelle Aufnahme abschließen",
+              "variables": [],
+              "repeat": {
+                "mode": "Once"
+              },
+              "resultBeforeRepeat": "Keep",
+              "children": [
+                {
+                  "art": "schritt",
+                  "block": "verlauf.bewerten",
+                  "parameters": {
+                    "Aufnahme": "DemoSpannung",
+                    "ErgebnisZiel": "Details"
+                  },
+                  "id": "demo-evaluate",
+                  "name": "Kurve abschließen und Details übernehmen"
+                }
+              ]
+            }
+          },
+          {
+            "art": "schritt",
+            "block": "wert.setzen",
+            "parameters": {
+              "Ziel": "NaechsterSchrittErreicht",
+              "Ausdruck": "true"
+            },
+            "id": "demo-next",
+            "name": "Regulären Folgeschritt markieren"
+          }
+        ],
+        "id": "demo-dut",
+        "name": "Grenzband-Demoprüfling",
+        "exit": {
+          "art": "gruppe",
+          "id": "demo-dut-exit",
+          "name": "Exit: Prüfung abschließen",
+          "variables": [],
+          "repeat": {
+            "mode": "Once"
+          },
+          "resultBeforeRepeat": "Keep",
+          "children": [
+            {
+              "art": "schritt",
+              "block": "werker",
+              "parameters": {
+                "Art": "Anweisung",
+                "Text": "Exit-Gruppe erreicht ({Szenario}). Kurve und Protokoll ansehen und danach bestätigen.",
+                "Bild": "",
+                "Datentyp": "Zahl",
+                "Pflicht": "true",
+                "Standardwert": "",
+                "Min": "",
+                "Max": "",
+                "Einheit": "",
+                "ErlaubteWerte": "",
+                "Warten": "true",
+                "Ziel": "",
+                "Anzeige": "Vorherigen Inhalt ersetzen"
+              },
+              "id": "demo-finished",
+              "name": "Exit erreicht – Kurve ansehen"
+            }
+          ]
+        }
+      }
+    ],
+    "id": "loop",
+    "name": "Ein Demodurchlauf"
+  },
+  "finalization": {
+    "variables": [],
+    "repeat": {
+      "mode": "Once"
+    },
+    "resultBeforeRepeat": "Keep",
+    "children": [],
+    "id": "fin",
+    "name": "Abschluss"
+  },
+  "simulation": [
+    {
+      "name": "Demo_DMM_Spannung",
+      "channel": "ai0",
+      "unit": "V",
+      "value": 0,
+      "requiresLock": false,
+      "min": 0,
+      "max": 10,
+      "noise": 0,
+      "frequency": 0,
+      "phase": 0
+    }
+  ],
+  "curves": [
+    {
+      "id": "demo-spannungsband",
+      "name": "4–6 V für vollständige 5 Sekunden",
+      "version": "1",
+      "description": "Grenzband deckt 0..5 s vollständig ab. Zusätzliche 10-%-Abbruchgrenzen sind 3,6 V und 6,6 V.",
+      "sampleRate": 1,
+      "times": "AAAAAAAAAAAAAAAAAAAUQA==",
+      "channels": [
+        {
+          "id": "Untergrenze",
+          "unit": "V",
+          "samples": "AAAAAAAAEEAAAAAAAAAQQA=="
+        },
+        {
+          "id": "Obergrenze",
+          "unit": "V",
+          "samples": "AAAAAAAAGEAAAAAAAAAYQA=="
+        }
+      ],
+      "origin": "Generator",
+      "source": "",
+      "createdBy": "",
+      "createdAt": "0001-01-01T00:00:00+00:00",
+      "sha256": "5930157d1e4c4a0fff780901fb938213edacbf3ba2ce27c3ed8389ee92beb7a7"
+    }
+  ]
+}
