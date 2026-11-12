@@ -4319,6 +4319,15 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "VorzeitigesEndeZiel",
+          "label": "Vorzeitiges Ende \u2192 Boolvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
         }
       ]
     },

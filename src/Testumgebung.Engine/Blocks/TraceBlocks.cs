@@ -24,7 +24,8 @@ public static class TraceBlocks
             [Name(), new("Aktion", "Aktion", ParameterKind.Choice, "Pausieren", Choices: ["Pausieren", "Fortsetzen"])],
             CreatePauseTime));
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
-            new[] { Name() }.Concat(ReaderParameters()).Append(new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression)).ToArray(), CreatePoint));
+            new[] { Name() }.Concat(ReaderParameters()).Concat([new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression),
+                new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable)]).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
             [Name(), ResultTarget()], parameters => new DelegateAction(ctx =>
             {
@@ -69,14 +70,17 @@ public static class TraceBlocks
     private static IStepAction CreatePoint(BlockParameters parameters)
     {
         var reader = new TraceSampleReader(parameters); var time = parameters.Expr("Zeit"); var name = parameters.Text("Aufnahme");
+        var earlyStopTarget = parameters.Optional("VorzeitigesEndeZiel");
         return new DelegateAction(async ctx =>
         {
             if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
             if (ctx.Recordings.IsPaused(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Messzeit pausiert; keine Messung.");
+            ValidateEarlyStopTarget(ctx, earlyStopTarget);
             try
             {
                 double? xValue = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(new ContextResolver(ctx)), "Zeit");
                 var preview = await reader.AppendAsync(ctx, name, xValue).ConfigureAwait(false);
+                WriteEarlyStop(ctx, earlyStopTarget, preview);
                 if (preview is not null)
                 {
                     if (preview.Finished) return Outcome(preview, true);
@@ -89,6 +93,17 @@ public static class TraceBlocks
             catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, name); throw; }
         });
     }
+    private static void ValidateEarlyStopTarget(IStepContext ctx, string? target)
+    {
+        if (target is not null && ctx.Get(target) is not bool)
+            throw new BlockConfigurationException("VorzeitigesEndeZiel muss eine Boolvariable sein.");
+    }
+
+    private static void WriteEarlyStop(IStepContext ctx, string? target, TraceEvaluation? result)
+    {
+        if (target is not null) ctx.Set(target, result?.EarlyStop is not null);
+    }
+
     internal static void ValidateTarget(IStepContext ctx, string? target)
     {
         if (target is not null && ctx.Get(target) is not string) throw new BlockConfigurationException("ErgebnisZiel muss eine Stringvariable sein.");

@@ -247,6 +247,28 @@ public sealed class EnvelopeTraceTests
         Assert.NotNull(r.Add("owner", "throttle", 0.2, [11], Now)!.EarlyStop);
     }
     [Theory]
+    [InlineData("10", true)]
+    [InlineData("25", false)]
+    public async Task Point_output_distinguishes_early_end_from_an_ordinary_fail(string percent, bool early)
+    {
+        var loop = Group("loop").Var("Early", VarType.Bool, false).Var("Observed", VarType.Bool, false);
+        loop.Add(Block(TraceBlocks.Start, "begin", ("Grenzkurven", "band@1"), ("FailAbbruch", "true"), ("AbweichungProzent", percent)),
+            Block(TraceBlocks.Point, "first", ("Werte", "5"), ("Zeit", "0")),
+            Block(TraceBlocks.Point, "middle", ("Werte", "12"), ("Zeit", "1"), ("VorzeitigesEndeZiel", "Early")),
+            Block(BlockCatalog.SetValue, "check", ("Ziel", "Observed"), ("Ausdruck", "Early")),
+            Block(TraceBlocks.Stop, "close"));
+        var definition = Test(loop);
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+
+        var status = await run.RunAsync().Within();
+        Assert.True(status.Rating == ResultRating.Fail, string.Join(" | ", run.Events.OfType<StepCompleted>()
+            .Select(step => $"{step.NodeId}: {step.Rating} {step.Message}")));
+        Assert.Equal(ResultRating.Fail, run.Steps("middle").Single().Rating);
+        Assert.Equal(early, Assert.IsType<bool>(run.Steps("check").Single().Value));
+    }
+
+    [Theory]
     [InlineData(false)] [InlineData(true)]
     public async Task Early_fail_ends_only_its_recording_preserves_data_and_continues_following_steps(bool parallel)
     {
