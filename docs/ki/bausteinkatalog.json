@@ -4090,6 +4090,15 @@
           "hint": null
         },
         {
+          "name": "Abbruchgrenzkurven",
+          "label": "Abbruchgrenzkurven: ID@Version (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
+        },
+        {
           "name": "Dauer",
           "label": "Messdauer [s]",
           "kind": "Number",
@@ -4363,6 +4372,15 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "Abbruchgrenzkurven",
+          "label": "Abbruchgrenzkurven: ID@Version (Komma)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
         },
         {
           "name": "Dauer",

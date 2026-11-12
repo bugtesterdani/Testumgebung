@@ -91,6 +91,22 @@ public sealed class EnvelopeTraceTests
     }
 
     [Fact]
+    public void A_time_dependent_abort_curve_can_trip_between_points_inside_the_normal_band()
+    {
+        var abort = Band(upper: [10, 4, 10]);
+        var recording = new EnvelopeRecordings();
+        recording.Start("owner", "trace", [new("U", "V", Band()) { AbortLimits = abort }], Now, maxGap: 2);
+        recording.Add("owner", "trace", 0, [5], Now);
+        var result = recording.Add("owner", "trace", 2, [5], Now.AddSeconds(2))!;
+
+        Assert.Equal(1, result.EarlyStop!.Time);
+        Assert.Equal(4, result.EarlyStop.Upper);
+        Assert.Empty(result.Channels[0].Violations);
+        Assert.False(result.Passed);
+        Assert.True(recording.HasViolation("owner", "trace"));
+    }
+
+    [Fact]
     public void A_violation_between_measured_points_is_detected_at_the_limit_knot()
     {
         var r = Start(Band(upper: [10, 1, 10])); r.Add("owner", "trace", 0, [5], Now); r.Add("owner", "trace", 2, [5], Now.AddSeconds(2));

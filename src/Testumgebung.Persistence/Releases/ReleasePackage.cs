@@ -355,8 +355,12 @@ public static class DefinitionCompatibility
         }
         void CollectReferences(JsonObject jsonObject2)
         {
-            if (((string?)jsonObject2["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && jsonObject2["parameters"] is JsonObject trace && (string?)trace["Grenzkurven"] is { } limits)
-                foreach (var key in limits.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) curves.Add(key.Contains('@') ? key : key + "@");
+            if (((string?)jsonObject2["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && jsonObject2["parameters"] is JsonObject trace)
+            {
+                foreach (var parameter in new[] { "Grenzkurven", Testumgebung.Engine.Blocks.TraceBlocks.AbortCurvesParameter })
+                    foreach (var key in ((string?)trace[parameter] ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                        curves.Add(key.Contains('@') ? key : key + "@");
+            }
             if (jsonObject2["parameters"] is JsonObject jsonObject3 && (string?)jsonObject3["Baustein"] is { Length: > 0 } bufferText) used.Add(bufferText);
             if (jsonObject2["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
         }

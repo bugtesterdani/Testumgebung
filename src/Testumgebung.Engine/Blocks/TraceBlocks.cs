@@ -9,6 +9,7 @@ public static class TraceBlocks
 {
     public const string Start = "verlauf.start", Point = "verlauf.punkt", Stop = "verlauf.bewerten", Record = "verlauf.aufnehmen";
     public const string PauseTime = "verlauf.messzeit";
+    public const string AbortCurvesParameter = "Abbruchgrenzkurven";
 
     public static void Register(BlockCatalog catalog)
     {
@@ -46,6 +47,8 @@ public static class TraceBlocks
     [Name(), new("Kanaele", "Kanalnamen (Komma)", ParameterKind.Text, "Spannung", Required: true),
      new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
      new("Grenzkurven", "Grenzkurven: ID@Version (Komma)", ParameterKind.Text, Required: true),
+     new(AbortCurvesParameter, "Abbruchgrenzkurven: ID@Version (Komma)", ParameterKind.Text,
+        Hint: "Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."),
      new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
      new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
      new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),
@@ -109,11 +112,19 @@ public static class TraceBlocks
     {
         if (target is not null) ctx.Set(target, JsonSerializer.Serialize(result.Channels));
     }
+    private static string EarlyStopMessage(EnvelopeEarlyStop early)
+    {
+        var limit = early.AbortCurve is { } curve
+            ? $"Abbruchgrenzkurve {curve}, Grenzen {early.Lower:G6}..{early.Upper:G6}"
+            : $"Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %";
+        return $"Aufnahme vorzeitig mit FAIL beendet: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, {limit}. Nächste Prüfschritte werden ausgeführt.";
+    }
+
     internal static StepOutcome Outcome(TraceEvaluation result, bool includeData)
     {
         var value = includeData ? result.Data : null;
         if (result.EarlyStop is { } early)
-            return StepOutcome.Fail($"Aufnahme vorzeitig mit FAIL beendet: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %. Nächste Prüfschritte werden ausgeführt.", value);
+            return StepOutcome.Fail(EarlyStopMessage(early), value);
         if (!result.Complete) return new(ResultRating.Error, value, Message: "Aufnahme unvollständig, ungültig oder abgebrochen; vollständigen Zeitraum prüfen.");
         return result.Passed ? new(ResultRating.Pass, value, Message: "Vollständiger Messverlauf innerhalb des Grenzbandes.")
             : StepOutcome.Fail($"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e).", value);

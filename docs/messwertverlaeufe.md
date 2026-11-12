@@ -19,6 +19,20 @@ Beispiel **4–6 V**, **10 % zusätzliche Abweichung**, **Messdauer 10 s**:
 
 Für Prozentsatz `p` liegen die zusätzlichen Abbruchgrenzen bei `Untergrenze − |Untergrenze| × p/100` und `Obergrenze + |Obergrenze| × p/100`. Negative Grenzen werden ebenfalls über ihren Betrag berechnet; bei −6 bis −4 V und 10 % ergibt sich −6,6 bis −3,6 V. Eine Grenze von 0 hat keinen prozentualen Zuschlag. Nur striktes Überschreiten löst das vorzeitige Ende aus; numerisches Rundungsrauschen der Prozentrechnung wird toleriert. Die normale Grenzprüfung bleibt strikt und unabhängig davon. Mit 0 % endet die Aufnahme bei jeder echten Grenzüberschreitung. Die Zusatzfunktion ist standardmäßig ausgeschaltet.
 
+## Eigene Abbruchgrenzkurven
+
+Eine zweite Kurve mit den Kanälen **Untergrenze** und **Obergrenze** erstellen und im Aufnahmebaustein
+unter **Abbruchgrenzkurven** mit `ID@Version` eintragen. Die normalen Grenzkurven bewerten weiter PASS
+oder FAIL. Eine Überschreitung der Abbruchkurve beendet die Aufnahme sofort mit FAIL und zeigt beide
+Abbruchlinien an. Das bloße Berühren der Abbruchlinie beendet die Aufnahme nicht.
+
+Bei mehreren Messkanälen die Abbruchkurven in Kanalreihenfolge kommasepariert angeben, z. B.
+`abbruch-spannung@1,,abbruch-leistung@1`. Ein leerer Eintrag verwendet die vorhandene Prozentregel,
+sofern sie aktiviert ist. Ein eingetragenes Abbruchband ersetzt die Prozentregel für diesen Kanal und
+ist auch bei ausgeschalteter Prozentregel aktiv. Einheit und Zeitabdeckung werden wie beim normalen
+Grenzband geprüft. Beispiel: Normale Untergrenze 0 V, Abbruch-Untergrenze −0,2 V. Ein Messwert von
+−0,1 V ergibt FAIL bei weiterlaufender Aufnahme. Unter −0,2 V endet die Aufnahme vorzeitig.
+
 ## Grenzkurven und vollständiger Zeitraum
 
 Unter **Kurven** eine Kurve mit Kanälen **Untergrenze** und **Obergrenze** und der Einheit der Messgröße anlegen. Vorhandener numerischer Generator/Formeleditor und CSV-Import können verwendet werden. [CSV-Beispiel](beispiele/grenzband-spannung.csv): erste Spalte als Zeit in Sekunden, restliche Spalten als die beiden Kanäle zuordnen. Die Vorlage reicht bis 1 s; für längere Aufnahmen Zeitpunkte entsprechend erweitern.

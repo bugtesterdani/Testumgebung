@@ -8,7 +8,7 @@ namespace Testumgebung.Engine.Blocks;
 /// <summary>Shared settings for manual point capture and the timed acquisition block.</summary>
 internal sealed class TraceRecordingSettings
 {
-    private readonly string[] _names, _units, _curves;
+    private readonly string[] _names, _units, _curves, _abortCurves;
     private readonly double _minimumDuration;
     private readonly bool _touchAllowed;
     private readonly double? _stopPercent;
@@ -20,6 +20,7 @@ internal sealed class TraceRecordingSettings
     {
         Name = p.Text("Aufnahme"); _names = Split(p.Text("Kanaele"), ','); _units = Split(p.Text("Einheiten"), ','); _curves = Split(p.Text("Grenzkurven"), ',');
         if (_names.Length != _units.Length || _names.Length != _curves.Length) throw new BlockConfigurationException("Je Messkanal eine Einheit und eine Grenzkurve angeben.");
+        _abortCurves = ReadAbortCurves(p.Text(TraceBlocks.AbortCurvesParameter), _names.Length);
         var maximum = p.Number("MaxPunkte") ?? 0;
         if (maximum != Math.Truncate(maximum) || maximum is < 2 or > 100000) throw new BlockConfigurationException("Ganzzahliges Punktlimit 2..100000 angeben.");
         Maximum = (int)maximum; MaxGap = p.Number("MaxLuecke") ?? 0;
@@ -32,9 +33,21 @@ internal sealed class TraceRecordingSettings
     public void Begin(IStepContext ctx)
     {
         if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
-        var channels = _names.Select((name, index) => new TraceChannelDefinition(name, _units[index], Resolve(ctx, _curves[index]))).ToArray();
+        var channels = _names.Select((name, index) => new TraceChannelDefinition(name, _units[index], Resolve(ctx, _curves[index]))
+        {
+            AbortLimits = _abortCurves[index].Length == 0 ? null : Resolve(ctx, _abortCurves[index])
+        }).ToArray();
         ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration);
     }
+    private static string[] ReadAbortCurves(string value, int channelCount)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return Enumerable.Repeat("", channelCount).ToArray();
+        var keys = Split(value, ',');
+        if (keys.Length != channelCount)
+            throw new BlockConfigurationException("Je Messkanal eine Abbruchgrenzkurve oder einen leeren Eintrag angeben.");
+        return keys;
+    }
+
     private static CurveDefinition Resolve(IStepContext ctx, string key)
     {
         var separator = key.LastIndexOf('@'); var id = separator < 0 ? key : key[..separator]; var version = separator < 0 ? null : key[(separator + 1)..];

@@ -19,4 +19,7 @@ public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Cha
 public sealed record EnvelopeViolation(double Time, double Value, double Lower, double Upper, double Deviation);
 
 /// <summary>Automatic FAIL trigger, distinct from operator cancellation. Percent refers to the absolute limit value.</summary>
-public sealed record EnvelopeEarlyStop(double Percent, string Channel, double Time, double Value, double Lower, double Upper);
+public sealed record EnvelopeEarlyStop(double Percent, string Channel, double Time, double Value, double Lower, double Upper)
+{
+    public string? AbortCurve { get; init; }
+}
