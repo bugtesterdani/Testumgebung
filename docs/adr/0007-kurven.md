@@ -54,6 +54,11 @@ Dort lassen sich je Linie Zeit in Sekunden und Wert bearbeiten sowie Punkte hinz
 Speicherung erfolgt über **Version speichern**. Die Linien teilen weiterhin ein Zeitraster. Zeitpunkte
 anderer Linien können in der bearbeiteten Linie als interpolierte Werte sichtbar bleiben.
 
+Ab Version 1.2.7 können Messwertverläufe ein eigenes Abbruchband mit Unter- und Obergrenze verwenden.
+Bei manuellen Messpunkten lässt sich die Messzeit während einer Umschaltung pausieren.
+Die Option **Bei vorzeitigem Ende zur Prüflings-Exit-Gruppe** beendet bei einer Verletzung der
+Abbruchgrenze die regulären Schritte des aktuellen Prüflings. Das Ergebnis bleibt FAIL.
+
 ## Ausgabe
 
 * `IWaveformOutputAdapter`: `LoadAsync`, `TransferAsync`, `StartAsync`, `StopAsync` mit Zustand
