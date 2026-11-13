@@ -320,7 +320,9 @@ public sealed class CurvesViewModel : ObservableObject
     }
 
     private static IEnumerable<string> TraceCurveKeys(StepDefinition step)
-        => new[] { "Grenzkurven", TraceBlocks.AbortCurvesParameter }
+        => step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand) != TraceBlocks.ValueBand
+            ? []
+            : new[] { "Grenzkurven", TraceBlocks.AbortCurvesParameter }
             .SelectMany(parameter => (step.Parameters.GetValueOrDefault(parameter) ?? "")
                 .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
             .Distinct(StringComparer.Ordinal);

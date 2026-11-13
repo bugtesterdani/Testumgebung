@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;
+using Testumgebung.Engine.Blocks;
 
 namespace Testumgebung.Persistence.Releases;
 
@@ -355,14 +356,12 @@ public static class DefinitionCompatibility
         }
         void CollectReferences(JsonObject jsonObject2)
         {
-            if (((string?)jsonObject2["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && jsonObject2["parameters"] is JsonObject trace)
-            {
-                foreach (var parameter in new[] { "Grenzkurven", Testumgebung.Engine.Blocks.TraceBlocks.AbortCurvesParameter })
-                    foreach (var key in ((string?)trace[parameter] ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
-                        curves.Add(key.Contains('@') ? key : key + "@");
-            }
-            if (jsonObject2["parameters"] is JsonObject jsonObject3 && (string?)jsonObject3["Baustein"] is { Length: > 0 } bufferText) used.Add(bufferText);
-            if (jsonObject2["parameters"] is JsonObject pc && (string?)pc["Kurve"] is { Length: > 0 } curve) curves.Add(curve + "@" + ((string?)pc["Version"] ?? ""));
+            if (jsonObject2["parameters"] is not JsonObject parameters) return;
+            if ((string?)jsonObject2["block"] is TraceBlocks.Start or TraceBlocks.Record)
+                CollectTraceCurveReferences(parameters, curves);
+            if ((string?)parameters["Baustein"] is { Length: > 0 } block) used.Add(block);
+            if ((string?)parameters["Kurve"] is { Length: > 0 } curve)
+                curves.Add(curve + "@" + ((string?)parameters["Version"] ?? ""));
         }
 
         Walk(root["init"]);
@@ -372,5 +371,17 @@ public static class DefinitionCompatibility
         usedOutside = used;
         curvesOutside = curves;
         return root;
+    }
+
+    private static void CollectTraceCurveReferences(JsonObject parameters, HashSet<string> curves)
+    {
+        var mode = (string?)parameters[TraceBlocks.EvaluationParameter] ?? TraceBlocks.ValueBand;
+        if (mode != TraceBlocks.ValueBand) return;
+        foreach (var parameter in new[] { "Grenzkurven", TraceBlocks.AbortCurvesParameter })
+        {
+            var keys = ((string?)parameters[parameter] ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            foreach (var key in keys)
+                curves.Add(key.Contains('@') ? key : key + "@");
+        }
     }
 }
