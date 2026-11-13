@@ -125,6 +125,11 @@ public sealed partial class DevelopmentWorkspaceTests
         Select(buttons.Single(button => Equals(button.CommandParameter, "Reports")));
         Assert.True(results.IsChecked);
         Select(areas.Single(button => AutomationProperties.GetName(button) == "Verwaltung"));
+        Select(buttons.Single(button => Equals(button.CommandParameter, "Notifications")));
+        var visibleHeadings = Descendants(window).OfType<TextBlock>().Where(text => text.IsVisible).Select(text => text.Text).ToArray();
+        Assert.Contains("MQTT-Meldeweg", visibleHeadings);
+        Assert.Contains("HTTP-Meldeweg (Webhook)", visibleHeadings);
+        Assert.Contains("OPC-UA-Meldeweg", visibleHeadings);
         Select(buttons.Single(button => Equals(button.CommandParameter, "Python")));
         Assert.Contains(Descendants(window).OfType<TextBlock>(), text => text.IsVisible && text.Text == "Python-Umgebung und Konsole");
         Select(buttons.Single(button => Equals(button.CommandParameter, "Access")));
