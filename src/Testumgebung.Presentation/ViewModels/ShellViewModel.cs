@@ -43,6 +43,9 @@ public enum ShellPage
     System,
     /// <summary>Auswertung und Berichte (Entwickeln oder Freigeben).</summary>
     Reports,
+    Notifications,
+    Access,
+    Python,
 }
 
 /// <summary>
@@ -473,7 +476,7 @@ public sealed class ShellViewModel : ObservableObject
     {
         ShellPage.Operator or ShellPage.Protocol => true,
         ShellPage.Releases => HasReleases && (Session.CanDevelop || Session.CanRelease),
-        ShellPage.Settings => Session.CanDevelop && HasSettings,
+        ShellPage.Settings or ShellPage.Notifications or ShellPage.Access => Session.CanDevelop && HasSettings,
         ShellPage.Reports => Session.CanDevelop || Session.CanRelease,
         _ => Session.CanDevelop,
     };

@@ -193,7 +193,7 @@ public sealed class EnumEqualsConverter : IValueConverter
 public sealed class NavigationAreaConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => parameter is string pages && pages.Split(',').Contains(value?.ToString(), StringComparer.Ordinal);
+        => parameter is string pages && pages.Split(';').Contains(value?.ToString(), StringComparer.Ordinal);
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }
@@ -257,7 +257,8 @@ public sealed class DepthToMarginConverter : IValueConverter
 public sealed class EnumToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        => value?.ToString() == parameter?.ToString() ? Visibility.Visible : Visibility.Collapsed;
+        => parameter is string pages && pages.Split(';').Contains(value?.ToString(), StringComparer.Ordinal)
+            ? Visibility.Visible : Visibility.Collapsed;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
 }

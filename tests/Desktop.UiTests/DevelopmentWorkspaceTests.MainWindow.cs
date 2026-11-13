@@ -8,6 +8,10 @@ using Testumgebung.Presentation.Settings;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Persistence;
+using Testumgebung.Presentation.ViewModels;
+using System.Windows.Automation;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using Xunit;
 
 namespace Testumgebung.Desktop.UiTests;
@@ -47,6 +51,7 @@ public sealed partial class DevelopmentWorkspaceTests
                 Assert.Same(window.Shell, window.DataContext); Assert.NotNull(services);
                 Assert.DoesNotContain(Descendants(window).OfType<System.Windows.Controls.CheckBox>(), b => b.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.ParentBinding.Path.Path == "PairedStations.Enabled");
                 Assert.Empty(Descendants(window).OfType<Views.PairedStationsView>().SelectMany(v => Descendants(v).OfType<System.Windows.Controls.ComboBox>()));
+                if (mode == "normal") VerifyGroupedNavigation(window, dispatcher);
                 if (mode == "example")
                 {
                     Assert.Contains("Programme A, B, C und D", window.Title); Assert.Equal("A123", window.Shell.SelectedStation.Selection.ScanText); Assert.True(window.Shell.SelectedStation.UseDraft);
@@ -88,6 +93,46 @@ public sealed partial class DevelopmentWorkspaceTests
                     "Temporäre Fensterdaten sind nach dem Schließen weiterhin gesperrt.");
             }
         }
+    }
+
+    private static void VerifyGroupedNavigation(MainWindow window, Dispatcher dispatcher)
+    {
+        var buttons = Descendants(window).OfType<RadioButton>().ToArray();
+        var areas = buttons.Where(button => button.GroupName == "Nav").ToArray();
+        Assert.Equal(7, areas.Length);
+
+        void Select(RadioButton button)
+        {
+            Assert.True(button.IsVisible);
+            Assert.True(button.Command.CanExecute(button.CommandParameter));
+            button.Command.Execute(button.CommandParameter);
+            Sta.Flush(dispatcher);
+            Assert.True(button.IsChecked);
+        }
+
+        var results = areas.Single(button => AutomationProperties.GetName(button) == "Ergebnisse");
+        Select(results);
+        Assert.Equal(ShellPage.Protocol, window.Shell.Page);
+        Assert.Equal("Aktueller Lauf", Assert.Single(buttons, button => button.GroupName == "TabsProtocol" && button.IsVisible).Content);
+        window.Shell.Page = ShellPage.Results;
+        Assert.Equal(ShellPage.Protocol, window.Shell.Page);
+
+        window.Shell.Session.EnableDevelopmentMode();
+        window.Shell.Login();
+        Sta.Flush(dispatcher);
+        Assert.True(window.Shell.IsDeveloper);
+        Select(results);
+        Select(buttons.Single(button => Equals(button.CommandParameter, "Reports")));
+        Assert.True(results.IsChecked);
+        Select(areas.Single(button => AutomationProperties.GetName(button) == "Verwaltung"));
+        Select(buttons.Single(button => Equals(button.CommandParameter, "Python")));
+        Assert.Contains(Descendants(window).OfType<TextBlock>(), text => text.IsVisible && text.Text == "Python-Umgebung und Konsole");
+        Select(buttons.Single(button => Equals(button.CommandParameter, "Access")));
+        Assert.Contains(Descendants(window).OfType<TextBlock>(), text => text.IsVisible && text.Text == "Zugang und Rechte (dieser Prüfplatz)");
+        window.Shell.LogoutCommand.Execute(null);
+        Sta.Flush(dispatcher);
+        Assert.Equal(ShellPage.Operator, window.Shell.Page);
+        Assert.False(buttons.Single(button => Equals(button.CommandParameter, "Access")).IsVisible);
     }
 
     [Fact]
