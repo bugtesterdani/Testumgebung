@@ -4156,7 +4156,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
+          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gew\u00E4hlte Abweichungsregel. Eine eingetragene Kurve ersetzt die gew\u00E4hlte Abweichungsregel dieses Kanals."
         },
         {
           "name": "Dauer",
@@ -4213,6 +4213,18 @@
           "hint": null
         },
         {
+          "name": "Abweichungsart",
+          "label": "Art der Abbruchabweichung",
+          "kind": "Choice",
+          "default": "Prozent",
+          "required": false,
+          "choices": [
+            "Prozent",
+            "Absolut"
+          ],
+          "hint": null
+        },
+        {
           "name": "AbweichungProzent",
           "label": "Zus\u00E4tzliche Abweichung [% vom Betrag des Grenzwerts]",
           "kind": "Number",
@@ -4220,6 +4232,15 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "AbweichungAbsolut",
+          "label": "Zus\u00E4tzliche Abweichung [Einheit der Auswertung]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung."
         },
         {
           "name": "Quelle",
@@ -4518,7 +4539,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
+          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gew\u00E4hlte Abweichungsregel. Eine eingetragene Kurve ersetzt die gew\u00E4hlte Abweichungsregel dieses Kanals."
         },
         {
           "name": "Dauer",
@@ -4575,6 +4596,18 @@
           "hint": null
         },
         {
+          "name": "Abweichungsart",
+          "label": "Art der Abbruchabweichung",
+          "kind": "Choice",
+          "default": "Prozent",
+          "required": false,
+          "choices": [
+            "Prozent",
+            "Absolut"
+          ],
+          "hint": null
+        },
+        {
           "name": "AbweichungProzent",
           "label": "Zus\u00E4tzliche Abweichung [% vom Betrag des Grenzwerts]",
           "kind": "Number",
@@ -4582,6 +4615,15 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "AbweichungAbsolut",
+          "label": "Zus\u00E4tzliche Abweichung [Einheit der Auswertung]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung."
         }
       ]
     },

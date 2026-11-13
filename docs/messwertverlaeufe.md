@@ -6,7 +6,7 @@ Mit **Messwertverlauf aufnehmen** werden Geräte-/Variablenwerte über eine eins
 
 In **Messwertverlauf beginnen** oder **Messwertverlauf aufnehmen** unter **Grenzauswertung** das **Berechnete Grenzband** wählen. In die zwei Formelfelder beispielsweise `4 + 0.2 * t` für die Untergrenze und `6 + 0.2 * t` für die Obergrenze eintragen. `t` ist die Messzeit in Sekunden. Konstante Zahlen sind ebenfalls gültig.
 
-Die Formeln gelten für alle Kanäle in ihrer jeweiligen Einheit. Die Aufnahme berechnet und prüft die Grenzen zu jedem erfassten Messpunkt und zeichnet sie im Diagramm. Der optionale Prozentabbruch verwendet ebenfalls diese Grenzen. Ungültige Ausdrücke, nicht endliche Ergebnisse und eine Untergrenze oberhalb der Obergrenze ergeben einen Fehler.
+Die Formeln gelten für alle Kanäle in ihrer jeweiligen Einheit. Die Aufnahme berechnet und prüft die Grenzen zu jedem erfassten Messpunkt und zeichnet sie im Diagramm. Der optionale Sofortabbruch verwendet ebenfalls diese Grenzen. Ungültige Ausdrücke, nicht endliche Ergebnisse und eine Untergrenze oberhalb der Obergrenze ergeben einen Fehler.
 
 ## Steigung mit Min-/Max-Grenzen bewerten
 
@@ -21,11 +21,11 @@ In **Messwertverlauf beginnen** oder **Messwertverlauf aufnehmen** die **Grenzau
 
 Für jedes vollständige Fenster wird die Differenz zwischen End- und Startwert durch die verstrichene Messzeit in Sekunden geteilt. Eine Änderung von 2 V auf 5 V in 2 s ergibt +1,5 V/s. Das Diagramm zeigt diese Steigung am letzten Zeitpunkt des Fensters und die eingestellten Min-/Max-Grenzen. Die Grenzen gelten für jeden Kanal in seiner jeweiligen Einheit pro Sekunde.
 
-Unvollständige Fenster am Ende bleiben unbewertet. Ohne vollständiges Fenster ergibt die Aufnahme ERROR. Die Option für den vorzeitigen Abbruch per Prozentabweichung verwendet die Steigungsgrenzen. Separate Abbruchgrenzkurven stehen für das Wert-Grenzband zur Verfügung.
+Unvollständige Fenster am Ende bleiben unbewertet. Ohne vollständiges Fenster ergibt die Aufnahme ERROR. Der optionale Sofortabbruch verwendet die Steigungsgrenzen. Separate Abbruchgrenzkurven stehen für das Wert-Grenzband zur Verfügung.
 
 ## Zwei getrennte Grenzen: Bewertung und vorzeitiges Aufnahmeende
 
-Das normale Grenzband entscheidet immer über PASS/FAIL. Die zusätzliche prozentuale Abweichung erweitert dieses zulässige Band nicht. Sie entscheidet ausschließlich, ob die Aufnahme früher endet. Die nächsten Prüfschritte laufen anschließend regulär weiter; ein späteres PASS überschreibt das bereits entstandene FAIL nicht.
+Das normale Grenzband entscheidet immer über PASS/FAIL. Die zusätzliche Abweichung erweitert dieses zulässige Band nicht. Sie entscheidet ausschließlich, ob die Aufnahme früher endet. Die nächsten Prüfschritte laufen anschließend regulär weiter; ein späteres PASS überschreibt das bereits entstandene FAIL nicht.
 
 Beispiel **4–6 V**, **10 % zusätzliche Abweichung**, **Messdauer 10 s**:
 
@@ -40,6 +40,8 @@ Beispiel **4–6 V**, **10 % zusätzliche Abweichung**, **Messdauer 10 s**:
 
 Für Prozentsatz `p` liegen die zusätzlichen Abbruchgrenzen bei `Untergrenze − |Untergrenze| × p/100` und `Obergrenze + |Obergrenze| × p/100`. Negative Grenzen werden ebenfalls über ihren Betrag berechnet; bei −6 bis −4 V und 10 % ergibt sich −6,6 bis −3,6 V. Eine Grenze von 0 hat keinen prozentualen Zuschlag. Nur striktes Überschreiten löst das vorzeitige Ende aus; numerisches Rundungsrauschen der Prozentrechnung wird toleriert. Die normale Grenzprüfung bleibt strikt und unabhängig davon. Mit 0 % endet die Aufnahme bei jeder echten Grenzüberschreitung. Die Zusatzfunktion ist standardmäßig ausgeschaltet.
 
+Unter **Art der Abbruchabweichung** lässt sich **Absolut** auswählen. Der Zuschlag wird von der Untergrenze abgezogen und zur Obergrenze addiert. Er gilt in der Einheit der Auswertung, beispielsweise V bei Spannung oder V/s bei Steigung. Bei Steigungsgrenzen von 0 bis 4 V/s und einem Zuschlag von 0,5 V/s löst erst eine Steigung unter −0,5 oder über 4,5 V/s den Sofortabbruch aus. Prozent ist der Standard für bestehende Projekte.
+
 ## Eigene Abbruchgrenzkurven
 
 Eine zweite Kurve mit den Kanälen **Untergrenze** und **Obergrenze** erstellen und im Aufnahmebaustein
@@ -48,9 +50,9 @@ oder FAIL. Eine Überschreitung der Abbruchkurve beendet die Aufnahme sofort mit
 Abbruchlinien an. Das bloße Berühren der Abbruchlinie beendet die Aufnahme nicht.
 
 Bei mehreren Messkanälen die Abbruchkurven in Kanalreihenfolge kommasepariert angeben, z. B.
-`abbruch-spannung@1,,abbruch-leistung@1`. Ein leerer Eintrag verwendet die vorhandene Prozentregel,
-sofern sie aktiviert ist. Ein eingetragenes Abbruchband ersetzt die Prozentregel für diesen Kanal und
-ist auch bei ausgeschalteter Prozentregel aktiv. Einheit und Zeitabdeckung werden wie beim normalen
+`abbruch-spannung@1,,abbruch-leistung@1`. Ein leerer Eintrag verwendet die gewählte Abweichungsregel,
+sofern sie aktiviert ist. Ein eingetragenes Abbruchband ersetzt die gewählte Abweichungsregel für diesen Kanal und
+ist auch bei ausgeschalteter Abweichungsregel aktiv. Einheit und Zeitabdeckung werden wie beim normalen
 Grenzband geprüft. Beispiel: Normale Untergrenze 0 V, Abbruch-Untergrenze −0,2 V. Ein Messwert von
 −0,1 V ergibt FAIL bei weiterlaufender Aufnahme. Unter −0,2 V endet die Aufnahme vorzeitig.
 
@@ -72,7 +74,7 @@ Grenzkurven werden mit dem Prüfprogramm versioniert, freigegeben und gehasht. D
 2. Kanalnamen, Einheiten und Grenzkurven kommasepariert in gleicher Reihenfolge angeben: `Spannung,Strom`, `V,A`, `spannungsband@1,stromband@1`.
 3. **Messdauer** in Sekunden und **Abfrageintervall** setzen, etwa `10` und `0.1`. Das ergibt regulär 101 Abfragen einschließlich Start- und Abschlusspunkt. Ist die Dauer kein Vielfaches des Intervalls, wird ein zusätzlicher Abschlusspunkt bei der Messdauer abgefragt.
 4. Quelle **Geräte** liest die kommaseparierten abstrakten Gerätenamen unter Beachtung der vorhandenen Ressourcen-/Sperrprüfung. Geräteeinheiten müssen zur Aufnahme passen. Quelle **Ausdrücke** wertet semikolongetrennte Ausdrücke/Variablen aus, z. B. `U_mess;I_mess`; der Autor verantwortet hier die deklarierten Einheiten.
-5. Optional **Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)** aktivieren und den Prozentsatz setzen. Die Aufnahme kehrt bei Auslösung sofort mit FAIL zurück. Folgende Schritte und parallele Geschwisterzweige werden weiter ausgeführt.
+5. Optional **Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)** aktivieren und die Abweichungsart sowie den Zuschlag einstellen. Die Aufnahme kehrt bei Auslösung sofort mit FAIL zurück. Folgende Schritte und parallele Geschwisterzweige werden weiter ausgeführt.
 6. Optional **ErgebnisZiel** auf eine vorher deklarierte Stringvariable setzen. Sie erhält die kanalweisen Auswertungsdetails als JSON.
 
 Die Zeitpositionen sind Software-Abfragepositionen. Start- und Abschlusspunkt werden 0 bzw. der eingestellten Messdauer zugeordnet; Geräte werden nacheinander abgefragt. Gerätelatenz und Betriebssystemplanung können die tatsächliche Laufzeit verlängern. Dies ist keine hardwareseitig synchrone DAQ-Erfassung. Überschreiten einzelne Abfragen oder Taktverspätungen die **maximale Messlücke / Abfragedauer**, ergibt die Aufnahme ERROR. Abfrageintervall und maximale Lücke zur Gerätegeschwindigkeit passend wählen. Ein zu kleines Punktlimit wird bereits bei der Bausteinkonfiguration gemeldet.

@@ -886,6 +886,8 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     private bool IsTraceParameterActive(string name)
     {
+        if (name is TraceBlocks.StopMarginModeParameter or TraceBlocks.PercentMarginParameter or TraceBlocks.AbsoluteMarginParameter)
+            return IsTraceMarginParameterActive(name);
         var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
         if (name is TraceBlocks.LowerFormulaParameter or TraceBlocks.UpperFormulaParameter)
             return mode == TraceBlocks.FormulaBand;
@@ -894,6 +896,20 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
             "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
             "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
             "SteigungMin" or "SteigungMax" => mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand),
+            _ => true
+        };
+    }
+
+    private bool IsTraceMarginParameterActive(string name)
+    {
+        var enabled = Step.Parameters.GetValueOrDefault(TraceBlocks.StopEnabledParameter, "");
+        if (!(enabled.Equals("true", StringComparison.OrdinalIgnoreCase) || enabled.Equals("ja", StringComparison.OrdinalIgnoreCase) || enabled == "1"))
+            return false;
+        var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.StopMarginModeParameter, TraceBlocks.PercentMargin);
+        return name switch
+        {
+            TraceBlocks.PercentMarginParameter => mode == TraceBlocks.PercentMargin,
+            TraceBlocks.AbsoluteMarginParameter => mode == TraceBlocks.AbsoluteMargin,
             _ => true
         };
     }
