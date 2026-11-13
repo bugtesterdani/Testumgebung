@@ -4088,6 +4088,7 @@
           "required": false,
           "choices": [
             "Wert-Grenzband",
+            "Berechnetes Grenzband",
             "Steigung je Nachbarpaar",
             "Steigung in getrennten Fenstern",
             "Steigung im gleitenden Fenster"
@@ -4102,6 +4103,24 @@
           "required": false,
           "choices": null,
           "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich."
+        },
+        {
+          "name": "Untergrenzenformel",
+          "label": "Formel f\u00FCr Untergrenze",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "t = Messzeit in Sekunden. Beispiel: 4 \u002B 0.2 * t"
+        },
+        {
+          "name": "Obergrenzenformel",
+          "label": "Formel f\u00FCr Obergrenze",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "t = Messzeit in Sekunden. Beispiel: 6 \u002B 0.2 * t"
         },
         {
           "name": "Steigungsfenster",
@@ -4431,6 +4450,7 @@
           "required": false,
           "choices": [
             "Wert-Grenzband",
+            "Berechnetes Grenzband",
             "Steigung je Nachbarpaar",
             "Steigung in getrennten Fenstern",
             "Steigung im gleitenden Fenster"
@@ -4445,6 +4465,24 @@
           "required": false,
           "choices": null,
           "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich."
+        },
+        {
+          "name": "Untergrenzenformel",
+          "label": "Formel f\u00FCr Untergrenze",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "t = Messzeit in Sekunden. Beispiel: 4 \u002B 0.2 * t"
+        },
+        {
+          "name": "Obergrenzenformel",
+          "label": "Formel f\u00FCr Obergrenze",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "t = Messzeit in Sekunden. Beispiel: 6 \u002B 0.2 * t"
         },
         {
           "name": "Steigungsfenster",

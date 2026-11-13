@@ -92,6 +92,8 @@ internal sealed class EnvelopeRecording
     private readonly TraceChannelDefinition[] _channels;
     private readonly CurveEnvelope[] _envelopes;
     private readonly SlopeLimits? _slope;
+    private readonly FormulaLimits? _formula;
+    private readonly Dictionary<double, (double Lower, double Upper)> _formulaBounds = [];
     private readonly List<double> _slopeTimes = [];
     private readonly List<double>[] _slopes;
     private readonly CurveEnvelope?[] _abortEnvelopes;
@@ -109,18 +111,21 @@ internal sealed class EnvelopeRecording
     public bool Ended => EarlyStop is not null || (_duration is { } duration && _times.Count > 1 && _times[^1] >= duration - TimeTolerance(duration));
     public EnvelopeEarlyStop? EarlyStop { get; private set; }
     private DateTimeOffset _lastPreview;
-    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope)
+    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula)
     {
         ValidateChannels(channels);
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
         if (stopPercent is { } percent && (!double.IsFinite(percent) || percent < 0)) throw new ArgumentException("FAIL-Abbruchabweichung muss endlich und >= 0 sein.");
         _stopPercent = stopPercent;
         _slope = slope;
+        if (formula is not null && slope is not null)
+            throw new ArgumentException("Für die Aufnahme entweder Formelgrenzen oder Steigungsgrenzen wählen.");
+        _formula = formula;
         slope?.Validate(maxPoints);
         _channels = channels.ToArray();
-        _envelopes = slope is null ? channels.Select(channel => new CurveEnvelope(
+        _envelopes = slope is null && formula is null ? channels.Select(channel => new CurveEnvelope(
             channel.Limits ?? throw new ArgumentException("Je Messkanal eine Grenzkurve angeben."), channel.Unit)).ToArray() : [];
-        _abortEnvelopes = channels.Select(channel => slope is null && channel.AbortLimits is { } limits
+        _abortEnvelopes = channels.Select(channel => slope is null && formula is null && channel.AbortLimits is { } limits
             ? new CurveEnvelope(limits, channel.Unit) : null).ToArray();
         ValidateDuration(duration, minimumDuration);
         _duration = duration;
@@ -168,11 +173,16 @@ internal sealed class EnvelopeRecording
     public bool Add(double time, IReadOnlyList<double> values, DateTimeOffset now)
     {
         if (_duration is { } end && Math.Abs(time - end) <= TimeTolerance(end)) time = end;
-        try { Validate(time, values); }
+        try
+        {
+            Validate(time, values);
+            if (_formula is not null) _formulaBounds.Add(time, _formula.At(time));
+        }
         catch { _faulted = true; throw; }
         _times.Add(time); for (var index = 0; index < values.Count; index++) _values[index].Add(values[index]);
         var alreadyFailed = HasViolation;
-        if (_slope is null) CheckSegment();
+        if (_formula is not null) CheckFormulaPoint(time, values);
+        else if (_slope is null) CheckSegment();
         else
         {
             if (!_slope.IsWindowEnd(_times.Count) && !Ended) return false;
@@ -199,7 +209,7 @@ internal sealed class EnvelopeRecording
         var complete = stopped && EarlyStop is null && !_faulted && HasFullDuration();
         if (_slope is { } slope) return EvaluateSlopes(slope, complete);
         if (_times.Count == 0) return new(new([]), [], false);
-        var grid = AllEnvelopes().SelectMany(curveEnvelope => curveEnvelope.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(concat => concat >= _times[0] && concat <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
+        var grid = _formula is not null ? _times.ToArray() : AllEnvelopes().SelectMany(curveEnvelope => curveEnvelope.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(concat => concat >= _times[0] && concat <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
         var waves = new List<Waveform>(); var metadata = new List<EnvelopeTraceMetadata>();
         for (var channel = 0; channel < _channels.Length; channel++)
         {
@@ -267,13 +277,15 @@ internal sealed class EnvelopeRecording
 
     private void EvaluateChannel(int channel, double[] grid, bool complete, List<Waveform> waves, List<EnvelopeTraceMetadata> metadata)
     {
-        var definition = _channels[channel]; var envelope = _envelopes[channel];
+        var definition = _channels[channel];
+        var envelope = _formula is null ? _envelopes[channel] : null;
+        var key = envelope?.Key ?? "Formelgrenzen";
         var measured = new double[grid.Length]; var lower = new double[grid.Length]; var upper = new double[grid.Length];
         var violations = new List<double>(); var details = new List<EnvelopeViolation>(); double maximum = 0;
         for (var index = 0; index < grid.Length; index++)
         {
-            measured[index] = _times.Count == 1 ? _values[channel][0] : CurveEnvelope.Interpolate(_times, _values[channel], grid[index]);
-            (lower[index], upper[index]) = envelope.At(grid[index]);
+            measured[index] = envelope is null ? _values[channel][index] : MeasuredAt(channel, grid[index]);
+            (lower[index], upper[index]) = envelope is null ? _formulaBounds[grid[index]] : envelope.At(grid[index]);
             if (!Inside(measured[index], lower[index], upper[index]))
             {
                 violations.Add(grid[index]); details.Add(new(grid[index], measured[index], lower[index], upper[index], Math.Max(0, Math.Max(lower[index] - measured[index], measured[index] - upper[index]))));
@@ -281,11 +293,11 @@ internal sealed class EnvelopeRecording
             maximum = Math.Max(maximum, Math.Max(lower[index] - measured[index], measured[index] - upper[index]));
         }
         if (measured.Any(measured2 => !double.IsFinite(measured2)) || !double.IsFinite(maximum)) throw new ArgumentException("Wertebereich der Kurvenauswertung überschritten.");
-        var info = new EnvelopeTraceMetadata(envelope.Key, envelope.Hash, definition.Name, _times.ToArray(), violations.ToArray(), violations.Count, maximum, complete) { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration };
+        var info = new EnvelopeTraceMetadata(key, envelope?.Hash ?? "", definition.Name, _times.ToArray(), violations.ToArray(), violations.Count, maximum, complete) { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration };
         metadata.Add(info);
         waves.Add(new(definition.Name, definition.Unit, 0, _start, measured, grid, info.Encode()));
-        waves.Add(new(definition.Name + " · Untergrenze (" + envelope.Key + ")", definition.Unit, 0, _start, lower, grid));
-        waves.Add(new(definition.Name + " · Obergrenze (" + envelope.Key + ")", definition.Unit, 0, _start, upper, grid));
+        waves.Add(new(definition.Name + " · Untergrenze (" + key + ")", definition.Unit, 0, _start, lower, grid));
+        waves.Add(new(definition.Name + " · Obergrenze (" + key + ")", definition.Unit, 0, _start, upper, grid));
     }
     private IEnumerable<CurveEnvelope> AllEnvelopes() => _envelopes.Concat(_abortEnvelopes.OfType<CurveEnvelope>());
 
@@ -298,6 +310,21 @@ internal sealed class EnvelopeRecording
             samples.Select(bounds => bounds.Lower).ToArray(), grid));
         waves.Add(new(definition.Name + " · Abbruch-Obergrenze (" + limits.Key + ")", definition.Unit, 0, _start,
             samples.Select(bounds => bounds.Upper).ToArray(), grid));
+    }
+
+    private void CheckFormulaPoint(double time, IReadOnlyList<double> values)
+    {
+        var (lower, upper) = _formulaBounds[time];
+        for (var channel = 0; channel < values.Count; channel++)
+        {
+            var value = values[channel];
+            HasViolation |= !Inside(value, lower, upper);
+            if (_stopPercent is { } percent && BeyondStopLimit(value, lower, upper, percent))
+            {
+                EarlyStop = new(percent, _channels[channel].Name, time, value, lower, upper);
+                return;
+            }
+        }
     }
 
     /// <summary>Inspect only the newly received segment, including hidden violations between samples.</summary>
@@ -365,13 +392,13 @@ public sealed class EnvelopeRecordings
 {
     private readonly object _gate = new();
     private readonly Dictionary<(string Owner, string Name), EnvelopeRecording> _recordings = [];
-    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null)
+    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null)
     {
         lock (_gate)
         {
             if (string.IsNullOrWhiteSpace(name) || _recordings.ContainsKey((owner, name))) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
             if (_recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
-            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope));
+            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula));
         }
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)

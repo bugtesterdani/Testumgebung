@@ -12,6 +12,8 @@ public static class TraceBlocks
     public const string EvaluationParameter = "Grenzauswertung";
     public const string ValueBand = "Wert-Grenzband", PairSlope = "Steigung je Nachbarpaar",
         DisjointSlope = "Steigung in getrennten Fenstern", RollingSlope = "Steigung im gleitenden Fenster";
+    public const string FormulaBand = "Berechnetes Grenzband";
+    public const string LowerFormulaParameter = "Untergrenzenformel", UpperFormulaParameter = "Obergrenzenformel";
     public const string AbortCurvesParameter = "Abbruchgrenzkurven";
     public const string ExitDutOnEarlyStopParameter = "BeiVorzeitigemEndeZurExitGruppe";
 
@@ -54,9 +56,13 @@ public static class TraceBlocks
     [Name(), new("Kanaele", "Kanalnamen (Komma)", ParameterKind.Text, "Spannung", Required: true),
      new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
      new(EvaluationParameter, "Grenzauswertung", ParameterKind.Choice, ValueBand,
-        Choices: [ValueBand, PairSlope, DisjointSlope, RollingSlope]),
+        Choices: [ValueBand, FormulaBand, PairSlope, DisjointSlope, RollingSlope]),
      new("Grenzkurven", "Grenzkurven: ID@Version (Komma)", ParameterKind.Text,
         Hint: "Für die Auswertung Wert-Grenzband erforderlich."),
+     new(LowerFormulaParameter, "Formel für Untergrenze", ParameterKind.Text,
+        Hint: "t = Messzeit in Sekunden. Beispiel: 4 + 0.2 * t"),
+     new(UpperFormulaParameter, "Formel für Obergrenze", ParameterKind.Text,
+        Hint: "t = Messzeit in Sekunden. Beispiel: 6 + 0.2 * t"),
      new("Steigungsfenster", "Punkte je Steigungsfenster", ParameterKind.Number, "5",
         Hint: "Für getrennte und gleitende Fenster. Nur vollständige Fenster werden bewertet."),
      new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),

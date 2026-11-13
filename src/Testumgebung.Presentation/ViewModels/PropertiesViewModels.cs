@@ -887,11 +887,13 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     private bool IsTraceParameterActive(string name)
     {
         var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
+        if (name is TraceBlocks.LowerFormulaParameter or TraceBlocks.UpperFormulaParameter)
+            return mode == TraceBlocks.FormulaBand;
         return name switch
         {
             "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
             "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
-            "SteigungMin" or "SteigungMax" => mode != TraceBlocks.ValueBand,
+            "SteigungMin" or "SteigungMax" => mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand),
             _ => true
         };
     }
