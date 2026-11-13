@@ -355,7 +355,9 @@ public static class DefinitionCompatibility
         }
         void CollectReferences(JsonObject jsonObject2)
         {
-            if (((string?)jsonObject2["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && jsonObject2["parameters"] is JsonObject trace)
+            if (((string?)jsonObject2["block"] is Testumgebung.Engine.Blocks.TraceBlocks.Start or Testumgebung.Engine.Blocks.TraceBlocks.Record) && jsonObject2["parameters"] is JsonObject trace &&
+                ((string?)trace[Testumgebung.Engine.Blocks.TraceBlocks.EvaluationParameter] ?? Testumgebung.Engine.Blocks.TraceBlocks.ValueBand)
+                    == Testumgebung.Engine.Blocks.TraceBlocks.ValueBand)
             {
                 foreach (var parameter in new[] { "Grenzkurven", Testumgebung.Engine.Blocks.TraceBlocks.AbortCurvesParameter })
                     foreach (var key in ((string?)trace[parameter] ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))

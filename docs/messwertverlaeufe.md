@@ -2,6 +2,21 @@
 
 Mit **Messwertverlauf aufnehmen** werden Geräte-/Variablenwerte über eine einstellbare Dauer erfasst, live angezeigt und gegen versionierte Grenzkurven bewertet. Für selbst gesteuerte Abläufe stehen zusätzlich **Messwertverlauf beginnen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten** bereit. X-Achse ist Zeit in Sekunden; andere numerische Bezugsgrößen sind noch nicht enthalten.
 
+## Steigung mit Min-/Max-Grenzen bewerten
+
+In **Messwertverlauf beginnen** oder **Messwertverlauf aufnehmen** die **Grenzauswertung** wählen:
+
+| Auswertung | Verwendete Punkte |
+| --- | --- |
+| Wert-Grenzband (Standard) | Messwerte gegen die eingetragenen Grenzkurven |
+| Steigung je Nachbarpaar | 1–2, 2–3, 3–4, … |
+| Steigung in getrennten Fenstern | bei 5 Punkten: 1–5, 6–10, 11–15, … |
+| Steigung im gleitenden Fenster | bei 5 Punkten: 1–5, 2–6, 3–7, … |
+
+Für jedes vollständige Fenster wird die Differenz zwischen End- und Startwert durch die verstrichene Messzeit in Sekunden geteilt. Eine Änderung von 2 V auf 5 V in 2 s ergibt +1,5 V/s. Das Diagramm zeigt diese Steigung am letzten Zeitpunkt des Fensters und die eingestellten Min-/Max-Grenzen. Die Grenzen gelten für jeden Kanal in seiner jeweiligen Einheit pro Sekunde.
+
+Unvollständige Fenster am Ende bleiben unbewertet. Ohne vollständiges Fenster ergibt die Aufnahme ERROR. Die Option für den vorzeitigen Abbruch per Prozentabweichung verwendet die Steigungsgrenzen. Separate Abbruchgrenzkurven stehen für das Wert-Grenzband zur Verfügung.
+
 ## Zwei getrennte Grenzen: Bewertung und vorzeitiges Aufnahmeende
 
 Das normale Grenzband entscheidet immer über PASS/FAIL. Die zusätzliche prozentuale Abweichung erweitert dieses zulässige Band nicht. Sie entscheidet ausschließlich, ob die Aufnahme früher endet. Die nächsten Prüfschritte laufen anschließend regulär weiter; ein späteres PASS überschreibt das bereits entstandene FAIL nicht.

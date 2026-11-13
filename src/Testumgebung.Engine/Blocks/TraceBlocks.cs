@@ -9,6 +9,9 @@ public static class TraceBlocks
 {
     public const string Start = "verlauf.start", Point = "verlauf.punkt", Stop = "verlauf.bewerten", Record = "verlauf.aufnehmen";
     public const string PauseTime = "verlauf.messzeit";
+    public const string EvaluationParameter = "Grenzauswertung";
+    public const string ValueBand = "Wert-Grenzband", PairSlope = "Steigung je Nachbarpaar",
+        DisjointSlope = "Steigung in getrennten Fenstern", RollingSlope = "Steigung im gleitenden Fenster";
     public const string AbortCurvesParameter = "Abbruchgrenzkurven";
     public const string ExitDutOnEarlyStopParameter = "BeiVorzeitigemEndeZurExitGruppe";
 
@@ -50,9 +53,16 @@ public static class TraceBlocks
     private static ParameterDescriptor[] RecordingParameters(bool timed) =>
     [Name(), new("Kanaele", "Kanalnamen (Komma)", ParameterKind.Text, "Spannung", Required: true),
      new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
-     new("Grenzkurven", "Grenzkurven: ID@Version (Komma)", ParameterKind.Text, Required: true),
+     new(EvaluationParameter, "Grenzauswertung", ParameterKind.Choice, ValueBand,
+        Choices: [ValueBand, PairSlope, DisjointSlope, RollingSlope]),
+     new("Grenzkurven", "Grenzkurven: ID@Version (Komma)", ParameterKind.Text,
+        Hint: "Für die Auswertung Wert-Grenzband erforderlich."),
+     new("Steigungsfenster", "Punkte je Steigungsfenster", ParameterKind.Number, "5",
+        Hint: "Für getrennte und gleitende Fenster. Nur vollständige Fenster werden bewertet."),
+     new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),
+     new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new(AbortCurvesParameter, "Abbruchgrenzkurven: ID@Version (Komma)", ParameterKind.Text,
-        Hint: "Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."),
+        Hint: "Nur für Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."),
      new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
      new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
      new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),

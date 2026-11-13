@@ -4081,11 +4081,52 @@
           "hint": null
         },
         {
+          "name": "Grenzauswertung",
+          "label": "Grenzauswertung",
+          "kind": "Choice",
+          "default": "Wert-Grenzband",
+          "required": false,
+          "choices": [
+            "Wert-Grenzband",
+            "Steigung je Nachbarpaar",
+            "Steigung in getrennten Fenstern",
+            "Steigung im gleitenden Fenster"
+          ],
+          "hint": null
+        },
+        {
           "name": "Grenzkurven",
           "label": "Grenzkurven: ID@Version (Komma)",
           "kind": "Text",
           "default": "",
-          "required": true,
+          "required": false,
+          "choices": null,
+          "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich."
+        },
+        {
+          "name": "Steigungsfenster",
+          "label": "Punkte je Steigungsfenster",
+          "kind": "Number",
+          "default": "5",
+          "required": false,
+          "choices": null,
+          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet."
+        },
+        {
+          "name": "SteigungMin",
+          "label": "Minimale Steigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SteigungMax",
+          "label": "Maximale Steigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
           "choices": null,
           "hint": null
         },
@@ -4096,7 +4137,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
+          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
         },
         {
           "name": "Dauer",
@@ -4383,11 +4424,52 @@
           "hint": null
         },
         {
+          "name": "Grenzauswertung",
+          "label": "Grenzauswertung",
+          "kind": "Choice",
+          "default": "Wert-Grenzband",
+          "required": false,
+          "choices": [
+            "Wert-Grenzband",
+            "Steigung je Nachbarpaar",
+            "Steigung in getrennten Fenstern",
+            "Steigung im gleitenden Fenster"
+          ],
+          "hint": null
+        },
+        {
           "name": "Grenzkurven",
           "label": "Grenzkurven: ID@Version (Komma)",
           "kind": "Text",
           "default": "",
-          "required": true,
+          "required": false,
+          "choices": null,
+          "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich."
+        },
+        {
+          "name": "Steigungsfenster",
+          "label": "Punkte je Steigungsfenster",
+          "kind": "Number",
+          "default": "5",
+          "required": false,
+          "choices": null,
+          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet."
+        },
+        {
+          "name": "SteigungMin",
+          "label": "Minimale Steigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SteigungMax",
+          "label": "Maximale Steigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "",
+          "required": false,
           "choices": null,
           "hint": null
         },
@@ -4398,7 +4480,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
+          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."
         },
         {
           "name": "Dauer",
