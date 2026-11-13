@@ -878,7 +878,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     internal bool IsParameterActive(string name)
     {
         if (Step.BlockType is TraceBlocks.Start or TraceBlocks.Record)
-            return IsTraceParameterActive(name);
+            return TraceMarginVisibility(name) ?? IsTraceParameterActive(name);
         if (Step.BlockType != BlockCatalog.Evaluate) return true;
         var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == "Festes Ergebnis";
         return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
@@ -886,8 +886,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     private bool IsTraceParameterActive(string name)
     {
-        if (name is TraceBlocks.StopMarginModeParameter or TraceBlocks.PercentMarginParameter or TraceBlocks.AbsoluteMarginParameter)
-            return IsTraceMarginParameterActive(name);
+
         var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
         if (name is TraceBlocks.LowerFormulaParameter or TraceBlocks.UpperFormulaParameter)
             return mode == TraceBlocks.FormulaBand;
@@ -900,8 +899,10 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         };
     }
 
-    private bool IsTraceMarginParameterActive(string name)
+    private bool? TraceMarginVisibility(string name)
     {
+        if (name is not (TraceBlocks.StopMarginModeParameter or TraceBlocks.PercentMarginParameter or TraceBlocks.AbsoluteMarginParameter))
+            return null;
         var enabled = Step.Parameters.GetValueOrDefault(TraceBlocks.StopEnabledParameter, "");
         if (!(enabled.Equals("true", StringComparison.OrdinalIgnoreCase) || enabled.Equals("ja", StringComparison.OrdinalIgnoreCase) || enabled == "1"))
             return false;
