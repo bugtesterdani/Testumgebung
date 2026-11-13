@@ -249,6 +249,47 @@ public sealed class EnvelopeTraceTests
     [Theory]
     [InlineData("10", true)]
     [InlineData("25", false)]
+    public async Task Early_stop_can_leave_the_dut_directly_without_aborting_the_run(string percent, bool exits)
+    {
+        var measurements = Group("measurements").Add(
+            Block(TraceBlocks.Start, "begin", ("Grenzkurven", "band@1"), ("FailAbbruch", "true"), ("AbweichungProzent", percent)),
+            Block(TraceBlocks.Point, "first", ("Werte", "5"), ("Zeit", "0")),
+            Block(TraceBlocks.Point, "middle", ("Werte", "12"), ("Zeit", "1"), (TraceBlocks.ExitDutOnEarlyStopParameter, "true")),
+            Block(TraceBlocks.Point, "remaining-point", ("Werte", "5"), ("Zeit", "2")));
+        measurements.ExitGroup = Group("measurement-exit").Add(Block(TraceBlocks.Stop, "close"));
+        var dut = Group("dut").Var("Kennung", VarType.String, "DUT-1");
+        dut.IsDutRun = true;
+        dut.Repetition = Repetition.Times(exits ? 2 : 1);
+        dut.Add(measurements, Steps.Code("remaining-dut-step", "Should be skipped on early stop", _ => StepOutcome.Unrated()));
+        dut.ExitGroup = Group("dut-exit").Add(Steps.Code("cleanup", "Cleanup", _ => StepOutcome.Unrated()));
+        var next = Group("next-dut").Var("Kennung", VarType.String, "DUT-2");
+        next.IsDutRun = true;
+        next.Add(Steps.Code("next-measurement", "Next DUT", _ => StepOutcome.Pass()));
+        var definition = Test(Group("loop").Add(dut, next));
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+
+        var result = await run.RunAsync().Within();
+
+        Assert.Equal(ResultRating.Fail, result.Rating);
+        Assert.False(result.OperatorAbort);
+        Assert.Equal(2, run.DutsCompleted);
+        Assert.Equal(ResultRating.Fail, Assert.Single(run.Steps("middle")).Rating);
+        Assert.Equal(exits ? 0 : 1, run.Steps("remaining-point").Count());
+        Assert.Equal(exits ? 0 : 1, run.Steps("remaining-dut-step").Count());
+        Assert.Single(run.Steps("close"));
+        Assert.Single(run.Steps("cleanup"));
+        Assert.Single(run.Steps("next-measurement"));
+        if (exits)
+        {
+            var ids = run.Events.OfType<StepCompleted>().Select(step => step.NodeId).ToList();
+            Assert.Equal(new[] { "close", "cleanup", "next-measurement" }, ids.Skip(ids.IndexOf("middle") + 1));
+        }
+    }
+
+    [Theory]
+    [InlineData("10", true)]
+    [InlineData("25", false)]
     public async Task Point_output_distinguishes_early_end_from_an_ordinary_fail(string percent, bool early)
     {
         var loop = Group("loop").Var("Early", VarType.Bool, false).Var("Observed", VarType.Bool, false);

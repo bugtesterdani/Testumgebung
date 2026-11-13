@@ -4208,6 +4208,15 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiVorzeitigemEndeZurExitGruppe",
+          "label": "Bei vorzeitigem Ende zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
         }
       ]
     },
@@ -4325,6 +4334,15 @@
           "label": "Vorzeitiges Ende \u2192 Boolvariable",
           "kind": "Variable",
           "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "BeiVorzeitigemEndeZurExitGruppe",
+          "label": "Bei vorzeitigem Ende zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
           "required": false,
           "choices": null,
           "hint": null

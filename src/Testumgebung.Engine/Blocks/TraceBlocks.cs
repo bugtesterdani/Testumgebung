@@ -10,6 +10,7 @@ public static class TraceBlocks
     public const string Start = "verlauf.start", Point = "verlauf.punkt", Stop = "verlauf.bewerten", Record = "verlauf.aufnehmen";
     public const string PauseTime = "verlauf.messzeit";
     public const string AbortCurvesParameter = "Abbruchgrenzkurven";
+    public const string ExitDutOnEarlyStopParameter = "BeiVorzeitigemEndeZurExitGruppe";
 
     public static void Register(BlockCatalog catalog)
     {
@@ -25,7 +26,7 @@ public static class TraceBlocks
             CreatePauseTime));
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
             new[] { Name() }.Concat(ReaderParameters()).Concat([new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression),
-                new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable)]).ToArray(), CreatePoint));
+                new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable), ExitDutOption()]).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
             [Name(), ResultTarget()], parameters => new DelegateAction(ctx =>
             {
@@ -35,10 +36,13 @@ public static class TraceBlocks
                 return Task.FromResult(Outcome(result, !result.Finished));
             })));
         catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
-            RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget()]).ToArray(),
-            parameters => new TimedTraceAction(new(parameters), new(parameters), parameters.Number("Intervall") ?? 0, parameters.Optional("ErgebnisZiel"))));
+            RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget(), ExitDutOption()]).ToArray(),
+            parameters => new TimedTraceAction(new(parameters), new(parameters), parameters.Number("Intervall") ?? 0,
+                parameters.Optional("ErgebnisZiel"), parameters.Bool(ExitDutOnEarlyStopParameter))));
     }
     private static ParameterDescriptor Name() => new("Aufnahme", "Aufnahmekennung", ParameterKind.Text, "Verlauf", Required: true);
+    private static ParameterDescriptor ExitDutOption() => new(ExitDutOnEarlyStopParameter,
+        "Bei vorzeitigem Ende zur Prüflings-Exit-Gruppe", ParameterKind.Bool, "false");
     private static ParameterDescriptor ResultTarget() => new("ErgebnisZiel", "Auswertungsdetails → Stringvariable (JSON)", ParameterKind.Variable);
     private static ParameterDescriptor[] ReaderParameters() =>
     [new("Quelle", "Datenquelle", ParameterKind.Choice, "Ausdrücke", Choices: ["Ausdrücke", "Geräte"]),
@@ -71,6 +75,7 @@ public static class TraceBlocks
     {
         var reader = new TraceSampleReader(parameters); var time = parameters.Expr("Zeit"); var name = parameters.Text("Aufnahme");
         var earlyStopTarget = parameters.Optional("VorzeitigesEndeZiel");
+        var exitDut = parameters.Bool(ExitDutOnEarlyStopParameter);
         return new DelegateAction(async ctx =>
         {
             if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
@@ -83,7 +88,7 @@ public static class TraceBlocks
                 WriteEarlyStop(ctx, earlyStopTarget, preview);
                 if (preview is not null)
                 {
-                    if (preview.Finished) return Outcome(preview, true);
+                    if (preview.Finished) return Outcome(preview, true, exitDut);
                     ctx.ReportTrace(preview.Data);
                 }
                 return ctx.Recordings.HasViolation(ctx.ProcessOwner, name)
@@ -112,19 +117,20 @@ public static class TraceBlocks
     {
         if (target is not null) ctx.Set(target, JsonSerializer.Serialize(result.Channels));
     }
-    private static string EarlyStopMessage(EnvelopeEarlyStop early)
+    private static string EarlyStopMessage(EnvelopeEarlyStop early, bool exitDut)
     {
         var limit = early.AbortCurve is { } curve
             ? $"Abbruchgrenzkurve {curve}, Grenzen {early.Lower:G6}..{early.Upper:G6}"
             : $"Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %";
-        return $"Aufnahme vorzeitig mit FAIL beendet: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, {limit}. Nächste Prüfschritte werden ausgeführt.";
+        var continuation = exitDut ? "Regulären Prüflingsablauf beenden und Exit-Gruppe ausführen." : "Nächste Prüfschritte werden ausgeführt.";
+        return $"Aufnahme vorzeitig mit FAIL beendet: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, {limit}. {continuation}";
     }
 
-    internal static StepOutcome Outcome(TraceEvaluation result, bool includeData)
+    internal static StepOutcome Outcome(TraceEvaluation result, bool includeData, bool exitDut = false)
     {
         var value = includeData ? result.Data : null;
         if (result.EarlyStop is { } early)
-            return StepOutcome.Fail(EarlyStopMessage(early), value);
+            return StepOutcome.Fail(EarlyStopMessage(early, exitDut), value) with { ExitDut = exitDut };
         if (!result.Complete) return new(ResultRating.Error, value, Message: "Aufnahme unvollständig, ungültig oder abgebrochen; vollständigen Zeitraum prüfen.");
         return result.Passed ? new(ResultRating.Pass, value, Message: "Vollständiger Messverlauf innerhalb des Grenzbandes.")
             : StepOutcome.Fail($"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e).", value);
