@@ -13,6 +13,7 @@ internal sealed class TraceRecordingSettings
     private readonly bool _touchAllowed;
     private readonly double? _stopPercent;
     private readonly SlopeLimits? _slope;
+    private readonly FormulaLimits? _formula;
     public string Name { get; }
     public int Maximum { get; }
     public double MaxGap { get; }
@@ -24,10 +25,12 @@ internal sealed class TraceRecordingSettings
         var maximum = p.Number("MaxPunkte") ?? 0;
         if (maximum != Math.Truncate(maximum) || maximum is < 2 or > 100000) throw new BlockConfigurationException("Ganzzahliges Punktlimit 2..100000 angeben.");
         Maximum = (int)maximum; MaxGap = p.Number("MaxLuecke") ?? 0;
-        _slope = ReadSlopeLimits(p, Maximum);
-        if (_slope is null && (_names.Length != _curves.Length || _curves.Any(string.IsNullOrWhiteSpace)))
+        var mode = p.Choice(TraceBlocks.EvaluationParameter);
+        _slope = ReadSlopeLimits(p, Maximum, mode);
+        if (mode == TraceBlocks.FormulaBand) _formula = ReadFormulaLimits(p);
+        if (mode == TraceBlocks.ValueBand && (_names.Length != _curves.Length || _curves.Any(string.IsNullOrWhiteSpace)))
             throw new BlockConfigurationException("Je Messkanal eine Grenzkurve angeben.");
-        _abortCurves = ReadAbortCurves(_slope is null ? p.Text(TraceBlocks.AbortCurvesParameter) : "", _names.Length);
+        _abortCurves = ReadAbortCurves(mode == TraceBlocks.ValueBand ? p.Text(TraceBlocks.AbortCurvesParameter) : "", _names.Length);
         var duration = p.Number("Dauer") ?? 0;
         if (!double.IsFinite(duration) || duration < 0) throw new BlockConfigurationException("Messdauer muss endlich und >= 0 sein.");
         Duration = duration == 0 ? null : duration;
@@ -37,16 +40,21 @@ internal sealed class TraceRecordingSettings
     public void Begin(IStepContext ctx)
     {
         if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
-        var channels = _names.Select((name, index) => new TraceChannelDefinition(name, _units[index], _slope is null ? Resolve(ctx, _curves[index]) : null)
+        var channels = _names.Select((name, index) => new TraceChannelDefinition(name, _units[index], _slope is null && _formula is null ? Resolve(ctx, _curves[index]) : null)
         {
             AbortLimits = _abortCurves[index].Length == 0 ? null : Resolve(ctx, _abortCurves[index])
         }).ToArray();
-        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope);
+        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula);
     }
-    private static SlopeLimits? ReadSlopeLimits(BlockParameters p, int maximum)
+    private static FormulaLimits ReadFormulaLimits(BlockParameters p)
     {
-        var mode = p.Choice(TraceBlocks.EvaluationParameter);
-        if (mode == TraceBlocks.ValueBand) return null;
+        try { return new(p.Text(TraceBlocks.LowerFormulaParameter), p.Text(TraceBlocks.UpperFormulaParameter)); }
+        catch (ExpressionException exception) { throw new BlockConfigurationException(exception.Message); }
+    }
+
+    private static SlopeLimits? ReadSlopeLimits(BlockParameters p, int maximum, string mode)
+    {
+        if (mode is TraceBlocks.ValueBand or TraceBlocks.FormulaBand) return null;
         var points = mode == TraceBlocks.PairSlope ? 2 : p.Number("Steigungsfenster") ?? 0;
         if (points < 2 || points > maximum || points != Math.Truncate(points))
             throw new BlockConfigurationException("Ganzzahlige Fenstergröße zwischen 2 und dem Punktlimit angeben.");
