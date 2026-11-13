@@ -13,13 +13,15 @@
             <ColumnDefinition Width="460" />
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,10">
+        <StackPanel Grid.ColumnSpan="3" Margin="0,0,0,10"
+                    Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=System}">
             <TextBlock Style="{StaticResource PageTitle}" Text="System &amp; Sicherung" />
             <TextBlock Text="Prüfrechner vor dem Pilotbetrieb prüfen; Rechnerkonfiguration sichern und wiederherstellen." FontSize="14" Foreground="{StaticResource MutedBrush}" />
         </StackPanel>
 
         <!-- ============================== Systemprüfung -->
-        <Border Grid.Row="1" Style="{StaticResource Card}">
+        <Border Grid.Row="1" Style="{StaticResource Card}"
+                Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=System}">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -71,9 +73,11 @@
         </Border>
 
         <!-- ============================== Sicherung -->
-        <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Python}">
             <StackPanel>
-                <Border Style="{StaticResource Card}" Margin="0,0,0,12" DataContext="{Binding Python}">
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12" DataContext="{Binding Python}"
+                        Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Python}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionTitle}" Text="Python-Umgebung und Konsole" />
                         <TextBlock Text="Mitgeliefertes Python in einen beschreibbaren temporären Ordner kopieren und dort Pakete mit pip installieren." TextWrapping="Wrap" Margin="0,0,0,8" />
@@ -97,6 +101,11 @@
                         <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
+            </StackPanel>
+        </ScrollViewer>
+        <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=System}">
+            <StackPanel>
                 <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionTitle}" Text="Konfiguration sichern" />

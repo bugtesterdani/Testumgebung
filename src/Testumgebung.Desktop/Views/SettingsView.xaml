@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
     <!-- Einstellungen (Etappe 6): Ergebnisdateien | Datenbank und Outbox | MQTT-Meldeweg -->
     <DockPanel Margin="16" DataContext="{Binding SettingsPage}">
-        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="14,10">
+        <Border DockPanel.Dock="Bottom" Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Settings;Notifications}" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="14,10">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Style="{StaticResource ToolButton}" Command="{Binding RevertCommand}" Margin="0,0,10,0">
@@ -40,14 +40,11 @@
         </ItemsControl>
 
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+
 
             <!-- ============================== Ergebnisdateien + Datenbank -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Settings}">
                 <StackPanel>
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                         <StackPanel>
@@ -144,6 +141,11 @@
                         </StackPanel>
                     </Border>
 
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Access}">
                     <!-- Zugang: Entra-App und Rechte je Konto (zugang.json, nur Administratoren) -->
                     <Border Style="{StaticResource Card}" Margin="0,12,0,0"
                             DataContext="{Binding DataContext.AccessPage, RelativeSource={RelativeSource AncestorType=UserControl}}">
@@ -249,12 +251,13 @@
                             </TextBlock>
                         </StackPanel>
                     </Border>
-                </StackPanel>
             </ScrollViewer>
 
             <!-- ============================== MQTT -->
-            <Border Grid.Column="2" Style="{StaticResource Card}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Border Style="{StaticResource Card}"
+                    Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Notifications}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Settings}">
                 <StackPanel>
                     <StackPanel>
                         <DockPanel>

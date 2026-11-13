@@ -1,12 +1,16 @@
-﻿<Window x:Class="Testumgebung.Desktop.MainWindow"
+<Window x:Class="Testumgebung.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:Testumgebung.Desktop.Converters"
         xmlns:views="clr-namespace:Testumgebung.Desktop.Views"
         Title="Testumgebung" Height="900" Width="1500" MinHeight="700" MinWidth="1200"
         WindowStartupLocation="CenterScreen" Icon="Assets/Testumgebung.ico"
         Background="{StaticResource BackgroundBrush}"
         FontFamily="Segoe UI" FontSize="14"
         Foreground="{StaticResource TextBrush}">
+    <Window.Resources>
+        <converters:NavigationAreaConverter x:Key="NavigationArea" />
+    </Window.Resources>
     <ScrollViewer x:Name="LayoutViewport" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled" CanContentScroll="False">
     <Grid x:Name="LayoutContent">
         <Grid.RowDefinitions>
@@ -180,106 +184,125 @@
             <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
                 <StackPanel Margin="12,16">
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                 IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Operator, Mode=TwoWay}">
+                                 Command="{Binding NavigateCommand}" CommandParameter="Operator"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Operator, Mode=OneWay}" AutomationProperties.Name="Prüfen">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE80F;" Margin="0,0,12,0" />
                             <TextBlock Text="Prüfen" />
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                 IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Protocol, Mode=TwoWay}">
+                                 Command="{Binding NavigateCommand}" CommandParameter="Protocol"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Protocol;Results;Reports, Mode=OneWay}" AutomationProperties.Name="Ergebnisse">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource Icon}" Text="&#xE8FD;" Margin="0,0,12,0" />
-                            <TextBlock Text="Protokoll" />
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE9F9;" Margin="0,0,12,0" />
+                            <TextBlock Text="Ergebnisse" />
                         </StackPanel>
                     </RadioButton>
-
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Margin="0,22,0,0"
-                                 Visibility="{Binding ShowReleasesNav, Converter={StaticResource BoolVis}}"
-                                 IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Releases, Mode=TwoWay}">
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding ShowReleasesNav, Converter={StaticResource BoolVis}}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="Releases"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Releases, Mode=OneWay}" AutomationProperties.Name="Releases">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE8A5;" Margin="0,0,12,0" />
                             <TextBlock Text="Releases" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding CanSeeReports, Converter={StaticResource BoolVis}}"
-                                 IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Reports, Mode=TwoWay}">
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="Editor"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Editor;Debug, Mode=OneWay}" AutomationProperties.Name="Ablaufeditor">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource Icon}" Text="&#xE9D2;" Margin="0,0,12,0" />
-                            <TextBlock Text="Auswertung" />
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE70F;" Margin="0,0,12,0" />
+                            <TextBlock Text="Ablaufeditor" />
                         </StackPanel>
                     </RadioButton>
-                    <StackPanel Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}">
-                        <TextBlock Text="Entwicklung" FontWeight="SemiBold" FontSize="16" Margin="12,22,0,8" />
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Editor, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE8A5;" Margin="0,0,12,0" />
-                                <TextBlock Text="Ablaufeditor" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Library, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE943;" Margin="0,0,12,0" />
-                                <TextBlock Text="CodeBlocks" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Curves, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE9D2;" Margin="0,0,12,0" />
-                                <TextBlock Text="Kurven" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Stations, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE713;" Margin="0,0,12,0" />
-                                <TextBlock Text="Prüfplatzkonfiguration" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Selection, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE8B3;" Margin="0,0,12,0" />
-                                <TextBlock Text="Auswahl &amp; Auftrag" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Results, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE9F9;" Margin="0,0,12,0" />
-                                <TextBlock Text="Ergebnisse" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Debug, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xEBE8;" Margin="0,0,12,0" />
-                                <TextBlock Text="Debug" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=System, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE9D5;" Margin="0,0,12,0" />
-                                <TextBlock Text="System &amp; Sicherung" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
-                                     Visibility="{Binding HasSettings, Converter={StaticResource BoolVis}}"
-                                     IsChecked="{Binding Page, Converter={StaticResource EnumEquals}, ConverterParameter=Settings, Mode=TwoWay}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource Icon}" Text="&#xE713;" Margin="0,0,12,0" />
-                                <TextBlock Text="Einstellungen" />
-                            </StackPanel>
-                        </RadioButton>
-                    </StackPanel>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="Library"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Library;Curves, Mode=OneWay}" AutomationProperties.Name="Bibliothek">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE943;" Margin="0,0,12,0" />
+                            <TextBlock Text="Bibliothek" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="Stations"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Stations;Selection, Mode=OneWay}" AutomationProperties.Name="Prüfplatz">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE7F4;" Margin="0,0,12,0" />
+                            <TextBlock Text="Prüfplatz" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="System"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Settings;Notifications;Access;Python;System, Mode=OneWay}" AutomationProperties.Name="Verwaltung">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE713;" Margin="0,0,12,0" />
+                            <TextBlock Text="Verwaltung" />
+                        </StackPanel>
+                    </RadioButton>
                 </StackPanel>
             </Border>
 
-            <Grid Grid.Column="1">
+            <DockPanel Grid.Column="1">
+                <Grid DockPanel.Dock="Top">
+                <StackPanel Orientation="Horizontal" Margin="16,8,16,0"
+                            Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Protocol;Results;Reports}">
+                    <RadioButton GroupName="TabsProtocol" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Aktueller Lauf" Command="{Binding NavigateCommand}" CommandParameter="Protocol"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Protocol, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsProtocol" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Einzelne Läufe" Command="{Binding NavigateCommand}" CommandParameter="Results" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Results, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsProtocol" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Statistik" Command="{Binding NavigateCommand}" CommandParameter="Reports" Visibility="{Binding CanSeeReports, Converter={StaticResource BoolVis}}"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Reports, Mode=OneWay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="16,8,16,0"
+                            Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Editor;Debug}">
+                    <RadioButton GroupName="TabsEditor" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Ablauf" Command="{Binding NavigateCommand}" CommandParameter="Editor"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Editor, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsEditor" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Debug" Command="{Binding NavigateCommand}" CommandParameter="Debug"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Debug, Mode=OneWay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="16,8,16,0"
+                            Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Library;Curves}">
+                    <RadioButton GroupName="TabsLibrary" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="CodeBlocks" Command="{Binding NavigateCommand}" CommandParameter="Library"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Library, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsLibrary" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Kurven" Command="{Binding NavigateCommand}" CommandParameter="Curves"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Curves, Mode=OneWay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="16,8,16,0"
+                            Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Stations;Selection}">
+                    <RadioButton GroupName="TabsStations" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Konfiguration" Command="{Binding NavigateCommand}" CommandParameter="Stations"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Stations, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsStations" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Auswahl &amp; Auftrag" Command="{Binding NavigateCommand}" CommandParameter="Selection"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Selection, Mode=OneWay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="16,8,16,0"
+                            Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Settings;Notifications;Access;Python;System}">
+                    <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Datenbank" Command="{Binding NavigateCommand}" CommandParameter="Settings" Visibility="{Binding HasSettings, Converter={StaticResource BoolVis}}"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Settings, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Meldewege" Command="{Binding NavigateCommand}" CommandParameter="Notifications" Visibility="{Binding HasSettings, Converter={StaticResource BoolVis}}"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Notifications, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Zugang" Command="{Binding NavigateCommand}" CommandParameter="Access" Visibility="{Binding HasSettings, Converter={StaticResource BoolVis}}"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Access, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Python" Command="{Binding NavigateCommand}" CommandParameter="Python"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Python, Mode=OneWay}" />
+                    <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
+                                 Content="Sicherung" Command="{Binding NavigateCommand}" CommandParameter="System"
+                                 IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=System, Mode=OneWay}" />
+                </StackPanel>
+                </Grid>
+                <Grid>
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Operator}">
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <views:OperatorView Grid.Row="1" />
@@ -290,12 +313,12 @@
                 <views:DebugView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Debug}" />
                 <views:LibraryView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Library}" />
                 <views:ResultsView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Results}" />
-                <views:SettingsView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Settings}" />
+                <views:SettingsView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Settings;Notifications;Access}" />
                 <views:ReleasesView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Releases}" />
                 <views:CurvesView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Curves}" />
                 <views:StationsView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Stations}" />
                 <views:SelectionView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Selection}" />
-                <views:SystemView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=System}" />
+                <views:SystemView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=System;Python}" />
                 <views:ReportsView Visibility="{Binding Page, Converter={StaticResource PageVis}, ConverterParameter=Reports}" />
 
                 <!-- Große Werkerwarnung: DB-Speicherung am Testende gescheitert (10 s je betroffenem Run, alle Prüfplätze) -->
@@ -326,7 +349,8 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </Grid>
+                </Grid>
+            </DockPanel>
         </Grid>
 
         <!-- ============================================ Statusleiste mit Start und Werkerabbruch (immer sichtbar) -->

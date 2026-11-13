@@ -78,6 +78,13 @@ public sealed partial class DevelopmentWorkspaceTests
             shell.Library.ImportAssembly(typeof(Testumgebung.Contracts.Waveform).Assembly.Location);
             foreach (var page in new UserControl[] { new OperatorView(), new SelectionView(), new LibraryView(), new ReleasesView(), new SystemView(), new PairedStationsView() })
             {
+                if (page is SystemView)
+                {
+                    if (shell.CanEnableDevelopmentLogin) shell.Session.EnableDevelopmentMode();
+                    shell.Login();
+                    Sta.Flush(dispatcher);
+                    shell.Page = ShellPage.Python;
+                }
                 page.DataContext = shell;
                 page.Width = 1280;
                 page.Height = 900;
@@ -355,12 +362,14 @@ public sealed partial class DevelopmentWorkspaceTests
             heading?.BringIntoView();
         });
         Capture(new StationsView(), "06-pruefplatz");
+        shell.Page = ShellPage.Settings;
         Capture(new SettingsView(), "07-einstellungen");
         Capture(new ReleasesView(), "08-releases");
         Capture(new ResultsView(), "09-ergebnisse");
         Capture(new DebugView(), "10-debugger");
         Capture(new CurvesView(), "11-kurven");
         Capture(new ReportsView(), "12-auswertung");
+        shell.Page = ShellPage.System;
         Capture(new SystemView(), "13-system");
     }
 

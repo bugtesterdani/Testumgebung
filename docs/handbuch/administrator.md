@@ -13,8 +13,8 @@ Installation, Ablageorte und Rechte: `docs/installation.md`.
    abstrakter Namen zu Gerät/Kanal, gemeinsame Geräte nur mit Reservierung. **Gerät testen** und **Geräte suchen**
    (VISA/DAQmx). Geräteliste: `docs/geraete.md`.
 5. **Auswahl & Auftrag** je Prüfplatz, falls Prüflinge über Kennung/Auftrag zugeordnet werden.
-6. **Einstellungen** (je Windows-Benutzer): Ergebnisordner, Datenbank (Verbindungstest, Vertragsprüfung), Outbox, Meldewege MQTT, HTTP-Webhook und OPC UA.
-7. **System & Sicherung → Systemprüfung** (mit „Reale Geräte ansprechen“) – keine Fehler mehr.
+6. **Verwaltung → Datenbank** (je Windows-Benutzer): Ergebnisordner, Datenbank (Verbindungstest, Vertragsprüfung) und Outbox. Unter **Verwaltung → Meldewege** MQTT, HTTP-Webhook und OPC UA konfigurieren.
+7. **Verwaltung → Sicherung → Systemprüfung** (mit „Reale Geräte ansprechen“) – keine Fehler mehr.
 8. **Sicherung erstellen**, ZIP extern ablegen.
 9. Abnahme nach `docs/pilot/abnahmeprotokoll.md`.
 
@@ -29,7 +29,7 @@ zugeordnete Geräte sie brauchen).
 
 * **Neue Version der Anwendung:** Installer erneut ausführen (Konfiguration bleibt). Vorher Sicherung, nachher Systemprüfung.
 * **Neue Prüfablaufversion:** über Releases freigeben; Prüfplätze übernehmen sie ab dem nächsten Prüfling.
-* **Outbox wächst:** Datenbank nicht erreichbar – Einstellungen → Verbindungstest. Einträge bleiben erhalten und werden
+* **Outbox wächst:** Datenbank nicht erreichbar – Verwaltung → Datenbank → Verbindungstest. Einträge bleiben erhalten und werden
   automatisch übertragen („Jetzt wiederholen“ unter Ergebnisse).
 * **Unvollständige Prüfläufe:** Ergebnisse → als abgebrochen speichern (ERROR mit Vermerk) oder verwerfen (wird
   aufbewahrt). Betroffene Prüflinge neu prüfen.
