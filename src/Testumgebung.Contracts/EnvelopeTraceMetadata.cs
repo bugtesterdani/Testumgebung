@@ -22,4 +22,6 @@ public sealed record EnvelopeViolation(double Time, double Value, double Lower, 
 public sealed record EnvelopeEarlyStop(double Percent, string Channel, double Time, double Value, double Lower, double Upper)
 {
     public string? AbortCurve { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public double? AbsoluteDeviation { get; init; }
 }
