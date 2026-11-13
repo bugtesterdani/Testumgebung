@@ -879,10 +879,15 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     {
         if (Step.BlockType is TraceBlocks.Start or TraceBlocks.Record)
             return TraceMarginVisibility(name) ?? IsTraceParameterActive(name);
+        if (Step.BlockType == BlockCatalog.CurveOutput)
+            return IsCurveOutputParameterActive(name);
         if (Step.BlockType != BlockCatalog.Evaluate) return true;
         var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == "Festes Ergebnis";
         return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
     }
+
+    private bool IsCurveOutputParameterActive(string name) => name is not ("Kurve" or "Version")
+        || Step.Parameters.GetValueOrDefault(CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Load) == CurveOutputBlocks.Load;
 
     private bool IsTraceParameterActive(string name)
     {

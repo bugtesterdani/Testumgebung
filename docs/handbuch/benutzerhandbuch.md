@@ -475,7 +475,7 @@ Die Seite **Kurven** dient dem Import und der Untersuchung von Kurvendaten. Im A
 4. Gerätezuordnung und Ausgabeparameter prüfen.
 5. Anzeige und Speicherung der Kurven im Projekt bewusst einstellen.
 
-Eine Vorschau ist noch keine tatsächliche Kurvenausgabe am Gerät. Vor Hardwarebetrieb Wertebereich und sichere Ausgangszustände prüfen.
+Im Ablauf für jede Aktion den Baustein **Kurvenausgabe** mit **Laden**, **Übertragen**, **Starten** oder **Stoppen** einsetzen. Beim Laden Kurven-ID und bei Bedarf Version angeben. Eine Vorschau ist noch keine tatsächliche Kurvenausgabe am Gerät. Vor Hardwarebetrieb Wertebereich und sichere Ausgangszustände prüfen.
 
 ## 15. Einstellungen, Sicherung und Betrieb
 

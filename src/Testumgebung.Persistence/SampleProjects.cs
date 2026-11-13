@@ -26,9 +26,9 @@ public static class SampleProjects
             .Add(
                 S(BlockCatalog.SetValue, "init.auftrag", "Auftrag übernehmen", ("Ziel", "Auftrag"), ("Ausdruck", "Auftrag")),
                 S(BlockCatalog.DigitalWrite, "init.grundzustand", "Ausgänge in Grundzustand", ("Ressource", "Digital_Start"), ("Wert", "false")),
-                S(BlockCatalog.CurveLoad, "init.kurve.laden", "AC-Profil laden", ("Ressource", "AC_Kurvenquelle"), ("Kurve", "AC_Profil"), ("Version", "0.4")),
-                S(BlockCatalog.CurveTransfer, "init.kurve.uebertragen", "AC-Profil übertragen", ("Ressource", "AC_Kurvenquelle")),
-                S(BlockCatalog.CurveStart, "init.kurve.starten", "Kurvenausgabe starten", ("Ressource", "AC_Kurvenquelle")));
+                S(BlockCatalog.CurveOutput, "init.kurve.laden", "AC-Profil laden", (CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Load), ("Ressource", "AC_Kurvenquelle"), ("Kurve", "AC_Profil"), ("Version", "0.4")),
+                S(BlockCatalog.CurveOutput, "init.kurve.uebertragen", "AC-Profil übertragen", (CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Transfer), ("Ressource", "AC_Kurvenquelle")),
+                S(BlockCatalog.CurveOutput, "init.kurve.starten", "Kurvenausgabe starten", (CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Start), ("Ressource", "AC_Kurvenquelle")));
 
         var belastung = new GroupDefinition("belastung", "Messgruppe – Belastung")
         {
@@ -83,7 +83,7 @@ public static class SampleProjects
         var loop = new GroupDefinition("loop", "Test Loop / Testing") { Repetition = Repetition.Endless }.Add(pruefling);
 
         var fin = new GroupDefinition("fin", "Test End / Finalization").Add(
-            S(BlockCatalog.CurveStop, "fin.kurve.stoppen", "Kurvenausgabe stoppen", ("Ressource", "AC_Kurvenquelle")),
+            S(BlockCatalog.CurveOutput, "fin.kurve.stoppen", "Kurvenausgabe stoppen", (CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Stop), ("Ressource", "AC_Kurvenquelle")),
             S(BlockCatalog.DigitalWrite, "fin.reset", "Ausgänge zurücksetzen", ("Ressource", "Digital_Start"), ("Wert", "false")));
 
         var definition = new TestDefinition("AC-Prüfung", "1.5", init, loop, fin);

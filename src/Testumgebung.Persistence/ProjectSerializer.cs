@@ -385,12 +385,22 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     {
         var type = Require(dto.Block, "block");
         if (!catalog.TryGet(type, out _)) throw new ProjectFormatException($"Schritt '{dto.Name}': unbekannter Baustein '{type}'.");
-        var step = catalog.Create(type, Require(dto.Id, "id"), dto.Name, dto.Parameters);
+        var id = Require(dto.Id, "id");
+        var step = CurveOutputBlocks.LegacyAction(type) is { } action && catalog.TryGet(BlockCatalog.CurveOutput, out _)
+            ? MigrateCurveOutput(dto, id, type, action)
+            : catalog.Create(type, id, dto.Name, dto.Parameters);
         step.Description = dto.Description;
         step.Disabled = dto.Disabled == true;
         RestoreDebugRules(step, dto);
         step.Storage = FromDto(dto.Storage);
         return step;
+    }
+
+    private StepDefinition MigrateCurveOutput(StepDto dto, string id, string type, string action)
+    {
+        var parameters = new Dictionary<string, string>(dto.Parameters ?? []);
+        parameters[CurveOutputBlocks.ActionParameter] = action;
+        return catalog.Create(BlockCatalog.CurveOutput, id, dto.Name ?? catalog.Get(type).DisplayName, parameters);
     }
 
     private static void RestoreDebugRules(NodeDefinition node, NodeDto dto)

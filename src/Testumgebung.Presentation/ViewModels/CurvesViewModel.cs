@@ -298,7 +298,9 @@ public sealed class CurvesViewModel : ObservableObject
     private List<(string Key, string Step)> Usage()
     {
         var list = new List<(string, string)>();
-        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(step2 => step2.BlockType == BlockCatalog.CurveLoad))
+        foreach (var step in _editor.Project.Definition.AllNodes().OfType<StepDefinition>().Where(step2 => step2.BlockType == BlockCatalog.CurveLoad ||
+                     step2.BlockType == BlockCatalog.CurveOutput &&
+                     step2.Parameters.GetValueOrDefault(CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Load) == CurveOutputBlocks.Load))
         {
             var id = step.Parameters.GetValueOrDefault("Kurve") ?? "";
             var version = step.Parameters.GetValueOrDefault("Version");
