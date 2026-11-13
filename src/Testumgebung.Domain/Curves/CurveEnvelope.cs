@@ -106,17 +106,17 @@ internal sealed class EnvelopeRecording
     private readonly double _maxGap, _minimumDuration;
     private readonly bool _touchAllowed;
     private bool _faulted;
-    private readonly double? _stopPercent, _duration;
+    private readonly StopMargin? _stopMargin;
+    private readonly double? _duration;
     public bool HasViolation { get; private set; }
     public bool Ended => EarlyStop is not null || (_duration is { } duration && _times.Count > 1 && _times[^1] >= duration - TimeTolerance(duration));
     public EnvelopeEarlyStop? EarlyStop { get; private set; }
     private DateTimeOffset _lastPreview;
-    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula)
+    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute)
     {
         ValidateChannels(channels);
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
-        if (stopPercent is { } percent && (!double.IsFinite(percent) || percent < 0)) throw new ArgumentException("FAIL-Abbruchabweichung muss endlich und >= 0 sein.");
-        _stopPercent = stopPercent;
+        _stopMargin = StopMargin.Create(stopPercent, stopAbsolute);
         _slope = slope;
         if (formula is not null && slope is not null)
             throw new ArgumentException("Für die Aufnahme entweder Formelgrenzen oder Steigungsgrenzen wählen.");
@@ -235,9 +235,7 @@ internal sealed class EnvelopeRecording
             var value = slopes[channel];
             _slopes[channel].Add(value);
             HasViolation |= !Inside(value, limits.Minimum, limits.Maximum);
-            if (EarlyStop is null && _stopPercent is { } percent &&
-                BeyondStopLimit(value, limits.Minimum, limits.Maximum, percent))
-                EarlyStop = new(percent, _channels[channel].Name, time, value, limits.Minimum, limits.Maximum);
+            EarlyStop ??= _stopMargin?.Check(_channels[channel].Name, time, value, limits.Minimum, limits.Maximum);
         }
     }
 
@@ -319,11 +317,8 @@ internal sealed class EnvelopeRecording
         {
             var value = values[channel];
             HasViolation |= !Inside(value, lower, upper);
-            if (_stopPercent is { } percent && BeyondStopLimit(value, lower, upper, percent))
-            {
-                EarlyStop = new(percent, _channels[channel].Name, time, value, lower, upper);
-                return;
-            }
+            EarlyStop = _stopMargin?.Check(_channels[channel].Name, time, value, lower, upper);
+            if (EarlyStop is not null) return;
         }
     }
 
@@ -353,15 +348,15 @@ internal sealed class EnvelopeRecording
     private EnvelopeEarlyStop? FindEarlyStop(int channel, double start, double end)
     {
         var abort = _abortEnvelopes[channel];
-        if (abort is null && _stopPercent is null) return null;
+        var margin = abort is null ? _stopMargin : new StopMargin(0, false);
+        if (margin is not { } stop) return null;
         var limits = abort ?? _envelopes[channel];
-        var percent = abort is null ? _stopPercent!.Value : 0;
         foreach (var time in limits.Checkpoints(start, end).Distinct().Order())
         {
             var value = MeasuredAt(channel, time);
             var (lower, upper) = limits.At(time);
-            if (BeyondStopLimit(value, lower, upper, percent))
-                return new(percent, _channels[channel].Name, time, value, lower, upper) { AbortCurve = abort?.Key };
+            if (stop.Check(_channels[channel].Name, time, value, lower, upper) is { } trigger)
+                return trigger with { AbortCurve = abort?.Key };
         }
         return null;
     }
@@ -375,15 +370,6 @@ internal sealed class EnvelopeRecording
         if (_times[^1] - _times[0] + TimeTolerance(_minimumDuration) < _minimumDuration) return false;
         return _duration is not { } duration || (_times[0] <= TimeTolerance(duration) && _times[^1] >= duration - TimeTolerance(duration));
     }
-    private static bool BeyondStopLimit(double value, double lower, double upper, double percent)
-    {
-        // Decimal configuration and interpolation may differ by a few binary rounding bits.
-        var low = lower - Math.Abs(lower) * (percent / 100);
-        var high = upper + Math.Abs(upper) * (percent / 100);
-        var lowTolerance = Math.Max(Math.Abs(value), Math.Abs(lower)) * 1e-12;
-        var highTolerance = Math.Max(Math.Abs(value), Math.Abs(upper)) * 1e-12;
-        return value < low - lowTolerance || value > high + highTolerance;
-    }
     private bool Inside(double value, double low, double high) => _touchAllowed ? value >= low && value <= high : value > low && value < high;
 }
 
@@ -392,13 +378,13 @@ public sealed class EnvelopeRecordings
 {
     private readonly object _gate = new();
     private readonly Dictionary<(string Owner, string Name), EnvelopeRecording> _recordings = [];
-    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null)
+    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null, double? stopAbsolute = null)
     {
         lock (_gate)
         {
             if (string.IsNullOrWhiteSpace(name) || _recordings.ContainsKey((owner, name))) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
             if (_recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
-            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula));
+            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute));
         }
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)

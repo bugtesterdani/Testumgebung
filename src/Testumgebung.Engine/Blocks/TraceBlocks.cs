@@ -14,6 +14,9 @@ public static class TraceBlocks
         DisjointSlope = "Steigung in getrennten Fenstern", RollingSlope = "Steigung im gleitenden Fenster";
     public const string FormulaBand = "Berechnetes Grenzband";
     public const string LowerFormulaParameter = "Untergrenzenformel", UpperFormulaParameter = "Obergrenzenformel";
+    public const string StopEnabledParameter = "FailAbbruch", StopMarginModeParameter = "Abweichungsart";
+    public const string PercentMargin = "Prozent", AbsoluteMargin = "Absolut";
+    public const string PercentMarginParameter = "AbweichungProzent", AbsoluteMarginParameter = "AbweichungAbsolut";
     public const string AbortCurvesParameter = "Abbruchgrenzkurven";
     public const string ExitDutOnEarlyStopParameter = "BeiVorzeitigemEndeZurExitGruppe";
 
@@ -68,14 +71,17 @@ public static class TraceBlocks
      new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new(AbortCurvesParameter, "Abbruchgrenzkurven: ID@Version (Komma)", ParameterKind.Text,
-        Hint: "Nur für Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die Prozentregel. Eine eingetragene Kurve ersetzt die Prozentregel dieses Kanals."),
+        Hint: "Nur für Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gewählte Abweichungsregel. Eine eingetragene Kurve ersetzt die gewählte Abweichungsregel dieses Kanals."),
      new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
      new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
      new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),
      new("MinDauer", "Mindestdauer der Aufnahme [s]", ParameterKind.Number, "0"),
      new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
-     new("FailAbbruch", "Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)", ParameterKind.Bool, "false"),
-     new("AbweichungProzent", "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10")];
+     new(StopEnabledParameter, "Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)", ParameterKind.Bool, "false"),
+     new(StopMarginModeParameter, "Art der Abbruchabweichung", ParameterKind.Choice, PercentMargin, Choices: [PercentMargin, AbsoluteMargin]),
+     new(PercentMarginParameter, "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10"),
+     new(AbsoluteMarginParameter, "Zusätzliche Abweichung [Einheit der Auswertung]", ParameterKind.Number, "0",
+        Hint: "Zum Beispiel V bei Spannung oder V/s bei Steigung.")];
     private static IStepAction CreatePauseTime(BlockParameters parameters)
     {
         var name = parameters.Text("Aufnahme");
@@ -137,10 +143,14 @@ public static class TraceBlocks
     {
         var limit = early.AbortCurve is { } curve
             ? $"Abbruchgrenzkurve {curve}, Grenzen {early.Lower:G6}..{early.Upper:G6}"
-            : $"Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {early.Percent:G6} %";
+            : $"Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {DescribeMargin(early)}";
         var continuation = exitDut ? "Regulären Prüflingsablauf beenden und Exit-Gruppe ausführen." : "Nächste Prüfschritte werden ausgeführt.";
         return $"Aufnahme vorzeitig mit FAIL beendet: {early.Channel}, t={early.Time:G6} s, Wert {early.Value:G6}, {limit}. {continuation}";
     }
+
+    private static string DescribeMargin(EnvelopeEarlyStop early) => early.AbsoluteDeviation is { } margin
+        ? $"{margin:G6} in der Einheit der Auswertung"
+        : $"{early.Percent:G6} %";
 
     internal static StepOutcome Outcome(TraceEvaluation result, bool includeData, bool exitDut = false)
     {

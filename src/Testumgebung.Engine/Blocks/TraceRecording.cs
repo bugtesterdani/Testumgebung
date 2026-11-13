@@ -11,7 +11,7 @@ internal sealed class TraceRecordingSettings
     private readonly string[] _names, _units, _curves, _abortCurves;
     private readonly double _minimumDuration;
     private readonly bool _touchAllowed;
-    private readonly double? _stopPercent;
+    private readonly double? _stopPercent, _stopAbsolute;
     private readonly SlopeLimits? _slope;
     private readonly FormulaLimits? _formula;
     public string Name { get; }
@@ -35,7 +35,7 @@ internal sealed class TraceRecordingSettings
         if (!double.IsFinite(duration) || duration < 0) throw new BlockConfigurationException("Messdauer muss endlich und >= 0 sein.");
         Duration = duration == 0 ? null : duration;
         _minimumDuration = p.Number("MinDauer") ?? 0; _touchAllowed = p.Bool("Beruehren");
-        _stopPercent = p.Bool("FailAbbruch") ? p.Number("AbweichungProzent") ?? 0 : null;
+        (_stopPercent, _stopAbsolute) = ReadStopMargins(p);
     }
     public void Begin(IStepContext ctx)
     {
@@ -44,8 +44,18 @@ internal sealed class TraceRecordingSettings
         {
             AbortLimits = _abortCurves[index].Length == 0 ? null : Resolve(ctx, _abortCurves[index])
         }).ToArray();
-        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula);
+        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula, _stopAbsolute);
     }
+    private static (double? Percent, double? Absolute) ReadStopMargins(BlockParameters p)
+    {
+        if (!p.Bool(TraceBlocks.StopEnabledParameter)) return (null, null);
+        var absolute = p.Choice(TraceBlocks.StopMarginModeParameter) == TraceBlocks.AbsoluteMargin;
+        var value = p.Number(absolute ? TraceBlocks.AbsoluteMarginParameter : TraceBlocks.PercentMarginParameter) ?? 0;
+        if (!double.IsFinite(value) || value < 0)
+            throw new BlockConfigurationException("FAIL-Abbruchabweichung muss endlich und >= 0 sein.");
+        return absolute ? (null, value) : (value, null);
+    }
+
     private static FormulaLimits ReadFormulaLimits(BlockParameters p)
     {
         try { return new(p.Text(TraceBlocks.LowerFormulaParameter), p.Text(TraceBlocks.UpperFormulaParameter)); }
