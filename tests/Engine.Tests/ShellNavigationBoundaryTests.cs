@@ -37,7 +37,7 @@ public sealed class ShellNavigationBoundaryTests
             foreach (var page in Enum.GetValues<ShellPage>())
             {
                 shell.Page = ShellPage.Operator;
-                var allowed = page switch { ShellPage.Operator or ShellPage.Protocol => true, ShellPage.Releases => false, ShellPage.Settings => develop && settings, ShellPage.Reports => develop || release, _ => develop };
+                var allowed = page switch { ShellPage.Operator or ShellPage.Protocol => true, ShellPage.Releases => false, ShellPage.Settings or ShellPage.Notifications or ShellPage.Access => develop && settings, ShellPage.Reports => develop || release, _ => develop };
                 Assert.Equal(allowed, shell.NavigateCommand.CanExecute(page));
                 Assert.Equal(allowed, shell.NavigateCommand.CanExecute(page.ToString()));
                 shell.NavigateCommand.Execute(page); Assert.Equal(allowed ? page : ShellPage.Operator, shell.Page);
