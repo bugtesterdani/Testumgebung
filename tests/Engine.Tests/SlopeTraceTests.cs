@@ -2,6 +2,8 @@ using Testumgebung.Contracts;
 using Testumgebung.Domain.Curves;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
+using Testumgebung.Persistence;
+using Testumgebung.Presentation.ViewModels;
 using static Testumgebung.Engine.Tests.Kit;
 
 namespace Testumgebung.Engine.Tests;
@@ -10,6 +12,35 @@ public sealed class SlopeTraceTests
 {
     private static StepDefinition Block(string type, string id, params (string Key, string Value)[] parameters)
         => BlockCatalog.Default.Create(type, id, id, parameters.ToDictionary(pair => pair.Key, pair => pair.Value));
+    [Theory]
+    [InlineData(TraceBlocks.Start)]
+    [InlineData(TraceBlocks.Record)]
+    public void Editor_shows_only_the_fields_for_the_selected_trace_evaluation(string blockType)
+    {
+        var editor = new EditorViewModel(new TestProject(Test(Group("loop"))));
+        editor.InsertAt(editor.Palette.SelectMany(category => category.Items).Single(item => item.BlockType == blockType),
+            editor.FindNode("loop")!, 0);
+        var properties = Assert.IsType<StepPropertiesViewModel>(editor.Properties);
+        var parameters = properties.Parameters.ToDictionary(row => row.Descriptor.Name);
+        var mode = parameters[TraceBlocks.EvaluationParameter];
+
+        Assert.False(parameters["Grenzkurven"].IsHidden);
+        Assert.True(parameters["Steigungsfenster"].IsHidden);
+        Assert.True(parameters["SteigungMin"].IsHidden);
+
+        mode.Value = TraceBlocks.PairSlope;
+        Assert.True(parameters["Grenzkurven"].IsHidden);
+        Assert.True(parameters[TraceBlocks.AbortCurvesParameter].IsHidden);
+        Assert.True(parameters["Steigungsfenster"].IsHidden);
+        Assert.False(parameters["SteigungMin"].IsHidden);
+        Assert.False(parameters["SteigungMax"].IsHidden);
+
+        mode.Value = TraceBlocks.DisjointSlope;
+        Assert.False(parameters["Steigungsfenster"].IsHidden);
+        mode.Value = TraceBlocks.RollingSlope;
+        Assert.False(parameters["Steigungsfenster"].IsHidden);
+    }
+
     [Theory]
     [InlineData("Steigung je Nachbarpaar", 5, new double[] { 1, 3, 4, 6, 7 }, new double[] { 2, -1, 6, 2, -2 })]
     [InlineData("Steigung in getrennten Fenstern", 3, new double[] { 3, 7 }, new double[] { 0, 2.0 / 3 })]

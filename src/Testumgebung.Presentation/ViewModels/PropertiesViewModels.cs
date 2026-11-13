@@ -878,19 +878,22 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     internal bool IsParameterActive(string name)
     {
         if (Step.BlockType is TraceBlocks.Start or TraceBlocks.Record)
-        {
-            var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
-            return name switch
-            {
-                "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
-                "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
-                "SteigungMin" or "SteigungMax" => mode != TraceBlocks.ValueBand,
-                _ => true
-            };
-        }
+            return IsTraceParameterActive(name);
         if (Step.BlockType != BlockCatalog.Evaluate) return true;
         var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == "Festes Ergebnis";
         return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
+    }
+
+    private bool IsTraceParameterActive(string name)
+    {
+        var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
+        return name switch
+        {
+            "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
+            "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
+            "SteigungMin" or "SteigungMax" => mode != TraceBlocks.ValueBand,
+            _ => true
+        };
     }
 
     internal void ParametersChanged()
