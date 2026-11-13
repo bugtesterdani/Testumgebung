@@ -182,6 +182,7 @@ public sealed class BlockCatalog
     public const string Measure = "analog.messen";
     public const string Output = "analog.ausgeben";
     public const string Capture = "kurve.aufnehmen";
+    public const string CurveOutput = "kurve.ausgabe";
     public const string CurveLoad = "kurve.laden";
     public const string CurveTransfer = "kurve.uebertragen";
     public const string CurveStart = "kurve.starten";
