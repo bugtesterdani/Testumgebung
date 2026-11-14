@@ -44,7 +44,8 @@ public sealed partial class EditorViewModel : ObservableObject
 
         _palette = Catalog.All
             .Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download)
-                && CurveOutputBlocks.LegacyAction(block.Type) is null)
+                && CurveOutputBlocks.LegacyAction(block.Type) is null
+                && ProcessBlocks.Replacement(block.Type) is null)
             .GroupBy(block => block.Category)
             .Select(group => new PaletteCategory(group.Key, group.Select(block => new PaletteItem(block.Type, block.DisplayName, block.Description, IconFor(block.Type))).ToList()))
             .Append(new PaletteCategory("Struktur", [new PaletteItem(null, "Gruppe", "Untergruppe mit Variablen, Bedingung, Wiederholung und Exit-Gruppe.", NodeIcon.Group)]))

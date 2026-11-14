@@ -881,9 +881,20 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
             return TraceMarginVisibility(name) ?? IsTraceParameterActive(name);
         if (Step.BlockType == BlockCatalog.CurveOutput)
             return IsCurveOutputParameterActive(name);
+        if (Step.BlockType is ProcessBlocks.Communication or ProcessBlocks.StatusEnd)
+            return IsProcessParameterActive(Step.BlockType, name);
         if (Step.BlockType != BlockCatalog.Evaluate) return true;
         var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == "Festes Ergebnis";
         return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
+    }
+
+    private bool IsProcessParameterActive(string type, string name)
+    {
+        if (name == ProcessBlocks.ActionParameter) return true;
+        var action = Step.Parameters.GetValueOrDefault(ProcessBlocks.ActionParameter)
+            ?? Block!.Parameters[0].Default;
+        var legacyType = ProcessBlocks.ActionBlock(type, action);
+        return legacyType is not null && _editor.Catalog.Get(legacyType).Parameters.Any(field => field.Name == name);
     }
 
     private bool IsCurveOutputParameterActive(string name) => name is not ("Kurve" or "Version")

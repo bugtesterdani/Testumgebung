@@ -19,6 +19,25 @@ public static class ProcessBlocks
     public const string WaitOutput = "prozess.ausgabe-warten", Send = "prozess.senden";
     public const string Communication = "prozess.kommunikation", StatusEnd = "prozess.status-ende";
     public const string ActionParameter = "Aktion";
+    private static readonly (string LegacyType, string Type, string Action)[] Actions =
+    [
+        (Send, Communication, "Senden"),
+        (WaitOutput, Communication, "Auf Ausgabe warten"),
+        (Status, StatusEnd, "Abfragen"),
+        (Wait, StatusEnd, "Warten"),
+        (Stop, StatusEnd, "Beenden")
+    ];
+
+    public static (string Type, string Action)? Replacement(string? type)
+    {
+        foreach (var action in Actions)
+            if (action.LegacyType == type) return (action.Type, action.Action);
+        return null;
+    }
+
+    public static string? ActionBlock(string type, string action) =>
+        Actions.FirstOrDefault(entry => entry.Type == type && entry.Action == action).LegacyType;
+
     private static readonly string[] Kinds = ["EXE", "Python", ".NET-DLL", "DLL-Main"];
     public static void Register(BlockCatalog catalog)
     {
@@ -58,7 +77,25 @@ public static class ProcessBlocks
          new("Schliessen", "stdin danach schließen (EOF)", ParameterKind.Bool, "false"),
          new("Zeitlimit", "Sendezeitlimit [ms]", ParameterKind.Number, "30000")],
          parameters => new SendAction(parameters.Text("Prozess"), parameters.Text("Text"), parameters.Choice("Zeilenende"), parameters.Bool("Schliessen"), Timeout(parameters))));
+        RegisterCombined(catalog, Communication, "Prozess: Kommunikation", "Sendet Text oder wartet auf ein Signal in stdout oder stderr.");
+        RegisterCombined(catalog, StatusEnd, "Prozess: Status/Ende", "Fragt den Prozessstatus ab, wartet auf das Ende oder beendet den Prozess.");
     }
+
+    private static void RegisterCombined(BlockCatalog catalog, string type, string title, string description)
+    {
+        var actions = Actions.Where(entry => entry.Type == type).ToArray();
+        var descriptors = actions.ToDictionary(entry => entry.Action, entry => catalog.Get(entry.LegacyType));
+        var fields = descriptors.Values.SelectMany(block => block.Parameters).DistinctBy(field => field.Name);
+        var choices = actions.Select(entry => entry.Action).ToArray();
+        catalog.Register(new(type, title, "Prozesse", "arrow", description,
+            [new(ActionParameter, "Aktion", ParameterKind.Choice, choices[0], Choices: choices), .. fields],
+            parameters =>
+            {
+                var descriptor = descriptors[parameters.Choice(ActionParameter)];
+                return descriptor.Factory(new BlockParameters(descriptor, parameters.Raw));
+            }));
+    }
+
     private static ParameterDescriptor HandleParameter() => new("Prozess", "Prozesskennung", ParameterKind.Text, Required: true, Hint: "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID.");
     private static ParameterDescriptor[] ResultParameters() =>
     [new("ExitcodeZiel", "Exitcode → Intvariable (erst nach Ende gültig)", ParameterKind.Variable),

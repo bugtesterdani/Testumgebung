@@ -18,7 +18,8 @@ public sealed class EditorPaletteTests
         Assert.Single(items, item => item.BlockType is null);
         Assert.DoesNotContain(items, item => item.Preset is not null);
         Assert.Equal(editor.Catalog.All.Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download)
-            && block.Type is not (BlockCatalog.CurveLoad or BlockCatalog.CurveTransfer or BlockCatalog.CurveStart or BlockCatalog.CurveStop)).Select(block => block.Type).Order(), items.Where(item => item.BlockType is not null).Select(item => item.BlockType!).Order());
+            && block.Type is not (BlockCatalog.CurveLoad or BlockCatalog.CurveTransfer or BlockCatalog.CurveStart or BlockCatalog.CurveStop)
+            && block.Type is not (ProcessBlocks.Send or ProcessBlocks.WaitOutput or ProcessBlocks.Wait or ProcessBlocks.Status or ProcessBlocks.Stop)).Select(block => block.Type).Order(), items.Where(item => item.BlockType is not null).Select(item => item.BlockType!).Order());
         Assert.All(editor.Palette.Where(category => category.Name == "Kommunikation"), category => Assert.False(category.IsExpanded));
     }
 

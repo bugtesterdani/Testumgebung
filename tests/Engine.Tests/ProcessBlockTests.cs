@@ -24,6 +24,13 @@ public sealed class ProcessBlockTests
         var run = new TestRun(Test(loop), new TestRunOptions { Clock = new VirtualClock() });
         await run.RunAsync().Within(); return run;
     }
+    private static StepDefinition ProcessAction(string legacy, string id, Dictionary<string, string> parameters)
+    {
+        var (type, action) = ProcessBlocks.Replacement(legacy)!.Value;
+        parameters = new(parameters) { [ProcessBlocks.ActionParameter] = action };
+        return BlockCatalog.Default.Create(type, id, parameters: parameters);
+    }
+
     [Theory]
     [InlineData("LF")]
     [InlineData("CRLF")]
@@ -32,13 +39,13 @@ public sealed class ProcessBlockTests
         var p = Launch(["dialog"]); p["Warten"] = "false";
         var loop = Variables().Var("Match", VarType.String).Var("Command", VarType.String, "hello");
         loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Start, "start", parameters: p));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.WaitOutput, "ready", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Muster"] = "ready>" }));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Send, "send", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Text"] = "{Command}", ["Zeilenende"] = ending }));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.WaitOutput, "response", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Muster"] = @"value=\d+;hello;", ["Regex"] = "true", ["Stream"] = "stderr", ["TrefferZiel"] = "Match" }));
+        loop.Add(ProcessAction(ProcessBlocks.WaitOutput, "ready", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Muster"] = "ready>" }));
+        loop.Add(ProcessAction(ProcessBlocks.Send, "send", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Text"] = "{Command}", ["Zeilenende"] = ending }));
+        loop.Add(ProcessAction(ProcessBlocks.WaitOutput, "response", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Muster"] = @"value=\d+;hello;", ["Regex"] = "true", ["Stream"] = "stderr", ["TrefferZiel"] = "Match" }));
         string? match = null;
         loop.Add(new StepDefinition("inspect", "Inspect", new DelegateAction(ctx => { match = (string)ctx.Get("Match"); return Task.FromResult(StepOutcome.Unrated()); })));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Send, "finish", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Text"] = "done\n", ["Zeilenende"] = "Keines", ["Schliessen"] = "true" }));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Wait, "wait", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}" }));
+        loop.Add(ProcessAction(ProcessBlocks.Send, "finish", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Text"] = "done\n", ["Zeilenende"] = "Keines", ["Schliessen"] = "true" }));
+        loop.Add(ProcessAction(ProcessBlocks.Wait, "wait", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}" }));
         var run = await Run(loop);
         Assert.Equal("value=42;hello;", match);
         Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("response")).Rating);
@@ -68,8 +75,8 @@ public sealed class ProcessBlockTests
     {
         var p = Launch(["sleep", "500"]); p["Warten"] = "false";
         var loop = Variables().Add(BlockCatalog.Default.Create(ProcessBlocks.Start, "start", parameters: p));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Status, "status", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["FertigZiel"] = "Done" }));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Wait, "wait", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Zeitlimit"] = "20000", ["ExitcodeZiel"] = "Exit" }));
+        loop.Add(ProcessAction(ProcessBlocks.Status, "status", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["FertigZiel"] = "Done" }));
+        loop.Add(ProcessAction(ProcessBlocks.Wait, "wait", parameters: new Dictionary<string, string> { ["Prozess"] = "{Handle}", ["Zeitlimit"] = "20000", ["ExitcodeZiel"] = "Exit" }));
         var run = await Run(loop);
         Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("start")).Rating);
         Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("status")).Rating);
@@ -82,8 +89,8 @@ public sealed class ProcessBlockTests
         var p = Launch(["sleep", "60000"]); p["Warten"] = "false";
         var loop = Variables().Add(BlockCatalog.Default.Create(ProcessBlocks.Start, "start", parameters: p));
         var handle = new Dictionary<string, string> { ["Prozess"] = "{Handle}" };
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Stop, "stop", parameters: handle));
-        loop.Add(BlockCatalog.Default.Create(ProcessBlocks.Wait, "wait", parameters: handle));
+        loop.Add(ProcessAction(ProcessBlocks.Stop, "stop", parameters: handle));
+        loop.Add(ProcessAction(ProcessBlocks.Wait, "wait", parameters: handle));
         var run = await Run(loop);
         Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("stop")).Rating);
         Assert.Equal(ResultRating.Error, Assert.Single(run.Steps("wait")).Rating);
