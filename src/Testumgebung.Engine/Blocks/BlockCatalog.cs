@@ -190,6 +190,7 @@ public sealed class BlockCatalog
     public const string DigitalRead = "digital.lesen";
     public const string DigitalWrite = "digital.setzen";
     public const string Evaluate = "bewertung";
+    public const string FixedRatingMode = "Festes Ergebnis";
     public const string SetRating = "bewertung.setzen";
     public const string Wait = "warten";
     public const string RaiseError = "fehler";
