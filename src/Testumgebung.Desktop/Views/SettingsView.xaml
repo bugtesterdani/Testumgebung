@@ -256,8 +256,7 @@
             <!-- ============================== MQTT -->
             <Border Style="{StaticResource Card}"
                     Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Notifications}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Settings}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <StackPanel>
                         <DockPanel>

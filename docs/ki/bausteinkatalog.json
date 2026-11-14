@@ -1811,6 +1811,55 @@
       ]
     },
     {
+      "type": "kurve.ausgabe",
+      "displayName": "Kurvenausgabe",
+      "category": "Kurvenausgabe",
+      "description": "L\u00E4dt eine Kurve mit Ger\u00E4teeignungspr\u00FCfung, \u00FCbertr\u00E4gt, startet oder stoppt die Ausgabe.",
+      "parameters": [
+        {
+          "name": "Aktion",
+          "label": "Aktion",
+          "kind": "Choice",
+          "default": "Laden",
+          "required": false,
+          "choices": [
+            "Laden",
+            "\u00DCbertragen",
+            "Starten",
+            "Stoppen"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Ressource",
+          "label": "Ausgabeger\u00E4t",
+          "kind": "Resource",
+          "default": "AC_Kurvenquelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kurve",
+          "label": "Kurve (ID)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Beim Laden erforderlich."
+        },
+        {
+          "name": "Version",
+          "label": "Version",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)"
+        }
+      ]
+    },
+    {
       "type": "kurve.laden",
       "displayName": "Kurve laden",
       "category": "Kurvenausgabe",

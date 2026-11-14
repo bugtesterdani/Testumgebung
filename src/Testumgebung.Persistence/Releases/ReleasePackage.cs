@@ -360,8 +360,7 @@ public static class DefinitionCompatibility
             if ((string?)jsonObject2["block"] is TraceBlocks.Start or TraceBlocks.Record)
                 CollectTraceCurveReferences(parameters, curves);
             if ((string?)parameters["Baustein"] is { Length: > 0 } block) used.Add(block);
-            if ((string?)parameters["Kurve"] is { Length: > 0 } curve)
-                curves.Add(curve + "@" + ((string?)parameters["Version"] ?? ""));
+            CollectOutputCurveReference((string?)jsonObject2["block"], parameters, curves);
         }
 
         Walk(root["init"]);
@@ -371,6 +370,15 @@ public static class DefinitionCompatibility
         usedOutside = used;
         curvesOutside = curves;
         return root;
+    }
+
+    private static void CollectOutputCurveReference(string? block, JsonObject parameters, HashSet<string> curves)
+    {
+        if (block == BlockCatalog.CurveOutput &&
+            ((string?)parameters[CurveOutputBlocks.ActionParameter] ?? CurveOutputBlocks.Load) != CurveOutputBlocks.Load)
+            return;
+        if ((string?)parameters["Kurve"] is { Length: > 0 } curve)
+            curves.Add(curve + "@" + ((string?)parameters["Version"] ?? ""));
     }
 
     private static void CollectTraceCurveReferences(JsonObject parameters, HashSet<string> curves)

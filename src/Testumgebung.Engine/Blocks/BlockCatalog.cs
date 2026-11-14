@@ -182,6 +182,7 @@ public sealed class BlockCatalog
     public const string Measure = "analog.messen";
     public const string Output = "analog.ausgeben";
     public const string Capture = "kurve.aufnehmen";
+    public const string CurveOutput = "kurve.ausgabe";
     public const string CurveLoad = "kurve.laden";
     public const string CurveTransfer = "kurve.uebertragen";
     public const string CurveStart = "kurve.starten";
@@ -292,6 +293,7 @@ public sealed class BlockCatalog
                 });
             }));
 
+        CurveOutputBlocks.Register(blockCatalog);
         const string output = "Kurvenausgabe";
         blockCatalog.Register(new(CurveLoad, "Kurve laden", output, "arrow",
             "Lädt eine Ausgabekurve (feste Version) und prüft die Geräteeignung. Keine automatische Skalierung oder Abtastratenänderung.",
@@ -307,13 +309,7 @@ public sealed class BlockCatalog
                 var version = parameters2.Optional("Version");
                 return new DelegateAction(async ctx =>
                 {
-                    var curve = ctx.FindCurve(id, version);
-                    if (curve is null) return StepOutcome.Error($"Kurve '{id}'{(version is null ? "" : $" v{version}")} ist im Projekt nicht vorhanden.");
-                    var output = curve.ToOutput();
-                    var errors = ctx.CheckOutput(resource, output).Where(issue => issue.IsError).ToList();
-                    if (errors.Count > 0) return StepOutcome.Error("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
-                    await ctx.CurveOutputAsync(resource, CurveCommand.Load, output).ConfigureAwait(false);
-                    return StepOutcome.Unrated(curve.Key, $"{curve.Name} v{curve.Version} geladen ({curve.Channels.Count} Kanäle, {curve.Count} Samples)");
+                    return await LoadCurveAsync(ctx, resource, id, version).ConfigureAwait(false);
                 });
             }));
         foreach (var (type, name, command, text) in new[]
@@ -604,6 +600,17 @@ public sealed class BlockCatalog
             "Gibt den zuvor erhaltenen Kanal an die andere Seite weiter, z. B. nach Bestätigung der Entnahme.",
             [new("Kanal", "Freigabekanal", ParameterKind.Text, "Pruefung", Required: true)],
             parameters => new HandoverReleaseAction(parameters.Text("Kanal")!)));
+    }
+
+    internal static async Task<StepOutcome> LoadCurveAsync(IStepContext ctx, string resource, string id, string? version)
+    {
+        var curve = ctx.FindCurve(id, version);
+        if (curve is null) return StepOutcome.Error($"Kurve '{id}'{(version is null ? "" : $" v{version}")} ist im Projekt nicht vorhanden.");
+        var output = curve.ToOutput();
+        var errors = ctx.CheckOutput(resource, output).Where(issue => issue.IsError).ToList();
+        if (errors.Count > 0) return StepOutcome.Error("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
+        await ctx.CurveOutputAsync(resource, CurveCommand.Load, output).ConfigureAwait(false);
+        return StepOutcome.Unrated(curve.Key, $"{curve.Name} v{curve.Version} geladen ({curve.Channels.Count} Kanäle, {curve.Count} Samples)");
     }
 
     internal static double ToDouble(object value, string what) => value switch
