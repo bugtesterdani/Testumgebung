@@ -16,7 +16,7 @@ public static class LiveLogBlocks
          new("AbEnde", "Datei erst ab aktuellem Ende lesen", ParameterKind.Bool, "false"),
          new("Kodierung", "Dateikodierung", ParameterKind.Text, "utf-8"),
          new("Mitschrift", "Optionale UTF-8-Mitschrift (absoluter Pfad)", ParameterKind.Text, Hint: "Anhängen; Quelle und Mitschrift müssen verschieden sein."),
-         new("Textregeln", "Text-/Regex-Regeln (JSON-Liste)", ParameterKind.Text, "[]", Hint: "[{\"text\":\"Start\",\"percent\":10,\"status\":\"Vorbereitung\"}]"),
+         new("Textregeln", "Text-/Regex-Regeln", ParameterKind.Table, "[]", Hint: "[{\"text\":\"Start\",\"percent\":10,\"status\":\"Vorbereitung\"}]"),
          new("ZahlenRegex", "Zahlenmuster mit current und total", ParameterKind.Text, Hint: @"(?<current>\d+) von (?<total>\d+)"),
          new("Statusvorlage", "Status bei Zahlentreffer", ParameterKind.Text, "{current} / {total}"),
          new("EndeRegex", "Optionales Ende-Muster", ParameterKind.Text, Hint: "Datei: z. B. ^FERTIG$; Prozess: sonst bis Ende des Streams."),

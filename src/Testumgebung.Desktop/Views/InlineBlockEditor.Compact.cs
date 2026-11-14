@@ -65,6 +65,7 @@ public sealed partial class InlineBlockEditor
     private FrameworkElement CompactInput(ParameterRowViewModel row)
     {
         FrameworkElement input;
+        if (row.IsTable) return TableButton(row);
         if (row.IsChoice)
         {
             var choice = new ComboBox { ItemsSource = row.Choices };

@@ -25,6 +25,7 @@ public enum ParameterKind
     Image,
     /// <summary>Mehrzeiliger Quelltext (CodeBlock).</summary>
     Code,
+    Table,
 }
 
 public sealed record ParameterVisibility(string Parameter, string Value);

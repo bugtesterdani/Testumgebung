@@ -56,7 +56,7 @@ public static class TraceBlocks
     [new("Quelle", "Datenquelle", ParameterKind.Choice, "Ausdrücke", Choices: ["Ausdrücke", "Geräte"]),
      new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"), new("Ressourcen", "Gerätenamen (Komma)", ParameterKind.Text)];
     private static ParameterDescriptor[] RecordingParameters(bool timed) =>
-    [Name(), new("Kanaele", "Kanalnamen (Komma)", ParameterKind.Text, "Spannung", Required: true),
+    [Name(), new("Kanaele", "Messkanäle", ParameterKind.Table, "Spannung", Required: true),
      new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
      new(EvaluationParameter, "Grenzauswertung", ParameterKind.Choice, ValueBand,
         Choices: [ValueBand, FormulaBand, PairSlope, DisjointSlope, RollingSlope]),

@@ -19,6 +19,12 @@ namespace Testumgebung.Desktop.Views;
 /// </summary>
 public partial class EditorView : UserControl
 {
+    private void OnParameterTable(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ParameterRowViewModel row } source)
+            ParameterTableDialog.Edit(source, row);
+    }
+
     private Point _dragStart;
     private NodeViewModel? _dragNode;
 
