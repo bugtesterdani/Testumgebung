@@ -1,6 +1,6 @@
 # Entwicklungsetappen
 
-Diese Übersicht dokumentiert die Umsetzung des ursprünglichen Softwareplans. Versionsbezogene Release Notes stehen bei den jeweiligen GitHub-Releases.
+Diese Übersicht dokumentiert die Umsetzung des ursprünglichen Softwareplans. Versionsbezogene Release Notes stehen bei den jeweiligen [GitHub-Releases](https://github.com/bugtesterdani/Testumgebung/releases).
 
 
 Umsetzung nach `info_/Software_Umsetzungsplan.md`:

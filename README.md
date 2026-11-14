@@ -1,145 +1,36 @@
-﻿# Testumgebung (Etappen 0–10, Pilotvorbereitung, Ausbau)
+# Testumgebung
 
-GitHub-Einrichtung, automatische Wiki-Dokumentation und signierte MSIX-Releases: [GitHub-Anleitung](docs/github.md). Die Dokumentation wird aus `docs/` erzeugt; das Repository bleibt zunächst privat.
+Testumgebung ist eine Windows-Anwendung für Prüfplätze in Fertigung und Labor. Werker führen freigegebene Prüfprogramme aus und sehen die Ergebnisse direkt am Prüfplatz. Prüfentwickler erstellen und simulieren Abläufe, binden Geräte an und bereiten Prüfprogramme zur Freigabe vor.
 
-Versionen, Release Notes direkt auf GitHub und der Abschluss über ein Release-Issue:
-[Release-Ablauf](docs/release-ablauf.md). Änderungen an `main` erfolgen nach der
-Einrichtung ausschließlich über Pull Requests.
+![Werkeransicht mit Auftragsauswahl und Prüfstatus](docs/handbuch/bilder/01-werker.png)
 
-Lizenz- und Veröffentlichungsprüfung: [Prüfbericht](docs/licensing/pruefbericht.md), [vollständiges Abhängigkeitsinventar](docs/licensing/inventar.md), [Drittanbieterhinweise](THIRD-PARTY-NOTICES.md) und [Status der eigenen Lizenz](LICENSE-STATUS.md). [Vorbereitung der öffentlichen GitHub-Freigabe](docs/github-veroeffentlichung.md) beschreibt die technischen Maßnahmen und verbleibenden Vertragsfragen. [Datenschutz](docs/datenschutz.md), [Sicherheitsmeldungen](SECURITY.md) und [Beiträge](CONTRIBUTING.md) sind gesondert dokumentiert.
+## Schnellstart
 
-Codeabdeckung und Wartbarkeit je Modul: `Report-Coverage.cmd` erstellt einen datierten HTML-Bericht. Anleitung und Messgrenzen: [Testabdeckung und Wartbarkeit](docs/testabdeckung-und-wartbarkeit.md). Entscheidungen und weitere Kandidaten: [Komplexitätsdurchsicht](docs/komplexitaetsdurchsicht.md).
+1. Das signierte MSIX-Paket aus den GitHub-Releases installieren. [Downloads](https://github.com/bugtesterdani/Testumgebung/releases) · [Installation und Voraussetzungen](docs/msix-release.md)
+2. Zum Ausprobieren ohne Hardware die Anwendung aus dem Repository mit dem simulierten Auftragsbeispiel starten. Dafür wird das .NET 10 SDK benötigt.
 
-Aktueller Betriebsmodus: standardmäßig Produktivbetrieb; lokale simulierte Entwicklung ausdrücklich mit `--development` starten. Details zu Zugang, Fehlerprotokollen und externen Laufzeitdateien: [Betriebsmodus](docs/betriebsmodus-und-laufzeit.md). Der mitgelieferte C++-Compiler und die native GDB-Inspektion sind unter [Portable C++-Toolchain](docs/portable-cpp-toolchain.md) beschrieben.
+   ```powershell
+   dotnet run --project src/Testumgebung.Desktop -- --development --example-order
+   ```
 
-Umsetzung nach `info_/Software_Umsetzungsplan.md`:
+3. In **Prüfen** den Beispielauftrag `A123` bestätigen und unten rechts **Start** wählen. Für den produktiven Prüfplatzstart sind die lokale Prüfplatzkonfiguration und ein freigegebenes Prüfprogramm maßgeblich. [Betriebsmodus](docs/betriebsmodus-und-laufzeit.md)
 
-* **Etappe 0–2:** Ausführungs-Engine mit Simulation und automatisierten Abnahmetests.
-* **Etappe 3:** WPF-Oberfläche – Werkeransicht, Ablaufeditor mit Bausteinpalette und Eigenschaften,
-  Werkerinteraktion, Debugger. Tests lassen sich ohne Quellcode erstellen, speichern (JSON) und ausführen.
-* **Etappe 4:** CodeBlocks in C# und Python, jeweils in einem isolierten Worker-Prozess: CodeBlock im Ablauf
-  (Zugriff auf Ordnervariablen), Baustein-Bibliothek mit typisierter Schnittstelle, „Build prüfen“ mit Compilerdiagnosen,
-  Testausführung, „In Baustein umwandeln“. Details: `docs/adr/0002-codeblocks-und-worker.md`.
-* **Etappe 4 (Nachtrag):** C++-CodeBlocks (eigener Worker, stabile C-Schnittstelle), LabVIEW-Bausteine als Prototyp
-  (gebaute VI-DLL über C++-Glue), grafische Bausteine „Aus Gruppe erstellen“, Code-/Parameter-Patch während der Pause
-  (D06). Details: `docs/adr/0003-cpp-labview-gruppenbausteine-patch.md`.
-* **Etappe 5:** Binäre Ergebnisdatei `.tres` je Prüflingstest mit Reader, unabhängige Filter für Anzeige/Datei/Datenbank,
-  Kurven (Mehrkanal, gemeinsame Zeitbasis) als Chunks, lokale dauerhafte Outbox mit Hintergrund-Wiederholung.
-  Details: `docs/adr/0004-ergebnisdatei-filter-outbox.md`.
-* **Etappe 6:** Datenbankadapter für SQL Server, PostgreSQL, MySQL/MariaDB und SQLite (gemeinsames Schema, automatische
-  Migration, idempotent je Run), MQTT-Meldeweg mit TLS (best effort), Einstellungsseite mit Verbindungstest und
-  Vertragsprüfung. Details: `docs/adr/0005-datenbanken-und-mqtt.md`, Schemaskripte unter `docs/sql/`.
-* **Etappe 7:** Anmeldung mit Firmenkonto (Entra ID über MSAL/WAM, bis zur Registrierung simuliert), Rechte
-  „Entwickeln“ und „Freigeben“ je Prüfplatz, unveränderliche Release-Pakete mit Hashes in der Datenbank, Workflow
-  Entwurf → Entwicklungsprüfung → Freigabe, Audit-Log mit Hash-Kette, Werkerbetrieb nur mit freigegebenen Versionen,
-  Versionswechsel erst am nächsten Prüfling. Details: `docs/adr/0006-identitaet-und-freigabe.md`,
-  Einrichtung: `docs/entra-registrierung.md`.
-* **Etappe 8:** Kurven auf drei Wegen – Dateiimport (CSV/Text, COMTRADE IEEE C37.111, Excel .xlsx, Ergebnisdatei .tres)
-  mit Spalten-, Einheiten- und Zeitbasiszuordnung, aufgenommene Messkurve als neue Ausgabekurve, Editor mit Sinus, Rampe,
-  Sprung und Formel. Vorschau mit Kanalauswahl, Zoom und Cursor; Zuschnitt, Skalierung, Zeitverschiebung und
-  Abtastratenänderung nur ausdrücklich und mit Historie; unveränderliche Kurvenversionen im Projekt und Release-Paket;
-  Ausgabe getrennt in Laden, Übertragen, Starten, Stoppen mit Geräteeignungsprüfung (keine stille Skalierung oder
-  Abtastratenänderung); Kurvenanzeige L1–L3 mit Cursor und Effektivwerten in der Werkeransicht.
-  Details: `docs/adr/0007-kurven.md`.
-* **Etappe 9:** Parallelbetrieb – Prüfplatzkonfiguration je Rechner (`%ProgramData%\Testumgebung\pruefplaetze.json`):
-  konfigurierbare Prüfplätze, lokale und gemeinsame Geräte, Zuordnung Name → Gerät/Kanal. Gesperrt wird das Gerät, nicht
-  der Name; Zyklusrisiko verschachtelter Sperren wird statisch erkannt und der Start verweigert, Verklemmungen zur
-  Laufzeit ergeben ERROR statt Hängen; Zugriffsprotokoll weist nach, dass kein widersprüchlicher Gerätezugriff erfolgt.
-  Details: `docs/adr/0008-parallelbetrieb.md`.
-* **Etappe 10:** Reale Geräte (Treiberprototypen, ohne vorhandene Hardware verifiziert): Keysight/Agilent
-  Multimeter 3446xA/34401A, Netzgeräte E36300/E3631A, AC-Quellen AC6800B, Generatoren 33500B/33600A, Oszilloskope
-  InfiniiVision (SCPI über LAN-Socket oder VISA) sowie NI-DAQmx (USB/PCIe/CompactDAQ, C-API). Gerät testen, Geräte
-  suchen, Kanalauswahl aus dem Treiber, sicherer Zustand nach jedem Lauf, Abbruch während Gerätezugriffen,
-  Laborsimulatoren und DAQmx-Nachbildung zum Ausprobieren. Details: `docs/adr/0009-reale-geraete.md`,
-  Geräteliste und Einrichtung: `docs/geraete.md`.
-* **Kommunikation:** Prüflingskommunikation über RS-232/RS-485, TCP, UDP, Modbus RTU/TCP und CAN/CAN FD (PEAK, Kvaser,
-  virtueller Bus) mit Bausteinen Senden/Empfangen/Abfrage, Modbus lesen/schreiben, CAN senden/empfangen, simuliertem
-  Prüfling nach Regeln und denselben Sperren wie Messgeräte. Details: `docs/adr/0011-kommunikation.md`, `docs/geraete.md`.
-* **Busdatenbanken, Diagnose, LIN:** DBC-/LDF-Import ins Projekt, Bausteine „CAN-Signal lesen“/„CAN-Botschaft senden“
-  (Multiplex, Wertetabellen, Gleitkomma), „UDS-Diagnose“ über ISO-TP, „J1939 empfangen/senden“ (Anforderung, BAM, RTS/CTS),
-  „LIN lesen/senden“; Vector XL und PEAK PLIN als Geräte; Kommunikation aus Python-, C#- und C++-CodeBlocks über die
-  zentrale Vermittlung. Details: `docs/adr/0013-busdatenbanken-diagnose-lin.md`.
-* **Auswertung aus der Datenbank, weitere Meldewege, Diagnoseausbau:** Auswertung und Prüfberichte auch aus SQL-/simulierter
-  Datenbank (serverseitige Filter, ohne Kurven); Zurückkopieren aus dem Wiederherstellungsordner; Meldewege HTTP-Webhook und
-  OPC UA neben MQTT; UDS über DoIP (Ethernet) und LIN sowie ISO-TP mit erweiterter Adressierung; J1939-Adressvergabe (Address
-  Claim), LIN-Fahrplan. Details: `docs/adr/0014-auswertung-db-meldewege-diagnose-doip.md`.
-* **Sicherheitszugang, Dreiphasenquelle, DoIP-Suche/TLS, CAN FD (Vector), DB-Kurven:** Baustein „UDS-Sicherheitszugang“
-  (Seed/Key, Verfahren wählbar); dreiphasige AC-Versorgung aus drei Quellen (L1/L2/L3); DoIP-Fahrzeugsuche (UDP) und TLS am
-  TCP-Client; CAN FD über Vector XL; LDF-Ereignis-/sporadische Frames; Kurven aus der Datenbank im Reader. Details:
-  `docs/adr/0015-sicherheitszugang-dreiphasig-doip-suche-fd.md`.
-* **Run-Patch Teil 2 und OPC UA (Feldzugriff):** Run-Patch im pausierten Lauf nun auch für Bibliotheksbausteine (Quelltext/Name,
-  wirkt auf folgende Aufrufe) und die Ablaufstruktur nicht aktiver Gruppen (Löschen/Verschieben); OPC UA als Gerät und Baustein
-  „OPC UA“ (Lesen/Schreiben, Methodenaufrufe, Abonnieren) sowie aus CodeBlocks (`opcua_read/write/call`) – gegen einen
-  in-Prozess-Simulationsserver getestet, realer Client über den OPC-Foundation-Stack in der Windows-Anwendung. Details:
-  `docs/adr/0016-run-patch-teil2-und-opc-ua.md`.
-* **Quellcode-Debugger für CodeBlocks:** einheitliche Oberfläche für alle Sprachen (Haltepunkt je Zeile, Einzelschritt,
-  „bei Eintritt halten“, Variablen-Anzeige). Volles Zeilen-Stepping mit Variablen-Inspektion bei Python (`sys.settrace`),
-  C# (Roslyn-Instrumentierung) und C++ (Quelltext-Instrumentierung; Variablen für einzeilige Zuweisungen); LabVIEW bleibt
-  reduziert (Halt bei Eintritt/Austritt, da kompilierte VI ohne Quelltext). Details:
-  `docs/adr/0017-quellcode-debugger-fremdsprachen.md`.
-* **Auswertung & Editor:** Auswertung über Ergebnisdateien (Ausbeute, FPY, Pareto, Cpk, Histogramm) mit PDF/CSV, Prüfbericht
-  je Prüfling als PDF; Editor mit Rückgängig/Wiederholen, Kopieren/Einfügen/Duplizieren, Suche, Versionsvergleich; offene
-  Punkte aus Abschnitt 15 entschieden (Zeitspanne in der Iteration, Einzel-/Prozedurschritt, Abmelden in Pause,
-  Entra-App-Rollen). Details: `docs/adr/0012-auswertung-editor-offene-punkte.md`.
-* **Plan-Lücken geschlossen:** Auswahl- und Auftragsablauf je Prüfplatz (Abschnitt 5: manuell, Kennungsregeln, eigener
-  Ablauf mit Baustein „Test auswählen“ **oder einem einzigen CodeBlock** über `SelectTest(...)`/`select_test(...)`, ADR 0018,
-  Beispiel `docs/beispiele/auswahl-codeblock.tproj.json`; nur eindeutige Zuordnung startet; ein Prüfling je Zuordnung mit
-  Vorbelegung von Kennung/Auftrag/Prüfparametern; aktiv bis Werkerabbruch) und konfigurierbare Werkeransicht (Abschnitt 4:
-  Fortschritt oben/links/unten, Übersicht/Protokoll ein/aus, alle oder nur auffällige Messwerte).
-* **Pilot (Etappe 11, vorbereitet):** Zwischenaufzeichnung je Prüfling und Wiederherstellung unvollständiger Läufe nach
-  Absturz/Stromausfall, Systemprüfung, Sicherung/Wiederherstellung der Rechnerkonfiguration, Installer (Inno Setup) mit
-  `build/publish.ps1`, Handbücher (`docs/handbuch/`), Abnahmeprotokoll (`docs/pilot/`). Details:
-  `docs/adr/0010-auswahl-werkeransicht-pilot.md`, Installation: `docs/installation.md`.
+## Handbücher
 
-## Anwendung starten
+- [Benutzerhandbuch](docs/handbuch/benutzerhandbuch.md)
+- [Werkerhandbuch](docs/handbuch/werker.md)
+- [Entwicklerhandbuch](docs/handbuch/entwickler.md)
+- [Administratorhandbuch](docs/handbuch/administrator.md)
+- [Geräte und Treiber](docs/geraete.md)
 
-```powershell
-dotnet run --project src/Testumgebung.Desktop
-```
+## Projekt und Releases
 
-* Beim Start ist das Beispielprojekt „AC-Prüfung“ geladen (Simulation, zwei Prüfplätze).
-* **Start** unten rechts startet den gewählten Prüfplatz; die Werkerinteraktionen erscheinen in der Mitte.
-* **Anmelden** (oben rechts): ohne Zugangsdatei simuliert mit allen Rechten (Entwicklungsmodus); mit
-  `%ProgramData%\Testumgebung\zugang.json` über Entra ID und nur mit den dort vergebenen Rechten.
-* **Releases** (Entwickeln oder Freigeben): Entwurf aus dem Editorstand erstellen, Entwicklungsprüfung (Integrität,
-  Validierung, Build der Codeartefakte), ausdrücklich freigeben; Paketinhalt mit Hashes, Audit-Log, Versionen der Prüfplätze.
-* **Werkerbetrieb:** Start nur mit freigegebener Version. Entwickler können „Entwurf testen“ wählen (Kopfzeile);
-  „Simulation starten“ im Editor nutzt den Entwurf. Neue Freigaben gelten ab dem nächsten Prüfling.
-* Haltepunkt: Karte wählen, **F9**; danach **Simulation starten**.
-* **CodeBlocks:** in der Palette „CodeBlock“ einfügen, Sprache wählen, Code schreiben, „Build prüfen“.
-  Die Bibliothek liegt unter Entwicklung → CodeBlocks.
-* Python-Interpreter: Standard ist die mitgelieferte portable Python-Laufzeit; ein anderes Environment über die Umgebungsvariable
-  `TESTUMGEBUNG_PYTHON` (z. B. `C:\venvs\pruef\Scripts\python.exe`).
-* C++-Compiler: automatisch MSVC (über `vswhere`/`vcvars64.bat`), sonst `clang++`, sonst `g++`. Fest vorgeben mit
-  `TESTUMGEBUNG_CXX` (`msvc`, `clang++`, `g++` oder voller Pfad). Build-Cache: `%TEMP%\Testumgebung\cpp`,
-  änderbar über `TESTUMGEBUNG_CPP_CACHE`.
-* **LabVIEW (Prototyp):** Baustein „LabVIEW“ in der Bibliothek; im Quelltextfeld `vi`, `dll`, `funktion`, `aufruf`
-  angeben, Ports entsprechen dem Connector. Ohne gebaute DLL bzw. LabVIEW-Runtime meldet „Build prüfen“ bzw. die
-  Ausführung eine klare Diagnose (ERROR), nichts stürzt ab.
-* **Grafischer Baustein:** Gruppe im Editor wählen → Eigenschaften → „Aus Gruppe erstellen“. Ports werden aus den
-  verwendeten Variablen erkannt, der Körper erscheint als eigener Abschnitt im Editorbaum.
-* **Ergebnisse:** Am Ende jedes Prüflings wird automatisch eine Datei geschrieben (auch bei WERROR), standardmäßig nach
-  `Dokumente\Testumgebung\Ergebnisse`, änderbar über `TESTUMGEBUNG_ERGEBNISSE`. Scheitert das Speichern, wird deutlich
-  angezeigt und in `%LOCALAPPDATA%\Testumgebung\Wiederherstellung` gesichert. Entwicklung → **Ergebnisse** zeigt die
-  Dateien mit Kopf, Ereignissen und Kurvenplot, dazu Outbox und Meldungen je Run.
-* **Einstellungen** (Entwicklung → Einstellungen, Datei `%LOCALAPPDATA%\Testumgebung\einstellungen.json`):
-  Ergebnisordner, Datenbank (Keine, Simuliert, SQL Server, PostgreSQL, MySQL/MariaDB, SQLite) mit Verbindungsstring,
-  „Verbindung testen“ und „Vertragsprüfung“ (schreibt und entfernt Test-Runs `VERTRAG-…`), Outbox-Parameter, MQTT
-  (Broker, Port, TLS, Firmen-CA, Benutzer/Passwort, Topic, Testmeldung). „Speichern und übernehmen“ wirkt sofort, ohne
-  Neustart. Verbindungsstring und Passwort werden per DPAPI für den Windows-Benutzer verschlüsselt.
-* **Datenbank:** Das Schema wird beim ersten Zugriff angelegt (`tu_schema_version`, Tabellen `tu_runs`, `tu_definitions`,
-  `tu_step_executions`, `tu_measurements`, `tu_waveform_chunks`, `tu_operator_inputs`, `tu_development_events`). Wer es
-  lieber vorab vom DBA anlegen lässt: `docs/sql/schema-<provider>.sql`. Ohne Einstellungsdatei bleibt die simulierte
-  Datenbank aktiv (Ordner `%LOCALAPPDATA%\Testumgebung\SimulierteDatenbank`, auf der Seite Ergebnisse „offline“ schaltbar);
-  `TESTUMGEBUNG_DB=aus` schaltet sie ab. Die Outbox liegt unter `%LOCALAPPDATA%\Testumgebung\Outbox` und wird beim
-  nächsten Öffnen der Anwendung fortgesetzt.
-* **MQTT:** Je Run-Ereignis eine JSON-Nachricht (runId, dutId, event, time, attempt, error, station) an das Topic
-  (Standard `testumgebung/{station}/runs`), QoS 0, nicht retained, ein Sendeversuch, keine Zwischenspeicherung.
-* **Filter:** Gruppe oder Schritt wählen → Eigenschaften → „Speicherung & Anzeige“ (Erben/An/Aus je Ziel, Kurven separat).
-* **Run-Patch (D06):** im Debugger bei Pause einen nicht aktiven Knoten wählen, Parameter/Code/Name/Bedingung ändern, „Prüfen“
-  und „Anwenden“. Zweiter Teil: auch Bibliotheksbausteine (Quelltext/Name, wirkt auf folgende Aufrufe) und die Ablaufstruktur
-  nicht aktiver Gruppen (Löschen/Verschieben). Gilt nur für den laufenden Durchlauf, wird nummeriert protokolliert; das Projekt
-  bleibt unverändert.
+Die [Entwicklungsetappen](CHANGELOG.md) dokumentieren den Ausbau der Anwendung. Die Änderungen je Version stehen bei den [GitHub-Releases](https://github.com/bugtesterdani/Testumgebung/releases). Änderungen an `main` erfolgen über Pull Requests. [Release-Ablauf](docs/release-ablauf.md) · [GitHub-Einrichtung und Wiki](docs/github.md) · [Beiträge](CONTRIBUTING.md)
+
+Das Skript `Report-Coverage.cmd` erstellt einen datierten HTML-Bericht zur Testabdeckung. [Testabdeckung und Wartbarkeit](docs/testabdeckung-und-wartbarkeit.md) · [Komplexitätsdurchsicht](docs/komplexitaetsdurchsicht.md)
+
+[Datenschutz](docs/datenschutz.md) · [Sicherheitsmeldungen](SECURITY.md) · [Lizenz-Prüfbericht](docs/licensing/pruefbericht.md) · [Abhängigkeitsinventar](docs/licensing/inventar.md) · [Hinweise zur Veröffentlichung](docs/github-veroeffentlichung.md)
+
 
 ## Bauen und testen
 
@@ -292,7 +183,7 @@ Konfigurationsseite mit Laborsimulatoren und Gerät testen).
 ## Bausteine (Palette)
 
 Messung, Ausgabe setzen, Digitaleingang lesen, Digitalausgang setzen, Wert setzen, Bewertung (Bedingung),
-Bewertung setzen, Warten, Fehler erzeugen, Werkerinteraktion (Anweisung, Bild mit Bestätigung, Eingabe, Auswahl;
+Bewertung (Bedingung oder festes Ergebnis), Warten, Werkerinteraktion (Anweisung, Bild mit Bestätigung, Eingabe, Auswahl;
 Pflicht, Bereich, erlaubte Werte, warten/fortsetzen, „bis Gruppenende sichtbar“). Grenzwerte und Werte sind
 typisierte Ausdrücke, z. B. `GrenzwertMin` oder `Nennspannung * 1.05`.
 
@@ -302,8 +193,7 @@ Grafischer Baustein (aus einer Gruppe).
 Kurve aufnehmen: mehrere Kanäle eines Geräts mit gemeinsamer Zeitbasis (z. B. L1/L2/L3), optional Bewertung des
 Effektivwerts je Kanal; die Kurven landen als binäre Chunks in Ergebnisdatei und Datenbank.
 
-Kurvenausgabe: Kurve laden (Ressource, Kurve, Version – Geräteeignung wird geprüft), Kurve übertragen, Kurve starten,
-Kurve stoppen. Die Reihenfolge wird vom Gerät erzwungen; das Beispielprojekt gibt `AC_Profil` v0.4 in Init aus und
+Kurvenausgabe: Aktion Laden (mit Geräteeignungsprüfung), Übertragen, Starten oder Stoppen. Die Reihenfolge wird vom Gerät erzwungen; das Beispielprojekt gibt `AC_Profil` v0.4 in Init aus und
 stoppt in der Finalization.
 
 Kommunikation: Senden, Empfangen, Abfrage, Modbus lesen/schreiben, CAN senden/empfangen, CAN-Signal lesen (DBC),
