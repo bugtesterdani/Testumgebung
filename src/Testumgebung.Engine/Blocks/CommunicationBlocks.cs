@@ -19,6 +19,7 @@ namespace Testumgebung.Engine.Blocks;
 public static class CommunicationBlocks
 {
     public const string Category = "Kommunikation";
+    public const string SerialCategory = "Seriell/TCP/UDP";
     public const string Send = "komm.senden";
     public const string Receive = "komm.empfangen";
     public const string Query = "komm.abfrage";
@@ -70,18 +71,18 @@ public static class CommunicationBlocks
     public static void Register(BlockCatalog c)
     {
         NetworkBlocks.Register(c);
-        c.Register(new(Send, "Senden", Category, "arrow",
+        c.Register(new(Send, "Senden", SerialCategory, "arrow",
             "Sendet Text oder Bytes an den Prüfling (RS-232/RS-485, TCP, UDP). Unbewertet.",
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), .. SendParameters()],
             parameters => new StreamAction(parameters.Text("Ressource"), SendSpec.From(parameters), null) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
 
-        c.Register(new(Receive, "Empfangen", Category, "measure",
+        c.Register(new(Receive, "Empfangen", SerialCategory, "measure",
             "Empfängt eine Antwort (bis Zeilenende, Länge oder Ruhe), prüft optional ein Muster und bewertet einen enthaltenen Zahlenwert.",
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), new("Format", "Format", ParameterKind.Choice, "Text", Choices: Formats),
                 new("Zeilenende", "Zeilenende (Text)", ParameterKind.Choice, "\\r\\n", Choices: LineEnds), .. ReceiveParameters()],
             parameters => new StreamAction(parameters.Text("Ressource"), null, ReceiveSpec.From(parameters)) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
 
-        c.Register(new(Query, "Abfrage", Category, "measure",
+        c.Register(new(Query, "Abfrage", SerialCategory, "measure",
             "Verwirft alte Eingangsdaten, sendet einen Befehl und wertet die Antwort aus (Muster, Zahlenwert, Grenzwerte).",
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), .. SendParameters(), .. ReceiveParameters()],
             parameters => new StreamAction(parameters.Text("Ressource"), SendSpec.From(parameters), ReceiveSpec.From(parameters)) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
