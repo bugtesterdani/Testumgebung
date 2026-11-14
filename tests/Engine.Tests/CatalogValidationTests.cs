@@ -1,4 +1,4 @@
-﻿using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Persistence;
 using Testumgebung.Presentation.ViewModels;
@@ -52,8 +52,12 @@ public sealed class CatalogValidationTests
         var copy = serializer.Clone(project);
         var copiedStep = Assert.IsType<StepDefinition>(copy.Definition.Find("step"));
         Assert.Equal(value, copiedStep.Parameters[parameter]);
-        Assert.Equal(type, copiedStep.BlockType);
+        var legacyAction = CurveOutputBlocks.LegacyAction(type);
+        Assert.Equal(legacyAction is null ? type : BlockCatalog.CurveOutput, copiedStep.BlockType);
         Assert.Equal(diagnostics, catalog.Rebuild(copiedStep));
-        Assert.Equal(serializer.Serialize(project), serializer.Serialize(copy));
+        if (legacyAction is not null)
+            Assert.Equal(legacyAction, copiedStep.Parameters[CurveOutputBlocks.ActionParameter]);
+        var expected = legacyAction is null ? project : serializer.Clone(copy);
+        Assert.Equal(serializer.Serialize(expected), serializer.Serialize(copy));
     }
 }
