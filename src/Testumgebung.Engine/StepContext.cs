@@ -83,7 +83,10 @@ internal sealed class StepContext(
 
     /// <summary>Zugriff im gemeinsamen Protokoll erfassen (falls vorhanden).</summary>
     private IDisposable? Track(ResourceBinding binding, string operation)
-        => run.Options.AccessJournal?.Begin(run.RunId, run.Options.StationName, binding, operation);
+    {
+        run.Options.OnDeviceAccess?.Invoke(binding);
+        return run.Options.AccessJournal?.Begin(run.RunId, run.Options.StationName, binding, operation);
+    }
 
     public Testumgebung.Domain.Curves.CurveDefinition? FindCurve(string id, string? version) => run.Definition.Curves.Find(id, version);
 

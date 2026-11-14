@@ -107,6 +107,24 @@ public sealed partial class StationViewModel
         }
     }
 
+    private DeviceConfig[] CalibrationDevices(TestProject project)
+    {
+        if (_simulationOnly || _coordinator is null) return [];
+        var setup = _coordinator.Setup;
+        var used = StationSetup.UsedResources(project).ToHashSet(StringComparer.Ordinal);
+        return (setup.Station(Name)?.Resources ?? []).Where(resource => used.Contains(resource.Name))
+            .Select(resource => setup.Device(resource.Device)).OfType<DeviceConfig>()
+            .Where(device => !device.IsSimulation).DistinctBy(device => device.Id).ToArray();
+    }
+
+
+    private IReadOnlyDictionary<string, string> CalibrationResourceIds()
+    {
+        if (_simulationOnly || _coordinator?.Setup.Station(Name) is not { } station)
+            return new Dictionary<string, string>();
+        return station.Resources.ToDictionary(resource => resource.Name, resource => resource.Device, StringComparer.Ordinal);
+    }
+
     private HardwareRegistry? BuildRunRegistry(TestProject project)
     {
         HardwareRegistry registry;
@@ -158,13 +176,14 @@ public sealed partial class StationViewModel
         return true;
     }
 
-    private TestRunOptions RunOptions(HardwareRegistry registry, IReadOnlyDictionary<string, object?>? presets, int? dutLimit, bool orderSession, string? pythonVenv)
+    private TestRunOptions RunOptions(HardwareRegistry registry, IReadOnlyDictionary<string, object?>? presets, int? dutLimit, bool orderSession, string? pythonVenv, Action<ResourceBinding> onDeviceAccess)
         => new()
         {
             Clock = _clock,
             Resources = _resources,
             Hardware = registry,
             AccessJournal = _coordinator?.Journal,
+            OnDeviceAccess = onDeviceAccess,
             Operator = this,
             Debugger = Debug.Controller,
             StationName = Name,
@@ -193,16 +212,37 @@ public sealed partial class StationViewModel
         ActiveRelease = release;
         if (!await ValidateRunProjectAsync(project, release).ConfigureAwait(true)) return;
 
+        var devices = CalibrationDevices(project);
+        var today = DateOnly.FromDateTime(_clock.Now.LocalDateTime);
+        if (StationHardware.CalibrationRefusal(devices, today, _runIsDraft) is { } refusal)
+        {
+            Error = refusal;
+            return;
+        }
+
         var registry = BuildRunRegistry(project);
         if (registry is null) return;
 
         PrepareRunDisplay(project, presets, orderSession, selectionNote);
-        _run = new TestRun(project.Definition, RunOptions(registry, presets, dutLimit, orderSession, pythonVenv), runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
+        var resourceIds = CalibrationResourceIds();
+        var accessed = new System.Collections.Concurrent.ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+        void TrackDevice(ResourceBinding binding)
+        {
+            if (resourceIds.TryGetValue(binding.Name, out var deviceId)) accessed.TryAdd(deviceId, 0);
+        }
+        _run = new TestRun(project.Definition, RunOptions(registry, presets, dutLimit, orderSession, pythonVenv, TrackDevice), runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
         if (_results is not null)
         {
             var resolver = _storage;
             var recorder = new ResultRecorder(_run, _results.Journal, resolver);
-            recorder.RunRecorded += recorded => QueueStorage(recorded, resolver);
+            var snapshot = (_coordinator?.Setup.Devices ?? []).Where(device => !device.IsSimulation)
+                .Select(device => (device.Id, Result: new ResultDevice(device.Name, device.Calibration?.SerialNumber,
+                    device.Calibration?.CalibratedOn, device.Calibration?.DueOn))).ToArray();
+            recorder.RunRecorded += recorded =>
+            {
+                recorded.Devices = snapshot.Where(device => accessed.ContainsKey(device.Id)).Select(device => device.Result).ToArray();
+                QueueStorage(recorded, resolver);
+            };
         }
         // Engine-Ereignisse kommen aus dem Ausführungskontext. Observable Collections und
         // gebundene Eigenschaften werden erst über den UI-Dispatcher geändert.
@@ -210,6 +250,8 @@ public sealed partial class StationViewModel
         RunningVersion = project.Definition.Version;
         OnPropertyChanged(nameof(RunningVersionText));
         Hint = "Prüfung läuft.";
+        foreach (var warning in StationHardware.CalibrationWarnings(devices, today))
+            AddProtocol(new ProtocolEntry(_clock.Now, ProtocolKind.Info, warning, "—", "", "", null, "Kalibrierung"));
         _runTask = Task.Run(_run.RunAsync);
         if (_abortBeforeEngineStart) RequestAbort();
         RaiseRunState();

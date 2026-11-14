@@ -24,6 +24,7 @@ public sealed class TestRunOptions
 
     /// <summary>Gemeinsames Zugriffsprotokoll aller Prüfplätze (Nachweis: kein widersprüchlicher Gerätezugriff).</summary>
     public HardwareAccessJournal? AccessJournal { get; init; }
+    public Action<ResourceBinding>? OnDeviceAccess { get; init; }
 
     public IOperatorInterface? Operator { get; init; }
     public DebugController? Debugger { get; init; }

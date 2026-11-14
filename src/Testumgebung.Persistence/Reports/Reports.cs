@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verbindet gespeicherte Ergebnisse und Statistik mit der Ausgabe von Prüf- und Auswertungsberichten.
  */
@@ -60,6 +60,7 @@ public static class Reports
 
         void WriteObservations()
         {
+            WriteDevices(writer, run.Devices);
             var measurements = run.Events.Where(resultEvent => resultEvent.Kind == ResultEventKind.Step && !resultEvent.Cancelled && (resultEvent.LowLimit is not null || resultEvent.HighLimit is not null || resultEvent.Unit is { Length: > 0 }))
                 .ToList();
             if (measurements.Count > 0)
@@ -171,6 +172,14 @@ public static class Reports
     }
 
     /// <summary>Auftrag aus dem Schritt, der die Variable „Auftrag“ schreibt (falls vorhanden).</summary>
+    private static void WriteDevices(PdfReportWriter writer, IReadOnlyList<ResultDevice> devices)
+    {
+        if (devices.Count == 0) return;
+        writer.Heading("Prüfmittel");
+        foreach (var device in devices)
+            writer.Paragraph($"{device.Name} · Seriennummer: {device.SerialNumber ?? "–"} · Kalibriert: {device.CalibratedOn:dd.MM.yyyy} · Fällig: {device.DueOn:dd.MM.yyyy}", 9);
+    }
+
     public static string? OrderOf(ResultRun run)
         => run.Events.Where(resultEvent => resultEvent.Kind == ResultEventKind.Diagnostic && resultEvent.Message is { } text && text.StartsWith("Aus der Auswahl übernommen: Auftrag = ", StringComparison.Ordinal))
                .Select(resultEvent => resultEvent.Message!["Aus der Auswahl übernommen: Auftrag = ".Length..].Trim('"')).FirstOrDefault()
