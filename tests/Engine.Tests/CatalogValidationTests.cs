@@ -52,12 +52,14 @@ public sealed class CatalogValidationTests
         var copy = serializer.Clone(project);
         var copiedStep = Assert.IsType<StepDefinition>(copy.Definition.Find("step"));
         Assert.Equal(value, copiedStep.Parameters[parameter]);
-        var legacyAction = CurveOutputBlocks.LegacyAction(type);
-        Assert.Equal(legacyAction is null ? type : BlockCatalog.CurveOutput, copiedStep.BlockType);
+        var replacement = ProcessBlocks.Replacement(type);
+        if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
+            replacement = (BlockCatalog.CurveOutput, curveAction);
+        Assert.Equal(replacement?.Type ?? type, copiedStep.BlockType);
         Assert.Equal(diagnostics, catalog.Rebuild(copiedStep));
-        if (legacyAction is not null)
-            Assert.Equal(legacyAction, copiedStep.Parameters[CurveOutputBlocks.ActionParameter]);
-        var expected = legacyAction is null ? project : serializer.Clone(copy);
+        if (replacement is { } target)
+            Assert.Equal(target.Action, copiedStep.Parameters["Aktion"]);
+        var expected = replacement is null ? project : serializer.Clone(copy);
         Assert.Equal(serializer.Serialize(expected), serializer.Serialize(copy));
     }
 }

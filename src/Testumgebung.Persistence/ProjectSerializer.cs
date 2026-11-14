@@ -386,8 +386,11 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         var type = Require(dto.Block, "block");
         if (!catalog.TryGet(type, out _)) throw new ProjectFormatException($"Schritt '{dto.Name}': unbekannter Baustein '{type}'.");
         var id = Require(dto.Id, "id");
-        var step = CurveOutputBlocks.LegacyAction(type) is { } action && catalog.TryGet(BlockCatalog.CurveOutput, out _)
-            ? MigrateCurveOutput(dto, id, type, action)
+        var replacement = ProcessBlocks.Replacement(type);
+        if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
+            replacement = (BlockCatalog.CurveOutput, curveAction);
+        var step = replacement is { } target && catalog.TryGet(target.Type, out _)
+            ? MigrateActionBlock(dto, id, type, target.Type, target.Action)
             : catalog.Create(type, id, dto.Name, dto.Parameters);
         step.Description = dto.Description;
         step.Disabled = dto.Disabled == true;
@@ -396,11 +399,11 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         return step;
     }
 
-    private StepDefinition MigrateCurveOutput(StepDto dto, string id, string type, string action)
+    private StepDefinition MigrateActionBlock(StepDto dto, string id, string type, string target, string action)
     {
         var parameters = new Dictionary<string, string>(dto.Parameters ?? []);
-        parameters[CurveOutputBlocks.ActionParameter] = action;
-        return catalog.Create(BlockCatalog.CurveOutput, id, dto.Name ?? catalog.Get(type).DisplayName, parameters);
+        parameters["Aktion"] = action;
+        return catalog.Create(target, id, dto.Name ?? catalog.Get(type).DisplayName, parameters);
     }
 
     private static void RestoreDebugRules(NodeDefinition node, NodeDto dto)

@@ -1,7 +1,7 @@
 # Externe Programme, Python-Skripte und DLL-Main aufrufen
 
 Im Ablaufeditor gibt es die Kategorie **Prozesse** mit **Prozess starten**,
-**Auf Prozess warten**, **Prozessstatus abfragen** und **Prozess beenden**.
+**Prozess: Kommunikation** (Senden, Auf Ausgabe warten) und **Prozess: Status/Ende** (Abfragen, Warten, Beenden).
 Alle Einstellungen werden im Prüfprojekt und dessen Release gespeichert.
 
 ## Aufrufarten
@@ -109,7 +109,7 @@ als Leser. Externe Programmdialoge sind keine gesperrten Werkeraufforderungen.
 **Konsolenfenster zulassen** erlaubt ein Konsolenfenster. GUI-Programme steuern
 ihre Fenster selbst; die Option versteckt keine beliebige GUI-Anwendung.
 Alle Aufrufe erhalten eine stdin-Pipe für automatisierte Dialoge. Befehle werden
-über **An Prozess senden** übergeben. Nach dem Schließen dieser Pipe oder dem
+über **Prozess: Kommunikation → Senden** übergeben. Nach dem Schließen dieser Pipe oder dem
 Ende der Anwendung erhält das Ziel EOF; ein unabhängiger Prozess darf weiterlaufen,
 muss EOF aber selbst sinnvoll behandeln. Eine echte Terminalemulation (TTY/PTY)
 wird nicht bereitgestellt.
@@ -131,7 +131,7 @@ ein Werkerabbruch wird nach der bestehenden Abbruchfolge behandelt.
 Ohne Warten bleibt **Prozess starten** immer NRESULT. **Prozesskennung → Stringvariable**
 ist dann Pflicht. Die Kennung ist ein undurchsichtiges Handle dieses Prüflaufs;
 es ist keine Betriebssystem-PID. Andere Prüfplätze/Läufe können sie nicht verwenden.
-In **Auf Prozess warten**, **Prozessstatus abfragen** und **Prozess beenden**
+In **Prozess: Status/Ende** bei **Warten**, **Abfragen** und **Beenden**
 wird beispielsweise `{MeinProzess}` eingetragen. Die separat verfügbare
 **Host-Prozess-ID** kann bei gebundenen/DLL-Aufrufen die ID des Hosts sein.
 
@@ -148,7 +148,7 @@ Mögliche Ergebnisziele:
 Zielvariablen vorher anlegen. **Prozess beendet** prüfen, bevor ein Exitcode aus
 einer Zwischenabfrage verwendet wird. Vor dem Ende wird kein erfundener Exitcode
 0 geschrieben; ein früherer Variablenwert ist noch keine neue Rückgabe.
-Timeout/Abbruch liefern keinen erfolgreichen Exitcode. **Prozess beenden** selbst
+Timeout/Abbruch liefern keinen erfolgreichen Exitcode. **Prozess: Status/Ende → Beenden** selbst
 ist unbewertet; eine spätere Warteaktion meldet eine erzwungene Beendigung als ERROR.
 Ein bereits beendeter unabhängiger Starter erlaubt keine nachträgliche zuverlässige
 Zuordnung seiner weiterlaufenden Kinder; automatische Baumverwaltung ist die
@@ -169,7 +169,7 @@ ursprünglichen Prüfsitzung.
    Argumente `["--serial","{Kennung}"]`, gebunden, Warten aus,
    Prozesskennung nach `MeinProzess` schreiben.
 3. Weitere sinnvolle Testschritte ausführen.
-4. **Auf Prozess warten** einfügen: Prozess `{MeinProzess}`, Zeitlimit 60.000,
+4. **Prozess: Status/Ende → Warten** einfügen: Prozess `{MeinProzess}`, Zeitlimit 60.000,
    Exitcode nach `Exitcode`, stdout/stderr nach `Ausgabe`/`Fehlertext`,
    Fertig nach `Fertig`, erlaubter Exitcode `0`.
 5. Erst mit einer bekannten simulierten/ungefährlichen Testdatei prüfen, danach
@@ -187,14 +187,14 @@ deaktivieren. Für Messwerkzeuge mit verlässlicher Aufräumregel gebunden verwe
 
 1. **Prozess starten**: **Auf Prozessende warten = false**, Ausgabeerfassung aktivieren,
    Prozesskennung in einer Stringvariable speichern.
-2. **Auf Prozessausgabe warten**: Prozess `{MeinProzess}`, Stream `stdout`, Muster
+2. **Prozess: Kommunikation → Auf Ausgabe warten**: Prozess `{MeinProzess}`, Stream `stdout`, Muster
    `ready>`, Regex `false`, Zeitlimit beispielsweise 30000 ms.
-3. **An Prozess senden**: Prozess `{MeinProzess}`, Text `measure {Kennung}`,
+3. **Prozess: Kommunikation → Senden**: Prozess `{MeinProzess}`, Text `measure {Kennung}`,
    Zeilenende `LF` (oder `CRLF` für das Zielprogramm).
 4. Erneut auf Ausgabe warten, etwa Stream `stderr`, Regex `true`, Muster
    `value=[0-9]+;`, Treffer nach einer Stringvariable schreiben.
 5. Weitere Befehle senden oder stdin mit **stdin danach schließen = true** schließen.
-6. **Auf Prozess warten** bewertet den abschließenden Exitcode wie bisher.
+6. **Prozess: Status/Ende → Warten** bewertet den abschließenden Exitcode wie bisher.
 
 Textsuche ist eine groß-/kleinschreibungssensitive, wortgetreue Teilstringsuche.
 Regex nutzt .NET-Syntax; Flags wie `(?i)` und `(?m)` können im Muster stehen.
