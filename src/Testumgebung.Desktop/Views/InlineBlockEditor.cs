@@ -77,10 +77,21 @@ public sealed partial class InlineBlockEditor : UserControl
         => field.SetBinding(VisibilityProperty, new Binding(nameof(row.IsHidden))
         { Source = row, Converter = (IValueConverter)FindResource("BoolVis"), ConverterParameter = "invert" });
 
+    private static Button TableButton(ParameterRowViewModel row)
+    {
+        var button = new Button { Content = "Tabelle bearbeiten …" };
+        button.Click += (_, _) => ParameterTableDialog.Edit(button, row);
+        return button;
+    }
+
     private FrameworkElement ParameterInput(ParameterRowViewModel row)
     {
         FrameworkElement input;
-        if (row.IsBool)
+        if (row.IsTable)
+        {
+            input = TableButton(row);
+        }
+        else if (row.IsBool)
         {
             var check = new CheckBox { Content = "Ja", VerticalAlignment = VerticalAlignment.Center };
             check.SetBinding(ToggleButton.IsCheckedProperty, Bind(row, "BoolValue")); input = check;

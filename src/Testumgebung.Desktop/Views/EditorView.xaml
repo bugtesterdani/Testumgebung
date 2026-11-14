@@ -501,6 +501,8 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Style="{StaticResource Label}" Text="{Binding Label}" TextWrapping="Wrap" />
                                 <StackPanel Grid.Column="1">
+                                    <Button Content="Tabelle bearbeiten …" Click="OnParameterTable" HorizontalAlignment="Left"
+                                            Visibility="{Binding IsTable, Converter={StaticResource BoolVis}}" />
                                     <TextBox x:Name="TextEditor" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                                              AcceptsReturn="{Binding IsMultiline}" TextWrapping="Wrap" MaxHeight="180" VerticalScrollBarVisibility="Auto"
                                              Visibility="{Binding IsText, Converter={StaticResource BoolVis}}" />

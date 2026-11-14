@@ -2,6 +2,8 @@
 
 Mit **Messwertverlauf aufnehmen** werden Geräte-/Variablenwerte über eine einstellbare Dauer erfasst, live angezeigt und gegen versionierte Grenzkurven bewertet. Für selbst gesteuerte Abläufe stehen zusätzlich **Messwertverlauf beginnen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten** bereit. X-Achse ist Zeit in Sekunden; andere numerische Bezugsgrößen sind noch nicht enthalten.
 
+Unter **Messkanäle → Tabelle bearbeiten** stehen Kanalname, Einheit und die Kurvenreferenzen für Wert-Grenzbänder in derselben Zeile. In bestehenden Projekten gespeicherte Listen werden beim Öffnen der Tabelle zeilenweise angezeigt.
+
 ## Grenzband aus Formeln berechnen
 
 In **Messwertverlauf beginnen** oder **Messwertverlauf aufnehmen** unter **Grenzauswertung** das **Berechnete Grenzband** wählen. In die zwei Formelfelder beispielsweise `4 + 0.2 * t` für die Untergrenze und `6 + 0.2 * t` für die Obergrenze eintragen. `t` ist die Messzeit in Sekunden. Konstante Zahlen sind ebenfalls gültig.

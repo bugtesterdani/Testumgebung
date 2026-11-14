@@ -762,6 +762,7 @@ public sealed class ParameterRowViewModel : ObservableObject
     }
 
     public string NodeId => _owner.Step.Id;
+    public StepPropertiesViewModel Owner => _owner;
     public ParameterDescriptor Descriptor { get; }
     public string Label => Descriptor.Label;
     public string? Hint => Descriptor.Hint;
@@ -770,7 +771,8 @@ public sealed class ParameterRowViewModel : ObservableObject
     public bool IsChoice => Kind == ParameterKind.Choice;
     public bool IsBool => Kind == ParameterKind.Bool;
     public bool IsCode => Kind == ParameterKind.Code;
-    public bool IsText => !IsChoice && !IsBool && !IsCode && !IsHidden;
+    public bool IsTable => Kind == ParameterKind.Table;
+    public bool IsText => !IsChoice && !IsBool && !IsCode && !IsHidden && !IsTable;
     public bool IsMultiline => Descriptor.Name is "Verbindungsoptionen" or "Header" or "Body";
 
     /// <summary>Wird durch eine eigene Oberfläche ersetzt (z. B. Bausteinauswahl).</summary>
@@ -798,6 +800,8 @@ public sealed class ParameterRowViewModel : ObservableObject
             _owner.ParametersChanged();
         }
     }
+
+    internal void RefreshValue() => OnPropertyChanged(nameof(Value));
 
     public bool BoolValue
     {
@@ -902,7 +906,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     internal bool IsParameterActive(string name)
     {
         if (Step.BlockType is TraceBlocks.Start or TraceBlocks.Record)
-            return TraceMarginVisibility(name) ?? IsTraceParameterActive(name);
+            return TraceTableVisibility(name) ?? TraceMarginVisibility(name) ?? IsTraceParameterActive(name);
         if (Step.BlockType == BlockCatalog.CurveOutput)
             return IsCurveOutputParameterActive(name);
         if (Step.BlockType is ProcessBlocks.Communication or ProcessBlocks.StatusEnd)
@@ -923,6 +927,10 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     private bool IsCurveOutputParameterActive(string name) => name is not ("Kurve" or "Version")
         || Step.Parameters.GetValueOrDefault(CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Load) == CurveOutputBlocks.Load;
+
+    private bool? TraceTableVisibility(string name) => name is "Einheiten" or "Grenzkurven" or TraceBlocks.AbortCurvesParameter
+        ? false
+        : null;
 
     private bool IsTraceParameterActive(string name)
     {
@@ -953,6 +961,15 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
             TraceBlocks.AbsoluteMarginParameter => mode == TraceBlocks.AbsoluteMargin,
             _ => true
         };
+    }
+
+    public void ApplyTableValues(IReadOnlyDictionary<string, string> values)
+    {
+        var changed = Parameters.Where(row => values.TryGetValue(row.Descriptor.Name, out var value) && row.Value != value).ToArray();
+        if (changed.Length == 0) return;
+        foreach (var row in changed) Step.Parameters[row.Descriptor.Name] = values[row.Descriptor.Name];
+        ParametersChanged();
+        foreach (var row in changed) row.RefreshValue();
     }
 
     internal void ParametersChanged()
