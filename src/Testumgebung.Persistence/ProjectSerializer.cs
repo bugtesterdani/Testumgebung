@@ -386,17 +386,38 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         var type = Require(dto.Block, "block");
         if (!catalog.TryGet(type, out _)) throw new ProjectFormatException($"Schritt '{dto.Name}': unbekannter Baustein '{type}'.");
         var id = Require(dto.Id, "id");
-        var replacement = ProcessBlocks.Replacement(type);
-        if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
-            replacement = (BlockCatalog.CurveOutput, curveAction);
-        var step = replacement is { } target && catalog.TryGet(target.Type, out _)
-            ? MigrateActionBlock(dto, id, type, target.Type, target.Action)
-            : catalog.Create(type, id, dto.Name, dto.Parameters);
+        var step = CreateLoadedStep(dto, id, type);
         step.Description = dto.Description;
         step.Disabled = dto.Disabled == true;
         RestoreDebugRules(step, dto);
         step.Storage = FromDto(dto.Storage);
         return step;
+    }
+
+    private StepDefinition CreateLoadedStep(StepDto dto, string id, string type)
+    {
+        if (type == BlockCatalog.SetRating && catalog.TryGet(BlockCatalog.Evaluate, out _))
+            return MigrateFixedRating(dto, id);
+
+        var replacement = ProcessBlocks.Replacement(type);
+        if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
+            replacement = (BlockCatalog.CurveOutput, curveAction);
+        return replacement is { } target && catalog.TryGet(target.Type, out _)
+            ? MigrateActionBlock(dto, id, type, target.Type, target.Action)
+            : catalog.Create(type, id, dto.Name, dto.Parameters);
+    }
+
+    private StepDefinition MigrateFixedRating(StepDto dto, string id)
+    {
+        var parameters = new Dictionary<string, string>(dto.Parameters ?? [])
+        {
+            ["Art"] = BlockCatalog.FixedRatingMode
+        };
+        // These names had no effect in the legacy block.
+        parameters.Remove("Wert");
+        parameters.Remove("Einheit");
+        parameters.Remove("Meldung");
+        return catalog.Create(BlockCatalog.Evaluate, id, dto.Name ?? catalog.Get(BlockCatalog.SetRating).DisplayName, parameters);
     }
 
     private StepDefinition MigrateActionBlock(StepDto dto, string id, string type, string target, string action)

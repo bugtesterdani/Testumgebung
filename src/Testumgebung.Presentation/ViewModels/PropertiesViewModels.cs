@@ -884,7 +884,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         if (Step.BlockType is ProcessBlocks.Communication or ProcessBlocks.StatusEnd)
             return IsProcessParameterActive(Step.BlockType, name);
         if (Step.BlockType != BlockCatalog.Evaluate) return true;
-        var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == "Festes Ergebnis";
+        var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == BlockCatalog.FixedRatingMode;
         return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
     }
 

@@ -97,8 +97,9 @@
                 "art": "schritt",
                 "id": "pass",
                 "name": "Dann bestätigt",
-                "block": "bewertung.setzen",
+                "block": "bewertung",
                 "parameters": {
+                  "Art": "Festes Ergebnis",
                   "Bewertung": "PASS"
                 }
               }
@@ -114,8 +115,9 @@
                 "art": "schritt",
                 "id": "fail",
                 "name": "Sonst nicht erwartet",
-                "block": "bewertung.setzen",
+                "block": "bewertung",
                 "parameters": {
+                  "Art": "Festes Ergebnis",
                   "Bewertung": "FAIL"
                 }
               }
@@ -140,8 +142,9 @@
             "art": "schritt",
             "id": "parallel-a",
             "name": "Zweig A",
-            "block": "bewertung.setzen",
+            "block": "bewertung",
             "parameters": {
+              "Art": "Festes Ergebnis",
               "Bewertung": "PASS"
             }
           },
@@ -149,8 +152,9 @@
             "art": "schritt",
             "id": "parallel-b",
             "name": "Zweig B",
-            "block": "bewertung.setzen",
+            "block": "bewertung",
             "parameters": {
+              "Art": "Festes Ergebnis",
               "Bewertung": "PASS"
             }
           }

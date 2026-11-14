@@ -84,8 +84,9 @@
                     "art": "schritt",
                     "id": "links.done",
                     "name": "links.done",
-                    "block": "bewertung.setzen",
+                    "block": "bewertung",
                     "parameters": {
+                      "Art": "Festes Ergebnis",
                       "Bewertung": "PASS"
                     }
                   }
@@ -114,8 +115,9 @@
                     "art": "schritt",
                     "id": "rechts.done",
                     "name": "rechts.done",
-                    "block": "bewertung.setzen",
+                    "block": "bewertung",
                     "parameters": {
+                      "Art": "Festes Ergebnis",
                       "Bewertung": "PASS"
                     }
                   }
