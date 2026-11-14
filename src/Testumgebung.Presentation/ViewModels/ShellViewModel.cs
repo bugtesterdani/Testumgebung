@@ -245,7 +245,8 @@ public sealed class ShellViewModel : ObservableObject
                     AccessStore = accessStore,
                     PythonExecutable = (codeRuntime as Testumgebung.Workers.CodeRuntime)?.Options.PythonExecutable,
                 },
-                Pilot.ConfigBackup.DefaultSources(settingsPath, accessStore?.Path ?? AccessConfigStore.DefaultPath, stationStore?.Path ?? StationSetupStore.DefaultPath),
+                Pilot.ConfigBackup.DefaultSources(settingsPath, accessStore?.Path ?? AccessConfigStore.DefaultPath, stationStore?.Path ?? StationSetupStore.DefaultPath,
+                    services is null ? null : Path.Combine(services.ReleaseFolder, "Quellen", "programmquellen.json")),
                 dialogs, () => Stations.Any(st => st.IsRunning || st.Selection.IsActive), _ui,
                 afterRestore: () =>
                 {

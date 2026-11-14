@@ -105,7 +105,24 @@ public sealed class PilotTests : IDisposable
         File.WriteAllText(settings, "{\"format\":1,\"database\":{\"protectedConnectionString\":\"dpapi:xyz\"}}");
         new StationSetupStore(stations).Save(StationSetup.Default(SampleProjects.AcPruefung()));
         var sources = ConfigBackup.DefaultSources(settings, access, stations);   // zugang.json fehlt
+        Assert.Contains(sources, source => source.Name == "python-environment.json");
+        Assert.Contains(sources, source => source.Name == "quellen-zugang.json" && source.ProtectOnRestore);
+        Assert.Contains(sources, source => source.Name == "programmquellen.json");
+        // Use only fixture paths when exercising backup and restore.
+        sources = sources.Select(source => source with { Path = P("backup-input/" + source.Name) })
+            .Select(source => source.Name switch
+            {
+                "einstellungen.json" => source with { Path = settings },
+                "zugang.json" => source with { Path = access },
+                "pruefplaetze.json" => source with { Path = stations },
+                _ => source
+            }).ToArray();
 
+        var pythonSelection = sources.Single(source => source.Name == "python-environment.json").Path;
+        Directory.CreateDirectory(Path.GetDirectoryName(pythonSelection)!);
+        File.WriteAllText(pythonSelection, "\"C:\\\\Python\\\\python.exe\"");
+        var inventory = sources.Single(source => source.Name == "laufzeitdateien.json").Path;
+        File.WriteAllText(inventory, "[]");
         var ui = new QueueDispatcher();
         var zip = P("sicherung.zip");
         var restoredCount = 0;
@@ -117,12 +134,15 @@ public sealed class PilotTests : IDisposable
         var inspection = ConfigBackup.Inspect(zip);
         Assert.True(inspection.IsIntact);
         Assert.True(inspection.Manifest.Files.Single(f => f.Name == "einstellungen.json").ContainsProtectedSecrets);
+        Assert.Contains(inspection.Manifest.Files, file => file.Name == "python-environment.json");
 
         // Änderung nach der Sicherung → Wiederherstellen setzt zurück und bewahrt den Vorstand
         File.WriteAllText(stations, "{\"format\":1,\"devices\":[],\"stations\":[]}");
         page.OpenBackupCommand.Execute(null);
         Assert.Contains("Prüfsummen in Ordnung", page.InspectionText);
-        Assert.Equal(2, page.BackupFiles.Count);
+        Assert.Equal(4, page.BackupFiles.Count);
+        page.BackupFiles.Single(f => f.Name == "laufzeitdateien.json").Selected = false;
+        page.BackupFiles.Single(f => f.Name == "python-environment.json").Selected = false;
         page.BackupFiles.Single(f => f.Name == "einstellungen.json").Selected = false;
         Assert.True(page.RestoreCommand.CanExecute(null));
         page.RestoreCommand.Execute(null);

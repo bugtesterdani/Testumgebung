@@ -59,6 +59,19 @@
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                         <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Code-Laufzeit" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                       Text="Die Pfade gelten nach einem Neustart. Leere Felder verwenden die automatische Auswahl. Umgebungsvariablen haben Vorrang." />
+                            <TextBlock Text="Python-Interpreter" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding PythonExecutable, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="C++-Compiler" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding CppCompiler, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="C++-Cache-Ordner" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding CppCacheDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
                             <TextBlock Style="{StaticResource SectionTitle}" Text="Ergebnisdateien" />
                             <TextBlock Text="Ordner" Style="{StaticResource Label}" />
                             <TextBox Text="{Binding ResultFolder, UpdateSourceTrigger=PropertyChanged}" />

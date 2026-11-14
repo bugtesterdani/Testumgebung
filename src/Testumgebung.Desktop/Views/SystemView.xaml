@@ -108,7 +108,7 @@
             <StackPanel>
                 <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource SectionTitle}" Text="Konfiguration sichern" />
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Konfigurationsdateien und Sicherung" />
                         <ItemsControl ItemsSource="{Binding Sources}" Margin="0,0,0,8">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -116,6 +116,7 @@
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding Description}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding Path}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                        <Button Content="Ordner öffnen" Style="{StaticResource ToolButton}" Click="OnOpenConfigurationFolder" HorizontalAlignment="Left" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

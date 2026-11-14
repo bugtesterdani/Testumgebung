@@ -105,6 +105,9 @@ public sealed class AppSettings
     public string? FirstPairedStation { get; set; }
     public string? SecondPairedStation { get; set; }
     public string? ResultFolder { get; set; }
+    public string? PythonExecutable { get; set; }
+    public string? CppCompiler { get; set; }
+    public string? CppCacheDirectory { get; set; }
     public DatabaseSettings Database { get; set; } = new();
     public OutboxSettings Outbox { get; set; } = new();
     public MqttSettings Mqtt { get; set; } = new();
