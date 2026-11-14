@@ -27,6 +27,8 @@ public enum ParameterKind
     Code,
 }
 
+public sealed record ParameterVisibility(string Parameter, string Value);
+
 public sealed record ParameterDescriptor(
     string Name,
     string Label,
@@ -34,7 +36,9 @@ public sealed record ParameterDescriptor(
     string Default = "",
     bool Required = false,
     IReadOnlyList<string>? Choices = null,
-    string? Hint = null);
+    string? Hint = null,
+    ParameterVisibility? VisibleWhen = null,
+    bool Advanced = false);
 
 /// <summary>Beschreibung eines Bausteins der Palette.</summary>
 public sealed record BlockDescriptor(

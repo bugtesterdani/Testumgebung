@@ -3377,7 +3377,9 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt."
+          "hint": "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt.",
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Umgebung",
@@ -3386,7 +3388,9 @@
           "default": "{}",
           "required": false,
           "choices": null,
-          "hint": "Stringwerte; nicht protokolliert. Beispiel: {\u0022MODE\u0022:\u0022test\u0022}"
+          "hint": "Stringwerte; nicht protokolliert. Beispiel: {\u0022MODE\u0022:\u0022test\u0022}",
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Typ",
@@ -3395,7 +3399,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Art",
+            "value": "DLL-Main"
+          },
+          "advanced": false
         },
         {
           "name": "Python",
@@ -3404,7 +3413,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Leer = bestehende Python-Auswahl des Pr\u00FCfprogramms."
+          "hint": "Leer = bestehende Python-Auswahl des Pr\u00FCfprogramms.",
+          "visibleWhen": {
+            "parameter": "Art",
+            "value": "Python"
+          },
+          "advanced": true
         },
         {
           "name": "Modus",
@@ -3425,7 +3439,9 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Ausgabe",
@@ -3443,7 +3459,9 @@
           "default": "utf-8",
           "required": false,
           "choices": null,
-          "hint": "Python: utf-8; \u00E4ltere EXE ggf. windows-1252 oder ibm850."
+          "hint": "Python: utf-8; \u00E4ltere EXE ggf. windows-1252 oder ibm850.",
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Ausgabelimit",
@@ -3452,7 +3470,9 @@
           "default": "65536",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Warten",
@@ -3871,7 +3891,12 @@
           "default": "0x7E0",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": false
         },
         {
           "name": "AntwortId",
@@ -3880,7 +3905,12 @@
           "default": "0x7E8",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": false
         },
         {
           "name": "Erweitert",
@@ -3889,7 +3919,12 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "Fd",
@@ -3898,7 +3933,12 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "AdresseTx",
@@ -3907,7 +3947,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal"
+          "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal",
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "AdresseRx",
@@ -3916,7 +3961,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "erstes Datenbyte der Antworten, z. B. 0xF1"
+          "hint": "erstes Datenbyte der Antworten, z. B. 0xF1",
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "Fuellbyte",
@@ -3925,7 +3975,12 @@
           "default": "CC",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "TesterAdresse",
@@ -3934,7 +3989,12 @@
           "default": "0x0E00",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "DoIP (Ethernet)"
+          },
+          "advanced": false
         },
         {
           "name": "SteuergeraetAdresse",
@@ -3943,7 +4003,12 @@
           "default": "0x1000",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "DoIP (Ethernet)"
+          },
+          "advanced": false
         },
         {
           "name": "Nad",
@@ -3952,7 +4017,12 @@
           "default": "0x01",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "LIN (Transportprotokoll)"
+          },
+          "advanced": false
         },
         {
           "name": "Anfrage",

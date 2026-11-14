@@ -24,7 +24,9 @@ public sealed class AiProjectGuideTests
         var blocks = BlockCatalog.Default.All.OrderBy(b => b.Type, StringComparer.Ordinal).Select(b => new
         {
             b.Type, b.DisplayName, b.Category, b.Description,
-            Parameters = b.Parameters.Select(p => new { p.Name, p.Label, Kind = p.Kind.ToString(), p.Default, p.Required, p.Choices, p.Hint })
+            Parameters = b.Parameters.Select(p => p.VisibleWhen is null && !p.Advanced
+                ? (object)new { p.Name, p.Label, Kind = p.Kind.ToString(), p.Default, p.Required, p.Choices, p.Hint }
+                : new { p.Name, p.Label, Kind = p.Kind.ToString(), p.Default, p.Required, p.Choices, p.Hint, p.VisibleWhen, p.Advanced })
         });
         var expected = JsonSerializer.SerializeToNode(new { Format = ProjectSerializer.FormatName, FormatVersion = ProjectSerializer.FormatVersion, Blocks = blocks },
             new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });

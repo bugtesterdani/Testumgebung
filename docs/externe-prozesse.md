@@ -2,6 +2,8 @@
 
 Im Ablaufeditor gibt es die Kategorie **Prozesse** mit **Prozess starten**,
 **Prozess: Kommunikation** (Senden, Auf Ausgabe warten) und **Prozess: Status/Ende** (Abfragen, Warten, Beenden).
+
+Bei **Prozess starten** richtet sich die Feldanzeige nach der Aufrufart. Unter **Erweitert** liegen unter anderem Arbeitsverzeichnis, Umgebungsvariablen und Ausgabekodierung. Beim Umschalten bleiben Eingaben gespeichert. Bei Konfigurationsfehlern zeigt der Editor auch ausgeblendete Felder zur Korrektur.
 Alle Einstellungen werden im Prüfprojekt und dessen Release gespeichert.
 
 ## Aufrufarten
