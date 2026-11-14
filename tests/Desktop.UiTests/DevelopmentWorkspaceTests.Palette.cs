@@ -15,13 +15,14 @@ public sealed partial class DevelopmentWorkspaceTests
         var panel = (FrameworkElement)view.FindName("PalettePanel");
         var categories = Descendants(panel).OfType<Expander>().ToList();
         Assert.DoesNotContain(categories, category => category.Header?.ToString() == "Steuerung");
-        var communication = categories.Single(category => category.Header?.ToString() == "Kommunikation");
+        var communication = categories.Single(category => category.Header?.ToString() == CommunicationBlocks.AutomationCategory);
         Assert.False(communication.IsExpanded);
         communication.IsExpanded = true; Sta.Flush(dispatcher);
         Assert.True(communication.IsExpanded);
         communication.IsExpanded = false;
         CaptureVisual(host, "editor-palette-compact.png");
         var search = Descendants(panel).OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Bausteine suchen");
+        Assert.True(search.Focusable && search.IsTabStop && search.IsEnabled);
         search.Text = "Modbus"; Sta.Flush(dispatcher); view.UpdateLayout();
         Assert.Equal("Modbus", editor.PaletteSearch);
         Assert.Single(editor.Palette);

@@ -39,22 +39,22 @@ public static class NetworkBlocks
     ];
     public static void Register(BlockCatalog c)
     {
-        c.Register(new(Configure, "Verbindung konfigurieren", CommunicationBlocks.Category, "arrow",
+        c.Register(new(Configure, "Verbindung konfigurieren", CommunicationBlocks.SerialCategory, "arrow",
             "Ändert COM-Port oder Netzwerkadresse und Optionen aus aktuellen Variablen. Eine bestehende Streamverbindung wird geschlossen.",
             [new("Ressource", "Ressource", ParameterKind.Resource, "Pruefling_Seriell", Required: true), .. ConnectionParameters()],
             parameters => new ConfigureAction(parameters.Text("Ressource"), parameters.Optional("Adresse"), parameters.Optional("Verbindungsoptionen"))));
-        c.Register(new(Http, "HTTP-Anfrage (GET / POST / …)", CommunicationBlocks.Category, "arrow",
+        c.Register(new(Http, "HTTP-Anfrage (GET / POST / …)", CommunicationBlocks.NetworkCategory, "arrow",
             "HTTP/HTTPS direkt ohne curl-Installation. Antwort und Statuscode als Variablen; maximal 1 MiB Antwort.",
             [.. Common(), new("Methode", "Methode", ParameterKind.Choice, "GET", Choices: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
                 new("Pfad", "Pfad / URL", ParameterKind.Text, "/", Required: true),
                 new("Body", "Request-Body", ParameterKind.Text, Hint: "Platzhalter {Variable}; JSON-Klammern als {{ und }} schreiben."),
                 new("Header", "Header", ParameterKind.Text, Hint: "Eine Zeile Name: Wert; z.B. Content-Type: application/json oder Authorization: Bearer {Token}. Nicht protokolliert.")],
             parameters => Create(parameters, "http", "Pfad")));
-        c.Register(new(Ssh, "SSH-Befehl", CommunicationBlocks.Category, "arrow",
+        c.Register(new(Ssh, "SSH-Befehl", CommunicationBlocks.NetworkCategory, "arrow",
             "Führt einen Befehl über SSH aus. Passwort oder Schlüsseldatei; HostKeySHA256 oder ausdrücklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
             [.. Common(), .. HostKeyTargets(), new("Befehl", "Befehl", ParameterKind.Text, "uname -a", Required: true)], parameters => Create(parameters, "ssh", "Befehl")));
         foreach (var upload in new[] { true, false })
-            c.Register(new(upload ? Upload : Download, upload ? "SFTP-Dateitransfer" : "SFTP-Datei herunterladen", CommunicationBlocks.Category, "arrow",
+            c.Register(new(upload ? Upload : Download, upload ? "SFTP-Dateitransfer" : "SFTP-Datei herunterladen", CommunicationBlocks.NetworkCategory, "arrow",
                 "Überträgt eine Datei über SSH/SFTP. Pfade unterstützen Variablen. Überschreiben ist ausdrücklich wählbar.",
                 [.. Common(), .. HostKeyTargets(), .. (upload ? new ParameterDescriptor[] { new("Richtung", "Richtung", ParameterKind.Choice, "Hochladen", Choices: ["Hochladen", "Herunterladen"]) } : []), new("Lokal", "Lokale Datei", ParameterKind.Text, Required: true), new("Remote", "Datei auf Gegenstelle", ParameterKind.Text, Required: true),
                     new("Ueberschreiben", "Bestehende Datei überschreiben", ParameterKind.Bool, "false")],

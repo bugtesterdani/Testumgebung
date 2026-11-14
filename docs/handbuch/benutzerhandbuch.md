@@ -405,7 +405,7 @@ Standardbewertung: HTTP 200–299 ist PASS. Andere Erwartungen lassen sich festl
 
 Für reine TCP-Protokolle den TCP-Client verwenden, für Telnet den Telnet-Adapter. Adresse `Host:Port`, danach Senden und Empfangen nutzen. Bei interaktiven Login-Dialogen erst den Prompt empfangen, dann die Antwort senden. „Abfrage“ verwirft vorherige Eingabedaten und ist deshalb nicht für jeden Promptdialog geeignet. Telnet-Verhandlung wird behandelt; eine vollständige Terminalemulation ist nicht enthalten.
 
-Alle neuen Protokolle sind direkt in der Software verfügbar. Die [Kommunikationsanleitung](../dynamische-verbindungen.md) enthält sämtliche Parameter und die C#-/Python-Hilfsfunktionen.
+Die Palette gruppiert die Kommunikationsbausteine nach CAN/J1939, LIN, Diagnose (UDS, DoIP), Modbus/OPC UA, Seriell/TCP/UDP und Netzwerk/Dateien (HTTP, SSH, SFTP). Mit **Bausteine suchen** lassen sich die Einträge nach Name, Beschreibung oder Protokoll filtern. Die [Kommunikationsanleitung](../dynamische-verbindungen.md) enthält sämtliche Parameter und die C#-/Python-Hilfsfunktionen.
 
 ## 11. Simulation und Debugger
 

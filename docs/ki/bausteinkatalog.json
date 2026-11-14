@@ -366,7 +366,7 @@
     {
       "type": "can.botschaft.senden",
       "displayName": "CAN-Botschaft senden (DBC)",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Setzt die Botschaft aus Signalwerten zusammen (nicht genannte Signale mit Startwert, Multiplexer automatisch) und sendet sie \u2013 optional mehrfach im Zyklus. J1939-Botschaften \u00FCber 8 Bytes laufen \u00FCber das Transportprotokoll.",
       "parameters": [
         {
@@ -437,7 +437,7 @@
     {
       "type": "can.empfangen",
       "displayName": "CAN empfangen",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Wartet auf einen Rahmen (ID/Maske), optional nach einer Anfrage; pr\u00FCft Daten oder liest ein Signal (Startbit, L\u00E4nge, Byteorder, Faktor, Offset).",
       "parameters": [
         {
@@ -622,7 +622,7 @@
     {
       "type": "can.senden",
       "displayName": "CAN senden",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Sendet einen CAN- oder CAN-FD-Rahmen. Daten in Hex; {Ausdruck} f\u00FCgt ein Byte ein.",
       "parameters": [
         {
@@ -684,7 +684,7 @@
     {
       "type": "can.signal.lesen",
       "displayName": "CAN-Signal lesen (DBC)",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Wartet auf die Botschaft des Signals (frisch nach Verwerfen alter Rahmen), dekodiert es nach der Datenbank (Faktor, Offset, Byteorder, Multiplex, Wertetabelle) und bewertet gegen Sollwert oder Grenzwerte.",
       "parameters": [
         {
@@ -889,7 +889,7 @@
     {
       "type": "doip.suche",
       "displayName": "DoIP Fahrzeugsuche",
-      "category": "Kommunikation",
+      "category": "Diagnose (UDS, DoIP)",
       "description": "Sendet eine DoIP-Fahrzeugsuche (Vehicle Identification Request, UDP 13400) und sammelt die antwortenden Steuerger\u00E4te/Gateways (VIN, logische Adresse). Ohne Hardware-Reservierung. Optional auf eine erwartete VIN oder Adresse pr\u00FCfen.",
       "parameters": [
         {
@@ -994,7 +994,7 @@
     {
       "type": "j1939.adresse",
       "displayName": "J1939 Adresse beanspruchen",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Beansprucht eine Quelladresse nach J1939-81 (Address Claimed, PGN 60928) mit dem eigenen 64-Bit-NAME und pr\u00FCft 250 ms lang auf Gegenanspr\u00FCche. Verliert die eigene Station (kleinerer NAME der Gegenstelle), ist der Schritt FAIL. Optional vorher alle Teilnehmer abfragen und in eine Variable schreiben.",
       "parameters": [
         {
@@ -1047,7 +1047,7 @@
     {
       "type": "j1939.empfangen",
       "displayName": "J1939 empfangen",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Empf\u00E4ngt eine Parametergruppe (PGN) \u2013 einzeln, als BAM oder per RTS/CTS \u2013 optional nach einer Anforderung (PGN 59904). Signal aus der Datenbank oder \u00FCber Startbit/L\u00E4nge; \u201Enicht verf\u00FCgbar\u201C (alle Bits 1) ist FAIL.",
       "parameters": [
         {
@@ -1250,7 +1250,7 @@
     {
       "type": "j1939.senden",
       "displayName": "J1939 senden",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Sendet eine Parametergruppe mit Priorit\u00E4t, Quell- und Zieladresse; mehr als 8 Bytes \u00FCber das Transportprotokoll (global BAM, sonst RTS/CTS).",
       "parameters": [
         {
@@ -1339,7 +1339,7 @@
     {
       "type": "komm.abfrage",
       "displayName": "Abfrage",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "Verwirft alte Eingangsdaten, sendet einen Befehl und wertet die Antwort aus (Muster, Zahlenwert, Grenzwerte).",
       "parameters": [
         {
@@ -1497,7 +1497,7 @@
     {
       "type": "komm.empfangen",
       "displayName": "Empfangen",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "Empf\u00E4ngt eine Antwort (bis Zeilenende, L\u00E4nge oder Ruhe), pr\u00FCft optional ein Muster und bewertet einen enthaltenen Zahlenwert.",
       "parameters": [
         {
@@ -1646,7 +1646,7 @@
     {
       "type": "komm.senden",
       "displayName": "Senden",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "Sendet Text oder Bytes an den Pr\u00FCfling (RS-232/RS-485, TCP, UDP). Unbewertet.",
       "parameters": [
         {
@@ -1716,7 +1716,7 @@
     {
       "type": "komm.verbindung",
       "displayName": "Verbindung konfigurieren",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "\u00C4ndert COM-Port oder Netzwerkadresse und Optionen aus aktuellen Variablen. Eine bestehende Streamverbindung wird geschlossen.",
       "parameters": [
         {
@@ -1948,7 +1948,7 @@
     {
       "type": "lin.fahrplan",
       "displayName": "LIN-Fahrplan",
-      "category": "Kommunikation",
+      "category": "LIN",
       "description": "Arbeitet eine LIN-Fahrplantabelle ab: je Zeile ein Frame (empfangen oder senden) mit festem Abstand. Optional mehrere Durchl\u00E4ufe. Unbeantwortete Subscriber-Frames sind FAIL (oder nur Hinweis).",
       "parameters": [
         {
@@ -2001,7 +2001,7 @@
     {
       "type": "lin.lesen",
       "displayName": "LIN lesen",
-      "category": "Kommunikation",
+      "category": "LIN",
       "description": "Sendet als Master den Header und liest die Slave-Antwort; pr\u00FCft Daten oder ein Signal (aus der LDF oder Startbit/L\u00E4nge).",
       "parameters": [
         {
@@ -2198,7 +2198,7 @@
     {
       "type": "lin.senden",
       "displayName": "LIN senden",
-      "category": "Kommunikation",
+      "category": "LIN",
       "description": "Sendet als Master einen Frame mit Daten (Hex) oder aus Signalwerten der LDF.",
       "parameters": [
         {
@@ -2263,7 +2263,7 @@
     {
       "type": "modbus.lesen",
       "displayName": "Modbus lesen",
-      "category": "Kommunikation",
+      "category": "Modbus/OPC UA",
       "description": "Liest Register oder Bits (RTU/TCP), wandelt den Datentyp, skaliert (Wert \u00D7 Faktor \u002B Offset) und bewertet gegen Grenzwerte bzw. Sollwert.",
       "parameters": [
         {
@@ -2391,7 +2391,7 @@
     {
       "type": "modbus.schreiben",
       "displayName": "Modbus schreiben",
-      "category": "Kommunikation",
+      "category": "Modbus/OPC UA",
       "description": "Schreibt einen Wert in Holding-Register oder Coils; optional Zur\u00FCcklesen (Abweichung = FAIL).",
       "parameters": [
         {
@@ -2465,7 +2465,7 @@
     {
       "type": "netz.http",
       "displayName": "HTTP-Anfrage (GET / POST / \u2026)",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "HTTP/HTTPS direkt ohne curl-Installation. Antwort und Statuscode als Variablen; maximal 1 MiB Antwort.",
       "parameters": [
         {
@@ -2589,7 +2589,7 @@
     {
       "type": "netz.sftp.download",
       "displayName": "SFTP-Datei herunterladen",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
       "parameters": [
         {
@@ -2714,7 +2714,7 @@
     {
       "type": "netz.sftp.upload",
       "displayName": "SFTP-Dateitransfer",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
       "parameters": [
         {
@@ -2851,7 +2851,7 @@
     {
       "type": "netz.ssh",
       "displayName": "SSH-Befehl",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "F\u00FChrt einen Befehl \u00FCber SSH aus. Passwort oder Schl\u00FCsseldatei; HostKeySHA256 oder ausdr\u00FCcklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
       "parameters": [
         {
@@ -2958,7 +2958,7 @@
     {
       "type": "opcua.zugriff",
       "displayName": "OPC UA",
-      "category": "Kommunikation",
+      "category": "Modbus/OPC UA",
       "description": "Liest oder schreibt einen OPC-UA-Variablenknoten, ruft eine Methode auf oder wartet auf eine Daten\u00E4nderung (Abo). Gelesene/zur\u00FCckgegebene Werte k\u00F6nnen gegen Sollwert oder Grenzwerte gepr\u00FCft werden.",
       "parameters": [
         {
@@ -3839,7 +3839,7 @@
     {
       "type": "uds.anfrage",
       "displayName": "UDS-Diagnose",
-      "category": "Kommunikation",
+      "category": "Diagnose (UDS, DoIP)",
       "description": "Sendet eine Diagnoseanfrage \u00FCber ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder pr\u00FCft eine erwartete negative Antwort.",
       "parameters": [
         {
@@ -4111,7 +4111,7 @@
     {
       "type": "uds.sicherheit",
       "displayName": "UDS-Sicherheitszugang",
-      "category": "Kommunikation",
+      "category": "Diagnose (UDS, DoIP)",
       "description": "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schl\u00FCssel und sendet ihn (Stufe\u002B1). Schl\u00FCsselverfahren w\u00E4hlbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder \u201EAusdruck je Byte\u201C (s = Seedbyte, i = Index). Seed aus lauter Nullen = bereits freigeschaltet. Negative Antwort (z. B. falscher Schl\u00FCssel) = FAIL.",
       "parameters": [
         {
