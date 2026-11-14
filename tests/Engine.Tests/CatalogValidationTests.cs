@@ -55,11 +55,16 @@ public sealed class CatalogValidationTests
         var replacement = ProcessBlocks.Replacement(type);
         if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
             replacement = (BlockCatalog.CurveOutput, curveAction);
-        Assert.Equal(replacement?.Type ?? type, copiedStep.BlockType);
-        Assert.Equal(diagnostics, catalog.Rebuild(copiedStep));
+        var fixedRating = type == BlockCatalog.SetRating;
+        Assert.Equal(fixedRating ? BlockCatalog.Evaluate : replacement?.Type ?? type, copiedStep.BlockType);
+        var expectedDiagnostics = fixedRating
+            ? diagnostics.Select(message => message.Replace("„Bewertung“", "„Festes Ergebnis“", StringComparison.Ordinal))
+            : diagnostics;
+        Assert.Equal(expectedDiagnostics, catalog.Rebuild(copiedStep));
+        if (fixedRating) Assert.Equal(BlockCatalog.FixedRatingMode, copiedStep.Parameters["Art"]);
         if (replacement is { } target)
             Assert.Equal(target.Action, copiedStep.Parameters["Aktion"]);
-        var expected = replacement is null ? project : serializer.Clone(copy);
+        var expected = replacement is null && !fixedRating ? project : serializer.Clone(copy);
         Assert.Equal(serializer.Serialize(expected), serializer.Serialize(copy));
     }
 }
