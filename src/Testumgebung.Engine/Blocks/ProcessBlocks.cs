@@ -17,6 +17,8 @@ public static class ProcessBlocks
 {
     public const string Start = "prozess.start", Wait = "prozess.warten", Status = "prozess.status", Stop = "prozess.beenden";
     public const string WaitOutput = "prozess.ausgabe-warten", Send = "prozess.senden";
+    public const string Communication = "prozess.kommunikation", StatusEnd = "prozess.status-ende";
+    public const string ActionParameter = "Aktion";
     private static readonly string[] Kinds = ["EXE", "Python", ".NET-DLL", "DLL-Main"];
     public static void Register(BlockCatalog catalog)
     {
