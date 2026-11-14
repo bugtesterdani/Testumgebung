@@ -20,7 +20,7 @@ public sealed class EditorPaletteTests
         Assert.Equal(editor.Catalog.All.Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download)
             && block.Type is not (BlockCatalog.CurveLoad or BlockCatalog.CurveTransfer or BlockCatalog.CurveStart or BlockCatalog.CurveStop)
             && block.Type is not (ProcessBlocks.Send or ProcessBlocks.WaitOutput or ProcessBlocks.Wait or ProcessBlocks.Status or ProcessBlocks.Stop)).Select(block => block.Type).Order(), items.Where(item => item.BlockType is not null).Select(item => item.BlockType!).Order());
-        Assert.All(editor.Palette.Where(category => category.Name == "Kommunikation"), category => Assert.False(category.IsExpanded));
+        Assert.DoesNotContain(editor.Palette, category => category.Name == "Kommunikation");
     }
 
     [Theory]
@@ -51,6 +51,7 @@ public sealed class EditorPaletteTests
     [InlineData("MODBUS lesen", "modbus.lesen")]
     [InlineData("kommunikation modbus", "modbus.schreiben")]
     [InlineData("analog.messen", BlockCatalog.Measure)]
+    [InlineData("Vehicle Identification Request", BusBlocks.DoIpDiscover)]
     public void Search_finds_specialized_blocks_and_opens_matching_categories(string search, string type)
     {
         var editor = Editor(); editor.PaletteSearch = search;
@@ -61,6 +62,20 @@ public sealed class EditorPaletteTests
         Assert.Empty(editor.Palette);
         editor.PaletteSearch = "  ";
         Assert.Contains(editor.Palette.SelectMany(category => category.Items), item => item.BlockType == BlockCatalog.Code);
+    }
+
+    [Theory]
+    [InlineData("CAN/J1939", BusBlocks.J1939Send)]
+    [InlineData("LIN", BusBlocks.LinRead)]
+    [InlineData("Diagnose (UDS, DoIP)", BusBlocks.UdsRequest)]
+    [InlineData("Modbus/OPC UA", BusBlocks.OpcUaAccess)]
+    [InlineData("Seriell/TCP/UDP", CommunicationBlocks.Send)]
+    [InlineData("Netzwerk/Dateien (HTTP, SSH, SFTP)", NetworkBlocks.Ssh)]
+    public void Communication_blocks_are_grouped_by_protocol(string group, string type)
+    {
+        var category = Assert.Single(Editor().Palette, category => category.Name == group);
+        Assert.False(category.IsExpanded);
+        Assert.Contains(category.Items, item => item.BlockType == type);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using Testumgebung.Engine.Blocks;
+
 namespace Testumgebung.Presentation.ViewModels;
 
 public sealed partial class EditorViewModel
@@ -34,9 +36,14 @@ public sealed partial class EditorViewModel
         if (search.Length == 0) return true;
         // Alle Suchwörter müssen vorkommen; Kategorie und Beschreibung helfen bei unbekannten Fachbegriffen.
         var text = $"{category} {item.DisplayName} {item.Description} {item.BlockType}";
+        if (IsCommunicationCategory(category)) text += " Kommunikation";
         return search.Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .All(word => text.Contains(word, StringComparison.CurrentCultureIgnoreCase));
     }
+
+    private static bool IsCommunicationCategory(string name) => name is CommunicationBlocks.CanCategory or
+        CommunicationBlocks.LinCategory or CommunicationBlocks.DiagnosticCategory or CommunicationBlocks.AutomationCategory or
+        CommunicationBlocks.SerialCategory or CommunicationBlocks.NetworkCategory;
 
     private static int PaletteRank(string name) => name switch
     {

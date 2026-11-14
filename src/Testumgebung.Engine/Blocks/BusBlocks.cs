@@ -68,9 +68,8 @@ public static class BusBlocks
 
     public static void Register(BlockCatalog c)
     {
-        var cat = CommunicationBlocks.Category;
 
-        c.Register(new(SignalRead, "CAN-Signal lesen (DBC)", cat, "measure",
+        c.Register(new(SignalRead, "CAN-Signal lesen (DBC)", CommunicationBlocks.CanCategory, "measure",
             "Wartet auf die Botschaft des Signals (frisch nach Verwerfen alter Rahmen), dekodiert es nach der Datenbank (Faktor, Offset, Byteorder, "
             + "Multiplex, Wertetabelle) und bewertet gegen Sollwert oder Grenzwerte.",
             [
@@ -82,7 +81,7 @@ public static class BusBlocks
             ],
             parameters => new SignalReadAction(parameters.Text("Ressource"), parameters.Text("Datenbank"), parameters.Text("Signal"), parameters.Number("Zeitlimit"), SignalCheck.From(parameters, withBytes: false))));
 
-        c.Register(new(MessageSend, "CAN-Botschaft senden (DBC)", cat, "arrow",
+        c.Register(new(MessageSend, "CAN-Botschaft senden (DBC)", CommunicationBlocks.CanCategory, "arrow",
             "Setzt die Botschaft aus Signalwerten zusammen (nicht genannte Signale mit Startwert, Multiplexer automatisch) und sendet sie – "
             + "optional mehrfach im Zyklus. J1939-Botschaften über 8 Bytes laufen über das Transportprotokoll.",
             [
@@ -97,9 +96,9 @@ public static class BusBlocks
             parameters => new MessageSendAction(parameters.Text("Ressource"), parameters.Text("Datenbank"), parameters.Text("Botschaft"), SignalValues.Parse(parameters.Optional("Werte")),
                 Math.Max(1, (int)(parameters.Number("Anzahl") ?? 1)), parameters.Number("Abstand"), ParseAddress(parameters.Optional("Quelladresse"), "Quelladresse"))));
 
-        RegisterDiagnosticBlocks(c, cat);
+        RegisterDiagnosticBlocks(c);
 
-        c.Register(new(J1939Receive, "J1939 empfangen", cat, "measure",
+        c.Register(new(J1939Receive, "J1939 empfangen", CommunicationBlocks.CanCategory, "measure",
             "Empfängt eine Parametergruppe (PGN) – einzeln, als BAM oder per RTS/CTS – optional nach einer Anforderung (PGN 59904). "
             + "Signal aus der Datenbank oder über Startbit/Länge; „nicht verfügbar“ (alle Bits 1) ist FAIL.",
             [
@@ -118,7 +117,7 @@ public static class BusBlocks
                 parameters.Bool("Anfordern"), ParseAddress(parameters.Optional("Eigene"), "Eigene Adresse") ?? 0xF9, TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 1000),
                 parameters.Optional("Datenbank"), parameters.Optional("Signal"), RawSignalFrom(parameters), SignalCheck.From(parameters, withBytes: true))));
 
-        c.Register(new(J1939Send, "J1939 senden", cat, "arrow",
+        c.Register(new(J1939Send, "J1939 senden", CommunicationBlocks.CanCategory, "arrow",
             "Sendet eine Parametergruppe mit Priorität, Quell- und Zieladresse; mehr als 8 Bytes über das Transportprotokoll (global BAM, sonst RTS/CTS).",
             [
                 Res("Pruefling_CAN"),
@@ -142,7 +141,7 @@ public static class BusBlocks
                     parameters.Text("Daten"), parameters.Optional("Datenbank"), parameters.Optional("Botschaft"), SignalValues.Parse(parameters.Optional("Werte")));
             }));
 
-        c.Register(new(LinRead, "LIN lesen", cat, "measure",
+        c.Register(new(LinRead, "LIN lesen", CommunicationBlocks.LinCategory, "measure",
             "Sendet als Master den Header und liest die Slave-Antwort; prüft Daten oder ein Signal (aus der LDF oder Startbit/Länge).",
             [
                 Res("Pruefling_LIN"),
@@ -159,7 +158,7 @@ public static class BusBlocks
                 parameters.Choice("Pruefsumme") == LinChecksums[1] ? LinChecksum.Classic : LinChecksum.Enhanced, TimeSpan.FromMilliseconds(parameters.Number("Zeitlimit") ?? 100),
                 RawSignalFrom(parameters), SignalCheck.From(parameters, withBytes: true))));
 
-        c.Register(new(LinSend, "LIN senden", cat, "arrow",
+        c.Register(new(LinSend, "LIN senden", CommunicationBlocks.LinCategory, "arrow",
             "Sendet als Master einen Frame mit Daten (Hex) oder aus Signalwerten der LDF.",
             [
                 Res("Pruefling_LIN"),
@@ -177,7 +176,7 @@ public static class BusBlocks
                     parameters.Choice("Pruefsumme") == LinChecksums[1] ? LinChecksum.Classic : LinChecksum.Enhanced);
             }));
 
-        c.Register(new(J1939Claim, "J1939 Adresse beanspruchen", cat, "arrow",
+        c.Register(new(J1939Claim, "J1939 Adresse beanspruchen", CommunicationBlocks.CanCategory, "arrow",
             "Beansprucht eine Quelladresse nach J1939-81 (Address Claimed, PGN 60928) mit dem eigenen 64-Bit-NAME und prüft 250 ms "
             + "lang auf Gegenansprüche. Verliert die eigene Station (kleinerer NAME der Gegenstelle), ist der Schritt FAIL. Optional "
             + "vorher alle Teilnehmer abfragen und in eine Variable schreiben.",
@@ -191,7 +190,7 @@ public static class BusBlocks
             parameters => new J1939ClaimAction(parameters.Text("Ressource"), ParseAddress(parameters.Text("Adresse"), "Quelladresse") ?? 0x80, ParseName(parameters.Text("Name")),
                 parameters.Bool("Abfragen"), parameters.Optional("Ziel"))));
 
-        c.Register(new(LinSchedule, "LIN-Fahrplan", cat, "measure",
+        c.Register(new(LinSchedule, "LIN-Fahrplan", CommunicationBlocks.LinCategory, "measure",
             "Arbeitet eine LIN-Fahrplantabelle ab: je Zeile ein Frame (empfangen oder senden) mit festem Abstand. Optional mehrere Durchläufe. "
             + "Unbeantwortete Subscriber-Frames sind FAIL (oder nur Hinweis).",
             [
@@ -205,7 +204,7 @@ public static class BusBlocks
             parameters => new LinScheduleAction(parameters.Text("Ressource"), parameters.Optional("Datenbank"), parameters.Text("Tabelle"), Math.Max(1, (int)(parameters.Number("Durchlaeufe") ?? 1)),
                 parameters.Bool("FehlendFail"))));
 
-        c.Register(new(DoIpDiscover, "DoIP Fahrzeugsuche", cat, "measure",
+        c.Register(new(DoIpDiscover, "DoIP Fahrzeugsuche", CommunicationBlocks.DiagnosticCategory, "measure",
             "Sendet eine DoIP-Fahrzeugsuche (Vehicle Identification Request, UDP 13400) und sammelt die antwortenden Steuergeräte/Gateways "
             + "(VIN, logische Adresse). Ohne Hardware-Reservierung. Optional auf eine erwartete VIN oder Adresse prüfen.",
             [
@@ -221,7 +220,7 @@ public static class BusBlocks
                 parameters.Optional("ErwarteteVin"), parameters.Optional("ErwarteteAdresse") is { } argument ? ParseWord(argument, 0, "Erwartete Adresse") : null,
                 (int?)parameters.Number("Mindestens"), parameters.Optional("Ziel"))));
 
-        c.Register(new(OpcUaAccess, "OPC UA", cat, "measure",
+        c.Register(new(OpcUaAccess, "OPC UA", CommunicationBlocks.AutomationCategory, "measure",
             "Liest oder schreibt einen OPC-UA-Variablenknoten, ruft eine Methode auf oder wartet auf eine Datenänderung (Abo). "
             + "Gelesene/zurückgegebene Werte können gegen Sollwert oder Grenzwerte geprüft werden.",
             [
@@ -246,9 +245,9 @@ public static class BusBlocks
 
     // ------------------------------------------------------------------ Hilfen
 
-    private static void RegisterDiagnosticBlocks(BlockCatalog blockCatalog, string cat)
+    private static void RegisterDiagnosticBlocks(BlockCatalog blockCatalog)
     {
-        blockCatalog.Register(new(UdsRequest, "UDS-Diagnose", cat, "measure",
+        blockCatalog.Register(new(UdsRequest, "UDS-Diagnose", CommunicationBlocks.DiagnosticCategory, "measure",
             "Sendet eine Diagnoseanfrage über ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet "
             + "und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder prüft eine erwartete negative Antwort.",
             [
@@ -274,7 +273,7 @@ public static class BusBlocks
                     SignalCheck.From(parameters, withBytes: true));
             }));
 
-        blockCatalog.Register(new(UdsSecurity, "UDS-Sicherheitszugang", cat, "arrow",
+        blockCatalog.Register(new(UdsSecurity, "UDS-Sicherheitszugang", CommunicationBlocks.DiagnosticCategory, "arrow",
             "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schlüssel und sendet ihn (Stufe+1). Schlüsselverfahren "
             + "wählbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder „Ausdruck je Byte“ (s = Seedbyte, i = Index). Seed aus lauter Nullen "
             + "= bereits freigeschaltet. Negative Antwort (z. B. falscher Schlüssel) = FAIL.",

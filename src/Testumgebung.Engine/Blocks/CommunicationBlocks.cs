@@ -18,7 +18,8 @@ namespace Testumgebung.Engine.Blocks;
 /// </summary>
 public static class CommunicationBlocks
 {
-    public const string Category = "Kommunikation";
+    public const string CanCategory = "CAN/J1939", LinCategory = "LIN", DiagnosticCategory = "Diagnose (UDS, DoIP)",
+        AutomationCategory = "Modbus/OPC UA", NetworkCategory = "Netzwerk/Dateien (HTTP, SSH, SFTP)";
     public const string SerialCategory = "Seriell/TCP/UDP";
     public const string Send = "komm.senden";
     public const string Receive = "komm.empfangen";
@@ -87,7 +88,7 @@ public static class CommunicationBlocks
             [Res("Pruefling_Seriell"), .. NetworkBlocks.ConnectionParameters(), .. SendParameters(), .. ReceiveParameters()],
             parameters => new StreamAction(parameters.Text("Ressource"), SendSpec.From(parameters), ReceiveSpec.From(parameters)) { Endpoint = parameters.Optional("Adresse"), Options = parameters.Optional("Verbindungsoptionen") }));
 
-        c.Register(new(ModbusRead, "Modbus lesen", Category, "measure",
+        c.Register(new(ModbusRead, "Modbus lesen", AutomationCategory, "measure",
             "Liest Register oder Bits (RTU/TCP), wandelt den Datentyp, skaliert (Wert × Faktor + Offset) und bewertet gegen Grenzwerte bzw. Sollwert.",
             [
                 Res("Pruefling_Modbus"),
@@ -104,7 +105,7 @@ public static class CommunicationBlocks
                 (int?)parameters.Number("Laenge"), parameters.Number("Faktor") ?? 1, parameters.Number("Offset") ?? 0, parameters.Expr("Sollwert"),
                 parameters.Optional("Ziel"), parameters.Expr("Untergrenze"), parameters.Expr("Obergrenze"), parameters.Text("Einheit"))));
 
-        c.Register(new(ModbusWrite, "Modbus schreiben", Category, "arrow",
+        c.Register(new(ModbusWrite, "Modbus schreiben", AutomationCategory, "arrow",
             "Schreibt einen Wert in Holding-Register oder Coils; optional Zurücklesen (Abweichung = FAIL).",
             [
                 Res("Pruefling_Modbus"),
@@ -117,7 +118,7 @@ public static class CommunicationBlocks
             parameters => new ModbusWriteAction(parameters.Text("Ressource"), parameters.Text("Adresse"), ModbusCodec.ParseType(parameters.Choice("Datentyp")), parameters.Choice("Wortfolge") == WordOrders[1],
                 parameters.Expr("Wert")!, parameters.Bool("Zuruecklesen"))));
 
-        c.Register(new(CanSend, "CAN senden", Category, "arrow",
+        c.Register(new(CanSend, "CAN senden", CanCategory, "arrow",
             "Sendet einen CAN- oder CAN-FD-Rahmen. Daten in Hex; {Ausdruck} fügt ein Byte ein.",
             [
                 Res("Pruefling_CAN"),
@@ -133,7 +134,7 @@ public static class CommunicationBlocks
                 return new CanSendAction(parameters.Text("Ressource"), CanIdSpec.From(parameters, "Id", "Erweitert"), parameters.Bool("Fd"), parameters.Bool("Brs"), parameters.Text("Daten"));
             }));
 
-        c.Register(new(CanReceive, "CAN empfangen", Category, "measure",
+        c.Register(new(CanReceive, "CAN empfangen", CanCategory, "measure",
             "Wartet auf einen Rahmen (ID/Maske), optional nach einer Anfrage; prüft Daten oder liest ein Signal (Startbit, Länge, Byteorder, Faktor, Offset).",
             [
                 Res("Pruefling_CAN"),
