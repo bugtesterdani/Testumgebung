@@ -291,6 +291,26 @@ public sealed class SettingsViewModel : ObservableObject
         set { _edit.ResultFolder = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); OnPropertyChanged(); }
     }
 
+    public string PythonExecutable
+    {
+        get => _edit.PythonExecutable ?? "";
+        set { _edit.PythonExecutable = OptionalPath(value); OnPropertyChanged(); }
+    }
+
+    public string CppCompiler
+    {
+        get => _edit.CppCompiler ?? "";
+        set { _edit.CppCompiler = OptionalPath(value); OnPropertyChanged(); }
+    }
+
+    public string CppCacheDirectory
+    {
+        get => _edit.CppCacheDirectory ?? "";
+        set { _edit.CppCacheDirectory = OptionalPath(value); OnPropertyChanged(); }
+    }
+
+    private static string? OptionalPath(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     public string ResultFolderHint => $"Leer = {Testumgebung.Persistence.Results.ResultFileStore.DefaultFolder}";
 
     // ------------------------------------------------------------------ Datenbank

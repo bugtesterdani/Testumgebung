@@ -38,6 +38,21 @@ public sealed class SettingsTests : IDisposable
         public string? Unprotect(string stored) => stored.StartsWith("rev:", StringComparison.Ordinal) ? new string(stored[4..].Reverse().ToArray()) : null;
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Runtime_paths_are_saved_and_environment_values_take_precedence(bool useEnvironment)
+    {
+        var store = new SettingsStore(P("runtime-settings.json"), PlainSecretProtector.Instance);
+        store.Save(new AppSettings { PythonExecutable = "saved-python", CppCompiler = "saved-cxx", CppCacheDirectory = "saved-cache" });
+        var settings = store.Load();
+        var runtime = ApplicationOverrides.Runtime(settings, "selected-python", name => useEnvironment ? name : null);
+        Assert.Equal(useEnvironment ? "TESTUMGEBUNG_PYTHON" : "saved-python", runtime.PythonExecutable);
+        Assert.Equal(useEnvironment ? "TESTUMGEBUNG_CXX" : "saved-cxx", runtime.CppCompiler);
+        Assert.Equal(useEnvironment ? "TESTUMGEBUNG_CPP_CACHE" : "saved-cache", runtime.CppCacheDirectory);
+        Assert.Equal("saved-python", settings.PythonExecutable);
+    }
+
     [Fact]
     public void Einstellungsdatei_speichert_Geheimnisse_geschuetzt_und_meldet_Unlesbares()
     {

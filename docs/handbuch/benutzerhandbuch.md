@@ -479,6 +479,10 @@ Im Ablauf für jede Aktion den Baustein **Kurvenausgabe** mit **Laden**, **Über
 
 ## 15. Einstellungen, Sicherung und Betrieb
 
+Unter **Verwaltung → Datenbank** lassen sich die Pfade für Python, den C++-Compiler und den C++-Cache speichern. Sie gelten nach dem Neustart. Die Umgebungsvariablen `TESTUMGEBUNG_PYTHON`, `TESTUMGEBUNG_CXX` und `TESTUMGEBUNG_CPP_CACHE` haben Vorrang vor diesen Feldern. `TESTUMGEBUNG_ERGEBNISSE` überschreibt den Ergebnisordner, `TESTUMGEBUNG_DB=aus` schaltet die Datenbankspeicherung aus. Die gespeicherten Vorgaben bleiben dabei erhalten.
+
+**Verwaltung → Sicherung** zeigt die lokalen Konfigurationsdateien mit Pfad und Zweck. **Ordner öffnen** öffnet den Ablageort im Explorer.
+
 ![Bild 12: Ergebnisablage, Datenbank und Meldewege](bilder/07-einstellungen.png)
 
 Unter **Verwaltung → Datenbank** den Ergebnisordner und die Datenbank konfigurieren. Unter **Verwaltung → Meldewege** die benötigten Meldewege einrichten. Einstellungen können je Windows-Benutzer getrennt sein; beim Wechsel des Benutzerkontos daher Ablage und Releases kontrollieren.

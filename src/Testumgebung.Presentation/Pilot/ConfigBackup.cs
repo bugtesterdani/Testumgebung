@@ -11,7 +11,7 @@ using System.Text.Json.Nodes;
 namespace Testumgebung.Presentation.Pilot;
 
 /// <summary>Eine sicherbare Konfigurationsdatei des Rechners.</summary>
-public sealed record BackupSource(string Name, string Path, string Description);
+public sealed record BackupSource(string Name, string Path, string Description, bool ProtectOnRestore = false);
 
 public sealed record BackupFileEntry(string Name, string Description, string Sha256, long Size, bool ContainsProtectedSecrets);
 
@@ -51,11 +51,17 @@ public static class ConfigBackup
     };
 
     /// <summary>Standardquellen des Rechners.</summary>
-    public static IReadOnlyList<BackupSource> DefaultSources(string settingsPath, string accessPath, string stationsPath) =>
+    public static IReadOnlyList<BackupSource> DefaultSources(string settingsPath, string accessPath, string stationsPath, string? localProgramCatalog = null) =>
     [
         new("einstellungen.json", settingsPath, "Ergebnisordner, Datenbank, Outbox, MQTT (Benutzerprofil)"),
         new("zugang.json", accessPath, "Entra-App und Rechte je Konto (ProgramData)"),
         new("pruefplaetze.json", stationsPath, "Geräte, Prüfplätze, Zuordnung, Auswahl-/Auftragsablauf (ProgramData)"),
+        new("programmquellen.json", localProgramCatalog ?? System.IO.Path.Combine(Testumgebung.Persistence.Releases.FolderReleaseStore.DefaultFolder, "Quellen", "programmquellen.json"),
+            "Lokaler Programmkatalog; bei Serverbetrieb liegt der aktive Katalog in der Datenbank"),
+        new("quellen-zugang.json", Testumgebung.Presentation.Releases.SourceCredentialStore.DefaultFile, "Geschützte Zugangsdaten für Programmquellen", ProtectOnRestore: true),
+        new("python-environment.json", Testumgebung.Workers.PythonEnvironments.DefaultSelectionFile, "Auswahl der externen Python-Umgebung"),
+        new("laufzeitdateien.json", Testumgebung.Persistence.Releases.ExternalRuntimeInventory.ConfigurationPath, "Externe Laufzeitdateien für die Freigabeprüfung"),
+        new("versionsverwaltungsclients.json", Testumgebung.Persistence.Programs.ProgramSourceClientSettings.DefaultFile, "Pfade der Versionsverwaltungsclients"),
     ];
 
     public static BackupManifest Create(string zipPath, IEnumerable<BackupSource> sources, DateTimeOffset now)
@@ -78,7 +84,7 @@ public static class ConfigBackup
                 var entry = zip.CreateEntry(source.Name, CompressionLevel.Optimal);
                 using (var stream = entry.Open()) stream.Write(data);
                 manifest.Files.Add(new BackupFileEntry(source.Name, source.Description, Convert.ToHexStringLower(SHA256.HashData(data)), data.Length,
-                    HasProtectedSecrets(data)));
+                    source.ProtectOnRestore || HasProtectedSecrets(data)));
             }
             var zipArchiveEntry = zip.CreateEntry(ManifestName);
             using var ms = zipArchiveEntry.Open();

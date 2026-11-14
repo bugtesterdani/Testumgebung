@@ -41,14 +41,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         _ = new AdaptiveWindowLayout(this, LayoutViewport, LayoutContent);
         _showMessage = startup?.ShowMessage ?? ((text, buttons, icon) => MessageBox.Show(text, "Testumgebung", buttons, icon));
-        // Explizite Umgebung, gespeicherte externe Kopie, sonst mitgelieferte Laufzeit.
-        _codeRuntime = new CodeRuntime(new CodeRuntimeOptions
-        {
-            PythonExecutable = Environment.GetEnvironmentVariable("TESTUMGEBUNG_PYTHON") is { Length: > 0 } py ? py : new PythonEnvironments().LoadSelection(),
-        });
-
         var (store, services) = LoadResultServices(startup);
         _services = services;
+        _codeRuntime = new CodeRuntime(ApplicationOverrides.Runtime(services.Current, new PythonEnvironments().LoadSelection()));
 
         var arguments = startup?.Arguments ?? Environment.GetCommandLineArgs();
         var developmentMode = arguments.Contains("--development", StringComparer.OrdinalIgnoreCase);
@@ -141,12 +136,10 @@ public partial class MainWindow : Window
     private static (SettingsStore Store, ResultServices Services) LoadResultServices(MainWindowStartup? startup)
     {
         // Einstellungen: %LOCALAPPDATA%\Testumgebung\einstellungen.json (Geheimnisse per DPAPI geschützt).
-        // Ohne Datei gelten die Standardwerte; TESTUMGEBUNG_ERGEBNISSE und TESTUMGEBUNG_DB=aus wirken nur dann.
         var store = startup?.SettingsStore ?? new SettingsStore(SettingsStore.DefaultPath, new DpapiSecretProtector());
-        var defaults = new AppSettings { ResultFolder = Env("TESTUMGEBUNG_ERGEBNISSE") };
-        if (string.Equals(Env("TESTUMGEBUNG_DB"), "aus", StringComparison.OrdinalIgnoreCase)) defaults.Database.Provider = DatabaseChoice.None;
-        var services = startup?.CreateResultServices is { } createServices ? createServices(store.Load(defaults))
-            : new ResultServices(store.Load(defaults), new DatabaseProviderRegistry());
+        var settings = store.Load();
+        var services = startup?.CreateResultServices is { } createServices ? createServices(settings)
+            : new ResultServices(settings, new DatabaseProviderRegistry());
 
         return (store, services);
     }
@@ -163,7 +156,6 @@ public partial class MainWindow : Window
 
     public ShellViewModel Shell { get; }
 
-    private static string? Env(string name) => Environment.GetEnvironmentVariable(name) is { Length: > 0 } value ? value : null;
 
     private void UpdateClock()
         => ClockText.Text = DateTime.Now.ToString("ddd, dd.MM.yyyy   HH:mm", CultureInfo.GetCultureInfo("de-DE"));

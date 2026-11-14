@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verdrahtet Ergebnisablage, Datenbank und Meldewege mit den aktuellen Anwendungseinstellungen.
  */
@@ -87,7 +87,8 @@ public sealed class ResultServices : IAsyncDisposable
     {
         Current = settings;
         ApplyWarning = null;
-        Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(settings.ResultFolder) ? ResultFileStore.DefaultFolder : settings.ResultFolder, RecoveryFolder);
+        var resultFolder = ApplicationOverrides.Value("TESTUMGEBUNG_ERGEBNISSE") ?? settings.ResultFolder;
+        Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(resultFolder) ? ResultFileStore.DefaultFolder : resultFolder, RecoveryFolder);
 
         var outbox = settings.Outbox;
         Outbox.Options = new OutboxOptions
@@ -98,12 +99,13 @@ public sealed class ResultServices : IAsyncDisposable
             AttemptTimeout = TimeSpan.FromSeconds(Math.Max(1, outbox.AttemptTimeoutSeconds)),
         };
 
-        Database.Inner = CreateDatabase(settings.Database, out var warning);
+        var database = ApplicationOverrides.Database(settings.Database);
+        Database.Inner = CreateDatabase(database, out var warning);
         ReleaseStore.Inner = Database.Inner is SqlRunDatabase sql ? new SqlReleaseStore(sql) : new FolderReleaseStore(ReleaseFolder);
         ProgramCatalog.Inner = Database.Inner is SqlRunDatabase programDb ? new SqlProgramCatalogStore(programDb)
             : new Testumgebung.Persistence.Programs.FolderProgramCatalogStore(Path.Combine(ReleaseFolder, "Quellen"));
         ApplyWarning = warning;
-        Pipeline.DatabaseEnabled = settings.Database.Provider != DatabaseChoice.None;
+        Pipeline.DatabaseEnabled = database.Provider != DatabaseChoice.None;
 
         var old = _mqtt;
         _mqtt = null;
