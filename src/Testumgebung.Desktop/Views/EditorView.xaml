@@ -489,6 +489,8 @@
                 </Grid>
 
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Parameter" Margin="0,14,0,6" />
+                <CheckBox Content="Erweitert" IsChecked="{Binding ShowAdvanced}" Margin="0,0,0,6"
+                          Visibility="{Binding HasAdvancedParameters, Converter={StaticResource BoolVis}}" />
                 <ItemsControl ItemsSource="{Binding Parameters}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

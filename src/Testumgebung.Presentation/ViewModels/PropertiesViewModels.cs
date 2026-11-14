@@ -775,7 +775,7 @@ public sealed class ParameterRowViewModel : ObservableObject
 
     /// <summary>Wird durch eine eigene Oberfläche ersetzt (z. B. Bausteinauswahl).</summary>
     private readonly bool _hidden;
-    public bool IsHidden { get => _hidden || !_owner.IsParameterActive(Descriptor.Name); init => _hidden = value; }
+    public bool IsHidden { get => _hidden || !_owner.IsParameterActive(Descriptor.Name) || !_owner.IsMetadataVisible(Descriptor); init => _hidden = value; }
     internal void RefreshVisibility()
     {
         OnPropertyChanged(nameof(IsHidden));
@@ -849,6 +849,30 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     public string BlockDescription => Block?.Description ?? "Im Code definierter Schritt – nicht im Editor konfigurierbar.";
 
     public ObservableCollection<ParameterRowViewModel> Parameters { get; } = [];
+
+    public bool HasAdvancedParameters => Block?.Parameters.Any(parameter => parameter.Advanced) == true;
+
+    private bool _showAdvanced;
+    public bool ShowAdvanced
+    {
+        get => _showAdvanced;
+        set
+        {
+            if (!SetProperty(ref _showAdvanced, value)) return;
+            foreach (var parameter in Parameters) parameter.RefreshVisibility();
+        }
+    }
+
+    internal bool IsMetadataVisible(ParameterDescriptor parameter)
+    {
+        if (!parameter.Advanced && parameter.VisibleWhen is null) return true;
+        // A diagnostic can originate in an inactive transport field. Keep those fields editable until it is fixed.
+        if (HasDiagnostics) return true;
+        if (parameter.Advanced && !ShowAdvanced) return false;
+        if (parameter.VisibleWhen is not { } condition) return true;
+        var controllingField = Block?.Parameters.FirstOrDefault(field => field.Name == condition.Parameter);
+        return Step.Parameters.GetValueOrDefault(condition.Parameter, controllingField?.Default ?? "") == condition.Value;
+    }
 
     public string Name
     {
@@ -933,8 +957,8 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     internal void ParametersChanged()
     {
-        foreach (var parameter in Parameters) parameter.RefreshVisibility();
         Diagnostics = _editor.DiagnosticsFor(Step);
+        foreach (var parameter in Parameters) parameter.RefreshVisibility();
         _node.Diagnostic = Diagnostics.FirstOrDefault();
         _node.Refresh();
         _editor.MarkChanged();

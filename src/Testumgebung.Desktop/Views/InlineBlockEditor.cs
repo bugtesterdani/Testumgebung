@@ -51,6 +51,12 @@ public sealed partial class InlineBlockEditor : UserControl
     }
     private void BuildStep(Panel fields, StepPropertiesViewModel step)
     {
+        if (step.HasAdvancedParameters)
+        {
+            var advanced = new CheckBox { Content = "Erweitert", VerticalAlignment = VerticalAlignment.Center };
+            advanced.SetBinding(ToggleButton.IsCheckedProperty, Bind(step, nameof(step.ShowAdvanced)));
+            fields.Children.Add(advanced);
+        }
         foreach (var row in step.Parameters)
         {
             if (row.IsVariable && row.Value.StartsWith("_BlockZweig_", StringComparison.Ordinal)) continue;

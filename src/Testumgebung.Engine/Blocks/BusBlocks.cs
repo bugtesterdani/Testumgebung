@@ -279,7 +279,7 @@ public static class BusBlocks
             + "= bereits freigeschaltet. Negative Antwort (z. B. falscher Schlüssel) = FAIL.",
             [
                 Res("Pruefling_Diagnose"),
-                .. DiagParameters(),
+                .. DiagParameters().Select(field => field with { VisibleWhen = null, Advanced = false }),
                 new("Stufe", "Seed-Stufe", ParameterKind.Text, "0x01", Required: true, Hint: "ungerade: 0x01, 0x03, …; Schlüssel geht an Stufe+1"),
                 new("Verfahren", "Schlüsselverfahren", ParameterKind.Choice, SecurityMethods[0], Choices: SecurityMethods),
                 new("Konstante", "Konstante (Hex)", ParameterKind.Text, "5A", Hint: "für XOR/Addition/Add-Rotate-XOR; byteweise wiederholt"),
@@ -304,16 +304,16 @@ public static class BusBlocks
     [
         new("Transport", "Transport", ParameterKind.Choice, DiagTransports[0], Choices: DiagTransports,
             Hint: "DoIP: Ressource ist ein TCP-Client-Gerät (Port 13400)"),
-        new("AnfrageId", "CAN: Anfrage-ID (Tester)", ParameterKind.Text, "0x7E0"),
-        new("AntwortId", "CAN: Antwort-ID (Steuergerät)", ParameterKind.Text, "0x7E8"),
-        new("Erweitert", "CAN: 29-Bit-IDs", ParameterKind.Bool, "false"),
-        new("Fd", "CAN FD (bis 64 Bytes je Rahmen)", ParameterKind.Bool, "false"),
-        new("AdresseTx", "CAN: Adressbyte Anfrage", ParameterKind.Text, Hint: "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal"),
-        new("AdresseRx", "CAN: Adressbyte Antwort", ParameterKind.Text, Hint: "erstes Datenbyte der Antworten, z. B. 0xF1"),
-        new("Fuellbyte", "CAN: Füllbyte", ParameterKind.Text, "CC"),
-        new("TesterAdresse", "DoIP: Tester-Adresse", ParameterKind.Text, "0x0E00"),
-        new("SteuergeraetAdresse", "DoIP: Steuergerät-Adresse", ParameterKind.Text, "0x1000"),
-        new("Nad", "LIN: NAD (Knotenadresse)", ParameterKind.Text, "0x01"),
+        new("AnfrageId", "CAN: Anfrage-ID (Tester)", ParameterKind.Text, "0x7E0", VisibleWhen: new("Transport", DiagTransports[0])),
+        new("AntwortId", "CAN: Antwort-ID (Steuergerät)", ParameterKind.Text, "0x7E8", VisibleWhen: new("Transport", DiagTransports[0])),
+        new("Erweitert", "CAN: 29-Bit-IDs", ParameterKind.Bool, "false", VisibleWhen: new("Transport", DiagTransports[0]), Advanced: true),
+        new("Fd", "CAN FD (bis 64 Bytes je Rahmen)", ParameterKind.Bool, "false", VisibleWhen: new("Transport", DiagTransports[0]), Advanced: true),
+        new("AdresseTx", "CAN: Adressbyte Anfrage", ParameterKind.Text, Hint: "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal", VisibleWhen: new("Transport", DiagTransports[0]), Advanced: true),
+        new("AdresseRx", "CAN: Adressbyte Antwort", ParameterKind.Text, Hint: "erstes Datenbyte der Antworten, z. B. 0xF1", VisibleWhen: new("Transport", DiagTransports[0]), Advanced: true),
+        new("Fuellbyte", "CAN: Füllbyte", ParameterKind.Text, "CC", VisibleWhen: new("Transport", DiagTransports[0]), Advanced: true),
+        new("TesterAdresse", "DoIP: Tester-Adresse", ParameterKind.Text, "0x0E00", VisibleWhen: new("Transport", DiagTransports[1])),
+        new("SteuergeraetAdresse", "DoIP: Steuergerät-Adresse", ParameterKind.Text, "0x1000", VisibleWhen: new("Transport", DiagTransports[1])),
+        new("Nad", "LIN: NAD (Knotenadresse)", ParameterKind.Text, "0x01", VisibleWhen: new("Transport", DiagTransports[2])),
     ];
 
     internal static byte ParseByte(string text, string label)
