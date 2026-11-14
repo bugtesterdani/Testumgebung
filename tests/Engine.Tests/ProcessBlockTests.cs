@@ -4,6 +4,7 @@ using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Persistence;
+using Testumgebung.Presentation.ViewModels;
 using static Testumgebung.Engine.Tests.Kit;
 
 namespace Testumgebung.Engine.Tests;
@@ -29,6 +30,27 @@ public sealed class ProcessBlockTests
         var (type, action) = ProcessBlocks.Replacement(legacy)!.Value;
         parameters = new(parameters) { [ProcessBlocks.ActionParameter] = action };
         return BlockCatalog.Default.Create(type, id, parameters: parameters);
+    }
+
+    [Theory]
+    [InlineData(ProcessBlocks.Communication, "Senden", "Text", "Muster")]
+    [InlineData(ProcessBlocks.Communication, "Auf Ausgabe warten", "Muster", "Text")]
+    [InlineData(ProcessBlocks.StatusEnd, "Abfragen", "ExitcodeZiel", "Zeitlimit")]
+    [InlineData(ProcessBlocks.StatusEnd, "Warten", "Zeitlimit", null)]
+    [InlineData(ProcessBlocks.StatusEnd, "Beenden", "Prozess", "ExitcodeZiel")]
+    public void Editor_shows_fields_for_selected_process_action(string type, string action, string visible, string? hidden)
+    {
+        var step = BlockCatalog.Default.Create(type, "process");
+        var editor = new EditorViewModel(new TestProject(Test(Group("loop").Add(step))));
+        editor.SelectedNode = editor.FindNode("process");
+        var properties = Assert.IsType<StepPropertiesViewModel>(editor.Properties);
+        var fields = properties.Parameters.ToDictionary(field => field.Descriptor.Name);
+        var actionField = fields[ProcessBlocks.ActionParameter];
+        Assert.False(actionField.IsHidden);
+        actionField.Value = action;
+        Assert.False(fields[visible].IsHidden);
+        if (hidden is not null) Assert.True(fields[hidden].IsHidden);
+        Assert.False(fields["Prozess"].IsHidden);
     }
 
     [Theory]
