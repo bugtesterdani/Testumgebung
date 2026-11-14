@@ -175,7 +175,8 @@ public static class ConfigBackup
     {
         try
         {
-            return JsonNode.Parse(data) is not null;
+            using var document = JsonDocument.Parse(data);
+            return true;
         }
         catch (JsonException)
         {
@@ -183,12 +184,18 @@ public static class ConfigBackup
         }
     }
 
+    private static bool HasSecret(JsonObject settings, string section, params string[] names)
+        => settings[section] is JsonObject values && names.Any(name => values[name] is not null);
+
     private static bool HasProtectedSecrets(byte[] data)
     {
         try
         {
-            var node = JsonNode.Parse(data);
-            return node?["database"]?["protectedConnectionString"] is not null || node?["mqtt"]?["protectedPassword"] is not null;
+            if (JsonNode.Parse(data) is not JsonObject settings) return false;
+            return HasSecret(settings, "database", "connectionString", "protectedConnectionString")
+                || HasSecret(settings, "mqtt", "password", "protectedPassword")
+                || HasSecret(settings, "http", "headerValue")
+                || HasSecret(settings, "opcUa", "password");
         }
         catch (JsonException)
         {

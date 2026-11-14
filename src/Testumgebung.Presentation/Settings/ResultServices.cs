@@ -87,8 +87,7 @@ public sealed class ResultServices : IAsyncDisposable
     {
         Current = settings;
         ApplyWarning = null;
-        var resultFolder = ApplicationOverrides.Value("TESTUMGEBUNG_ERGEBNISSE") ?? settings.ResultFolder;
-        Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(resultFolder) ? ResultFileStore.DefaultFolder : resultFolder, RecoveryFolder);
+        ConfigureResultFiles(settings.ResultFolder);
 
         var outbox = settings.Outbox;
         Outbox.Options = new OutboxOptions
@@ -127,6 +126,12 @@ public sealed class ResultServices : IAsyncDisposable
         if (oldHttp is not null) _ = oldHttp.DisposeAsync().AsTask();
         if (oldOpc is not null) _ = oldOpc.DisposeAsync().AsTask();
         Applied?.Invoke();
+    }
+
+    private void ConfigureResultFiles(string? configuredFolder)
+    {
+        var folder = ApplicationOverrides.Value("TESTUMGEBUNG_ERGEBNISSE") ?? configuredFolder;
+        Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(folder) ? ResultFileStore.DefaultFolder : folder, RecoveryFolder);
     }
 
     private void ConfigureOpcUa(OpcUaSettings settings)

@@ -120,7 +120,9 @@ public sealed class PilotTests : IDisposable
 
         var pythonSelection = sources.Single(source => source.Name == "python-environment.json").Path;
         Directory.CreateDirectory(Path.GetDirectoryName(pythonSelection)!);
-        File.WriteAllText(pythonSelection, "{}");
+        File.WriteAllText(pythonSelection, "\"C:\\\\Python\\\\python.exe\"");
+        var inventory = sources.Single(source => source.Name == "laufzeitdateien.json").Path;
+        File.WriteAllText(inventory, "[]");
         var ui = new QueueDispatcher();
         var zip = P("sicherung.zip");
         var restoredCount = 0;
@@ -138,7 +140,8 @@ public sealed class PilotTests : IDisposable
         File.WriteAllText(stations, "{\"format\":1,\"devices\":[],\"stations\":[]}");
         page.OpenBackupCommand.Execute(null);
         Assert.Contains("Prüfsummen in Ordnung", page.InspectionText);
-        Assert.Equal(3, page.BackupFiles.Count);
+        Assert.Equal(4, page.BackupFiles.Count);
+        page.BackupFiles.Single(f => f.Name == "laufzeitdateien.json").Selected = false;
         page.BackupFiles.Single(f => f.Name == "python-environment.json").Selected = false;
         page.BackupFiles.Single(f => f.Name == "einstellungen.json").Selected = false;
         Assert.True(page.RestoreCommand.CanExecute(null));
