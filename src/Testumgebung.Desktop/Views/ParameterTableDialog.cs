@@ -20,7 +20,7 @@ internal static class ParameterTableDialog
 
         using var data = new DataTable();
         foreach (var name in table.Columns) data.Columns.Add(name, typeof(string));
-        foreach (var row in table.Rows) data.Rows.Add(row.Cast<object>().ToArray());
+        foreach (var row in table.Rows) data.Rows.Add(row.Select(cell => (object?)cell ?? DBNull.Value).ToArray());
         var grid = new DataGrid { ItemsSource = data.DefaultView, AutoGenerateColumns = true, CanUserAddRows = false, CanUserDeleteRows = false, CanUserSortColumns = false, SelectionMode = DataGridSelectionMode.Extended };
         var dialog = CreateWindow(source, field.Label);
         var content = Layout(dialog, grid, out var save, out var errorText);
@@ -51,7 +51,7 @@ internal static class ParameterTableDialog
         if (!grid.CommitEdit(DataGridEditingUnit.Cell, true) || !grid.CommitEdit(DataGridEditingUnit.Row, true)) return;
         try
         {
-            var rows = data.Rows.Cast<DataRow>().Select(row => row.ItemArray.Select(cell => cell as string ?? "").ToArray()).ToArray();
+            var rows = data.Rows.Cast<DataRow>().Select(row => row.ItemArray.Select(cell => cell as string).ToArray()).ToArray();
             field.Owner.ApplyTableValues(ParameterTable.Write(field, rows));
             dialog.DialogResult = true;
         }

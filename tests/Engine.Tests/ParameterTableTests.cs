@@ -41,4 +41,17 @@ public sealed class ParameterTableTests
         field.Owner.ApplyTableValues(ParameterTable.Write(field, before.Rows));
         Assert.Equal(before.Rows.SelectMany(row => row), ParameterTable.Read(field).Rows.SelectMany(row => row));
     }
+
+    [Theory]
+    [InlineData("", "")]
+    [InlineData(null, "Start")]
+    public void Saving_rule_rows_preserves_empty_and_null_status_behavior(string? status, string expected)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new[] { new LiveProgressParser.Rule(Text: "Start", Percent: 10, Status: status) });
+        var field = Field(LiveLogBlocks.Monitor, "Textregeln", json);
+        field.Owner.ApplyTableValues(ParameterTable.Write(field, ParameterTable.Read(field).Rows));
+        var progress = new LiveProgressParser(field.Value);
+        progress.Push("Start\n");
+        Assert.Equal(expected, progress.Status);
+    }
 }
