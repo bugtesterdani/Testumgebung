@@ -44,6 +44,13 @@ public sealed class PairedStationsViewModel : ObservableObject
     {
         if (!CanStart) { Status = "Zwei verschiedene, freie Prüfplätze und einen Auftrag auswählen."; return; }
         var first = First!; var second = Second!;
+        var firstBlocked = first.BlockProductionForReference();
+        var secondBlocked = second.BlockProductionForReference();
+        if (firstBlocked || secondBlocked)
+        {
+            Status = "Gemeinsamer Start gesperrt. Offene Referenzprüfungen an den Prüfplätzen durchführen.";
+            return;
+        }
         _busy = true; _stopRequested = false; Refresh();
         var handover = new StationHandover();
         first.PairContext = new PairedStationContext(handover, 1);

@@ -45,8 +45,10 @@ public sealed class TestRunOptions
     /// der Lauf endet regulär über die Finalization. null = unbegrenzt.
     /// </summary>
     public int? DutLimit { get; init; }
+    public Func<bool>? CanBeginDut { get; init; }
 
     public bool ContinuousLoop { get; init; }
+    public bool SingleLoopIteration { get; init; }
     public IReadOnlyDictionary<string, object?>? SessionPresets { get; init; }
 
     /// <summary>
@@ -494,6 +496,7 @@ public sealed class TestRun
     private bool CanEnterGroup(GroupDefinition group, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
         if ((phase.IsCancelled || DutExitPending(phase)) && !forceEnter) return false;
+        if (group.IsDutRun && !isExit && Options.CanBeginDut?.Invoke() == false) return false;
         if (group.IsDutRun && !isExit && Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
         {
             Emit(new GroupNotEntered($"Prüflingsanzahl {limit} erreicht") { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = Combine(parentPath, group.Name), Iteration = parentIteration });
@@ -718,9 +721,16 @@ public sealed class TestRun
         return new NodeResult(accumulator.Rating, snapshot);
     }
 
+    private Repetition MainLoopRepetition(Repetition configured)
+    {
+        if (Options.SingleLoopIteration) return Repetition.Once;
+        return Options.ContinuousLoop ? Repetition.Endless : configured;
+    }
+
     private async Task<int> RunIterationsAsync(GroupDefinition group, Scope scope, ExecutionPhase phase, ResultAccumulator accumulator, string path, string childPath)
     {
-        var repetition = Options.ContinuousLoop && group == Definition.Loop ? Repetition.Endless : group.Repetition;
+        var isMainLoop = ReferenceEquals(group, Definition.Loop);
+        var repetition = isMainLoop ? MainLoopRepetition(group.Repetition) : group.Repetition;
         var repeatExpression = repetition.Expression is { } errorText ? Expression.Parse(errorText) : null;
         var start = Clock.Now;
         var iteration = 0;
@@ -753,6 +763,7 @@ public sealed class TestRun
 
         bool CanRepeat()
         {
+            if (isMainLoop && Options.CanBeginDut?.Invoke() == false) return false;
             if (iteration > 0 && Options.DutLimit is { } dutLimit && Volatile.Read(ref _dutsCompleted) >= dutLimit) return false;
             if (iteration > 0)
             {

@@ -43,10 +43,22 @@ public sealed partial class StationViewModel
             if (Selection.CanSubmitOrder) await Selection.StartSelectedAsync().ConfigureAwait(true);
             return;
         }
+        if (BlockProductionForReference()) return;
+        await StartStationProgramAsync().ConfigureAwait(true);
+    }
+
+    private async Task StartStationProgramAsync(ReferenceRunRequest? reference = null)
+    {
         TestProject project;
         ReleaseInfo? release = null;
         try
         {
+            if (reference is not null && Selection.Outcome is { Test: { } selected } outcome)
+            {
+                (project, release) = await LoadTestAsync(selected).ConfigureAwait(true);
+                await RunReferenceAsync(project, release, reference, outcome).ConfigureAwait(true);
+                return;
+            }
             if (_releases is null || UseDraft)
             {
                 project = _serializer.Clone(_projectSource());
@@ -73,7 +85,8 @@ public sealed partial class StationViewModel
             Error = ex.Message;
             return;
         }
-        await RunProjectAsync(project, release, null, null).ConfigureAwait(true);
+        if (reference is null) await RunProjectAsync(project, release, null, null).ConfigureAwait(true);
+        else await RunReferenceAsync(project, release, reference, null).ConfigureAwait(true);
     }
 
     /// <summary>
@@ -82,8 +95,13 @@ public sealed partial class StationViewModel
     /// </summary>
     internal async Task RunProjectAsync(TestProject project, ReleaseInfo? release, IReadOnlyDictionary<string, object?>? presets, int? dutLimit,
         string? selectionNote = null, bool simulationOnly = false, bool orderSession = false, string? pythonVenv = null)
+        => await RunProjectWithReferenceAsync(project, release, presets, dutLimit, selectionNote, simulationOnly, orderSession, pythonVenv, null).ConfigureAwait(true);
+
+    private async Task RunProjectWithReferenceAsync(TestProject project, ReleaseInfo? release, IReadOnlyDictionary<string, object?>? presets,
+        int? dutLimit, string? selectionNote, bool simulationOnly, bool orderSession, string? pythonVenv, ReferenceRunRequest? reference)
     {
-        if (IsRunning) return;
+        if (IsRunning || (!simulationOnly && reference is null && BlockProductionForReference())) return;
+        _referenceRun = reference;
         var completion = _completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _run = null;
         _runTask = null;
@@ -101,6 +119,7 @@ public sealed partial class StationViewModel
             finally
             {
                 _simulationOnly = false;
+                _referenceRun = null;
                 completion.TrySetResult();
                 OnPropertyChanged(nameof(IsSimulation));
                 RaiseRunState();
@@ -187,11 +206,13 @@ public sealed partial class StationViewModel
             PythonVenv = pythonVenv,
             PairedStation = PairContext,
             // Beide Seiten behalten bis zum nächsten gemeinsamen Auftrag dieselbe Version.
-            VersionSource = PairContext is null ? this : null,
+            VersionSource = _referenceRun is null && PairContext is null ? this : null,
             Presets = presets,
             SessionPresets = rootPresets,
             ContinuousLoop = orderSession,
+            SingleLoopIteration = _referenceRun is not null,
             DutLimit = dutLimit,
+            CanBeginDut = ProductionReferenceGuard(),
             EventHistoryLimit = 2000,
             RetainWaveformsInHistory = false,
             DevelopmentRun = _runIsDraft,
@@ -206,25 +227,7 @@ public sealed partial class StationViewModel
         _rejectedReleaseId = null;
         PendingVersionText = null;
         ActiveRelease = release;
-        IReadOnlyDictionary<string, object?> variantPresets;
-        try
-        {
-            variantPresets = LimitSetTable.Resolve(project, presets?.GetValueOrDefault(LimitSetTable.VariantParameter) as string);
-        }
-        catch (ProjectFormatException ex)
-        {
-            Error = ex.Message;
-            LogSelection("Grenzwertsatz fehlt oder ist ungültig", ex.Message, ResultRating.Error, "Kein Start");
-            return;
-        }
-        if (variantPresets.Count > 0)
-        {
-            var combined = new Dictionary<string, object?>(presets!, StringComparer.Ordinal);
-            combined.Remove(LimitSetTable.VariantParameter);
-            foreach (var (key, value) in variantPresets) combined[key] = value;
-            presets = combined;
-        }
-        var rootPresets = orderSession ? presets : variantPresets;
+        if (!TryPreparePresets(project, ref presets, orderSession, out var rootPresets)) return;
         if (!await ValidateRunProjectAsync(project, release).ConfigureAwait(true)) return;
 
         var devices = CalibrationDevices();
@@ -260,7 +263,34 @@ public sealed partial class StationViewModel
         // Der sichere Gerätezustand wird vor dem abschließenden UI-Status geprüft.
         // Ein abgeschlossenes Prüfergebnis bestätigt allein noch keinen sicheren Ausgangszustand.
         var safeProblems = await SafeStateAsync().ConfigureAwait(false);
+        FinishReferenceRun(status, safeProblems.Count == 0);
         _ui.Post(() => CompleteRunDisplay(status, safeProblems));
+    }
+
+    private bool TryPreparePresets(TestProject project, ref IReadOnlyDictionary<string, object?>? presets, bool orderSession,
+        out IReadOnlyDictionary<string, object?>? rootPresets)
+    {
+        rootPresets = null;
+        IReadOnlyDictionary<string, object?> variantPresets;
+        try
+        {
+            variantPresets = LimitSetTable.Resolve(project, presets?.GetValueOrDefault(LimitSetTable.VariantParameter) as string);
+        }
+        catch (ProjectFormatException ex)
+        {
+            Error = ex.Message;
+            LogSelection("Grenzwertsatz fehlt oder ist ungültig", ex.Message, ResultRating.Error, "Kein Start");
+            return false;
+        }
+        if (variantPresets.Count > 0)
+        {
+            var combined = new Dictionary<string, object?>(presets!, StringComparer.Ordinal);
+            combined.Remove(LimitSetTable.VariantParameter);
+            foreach (var (key, value) in variantPresets) combined[key] = value;
+            presets = combined;
+        }
+        rootPresets = orderSession || _referenceRun is not null ? presets : variantPresets;
+        return true;
     }
 
     private Task<RunStatus> StartPreparedRun(TestProject project, HardwareRegistry registry,
@@ -279,7 +309,7 @@ public sealed partial class StationViewModel
         if (_results is not null)
         {
             var resolver = _storage;
-            var recorder = new ResultRecorder(_run, _results.Journal, resolver);
+            var recorder = new ResultRecorder(_run, _results.Journal, resolver, _referenceRun?.Kind ?? ResultRunKind.Production);
             var snapshot = (_coordinator?.Setup.Devices ?? []).Where(device => !device.IsSimulation)
                 .Select(device => (device.Id, Result: new ResultDevice(device.Name, device.Calibration?.SerialNumber,
                     device.Calibration?.CalibratedOn, device.Calibration?.DueOn))).ToArray();
@@ -291,6 +321,7 @@ public sealed partial class StationViewModel
         }
         // Engine-Ereignisse kommen aus dem Ausführungskontext. Observable Collections und
         // gebundene Eigenschaften werden erst über den UI-Dispatcher geändert.
+        _run.EventRaised += RecordReferenceProgress;
         _run.EventRaised += engineEvent => _ui.Post(() => Handle(engineEvent));
         RunningVersion = project.Definition.Version;
         OnPropertyChanged(nameof(RunningVersionText));

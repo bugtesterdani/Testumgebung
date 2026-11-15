@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Lädt gespeicherte Prüfläufe für Detailansicht, Kurvenanzeige und Wiederherstellung unvollständiger Ergebnisse.
  */
@@ -67,6 +67,12 @@ public sealed class ResultDocumentViewModel : ObservableObject
             new("Dauer", $"{(run.Ended - run.Started).TotalSeconds.ToString("0.0", CultureInfo.InvariantCulture)} s"),
             new("Run-ID", run.RunId),
             new("Gefiltert für", run.FilteredFor == "" ? "—" : run.FilteredFor),
+            new("Lauftyp", run.Kind switch
+            {
+                ResultRunKind.GoodReference => "Referenzprüfung – Gutmuster",
+                ResultRunKind.BadReference => "Referenzprüfung – Schlechtmuster",
+                _ => "Produktionsprüfung",
+            }),
             new("Entwicklungslauf", run.IsDevelopmentRun ? "ja" : "nein"),
             new("Format", $"v{content.FormatVersion}, {content.FileSize / 1024.0:0.0} KiB"),
         ];

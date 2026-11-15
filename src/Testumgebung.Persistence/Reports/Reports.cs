@@ -52,11 +52,18 @@ public static class Reports
             ("Beginn / Ende", $"{run.Started.LocalDateTime:dd.MM.yyyy HH:mm:ss} – {run.Ended.LocalDateTime:HH:mm:ss} ({duration.TotalSeconds.ToString("0.0", De)} s)", null),
             ("Auftrag", OrderOf(run) ?? "–", null),
             ("Lauf-ID", run.RunId, null),
-            ("Art", run.IsDevelopmentRun ? "Entwicklungslauf (nicht für Freigabezwecke)" : "Produktionsprüfung", run.IsDevelopmentRun ? PdfColor.Warn : null),
+            ("Art", RunKindText(run), run.IsDevelopmentRun ? PdfColor.Warn : null),
             ("Quelle", (sourceFile is null ? "" : Path.GetFileName(sourceFile) + " · ") + (string.IsNullOrEmpty(run.FilteredFor) ? "ungefiltert" : "gefiltert für " + run.FilteredFor), null),
         ]);
 
         }
+
+        static string RunKindText(ResultRun run) => run.Kind switch
+        {
+            ResultRunKind.GoodReference => "Referenzprüfung – Gutmuster",
+            ResultRunKind.BadReference => "Referenzprüfung – Schlechtmuster",
+            _ => run.IsDevelopmentRun ? "Entwicklungslauf (nicht für Freigabezwecke)" : "Produktionsprüfung",
+        };
 
         void WriteObservations()
         {

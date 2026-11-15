@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verwaltet Scan, Auftragsauswertung und Programmauswahl vor dem Start eines einzelnen Prüfplatzes.
  */
@@ -433,7 +433,7 @@ public sealed class StationSelectionViewModel : ObservableObject
             return;
         }
         finally { _starting = false; RaiseRunning(); }
-        if (!_isActive || !ReferenceEquals(_outcome, selectedOutcome)) return;
+        if (!_isActive || !ReferenceEquals(_outcome, selectedOutcome) || _station.BlockProductionForReference()) return;
         var session = OrderSession;
         var presets = SelectionPresets(loaded.Project, session);
         if (session && !ValidateOrderProgram(loaded.Project)) return;
