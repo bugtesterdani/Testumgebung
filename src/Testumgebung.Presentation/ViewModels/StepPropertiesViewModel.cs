@@ -32,6 +32,7 @@ public sealed class ParameterRowViewModel : ObservableObject
     public bool IsCode => Kind == ParameterKind.Code;
     public bool IsTable => Kind == ParameterKind.Table;
     public bool IsText => !IsChoice && !IsBool && !IsCode && !IsHidden && !IsTable;
+    public bool IsLabelTemplate => _owner.Step.BlockType == LabelPrintingBlocks.Print && Descriptor.Name == "ZplVorlage";
     public bool IsMultiline => Descriptor.Name is "Verbindungsoptionen" or "Header" or "Body" or "ZplVorlage";
 
     /// <summary>Wird durch eine eigene Oberfläche ersetzt (z. B. Bausteinauswahl).</summary>
@@ -220,6 +221,15 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
             TraceBlocks.AbsoluteMarginParameter => mode == TraceBlocks.AbsoluteMargin,
             _ => true
         };
+    }
+
+    public void SaveLabelLayout(LabelLayout layout)
+    {
+        var zpl = layout.ToZpl();
+        Step.Parameters[LabelLayout.Parameter] = layout.Save();
+        Step.Parameters["ZplVorlage"] = zpl;
+        ParametersChanged();
+        Parameters.FirstOrDefault(row => row.IsLabelTemplate)?.RefreshValue();
     }
 
     public void ApplyTableValues(IReadOnlyDictionary<string, string> values)

@@ -121,6 +121,15 @@ public sealed partial class InlineBlockEditor : UserControl
         else input = Text(row, "Value", row.IsMultiline ? 300 : 185, row.IsMultiline);
         input.DataContext = row;
         AutomationProperties.SetName(input, row.Label);
+        if (row.IsLabelTemplate)
+        {
+            var designer = new Button { Content = "Etikett gestalten …", HorizontalAlignment = HorizontalAlignment.Left };
+            designer.Click += (_, _) => LabelDesignerWindow.Edit(designer, row);
+            var labelInputs = new StackPanel();
+            labelInputs.Children.Add(designer);
+            labelInputs.Children.Add(input);
+            return labelInputs;
+        }
         if (!row.HasVisualBuilder) return input;
         var stack = new StackPanel(); stack.Children.Add(input);
         stack.Children.Add(ExpressionSlot(row, null)); return stack;
