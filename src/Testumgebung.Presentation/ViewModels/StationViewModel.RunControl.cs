@@ -107,15 +107,9 @@ public sealed partial class StationViewModel
         }
     }
 
-    private DeviceConfig[] CalibrationDevices(TestProject project)
-    {
-        if (_simulationOnly || _coordinator is null) return [];
-        var setup = _coordinator.Setup;
-        var used = StationSetup.UsedResources(project).ToHashSet(StringComparer.Ordinal);
-        return (setup.Station(Name)?.Resources ?? []).Where(resource => used.Contains(resource.Name))
-            .Select(resource => setup.Device(resource.Device)).OfType<DeviceConfig>()
-            .Where(device => !device.IsSimulation).DistinctBy(device => device.Id).ToArray();
-    }
+    private DeviceConfig[] CalibrationDevices() => _simulationOnly || _coordinator is null
+        ? []
+        : StationHardware.CalibrationDevices(_coordinator.Setup, Name);
 
 
     private IReadOnlyDictionary<string, string> CalibrationResourceIds()
@@ -212,7 +206,7 @@ public sealed partial class StationViewModel
         ActiveRelease = release;
         if (!await ValidateRunProjectAsync(project, release).ConfigureAwait(true)) return;
 
-        var devices = CalibrationDevices(project);
+        var devices = CalibrationDevices();
         var today = DateOnly.FromDateTime(_clock.Now.LocalDateTime);
         if (StationHardware.CalibrationRefusal(devices, today, _runIsDraft) is { } refusal)
         {

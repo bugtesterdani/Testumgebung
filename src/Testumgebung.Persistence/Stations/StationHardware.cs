@@ -176,6 +176,11 @@ public static class StationHardware
             foreach (var error in profile.Validate()) issues.Add(new(ConfigSeverity.Error, null, null, $"{profile.Name}: {error}"));
     }
 
+    // CodeBlocks can access any resource bound by Build, including resources without a static reference.
+    public static DeviceConfig[] CalibrationDevices(StationSetup setup, string station) =>
+        (setup.Station(station)?.Resources ?? []).Select(resource => setup.Device(resource.Device))
+        .OfType<DeviceConfig>().Where(device => !device.IsSimulation).DistinctBy(device => device.Id).ToArray();
+
     public static string? CalibrationRefusal(IEnumerable<DeviceConfig> devices, DateOnly today, bool developmentRun)
     {
         if (developmentRun) return null;

@@ -29,6 +29,32 @@ public sealed class DeviceCalibrationTests
     }
 
     [Fact]
+    public void Start_check_includes_resources_bound_only_for_code_access()
+    {
+        var today = new DateOnly(2026, 1, 12);
+        var device = new DeviceConfig
+        {
+            Id = "meter", Adapter = "Real", Name = "Multimeter",
+            Calibration = new DeviceCalibration(CalibratedOn: today.AddDays(-11), IntervalDays: 10, BlockWhenOverdue: true)
+        };
+        var setup = new StationSetup
+        {
+            Devices = [device],
+            Stations =
+            [
+                new StationConfig { Name = "P1", Resources = [new ResourceAssignment { Name = "CodeMeter", Device = device.Id }] },
+                new StationConfig { Name = "P2" }
+            ]
+        };
+
+        var candidates = StationHardware.CalibrationDevices(setup, "P1");
+        Assert.Same(device, Assert.Single(candidates));
+        Assert.NotNull(StationHardware.CalibrationRefusal(candidates, today, developmentRun: false));
+        Assert.Null(StationHardware.CalibrationRefusal(candidates, today, developmentRun: true));
+        Assert.Empty(StationHardware.CalibrationDevices(setup, "P2"));
+    }
+
+    [Fact]
     public void Older_device_configuration_and_result_files_keep_optional_calibration()
     {
         var older = System.Text.Json.JsonSerializer.Deserialize<DeviceConfig>("{}")!;
