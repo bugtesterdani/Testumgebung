@@ -148,6 +148,9 @@ public static class SystemCheck
             return;
         }
         var setup = stationCoordinator.Setup;
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        items.AddRange(StationHardware.CalibrationWarnings(setup.Devices, today)
+            .Select(warning => new SystemCheckItem(area, "Kalibrierung", CheckLevel.Warning, warning)));
         var real = setup.Devices.Where(device => !device.IsSimulation).ToList();
         items.Add(stationCoordinator.IsSuggestion
             ? new SystemCheckItem(area, "Prüfplatzkonfiguration", CheckLevel.Warning, "Nur Vorschlag aus dem Projekt – unter „Prüfplatzkonfiguration“ prüfen und speichern.")

@@ -479,6 +479,8 @@ Im Ablauf für jede Aktion den Baustein **Kurvenausgabe** mit **Laden**, **Über
 
 ## 15. Einstellungen, Sicherung und Betrieb
 
+Unter **Prüfplatz → Konfiguration** lassen sich bei realen Geräten Seriennummer, Kalibrierdatum, Intervall und Vorwarnzeit hinterlegen. Die Systemprüfung meldet fällige und überfällige Kalibrierungen. Die optionale Startsperre prüft vor dem Werkerstart alle dem Prüfplatz zugeordneten realen Geräte, da CodeBlocks auch auf Ressourcen ohne statischen Verweis im Ablauf zugreifen können. Der Fälligkeitstag zählt noch zur Frist. Entwurfsprüfungen bleiben möglich. Ergebnisdatei und Prüfbericht enthalten die bis zum jeweiligen Ergebnis im Lauf angesprochenen realen Geräte samt Kalibrierstand.
+
 Unter **Verwaltung → Datenbank** lassen sich die Pfade für Python, den C++-Compiler und den C++-Cache speichern. Sie gelten nach dem Neustart. Die Umgebungsvariablen `TESTUMGEBUNG_PYTHON`, `TESTUMGEBUNG_CXX` und `TESTUMGEBUNG_CPP_CACHE` haben Vorrang vor diesen Feldern. `TESTUMGEBUNG_ERGEBNISSE` überschreibt den Ergebnisordner, `TESTUMGEBUNG_DB=aus` schaltet die Datenbankspeicherung aus. Die gespeicherten Vorgaben bleiben dabei erhalten.
 
 **Verwaltung → Sicherung** zeigt die lokalen Konfigurationsdateien mit Pfad und Zweck. **Ordner öffnen** öffnet den Ablageort im Explorer.

@@ -176,6 +176,32 @@ public static class StationHardware
             foreach (var error in profile.Validate()) issues.Add(new(ConfigSeverity.Error, null, null, $"{profile.Name}: {error}"));
     }
 
+    // CodeBlocks can access any resource bound by Build, including resources without a static reference.
+    public static DeviceConfig[] CalibrationDevices(StationSetup setup, string station) =>
+        (setup.Station(station)?.Resources ?? []).Select(resource => setup.Device(resource.Device))
+        .OfType<DeviceConfig>().Where(device => !device.IsSimulation).DistinctBy(device => device.Id).ToArray();
+
+    public static string? CalibrationRefusal(IEnumerable<DeviceConfig> devices, DateOnly today, bool developmentRun)
+    {
+        if (developmentRun) return null;
+        foreach (var device in devices)
+            if (device.Calibration is { BlockWhenOverdue: true } calibration && calibration.IsOverdue(today))
+                return $"Start gesperrt: Kalibrierfrist für „{device.Name}“ abgelaufen.";
+        return null;
+    }
+
+    public static IEnumerable<string> CalibrationWarnings(IEnumerable<DeviceConfig> devices, DateOnly today)
+    {
+        foreach (var device in devices)
+        {
+            if (device.IsSimulation || device.Calibration is not { } calibration) continue;
+            if (calibration.IsOverdue(today))
+                yield return $"Kalibrierfrist für „{device.Name}“ abgelaufen ({calibration.DueOn:dd.MM.yyyy}).";
+            else if (calibration.IsDueSoon(today))
+                yield return $"Kalibrierung für „{device.Name}“ fällig am {calibration.DueOn:dd.MM.yyyy}.";
+        }
+    }
+
     public static IReadOnlyList<ConfigIssue> Check(StationSetup setup, TestProject project)
     {
         var issues = new List<ConfigIssue>();

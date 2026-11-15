@@ -390,6 +390,17 @@
                             <ComboBox ItemsSource="{Binding DataContext.AdapterChoices, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                                       SelectedItem="{Binding Adapter}" Margin="0,0,0,6" />
                             <StackPanel Visibility="{Binding IsReal, Converter={StaticResource BoolVis}}">
+                                <TextBlock Style="{StaticResource Label}" Text="Prüfmittel und Kalibrierung" />
+                                <TextBlock Style="{StaticResource Label}" Text="Seriennummer" />
+                                <TextBox Text="{Binding CalibrationSerialNumber, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Style="{StaticResource Label}" Text="Kalibriert am" />
+                                <DatePicker SelectedDate="{Binding CalibrationDate}" />
+                                <TextBlock Style="{StaticResource Label}" Text="Kalibrierintervall [Tage], 0 = deaktiviert" />
+                                <TextBox Text="{Binding CalibrationIntervalDays, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Style="{StaticResource Label}" Text="Vorwarnung [Tage]" />
+                                <TextBox Text="{Binding CalibrationWarningDays, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Text="{Binding CalibrationDue, StringFormat='Nächste Fälligkeit: {0}'}" />
+                                <CheckBox Content="Werkerstart nach Ablauf sperren" IsChecked="{Binding BlockOverdueCalibration}" Margin="0,4,0,8" />
                                 <TextBlock Style="{StaticResource Label}" Text="Modell" Margin="0,0,0,2" />
                                 <ComboBox ItemsSource="{Binding Models}" Text="{Binding Model, UpdateSourceTrigger=LostFocus}" IsEditable="True" Margin="0,0,0,6" />
                                 <StackPanel Visibility="{Binding HasConnectionChoices, Converter={StaticResource BoolVis}}">

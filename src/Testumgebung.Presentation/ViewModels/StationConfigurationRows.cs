@@ -60,6 +60,49 @@ public sealed class DeviceRow : ObservableObject
         }
     }
 
+    private DeviceCalibration Calibration => Device.Calibration ?? new();
+
+    public string? CalibrationSerialNumber
+    {
+        get => Calibration.SerialNumber;
+        set => UpdateCalibration(Calibration with { SerialNumber = value });
+    }
+
+    public DateTime? CalibrationDate
+    {
+        get => Calibration.CalibratedOn?.ToDateTime(TimeOnly.MinValue);
+        set => UpdateCalibration(Calibration with { CalibratedOn = value is { } date ? DateOnly.FromDateTime(date) : null });
+    }
+
+    public int CalibrationIntervalDays
+    {
+        get => Calibration.IntervalDays;
+        set => UpdateCalibration(Calibration with { IntervalDays = Math.Max(0, value) });
+    }
+
+    public int CalibrationWarningDays
+    {
+        get => Calibration.WarningDays;
+        set => UpdateCalibration(Calibration with { WarningDays = Math.Max(0, value) });
+    }
+
+    public bool BlockOverdueCalibration
+    {
+        get => Calibration.BlockWhenOverdue;
+        set => UpdateCalibration(Calibration with { BlockWhenOverdue = value });
+    }
+
+    public string CalibrationDue => Calibration.DueOn?.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture) ?? "–";
+
+    private void UpdateCalibration(DeviceCalibration updated)
+    {
+        if (Calibration == updated) return;
+        Device.Calibration = updated;
+        OnPropertiesChanged(nameof(CalibrationSerialNumber), nameof(CalibrationDate), nameof(CalibrationIntervalDays),
+            nameof(CalibrationWarningDays), nameof(BlockOverdueCalibration), nameof(CalibrationDue));
+        _changed();
+    }
+
     public bool IsReal => !Device.IsSimulation;
     public bool HasCommandTimeout => IsReal && !DaqModels.IsDaq(Adapter);
     public IReadOnlyList<string> Models => ProjectInstruments.Family(_project(), Device.Adapter)?.Models ?? [];

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Liest und schreibt das Chunk-basierte Ergebnisformat; beschädigte Teilinhalte werden getrennt diagnostiziert.
  */
@@ -128,7 +128,7 @@ public static class ResultFile
 
     private static byte[] EncodeHeader(ResultRun run)
     {
-        var msgPackWriter = new MsgPackWriter().Map(17);
+        var msgPackWriter = new MsgPackWriter().Map(run.Devices.Count == 0 ? 17 : 18);
         msgPackWriter.Key("runId").Str(run.RunId);
         msgPackWriter.Key("stationRunId").Str(run.StationRunId);
         msgPackWriter.Key("station").Str(run.Station);
@@ -146,6 +146,8 @@ public static class ResultFile
         msgPackWriter.Key("filteredFor").Str(run.FilteredFor);
         msgPackWriter.Key("application").Str(run.Application);
         msgPackWriter.Key("schema").Str("testumgebung.ergebnis/1");
+        if (run.Devices.Count > 0)
+            msgPackWriter.Key("devices").Str(System.Text.Json.JsonSerializer.Serialize(run.Devices));
         return msgPackWriter.ToArray();
     }
 
@@ -593,6 +595,7 @@ public static class ResultFile
                 IsDevelopmentRun = head.B("development"),
                 FilteredFor = head.S("filteredFor") ?? "",
                 Application = head.S("application") ?? "",
+                Devices = ReadDevices(head.S("devices"), problems),
                 Structure = structure,
                 Events = events.OrderBy(resultEvent => resultEvent.Sequence).ToList(),
                 Waveforms = waveforms,
@@ -601,6 +604,17 @@ public static class ResultFile
         }
 
         return new ResultFileContent(run, problems, version, fileSize);
+    }
+
+    private static IReadOnlyList<ResultDevice> ReadDevices(string? json, List<string> problems)
+    {
+        if (json is null) return [];
+        try { return System.Text.Json.JsonSerializer.Deserialize<ResultDevice[]>(json) ?? []; }
+        catch (System.Text.Json.JsonException)
+        {
+            problems.Add("Prüfmittelnachweis im Kopf ist beschädigt.");
+            return [];
+        }
     }
 
     private static void ReadEvents(byte[] raw, List<ResultNode> structure, List<ResultEvent> events, Func<long, DateTimeOffset> time)
