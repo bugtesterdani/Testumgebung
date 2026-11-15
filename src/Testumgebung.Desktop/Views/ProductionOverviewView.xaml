@@ -1,0 +1,29 @@
+<UserControl x:Class="Testumgebung.Desktop.Views.ProductionOverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="16">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <Button x:Name="MonitorButton" DockPanel.Dock="Right" Content="Vollbild" Click="OnMonitor"
+                    Style="{StaticResource OutlineButton}" VerticalAlignment="Top" Margin="8,0,0,0" />
+            <StackPanel>
+                <TextBlock Style="{StaticResource PageTitle}" Text="Fertigungsübersicht" />
+                <TextBlock Text="{Binding FilterText}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Status}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,3,0,0" />
+            </StackPanel>
+        </DockPanel>
+        <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,8,0,0"
+                   Text="Stückzahl zählt Prüflinge mit Kennung. Taktzeit ist die mittlere Dauer je Prüflauf." />
+        <DataGrid x:Name="OverviewGrid" ItemsSource="{Binding ProductionRows}" IsReadOnly="True" AutoGenerateColumns="False"
+                  HeadersVisibility="Column" EnableRowVirtualization="True" VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Prüfplatz" Binding="{Binding Station}" Width="1.2*" />
+                <DataGridTextColumn Header="Schichtbeginn" Binding="{Binding ShiftStarted, StringFormat=dd.MM.yyyy HH:mm}" Width="1.4*" />
+                <DataGridTextColumn Header="Auftrag" Binding="{Binding Order}" Width="1.1*" />
+                <DataGridTextColumn Header="Stückzahl" Binding="{Binding Metrics.Pieces}" Width="0.8*" />
+                <DataGridTextColumn Header="Endausbeute" Binding="{Binding Metrics.FinalYield, StringFormat=P1, TargetNullValue=–}" Width="1*" />
+                <DataGridTextColumn Header="FPY" Binding="{Binding Metrics.FirstPassYield, StringFormat=P1, TargetNullValue=–}" Width="0.7*" />
+                <DataGridTextColumn Header="Taktzeit (s)" Binding="{Binding Metrics.MeanCycleTime.TotalSeconds, StringFormat=F1, FallbackValue=–}" Width="0.9*" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

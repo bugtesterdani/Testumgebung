@@ -105,7 +105,9 @@
         </Border>
 
         <!-- ============================== Ergebnis -->
-        <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+        <TabControl Grid.Row="1" Grid.Column="2">
+            <TabItem Header="Statistik">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <TextBlock Text="{Binding FilterText}" Style="{StaticResource Caption}" Margin="0,0,0,6" />
                 <UniformGrid Columns="4" Margin="0,0,0,12">
@@ -228,6 +230,11 @@
                     </StackPanel>
                 </Border>
             </StackPanel>
-        </ScrollViewer>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Fertigung">
+                <views:ProductionOverviewView />
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

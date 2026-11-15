@@ -162,8 +162,7 @@ public static class ResultAnalysis
     public static ResultStatistics Compute(IEnumerable<ResultRun> all, StatisticsFilter filter)
     {
         var runs = all.Where(run => run.Kind == ResultRunKind.Production && filter.Matches(run)).OrderBy(run => run.Started).ToList();
-        var withId = runs.Where(run => !string.IsNullOrWhiteSpace(run.DutId)).GroupBy(run => run.DutId, StringComparer.Ordinal).ToList();
-        var durations = runs.Where(run => run.Ended > run.Started).Select(run => (run.Ended - run.Started).TotalSeconds).ToList();
+        var production = ProductionSummary.FromOrderedRuns(runs);
 
         return new ResultStatistics
         {
@@ -175,11 +174,11 @@ public static class ResultAnalysis
             NResult = runs.Count(run => HasOutcome(run, ResultRating.NResult)),
             OperatorAborts = runs.Count(run => run.OperatorAbort),
             DevelopmentRuns = runs.Count(run => run.IsDevelopmentRun),
-            Duts = withId.Count,
-            Retests = withId.Sum(group => group.Count() - 1),
-            FirstPassYield = withId.Count == 0 ? null : (double)withId.Count(group => HasOutcome(group.First(), ResultRating.Pass)) / withId.Count,
-            FinalYield = withId.Count == 0 ? null : (double)withId.Count(group => HasOutcome(group.Last(), ResultRating.Pass)) / withId.Count,
-            MeanDuration = durations.Count == 0 ? null : TimeSpan.FromSeconds(durations.Average()),
+            Duts = production.Pieces,
+            Retests = production.Retests,
+            FirstPassYield = production.FirstPassYield,
+            FinalYield = production.FinalYield,
+            MeanDuration = production.MeanCycleTime,
             First = runs.FirstOrDefault()?.Started,
             Last = runs.LastOrDefault()?.Started,
             Measurements = MeasurementsOf(runs),
