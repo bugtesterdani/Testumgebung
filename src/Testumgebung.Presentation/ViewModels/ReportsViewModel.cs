@@ -29,6 +29,7 @@ public sealed partial class ReportsViewModel : ObservableObject
     private readonly IUiDispatcher _ui;
     private LoadedResults? _loaded;
     private ResultStatistics? _stats;
+    private readonly Func<string, IReadOnlyList<TimeOnly>> _productionShifts;
     private string _folder = "";
     private bool _busy;
     private string? _status;
@@ -47,12 +48,13 @@ public sealed partial class ReportsViewModel : ObservableObject
     private readonly Func<IRunQuerySource?> _database;
     private string _source = FolderSource;
 
-    public ReportsViewModel(Func<string?> defaultFolder, IFileDialogService? dialogs, IUiDispatcher ui, Func<IRunQuerySource?>? database = null)
+    public ReportsViewModel(Func<string?> defaultFolder, IFileDialogService? dialogs, IUiDispatcher ui, Func<IRunQuerySource?>? database = null, Func<string, IReadOnlyList<TimeOnly>>? productionShifts = null)
     {
         _database = database ?? (() => null);
         _defaultFolder = defaultFolder;
         _dialogs = dialogs;
         _ui = ui;
+        _productionShifts = productionShifts ?? (_ => []);
         LoadCommand = new RelayCommand(() => _ = LoadAsync(), () => !_busy);
         ApplyCommand = new RelayCommand(Apply, () => _loaded is not null);
         ResetFilterCommand = new RelayCommand(ResetFilter);
@@ -172,6 +174,10 @@ public sealed partial class ReportsViewModel : ObservableObject
             Apply();
             Status = $"{_loaded.Files} Datei(en) gelesen{(_loaded.Problems.Count > 0 ? $", {_loaded.Problems.Count} mit Problemen" : "")}.";
         }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Status = "Ergebnisordner nicht lesbar: " + ex.Message;
+        }
         finally
         {
             IsBusy = false;
@@ -245,7 +251,9 @@ public sealed partial class ReportsViewModel : ObservableObject
     public void Apply()
     {
         if (_loaded is null) return;
-        _stats = ResultAnalysis.Compute(_loaded.Runs, Filter);
+        var filter = Filter;
+        _stats = ResultAnalysis.Compute(_loaded.Runs, filter);
+        ProductionRows = ProductionOverview.Compute(_loaded.Runs, filter, _productionShifts);
         Measurements.Clear();
         foreach (var measurementStatistics in _stats.Measurements) Measurements.Add(measurementStatistics);
         Failures.Clear();
@@ -257,11 +265,12 @@ public sealed partial class ReportsViewModel : ObservableObject
                 $"{dailyCount.Day:dd.MM.yyyy}: {dailyCount.Total} Läufe, PASS {dailyCount.Pass}, FAIL {dailyCount.Fail}, ERROR {dailyCount.Error}, ABORT {dailyCount.Abort}", dailyCount.Fail + dailyCount.Error > 0));
         SelectedMeasurement = Measurements.FirstOrDefault(measurementStatistics2 => measurementStatistics2.Cpk is not null) ?? Measurements.FirstOrDefault();
         OnPropertiesChanged(nameof(Statistics), nameof(HasStatistics), nameof(RunsText), nameof(YieldText), nameof(FpyText), nameof(FinalYieldText),
-            nameof(DutsText), nameof(DurationText), nameof(FilterText), nameof(ProblemCount), nameof(FailStreakWarning));
+            nameof(DutsText), nameof(DurationText), nameof(FilterText), nameof(ProblemCount), nameof(FailStreakWarning), nameof(ProductionRows));
         PdfCommand.RaiseCanExecuteChanged();
         CsvCommand.RaiseCanExecuteChanged();
     }
 
+    public IReadOnlyList<ProductionRow> ProductionRows { get; private set; } = [];
     public ResultStatistics? Statistics => _stats;
     public bool HasStatistics => _stats is { Runs: > 0 };
     public int ProblemCount => _loaded?.Problems.Count ?? 0;

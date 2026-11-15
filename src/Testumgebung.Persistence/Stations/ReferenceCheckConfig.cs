@@ -15,16 +15,16 @@ public sealed class ReferenceCheckConfig
 
     public string? Validate()
     {
+        if (ReadShifts().Length == 0) return "Schichtbeginn als Uhrzeit im Format HH:mm angeben.";
         if (!Enabled) return null;
         if (string.IsNullOrWhiteSpace(GoodId) || string.IsNullOrWhiteSpace(BadId) || GoodId.Trim() == BadId.Trim())
             return "Für die Referenzprüfung zwei unterschiedliche Kennungen für Gut- und Schlechtmuster eintragen.";
-        if (ReadShifts().Length == 0) return "Schichtbeginn als Uhrzeit im Format HH:mm angeben.";
         if (DutInterval < 0 || HoursInterval < 0 || !double.IsFinite(HoursInterval))
             return "Referenzintervalle müssen positiv sein oder 0 (ausgeschaltet).";
         return null;
     }
 
-    internal TimeOnly[] ReadShifts()
+    public TimeOnly[] ReadShifts()
     {
         var shifts = new List<TimeOnly>();
         foreach (var part in (ShiftStarts ?? "").Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))

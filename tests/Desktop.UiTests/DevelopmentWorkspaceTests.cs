@@ -22,6 +22,7 @@ public sealed partial class DevelopmentWorkspaceTests
             app.InitializeComponent();
             VerifyReleaseSelectionAndWorkflow(dispatcher);
             VerifyLiveOutputPanel(dispatcher);
+            VerifyProductionMonitor(dispatcher);
             InteractionBoundaryTests.VerifyPlotGestures();
             VerifyCurvePointTable(dispatcher);
             VerifyEnvelopePlot(dispatcher);

@@ -229,7 +229,8 @@ public sealed class ShellViewModel : ObservableObject
         ReportsViewModel CreateReportsPage()
         {
             return new ReportsViewModel(() => results?.Files?.Folder ?? Testumgebung.Persistence.Results.ResultFileStore.DefaultFolder, dialogs, _ui,
-                () => services?.Database is { CanQuery: true } db ? db : null);
+                () => services?.Database is { CanQuery: true } db ? db : null,
+                station => Coordinator.Setup.Station(station)?.ReferenceCheck?.ReadShifts() ?? []);
         }
 
         SystemPageViewModel CreateSystemPage()
