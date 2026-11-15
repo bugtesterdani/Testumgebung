@@ -58,6 +58,8 @@ public sealed record StatisticsFilter
 public sealed record MeasurementStatistics(string NodeId, string Name, string Unit, int Count, double Min, double Max, double Mean, double StdDev,
     double? Low, double? High, int OutOfLimits, double? Cp, double? Cpk, IReadOnlyList<double> Values)
 {
+    public IReadOnlyList<IndividualValueChart> Charts { get; init; } = [];
+
     /// <summary>Bewertung der Fähigkeit: Cpk ≥ 1,33 gut, ≥ 1,0 grenzwertig, sonst unzureichend.</summary>
     public string Capability => Cpk switch
     {
@@ -120,6 +122,7 @@ public sealed class ResultStatistics
     public DateTimeOffset? First { get; init; }
     public DateTimeOffset? Last { get; init; }
     public IReadOnlyList<MeasurementStatistics> Measurements { get; init; } = [];
+    public int LongestFailStreak { get; init; }
     public IReadOnlyList<FailureItem> Failures { get; init; } = [];
     public IReadOnlyList<DailyCount> Daily { get; init; } = [];
     public IReadOnlyList<StationCount> Stations { get; init; } = [];
@@ -180,6 +183,7 @@ public static class ResultAnalysis
             First = runs.FirstOrDefault()?.Started,
             Last = runs.LastOrDefault()?.Started,
             Measurements = MeasurementsOf(runs),
+            LongestFailStreak = IndividualValueChart.LongestFailStreak(runs),
             Failures = FailuresOf(runs),
             Daily = runs.GroupBy(run => DateOnly.FromDateTime(run.Started.LocalDateTime)).OrderBy(group => group.Key)
                 .Select(group => new DailyCount(group.Key, group.Count(run => HasOutcome(run, ResultRating.Pass)), group.Count(run => HasOutcome(run, ResultRating.Fail)),
@@ -199,7 +203,7 @@ public static class ResultAnalysis
 
     private static IReadOnlyList<MeasurementStatistics> MeasurementsOf(IReadOnlyList<ResultRun> runs)
     {
-        var map = new Dictionary<string, (string Name, string Unit, List<double> Values, double? Low, double? High, int Order)>(StringComparer.Ordinal);
+        var map = new Dictionary<string, (string Name, string Unit, List<(MeasurementSeriesKey Key, MeasurementPoint Point)> Points, double? Low, double? High, int Order)>(StringComparer.Ordinal);
         var order = 0;
         foreach (var run in runs)
         {
@@ -207,21 +211,33 @@ public static class ResultAnalysis
             {
                 var key = resultEvent.NodeId ?? resultEvent.Path;
                 var value = Convert.ToDouble(resultEvent.Value, CultureInfo.InvariantCulture);
+                if (!double.IsFinite(value)) continue;
                 if (!map.TryGetValue(key, out var namedEntry)) namedEntry = (NameOf(run, resultEvent), resultEvent.Unit ?? "", [], null, null, order++);
-                namedEntry.Values.Add(value);
+                var series = new MeasurementSeriesKey(run.Station, run.TestName, run.TestVersion, resultEvent.Unit ?? "");
+                namedEntry.Points.Add((series, new MeasurementPoint(resultEvent.Time, value)));
                 namedEntry = namedEntry with { Low = resultEvent.LowLimit ?? namedEntry.Low, High = resultEvent.HighLimit ?? namedEntry.High, Unit = string.IsNullOrEmpty(namedEntry.Unit) ? resultEvent.Unit ?? "" : namedEntry.Unit };
                 map[key] = namedEntry;
             }
         }
-        return map.OrderBy(kv => kv.Value.Order).Select(kv =>
+        return map.OrderBy(entry => entry.Value.Order)
+            .Select(entry => SummarizeMeasurement(entry.Key, entry.Value.Name, entry.Value.Unit, entry.Value.Points, entry.Value.Low, entry.Value.High))
+            .ToList();
+    }
+
+    private static MeasurementStatistics SummarizeMeasurement(string nodeId, string name, string unit,
+        IReadOnlyList<(MeasurementSeriesKey Key, MeasurementPoint Point)> points, double? low, double? high)
+    {
+        var values = points.Select(point => point.Point.Value).ToList();
+        var mean = values.Average();
+        var sd = values.Count > 1 ? Math.Sqrt(values.Sum(value => (value - mean) * (value - mean)) / (values.Count - 1)) : 0;
+        var (cp, cpk) = Capability(values.Count, mean, sd, low, high);
+        var outside = values.Count(value => (low is { } lower && value < lower) || (high is { } upper && value > upper));
+        return new MeasurementStatistics(nodeId, name, unit, values.Count, values.Min(), values.Max(), mean, sd, low, high, outside, cp, cpk, values)
         {
-            var (name, unit, values, low, high, _) = kv.Value;
-            var mean = values.Average();
-            var sd = values.Count > 1 ? Math.Sqrt(values.Sum(value2 => (value2 - mean) * (value2 - mean)) / (values.Count - 1)) : 0;
-            var (cp, cpk) = Capability(values.Count, mean, sd, low, high);
-            var outside = values.Count(value2 => (low is { } l3 && value2 < l3) || (high is { } h3 && value2 > h3));
-            return new MeasurementStatistics(kv.Key, name, unit, values.Count, values.Min(), values.Max(), mean, sd, low, high, outside, cp, cpk, values);
-        }).ToList();
+            Charts = points.GroupBy(point => point.Key)
+                .Select(series => new IndividualValueChart(series.Key, series.Select(item => item.Point).OrderBy(point => point.Time).ToArray()))
+                .ToArray(),
+        };
     }
 
     private static (double? Cp, double? Cpk) Capability(int count, double mean, double sd, double? low, double? high)
