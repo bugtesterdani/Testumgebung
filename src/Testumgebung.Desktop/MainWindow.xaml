@@ -243,7 +243,7 @@
                             <TextBlock Text="Bibliothek" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding CanManage, Converter={StaticResource BoolVis}}"
                                  Command="{Binding NavigateCommand}" CommandParameter="Stations"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Stations;Selection, Mode=OneWay}" AutomationProperties.Name="Prüfplatz">
                         <StackPanel Orientation="Horizontal">
@@ -251,7 +251,7 @@
                             <TextBlock Text="Prüfplatz" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
+                    <RadioButton Style="{StaticResource NavButton}" GroupName="Nav" Visibility="{Binding CanManage, Converter={StaticResource BoolVis}}"
                                  Command="{Binding NavigateCommand}" CommandParameter="System"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Settings;Notifications;Access;Python;System, Mode=OneWay}" AutomationProperties.Name="Verwaltung">
                         <StackPanel Orientation="Horizontal">
@@ -300,7 +300,7 @@
                                  Content="Konfiguration" Command="{Binding NavigateCommand}" CommandParameter="Stations"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Stations, Mode=OneWay}" />
                     <RadioButton GroupName="TabsStations" Style="{StaticResource NavButton}" Margin="0,0,8,0"
-                                 Content="Auswahl &amp; Auftrag" Command="{Binding NavigateCommand}" CommandParameter="Selection"
+                                 Content="Auswahl &amp; Auftrag" Command="{Binding NavigateCommand}" CommandParameter="Selection" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Selection, Mode=OneWay}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="16,8,16,0"
@@ -312,10 +312,10 @@
                                  Content="Meldewege" Command="{Binding NavigateCommand}" CommandParameter="Notifications" Visibility="{Binding HasSettings, Converter={StaticResource BoolVis}}"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Notifications, Mode=OneWay}" />
                     <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
-                                 Content="Zugang" Command="{Binding NavigateCommand}" CommandParameter="Access" Visibility="{Binding HasSettings, Converter={StaticResource BoolVis}}"
+                                 Content="Zugang" Command="{Binding NavigateCommand}" CommandParameter="Access" Visibility="{Binding ShowAccessNav, Converter={StaticResource BoolVis}}"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Access, Mode=OneWay}" />
                     <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
-                                 Content="Python" Command="{Binding NavigateCommand}" CommandParameter="Python"
+                                 Content="Python" Command="{Binding NavigateCommand}" CommandParameter="Python" Visibility="{Binding IsDeveloper, Converter={StaticResource BoolVis}}"
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Python, Mode=OneWay}" />
                     <RadioButton GroupName="TabsSettings" Style="{StaticResource NavButton}" Margin="0,0,8,0"
                                  Content="Sicherung" Command="{Binding NavigateCommand}" CommandParameter="System"

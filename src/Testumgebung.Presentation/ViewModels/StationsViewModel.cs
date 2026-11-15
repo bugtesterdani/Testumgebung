@@ -28,6 +28,7 @@ public sealed partial class StationsViewModel : ObservableObject
     private readonly StationSetupStore? _store;
     private readonly IUiDispatcher _ui;
     private readonly Func<bool> _anyRunning;
+    private readonly Func<bool> _canManage;
     private StationSetup _draft;
     private string? _selectedStation;
     private AssignmentRow? _selectedRow;
@@ -38,18 +39,19 @@ public sealed partial class StationsViewModel : ObservableObject
     private int _refreshQueued;
     private IReadOnlyList<ResourceOwnership> _snapshot = [];
 
-    public StationsViewModel(StationCoordinator coordinator, EditorViewModel editor, StationSetupStore? store, IUiDispatcher ui, Func<bool> anyRunning, Func<string?>? wearResetUser = null)
+    public StationsViewModel(StationCoordinator coordinator, EditorViewModel editor, StationSetupStore? store, IUiDispatcher ui, Func<bool> anyRunning, Func<string?>? wearResetUser = null, Func<bool>? canManage = null)
     {
         _coordinator = coordinator;
         _editor = editor;
         _store = store;
         _ui = ui;
         _anyRunning = anyRunning;
+        _canManage = canManage ?? (() => true);
         _wearResetUser = wearResetUser;
         _draft = coordinator.Setup.Clone();
 
         CheckCommand = new RelayCommand(Check);
-        SaveCommand = new RelayCommand(Save, () => _isDirty || _coordinator.IsSuggestion || _coordinator.LoadError is not null);
+        SaveCommand = new RelayCommand(Save, () => _canManage() && (_isDirty || _coordinator.IsSuggestion || _coordinator.LoadError is not null));
         DiscardCommand = new RelayCommand(Discard, () => _isDirty);
         AddStationCommand = new RelayCommand(AddStation);
         RemoveStationCommand = new RelayCommand(RemoveStation, () => _selectedStation is not null && _draft.Stations.Count > 1);
@@ -246,6 +248,7 @@ public sealed partial class StationsViewModel : ObservableObject
     /// <summary>„Zuordnung speichern“: nur fehlerfrei und ohne laufende Prüfung; danach gilt sie für alle Prüfplätze.</summary>
     public void Save()
     {
+        if (!_canManage()) return;
         Check();
         if (HasConfigErrors)
         {

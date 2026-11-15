@@ -165,6 +165,10 @@ public sealed class SessionService
 
     public static string RightsText(UserRights r) => r switch
     {
+        UserRights.Develop | UserRights.Release | UserRights.Manage => "Entwickeln, Freigeben, Verwalten",
+        UserRights.Develop | UserRights.Manage => "Entwickeln, Verwalten",
+        UserRights.Release | UserRights.Manage => "Freigeben, Verwalten",
+        UserRights.Manage => "Verwalten",
         UserRights.Develop | UserRights.Release => "Entwickeln, Freigeben",
         UserRights.Develop => "Entwickeln",
         UserRights.Release => "Freigeben",

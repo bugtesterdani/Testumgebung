@@ -221,6 +221,8 @@
                             </Grid>
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
                                        Text="Lokal = Liste unten je Prüfplatz; AppRollen = zentral über die App-Rollen der Entra-App (Claim „roles“); Beide = Vereinigung." />
+                            <TextBlock Text="App-Rolle „Verwalten“" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding ManageRole, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" Margin="0,0,0,8" />
                             <CheckBox Content="Lokalen Benutzer-/Passwortzugang als Übergang aktivieren" IsChecked="{Binding AllowLocalPasswords}" Margin="0,8"/>
                             <TextBlock Text="Vor dem Aktivieren für jedes Konto ein Passwort setzen. Passwörter werden gesalzen gehasht in zugang.json gespeichert. Werkerbetrieb ohne Anmeldung bleibt möglich; für zentrale Firmenidentitäten Entra verwenden." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             <TextBlock Text="Rechte je Konto" FontWeight="SemiBold" Margin="0,4,0,4" />
@@ -230,6 +232,7 @@
                                     <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="*" />
                                     <DataGridCheckBoxColumn Header="Entwickeln" Binding="{Binding Develop, UpdateSourceTrigger=PropertyChanged}" Width="85" />
                                     <DataGridCheckBoxColumn Header="Freigeben" Binding="{Binding Release, UpdateSourceTrigger=PropertyChanged}" Width="85" />
+                                    <DataGridCheckBoxColumn Header="Verwalten" Binding="{Binding Manage, UpdateSourceTrigger=PropertyChanged}" Width="85" />
                                     <DataGridTextColumn Header="Passwort" Binding="{Binding PasswordStatus}" IsReadOnly="True" Width="100"/>
                                     <DataGridTemplateColumn Header="Lokales Passwort" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                                         <Button Content="Setzen / ändern" Click="OnSetLocalPassword" Style="{StaticResource ToolButton}"/>
