@@ -108,6 +108,7 @@ public sealed class PilotTests : IDisposable
         Assert.Contains(sources, source => source.Name == "python-environment.json");
         Assert.Contains(sources, source => source.Name == "quellen-zugang.json" && source.ProtectOnRestore);
         Assert.Contains(sources, source => source.Name == "programmquellen.json");
+        Assert.Equal(WearCounterStore.PathForStationSetup(stations), sources.Single(source => source.Name == WearCounterStore.FileName).Path);
         // Use only fixture paths when exercising backup and restore.
         sources = sources.Select(source => source with { Path = P("backup-input/" + source.Name) })
             .Select(source => source.Name switch
@@ -115,8 +116,20 @@ public sealed class PilotTests : IDisposable
                 "einstellungen.json" => source with { Path = settings },
                 "zugang.json" => source with { Path = access },
                 "pruefplaetze.json" => source with { Path = stations },
+                WearCounterStore.FileName => source with { Path = WearCounterStore.PathForStationSetup(stations) },
                 _ => source
             }).ToArray();
+
+        var counter = new WearCounterConfig { Name = "Nadelbett" };
+        var stationStore = new StationSetupStore(stations);
+        var setup = stationStore.Load()!;
+        setup.Stations[0].WearCounters.Add(counter);
+        stationStore.Save(setup);
+        var wearPath = WearCounterStore.PathForStationSetup(stations);
+        var wear = new WearCounterStore(wearPath);
+        wear.BeginDut([counter]);
+        wear.Reset("Prüfplatz 01", counter, "wartung", DateTimeOffset.UnixEpoch);
+        wear.BeginDut([counter]);
 
         var pythonSelection = sources.Single(source => source.Name == "python-environment.json").Path;
         Directory.CreateDirectory(Path.GetDirectoryName(pythonSelection)!);
@@ -138,9 +151,10 @@ public sealed class PilotTests : IDisposable
 
         // Änderung nach der Sicherung → Wiederherstellen setzt zurück und bewahrt den Vorstand
         File.WriteAllText(stations, "{\"format\":1,\"devices\":[],\"stations\":[]}");
+        wear.BeginDut([counter]);
         page.OpenBackupCommand.Execute(null);
         Assert.Contains("Prüfsummen in Ordnung", page.InspectionText);
-        Assert.Equal(4, page.BackupFiles.Count);
+        Assert.Equal(5, page.BackupFiles.Count);
         page.BackupFiles.Single(f => f.Name == "laufzeitdateien.json").Selected = false;
         page.BackupFiles.Single(f => f.Name == "python-environment.json").Selected = false;
         page.BackupFiles.Single(f => f.Name == "einstellungen.json").Selected = false;
@@ -150,6 +164,20 @@ public sealed class PilotTests : IDisposable
         Assert.Equal(1, restoredCount);
         Assert.Contains("Wiederhergestellt: pruefplaetze.json", page.BackupStatus);
         Assert.Equal(2, new StationSetupStore(stations).Load()!.Stations.Count);
+        Assert.Equal(1, Assert.Single(wear.Read([counter])).Count);
+        Assert.Equal("wartung", Assert.Single(wear.Resets("Prüfplatz 01")).User);
+
+        var freshSetup = P("fresh/pruefplaetze.json");
+        var freshPath = WearCounterStore.PathForStationSetup(freshSetup);
+        ConfigBackup.Restore(zip, new Dictionary<string, string>
+        {
+            ["pruefplaetze.json"] = freshSetup,
+            [WearCounterStore.FileName] = freshPath,
+        }, DateTimeOffset.UnixEpoch);
+        var freshCounters = new StationSetupStore(freshSetup).Load()!.Stations[0].WearCounters;
+        var freshWear = new WearCounterStore(freshPath);
+        Assert.Equal(1, Assert.Single(freshWear.Read(freshCounters)).Count);
+        Assert.Single(freshWear.Resets("Prüfplatz 01"));
         Assert.Single(Directory.GetFiles(P("pd"), "pruefplaetze.json.vor-wiederherstellung-*"));
 
         // Manipulierte Sicherung wird erkannt und nicht wiederhergestellt

@@ -25,6 +25,12 @@ ProgramData (Werker: nur lesen ist erwartet), Prüfplatzkonfiguration und Gerät
 Datenbankverbindung, offene Outbox, unvollständige Prüfläufe, Python, C++-Toolchain, VISA und NI-DAQmx (Fehler nur, wenn
 zugeordnete Geräte sie brauchen).
 
+## Verschleißzähler
+
+Zählerstände und das Rücksetzprotokoll liegen unter `%ProgramData%\Testumgebung\Verschleiss\verschleisszaehler.json`. Der klassische Installer gewährt der lokalen Gruppe **Benutzer** Änderungsrechte für den Unterordner `Verschleiss`. Bei einer MSIX- oder manuellen Installation den Ordner bei Bedarf als Administrator anlegen und der Gruppe **Benutzer** Änderungsrechte für diesen Ordner und seine Inhalte geben. Die Rechnerkonfiguration im darüberliegenden Ordner bleibt für Werker schreibgeschützt.
+
+Bei einer Rechnerwiederherstellung `pruefplaetze.json` und `verschleisszaehler.json` aus derselben Sicherung auswählen. Die Sicherung enthält die Verschleißdatei, sobald Zählerstände oder Rücksetzungen gespeichert wurden.
+
 ## Betrieb
 
 * **Neue Version der Anwendung:** Installer erneut ausführen (Konfiguration bleibt). Vorher Sicherung, nachher Systemprüfung.

@@ -239,9 +239,7 @@ public partial class MainWindow : Window
 
     private static WearCounterStore CreateWearStore(StationSetupStore store, bool exampleMode)
     {
-        if (exampleMode) return new();
-        var folder = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(store.Path))!;
-        return new(System.IO.Path.Combine(folder, "verschleisszaehler.json"));
+        return exampleMode ? new() : new(WearCounterStore.PathForStationSetup(store.Path));
     }
 }
 

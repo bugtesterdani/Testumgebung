@@ -27,6 +27,11 @@ public sealed record WearReading(WearCounterConfig Counter, long Count)
 /// <summary>Speichert Zählerstände getrennt von der bearbeitbaren Prüfplatzkonfiguration.</summary>
 public sealed class WearCounterStore(string? path = null)
 {
+    public const string FileName = "verschleisszaehler.json";
+
+    public static string PathForStationSetup(string stationSetupPath)
+        => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(stationSetupPath))!, "Verschleiss", FileName);
+
     private readonly object _gate = new();
     private readonly State _memory = new();
 
