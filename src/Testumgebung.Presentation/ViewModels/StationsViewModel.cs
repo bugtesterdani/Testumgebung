@@ -38,13 +38,14 @@ public sealed partial class StationsViewModel : ObservableObject
     private int _refreshQueued;
     private IReadOnlyList<ResourceOwnership> _snapshot = [];
 
-    public StationsViewModel(StationCoordinator coordinator, EditorViewModel editor, StationSetupStore? store, IUiDispatcher ui, Func<bool> anyRunning)
+    public StationsViewModel(StationCoordinator coordinator, EditorViewModel editor, StationSetupStore? store, IUiDispatcher ui, Func<bool> anyRunning, Func<string?>? wearResetUser = null)
     {
         _coordinator = coordinator;
         _editor = editor;
         _store = store;
         _ui = ui;
         _anyRunning = anyRunning;
+        _wearResetUser = wearResetUser;
         _draft = coordinator.Setup.Clone();
 
         CheckCommand = new RelayCommand(Check);
@@ -140,6 +141,7 @@ public sealed partial class StationsViewModel : ObservableObject
         Check();
         OnPropertiesChanged(nameof(SelectedStation), nameof(SourceText));
         NotifyReferenceSettings();
+        ReloadWearCounters();
         SaveCommand.RaiseCanExecuteChanged();
     }
 
@@ -155,6 +157,7 @@ public sealed partial class StationsViewModel : ObservableObject
             if (value is null || !SetProperty(ref _selectedStation, value)) return;
             LoadRows();
             NotifyReferenceSettings();
+            ReloadWearCounters();
             RemoveStationCommand.RaiseCanExecuteChanged();
             RefreshLive();
         }
@@ -226,6 +229,7 @@ public sealed partial class StationsViewModel : ObservableObject
     public void Check()
     {
         Issues.Clear();
+        foreach (var issue in WearConfigIssues()) Issues.Add(issue);
         foreach (var station in _draft.Stations)
             if (station.ReferenceCheck?.Validate() is { } message)
                 Issues.Add(new(ConfigSeverity.Error, station.Name, null, message));

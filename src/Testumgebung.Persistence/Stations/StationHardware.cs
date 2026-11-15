@@ -372,9 +372,10 @@ public sealed class StationCoordinator
     private readonly Dictionary<string, TestDefinition> _running = new(StringComparer.Ordinal);
     private StationSetup _setup;
 
-    public StationCoordinator(StationSetup setup, IResourceManager resources, IClock? clock = null)
+    public StationCoordinator(StationSetup setup, IResourceManager resources, IClock? clock = null, WearCounterStore? wear = null)
     {
         _setup = setup;
+        Wear = wear ?? new();
         Resources = resources;
         Pool = new DevicePool { Clock = clock };
         Journal = new HardwareAccessJournal(resources, clock);
@@ -382,6 +383,7 @@ public sealed class StationCoordinator
 
     public IResourceManager Resources { get; }
     public DevicePool Pool { get; }
+    public WearCounterStore Wear { get; }
 
     /// <summary>Konfigurationsdatei war beschädigt: kein Prüfplatz startet, bis sie korrigiert und gespeichert ist.</summary>
     public string? LoadError { get; set; }

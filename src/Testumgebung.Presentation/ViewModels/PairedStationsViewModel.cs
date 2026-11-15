@@ -44,13 +44,7 @@ public sealed class PairedStationsViewModel : ObservableObject
     {
         if (!CanStart) { Status = "Zwei verschiedene, freie Prüfplätze und einen Auftrag auswählen."; return; }
         var first = First!; var second = Second!;
-        var firstBlocked = first.BlockProductionForReference();
-        var secondBlocked = second.BlockProductionForReference();
-        if (firstBlocked || secondBlocked)
-        {
-            Status = "Gemeinsamer Start gesperrt. Offene Referenzprüfungen an den Prüfplätzen durchführen.";
-            return;
-        }
+        if (BlockPairStart(first, second)) return;
         _busy = true; _stopRequested = false; Refresh();
         var handover = new StationHandover();
         first.PairContext = new PairedStationContext(handover, 1);
@@ -93,6 +87,25 @@ public sealed class PairedStationsViewModel : ObservableObject
             first.PairContext = null; second.PairContext = null;
             _busy = false; Refresh();
         }
+    }
+
+    private bool BlockPairStart(StationViewModel first, StationViewModel second)
+    {
+        if (BlockPairForWear(first, second)) return true;
+        var firstBlocked = first.BlockProductionForReference();
+        var secondBlocked = second.BlockProductionForReference();
+        if (!firstBlocked && !secondBlocked) return false;
+        Status = "Gemeinsamer Start gesperrt. Offene Referenzprüfungen an den Prüfplätzen durchführen.";
+        return true;
+    }
+
+    private bool BlockPairForWear(StationViewModel first, StationViewModel second)
+    {
+        var firstBlocked = first.BlockWearStart();
+        var secondBlocked = second.BlockWearStart();
+        if (!firstBlocked && !secondBlocked) return false;
+        Status = "Gemeinsamer Start durch Verschleißzähler gesperrt.";
+        return true;
     }
 
     private static void StopPartner(StationViewModel station)

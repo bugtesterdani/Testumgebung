@@ -83,6 +83,36 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </DockPanel>
+            <Expander Header="Verschleißzähler am gewählten Prüfplatz" Margin="0,8,0,0">
+                <StackPanel Margin="8">
+                    <WrapPanel Margin="0,0,0,6">
+                        <Button Style="{StaticResource ToolButton}" Content="Zähler hinzufügen" Command="{Binding AddWearCounterCommand}" />
+                        <Button Style="{StaticResource ToolButton}" Content="Entfernen" Command="{Binding RemoveWearCounterCommand}" />
+                        <Button Style="{StaticResource ToolButton}" Content="Stand aktualisieren" Command="{Binding RefreshWearCountersCommand}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Nach Wartung zurücksetzen" Command="{Binding ResetWearCounterCommand}" />
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="Grenze 0 ist ausgeschaltet. Änderungen an Namen und Grenzen über Zuordnung speichern." Margin="0,0,0,4" />
+                    <DataGrid ItemsSource="{Binding WearCounters}" SelectedItem="{Binding SelectedWearCounter}" MaxHeight="170"
+                              AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
+                            <DataGridTextColumn Header="Stand" Binding="{Binding Count, Mode=OneWay}" IsReadOnly="True" Width="*" />
+                            <DataGridTextColumn Header="Warngrenze" Binding="{Binding WarningAt}" Width="*" />
+                            <DataGridTextColumn Header="Sperrgrenze" Binding="{Binding StopAt}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Expander Header="Rücksetzprotokoll" Margin="0,6,0,0">
+                        <DataGrid ItemsSource="{Binding WearResets}" AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="125">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Zeit" Binding="{Binding At, StringFormat=g}" Width="*" />
+                                <DataGridTextColumn Header="Zähler" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Alter Stand" Binding="{Binding PreviousCount}" Width="*" />
+                                <DataGridTextColumn Header="Benutzer" Binding="{Binding User}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Expander>
+                </StackPanel>
+            </Expander>
             <Expander Header="Referenzprüfung am gewählten Prüfplatz" Margin="0,8,0,0">
                 <StackPanel Margin="8">
                     <CheckBox Content="Gut- und Schlechtmuster verlangen" IsChecked="{Binding ReferenceEnabled}" />

@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Testumgebung.Persistence.Stations;
 
 namespace Testumgebung.Presentation.Pilot;
 
@@ -36,7 +37,7 @@ public sealed record RestoreResult(IReadOnlyList<string> Restored, IReadOnlyList
 
 /// <summary>
 /// Sicherung und Wiederherstellung der Rechnerkonfiguration als ZIP: einstellungen.json (Geheimnisse bleiben DPAPI-geschützt
-/// und sind nur für dasselbe Windows-Konto auf demselben Rechner lesbar), zugang.json, pruefplaetze.json.
+/// und sind nur für dasselbe Windows-Konto auf demselben Rechner lesbar), zugang.json, pruefplaetze.json und Verschleißstände.
 /// Wiederherstellen prüft Hashes und JSON, legt vorher Kopien der aktuellen Dateien an und schreibt atomar.
 /// </summary>
 public static class ConfigBackup
@@ -56,6 +57,7 @@ public static class ConfigBackup
         new("einstellungen.json", settingsPath, "Ergebnisordner, Datenbank, Outbox, MQTT (Benutzerprofil)"),
         new("zugang.json", accessPath, "Entra-App und Rechte je Konto (ProgramData)"),
         new("pruefplaetze.json", stationsPath, "Geräte, Prüfplätze, Zuordnung, Auswahl-/Auftragsablauf (ProgramData)"),
+        new(WearCounterStore.FileName, WearCounterStore.PathForStationSetup(stationsPath), "Verschleißstände und Rücksetzprotokoll"),
         new("programmquellen.json", localProgramCatalog ?? System.IO.Path.Combine(Testumgebung.Persistence.Releases.FolderReleaseStore.DefaultFolder, "Quellen", "programmquellen.json"),
             "Lokaler Programmkatalog; bei Serverbetrieb liegt der aktive Katalog in der Datenbank"),
         new("quellen-zugang.json", Testumgebung.Presentation.Releases.SourceCredentialStore.DefaultFile, "Geschützte Zugangsdaten für Programmquellen", ProtectOnRestore: true),
