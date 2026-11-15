@@ -143,8 +143,15 @@ public sealed class WaveformPlotViewModel : ObservableObject
 
     public bool HasCursor => _cursor is { } number && number >= _viewStart && number <= _viewEnd;
     public double CursorX => _cursor is { } number && _viewEnd > _viewStart ? (number - _viewStart) / (_viewEnd - _viewStart) * PlotWidth : 0;
-    public string CursorText => _cursor is { } number ? "Cursor " + FormatTime(number) : "Cursor: in die Kurve klicken";
-    public string ViewText => HasData ? $"{FormatTime(_viewStart)} … {FormatTime(_viewEnd)} von {FormatTime(Duration)}" : "Keine Kurve";
+    public bool ShowRms { get; init; } = true;
+    public DateTimeOffset? TimeOrigin { get; set; }
+    public string CursorText => _cursor is { } number ? "Cursor " + PlotTime(number) : "Cursor: in die Kurve klicken";
+    public string ViewText => !HasData ? "Keine Kurve" : TimeOrigin is null
+        ? $"{FormatTime(_viewStart)} … {FormatTime(_viewEnd)} von {FormatTime(Duration)}"
+        : $"{PlotTime(_viewStart)} … {PlotTime(_viewEnd)}";
+
+    private string PlotTime(double seconds)
+        => TimeOrigin is { } origin ? origin.AddSeconds(seconds).ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.CurrentCulture) : FormatTime(seconds);
     public string RangeText => HasData ? string.Create(CultureInfo.InvariantCulture, $"{_yMin:0.###} … {_yMax:0.###} {Unit}") : "";
     /// <summary>Y-Achse: oben, Mitte, unten (die Achse liegt außerhalb der gestreckten Zeichenfläche).</summary>
     public string YTopText => HasData ? _yMax.ToString("0.##", CultureInfo.InvariantCulture) : "";

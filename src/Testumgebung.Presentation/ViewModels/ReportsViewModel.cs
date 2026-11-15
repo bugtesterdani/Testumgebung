@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Wählt Prüfläufe für statistische Auswertung und PDF-Berichte in der Oberfläche aus.
  */
@@ -18,7 +18,7 @@ public sealed record BarItem(string Label, double Height, string Tooltip, bool H
 /// Auswertung &amp; Berichte: Ergebnisdateien laden, filtern (Zeitraum, Test, Version, Prüfplatz, Kennung), Kennzahlen (Ausbeute,
 /// FPY, Endausbeute), Fehler-Pareto, Messwertstatistik mit Cpk und Histogramm, Tagesverlauf; Export als PDF und CSV.
 /// </summary>
-public sealed class ReportsViewModel : ObservableObject
+public sealed partial class ReportsViewModel : ObservableObject
 {
     private const string PdfFilter = "PDF (*.pdf)|*.pdf";
     private const string CsvFilter = "CSV für Excel (*.csv)|*.csv";
@@ -257,7 +257,7 @@ public sealed class ReportsViewModel : ObservableObject
                 $"{dailyCount.Day:dd.MM.yyyy}: {dailyCount.Total} Läufe, PASS {dailyCount.Pass}, FAIL {dailyCount.Fail}, ERROR {dailyCount.Error}, ABORT {dailyCount.Abort}", dailyCount.Fail + dailyCount.Error > 0));
         SelectedMeasurement = Measurements.FirstOrDefault(measurementStatistics2 => measurementStatistics2.Cpk is not null) ?? Measurements.FirstOrDefault();
         OnPropertiesChanged(nameof(Statistics), nameof(HasStatistics), nameof(RunsText), nameof(YieldText), nameof(FpyText), nameof(FinalYieldText),
-            nameof(DutsText), nameof(DurationText), nameof(FilterText), nameof(ProblemCount));
+            nameof(DutsText), nameof(DurationText), nameof(FilterText), nameof(ProblemCount), nameof(FailStreakWarning));
         PdfCommand.RaiseCanExecuteChanged();
         CsvCommand.RaiseCanExecuteChanged();
     }
@@ -301,6 +301,7 @@ public sealed class ReportsViewModel : ObservableObject
                         $"{lo.ToString("0.###", De)} … {(lo + width).ToString("0.###", De)}: {counts[index]}", outside));
                 }
             }
+            UpdateControlCharts();
             OnPropertyChanged(nameof(MeasurementText));
         }
     }
