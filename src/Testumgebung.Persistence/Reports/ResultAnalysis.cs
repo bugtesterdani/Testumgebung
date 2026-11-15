@@ -219,21 +219,25 @@ public static class ResultAnalysis
                 map[key] = namedEntry;
             }
         }
-        return map.OrderBy(kv => kv.Value.Order).Select(kv =>
+        return map.OrderBy(entry => entry.Value.Order)
+            .Select(entry => SummarizeMeasurement(entry.Key, entry.Value.Name, entry.Value.Unit, entry.Value.Points, entry.Value.Low, entry.Value.High))
+            .ToList();
+    }
+
+    private static MeasurementStatistics SummarizeMeasurement(string nodeId, string name, string unit,
+        IReadOnlyList<(MeasurementSeriesKey Key, MeasurementPoint Point)> points, double? low, double? high)
+    {
+        var values = points.Select(point => point.Point.Value).ToList();
+        var mean = values.Average();
+        var sd = values.Count > 1 ? Math.Sqrt(values.Sum(value => (value - mean) * (value - mean)) / (values.Count - 1)) : 0;
+        var (cp, cpk) = Capability(values.Count, mean, sd, low, high);
+        var outside = values.Count(value => (low is { } lower && value < lower) || (high is { } upper && value > upper));
+        return new MeasurementStatistics(nodeId, name, unit, values.Count, values.Min(), values.Max(), mean, sd, low, high, outside, cp, cpk, values)
         {
-            var (name, unit, points, low, high, _) = kv.Value;
-            var values = points.Select(point => point.Point.Value).ToList();
-            var mean = values.Average();
-            var sd = values.Count > 1 ? Math.Sqrt(values.Sum(value2 => (value2 - mean) * (value2 - mean)) / (values.Count - 1)) : 0;
-            var (cp, cpk) = Capability(values.Count, mean, sd, low, high);
-            var outside = values.Count(value2 => (low is { } l3 && value2 < l3) || (high is { } h3 && value2 > h3));
-            return new MeasurementStatistics(kv.Key, name, unit, values.Count, values.Min(), values.Max(), mean, sd, low, high, outside, cp, cpk, values)
-            {
-                Charts = points.GroupBy(point => point.Key)
-                    .Select(series => new IndividualValueChart(series.Key, series.Select(item => item.Point).OrderBy(point => point.Time).ToArray()))
-                    .ToArray(),
-            };
-        }).ToList();
+            Charts = points.GroupBy(point => point.Key)
+                .Select(series => new IndividualValueChart(series.Key, series.Select(item => item.Point).OrderBy(point => point.Time).ToArray()))
+                .ToArray(),
+        };
     }
 
     private static (double? Cp, double? Cpk) Capability(int count, double mean, double sd, double? low, double? high)
