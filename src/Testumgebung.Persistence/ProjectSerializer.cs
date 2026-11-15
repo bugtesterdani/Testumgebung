@@ -137,17 +137,28 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
-        foreach (var (name, values) in dto.LimitSets ?? new Dictionary<string, SortedDictionary<string, string>>())
+        ReadLimitSets(dto.LimitSets, project);
+        ReadSimulation(dto, project);
+        ReadDeviceProfiles(dto.DeviceProfiles, project);
+        return project;
+    }
+
+    private static void ReadLimitSets(IReadOnlyDictionary<string, SortedDictionary<string, string>>? sets, TestProject project)
+    {
+        if (sets is null) return;
+        foreach (var (name, values) in sets)
         {
             if (values is null || values.Any(entry => entry.Value is null))
                 throw new ProjectFormatException($"Grenzwertsatz „{name}“ enthält ungültige Werte.");
             project.LimitSets.Add(name, new(values, StringComparer.Ordinal));
         }
+    }
+
+    private static void ReadSimulation(ProjectDto dto, TestProject project)
+    {
         if (dto.Simulation is not null) project.Simulation.AddRange(dto.Simulation);
         if (dto.SimulationOutputs is not null) project.SimulationOutputs.AddRange(dto.SimulationOutputs);
         if (dto.SimulationComm is not null) project.SimulationComm.AddRange(dto.SimulationComm);
-        ReadDeviceProfiles(dto.DeviceProfiles, project);
-        return project;
     }
 
     private static void ReadDeviceProfiles(List<Testumgebung.Instruments.CustomDeviceProfile>? profiles, TestProject project)
