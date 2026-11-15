@@ -81,6 +81,7 @@ public sealed class StationConfig
 
     /// <summary>Auswahl- und Auftragsablauf (Abschnitt 5); null = der Prüfplatz prüft den geöffneten bzw. freigegebenen Ablauf.</summary>
     public SelectionConfig? Selection { get; set; }
+    public ReferenceCheckConfig? ReferenceCheck { get; set; }
 }
 
 /// <summary>

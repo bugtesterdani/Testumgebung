@@ -128,7 +128,7 @@ public static class ResultFile
 
     private static byte[] EncodeHeader(ResultRun run)
     {
-        var msgPackWriter = new MsgPackWriter().Map(run.Devices.Count == 0 ? 17 : 18);
+        var msgPackWriter = new MsgPackWriter().Map(run.Devices.Count == 0 ? 18 : 19);
         msgPackWriter.Key("runId").Str(run.RunId);
         msgPackWriter.Key("stationRunId").Str(run.StationRunId);
         msgPackWriter.Key("station").Str(run.Station);
@@ -143,6 +143,7 @@ public static class ResultFile
         msgPackWriter.Key("werror").Bool(run.OperatorAbort);
         msgPackWriter.Key("status").Str(run.Status.ToString());
         msgPackWriter.Key("development").Bool(run.IsDevelopmentRun);
+        msgPackWriter.Key("runKind").Str(run.Kind.ToString());
         msgPackWriter.Key("filteredFor").Str(run.FilteredFor);
         msgPackWriter.Key("application").Str(run.Application);
         msgPackWriter.Key("schema").Str("testumgebung.ergebnis/1");
@@ -593,6 +594,7 @@ public static class ResultFile
                 Rating = ParseRating(head.S("rating")),
                 OperatorAbort = head.B("werror") || head.S("status") == "ABORT",
                 IsDevelopmentRun = head.B("development"),
+                Kind = Enum.TryParse<ResultRunKind>(head.S("runKind"), out var kind) ? kind : ResultRunKind.Production,
                 FilteredFor = head.S("filteredFor") ?? "",
                 Application = head.S("application") ?? "",
                 Devices = ReadDevices(head.S("devices"), problems),
