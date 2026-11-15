@@ -110,13 +110,7 @@ public sealed class ShellViewModel : ObservableObject
         ExecuteSelectedCommand = new RelayCommand(
             () => _ = SelectedStation.Debug.ExecuteTargetedAsync(Editor.SelectedNode!.Id, SelectedStation.CreateTargetedRun),
             () => IsDeveloper && Editor.SelectedNode is { IsSection: false } && !SelectedStation.IsRunning);
-        StartSimulationCommand = new RelayCommand(() =>
-        {
-            if (!SelectedStation.CanStart) return;
-            _ = SelectedStation.StartSimulationAsync(SimulationVariant);
-            Page = ShellPage.Editor;
-        }, () => IsDeveloper && SelectedStation.CanStart && !SelectedStation.Selection.IsActive
-            && (!HasSimulationVariants || SimulationVariants.Contains(SimulationVariant)));
+        StartSimulationCommand = CreateStartSimulationCommand();
         RefreshSimulationVariants();
         Editor.Changed += RefreshSimulationVariants;
         Editor.ProjectReplaced += ResetSimulationVariant;
@@ -437,6 +431,14 @@ public sealed class ShellViewModel : ObservableObject
             if (SetProperty(ref _simulationVariant, value)) StartSimulationCommand.RaiseCanExecuteChanged();
         }
     }
+
+    private RelayCommand CreateStartSimulationCommand() => new(() =>
+    {
+        if (!SelectedStation.CanStart) return;
+        _ = SelectedStation.StartSimulationAsync(SimulationVariant);
+        Page = ShellPage.Editor;
+    }, () => IsDeveloper && SelectedStation.CanStart && !SelectedStation.Selection.IsActive
+        && (!HasSimulationVariants || SimulationVariants.Contains(SimulationVariant)));
 
     private void ResetSimulationVariant()
     {
