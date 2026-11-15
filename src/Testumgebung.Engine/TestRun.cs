@@ -48,7 +48,7 @@ public sealed class TestRunOptions
     public Func<bool>? CanBeginDut { get; init; }
 
     public bool ContinuousLoop { get; init; }
-    public bool SingleLoopIteration { get; init; }
+    public bool ReferenceRun { get; init; }
     public IReadOnlyDictionary<string, object?>? SessionPresets { get; init; }
 
     /// <summary>
@@ -728,7 +728,7 @@ public sealed class TestRun
 
     private Repetition MainLoopRepetition(Repetition configured)
     {
-        if (Options.SingleLoopIteration) return Repetition.Once;
+        if (Options.ReferenceRun) return Repetition.Once;
         return Options.ContinuousLoop ? Repetition.Endless : configured;
     }
 

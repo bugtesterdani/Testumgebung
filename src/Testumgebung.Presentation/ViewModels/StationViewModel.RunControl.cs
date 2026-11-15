@@ -210,7 +210,7 @@ public sealed partial class StationViewModel
             Presets = presets,
             SessionPresets = rootPresets,
             ContinuousLoop = orderSession,
-            SingleLoopIteration = _referenceRun is not null,
+            ReferenceRun = _referenceRun is not null,
             DutLimit = dutLimit,
             CanBeginDut = ProductionReferenceGuard(),
             EventHistoryLimit = 2000,

@@ -182,6 +182,7 @@ internal sealed class StepContext(
 
     public string? ProgramPythonVenv => run.Options.PythonVenv;
     public PairedStationContext? PairedStation => run.Options.PairedStation;
+    public bool IsReferenceRun => run.Options.ReferenceRun;
 
     public Testumgebung.Domain.Code.ICodeRuntime? CodeRuntime => run.Options.CodeRuntime;
 

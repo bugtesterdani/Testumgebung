@@ -11,6 +11,7 @@ public sealed class HandoverWaitAction(string channel, int firstSide) : IStepAct
 {
     public async Task<StepOutcome> ExecuteAsync(IStepContext context)
     {
+        if (context.IsReferenceRun) return StepOutcome.Unrated(null, "Zwei-Platz-Freigabe im Referenzlauf übersprungen.");
         var paired = context.PairedStation ?? throw new InvalidOperationException("Freigaben benötigen einen gemeinsamen Zwei-Platz-Auftrag.");
         context.Log($"Seite {paired.Side}: Freigabe „{channel}“ abwarten.");
         await paired.Handover.WaitAsync(paired.Side, channel, firstSide, context.CancellationToken).ConfigureAwait(false);
@@ -22,6 +23,7 @@ public sealed class HandoverReleaseAction(string channel) : IStepAction
 {
     public Task<StepOutcome> ExecuteAsync(IStepContext context)
     {
+        if (context.IsReferenceRun) return Task.FromResult(StepOutcome.Unrated(null, "Zwei-Platz-Freigabe im Referenzlauf übersprungen."));
         var paired = context.PairedStation ?? throw new InvalidOperationException("Freigaben benötigen einen gemeinsamen Zwei-Platz-Auftrag.");
         paired.Handover.Release(paired.Side, channel);
         return Task.FromResult(StepOutcome.Unrated(paired.Side == 1 ? 2 : 1, "Andere Seite freigegeben."));
