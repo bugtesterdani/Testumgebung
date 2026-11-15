@@ -193,6 +193,7 @@ public static class ReleasePackage
         flow.Remove("simulation");
         flow.Remove("simulationOutputs");
         flow.Remove("curves");
+        flow.Remove("limitSets");
         list.Add(new ManifestEntry("Ablauf", definition.Name, definition.Version, Sha256(flow.ToJsonString())));
 
         AddBlockEntries(root["library"] as JsonArray, list);
@@ -212,6 +213,9 @@ public static class ReleasePackage
                 list.Add(new ManifestEntry("Kurven", (string?)node!["name"] ?? (string)node["id"]!, (string?)node["version"] ?? "", Sha256(node.ToJsonString())));
         else
             list.Add(new ManifestEntry("Kurven", "keine", "", Sha256("")));
+        if (root["limitSets"] is JsonObject limitSets)
+            foreach (var (name, values) in limitSets)
+                list.Add(new ManifestEntry("Definitionen", $"Grenzwertsatz: {name}", definition.Version, Sha256(values!.ToJsonString())));
         list.Add(new ManifestEntry("Definitionen", "Hardwareprofil (Simulation)", definition.Version,
             Sha256((root["simulation"]?.ToJsonString() ?? "[]") + (root["simulationOutputs"]?.ToJsonString() ?? ""))));
         return list;

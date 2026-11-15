@@ -30,6 +30,10 @@ public static class Xlsx
     }
 
     public static ImportTable Parse(byte[] bytes, string name, string? sheetName = null)
+        => CurveImport.FromGrid("Excel (.xlsx)", name + (sheetName is null ? "" : $" [{sheetName}]"),
+            CurveImport.Hash(bytes), ReadGrid(bytes, sheetName), CultureInfo.InvariantCulture);
+
+    internal static List<string[]> ReadGrid(byte[] bytes, string? sheetName = null)
     {
         using var zip = Open(bytes);
         var workbook = Load(zip, "xl/workbook.xml");
@@ -49,9 +53,8 @@ public static class Xlsx
         var rows = ReadRows(zip, sheetPath, shared);
         if (rows.Count == 0) throw new CurveImportException("Tabellenblatt ist leer.");
         var width = rows.Values.Where(entries => entries.Count > 0).Select(entries => entries.Keys.Max() + 1).DefaultIfEmpty(0).Max();
-        var grid = rows.Values.Select(entries => Enumerable.Range(0, width).Select(index => entries.TryGetValue(index, out var text) ? text : "").ToArray()).ToList();
-        var table = CurveImport.FromGrid("Excel (.xlsx)", name + (sheetName is null ? "" : $" [{sheetName}]"), CurveImport.Hash(bytes), grid, CultureInfo.InvariantCulture);
-        return table;
+        return rows.Values.Select(entries => Enumerable.Range(0, width)
+            .Select(index => entries.TryGetValue(index, out var text) ? text : "").ToArray()).ToList();
     }
 
     private static SortedDictionary<int, Dictionary<int, string>> ReadRows(ZipArchive zip, string sheetPath, List<string> shared)
