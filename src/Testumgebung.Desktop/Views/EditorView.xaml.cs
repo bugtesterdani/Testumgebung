@@ -19,6 +19,12 @@ namespace Testumgebung.Desktop.Views;
 /// </summary>
 public partial class EditorView : UserControl
 {
+    private void OnLabelDesigner(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ParameterRowViewModel row } source)
+            LabelDesignerWindow.Edit(source, row);
+    }
+
     private void OnParameterTable(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: ParameterRowViewModel row } source)

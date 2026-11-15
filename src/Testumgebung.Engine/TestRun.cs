@@ -63,6 +63,8 @@ public sealed class TestRunOptions
     public int EventHistoryLimit { get; init; } = int.MaxValue;
     public bool RetainWaveformsInHistory { get; init; } = true;
     public bool DevelopmentRun { get; init; }
+    /// <summary>Ohne Drucker werden Etiketten als Vorschau zurückgegeben.</summary>
+    public ILabelPrinter? LabelPrinter { get; init; }
 }
 
 /// <summary>

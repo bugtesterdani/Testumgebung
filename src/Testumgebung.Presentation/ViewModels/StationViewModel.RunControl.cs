@@ -215,6 +215,7 @@ public sealed partial class StationViewModel
             DutLimit = dutLimit,
             CanBeginDut = DutStartGuard(),
             ReserveDutUsage = WearReservation(),
+            LabelPrinter = !_simulationOnly && _coordinator is not null ? new LabelPrinter() : null,
             EventHistoryLimit = 2000,
             RetainWaveformsInHistory = false,
             DevelopmentRun = _runIsDraft,

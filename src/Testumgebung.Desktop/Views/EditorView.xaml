@@ -510,6 +510,8 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Style="{StaticResource Label}" Text="{Binding Label}" TextWrapping="Wrap" />
                                 <StackPanel Grid.Column="1">
+                                    <Button Content="Etikett gestalten …" Click="OnLabelDesigner" HorizontalAlignment="Left"
+                                            Visibility="{Binding IsLabelTemplate, Converter={StaticResource BoolVis}}" />
                                     <Button Content="Tabelle bearbeiten …" Click="OnParameterTable" HorizontalAlignment="Left"
                                             Visibility="{Binding IsTable, Converter={StaticResource BoolVis}}" />
                                     <TextBox x:Name="TextEditor" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, Delay=300}"

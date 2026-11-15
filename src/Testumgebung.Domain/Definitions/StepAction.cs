@@ -181,6 +181,9 @@ public interface IStepContext
     /// <summary>Werkerinteraktion; liefert Antwort bzw. Eingabewert (null bei „fortsetzen ohne Warten“).</summary>
     Task<object?> AskOperatorAsync(OperatorPrompt prompt);
 
+    /// <summary>Gibt false zurück, wenn der Lauf Etiketten nur simuliert.</summary>
+    Task<bool> PrintLabelAsync(LabelPrintRequest request) => Task.FromResult(false);
+
     void Log(string message);
 
     /// <summary>Aktualisiert die laufende Werkeranzeige ohne Eingabeaufforderung oder Bewertungsänderung.</summary>

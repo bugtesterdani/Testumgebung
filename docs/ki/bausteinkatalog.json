@@ -958,6 +958,92 @@
       ]
     },
     {
+      "type": "etikett.drucken",
+      "displayName": "Etikett drucken",
+      "category": "Werkerinteraktion",
+      "description": "Rendert eine ZPL-Vorlage und \u00FCbergibt das Etikett an einen TCP-Drucker, eine Windows-Druckwarteschlange oder die Simulation.",
+      "parameters": [
+        {
+          "name": "Druckart",
+          "label": "Druckart",
+          "kind": "Choice",
+          "default": "Simulation",
+          "required": false,
+          "choices": [
+            "Simulation",
+            "TCP",
+            "Windows"
+          ],
+          "hint": null
+        },
+        {
+          "name": "ZplVorlage",
+          "label": "ZPL-Vorlage",
+          "kind": "Text",
+          "default": "^XA\n^CI28\n^FO30,30^FD{Kennung}^FS\n^XZ",
+          "required": true,
+          "choices": null,
+          "hint": "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern."
+        },
+        {
+          "name": "Host",
+          "label": "Druckername / IP-Adresse",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "TCP"
+          },
+          "advanced": false
+        },
+        {
+          "name": "Port",
+          "label": "TCP-Port",
+          "kind": "Number",
+          "default": "9100",
+          "required": false,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "TCP"
+          },
+          "advanced": false
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "TCP-Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "5000",
+          "required": false,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "TCP"
+          },
+          "advanced": false
+        },
+        {
+          "name": "Warteschlange",
+          "label": "Windows-Druckwarteschlange",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "Windows"
+          },
+          "advanced": false
+        }
+      ]
+    },
+    {
       "type": "fehler",
       "displayName": "Fehler erzeugen",
       "category": "Ablauf",
