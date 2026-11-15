@@ -502,6 +502,7 @@ public sealed class BlockCatalog
         TraceBlocks.Register(blockCatalog);
         ProcessBlocks.Register(blockCatalog);
         LiveLogBlocks.Register(blockCatalog);
+        LabelPrintingBlocks.Register(blockCatalog);
         CommunicationBlocks.Register(blockCatalog);
         BusBlocks.Register(blockCatalog);
         return blockCatalog;

@@ -55,6 +55,13 @@ internal sealed class StepContext(
 
     public object Get(string name) => scope.Get(name);
 
+    public async Task<bool> PrintLabelAsync(LabelPrintRequest request)
+    {
+        if (run.Options.LabelPrinter is not { } printer) return false;
+        await printer.SendAsync(request, CancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
     public object? Preset(string name) => run.Options.Presets is { } entries && entries.TryGetValue(name, out var value) ? value
         : run.Options.SessionPresets is { } entries2 && entries2.TryGetValue(name, out var sv) ? sv : null;
 
