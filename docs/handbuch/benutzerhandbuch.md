@@ -162,10 +162,12 @@ zeigt beide Ansichten mit Bildern und einem ausführbaren Beispiel.
 
 ### 5.1 Projekt anlegen und speichern
 
-1. Im Ablaufeditor **Neu** verwenden oder ein bestehendes `.tproj.json` über **Öffnen** laden.
-2. Name und Version in den Projekteigenschaften setzen.
+1. Im Ablaufeditor **Neu** wählen. Im Assistenten eine Vorlage oder einen leeren Ablauf auswählen und den Projektnamen eingeben. Ein bestehendes `.tproj.json` lässt sich über **Öffnen** laden.
+2. Bei einem neuen Projekt wird eine unabhängige Kopie mit Version 0.1 angelegt. Die Vorlage bleibt erhalten.
 3. Hauptvariablen anlegen, beispielsweise `Auftrag` und `Artikel` als String.
 4. Unter einem eindeutigen Namen speichern, z. B. `programm-a.tproj.json`.
+
+**F1** öffnet die Hilfe für den aktiven Bereich. Bei einem ausgewählten Schritt zeigt die Hilfe auch die Beschreibung und Parameter seines Bausteins.
 
 Projektdateien enthalten den Ablauf und eingebettete DLLs. **Speichern** ist keine Freigabe. Nach Änderungen ist ein erneuter Test und bei Produktivbetrieb eine neue Testprogrammfreigabe erforderlich.
 

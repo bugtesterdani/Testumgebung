@@ -229,7 +229,12 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
 
     public TestProject Load(string path) => Deserialize(File.ReadAllText(path));
 
-    public TestProject LoadTemplate(string path, string name) => DeserializeProject(File.ReadAllText(path), name);
+    public TestProject LoadTemplate(string path, string name)
+    {
+        var project = DeserializeProject(File.ReadAllText(path), name);
+        project.Definition.Version = "0.1";
+        return project;
+    }
 
     /// <summary>Unveränderliche Kopie für einen Lauf: laufende Prüflinge behalten ihre gestartete Version.</summary>
     public TestProject Clone(TestProject project) => Deserialize(Serialize(project));

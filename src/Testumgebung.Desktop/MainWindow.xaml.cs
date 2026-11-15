@@ -65,7 +65,7 @@ public partial class MainWindow : Window
             LoadError = stationError,
         };
 
-        Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), new FileDialogService(), project: exampleProject, codeRuntime: _codeRuntime,
+        Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), CreateFileDialogService(startup), project: exampleProject, codeRuntime: _codeRuntime,
             services: _services, settingsStore: store, identity: identity, releases: _releases,
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
         Shell.ReleasesPage?.Sources.ConfigureAuthentication(new SourceCredentialStore(SourceCredentialStore.DefaultFile, new RepositorySecretProtector()));
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
 
         // Optionale Inaktivitätssperre: Eingaben merken, regelmäßig prüfen. Ein laufender Test wird nie beeinflusst.
         PreviewMouseDown += (_, _) => Shell.NoteActivity();
-        PreviewKeyDown += (_, _) => Shell.NoteActivity();
+        PreviewKeyDown += OnWindowKeyDown;
         _inactivity.Tick += (_, _) => Shell.CheckInactivity();
         _inactivity.Start();
         // Manuelles Öffnen der Anwendung: offene Runs aus der lokalen Outbox laden und Übertragung fortsetzen (P04).
@@ -234,6 +234,32 @@ public partial class MainWindow : Window
             _closing = false;
             _showMessage("Der Abschluss konnte nicht vollständig bestätigt werden: " + ex.Message,
                 MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static FileDialogService CreateFileDialogService(MainWindowStartup? startup) => new(startup?.ExamplesDirectory);
+
+    private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs args)
+    {
+        Shell.NoteActivity();
+        if (args.Key != System.Windows.Input.Key.F1) return;
+        args.Handled = true;
+        ShowContextHelp();
+    }
+
+    private void ShowContextHelp()
+    {
+        var block = (Shell.Editor.SelectedNode?.InlineProperties as StepPropertiesViewModel)?.Block;
+        try
+        {
+            var folder = System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "handbuch");
+            var help = ContextHelp.Load(folder, Shell.Page, block);
+            new Testumgebung.Desktop.Views.ContextHelpWindow(help) { Owner = this }.ShowDialog();
+        }
+        catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _showMessage("Das mitgelieferte Handbuch konnte nicht geöffnet werden. " + error.Message,
+                MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

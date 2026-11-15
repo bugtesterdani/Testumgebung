@@ -51,7 +51,11 @@ public sealed partial class DevelopmentWorkspaceTests
                 Assert.Same(window.Shell, window.DataContext); Assert.NotNull(services);
                 Assert.DoesNotContain(Descendants(window).OfType<System.Windows.Controls.CheckBox>(), b => b.GetBindingExpression(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty)?.ParentBinding.Path.Path == "PairedStations.Enabled");
                 Assert.Empty(Descendants(window).OfType<Views.PairedStationsView>().SelectMany(v => Descendants(v).OfType<System.Windows.Controls.ComboBox>()));
-                if (mode == "normal") VerifyGroupedNavigation(window, dispatcher);
+                if (mode == "normal")
+                {
+                    VerifyProjectAssistantAndHelp(window, dispatcher, directory);
+                    VerifyGroupedNavigation(window, dispatcher);
+                }
                 if (mode == "example")
                 {
                     Assert.Contains("Programme A, B, C und D", window.Title); Assert.Equal("A123", window.Shell.SelectedStation.Selection.ScanText); Assert.True(window.Shell.SelectedStation.UseDraft);
