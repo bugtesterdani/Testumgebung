@@ -164,6 +164,10 @@
                     <CheckBox Content="Entwurf testen" IsChecked="{Binding SelectedStation.UseDraft}" VerticalAlignment="Center" Margin="0,0,14,0"
                               Visibility="{Binding SelectedStation.UsesReleases, Converter={StaticResource BoolVis}}"
                               ToolTip="Aktuellen Editorstand statt der freigegebenen Version starten (Entwicklungslauf, nicht freigegeben)." />
+                    <ComboBox ItemsSource="{Binding SimulationVariants}" SelectedItem="{Binding SimulationVariant, Mode=TwoWay}"
+                              Visibility="{Binding HasSimulationVariants, Converter={StaticResource BoolVis}}"
+                              MinWidth="120" Margin="0,0,8,0" VerticalAlignment="Center"
+                              AutomationProperties.Name="Variante für Simulation" ToolTip="Variante für die Simulation auswählen" />
                     <Button Style="{StaticResource OutlineButton}" Command="{Binding StartSimulationCommand}" Padding="18,9">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" Margin="0,0,10,0" />

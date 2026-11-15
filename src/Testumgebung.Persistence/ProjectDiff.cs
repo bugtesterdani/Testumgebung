@@ -48,6 +48,15 @@ public static class ProjectDiff
             list.Add(new(DiffKind.Changed, "Projekt", "Name", $"{before.Definition.Name} → {after.Definition.Name}"));
         if (before.Description != after.Description) list.Add(new(DiffKind.Changed, "Projekt", "Beschreibung", Short(after.Description)));
         CompareVariables(list, "Hauptablauf", before.Definition.Root, after.Definition.Root);
+        foreach (var (name, values) in after.LimitSets)
+        {
+            if (!before.LimitSets.TryGetValue(name, out var previous))
+                list.Add(new(DiffKind.Added, "Grenzwertsätze", name, ""));
+            else if (!previous.SequenceEqual(values))
+                list.Add(new(DiffKind.Changed, "Grenzwertsätze", name, "Variablenwerte geändert"));
+        }
+        foreach (var name in before.LimitSets.Keys.Where(name => !after.LimitSets.ContainsKey(name)))
+            list.Add(new(DiffKind.Removed, "Grenzwertsätze", name, ""));
 
         foreach (var (id, nb) in entries2)
         {

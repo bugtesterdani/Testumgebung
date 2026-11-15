@@ -355,7 +355,7 @@ public sealed class SelectionPageViewModel : ObservableObject
         new("Testkennung", "string", "Ausgewählter Test (Name des Ablaufs, z. B. AC-Prüfung)"),
         new("Version", "string (optional)", "Freigegebene Version (leer = aktuelle Freigabe)"),
         new("Auftrag", "string", "Auftragsnummer (z. B. FA-2038) → Variable „Auftrag“"),
-        new("Prüfparameter", "Name=Wert;…", "Setzt Variablen gleichen Namens im Prüfling (z. B. GrenzwertMin=220)"),
+        new("Prüfparameter", "Name=Wert;…", "Wählt einen Grenzwertsatz (Variante=Standard) oder setzt Variablen (GrenzwertMin=220)"),
         new("Kennung", "string", "Im Auftragsmodus: neue Seriennummer in jeder Loop-Runde. Im Einzelprüfling-Modus: Vorbelegung der erfassten Kennung."),
     ];
 

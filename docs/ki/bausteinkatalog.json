@@ -232,7 +232,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Text \u201EGrenzwertMin=220;GrenzwertMax=240\u201C"
+          "hint": "Text \u201EVariante=Standard\u201C oder \u201EGrenzwertMin=220;GrenzwertMax=240\u201C"
         },
         {
           "name": "PythonVenv",

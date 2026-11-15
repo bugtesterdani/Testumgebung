@@ -110,12 +110,10 @@ public sealed class ShellViewModel : ObservableObject
         ExecuteSelectedCommand = new RelayCommand(
             () => _ = SelectedStation.Debug.ExecuteTargetedAsync(Editor.SelectedNode!.Id, SelectedStation.CreateTargetedRun),
             () => IsDeveloper && Editor.SelectedNode is { IsSection: false } && !SelectedStation.IsRunning);
-        StartSimulationCommand = new RelayCommand(() =>
-        {
-            if (!SelectedStation.CanStart) return;
-            _ = SelectedStation.StartSimulationAsync();
-            Page = ShellPage.Editor;
-        }, () => IsDeveloper && SelectedStation.CanStart && !SelectedStation.Selection.IsActive);
+        StartSimulationCommand = CreateStartSimulationCommand();
+        RefreshSimulationVariants();
+        Editor.Changed += RefreshSimulationVariants;
+        Editor.ProjectReplaced += ResetSimulationVariant;
         void ConnectProjectEvents()
         {
             Session.Changed += () => _ui.Post(RaiseUser);
@@ -420,6 +418,43 @@ public sealed class ShellViewModel : ObservableObject
     public RelayCommand SwitchAccountCommand { get; }
     public RelayCommand ExecuteSelectedCommand { get; }
     public RelayCommand StartSimulationCommand { get; }
+
+    private string? _simulationVariant;
+    public IReadOnlyList<string> SimulationVariants { get; private set; } = [];
+    public bool HasSimulationVariants => SimulationVariants.Count > 0;
+
+    public string? SimulationVariant
+    {
+        get => _simulationVariant;
+        set
+        {
+            if (SetProperty(ref _simulationVariant, value)) StartSimulationCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    private RelayCommand CreateStartSimulationCommand() => new(() =>
+    {
+        if (!SelectedStation.CanStart) return;
+        _ = SelectedStation.StartSimulationAsync(SimulationVariant);
+        Page = ShellPage.Editor;
+    }, () => IsDeveloper && SelectedStation.CanStart && !SelectedStation.Selection.IsActive
+        && (!HasSimulationVariants || SimulationVariants.Contains(SimulationVariant)));
+
+    private void ResetSimulationVariant()
+    {
+        SimulationVariant = null;
+        RefreshSimulationVariants();
+    }
+
+    private void RefreshSimulationVariants()
+    {
+        var variants = Editor.Project.LimitSets.Keys.ToArray();
+        if (SimulationVariants.SequenceEqual(variants)) return;
+        SimulationVariants = variants;
+        if (!SimulationVariants.Contains(SimulationVariant)) SimulationVariant = null;
+        OnPropertiesChanged(nameof(SimulationVariants), nameof(HasSimulationVariants));
+        StartSimulationCommand.RaiseCanExecuteChanged();
+    }
 
     public string ProjectName => Editor.ProjectName;
     public string Version => Editor.Version;

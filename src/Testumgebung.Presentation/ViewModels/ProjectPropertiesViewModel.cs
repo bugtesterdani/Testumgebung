@@ -5,6 +5,8 @@ using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
 using Testumgebung.Domain.Scopes;
 using Testumgebung.Engine.Blocks;
+using Testumgebung.Persistence;
+using Testumgebung.Persistence.Curves;
 using Testumgebung.Presentation.Mvvm;
 
 namespace Testumgebung.Presentation.ViewModels;
@@ -37,6 +39,42 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
     }
 
     public VariableListViewModel Variables { get; }
+
+    public IReadOnlyList<string> LimitSetNames => _editor.Project.LimitSets.Keys.ToArray();
+
+    private RelayCommand? _importLimitSets;
+    private RelayCommand? _clearLimitSets;
+
+    public RelayCommand ImportLimitSetsCommand => _importLimitSets ??= new(() =>
+    {
+        var dialogs = _editor.Dialogs;
+        var path = dialogs?.OpenFile("Grenzwertsätze importieren", "Grenzwerttabellen (*.csv;*.xlsx)|*.csv;*.xlsx");
+        if (path is null) return;
+        try
+        {
+            var sets = LimitSetTable.Import(_editor.Project, path);
+            _editor.Project.LimitSets.Clear();
+            foreach (var (name, values) in sets) _editor.Project.LimitSets.Add(name, values);
+            LimitSetsChanged();
+        }
+        catch (Exception ex) when (ex is ProjectFormatException or CurveImportException or IOException or UnauthorizedAccessException or System.Xml.XmlException)
+        {
+            dialogs!.ShowError(ex.Message);
+        }
+    }, () => _editor.Dialogs is not null);
+
+    public RelayCommand ClearLimitSetsCommand => _clearLimitSets ??= new(() =>
+    {
+        _editor.Project.LimitSets.Clear();
+        LimitSetsChanged();
+    }, () => _editor.Project.LimitSets.Count > 0);
+
+    private void LimitSetsChanged()
+    {
+        _editor.MarkChanged();
+        OnPropertyChanged(nameof(LimitSetNames));
+        _clearLimitSets?.RaiseCanExecuteChanged();
+    }
 
     // ------------------------------------------------------------------ Kommunikations-Simulation
 

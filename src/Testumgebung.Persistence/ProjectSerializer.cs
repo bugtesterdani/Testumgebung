@@ -29,6 +29,7 @@ public sealed class TestProject(TestDefinition definition)
 {
     public TestDefinition Definition { get; set; } = definition;
     public string? Description { get; set; }
+    public SortedDictionary<string, SortedDictionary<string, string>> LimitSets { get; } = new(StringComparer.Ordinal);
     public List<SimulatedResource> Simulation { get; } = [];
 
     /// <summary>Simulierte Kurvenausgänge (z. B. programmierbare AC-Quelle) mit Rückwirkung auf Messkanäle.</summary>
@@ -84,6 +85,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             Name = def.Name,
             Version = def.Version,
             Description = project.Description,
+            LimitSets = project.LimitSets.Count == 0 ? null : project.LimitSets,
             Assemblies = def.Assemblies.Count == 0 ? null : def.Assemblies.OrderBy(managedAssembly => managedAssembly.Name, StringComparer.Ordinal).ToList(),
             Variables = def.Root.Variables.Select(ToDto).ToList(),
             Init = ToDto(def.Init),
@@ -135,11 +137,28 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
+        ReadLimitSets(dto.LimitSets, project);
+        ReadSimulation(dto, project);
+        ReadDeviceProfiles(dto.DeviceProfiles, project);
+        return project;
+    }
+
+    private static void ReadLimitSets(IReadOnlyDictionary<string, SortedDictionary<string, string>>? sets, TestProject project)
+    {
+        if (sets is null) return;
+        foreach (var (name, values) in sets)
+        {
+            if (values is null || values.Any(entry => entry.Value is null))
+                throw new ProjectFormatException($"Grenzwertsatz „{name}“ enthält ungültige Werte.");
+            project.LimitSets.Add(name, new(values, StringComparer.Ordinal));
+        }
+    }
+
+    private static void ReadSimulation(ProjectDto dto, TestProject project)
+    {
         if (dto.Simulation is not null) project.Simulation.AddRange(dto.Simulation);
         if (dto.SimulationOutputs is not null) project.SimulationOutputs.AddRange(dto.SimulationOutputs);
         if (dto.SimulationComm is not null) project.SimulationComm.AddRange(dto.SimulationComm);
-        ReadDeviceProfiles(dto.DeviceProfiles, project);
-        return project;
     }
 
     private static void ReadDeviceProfiles(List<Testumgebung.Instruments.CustomDeviceProfile>? profiles, TestProject project)
@@ -520,6 +539,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         public string? Name { get; set; }
         public string? Version { get; set; }
         public string? Description { get; set; }
+        public IReadOnlyDictionary<string, SortedDictionary<string, string>>? LimitSets { get; set; }
         public List<VariableDto>? Variables { get; set; }
         public GroupDto? Init { get; set; }
         public GroupDto? Loop { get; set; }

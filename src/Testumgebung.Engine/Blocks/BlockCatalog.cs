@@ -393,7 +393,7 @@ public sealed class BlockCatalog
                 new("Testkennung", "Testkennung", ParameterKind.Expression, Required: true, Hint: "z. B. \"AC-Prüfung\" oder eine Variable"),
                 new("Version", "Version (leer = aktuell freigegebene)", ParameterKind.Expression),
                 new("Auftrag", "Auftrag", ParameterKind.Expression),
-                new("Pruefparameter", "Prüfparameter", ParameterKind.Expression, Hint: "Text „GrenzwertMin=220;GrenzwertMax=240“"),
+                new("Pruefparameter", "Prüfparameter", ParameterKind.Expression, Hint: "Text „Variante=Standard“ oder „GrenzwertMin=220;GrenzwertMax=240“"),
                 new("PythonVenv", "Python-Umgebung (optional)", ParameterKind.Expression, Hint: "Absoluter Ordnerpfad als String oder Variable; fehlende Umgebung fällt auf die nächste Stufe zurück."),
             ],
             parameters2 =>
