@@ -16,6 +16,28 @@ Anmelden (oben rechts) mit dem Recht **Entwickeln**. Die Entwickleransicht öffn
 * **Anzeige und Speicherung** je Schritt/Gruppe (erben oder setzen): Anzeigen am Prüfplatz, Ergebnisdatei (+Kurven),
   Datenbank (+Kurven). „Anzeigen“ aus blendet Schritt und Messwerte in der Werkeransicht aus.
 
+## Neues Prüfprogramm und Hilfe
+
+Über **Neu** im Ablaufeditor öffnest du den Projektassistenten. Wähle eine
+mitgelieferte Vorlage oder einen leeren Ablauf und gib einen Projektnamen ein.
+Die Kopie startet mit Version 0.1 und wird erstmals über **Speichern** abgelegt.
+Die mitgelieferte Vorlage bleibt erhalten.
+
+Mit **F1** öffnest du die Hilfe für die aktive Ansicht. Ist ein Schritt im
+Ablaufeditor ausgewählt, siehst du zusätzlich die Beschreibung und Parameter
+seines Bausteins.
+
+## Etikett drucken und gestalten
+
+Der Baustein **Etikett drucken** verwendet eine ZPL-Vorlage. Platzhalter wie
+`{Kennung}` werden beim Ausführen ersetzt. Für den Druck kannst du einen
+TCP-Drucker oder eine Windows-Druckwarteschlange wählen. Die Simulation zeigt
+den erzeugten ZPL-Text als Schrittergebnis.
+
+Über **Etikett gestalten …** lassen sich Elemente und Bilder visuell platzieren.
+Die Druckauflösung muss zum Drucker passen. Der Designer bettet Bilder aus
+PNG, JPEG, BMP, GIF oder TIFF als Schwarzweißgrafik in die Vorlage ein.
+
 ## Werkeransicht gestalten
 
 Projekt-Eigenschaften (Editor ohne Auswahl bzw. „Projekt“) → **Werkeransicht: Layout und Darstellung**:

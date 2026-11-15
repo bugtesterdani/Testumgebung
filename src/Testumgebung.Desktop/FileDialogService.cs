@@ -5,12 +5,13 @@
 
 using System.Windows;
 using Microsoft.Win32;
+using Testumgebung.Desktop.Views;
 using Testumgebung.Presentation.Mvvm;
 
 namespace Testumgebung.Desktop;
 
 /// <summary>Standarddialoge von Windows für Projektdateien.</summary>
-public sealed class FileDialogService : IFileDialogService
+public sealed class FileDialogService(string? examplesFolder = null) : IFileDialogService
 {
     private const string Filter = "Testumgebung-Projekt (*.tproj.json)|*.tproj.json|JSON (*.json)|*.json|Alle Dateien (*.*)|*.*";
 
@@ -22,6 +23,13 @@ public sealed class FileDialogService : IFileDialogService
             MessageBoxResult.No => UnsavedProjectDecision.Discard,
             _ => UnsavedProjectDecision.Cancel,
         };
+
+    public NewProjectRequest? ChooseNewProject()
+    {
+        var folder = examplesFolder ?? System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "beispiele");
+        var dialog = new NewProjectWindow(folder) { Owner = Application.Current?.MainWindow };
+        return dialog.ShowDialog() == true ? dialog.Request : null;
+    }
 
     public string? OpenProject()
     {

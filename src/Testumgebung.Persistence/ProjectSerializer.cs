@@ -118,7 +118,9 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         return JsonSerializer.Serialize(dto, Options);
     }
 
-    public TestProject Deserialize(string json)
+    public TestProject Deserialize(string json) => DeserializeProject(json, null);
+
+    private TestProject DeserializeProject(string json, string? nameOverride)
     {
         ProjectDto? dto;
         try
@@ -133,7 +135,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         if (dto.FormatVersion > FormatVersion) throw new ProjectFormatException($"Formatversion {dto.FormatVersion} wird von dieser Anwendung nicht unterstützt.");
         if (dto.Init is null || dto.Loop is null || dto.Finalization is null) throw new ProjectFormatException("Init, Loop oder Finalization fehlt.");
 
-        var def = new TestDefinition(dto.Name ?? "Unbenannt", dto.Version ?? "0.1", FromDto(dto.Init), FromDto(dto.Loop), FromDto(dto.Finalization));
+        var def = new TestDefinition(nameOverride ?? dto.Name ?? "Unbenannt", dto.Version ?? "0.1", FromDto(dto.Init), FromDto(dto.Loop), FromDto(dto.Finalization));
         foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
@@ -226,6 +228,13 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     }
 
     public TestProject Load(string path) => Deserialize(File.ReadAllText(path));
+
+    public TestProject LoadTemplate(string path, string name)
+    {
+        var project = DeserializeProject(File.ReadAllText(path), name);
+        project.Definition.Version = "0.1";
+        return project;
+    }
 
     /// <summary>Unveränderliche Kopie für einen Lauf: laufende Prüflinge behalten ihre gestartete Version.</summary>
     public TestProject Clone(TestProject project) => Deserialize(Serialize(project));
