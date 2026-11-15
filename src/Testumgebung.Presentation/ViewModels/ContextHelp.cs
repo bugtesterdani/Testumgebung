@@ -41,24 +41,30 @@ public static class ContextHelp
     public static HandbookTopic SelectTopic(ShellPage page, BlockDescriptor? block)
         => page == ShellPage.Editor && block is not null ? BlockTopic(block) : Pages[page];
 
-    private static HandbookTopic BlockTopic(BlockDescriptor block)
+    private static readonly HandbookTopic CommunicationTopic = new(UserHandbook, "10. COM und Netzwerkkommunikation");
+
+    private static readonly IReadOnlyDictionary<string, HandbookTopic> BlockTopics = new Dictionary<string, HandbookTopic>(StringComparer.Ordinal)
     {
-        if (block.Type is BlockCatalog.Code or BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock)
-            return Pages[ShellPage.Library];
-        if (block.Type == BlockCatalog.SelectTest) return Pages[ShellPage.Selection];
-        var family = block.Type.Split('.', 2)[0];
-        return family switch
-        {
-            "etikett" => new(DeveloperHandbook, "Etikett drucken und gestalten"),
-            "verlauf" => new(UserHandbook, "Messwertverläufe mit Grenzbandprüfung"),
-            "kurve" => new(UserHandbook, "14. Kurven verwenden"),
-            "komm" or "netz" or "bus" or "can" or "lin" => new(UserHandbook, "10. COM und Netzwerkkommunikation"),
-            "prozess" => new(DeveloperHandbook, "Externe Programme"),
-            "code" or "bibliothek" => Pages[ShellPage.Library],
-            "auswahl" => Pages[ShellPage.Selection],
-            _ => new(UserHandbook, "5.3 Schritte einfügen und verschieben"),
-        };
-    }
+        [BlockCatalog.Code] = Pages[ShellPage.Library],
+        [BlockCatalog.LibraryBlock] = Pages[ShellPage.Library],
+        [BlockCatalog.GroupBlock] = Pages[ShellPage.Library],
+        ["auswahl"] = Pages[ShellPage.Selection],
+        ["etikett"] = new(DeveloperHandbook, "Etikett drucken und gestalten"),
+        ["verlauf"] = new(UserHandbook, "Messwertverläufe mit Grenzbandprüfung"),
+        ["kurve"] = Pages[ShellPage.Curves],
+        ["komm"] = CommunicationTopic,
+        ["netz"] = CommunicationTopic,
+        ["bus"] = CommunicationTopic,
+        ["can"] = CommunicationTopic,
+        ["lin"] = CommunicationTopic,
+        ["prozess"] = new(DeveloperHandbook, "Externe Programme"),
+        ["bibliothek"] = Pages[ShellPage.Library],
+    };
+
+    private static readonly HandbookTopic DefaultBlockTopic = new(UserHandbook, "5.3 Schritte einfügen und verschieben");
+
+    private static HandbookTopic BlockTopic(BlockDescriptor block)
+        => BlockTopics.GetValueOrDefault(block.Type.Split('.', 2)[0], DefaultBlockTopic);
 
     public static string ReadSection(IEnumerable<string> lines, string heading)
     {
