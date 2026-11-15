@@ -156,21 +156,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
             return false;
         }
         if (!ValidateEntraCallback()) return false;
-        var config = new AccessConfig
-        {
-            ClientId = ClientId.Length == 0 ? null : ClientId,
-            TenantId = TenantId.Length == 0 ? null : TenantId,
-            EntraRedirectUri = EntraRedirectUri.Length == 0 ? null : EntraRedirectUri,
-            EntraBrokerTlsSha256 = EntraBrokerTlsSha256.Length == 0 ? null : EntraBrokerTlsSha256,
-            InactivityMinutes = InactivityMinutes,
-            AllowLocalPasswords = AllowLocalPasswords,
-            AllowLocalDevelopment = SaveLocalDevelopmentMode,
-            RightsSource = RightsSource,
-            DevelopRole = DevelopRole.Length == 0 ? "Testumgebung.Entwickeln" : DevelopRole,
-            ReleaseRole = ReleaseRole.Length == 0 ? "Testumgebung.Freigeben" : ReleaseRole,
-            ManageRole = ManageRole.Length == 0 ? "Testumgebung.Verwalten" : ManageRole,
-            Users = Users.Select(user => new RightsEntry { Upn = user.Upn.Trim(), Name = user.Name.Length == 0 ? null : user.Name, Develop = user.Develop, Release = user.Release, Manage = user.Manage, PasswordHash = user.PasswordHash }).ToList(),
-        };
+        var config = BuildConfig();
         if (!ValidateReachableAccess(config)) return false;
         try
         {
@@ -191,6 +177,22 @@ public sealed class AccessSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ModeText));
         return true;
     }
+
+    private AccessConfig BuildConfig() => new()
+    {
+        ClientId = ClientId.Length == 0 ? null : ClientId,
+        TenantId = TenantId.Length == 0 ? null : TenantId,
+        EntraRedirectUri = EntraRedirectUri.Length == 0 ? null : EntraRedirectUri,
+        EntraBrokerTlsSha256 = EntraBrokerTlsSha256.Length == 0 ? null : EntraBrokerTlsSha256,
+        InactivityMinutes = InactivityMinutes,
+        AllowLocalPasswords = AllowLocalPasswords,
+        AllowLocalDevelopment = SaveLocalDevelopmentMode,
+        RightsSource = RightsSource,
+        DevelopRole = DevelopRole.Length == 0 ? "Testumgebung.Entwickeln" : DevelopRole,
+        ReleaseRole = ReleaseRole.Length == 0 ? "Testumgebung.Freigeben" : ReleaseRole,
+        ManageRole = ManageRole.Length == 0 ? "Testumgebung.Verwalten" : ManageRole,
+        Users = Users.Select(user => new RightsEntry { Upn = user.Upn.Trim(), Name = user.Name.Length == 0 ? null : user.Name, Develop = user.Develop, Release = user.Release, Manage = user.Manage, PasswordHash = user.PasswordHash }).ToList(),
+    };
 
     private bool ValidateEntraCallback()
     {
