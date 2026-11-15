@@ -28,11 +28,14 @@ public sealed record WearReading(WearCounterConfig Counter, long Count)
 public sealed class WearCounterStore(string? path = null)
 {
     private readonly object _gate = new();
-    private State _memory = new();
+    private readonly State _memory = new();
 
     private sealed class State
     {
+        public State() { }
+        [System.Text.Json.Serialization.JsonRequired]
         public Dictionary<string, long> Counts { get; init; } = new(StringComparer.Ordinal);
+        [System.Text.Json.Serialization.JsonRequired]
         public List<WearReset> Resets { get; init; } = [];
     }
 
@@ -46,15 +49,17 @@ public sealed class WearCounterStore(string? path = null)
         lock (_gate) return ReadState().Resets.Where(reset => reset.Station == station).Reverse().ToArray();
     }
 
-    public IReadOnlyList<WearReading> Increment(IReadOnlyList<WearCounterConfig> counters)
+    public (bool Started, IReadOnlyList<WearReading> Readings) BeginDut(IReadOnlyList<WearCounterConfig> counters)
         => Update(state =>
         {
+            var readings = Readings(state, counters);
+            if (readings.Any(reading => reading.Blocked)) return (false, readings);
             foreach (var counter in counters)
             {
                 var count = state.Counts.GetValueOrDefault(counter.Id);
                 state.Counts[counter.Id] = count == long.MaxValue ? count : count + 1;
             }
-            return Readings(state, counters);
+            return (true, Readings(state, counters));
         });
 
     public WearReset Reset(string station, WearCounterConfig counter, string user, DateTimeOffset now)
@@ -77,7 +82,10 @@ public sealed class WearCounterStore(string? path = null)
         try
         {
             using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            return JsonSerializer.Deserialize<State>(file) ?? throw new InvalidDataException("Verschleißzählerdatei ist leer.");
+            var state = JsonSerializer.Deserialize<State>(file);
+            if (state?.Counts is null || state.Resets is null || state.Counts.Values.Any(count => count < 0))
+                throw new InvalidDataException("Verschleißzählerdatei enthält ungültige Zählerstände.");
+            return state;
         }
         catch (FileNotFoundException) { return new(); }
         catch (DirectoryNotFoundException) { return new(); }

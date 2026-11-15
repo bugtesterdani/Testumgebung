@@ -58,7 +58,8 @@ public partial class MainWindow : Window
         // Ohne Datei: Vorschlag aus dem Projekt. Beschädigt: Anzeige, kein Prüfplatz startet bis zur Korrektur.
         var stationStore = startup?.StationStore ?? new StationSetupStore(StationSetupStore.DefaultPath);
         var (exampleProject, stationSetup, stationError) = LoadStationSetup(startup, stationStore, exampleMode);
-        var coordinator = _coordinator = new StationCoordinator(stationSetup ?? StationSetup.Default(SampleProjects.AcPruefung()), new ResourceManager())
+        var wear = CreateWearStore(stationStore, exampleMode);
+        var coordinator = _coordinator = new StationCoordinator(stationSetup ?? StationSetup.Default(SampleProjects.AcPruefung()), new ResourceManager(), wear: wear)
         {
             IsSuggestion = stationSetup is null && stationError is null,
             LoadError = stationError,
@@ -235,6 +236,13 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
+
+    private static WearCounterStore CreateWearStore(StationSetupStore store, bool exampleMode)
+    {
+        if (exampleMode) return new();
+        var folder = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(store.Path))!;
+        return new(System.IO.Path.Combine(folder, "verschleisszaehler.json"));
+    }
 }
 
 internal sealed class MainWindowStartup
@@ -246,4 +254,5 @@ internal sealed class MainWindowStartup
     public IReadOnlyList<string>? Arguments { get; init; }
     public string? ExamplesDirectory { get; init; }
     public Func<string, MessageBoxButton, MessageBoxImage, MessageBoxResult>? ShowMessage { get; init; }
+
 }

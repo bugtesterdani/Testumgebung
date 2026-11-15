@@ -46,6 +46,7 @@ public sealed class TestRunOptions
     /// </summary>
     public int? DutLimit { get; init; }
     public Func<bool>? CanBeginDut { get; init; }
+    public Func<string?>? ReserveDutUsage { get; init; }
 
     public bool ContinuousLoop { get; init; }
     public bool ReferenceRun { get; init; }
@@ -534,6 +535,9 @@ public sealed class TestRun
         finally { Volatile.Write(ref _activeDut, 0); }
     }
 
+    private string? DutUsageRefusal(GroupDefinition group, bool isExit)
+        => group.IsDutRun && !isExit ? Options.ReserveDutUsage?.Invoke() : null;
+
     private async Task<NodeResult?> ExecuteGroupCoreAsync(
         GroupDefinition group, Scope? parentScope, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
@@ -568,6 +572,14 @@ public sealed class TestRun
         var (entered, entryResult) = EvaluateEntry();
         if (!entered) return entryResult;
 
+        (bool Entered, NodeResult? Result) ReserveUsageForEntry()
+        {
+            if (DutUsageRefusal(group, isExit) is not { } refusal) return (true, null);
+            scope.Discard();
+            Emit(new Diagnostic(group.Id, refusal) { Time = Clock.Now, RunId = RunId });
+            return (false, new NodeResult(ResultRating.Error, null));
+        }
+
         (bool Entered, NodeResult? Result) EvaluateEntry()
         {
             // 2. Eintrittsbedingung (in der Abbruchfolge für Exit-Gruppen ignoriert)
@@ -593,7 +605,7 @@ public sealed class TestRun
                 }
             }
 
-            return (true, null);
+            return ReserveUsageForEntry();
         }
 
         ApplyDutPresets(group, scope, isExit);

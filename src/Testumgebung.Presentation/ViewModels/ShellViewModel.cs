@@ -97,7 +97,8 @@ public sealed class ShellViewModel : ObservableObject
         ReleasesPage = CreateReleasesPage();
         AccessPage = new AccessSettingsViewModel(_identity);
         ConnectProjectEvents();
-        StationsPage = new StationsViewModel(Coordinator, Editor, stationStore, _ui, () => Stations.Any(st => st.IsRunning));
+        StationsPage = new StationsViewModel(Coordinator, Editor, stationStore, _ui, () => Stations.Any(st => st.IsRunning),
+            () => IsDeveloper ? Session.User?.Upn : null);
         var accessStore = _identity.Store;
         SystemPage = CreateSystemPage();
         SelectionPage = CreateSelectionPage();

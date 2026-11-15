@@ -30,7 +30,7 @@ public sealed partial class StationViewModel
     /// <summary>Startet den Hauptablauf mit einer unveränderlichen Kopie der aktuellen Projektversion.</summary>
     public async Task StartAsync()
     {
-        if (IsRunning) return;
+        if (!CanAttemptPhysicalStart()) return;
         // Auswahl-/Auftragsablauf: „Start“ öffnet die Erfassung bzw. startet den zugeordneten Test
         if (Selection.IsActive)
         {
@@ -101,6 +101,7 @@ public sealed partial class StationViewModel
         int? dutLimit, string? selectionNote, bool simulationOnly, bool orderSession, string? pythonVenv, ReferenceRunRequest? reference)
     {
         if (IsRunning || (!simulationOnly && reference is null && BlockProductionForReference())) return;
+        if (!simulationOnly && BlockWearStart()) return;
         _referenceRun = reference;
         var completion = _completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _run = null;
@@ -212,7 +213,8 @@ public sealed partial class StationViewModel
             ContinuousLoop = orderSession,
             ReferenceRun = _referenceRun is not null,
             DutLimit = dutLimit,
-            CanBeginDut = ProductionReferenceGuard(),
+            CanBeginDut = DutStartGuard(),
+            ReserveDutUsage = WearReservation(),
             EventHistoryLimit = 2000,
             RetainWaveformsInHistory = false,
             DevelopmentRun = _runIsDraft,
