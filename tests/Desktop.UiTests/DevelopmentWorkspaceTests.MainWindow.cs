@@ -54,6 +54,7 @@ public sealed partial class DevelopmentWorkspaceTests
                 if (mode == "normal")
                 {
                     VerifyProjectAssistantAndHelp(window, dispatcher, directory);
+                    VerifyOperatorLanguage(window, dispatcher);
                     VerifyGroupedNavigation(window, dispatcher);
                 }
                 if (mode == "example")

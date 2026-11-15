@@ -21,14 +21,14 @@
         <!-- ============================== Ablaufübersicht (Layout des Ablaufs: ein-/ausblendbar, Fortschritt links/oben/unten) -->
         <Border Style="{StaticResource Card}" Grid.RowSpan="{Binding MainRowSpan}" Visibility="{Binding ShowOverview, Converter={StaticResource BoolVis}}">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Ablaufübersicht" />
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="{DynamicResource Operator_Overview}" />
                 <TextBlock DockPanel.Dock="Top" Text="{Binding ProgressText}" FontWeight="SemiBold" Margin="0,0,0,8"
                            Visibility="{Binding ProgressLeft, Converter={StaticResource BoolVis}}" />
                 <ProgressBar DockPanel.Dock="Top" Height="6" Value="{Binding DutProgress, Mode=OneWay}" Maximum="100"
                              Foreground="{StaticResource PrimaryBrush}" Background="#E9EEF4" BorderThickness="0" Margin="0,0,0,10"
                              Visibility="{Binding ProgressLeft, Converter={StaticResource BoolVis}}" />
                 <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,8,0,0"
-                           Text="Endlosschleife: Fortschritt des aktuellen Prüflings und Durchlaufzahl statt Gesamtprozentsatz." />
+                           Text="{DynamicResource Operator_LoopHint}" />
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Overview}">
                         <ItemsControl.ItemTemplate>
@@ -89,7 +89,7 @@
                         <ProgressBar Height="6" Value="{Binding DutProgress, Mode=OneWay}" Maximum="100" VerticalAlignment="Center"
                                      Foreground="{StaticResource PrimaryBrush}" Background="#E9EEF4" BorderThickness="0" />
                     </DockPanel>
-                    <TextBlock Text="{Binding CurrentStepName, StringFormat=Aktueller Schritt: {0}}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0" ><Run Text="{DynamicResource Operator_CurrentStep}" /><Run Text="{Binding CurrentStepName, Mode=OneWay}" /></TextBlock>
                 </StackPanel>
             </Border>
             <StackPanel DockPanel.Dock="Top">
@@ -105,9 +105,9 @@
                         <Border Width="34" Height="34" CornerRadius="17" Background="{StaticResource FailBrush}" Margin="0,0,12,0">
                             <TextBlock Text="!" Foreground="White" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Text="Werkerabbruch angefordert" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource Operator_AbortRequested}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Text="Reguläre Schritte gestoppt. Abschlussgruppen werden von innen nach außen ausgeführt. Dies ist ein Software-Abbruch, kein Hardware-Not-Halt."
+                    <TextBlock Text="{DynamicResource Operator_AbortExplanation}"
                                TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,10" />
                     <ItemsControl ItemsSource="{Binding ExitSequence}">
                         <ItemsControl.ItemTemplate>
@@ -145,12 +145,12 @@
             <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,0,0,12"
                     Visibility="{Binding HasReferenceCheck, Converter={StaticResource BoolVis}}">
                 <StackPanel>
-                    <TextBlock Text="Referenzprüfung" Style="{StaticResource SectionTitle}" />
-                    <TextBlock Text="Kennung vom Gut- oder Schlechtmuster scannen." Style="{StaticResource Caption}" />
+                    <TextBlock Text="{DynamicResource Operator_ReferenceCheck}" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="{DynamicResource Operator_ReferenceScanHint}" Style="{StaticResource Caption}" />
                     <DockPanel Margin="0,4,0,0">
-                        <Button DockPanel.Dock="Right" Content="Referenz prüfen" Command="{Binding StartReferenceCommand}"
+                        <Button DockPanel.Dock="Right" Content="{DynamicResource Operator_CheckReference}" Command="{Binding StartReferenceCommand}"
                                 Style="{StaticResource OutlineButton}" Margin="8,0,0,0" />
-                        <TextBox Text="{Binding ReferenceScan, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Referenzkennung">
+                        <TextBox Text="{Binding ReferenceScan, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{DynamicResource Operator_ReferenceId}">
                             <TextBox.InputBindings><KeyBinding Key="Return" Command="{Binding StartReferenceCommand}" /></TextBox.InputBindings>
                         </TextBox>
                     </DockPanel>
@@ -161,9 +161,31 @@
             <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,0,0,12" Padding="18" DataContext="{Binding Selection}"
                     Visibility="{Binding ShowPanel, Converter={StaticResource BoolVis}}">
                 <StackPanel>
-                    <TextBlock Text="{Binding ScanTitle}" FontSize="26" FontWeight="Bold" />
-                    <TextBlock Text="{Binding ScanHint}"
-                               Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,2,0,12" />
+                    <TextBlock FontSize="26" FontWeight="Bold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{DynamicResource Operator_ScanTitle}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding OrderSession}" Value="True">
+                                        <Setter Property="Text" Value="{DynamicResource Operator_OrderTitle}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock
+                               Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="0,2,0,12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{DynamicResource Operator_ScanHint}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding OrderSession}" Value="True">
+                                        <Setter Property="Text" Value="{DynamicResource Operator_OrderHint}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="190" />
@@ -174,9 +196,20 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Text="{Binding ScanLabel}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock FontWeight="SemiBold" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="{DynamicResource Operator_ScanLabel}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OrderSession}" Value="True">
+                                            <Setter Property="Text" Value="{DynamicResource Operator_OrderLabel}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <DockPanel Grid.Column="1" Margin="0,0,0,8">
-                            <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Command="{Binding AssignCommand}" Content="Zuordnen" Margin="8,0,0,0" />
+                            <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Command="{Binding AssignCommand}" Content="{DynamicResource Operator_Assign}" Margin="8,0,0,0" />
                             <TextBox x:Name="KennungBox" Text="{Binding ScanText, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditScan}" FontSize="18" FontWeight="SemiBold" Padding="6,4"
                                      beh:FocusBehavior.AutoFocus="True">
                                 <TextBox.InputBindings>
@@ -184,16 +217,16 @@
                                 </TextBox.InputBindings>
                             </TextBox>
                         </DockPanel>
-                        <TextBlock Grid.Row="1" Visibility="{Binding ShowOrderField, Converter={StaticResource BoolVis}}" Text="Auftrag" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Visibility="{Binding ShowOrderField, Converter={StaticResource BoolVis}}" Text="{DynamicResource Operator_Order}" VerticalAlignment="Center" />
                         <TextBox Grid.Row="1" Grid.Column="1" Visibility="{Binding ShowOrderField, Converter={StaticResource BoolVis}}" Text="{Binding Auftrag, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,8" Padding="6,4" />
-                        <TextBlock Grid.Row="2" Text="Test / Prüfvorschrift" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="2" Text="{DynamicResource Operator_TestSpecification}" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
                             <TextBlock Text="{Binding TestText}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding SourceText}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="12,0,0,0" />
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="Zuordnung" Style="{StaticResource SectionTitle}" Margin="0,14,0,6" />
+                    <TextBlock Text="{DynamicResource Operator_Assignment}" Style="{StaticResource SectionTitle}" Margin="0,14,0,6" />
                     <Border CornerRadius="6" Padding="12,8">
                         <Border.Style>
                             <Style TargetType="Border">
@@ -216,8 +249,8 @@
                                            Visibility="{Binding HasProblem, Converter={StaticResource BoolVis}}" />
                                 <TextBlock Text="{Binding ResultText}" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </StackPanel>
-                            <TextBlock Text="{Binding ParametersText, StringFormat=Prüfparameter: {0}}" Style="{StaticResource Caption}" Margin="0,4,0,0"
-                                       Visibility="{Binding ParametersText, Converter={StaticResource NullVis}}" />
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                       Visibility="{Binding ParametersText, Converter={StaticResource NullVis}}" ><Run Text="{DynamicResource Operator_Parameters}" /><Run Text="{Binding ParametersText, Mode=OneWay}" /></TextBlock>
                         </StackPanel>
                     </Border>
 
@@ -227,9 +260,9 @@
                     </StackPanel>
 
                     <DockPanel Margin="0,12,0,0">
-                        <TextBlock DockPanel.Dock="Right" Text="{Binding CompletedDuts, StringFormat=Geprüft in dieser Auswahl: {0}}" Style="{StaticResource Caption}" />
-                        <TextBlock Text="{Binding LastResult, StringFormat=Letzter Prüfling: {0}}" Style="{StaticResource Caption}" TextWrapping="Wrap"
-                                   Visibility="{Binding LastResult, Converter={StaticResource NullVis}}" />
+                        <TextBlock DockPanel.Dock="Right" Style="{StaticResource Caption}" ><Run Text="{DynamicResource Operator_Completed}" /><Run Text="{Binding CompletedDuts, Mode=OneWay}" /></TextBlock>
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                   Visibility="{Binding LastResult, Converter={StaticResource NullVis}}" ><Run Text="{DynamicResource Operator_LastDut}" /><Run Text="{Binding LastResult, Mode=OneWay}" /></TextBlock>
                     </DockPanel>
                 </StackPanel>
             </Border>
@@ -324,7 +357,7 @@
                 </Grid.ColumnDefinitions>
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="Bewertung (aktueller Prüfling)" />
+                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="{DynamicResource Operator_UnitRating}" />
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <TextBlock Style="{StaticResource Icon}" FontSize="26" Margin="0,0,10,0"
                                        Text="{Binding DutRating, Converter={StaticResource RatingGlyph}}" Visibility="{Binding DutWerror, Converter={StaticResource BoolVis}, ConverterParameter=invert}"
@@ -339,7 +372,7 @@
                 </Border>
                 <Border Grid.Column="2" Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="Ablaufstatus" />
+                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="{DynamicResource Operator_SequenceStatus}" />
                         <TextBlock FontSize="28" FontWeight="Bold" Text="ABORT" Foreground="{StaticResource FailBrush}" Margin="0,6,0,0"
                                    Visibility="{Binding DutWerror, Converter={StaticResource BoolVis}}" />
                         <TextBlock FontSize="20" FontWeight="SemiBold" Text="{Binding StatusText}" Margin="0,8,0,0"
@@ -352,7 +385,7 @@
             <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,0,0,12" Padding="12,10"
                     Visibility="{Binding HasLiveWaveform, Converter={StaticResource BoolVis}}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Kurven" Margin="0,0,0,2" />
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="{DynamicResource Operator_Curves}" Margin="0,0,0,2" />
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" Text="{Binding LiveWaveformTitle}" TextTrimming="CharacterEllipsis" Margin="0,0,0,6" />
                     <views:WaveformPlot DataContext="{Binding LiveWaveform}" ShowToolbar="False" Height="230" />
                 </DockPanel>
@@ -360,19 +393,19 @@
             <Border Style="{StaticResource Card}">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
-                        <CheckBox DockPanel.Dock="Right" Content="Alle anzeigen" IsChecked="{Binding ShowAllMeasurements}" VerticalAlignment="Center"
+                        <CheckBox DockPanel.Dock="Right" Content="{DynamicResource Operator_ShowAll}" IsChecked="{Binding ShowAllMeasurements}" VerticalAlignment="Center"
                                   Visibility="{Binding CanToggleMeasurements, Converter={StaticResource BoolVis}}" />
-                        <TextBlock Style="{StaticResource SectionTitle}" Text="Messwerte" />
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{DynamicResource Operator_Measurements}" />
                     </DockPanel>
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" Text="{Binding HiddenMeasurementsText}" Margin="0,0,0,4"
                                Visibility="{Binding HiddenMeasurementsText, Converter={StaticResource NullVis}}" />
                     <DataGrid ItemsSource="{Binding Measurements}" IsReadOnly="True" BorderThickness="0">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Name}" Width="2*" />
-                            <DataGridTextColumn Header="Wert" Binding="{Binding Value}" Width="*" />
-                            <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="60" />
-                            <DataGridTextColumn Header="Grenzwerte" Binding="{Binding Limits}" Width="*" />
-                            <DataGridTemplateColumn Header="Ergebnis" Width="90">
+                            <DataGridTextColumn Binding="{Binding Name}" Width="2*" ><DataGridTextColumn.Header><TextBlock Text="{DynamicResource Operator_Name}" /></DataGridTextColumn.Header></DataGridTextColumn>
+                            <DataGridTextColumn Binding="{Binding Value}" Width="*" ><DataGridTextColumn.Header><TextBlock Text="{DynamicResource Operator_Value}" /></DataGridTextColumn.Header></DataGridTextColumn>
+                            <DataGridTextColumn Binding="{Binding Unit}" Width="60" ><DataGridTextColumn.Header><TextBlock Text="{DynamicResource Operator_Unit}" /></DataGridTextColumn.Header></DataGridTextColumn>
+                            <DataGridTextColumn Binding="{Binding Limits}" Width="*" ><DataGridTextColumn.Header><TextBlock Text="{DynamicResource Operator_Limits}" /></DataGridTextColumn.Header></DataGridTextColumn>
+                            <DataGridTemplateColumn Width="90"><DataGridTemplateColumn.Header><TextBlock Text="{DynamicResource Operator_Result}" /></DataGridTemplateColumn.Header>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -395,7 +428,7 @@
         <Border Grid.Row="2" Grid.ColumnSpan="5" Style="{StaticResource Card}" Padding="14,10"
                 Visibility="{Binding ShowProtocol, Converter={StaticResource BoolVis}}">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Protokoll" />
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="{DynamicResource Operator_Log}" />
                 <views:ProtocolGrid />
             </DockPanel>
         </Border>

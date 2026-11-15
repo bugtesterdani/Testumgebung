@@ -1,0 +1,49 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="Operator_Overview">Sequence overview</sys:String>
+    <sys:String x:Key="Operator_LoopHint">Continuous loop: shows the current unit’s progress and run count.</sys:String>
+    <sys:String x:Key="Operator_AbortRequested">Operator abort requested</sys:String>
+    <sys:String x:Key="Operator_AbortExplanation">Regular steps have stopped. Exit groups run from the innermost outward. This is a software abort. Use the hardware emergency stop in an emergency.</sys:String>
+    <sys:String x:Key="Operator_ReferenceCheck">Reference check</sys:String>
+    <sys:String x:Key="Operator_ReferenceScanHint">Scan the ID of the good or bad reference sample.</sys:String>
+    <sys:String x:Key="Operator_CheckReference">Check reference</sys:String>
+    <sys:String x:Key="Operator_ReferenceId">Reference ID</sys:String>
+    <sys:String x:Key="Operator_Assign">Assign</sys:String>
+    <sys:String x:Key="Operator_Order">Order</sys:String>
+    <sys:String x:Key="Operator_TestSpecification">Test / specification</sys:String>
+    <sys:String x:Key="Operator_Assignment">Assignment</sys:String>
+    <sys:String x:Key="Operator_UnitRating">Result (current unit)</sys:String>
+    <sys:String x:Key="Operator_SequenceStatus">Sequence status</sys:String>
+    <sys:String x:Key="Operator_Curves">Curves</sys:String>
+    <sys:String x:Key="Operator_ShowAll">Show all</sys:String>
+    <sys:String x:Key="Operator_Measurements">Measurements</sys:String>
+    <sys:String x:Key="Operator_Name">Name</sys:String>
+    <sys:String x:Key="Operator_Value">Value</sys:String>
+    <sys:String x:Key="Operator_Unit">Unit</sys:String>
+    <sys:String x:Key="Operator_Limits">Limits</sys:String>
+    <sys:String x:Key="Operator_Result">Result</sys:String>
+    <sys:String x:Key="Operator_Log">Log</sys:String>
+    <sys:String x:Key="Operator_Start">Start</sys:String>
+    <sys:String x:Key="Operator_StartDisabled">disabled during testing</sys:String>
+    <sys:String x:Key="Operator_Ready">ready to test</sys:String>
+    <sys:String x:Key="Operator_Abort">Operator abort</sys:String>
+    <sys:String x:Key="Operator_AbortAgain">Aborting again ends the current exit group.</sys:String>
+    <sys:String x:Key="Operator_DutPrefix" xml:space="preserve">  •  Unit </sys:String>
+    <sys:String x:Key="Operator_Language">Operator view language</sys:String>
+    <sys:String x:Key="Operator_CurrentDut">Current unit</sys:String>
+    <sys:String x:Key="Operator_CurrentOrder">Current order</sys:String>
+    <sys:String x:Key="Operator_ActiveSoftware">Active test software</sys:String>
+    <sys:String x:Key="Operator_Test">Test</sys:String>
+    <sys:String x:Key="Operator_OperatorView">OPERATOR VIEW</sys:String>
+    <sys:String x:Key="Operator_ScanTitle">Scan unit</sys:String>
+    <sys:String x:Key="Operator_OrderTitle">Scan production order</sys:String>
+    <sys:String x:Key="Operator_ScanLabel">ID (serial number) *</sys:String>
+    <sys:String x:Key="Operator_OrderLabel">Production order *</sys:String>
+    <sys:String x:Key="Operator_ScanHint">Scan the ID and press Enter to assign it.</sys:String>
+    <sys:String x:Key="Operator_OrderHint">Scan the production order and press Enter. The test session starts after selection and prompts for a serial number each cycle.</sys:String>
+    <sys:String x:Key="Operator_CurrentStep" xml:space="preserve">Current step: </sys:String>
+    <sys:String x:Key="Operator_Parameters" xml:space="preserve">Test parameters: </sys:String>
+    <sys:String x:Key="Operator_Completed" xml:space="preserve">Tested in this selection: </sys:String>
+    <sys:String x:Key="Operator_LastDut" xml:space="preserve">Last unit: </sys:String>
+</ResourceDictionary>

@@ -239,6 +239,23 @@ public partial class MainWindow : Window
 
     private static FileDialogService CreateFileDialogService(MainWindowStartup? startup) => new(startup?.ExamplesDirectory);
 
+    private ResourceDictionary? _operatorEnglish;
+
+    private void OnOperatorLanguageChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs args)
+    {
+        if (sender is not System.Windows.Controls.ComboBox { SelectedIndex: 1 })
+        {
+            if (_operatorEnglish is not null) Resources.MergedDictionaries.Remove(_operatorEnglish);
+            return;
+        }
+
+        _operatorEnglish ??= new ResourceDictionary
+        {
+            Source = new Uri("/Testumgebung.Desktop;component/Localization/Operator.en.xaml", UriKind.Relative),
+        };
+        if (!Resources.MergedDictionaries.Contains(_operatorEnglish)) Resources.MergedDictionaries.Add(_operatorEnglish);
+    }
+
     private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs args)
     {
         Shell.NoteActivity();

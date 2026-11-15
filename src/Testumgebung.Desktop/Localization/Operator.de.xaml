@@ -1,0 +1,49 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:String x:Key="Operator_Overview">Ablaufübersicht</sys:String>
+    <sys:String x:Key="Operator_LoopHint">Endlosschleife: Fortschritt des aktuellen Prüflings und Durchlaufzahl statt Gesamtprozentsatz.</sys:String>
+    <sys:String x:Key="Operator_AbortRequested">Werkerabbruch angefordert</sys:String>
+    <sys:String x:Key="Operator_AbortExplanation">Reguläre Schritte gestoppt. Abschlussgruppen werden von innen nach außen ausgeführt. Dies ist ein Software-Abbruch, kein Hardware-Not-Halt.</sys:String>
+    <sys:String x:Key="Operator_ReferenceCheck">Referenzprüfung</sys:String>
+    <sys:String x:Key="Operator_ReferenceScanHint">Kennung vom Gut- oder Schlechtmuster scannen.</sys:String>
+    <sys:String x:Key="Operator_CheckReference">Referenz prüfen</sys:String>
+    <sys:String x:Key="Operator_ReferenceId">Referenzkennung</sys:String>
+    <sys:String x:Key="Operator_Assign">Zuordnen</sys:String>
+    <sys:String x:Key="Operator_Order">Auftrag</sys:String>
+    <sys:String x:Key="Operator_TestSpecification">Test / Prüfvorschrift</sys:String>
+    <sys:String x:Key="Operator_Assignment">Zuordnung</sys:String>
+    <sys:String x:Key="Operator_UnitRating">Bewertung (aktueller Prüfling)</sys:String>
+    <sys:String x:Key="Operator_SequenceStatus">Ablaufstatus</sys:String>
+    <sys:String x:Key="Operator_Curves">Kurven</sys:String>
+    <sys:String x:Key="Operator_ShowAll">Alle anzeigen</sys:String>
+    <sys:String x:Key="Operator_Measurements">Messwerte</sys:String>
+    <sys:String x:Key="Operator_Name">Bezeichnung</sys:String>
+    <sys:String x:Key="Operator_Value">Wert</sys:String>
+    <sys:String x:Key="Operator_Unit">Einheit</sys:String>
+    <sys:String x:Key="Operator_Limits">Grenzwerte</sys:String>
+    <sys:String x:Key="Operator_Result">Ergebnis</sys:String>
+    <sys:String x:Key="Operator_Log">Protokoll</sys:String>
+    <sys:String x:Key="Operator_Start">Start</sys:String>
+    <sys:String x:Key="Operator_StartDisabled">während Prüfung deaktiviert</sys:String>
+    <sys:String x:Key="Operator_Ready">bereit für Prüfung</sys:String>
+    <sys:String x:Key="Operator_Abort">Werkerabbruch</sys:String>
+    <sys:String x:Key="Operator_AbortAgain">Erneuter Abbruch beendet nur die aktuelle Exit-Gruppe.</sys:String>
+    <sys:String x:Key="Operator_DutPrefix" xml:space="preserve">  •  Prüfling </sys:String>
+    <sys:String x:Key="Operator_Language">Sprache der Werkeransicht</sys:String>
+    <sys:String x:Key="Operator_CurrentDut">Aktueller Prüfling</sys:String>
+    <sys:String x:Key="Operator_CurrentOrder">Aktueller Auftrag</sys:String>
+    <sys:String x:Key="Operator_ActiveSoftware">Aktive Prüfsoftware</sys:String>
+    <sys:String x:Key="Operator_Test">Prüfen</sys:String>
+    <sys:String x:Key="Operator_OperatorView">WERKERANSICHT</sys:String>
+    <sys:String x:Key="Operator_ScanTitle">Prüfling erfassen</sys:String>
+    <sys:String x:Key="Operator_OrderTitle">Fertigungsauftrag erfassen</sys:String>
+    <sys:String x:Key="Operator_ScanLabel">Kennung (Seriennummer) *</sys:String>
+    <sys:String x:Key="Operator_OrderLabel">Fertigungsauftrag *</sys:String>
+    <sys:String x:Key="Operator_ScanHint">Kennung scannen und mit Enter zuordnen.</sys:String>
+    <sys:String x:Key="Operator_OrderHint">Fertigungsauftrag scannen und Enter drücken. Nach der Auswahl startet die Prüfsitzung; die Seriennummer wird in jeder Loop-Runde erfasst.</sys:String>
+    <sys:String x:Key="Operator_CurrentStep" xml:space="preserve">Aktueller Schritt: </sys:String>
+    <sys:String x:Key="Operator_Parameters" xml:space="preserve">Prüfparameter: </sys:String>
+    <sys:String x:Key="Operator_Completed" xml:space="preserve">Geprüft in dieser Auswahl: </sys:String>
+    <sys:String x:Key="Operator_LastDut" xml:space="preserve">Letzter Prüfling: </sys:String>
+</ResourceDictionary>
