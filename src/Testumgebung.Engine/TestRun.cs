@@ -496,8 +496,13 @@ public sealed class TestRun
     private bool CanEnterGroup(GroupDefinition group, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
         if ((phase.IsCancelled || DutExitPending(phase)) && !forceEnter) return false;
-        if (group.IsDutRun && !isExit && Options.CanBeginDut?.Invoke() == false) return false;
-        if (group.IsDutRun && !isExit && Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
+        return !group.IsDutRun || isExit || CanEnterDut(group, parentPath, parentIteration);
+    }
+
+    private bool CanEnterDut(GroupDefinition group, string parentPath, int parentIteration)
+    {
+        if (Options.CanBeginDut?.Invoke() == false) return false;
+        if (Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
         {
             Emit(new GroupNotEntered($"Prüflingsanzahl {limit} erreicht") { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = Combine(parentPath, group.Name), Iteration = parentIteration });
             return false;

@@ -107,15 +107,21 @@ public sealed partial class StationViewModel
             Error = "Für die Referenzprüfung muss die Prüfsoftware einen Prüflingstest enthalten.";
             return Task.CompletedTask;
         }
+        var presets = ReferencePresets(reference.Id, groups, outcome);
+        return RunProjectWithReferenceAsync(project, release, presets, 1, $"Referenzprüfung · {reference.Id}",
+            false, false, outcome?.PythonVenv, reference);
+    }
+
+    private static Dictionary<string, object?> ReferencePresets(string id, IReadOnlyList<GroupDefinition> groups, SelectionOutcome? outcome)
+    {
         var presets = new Dictionary<string, object?>(StringComparer.Ordinal);
         if (outcome is not null)
         {
             foreach (var (key, value) in outcome.Parameters) presets[key] = value;
             if (outcome.Order is { Length: > 0 } order) presets["Auftrag"] = order;
         }
-        foreach (var group in groups) presets[group.DutIdVariable] = reference.Id;
-        return RunProjectWithReferenceAsync(project, release, presets, 1, $"Referenzprüfung · {reference.Id}",
-            false, false, outcome?.PythonVenv, reference);
+        foreach (var group in groups) presets[group.DutIdVariable] = id;
+        return presets;
     }
 
     private void RecordReferenceProgress(EngineEvent engineEvent)
