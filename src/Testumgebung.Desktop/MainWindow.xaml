@@ -26,9 +26,25 @@
                 <Image Source="Assets/AppIcon.png" Width="32" Height="32" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality" />
                 <TextBlock Text="{Binding AppTitle}" Foreground="White" FontSize="22" FontWeight="Bold" />
                 <Rectangle Width="1" Height="24" Fill="#5C7FA8" Margin="16,0" />
-                <TextBlock Text="{Binding ViewTitle}" Foreground="White" FontSize="20" VerticalAlignment="Center" />
+                <TextBlock Foreground="White" FontSize="20" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{Binding ViewTitle}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSignedIn}" Value="False"><Setter Property="Text" Value="{DynamicResource Operator_OperatorView}" /></DataTrigger>
+                                <DataTrigger Binding="{Binding Page}" Value="Operator"><Setter Property="Text" Value="{DynamicResource Operator_OperatorView}" /></DataTrigger>
+                                <DataTrigger Binding="{Binding Page}" Value="Protocol"><Setter Property="Text" Value="{DynamicResource Operator_OperatorView}" /></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,20,0" VerticalAlignment="Center">
+                <ComboBox x:Name="OperatorLanguage" SelectedIndex="0" SelectionChanged="OnOperatorLanguageChanged" VerticalAlignment="Center" Margin="0,0,12,0"
+                          AutomationProperties.Name="{DynamicResource Operator_Language}" ToolTip="{DynamicResource Operator_Language}">
+                    <ComboBoxItem Content="Deutsch" Tag="de" />
+                    <ComboBoxItem Content="English" Tag="en" />
+                </ComboBox>
                 <Button Content="Lizenzen &amp; Quellen" Click="ShowLicenses" Background="Transparent" Foreground="White" Padding="8,4" Margin="0,0,12,0" />
                 <ToggleButton x:Name="UserToggle" Background="Transparent" BorderThickness="0" Cursor="Hand" Foreground="White">
                     <StackPanel Orientation="Horizontal">
@@ -130,7 +146,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="8,0" VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource Icon}" Text="&#xE7B8;" FontSize="28" Margin="0,0,12,0" Foreground="{StaticResource TextBrush}" />
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="Aktueller Prüfling" />
+                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="{DynamicResource Operator_CurrentDut}" />
                         <TextBlock Text="{Binding SelectedStation.CurrentDutId}" FontSize="20" FontWeight="Bold" />
                     </StackPanel>
                 </StackPanel>
@@ -138,7 +154,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="8,0" VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource Icon}" Text="&#xE8A5;" FontSize="28" Margin="0,0,12,0" Foreground="{StaticResource TextBrush}" />
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="Aktueller Auftrag" />
+                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="{DynamicResource Operator_CurrentOrder}" />
                         <TextBlock Text="{Binding SelectedStation.CurrentOrder}" FontSize="20" FontWeight="Bold" />
                     </StackPanel>
                 </StackPanel>
@@ -146,7 +162,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="8,0" VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource Icon}" Text="&#xE8B7;" FontSize="28" Margin="0,0,12,0" Foreground="{StaticResource TextBrush}" />
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="Aktive Prüfsoftware" />
+                        <TextBlock Style="{StaticResource Caption}" FontSize="13" Text="{DynamicResource Operator_ActiveSoftware}" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding ActiveSoftwareText}" FontSize="18" FontWeight="Bold" />
                             <TextBlock Text="{Binding ProjectName}" FontSize="15" Margin="10,0,0,0" VerticalAlignment="Bottom" Foreground="{StaticResource MutedBrush}" />
@@ -192,7 +208,7 @@
                                  IsChecked="{Binding Page, Converter={StaticResource NavigationArea}, ConverterParameter=Operator, Mode=OneWay}" AutomationProperties.Name="Prüfen">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE80F;" Margin="0,0,12,0" />
-                            <TextBlock Text="Prüfen" />
+                            <TextBlock Text="{DynamicResource Operator_Test}" />
                         </StackPanel>
                     </RadioButton>
                     <RadioButton Style="{StaticResource NavButton}" GroupName="Nav"
@@ -365,10 +381,10 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" FontSize="22" Margin="0,0,14,0" />
                             <StackPanel>
-                                <TextBlock Text="Start" FontSize="19" FontWeight="SemiBold" />
-                                <TextBlock FontSize="12" Text="während Prüfung deaktiviert"
+                                <TextBlock Text="{DynamicResource Operator_Start}" FontSize="19" FontWeight="SemiBold" />
+                                <TextBlock FontSize="12" Text="{DynamicResource Operator_StartDisabled}"
                                            Visibility="{Binding SelectedStation.IsRunning, Converter={StaticResource BoolVis}}" />
-                                <TextBlock FontSize="12" Text="bereit für Prüfung"
+                                <TextBlock FontSize="12" Text="{DynamicResource Operator_Ready}"
                                            Visibility="{Binding SelectedStation.IsRunning, Converter={StaticResource BoolVis}, ConverterParameter=invert}" />
                             </StackPanel>
                         </StackPanel>
@@ -377,11 +393,11 @@
                         <Button Style="{StaticResource DangerButton}" Command="{Binding SelectedStation.AbortCommand}" Width="260" Height="56">
                             <StackPanel Orientation="Horizontal">
                                 <Rectangle Width="22" Height="22" Fill="{StaticResource FailBrush}" Margin="0,0,16,0" />
-                                <TextBlock Text="Werkerabbruch" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource Operator_Abort}" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                         <TextBlock Style="{StaticResource Caption}" HorizontalAlignment="Center" Margin="0,3,0,0"
-                                   Text="Erneuter Abbruch beendet nur die aktuelle Exit-Gruppe."
+                                   Text="{DynamicResource Operator_AbortAgain}"
                                    Visibility="{Binding SelectedStation.IsAborting, Converter={StaticResource BoolVis}}" />
                     </StackPanel>
                 </StackPanel>
@@ -396,7 +412,7 @@
                     <StackPanel Grid.Column="1">
                         <TextBlock FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
                             <Run Text="{Binding SelectedStation.Name, Mode=OneWay}" />
-                            <Run Text="  •  Prüfling " />
+                            <Run Text="{DynamicResource Operator_DutPrefix}" />
                             <Run Text="{Binding SelectedStation.CurrentDutId, Mode=OneWay}" />
                             <Run Text="  •  " />
                             <Run Text="{Binding SelectedStation.ProgressText, Mode=OneWay}" />
