@@ -49,6 +49,24 @@ Bei einer Rechnerwiederherstellung `pruefplaetze.json` und `verschleisszaehler.j
 * **Rechner ersetzen:** Anwendung installieren, Sicherung wiederherstellen, Datenbank-/MQTT-/HTTP-/OPC-UA-Kennwörter neu eingeben
   (DPAPI), Systemprüfung.
 
+## Alarmierung
+
+Unter **Verwaltung → Meldewege → Alarmierung** die gewünschten Auslöser und mindestens einen Versandweg aktivieren. Beide Versandwege können gleichzeitig aktiv sein.
+
+| Auslöser | Wann ein Alarm gesendet wird |
+|---|---|
+| ERROR-Prüfläufe in Folge | Beim Erreichen der eingestellten Anzahl je Prüfplatz. Ein regulärer Produktionslauf mit anderem Ergebnis oder ein Werkerabbruch setzt den Zähler zurück. Entwurfs- und Referenzläufe zählen nicht mit. |
+| Offene Outbox-Einträge | Sobald die Anzahl der offenen Einträge den Grenzwert erreicht. Fällt sie darunter, ist der Alarm wieder bereit. |
+| Ergebnisordner nicht erreichbar | Beim ersten fehlgeschlagenen Schreiben in den Ergebnisordner, auch wenn die lokale Wiederherstellungsdatei gespeichert wurde. Ein erfolgreicher Schreibvorgang gibt den Alarm wieder frei. |
+| Kalibrierung | Beim Eintritt in die konfigurierte Vorwarnzeit und erneut bei Überschreitung des Kalibriertermins. Die Anwendung prüft die Gerätekonfiguration alle 30 Sekunden. |
+
+Für beide Zahlenfelder deaktiviert `0` den Auslöser. Die Anwendung meldet eine fortbestehende Bedingung je Sitzung nur einmal. Sie prüft die Auslöser nach einem Neustart oder nach Übernahme der Einstellungen neu.
+
+- **SMTP** braucht Server, Port, Absender und Empfänger. Standard ist Port 587 mit STARTTLS. Benutzername und Passwort sind für Server mit Anmeldung vorgesehen.
+- **Teams** braucht die HTTPS-URL eines Workflows mit dem Auslöser „Wenn eine Teams-Webhookanforderung empfangen wird“. Der Workflow muss den Aufruf über die URL erlauben und die Adaptive Card im gewünschten Kanal posten. [Microsoft-Dokumentation zum Teams-Webhook](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=newteams%2Cdotnet)
+
+Die Versandversuche stehen unter **Gesendete Meldungen**. Ein fehlgeschlagener Versand beeinflusst den Prüfablauf nicht. SMTP-Passwort und Teams-URL sind wie die übrigen Zugangsdaten an den Windows-Benutzer gebunden und müssen nach einem Benutzer- oder Rechnerwechsel neu eingegeben werden.
+
 ## Umgebungsvariablen
 
 | Variable | Wirkung |

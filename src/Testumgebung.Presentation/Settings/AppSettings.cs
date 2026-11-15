@@ -113,6 +113,7 @@ public sealed class AppSettings
     public MqttSettings Mqtt { get; set; } = new();
     public HttpNotifySettings Http { get; set; } = new();
     public OpcUaSettings OpcUa { get; set; } = new();
+    public AlarmSettings Alarms { get; set; } = new();
 
     public AppSettings Clone(ISecretProtector protector)
     {
@@ -185,6 +186,7 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         s.Mqtt.ProtectedPassword = string.IsNullOrEmpty(s.Mqtt.Password) ? null : protector.Protect(s.Mqtt.Password);
         s.Http.ProtectedHeaderValue = string.IsNullOrEmpty(s.Http.HeaderValue) ? null : protector.Protect(s.Http.HeaderValue);
         s.OpcUa.ProtectedPassword = string.IsNullOrEmpty(s.OpcUa.Password) ? null : protector.Protect(s.OpcUa.Password);
+        ProtectAlarmSecrets(s.Alarms);
         return JsonSerializer.Serialize(s, Json);
     }
 
@@ -196,9 +198,34 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         appSettings.Mqtt ??= new MqttSettings();
         appSettings.Http ??= new HttpNotifySettings();
         appSettings.OpcUa ??= new OpcUaSettings();
+        appSettings.Alarms ??= new();
         RestoreSecrets(appSettings);
+        RestoreAlarmSecrets(appSettings.Alarms);
         return appSettings;
     }
+    private void ProtectAlarmSecrets(AlarmSettings alarms)
+    {
+        alarms.ProtectedSmtpPassword = ProtectOptional(alarms.SmtpPassword);
+        alarms.ProtectedTeamsUrl = ProtectOptional(alarms.TeamsUrl);
+    }
+
+    private string? ProtectOptional(string? secret)
+        => string.IsNullOrEmpty(secret) ? null : protector.Protect(secret);
+
+    private void RestoreAlarmSecrets(AlarmSettings alarms)
+    {
+        alarms.SmtpPassword = RestoreOptional(alarms.ProtectedSmtpPassword, "SMTP-Passwort");
+        alarms.TeamsUrl = RestoreOptional(alarms.ProtectedTeamsUrl, "Teams-Webhook-URL");
+    }
+
+    private string? RestoreOptional(string? value, string name)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        var secret = protector.Unprotect(value);
+        if (secret is null) Warnings.Add($"{name} nicht entschlüsselbar – bitte neu eingeben.");
+        return secret;
+    }
+
     private void RestoreSecrets(AppSettings appSettings)
     {
         if (appSettings.Http.ProtectedHeaderValue is { Length: > 0 } hv)

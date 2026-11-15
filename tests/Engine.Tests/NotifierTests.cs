@@ -78,6 +78,39 @@ public sealed class NotifierTests
         Assert.True(condition(), "Bedingung nicht erfüllt");
     }
 
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(500, false)]
+    public async Task Teams_posts_adaptive_card_without_logging_the_webhook_url(int status, bool sent)
+    {
+        await using var server = TestWebhook.Start();
+        server.StatusCode = status;
+        await using var notifier = new TeamsAlarmNotifier(new Uri(server.Prefix + "workflow?sig=secret"));
+        var delivered = new TaskCompletionSource<NotifyDelivery>(TaskCreationOptions.RunContinuationsAsynchronously);
+        notifier.Delivered += delivery => delivered.TrySetResult(delivery);
+
+        notifier.Notify(N(RunNotificationKind.Alarm, "Outbox: 3 offene Einträge."));
+        var result = await delivered.Task.Within();
+        Assert.Equal(sent, result.Sent);
+        Assert.DoesNotContain("secret", result.Error ?? "");
+        Assert.Equal("Teams-Workflow", notifier.TargetFor(result.Notification));
+        var request = Assert.Single(server.Received);
+        Assert.Equal("/workflow", request.Path);
+        using var json = JsonDocument.Parse(request.Body);
+        var card = json.RootElement.GetProperty("attachments")[0];
+        Assert.Equal("application/vnd.microsoft.card.adaptive", card.GetProperty("contentType").GetString());
+        Assert.Equal("Outbox: 3 offene Einträge.", card.GetProperty("content").GetProperty("body")[0].GetProperty("text").GetString());
+    }
+
+    [Theory]
+    [InlineData("", 587, "alarms@example.test", "worker@example.test", false)]
+    [InlineData("localhost", 0, "alarms@example.test", "worker@example.test", false)]
+    [InlineData("localhost", 587, "", "worker@example.test", false)]
+    [InlineData("localhost", 587, "alarms@example.test", "", false)]
+    [InlineData("localhost", 587, "alarms@example.test", "worker@example.test", true)]
+    public void Smtp_requires_host_valid_port_and_mail_addresses(string host, int port, string sender, string recipient, bool valid)
+        => Assert.Equal(valid, new SmtpAlarmOptions(host, port, true, null, null, sender, recipient).IsValid);
+
     [Fact]
     public async Task HTTP_POST_mit_JSON_Platzhaltern_und_Kopfzeile()
     {

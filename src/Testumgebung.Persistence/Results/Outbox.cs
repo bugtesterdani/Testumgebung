@@ -41,6 +41,7 @@ public enum RunNotificationKind
     StoredLater,
     /// <summary>Outbox-Eintrag nicht lesbar – in Unterordner „defekt“ verschoben.</summary>
     OutboxDamaged,
+    Alarm,
 }
 
 /// <summary>Meldung je Run (und Versuch) für den zusätzlichen Meldeweg (MQTT ab Etappe 6) und die Entwickleransicht.</summary>
@@ -134,6 +135,8 @@ public sealed class OutboxService : IAsyncDisposable
             lock (_gate) return _entries.Values.OrderBy(outboxEntry => outboxEntry.Created).ToList();
         }
     }
+
+    public int PendingCount { get { lock (_gate) return _entries.Count; } }
 
     public bool IsRunning => _loop is { IsCompleted: false };
 

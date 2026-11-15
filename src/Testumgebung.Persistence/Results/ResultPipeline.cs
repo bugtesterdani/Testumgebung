@@ -25,6 +25,9 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
     /// <summary>Zielordner der Ergebnisdateien – zur Laufzeit änderbar.</summary>
     public ResultFileStore? Files { get; set; } = files;
     public OutboxService? Outbox { get; } = outbox;
+    /// <summary>Wird synchron bei Übergabe des Prüfergebnisses ausgelöst, vor asynchroner Speicherung.</summary>
+    public event Action<ResultRun>? RunReceived;
+    public event Action<StorageReport>? Processed;
 
     /// <summary>Zwischenaufzeichnung laufender Prüflingstests; null = ohne Absturzsicherung.</summary>
     public RunJournal? Journal { get; set; }
@@ -34,6 +37,7 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
 
     public async Task<StorageReport> ProcessAsync(ResultRun recorded, StorageResolver resolver)
     {
+        RunReceived?.Invoke(recorded);
         FileSaveResult? file = null;
         if (Files is not null)
         {
@@ -59,6 +63,7 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
         var report = new StorageReport(recorded.RunId, recorded.DutId, file, db);
         // Gesichert (Datei, Wiederherstellungsordner oder Outbox) → Zwischenaufzeichnung nicht mehr nötig.
         if (IsSecured(file, db)) Journal?.Complete(recorded.RunId);
+        Processed?.Invoke(report);
         return report;
     }
 

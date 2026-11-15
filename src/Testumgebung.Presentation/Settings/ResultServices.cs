@@ -23,7 +23,7 @@ public interface IDatabaseProviderRegistry
 /// Speicherdienste der Anwendung: Ergebnisdateien, Outbox, Datenbank und Meldeweg. Einstellungen werden ohne
 /// Neustart übernommen; offene Outbox-Einträge bleiben erhalten und gehen an die neu eingestellte Datenbank.
 /// </summary>
-public sealed class ResultServices : IAsyncDisposable
+public sealed partial class ResultServices : IAsyncDisposable
 {
     private readonly IDatabaseProviderRegistry _registry;
     private MqttNotifier? _mqtt;
@@ -51,6 +51,10 @@ public sealed class ResultServices : IAsyncDisposable
             // Zwischenaufzeichnung: in Tests neben dem angegebenen Wiederherstellungsordner, sonst im Benutzerprofil.
             Journal = new RunJournal(journalFolder ?? (recoveryFolder is not null ? Path.Combine(recoveryFolder, "Zwischenaufzeichnung") : RunJournal.DefaultFolder)),
         };
+        _alarmClock = clock ?? SystemClock.Instance;
+        Pipeline.RunReceived += OnRunReceived;
+        Pipeline.Processed += OnStorageProcessed;
+        Outbox.Changed += OnOutboxChanged;
         Apply(settings);
     }
 
@@ -125,6 +129,7 @@ public sealed class ResultServices : IAsyncDisposable
         if (old is not null) _ = old.DisposeAsync().AsTask();
         if (oldHttp is not null) _ = oldHttp.DisposeAsync().AsTask();
         if (oldOpc is not null) _ = oldOpc.DisposeAsync().AsTask();
+        ConfigureAlarms(settings.Alarms);
         Applied?.Invoke();
     }
 
@@ -221,6 +226,7 @@ public sealed class ResultServices : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await Outbox.StopAsync().ConfigureAwait(false);
+        await DisposeAlarmsAsync().ConfigureAwait(false);
         if (_mqtt is not null) await _mqtt.DisposeAsync().ConfigureAwait(false);
         if (_http is not null) await _http.DisposeAsync().ConfigureAwait(false);
         if (_opcUa is not null) await _opcUa.DisposeAsync().ConfigureAwait(false);
