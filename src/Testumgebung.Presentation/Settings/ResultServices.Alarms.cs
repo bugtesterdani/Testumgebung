@@ -47,7 +47,8 @@ public sealed partial class ResultServices
         => Uri.TryCreate(settings.TeamsUrl, UriKind.Absolute, out var endpoint) && endpoint.Scheme == Uri.UriSchemeHttps
             ? new TeamsAlarmNotifier(endpoint) : null;
 
-    private void OnRunProcessed(ResultRun run, StorageReport report) => Volatile.Read(ref _alarmMonitor)?.ObserveRun(run, report);
+    private void OnRunReceived(ResultRun run) => Volatile.Read(ref _alarmMonitor)?.ObserveRun(run);
+    private void OnStorageProcessed(StorageReport report) => Volatile.Read(ref _alarmMonitor)?.ObserveStorage(report);
     private void OnOutboxChanged() => Volatile.Read(ref _alarmMonitor)?.ObserveOutbox(Outbox.PendingCount);
 
     public void ObserveCalibration(IEnumerable<DeviceConfig> devices)

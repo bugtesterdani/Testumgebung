@@ -119,7 +119,7 @@ public sealed class SettingsTests : IDisposable
     }
 
     [Fact]
-    public async Task Production_error_sends_an_alarm_through_configured_smtp()
+    public async Task Smtp_error_alarm_uses_run_order_when_database_writes_finish_out_of_order()
     {
         using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
         listener.Start();
@@ -129,10 +129,10 @@ public sealed class SettingsTests : IDisposable
         var settings = new AppSettings
         {
             ResultFolder = P("results"),
-            Database = new DatabaseSettings { Provider = DatabaseChoice.None },
+            Database = new DatabaseSettings { Provider = DatabaseChoice.Simulated },
             Alarms = new AlarmSettings
             {
-                ErrorStreak = 1, SmtpEnabled = true, SmtpHost = "127.0.0.1", SmtpPort = port, SmtpStartTls = false,
+                ErrorStreak = 2, SmtpEnabled = true, SmtpHost = "127.0.0.1", SmtpPort = port, SmtpStartTls = false,
                 SmtpSender = "alarms@example.test", SmtpRecipient = "worker@example.test"
             }
         };
@@ -140,9 +140,28 @@ public sealed class SettingsTests : IDisposable
         var delivered = new TaskCompletionSource<Testumgebung.Notifications.NotifyDelivery>(TaskCreationOptions.RunContinuationsAsynchronously);
         services.NotifyDelivered += result => delivered.TrySetResult(result);
 
-        var run = new ResultRun { RunId = "alarm-test", Station = "P1", Rating = ResultRating.Error };
-        await services.Pipeline.ProcessAsync(run, new Testumgebung.Domain.Storage.StorageResolver(SampleProjects.AcPruefung().Definition));
+        var database = new DelayedAlarmTestDatabase();
+        services.Database.Inner = database;
+        var resolver = new Testumgebung.Domain.Storage.StorageResolver(SampleProjects.AcPruefung().Definition);
+        Task<StorageReport> Process(string id, ResultRating rating) =>
+            services.Pipeline.ProcessAsync(new ResultRun { RunId = id, Station = "P1", Rating = rating }, resolver);
+
+        var firstError = Process("slow-error", ResultRating.Error);
+        try
+        {
+            await database.Started.Task.Within();
+            await Process("pass", ResultRating.Pass);
+            await Process("second-error", ResultRating.Error);
+        }
+        finally
+        {
+            database.Release.TrySetResult();
+            await firstError;
+        }
+
+        await Process("third-error", ResultRating.Error);
         var result = await delivered.Task.Within();
+        Assert.Equal("third-error", result.Notification.RunId);
         Assert.True(result.Sent, result.Error);
         Assert.Equal("SMTP", result.Channel);
         var message = await received;
@@ -150,7 +169,21 @@ public sealed class SettingsTests : IDisposable
         var body = message[(message.IndexOf("\r\n\r\n", StringComparison.Ordinal) + 4)..];
         var encoded = body[..body.IndexOf("\r\n.\r\n", StringComparison.Ordinal)];
         var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-        Assert.Contains("P1: 1 Prüfläufe in Folge mit ERROR.", decoded);
+        Assert.Contains("P1: 2 Prüfläufe in Folge mit ERROR.", decoded);
+    }
+
+    private sealed class DelayedAlarmTestDatabase : IRunDatabase
+    {
+        public string Name => "Alarmtest";
+        public TaskCompletionSource<bool> Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task StoreAsync(ResultRun run, CancellationToken cancellationToken)
+        {
+            if (run.RunId != "slow-error") return;
+            Started.TrySetResult(true);
+            await Release.Task.WaitAsync(cancellationToken);
+        }
     }
 
     private static async Task<string> ReceiveSmtpAlarmAsync(System.Net.Sockets.TcpListener listener, CancellationToken ct)

@@ -22,26 +22,25 @@ public sealed class AlarmMonitorTests
     {
         var capture = new Capture();
         var monitor = new AlarmMonitor(new(2, 0, false, false), capture, new VirtualClock());
-        var report = new StorageReport("run", "SN", null, null);
 
-        monitor.ObserveRun(Run(), report);
-        monitor.ObserveRun(Run(station: "P2"), report);
-        monitor.ObserveRun(Run(development: true, rating: ResultRating.Pass), report);
-        monitor.ObserveRun(Run(kind: ResultRunKind.GoodReference), report);
+        monitor.ObserveRun(Run());
+        monitor.ObserveRun(Run(station: "P2"));
+        monitor.ObserveRun(Run(development: true, rating: ResultRating.Pass));
+        monitor.ObserveRun(Run(kind: ResultRunKind.GoodReference));
         Assert.Empty(capture.Notifications);
-        monitor.ObserveRun(Run("trigger"), report);
-        monitor.ObserveRun(Run(), report);
+        monitor.ObserveRun(Run("trigger"));
+        monitor.ObserveRun(Run());
         var alarm = Assert.Single(capture.Notifications);
         Assert.Equal(RunNotificationKind.Alarm, alarm.Kind);
         Assert.Equal("trigger", alarm.RunId);
         Assert.Equal("SN", alarm.DutId);
 
-        monitor.ObserveRun(Run(rating: ResultRating.Fail), report);
-        monitor.ObserveRun(Run(), report);
-        monitor.ObserveRun(Run(abort: true), report);
-        monitor.ObserveRun(Run(), report);
+        monitor.ObserveRun(Run(rating: ResultRating.Fail));
+        monitor.ObserveRun(Run());
+        monitor.ObserveRun(Run(abort: true));
+        monitor.ObserveRun(Run());
         Assert.Single(capture.Notifications);
-        monitor.ObserveRun(Run("rearmed"), report);
+        monitor.ObserveRun(Run("rearmed"));
         Assert.Equal("rearmed", capture.Notifications[1].RunId);
     }
 
@@ -56,15 +55,15 @@ public sealed class AlarmMonitorTests
         monitor.ObserveOutbox(2);
         monitor.ObserveOutbox(3);
         monitor.ObserveOutbox(4);
-        monitor.ObserveRun(Run(), failed);
-        monitor.ObserveRun(Run(), failed);
+        monitor.ObserveStorage(failed);
+        monitor.ObserveStorage(failed);
         Assert.Equal(2, capture.Notifications.Count);
         Assert.Contains("Outbox", capture.Notifications[0].Error);
         Assert.Contains("Ergebnisordner", capture.Notifications[1].Error);
 
         monitor.ObserveOutbox(2);
-        monitor.ObserveRun(Run(), available);
-        monitor.ObserveRun(Run(), failed);
+        monitor.ObserveStorage(available);
+        monitor.ObserveStorage(failed);
         monitor.ObserveOutbox(3);
         Assert.Equal(4, capture.Notifications.Count);
     }
@@ -99,7 +98,8 @@ public sealed class AlarmMonitorTests
     {
         var capture = new Capture();
         var monitor = new AlarmMonitor(new(0, 0, false, false), capture, new VirtualClock());
-        monitor.ObserveRun(Run(), new("run", "SN", new(null, "unavailable", false), null));
+        monitor.ObserveRun(Run());
+        monitor.ObserveStorage(new("run", "SN", new(null, "unavailable", false), null));
         monitor.ObserveOutbox(100);
         monitor.ObserveCalibration([]);
         Assert.Empty(capture.Notifications);

@@ -52,7 +52,8 @@ public sealed partial class ResultServices : IAsyncDisposable
             Journal = new RunJournal(journalFolder ?? (recoveryFolder is not null ? Path.Combine(recoveryFolder, "Zwischenaufzeichnung") : RunJournal.DefaultFolder)),
         };
         _alarmClock = clock ?? SystemClock.Instance;
-        Pipeline.Processed += OnRunProcessed;
+        Pipeline.RunReceived += OnRunReceived;
+        Pipeline.Processed += OnStorageProcessed;
         Outbox.Changed += OnOutboxChanged;
         Apply(settings);
     }

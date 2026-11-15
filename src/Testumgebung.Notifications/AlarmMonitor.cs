@@ -13,15 +13,18 @@ public sealed class AlarmMonitor(AlarmRules rules, IRunNotifier notifier, IClock
     private readonly Dictionary<string, int> _errors = new(StringComparer.Ordinal);
     private readonly HashSet<string> _active = new(StringComparer.Ordinal);
 
-    public void ObserveRun(ResultRun run, StorageReport report)
+    public void ObserveRun(ResultRun run)
     {
+        if (rules.ErrorStreak <= 0 || run.IsDevelopmentRun || run.Kind != ResultRunKind.Production) return;
         lock (_gate)
-        {
-            if (rules.ResultFolder && report.File is { } file)
-                Check("folder", !file.Success, "Ergebnisordner nicht erreichbar. Ergebnisablage prüfen.");
-            if (rules.ErrorStreak > 0 && !run.IsDevelopmentRun && run.Kind == ResultRunKind.Production)
-                ReadErrorStreak(run);
-        }
+            ReadErrorStreak(run);
+    }
+
+    public void ObserveStorage(StorageReport report)
+    {
+        if (!rules.ResultFolder || report.File is not { } file) return;
+        lock (_gate)
+            Check("folder", !file.Success, "Ergebnisordner nicht erreichbar. Ergebnisablage prüfen.");
     }
 
     private void ReadErrorStreak(ResultRun run)
