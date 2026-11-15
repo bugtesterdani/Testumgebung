@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief WPF-Anbindung für Anwendungseinstellungen. Ereignisse und Bindings verbinden diese Ansicht mit ihrem Datenkontext.
  */
@@ -52,7 +52,19 @@ public partial class SettingsView : UserControl
         if (MqttPasswordBox.Password != vm.MqttPassword) MqttPasswordBox.Password = vm.MqttPassword;
         if (HttpHeaderBox.Password != vm.HttpHeaderValue) HttpHeaderBox.Password = vm.HttpHeaderValue;
         if (OpcUaPasswordBox.Password != vm.OpcUaPassword) OpcUaPasswordBox.Password = vm.OpcUaPassword;
+        SmtpPasswordBox.Password = vm.Alarms.SmtpPassword ?? "";
+        TeamsUrlBox.Password = vm.Alarms.TeamsUrl ?? "";
         _syncing = false;
+    }
+
+    private void SmtpPasswordChanged(object sender, RoutedEventArgs eventArgs)
+    {
+        if (!_syncing && Settings is { } vm) vm.Alarms.SmtpPassword = SmtpPasswordBox.Password;
+    }
+
+    private void TeamsUrlChanged(object sender, RoutedEventArgs eventArgs)
+    {
+        if (!_syncing && Settings is { } vm) vm.Alarms.TeamsUrl = TeamsUrlBox.Password;
     }
 
     private void MqttPasswordChanged(object sender, RoutedEventArgs eventArgs)

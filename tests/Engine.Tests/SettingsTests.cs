@@ -86,6 +86,90 @@ public sealed class SettingsTests : IDisposable
         Assert.Single(broken.Warnings);
     }
 
+    [Fact]
+    public void Alarm_settings_default_off_and_protect_smtp_password_and_teams_url()
+    {
+        var path = P("alarms.json");
+        var store = new SettingsStore(path, new ReversingProtector());
+        File.WriteAllText(path, "{}");
+        var defaults = store.Load().Alarms;
+        Assert.False(defaults.SmtpEnabled);
+        Assert.False(defaults.TeamsEnabled);
+        Assert.Equal(0, defaults.ErrorStreak);
+        Assert.Equal(0, defaults.OutboxThreshold);
+        Assert.False(defaults.ResultFolder);
+        Assert.False(defaults.Calibration);
+
+        store.Save(new AppSettings
+        {
+            Alarms = new AlarmSettings
+            {
+                SmtpEnabled = true, TeamsEnabled = true, ErrorStreak = 3, OutboxThreshold = 5,
+                ResultFolder = true, Calibration = true,
+                SmtpPassword = "smtp-credential", TeamsUrl = "https://example.test/?sig=workflow-secret"
+            }
+        });
+        var json = File.ReadAllText(path);
+        Assert.DoesNotContain("smtp-credential", json);
+        Assert.DoesNotContain("workflow-secret", json);
+        var alarms = store.Load().Alarms;
+        Assert.Equal(("smtp-credential", "https://example.test/?sig=workflow-secret"), (alarms.SmtpPassword, alarms.TeamsUrl));
+        Assert.Equal((true, true, 3, 5, true, true),
+            (alarms.SmtpEnabled, alarms.TeamsEnabled, alarms.ErrorStreak, alarms.OutboxThreshold, alarms.ResultFolder, alarms.Calibration));
+    }
+
+    [Fact]
+    public async Task Production_error_sends_an_alarm_through_configured_smtp()
+    {
+        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var received = ReceiveSmtpAlarmAsync(listener, timeout.Token);
+        var settings = new AppSettings
+        {
+            ResultFolder = P("results"),
+            Database = new DatabaseSettings { Provider = DatabaseChoice.None },
+            Alarms = new AlarmSettings
+            {
+                ErrorStreak = 1, SmtpEnabled = true, SmtpHost = "127.0.0.1", SmtpPort = port, SmtpStartTls = false,
+                SmtpSender = "alarms@example.test", SmtpRecipient = "worker@example.test"
+            }
+        };
+        await using var services = new ResultServices(settings, new TestRegistry(), P("outbox"), P("simdb"), recoveryFolder: P("recovery"));
+        var delivered = new TaskCompletionSource<Testumgebung.Notifications.NotifyDelivery>(TaskCreationOptions.RunContinuationsAsynchronously);
+        services.NotifyDelivered += result => delivered.TrySetResult(result);
+
+        var run = new ResultRun { RunId = "alarm-test", Station = "P1", Rating = ResultRating.Error };
+        await services.Pipeline.ProcessAsync(run, new Testumgebung.Domain.Storage.StorageResolver(SampleProjects.AcPruefung().Definition));
+        var result = await delivered.Task.Within();
+        Assert.True(result.Sent, result.Error);
+        Assert.Equal("SMTP", result.Channel);
+        var message = await received;
+        Assert.Contains("worker@example.test", message);
+        Assert.Contains("P1: 1", message);
+    }
+
+    private static async Task<string> ReceiveSmtpAlarmAsync(System.Net.Sockets.TcpListener listener, CancellationToken ct)
+    {
+        using var connection = await listener.AcceptTcpClientAsync(ct);
+        using var stream = connection.GetStream();
+        using var reader = new StreamReader(stream);
+        await using var writer = new StreamWriter(stream, leaveOpen: true) { AutoFlush = true, NewLine = "\r\n" };
+        await writer.WriteLineAsync("220 localhost");
+        var message = new System.Text.StringBuilder();
+        var inData = false;
+        while (await reader.ReadLineAsync(ct) is { } command)
+        {
+            message.AppendLine(command);
+            if (inData && command != ".") continue;
+            if (command == "QUIT") break;
+            inData = command == "DATA";
+            await writer.WriteLineAsync(inData ? "354 Start mail input" : "250 OK");
+        }
+        return message.ToString();
+    }
+
     private sealed class FailingProtector : ISecretProtector
     {
         public string Protect(string plain) => plain;

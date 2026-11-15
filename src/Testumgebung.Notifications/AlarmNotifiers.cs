@@ -22,7 +22,7 @@ public sealed class SmtpAlarmNotifier(SmtpAlarmOptions options) : QueuedNotifier
         using var client = new SmtpClient(options.Host, options.Port) { EnableSsl = options.StartTls };
         if (!string.IsNullOrWhiteSpace(options.Username))
             client.Credentials = new NetworkCredential(options.Username, options.Password);
-        using var message = new MailMessage(options.Sender, options.Recipient, "Testumgebung – Alarm", n.Message);
+        using var message = new MailMessage(options.Sender, options.Recipient, "Testumgebung – Alarm", (n.Error ?? n.Text));
         await client.SendMailAsync(message, cancellationToken).ConfigureAwait(false);
     }
 }
@@ -37,7 +37,7 @@ public sealed class TeamsAlarmNotifier(Uri endpoint) : QueuedNotifier(TimeSpan.F
     {
         try
         {
-            using var response = await Client.PostAsJsonAsync(endpoint, Card(n.Message), cancellationToken).ConfigureAwait(false);
+            using var response = await Client.PostAsJsonAsync(endpoint, Card((n.Error ?? n.Text)), cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) throw new IOException($"Teams-Workflow antwortet mit HTTP {(int)response.StatusCode}.");
         }
         catch (HttpRequestException)
@@ -55,6 +55,7 @@ public sealed class TeamsAlarmNotifier(Uri endpoint) : QueuedNotifier(TimeSpan.F
             new
             {
                 contentType = "application/vnd.microsoft.card.adaptive",
+                contentUrl = (string?)null,
                 content = new
                 {
                     type = "AdaptiveCard",

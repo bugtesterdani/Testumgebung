@@ -197,7 +197,8 @@ public static class ConfigBackup
             return HasSecret(settings, "database", "connectionString", "protectedConnectionString")
                 || HasSecret(settings, "mqtt", "password", "protectedPassword")
                 || HasSecret(settings, "http", "headerValue")
-                || HasSecret(settings, "opcUa", "password");
+                || HasSecret(settings, "opcUa", "password")
+                || HasSecret(settings, "alarms", "protectedSmtpPassword", "protectedTeamsUrl");
         }
         catch (JsonException)
         {

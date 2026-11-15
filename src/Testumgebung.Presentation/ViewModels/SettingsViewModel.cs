@@ -68,6 +68,8 @@ public sealed class SettingsViewModel : ObservableObject
         foreach (var warning in store.Warnings) Warnings.Add(warning);
     }
 
+    public AlarmSettings Alarms => _edit.Alarms;
+
     public IReadOnlyList<string> StationNames => _stationNames();
     public void RefreshStationNames() => OnPropertyChanged(nameof(StationNames));
     public bool ShowPairedStations

@@ -80,7 +80,7 @@ public partial class MainWindow : Window
         // Optionale Inaktivitätssperre: Eingaben merken, regelmäßig prüfen. Ein laufender Test wird nie beeinflusst.
         PreviewMouseDown += (_, _) => Shell.NoteActivity();
         PreviewKeyDown += OnWindowKeyDown;
-        _inactivity.Tick += (_, _) => Shell.CheckInactivity();
+        _inactivity.Tick += (_, _) => CheckInactivityAndCalibration();
         _inactivity.Start();
         // Manuelles Öffnen der Anwendung: offene Runs aus der lokalen Outbox laden und Übertragung fortsetzen (P04).
         _services.Outbox.Start();
@@ -90,6 +90,12 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Keeps account configuration and provider selection together during startup.</summary>
+    private void CheckInactivityAndCalibration()
+    {
+        Shell.CheckInactivity();
+        _services.ObserveCalibration(_coordinator.Setup.Devices);
+    }
+
     private void OnLocalPasswordKey(object sender, System.Windows.Input.KeyEventArgs eventArgs)
     {
         if (eventArgs.Key != System.Windows.Input.Key.Enter || !Shell.LoginCommand.CanExecute(null)) return;

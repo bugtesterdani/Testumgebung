@@ -25,6 +25,7 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
     /// <summary>Zielordner der Ergebnisdateien – zur Laufzeit änderbar.</summary>
     public ResultFileStore? Files { get; set; } = files;
     public OutboxService? Outbox { get; } = outbox;
+    public event Action<ResultRun, StorageReport>? Processed;
 
     /// <summary>Zwischenaufzeichnung laufender Prüflingstests; null = ohne Absturzsicherung.</summary>
     public RunJournal? Journal { get; set; }
@@ -59,6 +60,7 @@ public sealed class ResultPipeline(ResultFileStore? files, OutboxService? outbox
         var report = new StorageReport(recorded.RunId, recorded.DutId, file, db);
         // Gesichert (Datei, Wiederherstellungsordner oder Outbox) → Zwischenaufzeichnung nicht mehr nötig.
         if (IsSecured(file, db)) Journal?.Complete(recorded.RunId);
+        Processed?.Invoke(recorded, report);
         return report;
     }
 

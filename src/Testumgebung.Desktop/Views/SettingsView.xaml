@@ -414,7 +414,32 @@
                     <TextBlock Text="{Binding OpcUaStatus}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"
                                Visibility="{Binding OpcUaStatus, Converter={StaticResource NullVis}}" />
 
-                    <TextBlock Style="{StaticResource SectionTitle}" Text="Gesendete Meldungen (HTTP, OPC UA)" Margin="0,14,0,6" />
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Alarmierung" Margin="0,14,0,6" />
+                    <TextBlock Text="ERROR-Prüfläufe in Folge (0 = aus)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.ErrorStreak}" />
+                    <TextBlock Text="Offene Outbox-Einträge (0 = aus)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.OutboxThreshold}" />
+                    <CheckBox IsChecked="{Binding Alarms.ResultFolder}" Content="Bei nicht erreichbarem Ergebnisordner melden" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding Alarms.Calibration}" Content="Bei fälliger Kalibrierung melden" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding Alarms.SmtpEnabled}" Content="Alarme per SMTP-E-Mail senden" Margin="0,6,0,0" />
+                    <TextBlock Text="SMTP-Server" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpHost}" />
+                    <TextBlock Text="Port" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpPort}" />
+                    <TextBlock Text="Absenderadresse" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpSender}" />
+                    <TextBlock Text="Empfängeradresse" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpRecipient}" />
+                    <TextBlock Text="Benutzername (optional)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpUsername}" />
+                    <CheckBox IsChecked="{Binding Alarms.SmtpStartTls}" Content="SMTP-Verbindung mit STARTTLS verschlüsseln" Margin="0,6,0,0" />
+                    <TextBlock Text="SMTP-Passwort" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <PasswordBox x:Name="SmtpPasswordBox" PasswordChanged="SmtpPasswordChanged" />
+                    <CheckBox IsChecked="{Binding Alarms.TeamsEnabled}" Content="Alarme an Microsoft Teams senden" Margin="0,6,0,0" />
+                    <TextBlock Text="Teams-Workflow-Webhook-URL" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <PasswordBox x:Name="TeamsUrlBox" PasswordChanged="TeamsUrlChanged" />
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Gesendete Meldungen" Margin="0,14,0,6" />
                     <ListBox ItemsSource="{Binding NotifyLog}" BorderThickness="0" MaxHeight="180">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
