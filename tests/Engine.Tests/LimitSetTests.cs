@@ -2,9 +2,11 @@ using System.IO.Compression;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Hardware;
+using Testumgebung.Identity;
 using Testumgebung.Persistence;
 using Testumgebung.Persistence.Releases;
 using Testumgebung.Persistence.Stations;
+using Testumgebung.Presentation.Releases;
 using Testumgebung.Presentation.ViewModels;
 
 namespace Testumgebung.Engine.Tests;
@@ -15,6 +17,7 @@ public sealed class LimitSetTests
     {
         var project = SampleProjects.AcPruefung();
         project.Definition.Root.Variables.Add(new("Grenze", VarType.Double));
+        project.Definition.Root.Variables.Add(new("Aktiv", VarType.Bool));
         return project;
     }
 
@@ -60,10 +63,10 @@ public sealed class LimitSetTests
                     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Target="worksheets/sheet1.xml"/></Relationships>
                     """);
                 var rows = string.Concat(Enumerable.Range(1, 12).Select(index =>
-                    $"<row><c t='inlineStr'><is><t>V{index}</t></is></c><c><v>{index}</v></c></row>"));
+                    $"<row><c t='inlineStr'><is><t>V{index}</t></is></c><c><v>{index}</v></c><c t='b'><v>{index % 2}</v></c></row>"));
                 Write("xl/worksheets/sheet1.xml", $"""
                     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>
-                      <row><c t="inlineStr"><is><t>Variante</t></is></c><c t="inlineStr"><is><t>Grenze</t></is></c></row>
+                      <row><c t="inlineStr"><is><t>Variante</t></is></c><c t="inlineStr"><is><t>Grenze</t></is></c><c t="inlineStr"><is><t>Aktiv</t></is></c></row>
                       {rows}
                     </sheetData></worksheet>
                     """);
@@ -74,9 +77,13 @@ public sealed class LimitSetTests
                     writer.Write(content);
                 }
             }
-            var sets = LimitSetTable.Import(Project(), path);
+            var project = Project();
+            var sets = LimitSetTable.Import(project, path);
             Assert.Equal(12, sets.Count);
             Assert.Equal("12", sets["V12"]["Grenze"]);
+            foreach (var (name, values) in sets) project.LimitSets.Add(name, values);
+            Assert.True(Assert.IsType<bool>(LimitSetTable.Resolve(project, "V1")["Aktiv"]));
+            Assert.False(Assert.IsType<bool>(LimitSetTable.Resolve(project, "V12")["Aktiv"]));
         }
         finally { File.Delete(path); }
     }
@@ -97,6 +104,39 @@ public sealed class LimitSetTests
             Assert.Single(project.LimitSets);
         }
         finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public async Task Editor_simulation_uses_an_explicit_variant_and_clears_a_removed_choice()
+    {
+        var definition = new TestDefinition("Simulation", "1", new("init", "Init"), new("loop", "Loop"), new("exit", "Ende"));
+        definition.Root.Variables.Add(new("Grenze", VarType.Double));
+        var project = new TestProject(definition);
+        var ui = new QueueDispatcher();
+        var session = new SessionService(new SimulatedIdentityProvider(() => "test"), null);
+        var shell = new ShellViewModel(ui, project: project, clock: new VirtualClock(),
+            identity: new IdentityServices(session, null, _ => new SimulatedIdentityProvider(() => "test")));
+        await shell.LoginDevelopmentAsync();
+        ui.Pump();
+        Assert.True(shell.StartSimulationCommand.CanExecute(null));
+
+        project.LimitSets.Add("Standard", new() { ["Grenze"] = "2.5" });
+        shell.Editor.MarkChanged();
+        Assert.Equal("Standard", Assert.Single(shell.SimulationVariants));
+        Assert.False(shell.StartSimulationCommand.CanExecute(null));
+        shell.SimulationVariant = "Standard";
+        Assert.True(shell.StartSimulationCommand.CanExecute(null));
+        shell.StartSimulationCommand.Execute(null);
+        await shell.SelectedStation.WaitForCompletionAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        ui.Pump();
+        Assert.Null(shell.SelectedStation.Error);
+        Assert.Contains(shell.SelectedStation.Protocol, row => row.Text.Contains("Grenze = 2.5"));
+
+        project.LimitSets.Clear();
+        shell.Editor.MarkChanged();
+        Assert.Null(shell.SimulationVariant);
+        Assert.Empty(shell.SimulationVariants);
+        Assert.True(shell.StartSimulationCommand.CanExecute(null));
     }
 
     [Fact]

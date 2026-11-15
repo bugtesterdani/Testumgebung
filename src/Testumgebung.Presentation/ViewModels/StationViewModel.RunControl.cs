@@ -20,10 +20,11 @@ public sealed partial class StationViewModel
     // ------------------------------------------------------------------ Steuerung
 
     /// <summary>Editorstand ausschließlich mit simulierten Geräten ausführen, unabhängig von der Stationszuordnung.</summary>
-    public Task StartSimulationAsync()
+    public Task StartSimulationAsync(string? variant = null)
     {
         if (!CanStart || Selection.IsActive) return Task.CompletedTask;
-        return RunProjectAsync(_serializer.Clone(_projectSource()), null, null, null, simulationOnly: true);
+        var presets = variant is null ? null : new Dictionary<string, object?> { [LimitSetTable.VariantParameter] = variant };
+        return RunProjectAsync(_serializer.Clone(_projectSource()), null, presets, null, simulationOnly: true);
     }
 
     /// <summary>Startet den Hauptablauf mit einer unveränderlichen Kopie der aktuellen Projektversion.</summary>

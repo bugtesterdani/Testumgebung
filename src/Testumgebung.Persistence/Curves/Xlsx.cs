@@ -33,7 +33,7 @@ public static class Xlsx
         => CurveImport.FromGrid("Excel (.xlsx)", name + (sheetName is null ? "" : $" [{sheetName}]"),
             CurveImport.Hash(bytes), ReadGrid(bytes, sheetName), CultureInfo.InvariantCulture);
 
-    internal static List<string[]> ReadGrid(byte[] bytes, string? sheetName = null)
+    internal static List<string[]> ReadGrid(byte[] bytes, string? sheetName = null, bool booleanAsText = false)
     {
         using var zip = Open(bytes);
         var workbook = Load(zip, "xl/workbook.xml");
@@ -50,14 +50,14 @@ public static class Xlsx
         var shared = zip.GetEntry("xl/sharedStrings.xml") is null ? [] :
             Load(zip, "xl/sharedStrings.xml").Root!.Elements(S + "si").Select(si => string.Concat(si.Descendants(S + "t").Select(element => element.Value))).ToList();
 
-        var rows = ReadRows(zip, sheetPath, shared);
+        var rows = ReadRows(zip, sheetPath, shared, booleanAsText);
         if (rows.Count == 0) throw new CurveImportException("Tabellenblatt ist leer.");
         var width = rows.Values.Where(entries => entries.Count > 0).Select(entries => entries.Keys.Max() + 1).DefaultIfEmpty(0).Max();
         return rows.Values.Select(entries => Enumerable.Range(0, width)
             .Select(index => entries.TryGetValue(index, out var text) ? text : "").ToArray()).ToList();
     }
 
-    private static SortedDictionary<int, Dictionary<int, string>> ReadRows(ZipArchive zip, string sheetPath, List<string> shared)
+    private static SortedDictionary<int, Dictionary<int, string>> ReadRows(ZipArchive zip, string sheetPath, List<string> shared, bool booleanAsText)
     {
         var rows = new SortedDictionary<int, Dictionary<int, string>>();
         foreach (var row in Load(zip, sheetPath).Descendants(S + "row"))
@@ -69,14 +69,14 @@ public static class Xlsx
             {
                 var col = (string?)element.Attribute("r") is { } resource ? ColumnIndex(resource) : next;
                 next = col + 1;
-                cells[col] = CellText(element, shared);
+                cells[col] = CellText(element, shared, booleanAsText);
             }
             rows[rowIndex] = cells;
         }
         return rows;
     }
 
-    private static string CellText(XElement element2, List<string> shared)
+    private static string CellText(XElement element2, List<string> shared, bool booleanAsText)
     {
         var type = (string?)element2.Attribute("t");
         var value = element2.Element(S + "v")?.Value;
@@ -84,6 +84,7 @@ public static class Xlsx
         {
             "s" => value is not null && int.TryParse(value, out var si) && si >= 0 && si < shared.Count ? shared[si] : "",
             "inlineStr" => string.Concat(element2.Descendants(S + "t").Select(element => element.Value)),
+            "b" when booleanAsText => value switch { "1" => "true", "0" => "false", _ => "" },
             "b" => value == "1" ? "1" : "0",
             _ => value ?? "",
         };

@@ -14,7 +14,7 @@ public static class LimitSetTable
     {
         var rows = Path.GetExtension(path).ToLowerInvariant() switch
         {
-            ".xlsx" => Xlsx.ReadGrid(File.ReadAllBytes(path)),
+            ".xlsx" => Xlsx.ReadGrid(File.ReadAllBytes(path), booleanAsText: true),
             ".csv" => ReadCsv(path),
             _ => throw new ProjectFormatException("Grenzwerttabellen als .csv oder .xlsx importieren."),
         };
