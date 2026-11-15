@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Filtert Prüfläufe und berechnet Messwertstatistik, Fehlerhäufigkeit und Berichtszellen.
  */
@@ -158,7 +158,7 @@ public static class ResultAnalysis
 
     public static ResultStatistics Compute(IEnumerable<ResultRun> all, StatisticsFilter filter)
     {
-        var runs = all.Where(filter.Matches).OrderBy(run => run.Started).ToList();
+        var runs = all.Where(run => run.Kind == ResultRunKind.Production && filter.Matches(run)).OrderBy(run => run.Started).ToList();
         var withId = runs.Where(run => !string.IsNullOrWhiteSpace(run.DutId)).GroupBy(run => run.DutId, StringComparer.Ordinal).ToList();
         var durations = runs.Where(run => run.Ended > run.Started).Select(run => (run.Ended - run.Started).TotalSeconds).ToList();
 

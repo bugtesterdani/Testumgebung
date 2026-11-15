@@ -13,6 +13,13 @@
                 <TextBlock Text="{Binding ProgramVersionWarning}" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}"/>
                 <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
                 <TextBlock Text="{Binding StorageError}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
+                <DockPanel Margin="0,4" Visibility="{Binding HasReferenceCheck, Converter={StaticResource BoolVis}}">
+                    <Button DockPanel.Dock="Right" Content="Referenz prüfen" Command="{Binding StartReferenceCommand}" Style="{StaticResource OutlineButton}" />
+                    <TextBox Text="{Binding ReferenceScan, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" AutomationProperties.Name="Referenzkennung"
+                             ToolTip="Kennung des Gut- oder Schlechtmusters scannen.">
+                        <TextBox.InputBindings><KeyBinding Key="Return" Command="{Binding StartReferenceCommand}" /></TextBox.InputBindings>
+                    </TextBox>
+                </DockPanel>
                 <ProgressBar Value="{Binding DutProgress, Mode=OneWay}" Maximum="100" Height="5" Margin="0,4,0,8"/>
             </StackPanel>
             <DataGrid Grid.Row="1" ItemsSource="{Binding Measurements}" IsReadOnly="True" Margin="0,0,0,10">

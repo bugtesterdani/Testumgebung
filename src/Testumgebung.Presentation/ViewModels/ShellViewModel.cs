@@ -349,7 +349,11 @@ public sealed class ShellViewModel : ObservableObject
             if (at >= 0 && at != index && index < Stations.Count) Stations.Move(at, index);
         }
         if (!Stations.Contains(_selectedStation)) SelectedStation = Stations.First();
-        foreach (var station in Stations) station.RaiseStartState();
+        foreach (var station in Stations)
+        {
+            station.RaiseStartState();
+            station.RefreshReferenceCheck();
+        }
     }
 
     public string AppTitle => "Testumgebung";

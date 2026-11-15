@@ -139,6 +139,7 @@ public sealed partial class StationsViewModel : ObservableObject
         ReloadGroups();
         Check();
         OnPropertiesChanged(nameof(SelectedStation), nameof(SourceText));
+        NotifyReferenceSettings();
         SaveCommand.RaiseCanExecuteChanged();
     }
 
@@ -153,12 +154,33 @@ public sealed partial class StationsViewModel : ObservableObject
         {
             if (value is null || !SetProperty(ref _selectedStation, value)) return;
             LoadRows();
+            NotifyReferenceSettings();
             RemoveStationCommand.RaiseCanExecuteChanged();
             RefreshLive();
         }
     }
 
     private StationConfig? Station => _selectedStation is null ? null : _draft.Station(_selectedStation);
+
+    private ReferenceCheckConfig? ReferenceCheck => Station?.ReferenceCheck;
+
+    public bool ReferenceEnabled { get => ReferenceCheck?.Enabled ?? false; set => EditReference(config => config.Enabled = value); }
+    public string ReferenceGoodId { get => ReferenceCheck?.GoodId ?? ""; set => EditReference(config => config.GoodId = value); }
+    public string ReferenceBadId { get => ReferenceCheck?.BadId ?? ""; set => EditReference(config => config.BadId = value); }
+    public string ReferenceShiftStarts { get => ReferenceCheck?.ShiftStarts ?? "06:00;14:00;22:00"; set => EditReference(config => config.ShiftStarts = value); }
+    public int ReferenceDutInterval { get => ReferenceCheck?.DutInterval ?? 0; set => EditReference(config => config.DutInterval = value); }
+    public double ReferenceHoursInterval { get => ReferenceCheck?.HoursInterval ?? 0; set => EditReference(config => config.HoursInterval = value); }
+
+    private void EditReference(Action<ReferenceCheckConfig> change)
+    {
+        if (Station is not { } station) return;
+        change(station.ReferenceCheck ??= new());
+        Edited();
+        NotifyReferenceSettings();
+    }
+
+    private void NotifyReferenceSettings() => OnPropertiesChanged(nameof(ReferenceEnabled), nameof(ReferenceGoodId), nameof(ReferenceBadId),
+        nameof(ReferenceShiftStarts), nameof(ReferenceDutInterval), nameof(ReferenceHoursInterval));
 
     private void AddStation()
     {
@@ -204,6 +226,9 @@ public sealed partial class StationsViewModel : ObservableObject
     public void Check()
     {
         Issues.Clear();
+        foreach (var station in _draft.Stations)
+            if (station.ReferenceCheck?.Validate() is { } message)
+                Issues.Add(new(ConfigSeverity.Error, station.Name, null, message));
         foreach (var issue in StationHardware.Check(_draft, Project).OrderByDescending(issue2 => issue2.Severity)) Issues.Add(issue);
         OnPropertiesChanged(nameof(HasConfigErrors), nameof(CheckSummary));
     }

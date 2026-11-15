@@ -83,6 +83,19 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </DockPanel>
+            <Expander Header="Referenzprüfung am gewählten Prüfplatz" Margin="0,8,0,0">
+                <StackPanel Margin="8">
+                    <CheckBox Content="Gut- und Schlechtmuster verlangen" IsChecked="{Binding ReferenceEnabled}" />
+                    <WrapPanel IsEnabled="{Binding ReferenceEnabled}" Margin="0,6,0,0">
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Kennung Gutmuster" /><TextBox Text="{Binding ReferenceGoodId}" MinWidth="120" /></StackPanel>
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Kennung Schlechtmuster" /><TextBox Text="{Binding ReferenceBadId}" MinWidth="120" /></StackPanel>
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Schichtbeginn (HH:mm;HH:mm)" /><TextBox Text="{Binding ReferenceShiftStarts}" MinWidth="170" /></StackPanel>
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Nach n Prüflingen" /><TextBox Text="{Binding ReferenceDutInterval}" MinWidth="85" /></StackPanel>
+                        <StackPanel><TextBlock Text="Nach t Stunden" /><TextBox Text="{Binding ReferenceHoursInterval}" MinWidth="85" /></StackPanel>
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="Intervall 0 deaktiviert die jeweilige Wiederholungsregel." Margin="0,4,0,0" />
+                </StackPanel>
+            </Expander>
             <Border Style="{StaticResource ErrorBox}" Margin="0,8,0,0" Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
                 <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" />
             </Border>

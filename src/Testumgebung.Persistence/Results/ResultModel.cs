@@ -52,6 +52,8 @@ public sealed record ResultAttachment(string Id, string Name, string MediaType, 
 /// <summary>Ein Prüflingstest – Inhalt einer Ergebnisdatei bzw. eines Outbox-Eintrags.</summary>
 public sealed record ResultDevice(string Name, string? SerialNumber, DateOnly? CalibratedOn, DateOnly? DueOn);
 
+public enum ResultRunKind { Production, GoodReference, BadReference }
+
 public sealed class ResultRun
 {
     public required string RunId { get; init; }
@@ -66,6 +68,7 @@ public sealed class ResultRun
     public ResultRating Rating { get; init; }
     public bool OperatorAbort { get; init; }
     public bool IsDevelopmentRun { get; init; }
+    public ResultRunKind Kind { get; init; }
 
     /// <summary>Für welches Ziel gefiltert wurde („Ergebnisdatei“, „Datenbank“, leer = ungefiltert).</summary>
     public string FilteredFor { get; init; } = "";
@@ -94,6 +97,7 @@ public sealed class ResultRun
         Rating = Rating,
         OperatorAbort = OperatorAbort,
         IsDevelopmentRun = IsDevelopmentRun,
+        Kind = Kind,
         FilteredFor = filteredFor,
         Application = Application,
         Devices = Devices,

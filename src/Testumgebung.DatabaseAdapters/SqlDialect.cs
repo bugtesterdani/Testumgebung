@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Kapselt providerspezifisches SQL und Migrationen hinter einem gemeinsamen logischen Datenmodell.
  */
@@ -55,6 +55,7 @@ public abstract class SqlDialect
         (1, Version1()),
         (2, Version2()),
         (3, [$"ALTER TABLE tu_runs ADD order_id {Key}", "CREATE INDEX ix_tu_runs_order ON tu_runs (order_id)"]),
+        (4, [$"ALTER TABLE tu_runs ADD run_kind {Key}"]),
     ];
 
     /// <summary>Separate opt-in schema, additive to the existing result schema.</summary>

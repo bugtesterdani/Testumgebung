@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Schreibt einen Prüflingslauf transaktional; Run-ID, Messwerte und Kurven gehören zu derselben Speicherung.
  */
@@ -86,14 +86,14 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
         await writer.ExecAsync(
             """
             INSERT INTO tu_runs (run_id, station_run_id, station, dut_id, definition_id, test_name, test_version, started_utc, started_text,
-                ended_utc, ended_text, rating, werror, development_run, application, stored_utc, order_id)
+                ended_utc, ended_text, rating, werror, development_run, application, stored_utc, order_id, run_kind)
             VALUES (@run, @stationRun, @station, @dut, @def, @name, @version, @started, @startedText,
-                @ended, @endedText, @rating, @werror, @dev, @app, @stored, @order)
+                @ended, @endedText, @rating, @werror, @dev, @app, @stored, @order, @kind)
             """,
             ("run", run.RunId), ("stationRun", run.StationRunId), ("station", run.Station), ("dut", run.DutId), ("order", run.Order), ("def", definitionId),
             ("name", run.TestName), ("version", run.TestVersion), ("started", run.Started.UtcTicks), ("startedText", Iso(run.Started)),
             ("ended", run.Ended.UtcTicks), ("endedText", Iso(run.Ended)), ("rating", RatingText(run.Rating)), ("werror", run.OperatorAbort ? 1L : 0L),
-            ("dev", run.IsDevelopmentRun ? 1L : 0L), ("app", run.Application), ("stored", DateTimeOffset.UtcNow.UtcTicks)).ConfigureAwait(false);
+            ("dev", run.IsDevelopmentRun ? 1L : 0L), ("kind", run.Kind.ToString()), ("app", run.Application), ("stored", DateTimeOffset.UtcNow.UtcTicks)).ConfigureAwait(false);
     }
 
     private static async Task StoreEventsAsync(Writer writer, ResultRun run)
@@ -310,7 +310,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
         await using (var cmd = writer.Command(
             $"""
             SELECT r.run_id, r.station_run_id, r.station, r.dut_id, r.test_name, r.test_version, r.started_utc, r.started_text, r.ended_utc, r.ended_text,
-                r.rating, r.werror, r.development_run, r.application, d.structure_json, r.order_id
+                r.rating, r.werror, r.development_run, r.application, d.structure_json, r.order_id, r.run_kind
             FROM tu_runs r LEFT JOIN tu_definitions d ON d.definition_id = r.definition_id
             WHERE {where} ORDER BY r.started_utc
             """, parameters))
@@ -390,6 +390,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
             Station = Str(reader, 2) ?? "",
             DutId = Str(reader, 3) ?? "",
             Order = Str(reader, 15) ?? "",
+            Kind = Enum.TryParse<ResultRunKind>(Str(reader, 16), out var kind) ? kind : ResultRunKind.Production,
             TestName = Str(reader, 4) ?? "",
             TestVersion = Str(reader, 5) ?? "",
             Started = Time(Long(reader, 6), Str(reader, 7)),

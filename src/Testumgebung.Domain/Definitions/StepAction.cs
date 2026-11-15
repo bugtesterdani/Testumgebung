@@ -193,6 +193,7 @@ public interface IStepContext
     /// <summary>Python-Umgebung aus dem Auswahlprogramm dieses Laufs.</summary>
     string? ProgramPythonVenv => null;
     PairedStationContext? PairedStation => null;
+    bool IsReferenceRun => false;
 
     /// <summary>Ausführungsumgebung für Codebausteine; null, wenn nicht konfiguriert.</summary>
     Code.ICodeRuntime? CodeRuntime { get; }
