@@ -223,6 +223,35 @@ public sealed partial class StationViewModel
         var registry = BuildRunRegistry(project);
         if (registry is null) return;
 
+        var runTask = StartPreparedRun(project, registry, presets, dutLimit, selectionNote, orderSession, pythonVenv, devices, today);
+
+        RunStatus status;
+        try
+        {
+            status = await runTask.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _coordinator?.EndRun(Name);
+            var problems = await SafeStateAsync().ConfigureAwait(false);
+            _ui.Post(() =>
+            {
+                Error = ex.Message + (problems.Count > 0 ? " " + string.Join(" ", problems) : "");
+                RaiseRunState();
+            });
+            return;
+        }
+        _coordinator?.EndRun(Name);
+        // Der sichere Gerätezustand wird vor dem abschließenden UI-Status geprüft.
+        // Ein abgeschlossenes Prüfergebnis bestätigt allein noch keinen sicheren Ausgangszustand.
+        var safeProblems = await SafeStateAsync().ConfigureAwait(false);
+        _ui.Post(() => CompleteRunDisplay(status, safeProblems));
+    }
+
+    private Task<RunStatus> StartPreparedRun(TestProject project, HardwareRegistry registry,
+        IReadOnlyDictionary<string, object?>? presets, int? dutLimit, string? selectionNote, bool orderSession,
+        string? pythonVenv, IReadOnlyList<DeviceConfig> devices, DateOnly today)
+    {
         PrepareRunDisplay(project, presets, orderSession, selectionNote);
         var resourceIds = CalibrationResourceIds();
         var accessed = new System.Collections.Concurrent.ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
@@ -252,31 +281,10 @@ public sealed partial class StationViewModel
         Hint = "Prüfung läuft.";
         foreach (var warning in StationHardware.CalibrationWarnings(devices, today))
             AddProtocol(new ProtocolEntry(_clock.Now, ProtocolKind.Info, warning, "—", "", "", null, "Kalibrierung"));
-        _runTask = Task.Run(_run.RunAsync);
+        var task = _runTask = Task.Run(_run.RunAsync);
         if (_abortBeforeEngineStart) RequestAbort();
         RaiseRunState();
-
-        RunStatus status;
-        try
-        {
-            status = await _runTask.ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _coordinator?.EndRun(Name);
-            var problems = await SafeStateAsync().ConfigureAwait(false);
-            _ui.Post(() =>
-            {
-                Error = ex.Message + (problems.Count > 0 ? " " + string.Join(" ", problems) : "");
-                RaiseRunState();
-            });
-            return;
-        }
-        _coordinator?.EndRun(Name);
-        // Der sichere Gerätezustand wird vor dem abschließenden UI-Status geprüft.
-        // Ein abgeschlossenes Prüfergebnis bestätigt allein noch keinen sicheren Ausgangszustand.
-        var safeProblems = await SafeStateAsync().ConfigureAwait(false);
-        _ui.Post(() => CompleteRunDisplay(status, safeProblems));
+        return task;
     }
 
     [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_storage))]
