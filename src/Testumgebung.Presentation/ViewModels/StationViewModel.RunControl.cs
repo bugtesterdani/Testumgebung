@@ -170,7 +170,8 @@ public sealed partial class StationViewModel
         return true;
     }
 
-    private TestRunOptions RunOptions(HardwareRegistry registry, IReadOnlyDictionary<string, object?>? presets, int? dutLimit, bool orderSession, string? pythonVenv, Action<ResourceBinding> onDeviceAccess)
+    private TestRunOptions RunOptions(HardwareRegistry registry, IReadOnlyDictionary<string, object?>? presets,
+        IReadOnlyDictionary<string, object?>? rootPresets, int? dutLimit, bool orderSession, string? pythonVenv, Action<ResourceBinding> onDeviceAccess)
         => new()
         {
             Clock = _clock,
@@ -187,7 +188,7 @@ public sealed partial class StationViewModel
             // Beide Seiten behalten bis zum nächsten gemeinsamen Auftrag dieselbe Version.
             VersionSource = PairContext is null ? this : null,
             Presets = presets,
-            SessionPresets = orderSession ? presets : null,
+            SessionPresets = rootPresets,
             ContinuousLoop = orderSession,
             DutLimit = dutLimit,
             EventHistoryLimit = 2000,
@@ -204,6 +205,25 @@ public sealed partial class StationViewModel
         _rejectedReleaseId = null;
         PendingVersionText = null;
         ActiveRelease = release;
+        IReadOnlyDictionary<string, object?> variantPresets;
+        try
+        {
+            variantPresets = LimitSetTable.Resolve(project, presets?.GetValueOrDefault(LimitSetTable.VariantParameter) as string);
+        }
+        catch (ProjectFormatException ex)
+        {
+            Error = ex.Message;
+            LogSelection("Grenzwertsatz fehlt oder ist ungültig", ex.Message, ResultRating.Error, "Kein Start");
+            return;
+        }
+        if (variantPresets.Count > 0)
+        {
+            var combined = new Dictionary<string, object?>(presets!, StringComparer.Ordinal);
+            combined.Remove(LimitSetTable.VariantParameter);
+            foreach (var (key, value) in variantPresets) combined[key] = value;
+            presets = combined;
+        }
+        var rootPresets = orderSession ? presets : variantPresets;
         if (!await ValidateRunProjectAsync(project, release).ConfigureAwait(true)) return;
 
         var devices = CalibrationDevices();
@@ -217,7 +237,7 @@ public sealed partial class StationViewModel
         var registry = BuildRunRegistry(project);
         if (registry is null) return;
 
-        var runTask = StartPreparedRun(project, registry, presets, dutLimit, selectionNote, orderSession, pythonVenv, devices, today);
+        var runTask = StartPreparedRun(project, registry, presets, rootPresets, dutLimit, selectionNote, orderSession, pythonVenv, devices, today);
 
         RunStatus status;
         try
@@ -243,7 +263,8 @@ public sealed partial class StationViewModel
     }
 
     private Task<RunStatus> StartPreparedRun(TestProject project, HardwareRegistry registry,
-        IReadOnlyDictionary<string, object?>? presets, int? dutLimit, string? selectionNote, bool orderSession,
+        IReadOnlyDictionary<string, object?>? presets, IReadOnlyDictionary<string, object?>? rootPresets,
+        int? dutLimit, string? selectionNote, bool orderSession,
         string? pythonVenv, IReadOnlyList<DeviceConfig> devices, DateOnly today)
     {
         PrepareRunDisplay(project, presets, orderSession, selectionNote);
@@ -253,7 +274,7 @@ public sealed partial class StationViewModel
         {
             if (resourceIds.TryGetValue(binding.Name, out var deviceId)) accessed.TryAdd(deviceId, 0);
         }
-        _run = new TestRun(project.Definition, RunOptions(registry, presets, dutLimit, orderSession, pythonVenv, TrackDevice), runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
+        _run = new TestRun(project.Definition, RunOptions(registry, presets, rootPresets, dutLimit, orderSession, pythonVenv, TrackDevice), runId: $"{Name.Replace(' ', '-')}-{DateTime.Now:HHmmss}");
         if (_results is not null)
         {
             var resolver = _storage;

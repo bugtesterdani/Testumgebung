@@ -137,7 +137,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
-        foreach (var (name, values) in dto.LimitSets ?? [])
+        foreach (var (name, values) in dto.LimitSets ?? new Dictionary<string, SortedDictionary<string, string>>())
         {
             if (values is null || values.Any(entry => entry.Value is null))
                 throw new ProjectFormatException($"Grenzwertsatz „{name}“ enthält ungültige Werte.");
@@ -528,7 +528,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         public string? Name { get; set; }
         public string? Version { get; set; }
         public string? Description { get; set; }
-        public SortedDictionary<string, SortedDictionary<string, string>>? LimitSets { get; set; }
+        public IReadOnlyDictionary<string, SortedDictionary<string, string>>? LimitSets { get; set; }
         public List<VariableDto>? Variables { get; set; }
         public GroupDto? Init { get; set; }
         public GroupDto? Loop { get; set; }

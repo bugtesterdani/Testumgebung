@@ -287,6 +287,11 @@ public static class DefinitionCompatibility
             return false;
         }
         if (!SameOuterFlow(jsonObject, jsonObject2, out reason)) return false;
+        if (!LimitSetTable.SameBindings(current, next))
+        {
+            reason = "Variablen der Grenzwertsätze geändert";
+            return false;
+        }
         foreach (var id in curvesA.Union(curvesB))
         {
             if (Curve(jsonObject, id) != Curve(jsonObject2, id))
@@ -312,6 +317,7 @@ public static class DefinitionCompatibility
         (string Key, string Reason)[] properties =
         [
             ("variables", "Hauptablauf-Variablen geändert"),
+            ("limitSets", "Grenzwertsätze geändert"),
             ("assemblies", ".NET-DLLs geändert; neue Prüfsitzung erforderlich"),
             ("init", "Init geändert"),
             ("finalization", "Finalization geändert"),

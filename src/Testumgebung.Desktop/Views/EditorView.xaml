@@ -204,6 +204,15 @@
                            Text="Gemeinsame Auftragsdaten: Init ermittelt sie, der Test Loop liest sie." />
                 <ContentControl Content="{Binding Variables}" ContentTemplate="{StaticResource VariableListTemplate}" />
 
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Grenzwertsätze" Margin="0,16,0,6" />
+                <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                           Text="Erste Spalte: Variante. Weitere Spalten: Namen der Prüfvariablen. Auswahl über Variante=&lt;Name&gt; in den Prüfparametern." />
+                <ItemsControl ItemsSource="{Binding LimitSetNames}" Margin="0,4" />
+                <WrapPanel>
+                    <Button Style="{StaticResource OutlineButton}" Content="Tabelle importieren und ersetzen"
+                            Command="{Binding ImportLimitSetsCommand}" Margin="0,0,6,0" />
+                    <Button Style="{StaticResource OutlineButton}" Content="Grenzwertsätze entfernen" Command="{Binding ClearLimitSetsCommand}" />
+                </WrapPanel>
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Werkeransicht: Layout und Darstellung" Margin="0,16,0,6" />
                 <Grid>
                     <Grid.ColumnDefinitions>

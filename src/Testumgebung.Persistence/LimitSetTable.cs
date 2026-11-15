@@ -61,9 +61,26 @@ public static class LimitSetTable
             StringComparer.Ordinal);
     }
 
+    internal static bool SameBindings(TestProject current, TestProject next)
+    {
+        if (current.LimitSets.Count == 0) return true;
+        var names = current.LimitSets.Values.SelectMany(values => values.Keys).ToHashSet(StringComparer.Ordinal);
+        return Bindings(current).SequenceEqual(Bindings(next));
+
+        IEnumerable<(string Group, string Variable, VarType Type)> Bindings(TestProject project)
+            => DutGroups(project).Prepend(project.Definition.Root)
+                .SelectMany(group => group.Variables.Where(variable => names.Contains(variable.Name))
+                    .Select(variable => (Group: group.Id, Variable: variable.Name, variable.Type)))
+                .OrderBy(binding => binding.Group, StringComparer.Ordinal)
+                .ThenBy(binding => binding.Variable, StringComparer.Ordinal);
+    }
+
+    private static IEnumerable<GroupDefinition> DutGroups(TestProject project)
+        => project.Definition.Loop.Descendants().OfType<GroupDefinition>().Where(group => group.IsDutRun);
+
     private static Dictionary<string, VarType[]> TargetTypes(TestProject project)
     {
-        var duts = project.Definition.Loop.Descendants().OfType<GroupDefinition>().Where(group => group.IsDutRun).ToArray();
+        var duts = DutGroups(project).ToArray();
         var reserved = duts.Select(group => group.DutIdVariable).ToHashSet(StringComparer.Ordinal);
         reserved.UnionWith([VariantParameter, "Kennung", "Auftrag", "Pruefseite"]);
         return project.Definition.Root.Variables.Concat(duts.SelectMany(group => group.Variables))
@@ -92,13 +109,16 @@ public static class LimitSetTable
     private static List<string[]> ReadCsv(string path)
     {
         using var parser = new TextFieldParser(path) { HasFieldsEnclosedInQuotes = true };
-        var header = parser.PeekChars(1024) ?? "";
+        string? header;
+        do { header = parser.ReadLine(); } while (header is not null && string.IsNullOrWhiteSpace(header));
+        if (header is null) return [];
         var separator = header.Contains(';') ? ";" : header.Contains('\t') ? "\t" : ",";
-        parser.SetDelimiters(separator);
+        using var csv = new TextFieldParser(path) { HasFieldsEnclosedInQuotes = true };
+        csv.SetDelimiters(separator);
         var rows = new List<string[]>();
         try
         {
-            while (parser.ReadFields() is { } fields) rows.Add(fields);
+            while (csv.ReadFields() is { } fields) rows.Add(fields);
         }
         catch (MalformedLineException ex)
         {
