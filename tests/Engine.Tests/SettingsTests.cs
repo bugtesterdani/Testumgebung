@@ -147,7 +147,10 @@ public sealed class SettingsTests : IDisposable
         Assert.Equal("SMTP", result.Channel);
         var message = await received;
         Assert.Contains("worker@example.test", message);
-        Assert.Contains("P1: 1", message);
+        var body = message[(message.IndexOf("\r\n\r\n", StringComparison.Ordinal) + 4)..];
+        var encoded = body[..body.IndexOf("\r\n.\r\n", StringComparison.Ordinal)];
+        var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+        Assert.Contains("P1: 1 Prüfläufe in Folge mit ERROR.", decoded);
     }
 
     private static async Task<string> ReceiveSmtpAlarmAsync(System.Net.Sockets.TcpListener listener, CancellationToken ct)
