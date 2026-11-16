@@ -14,7 +14,7 @@ public sealed partial class LabelPrinter
         cancellationToken.ThrowIfCancellationRequested();
         var document = new DocumentInfo { Name = "Testumgebung – Etikett", DataType = "RAW" };
         RequireSpoolSuccess(StartDocPrinter(printer, 1, ref document) != 0, "Druckauftrag starten");
-        try { WriteDocument(printer, request.Zpl, cancellationToken); }
+        try { WriteDocument(printer, request.Data, cancellationToken); }
         catch
         {
             // Ein unvollständiges RAW-Dokument soll nicht in der Warteschlange verbleiben.
@@ -30,11 +30,11 @@ public sealed partial class LabelPrinter
         return printer;
     }
 
-    private static void WriteDocument(PrinterHandle printer, byte[] zpl, CancellationToken cancellationToken)
+    private static void WriteDocument(PrinterHandle printer, byte[] data, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        RequireSpoolSuccess(WritePrinter(printer, zpl, zpl.Length, out var written), "ZPL schreiben");
-        if (written != zpl.Length) throw new IOException($"Nur {written} von {zpl.Length} Bytes an die Druckwarteschlange übergeben.");
+        RequireSpoolSuccess(WritePrinter(printer, data, data.Length, out var written), "Druckdaten schreiben");
+        if (written != data.Length) throw new IOException($"Nur {written} von {data.Length} Bytes an die Druckwarteschlange übergeben.");
         cancellationToken.ThrowIfCancellationRequested();
         RequireSpoolSuccess(EndDocPrinter(printer), "Druckauftrag abschließen");
     }

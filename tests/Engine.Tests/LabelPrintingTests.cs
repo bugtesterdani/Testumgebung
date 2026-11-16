@@ -15,6 +15,22 @@ public sealed class LabelPrintingTests
 {
     private const string Template = "^XA\n^CI28\n^FD{Kennung} {{Los}}^FS\n^XZ";
     private const string Expected = "^XA\n^CI28\n^FDPrüfling-42 {Los}^FS\n^XZ";
+    private static readonly byte[] CabBytes =
+    [
+        .. "m m\r\nJ\r\n"u8,
+        0x1B, 0x00, 0x7B, 0xFF, 0x80, 0x7D,
+        .. "\r\nA 1\r\n"u8,
+    ];
+
+    private static TestDefinition WithCab(TestDefinition definition, string? encoded = null)
+    {
+        var step = (StepDefinition)definition.Find("label")!;
+        step.Parameters[LabelPrintingBlocks.FormatParameter] = LabelPrintingBlocks.Cab;
+        step.Parameters[LabelPrintingBlocks.CabDataParameter] = encoded ?? Convert.ToBase64String(CabBytes);
+        step.Parameters["ZplVorlage"] = "";
+        BlockCatalog.Default.Rebuild(step);
+        return definition;
+    }
 
     private static TestDefinition Program(string mode, string id = "Prüfling-42", string? host = null, int port = 9100)
     {
@@ -23,6 +39,8 @@ public sealed class LabelPrintingTests
             ["Druckart"] = mode, ["ZplVorlage"] = Template, ["Host"] = host ?? "localhost",
             ["Port"] = port.ToString(System.Globalization.CultureInfo.InvariantCulture), ["Warteschlange"] = "Etikettendrucker",
         });
+        step.Parameters.Remove(LabelPrintingBlocks.FormatParameter);
+        BlockCatalog.Default.Rebuild(step);
         var definition = Test(Group("loop").Add(step));
         definition.Root.Variables.Add(new("Kennung", VarType.String, id));
         return definition;
@@ -42,8 +60,10 @@ public sealed class LabelPrintingTests
         Assert.Contains("simuliert", result.Message);
     }
 
-    [Fact]
-    public async Task TCP_block_transmits_UTF8_ZPL_unchanged()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TCP_block_transmits_ZPL_and_binary_LBL_unchanged(bool cab)
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -51,10 +71,12 @@ public sealed class LabelPrintingTests
         {
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
             var reading = ReceiveLabel();
-            var run = new TestRun(Program("TCP", host: "127.0.0.1", port: port), new() { LabelPrinter = new LabelPrinter() });
+            var definition = Program("TCP", host: "127.0.0.1", port: port);
+            var expected = cab ? CabBytes : Encoding.UTF8.GetBytes(Expected);
+            var run = new TestRun(cab ? WithCab(definition) : definition, new() { LabelPrinter = new LabelPrinter() });
             await run.RunAsync().Within();
-            Assert.Equal(Expected, Encoding.UTF8.GetString(await reading.Within()));
-            Assert.Equal((long)Encoding.UTF8.GetByteCount(Expected), Assert.Single(run.Steps("label")).Value);
+            Assert.Equal(expected, await reading.Within());
+            Assert.Equal((long)expected.Length, Assert.Single(run.Steps("label")).Value);
         }
         finally { listener.Stop(); }
 
@@ -82,6 +104,36 @@ public sealed class LabelPrintingTests
         await preview.RunAsync().Within();
         Assert.Single(printer.Requests);
         Assert.Equal(Expected, Assert.Single(preview.Steps("label")).Value);
+    }
+
+    [Fact]
+    public async Task Embedded_LBL_remains_binary_after_roundtrip_and_simulates_without_sending()
+    {
+        var definition = WithCab(Program("Windows"));
+        var project = new ProjectSerializer().Clone(new TestProject(definition));
+        var printer = new RecordingPrinter();
+        var run = new TestRun(project.Definition, new() { LabelPrinter = printer });
+        await run.RunAsync().Within();
+        var sent = Assert.Single(printer.Requests);
+        Assert.Equal(LabelPrinterKind.Windows, sent.Kind);
+        Assert.Equal(CabBytes, sent.Data);
+
+        var preview = new TestRun(WithCab(Program("Simulation")), new() { LabelPrinter = printer });
+        await preview.RunAsync().Within();
+        Assert.Equal((long)CabBytes.Length, Assert.Single(preview.Steps("label")).Value);
+        Assert.Single(printer.Requests);
+    }
+
+    [Theory]
+    [InlineData("", "erforderlich")]
+    [InlineData("!!!", "Base64")]
+    public async Task Missing_or_invalid_LBL_is_rejected_before_printing(string encoded, string expected)
+    {
+        var printer = new RecordingPrinter();
+        var run = new TestRun(WithCab(Program("Windows"), encoded), new() { LabelPrinter = printer });
+        Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
+        Assert.Contains(expected, Assert.Single(run.Steps("label")).Message);
+        Assert.Empty(printer.Requests);
     }
 
     [Fact]

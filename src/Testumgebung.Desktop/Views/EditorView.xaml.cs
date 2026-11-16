@@ -25,6 +25,12 @@ public partial class EditorView : UserControl
             LabelDesignerWindow.Edit(source, row);
     }
 
+    private void OnImportCabLabel(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: ParameterRowViewModel row } source)
+            CabLabelFile.Import(source, row);
+    }
+
     private void OnParameterTable(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: ParameterRowViewModel row } source)

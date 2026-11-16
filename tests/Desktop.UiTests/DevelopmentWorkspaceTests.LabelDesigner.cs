@@ -54,8 +54,34 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Contains("^BQN,", zpl);
             Assert.Contains("^GB", zpl);
             Assert.Contains("^FD{Kennung}", zpl);
+            VerifyCabFileImport(folder, properties, field);
         }
         finally { Directory.Delete(folder, recursive: true); }
+    }
+
+    private static void VerifyCabFileImport(string folder, StepPropertiesViewModel properties, ParameterRowViewModel zpl)
+    {
+        var format = properties.Parameters.Single(row => row.Descriptor.Name == LabelPrintingBlocks.FormatParameter);
+        var cab = properties.Parameters.Single(row => row.IsCabLabel);
+        Assert.True(cab.IsHidden);
+        format.Value = LabelPrintingBlocks.Cab;
+        Assert.False(cab.IsHidden);
+        Assert.False(cab.IsText);
+        Assert.True(zpl.IsHidden);
+        Assert.Equal("Keine Datei eingebettet", cab.CabFileStatus);
+        var path = Path.Combine(folder, "bild.lbl");
+        Assert.NotNull(CabLabelFile.TryEmbed(path, cab));
+        File.WriteAllBytes(path, []);
+        Assert.NotNull(CabLabelFile.TryEmbed(path, cab));
+        byte[] data = [0x00, 0x1B, 0xFF, 0x80, 0x0D, 0x0A];
+        File.WriteAllBytes(path, data);
+        Assert.Null(CabLabelFile.TryEmbed(path, cab));
+        Assert.Equal(data, Convert.FromBase64String(cab.Value));
+        Assert.Equal("Druckdatei eingebettet", cab.CabFileStatus);
+        Assert.Equal(LabelPrintingBlocks.Cab, format.Value);
+        format.Value = LabelPrintingBlocks.Zpl;
+        Assert.False(zpl.IsHidden);
+        Assert.True(cab.IsHidden);
     }
 
     private static void VerifyLabelImages(string folder, LabelLayout layout, BitmapSource bitmap)

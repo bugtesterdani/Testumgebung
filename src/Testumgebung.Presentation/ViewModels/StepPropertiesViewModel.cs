@@ -31,8 +31,10 @@ public sealed class ParameterRowViewModel : ObservableObject
     public bool IsBool => Kind == ParameterKind.Bool;
     public bool IsCode => Kind == ParameterKind.Code;
     public bool IsTable => Kind == ParameterKind.Table;
-    public bool IsText => !IsChoice && !IsBool && !IsCode && !IsHidden && !IsTable;
+    public bool IsText => !IsChoice && !IsBool && !IsCode && !IsHidden && !IsTable && !IsCabLabel;
     public bool IsLabelTemplate => _owner.Step.BlockType == LabelPrintingBlocks.Print && Descriptor.Name == "ZplVorlage";
+    public bool IsCabLabel => _owner.Step.BlockType == LabelPrintingBlocks.Print && Descriptor.Name == LabelPrintingBlocks.CabDataParameter;
+    public string CabFileStatus => string.IsNullOrWhiteSpace(Value) ? "Keine Datei eingebettet" : "Druckdatei eingebettet";
     public bool IsMultiline => Descriptor.Name is "Verbindungsoptionen" or "Header" or "Body" or "ZplVorlage";
 
     /// <summary>Wird durch eine eigene Oberfläche ersetzt (z. B. Bausteinauswahl).</summary>
@@ -56,12 +58,17 @@ public sealed class ParameterRowViewModel : ObservableObject
             _owner.Step.Parameters[Descriptor.Name] = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(BoolValue));
+            OnPropertyChanged(nameof(CabFileStatus));
             OnPropertyChanged(nameof(HasVisualBuilder));
             _owner.ParametersChanged();
         }
     }
 
-    internal void RefreshValue() => OnPropertyChanged(nameof(Value));
+    internal void RefreshValue()
+    {
+        OnPropertyChanged(nameof(Value));
+        OnPropertyChanged(nameof(CabFileStatus));
+    }
 
     public bool BoolValue
     {
@@ -171,9 +178,22 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
             return IsCurveOutputParameterActive(name);
         if (Step.BlockType is ProcessBlocks.Communication or ProcessBlocks.StatusEnd)
             return IsProcessParameterActive(Step.BlockType, name);
+        if (Step.BlockType == LabelPrintingBlocks.Print)
+            return IsLabelFormatParameterActive(name);
         if (Step.BlockType != BlockCatalog.Evaluate) return true;
         var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == BlockCatalog.FixedRatingMode;
         return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
+    }
+
+    private bool IsLabelFormatParameterActive(string name)
+    {
+        var format = Step.Parameters.GetValueOrDefault(LabelPrintingBlocks.FormatParameter, LabelPrintingBlocks.Zpl);
+        return name switch
+        {
+            "ZplVorlage" => format != LabelPrintingBlocks.Cab,
+            LabelPrintingBlocks.CabDataParameter => format == LabelPrintingBlocks.Cab,
+            _ => true,
+        };
     }
 
     private bool IsProcessParameterActive(string type, string name)

@@ -84,8 +84,21 @@ public sealed partial class InlineBlockEditor : UserControl
         return button;
     }
 
+    private static FrameworkElement CabLabelInput(ParameterRowViewModel row)
+    {
+        var import = new Button { Content = "LBL-Datei einbetten …", HorizontalAlignment = HorizontalAlignment.Left };
+        import.Click += (_, _) => CabLabelFile.Import(import, row);
+        var status = new TextBlock();
+                status.SetBinding(TextBlock.TextProperty, new Binding(nameof(ParameterRowViewModel.CabFileStatus)) { Source = row, Mode = BindingMode.OneWay });
+        var panel = new StackPanel();
+        panel.Children.Add(import);
+        panel.Children.Add(status);
+        return panel;
+    }
+
     private FrameworkElement ParameterInput(ParameterRowViewModel row)
     {
+        if (row.IsCabLabel) return CabLabelInput(row);
         FrameworkElement input;
         if (row.IsTable)
         {

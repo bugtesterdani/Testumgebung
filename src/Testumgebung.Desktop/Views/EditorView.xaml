@@ -512,6 +512,10 @@
                                 <StackPanel Grid.Column="1">
                                     <Button Content="Etikett gestalten …" Click="OnLabelDesigner" HorizontalAlignment="Left"
                                             Visibility="{Binding IsLabelTemplate, Converter={StaticResource BoolVis}}" />
+                                    <StackPanel Visibility="{Binding IsCabLabel, Converter={StaticResource BoolVis}}">
+                                        <Button Content="LBL-Datei einbetten …" Click="OnImportCabLabel" HorizontalAlignment="Left" />
+                                        <TextBlock Text="{Binding CabFileStatus}" Style="{StaticResource Caption}" />
+                                    </StackPanel>
                                     <Button Content="Tabelle bearbeiten …" Click="OnParameterTable" HorizontalAlignment="Left"
                                             Visibility="{Binding IsTable, Converter={StaticResource BoolVis}}" />
                                     <TextBox x:Name="TextEditor" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, Delay=300}"

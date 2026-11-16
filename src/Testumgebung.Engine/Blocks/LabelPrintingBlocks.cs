@@ -9,20 +9,20 @@ public static class LabelPrintingBlocks
     public const string Print = "etikett.drucken";
     public const string FormatParameter = "Vorlagenformat", CabDataParameter = "CabLblDaten";
     public const string Zpl = "ZPL", Cab = "cab LBL";
-    public const int MaximumCabBytes = 16 * 1024 * 1024;
+
     private const string Simulated = "Simulation", Tcp = "TCP", Windows = "Windows";
 
     public static void Register(BlockCatalog catalog)
     {
         catalog.Register(new(Print, "Etikett drucken", "Werkerinteraktion", "arrow",
-            "Rendert eine ZPL-Vorlage oder sendet eine eingebettete cab-LBL-Druckdatei und übergibt das Etikett an einen TCP-Drucker, eine Windows-Druckwarteschlange oder die Simulation.",
+            "Übergibt eine gerenderte ZPL-Vorlage oder eine eingebettete cab-LBL-Druckdatei an einen TCP-Drucker, eine Windows-Druckwarteschlange oder die Simulation.",
             [
                 new("Druckart", "Druckart", ParameterKind.Choice, Simulated, Choices: [Simulated, Tcp, Windows]),
                 new(FormatParameter, "Vorlagenformat", ParameterKind.Choice, Zpl, Choices: [Zpl, Cab]),
                 new("ZplVorlage", "ZPL-Vorlage", ParameterKind.Text, "^XA\n^CI28\n^FO30,30^FD{Kennung}^FS\n^XZ", Required: true,
                     Hint: "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern.", VisibleWhen: new(FormatParameter, Zpl)),
                 new(CabDataParameter, "cab-LBL-Druckdatei", ParameterKind.Text, Required: true,
-                    Hint: "JScript-Druckdatei aus cablabel. Im Projekt als Base64 gespeichert und bytegenau gesendet.", VisibleWhen: new(FormatParameter, Cab)),
+                    Hint: "Druckfertiger JScript-Export aus cablabel. Eingebettete Grafiken werden übernommen.", VisibleWhen: new(FormatParameter, Cab)),
                 new("Host", "Druckername / IP-Adresse", ParameterKind.Text, Required: true, VisibleWhen: new("Druckart", Tcp)),
                 new("Port", "TCP-Port", ParameterKind.Number, "9100", VisibleWhen: new("Druckart", Tcp)),
                 new("Zeitlimit", "TCP-Zeitlimit [ms]", ParameterKind.Number, "5000", VisibleWhen: new("Druckart", Tcp)),
@@ -63,13 +63,12 @@ public static class LabelPrintingBlocks
 
     private static RenderLabel CabRenderer(string data)
     {
-        if (data.Length > ((MaximumCabBytes + 2) / 3) * 4)
-            throw new BlockConfigurationException("cab-LBL-Druckdatei ist größer als 16 MiB.");
+
         byte[] bytes;
         try { bytes = Convert.FromBase64String(data); }
         catch (FormatException) { throw new BlockConfigurationException("Die eingebettete cab-LBL-Druckdatei enthält ungültige Base64-Daten."); }
-        if (bytes.Length == 0 || bytes.Length > MaximumCabBytes)
-            throw new BlockConfigurationException("cab-LBL-Druckdatei muss 1 Byte bis 16 MiB groß sein.");
+        if (bytes.Length == 0)
+            throw new BlockConfigurationException("Die eingebettete cab-LBL-Druckdatei ist leer.");
         return _ => (bytes, (long)bytes.Length);
     }
 

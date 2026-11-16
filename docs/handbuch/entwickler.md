@@ -29,7 +29,7 @@ seines Bausteins.
 
 ## Etikett drucken und gestalten
 
-Der Baustein **Etikett drucken** verwendet eine ZPL-Vorlage. Platzhalter wie
+Der Baustein **Etikett drucken** verwendet standardmäßig eine ZPL-Vorlage. Platzhalter wie
 `{Kennung}` werden beim Ausführen ersetzt. Für den Druck kannst du einen
 TCP-Drucker oder eine Windows-Druckwarteschlange wählen. Die Simulation zeigt
 den erzeugten ZPL-Text als Schrittergebnis.
@@ -37,6 +37,12 @@ den erzeugten ZPL-Text als Schrittergebnis.
 Über **Etikett gestalten …** lassen sich Elemente und Bilder visuell platzieren.
 Die Druckauflösung muss zum Drucker passen. Der Designer bettet Bilder aus
 PNG, JPEG, BMP, GIF oder TIFF als Schwarzweißgrafik in die Vorlage ein.
+
+### cab-Drucker mit LBL-Datei
+
+Unter **Vorlagenformat** den Wert **cab LBL** wählen und die Druckdatei über **LBL-Datei einbetten …** auswählen. Benötigt wird ein druckfertiger cab-JScript-Export. In cablabel S3 Pro kann er über **Drucken in Datei** erstellt werden. Beim Ziel **Datei** enthält der Export auch eingebettete Bilder und Schriften in binärer Form. Ein bearbeitbares Layout zunächst in eine solche Druckdatei exportieren. [cablabel-S3-Handbuch](https://www.cab.de/media/pushfile.cfm?file=2238)
+
+Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über TCP oder als RAW-Auftrag an eine Windows-Druckwarteschlange. Die Simulation zeigt die Byteanzahl. Eingebettete Bilder bleiben damit unverändert. ZPL-Platzhalter und der ZPL-Designer sind für cab-Dateien nicht verfügbar.
 
 ## Werkeransicht gestalten
 

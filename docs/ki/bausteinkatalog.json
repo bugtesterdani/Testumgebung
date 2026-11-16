@@ -961,7 +961,7 @@
       "type": "etikett.drucken",
       "displayName": "Etikett drucken",
       "category": "Werkerinteraktion",
-      "description": "Rendert eine ZPL-Vorlage und \u00FCbergibt das Etikett an einen TCP-Drucker, eine Windows-Druckwarteschlange oder die Simulation.",
+      "description": "\u00DCbergibt eine gerenderte ZPL-Vorlage oder eine eingebettete cab-LBL-Druckdatei an einen TCP-Drucker, eine Windows-Druckwarteschlange oder die Simulation.",
       "parameters": [
         {
           "name": "Druckart",
@@ -977,13 +977,44 @@
           "hint": null
         },
         {
+          "name": "Vorlagenformat",
+          "label": "Vorlagenformat",
+          "kind": "Choice",
+          "default": "ZPL",
+          "required": false,
+          "choices": [
+            "ZPL",
+            "cab LBL"
+          ],
+          "hint": null
+        },
+        {
           "name": "ZplVorlage",
           "label": "ZPL-Vorlage",
           "kind": "Text",
           "default": "^XA\n^CI28\n^FO30,30^FD{Kennung}^FS\n^XZ",
           "required": true,
           "choices": null,
-          "hint": "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern."
+          "hint": "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern.",
+          "visibleWhen": {
+            "parameter": "Vorlagenformat",
+            "value": "ZPL"
+          },
+          "advanced": false
+        },
+        {
+          "name": "CabLblDaten",
+          "label": "cab-LBL-Druckdatei",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Druckfertiger JScript-Export aus cablabel. Eingebettete Grafiken werden \u00FCbernommen.",
+          "visibleWhen": {
+            "parameter": "Vorlagenformat",
+            "value": "cab LBL"
+          },
+          "advanced": false
         },
         {
           "name": "Host",
