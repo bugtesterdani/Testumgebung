@@ -14,11 +14,17 @@ Stand: 02.10.2026 · Status: angenommen für Etappe 7
 
 ## Rechte (Entscheidung: lokal je Prüfplatz)
 
-* `%ProgramData%\Testumgebung\zugang.json`: Client-/Mandanten-ID, Inaktivitätssperre, Liste UPN → Entwickeln/Freigeben.
+* `%ProgramData%\Testumgebung\zugang.json`: Client-/Mandanten-ID, Inaktivitätssperre, Liste UPN → Entwickeln, Freigeben und Verwalten.
   Für alle Windows-Benutzer gleich, Schreibrecht nur für Administratoren (siehe `docs/entra-registrierung.md`).
 * Fehlt die Datei: Entwicklungsmodus (simulierte Anmeldung, alle Rechte). Ist sie beschädigt: niemand hat Rechte.
-* Seiten: Editor, Debugger, Bibliothek, Ergebnisse, Einstellungen → Entwickeln; Releases → Entwickeln oder Freigeben;
-  Freigabe-Aktion → Freigeben.
+* Editor, Debugger, Bibliothek, einzelne Ergebnisse und Zugangskonfiguration setzen Entwickeln voraus. Releases sind
+  mit Entwickeln oder Freigeben sichtbar, die Freigabe-Aktion setzt Freigeben voraus.
+* Prüfplatz- und Gerätekonfiguration, Anwendungseinstellungen, Meldewege und Konfigurationssicherung setzen Verwalten
+  voraus. Entwickeln schließt Verwalten aus Kompatibilitätsgründen ein. Ein Konto mit ausschließlich Verwalten kann
+  Einstellungen, Prüfplatzkonfiguration und Verschleißstände sichern und wiederherstellen. Die Zugangsdatei,
+  Programmquellen und Laufzeitkonfiguration bleiben Entwickeln vorbehalten. Beim Speichern und Wiederherstellen der
+  Anwendungseinstellungen mit Verwalten bleiben die vorhandenen Pfade für Python-Interpreter, C++-Compiler und
+  C++-Cache erhalten.
 
 ## Release-Pakete (Entscheidung: in der Prüfdatenbank)
 

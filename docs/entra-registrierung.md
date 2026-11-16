@@ -57,13 +57,15 @@ Datei `%ProgramData%\Testumgebung\zugang.json` – gilt für alle Windows-Benutz
   "inactivityMinutes": 0,
   "users": [
     { "upn": "m.weber@firma.example", "name": "M. Weber", "develop": true, "release": true },
-    { "upn": "qs.leitung@firma.example", "name": "QS-Leitung", "develop": false, "release": true }
+    { "upn": "qs.leitung@firma.example", "name": "QS-Leitung", "develop": false, "release": true },
+    { "upn": "pruefplatz@firma.example", "name": "Prüfplatzverwaltung", "manage": true }
   ]
 }
 ```
 
-* `develop` = Entwickeln (Editor, Debugger, Simulation, Einstellungen, Entwürfe, Entwicklungsprüfung).
-* `release` = Freigeben (geprüfte Pakete ausdrücklich freigeben). Getrennt oder kombiniert vergebbar.
+* `develop` = Entwickeln (Editor, Debugger, Simulation, Entwürfe und Entwicklungsprüfung). Bestehende Entwicklerkonten behalten auch den Verwaltungszugang.
+* `release` = Freigeben (geprüfte Pakete ausdrücklich freigeben).
+* `manage` = Verwalten (Prüfplätze, Geräte, Anwendungseinstellungen, Meldewege und deren Sicherung). Ein reines Verwaltungskonto erhält keinen Zugriff auf den Ablaufeditor, die Freigabe oder die Zugangsdatei.
 * Konten aus anderen Mandanten und nicht bestätigte (simulierte) Anmeldungen werden abgelehnt, sobald `clientId` und
   `tenantId` gesetzt sind. Ist die Datei beschädigt, hat niemand Rechte (sicherer Zustand).
 * `inactivityMinutes` > 0: automatische Abmeldung nach Inaktivität. Ein laufender oder pausierter Test wird dabei
@@ -93,8 +95,9 @@ icacls "%ProgramData%\Testumgebung" /inheritance:r /grant:r "*S-1-5-32-544:(OI)(
 
 Statt (oder zusätzlich zu) der Liste je Prüfplatz können die Rechte zentral in Entra vergeben werden:
 
-1. App-Registrierung → **App-Rollen** → zwei Rollen anlegen, zulässige Mitgliedstypen „Benutzer/Gruppen“:
-   Wert `Testumgebung.Entwickeln` und Wert `Testumgebung.Freigeben` (andere Werte in der Zugangskonfiguration einstellbar).
+1. In der App-Registrierung unter **App-Rollen** die benötigten Rollen für „Benutzer/Gruppen“ anlegen. Die Standardwerte sind
+   `Testumgebung.Entwickeln`, `Testumgebung.Freigeben` und `Testumgebung.Verwalten`. Der Wert für Verwalten kann in der
+   Zugangskonfiguration unter **App-Rolle „Verwalten“** oder per `manageRole` in `zugang.json` angepasst werden.
 2. Unternehmensanwendungen → die App → **Benutzer und Gruppen** → Personen oder Gruppen den Rollen zuweisen.
 3. In der Anwendung: Einstellungen → Zugang → **Rechtequelle** = `AppRollen` (nur zentral) oder `Beide` (Vereinigung mit der
    lokalen Liste). Die Rollen kommen aus dem ID-Token (Claim `roles`) und gelten nur für bestätigte Anmeldungen im

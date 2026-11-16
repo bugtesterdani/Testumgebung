@@ -1,4 +1,4 @@
-﻿# Optionaler lokaler Benutzerlogin mit Passwort
+# Optionaler lokaler Benutzerlogin mit Passwort
 
 Der lokale Passwortzugang ist ein freiwilliger Übergang, bis Microsoft Entra ID eingerichtet ist. Er verwendet dieselbe Benutzerliste und Rechteverwaltung wie der bisherige Zugang. Werker können die Prüfung weiterhin ohne Anmeldung bedienen; eine freiwillige Anmeldung ohne Entwickler-/Freigaberecht gewährt keine zusätzlichen Rechte.
 
@@ -7,7 +7,7 @@ Der lokale Passwortzugang ist ein freiwilliger Übergang, bis Microsoft Entra ID
 1. Oben **Anmelden** öffnen. Ohne eingerichtetes Entra zunächst den gewünschten Namen eingeben und bewusst **Lokal anmelden (Entwicklungsmodus)** wählen.
 2. Unter **Einstellungen → Zugang** die Benutzerliste bearbeiten. Das aktuell angemeldete Entwicklerkonto beibehalten, damit der Zugang zu den Einstellungen erhalten bleibt.
 3. Für jedes Konto **Setzen / ändern** in der Passwortspalte wählen. Das Passwort zweimal eingeben und übernehmen. Die Liste zeigt nur „gesetzt“ beziehungsweise „nicht gesetzt“.
-4. **Lokalen Benutzer-/Passwortzugang als Übergang aktivieren** anhaken. Die Rechtequelle muss **Lokal** sein; mindestens ein Konto braucht **Entwickeln**. Vor dem Aktivieren muss jedes Konto ein Passwort haben.
+4. **Lokalen Benutzer-/Passwortzugang als Übergang aktivieren** anhaken. Die Rechtequelle muss **Lokal** sein; mindestens ein Konto braucht **Entwickeln**. Vor dem Aktivieren muss jedes Konto ein Passwort haben. Für reine Prüfplatzverwaltung beim betreffenden Konto **Verwalten** wählen. Damit kann das Konto Prüfplätze, Geräte, Einstellungen, Meldewege und die zugehörige Sicherung nutzen. Das Entwickeln-Konto behält Zugriff auf die Zugangskonfiguration.
 5. **Zugang speichern** wählen. Erst jetzt werden die Änderungen dauerhaft übernommen. Beim Wechsel der Anmeldeart erfolgt eine Abmeldung.
 6. Im Anmeldepanel Benutzername und Passwort eingeben und **Anmelden** oder Enter betätigen.
 

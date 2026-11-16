@@ -132,7 +132,7 @@ public static class ConfigBackup
     /// Ausgewählte Dateien wiederherstellen (Name → Zielpfad). Nur intakte Sicherungen; vorhandene Dateien werden vorher als
     /// „*.vor-wiederherstellung-JJJJMMTT-HHMMSS“ daneben abgelegt.
     /// </summary>
-    public static RestoreResult Restore(string zipPath, IReadOnlyDictionary<string, string> targets, DateTimeOffset now)
+    public static RestoreResult Restore(string zipPath, IReadOnlyDictionary<string, string> targets, DateTimeOffset now, bool preserveRuntime = false)
     {
         var inspection = Inspect(zipPath);
         if (!inspection.IsIntact) throw new InvalidDataException(string.Join(" ", inspection.Problems));
@@ -143,6 +143,8 @@ public static class ConfigBackup
         {
             if (!targets.TryGetValue(backupFileEntry.Name, out var target)) continue;
             var data = ReadAll(zip.GetEntry(backupFileEntry.Name)!);
+            if (preserveRuntime && backupFileEntry.Name == "einstellungen.json")
+                data = Settings.SettingsStore.PreserveRuntime(data, target);
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target)!);
             if (File.Exists(target))
             {

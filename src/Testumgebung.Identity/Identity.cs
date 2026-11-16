@@ -65,10 +65,13 @@ public sealed class RightsEntry
     public string? Name { get; set; }
     public bool Develop { get; set; }
     public bool Release { get; set; }
+    public bool Manage { get; set; }
     public string? PasswordHash { get; set; }
 
     [JsonIgnore]
-    public UserRights Rights => (Develop ? UserRights.Develop : UserRights.None) | (Release ? UserRights.Release : UserRights.None);
+    public UserRights Rights => (Develop ? UserRights.Develop : UserRights.None)
+        | (Release ? UserRights.Release : UserRights.None)
+        | (Manage ? UserRights.Manage : UserRights.None);
 }
 
 /// <summary>
@@ -134,6 +137,9 @@ public sealed class AccessConfig
     /// <summary>Wert der App-Rolle für „Freigeben“.</summary>
     public string ReleaseRole { get; set; } = "Testumgebung.Freigeben";
 
+    /// <summary>Wert der App-Rolle für „Verwalten“.</summary>
+    public string ManageRole { get; set; } = "Testumgebung.Verwalten";
+
     [JsonIgnore] public bool UsesAppRoles => RightsSource.Equals("AppRollen", StringComparison.OrdinalIgnoreCase) || RightsSource.Equals("Beide", StringComparison.OrdinalIgnoreCase);
     [JsonIgnore] public bool UsesLocalList => !RightsSource.Equals("AppRollen", StringComparison.OrdinalIgnoreCase);
 
@@ -145,6 +151,7 @@ public sealed class AccessConfig
         {
             if (roles.Contains(DevelopRole, StringComparer.OrdinalIgnoreCase)) rights |= UserRights.Develop;
             if (roles.Contains(ReleaseRole, StringComparer.OrdinalIgnoreCase)) rights |= UserRights.Release;
+            if (roles.Contains(ManageRole, StringComparer.OrdinalIgnoreCase)) rights |= UserRights.Manage;
         }
         return rights;
     }

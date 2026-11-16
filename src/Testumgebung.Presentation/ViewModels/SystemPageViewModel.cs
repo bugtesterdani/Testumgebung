@@ -40,6 +40,9 @@ public sealed class SystemPageViewModel : ObservableObject
     private readonly IReadOnlyList<BackupSource> _sources;
     private readonly IFileDialogService? _dialogs;
     private readonly Func<bool> _anyRunning;
+    private readonly Func<bool> _canManage;
+    private readonly Func<bool> _canDevelop;
+    private readonly Func<BackupSource, bool> _canUseSource;
     private readonly Action? _afterRestore;
     private readonly IUiDispatcher _ui;
     private bool _busy;
@@ -50,30 +53,49 @@ public sealed class SystemPageViewModel : ObservableObject
     private BackupInspection? _inspection;
 
     public SystemPageViewModel(Func<SystemCheckContext> context, IReadOnlyList<BackupSource> sources, IFileDialogService? dialogs,
-        Func<bool> anyRunning, IUiDispatcher ui, Action? afterRestore = null, Testumgebung.Workers.CodeRuntime? pythonRuntime = null)
+        Func<bool> anyRunning, IUiDispatcher ui, Action? afterRestore = null, Testumgebung.Workers.CodeRuntime? pythonRuntime = null,
+        Func<bool>? canManage = null, Func<BackupSource, bool>? canUseSource = null, Func<bool>? canDevelop = null)
     {
         _context = context;
         _sources = sources;
         _dialogs = dialogs;
         _anyRunning = anyRunning;
+        _canManage = canManage ?? (() => true);
+        _canDevelop = canDevelop ?? (() => true);
+        _canUseSource = canUseSource ?? (_ => true);
         _ui = ui;
         _afterRestore = afterRestore;
         Python = new PythonEnvironmentViewModel(pythonRuntime, anyRunning, dialogs: dialogs);
-        RunCheckCommand = new RelayCommand(() => _ = RunCheckAsync(), () => !_busy);
+        RunCheckCommand = new RelayCommand(() => _ = RunCheckAsync(), () => !_busy && _canManage());
         BackupCommand = new RelayCommand(() =>
         {
             var path = _dialogs?.SaveFile("Konfiguration sichern", ZipFilter, $"Testumgebung-Konfiguration-{Environment.MachineName}-{DateTime.Now:yyyyMMdd-HHmm}.zip");
             if (path is not null) Backup(path);
-        });
+        }, _canManage);
         OpenBackupCommand = new RelayCommand(() =>
         {
             var path = _dialogs?.OpenFile("Sicherung öffnen", ZipFilter);
             if (path is not null) InspectBackup(path);
-        });
-        RestoreCommand = new RelayCommand(Restore, () => _inspection is { IsIntact: true } && BackupFiles.Any(backupFileRow => backupFileRow.Selected));
+        }, _canManage);
+        RestoreCommand = new RelayCommand(Restore, () => _canManage() && _inspection is { IsIntact: true } && BackupFiles.Any(row => row.Selected));
     }
 
-    public IReadOnlyList<BackupSource> Sources => _sources;
+    public IReadOnlyList<BackupSource> Sources => _canManage() ? _sources.Where(_canUseSource).ToArray() : [];
+
+    public void RefreshBackupRights()
+    {
+        _inspection = null;
+        RestorePath = null;
+        BackupStatus = null;
+        BackupFiles.Clear();
+        BackupMessages.Clear();
+        OnPropertyChanged(nameof(InspectionText));
+        OnPropertyChanged(nameof(Sources));
+        RunCheckCommand.RaiseCanExecuteChanged();
+        BackupCommand.RaiseCanExecuteChanged();
+        OpenBackupCommand.RaiseCanExecuteChanged();
+        RestoreCommand.RaiseCanExecuteChanged();
+    }
     public PythonEnvironmentViewModel Python { get; }
 
     // ------------------------------------------------------------------ Systemprüfung
@@ -106,7 +128,7 @@ public sealed class SystemPageViewModel : ObservableObject
 
     public async Task RunCheckAsync()
     {
-        if (_busy) return;
+        if (_busy || !_canManage()) return;
         IsBusy = true;
         CheckSummary = "Systemprüfung läuft …";
         try
@@ -166,10 +188,12 @@ public sealed class SystemPageViewModel : ObservableObject
 
     public void Backup(string path)
     {
+        if (!_canManage()) return;
         try
         {
-            var manifest = ConfigBackup.Create(path, _sources, DateTimeOffset.Now);
-            var missing = _sources.Where(backupSource => manifest.Files.All(backupFileEntry => backupFileEntry.Name != backupSource.Name)).Select(backupSource => backupSource.Name).ToList();
+            var sources = Sources;
+            var manifest = ConfigBackup.Create(path, sources, DateTimeOffset.Now);
+            var missing = sources.Where(backupSource => manifest.Files.All(backupFileEntry => backupFileEntry.Name != backupSource.Name)).Select(backupSource => backupSource.Name).ToList();
             BackupStatus = $"Gesichert: {string.Join(", ", manifest.Files.Select(backupFileEntry => backupFileEntry.Name))} → {path}"
                            + (missing.Count > 0 ? $" (nicht vorhanden: {string.Join(", ", missing)})" : "");
         }
@@ -181,12 +205,14 @@ public sealed class SystemPageViewModel : ObservableObject
 
     public void InspectBackup(string path)
     {
+        if (!_canManage()) return;
         RestorePath = path;
         _inspection = ConfigBackup.Inspect(path);
         BackupFiles.Clear();
         BackupMessages.Clear();
+        var sources = Sources;
         foreach (var backupFileEntry in _inspection.Manifest.Files)
-            BackupFiles.Add(new BackupFileRow(backupFileEntry, _sources.FirstOrDefault(backupSource => backupSource.Name == backupFileEntry.Name)?.Path));
+            BackupFiles.Add(new BackupFileRow(backupFileEntry, sources.FirstOrDefault(backupSource => backupSource.Name == backupFileEntry.Name)?.Path));
         foreach (var problem in _inspection.Problems) BackupMessages.Add("Fehler: " + problem);
         foreach (var warning in _inspection.Warnings) BackupMessages.Add("Hinweis: " + warning);
         foreach (var row in BackupFiles) row.PropertyChanged += (_, _) => RestoreCommand.RaiseCanExecuteChanged();
@@ -196,22 +222,24 @@ public sealed class SystemPageViewModel : ObservableObject
 
     public void Restore()
     {
-        if (_inspection is not { IsIntact: true } || _restorePath is null) return;
+        if (!_canManage() || _inspection is not { IsIntact: true } || _restorePath is null) return;
         if (_anyRunning())
         {
             BackupStatus = "Nicht wiederhergestellt: Während einer Prüfung kann die Konfiguration nicht ersetzt werden.";
             return;
         }
-        var targets = BackupFiles.Where(backupFileRow => backupFileRow.Selected && backupFileRow.Target is not null).ToDictionary(backupFileRow => backupFileRow.Name, backupFileRow => backupFileRow.Target!);
+        var selected = BackupFiles.Where(row => row.Selected).Select(row => row.Name).ToHashSet(StringComparer.Ordinal);
+        var targets = Sources.Where(source => selected.Contains(source.Name)).ToDictionary(source => source.Name, source => source.Path);
+        if (targets.Count == 0) return;
         try
         {
-            var result = ConfigBackup.Restore(_restorePath, targets, DateTimeOffset.Now);
+            var result = ConfigBackup.Restore(_restorePath, targets, DateTimeOffset.Now, preserveRuntime: !_canDevelop());
             BackupStatus = $"Wiederhergestellt: {string.Join(", ", result.Restored.Select(Path.GetFileName))}. "
                            + (result.PreviousCopies.Count > 0 ? "Vorherige Stände daneben gesichert. " : "")
                            + "Anwendung neu starten, damit Einstellungen und Zugang vollständig wirksam werden.";
             _ui.Post(() => _afterRestore?.Invoke());
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
         {
             BackupStatus = "Wiederherstellung fehlgeschlagen: " + ex.Message;
         }

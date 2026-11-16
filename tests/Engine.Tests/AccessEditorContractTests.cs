@@ -34,11 +34,11 @@ public sealed class AccessEditorContractTests
             vm.RightsSource = source; vm.InactivityMinutes = -1;
             Assert.Equal(0, vm.InactivityMinutes);
             vm.InactivityMinutes = 7;
-            vm.DevelopRole = roles ? " Develop " : ""; vm.ReleaseRole = roles ? " Release " : "";
+            vm.DevelopRole = roles ? " Develop " : ""; vm.ReleaseRole = roles ? " Release " : ""; vm.ManageRole = roles ? " Manage " : "";
             vm.AddCommand.Execute(null);
             Assert.Single(vm.Users);
             var row = vm.Users[0]; row.Upn = user; row.Name = roles ? "Tester" : "";
-            row.Develop = roles; row.Release = !roles;
+            row.Develop = roles; row.Release = !roles; row.Manage = !roles;
             var valid = user.Length > 0 && (source == "Lokal" || client.Length > 0) && (client.Length == 0) == (tenant.Length == 0);
             Assert.Equal(valid, vm.Save());
             Assert.NotNull(vm.Status);
@@ -55,6 +55,8 @@ public sealed class AccessEditorContractTests
                 Assert.Equal(callback, store.Load()!.EntraRedirectUri);
                 Assert.Equal(roles ? "Develop" : "Testumgebung.Entwickeln", loaded.DevelopRole);
                 Assert.Equal(roles ? "Release" : "Testumgebung.Freigeben", loaded.ReleaseRole);
+                Assert.Equal(roles ? "Manage" : "Testumgebung.Verwalten", loaded.ManageRole);
+                Assert.Equal(!roles, loaded.Users[0].Manage);
                 Assert.Equal(user, Assert.Single(loaded.Users).Upn);
                 Assert.Equal(roles, loaded.Users[0].Develop); Assert.Equal(!roles, loaded.Users[0].Release);
                 vm.ClientId = "discard"; vm.ReloadCommand.Execute(null);
