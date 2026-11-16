@@ -22,7 +22,9 @@ Stand: 02.10.2026 · Status: angenommen für Etappe 7
 * Prüfplatz- und Gerätekonfiguration, Anwendungseinstellungen, Meldewege und Konfigurationssicherung setzen Verwalten
   voraus. Entwickeln schließt Verwalten aus Kompatibilitätsgründen ein. Ein Konto mit ausschließlich Verwalten kann
   Einstellungen, Prüfplatzkonfiguration und Verschleißstände sichern und wiederherstellen. Die Zugangsdatei,
-  Programmquellen und Laufzeitkonfiguration bleiben Entwickeln vorbehalten.
+  Programmquellen und Laufzeitkonfiguration bleiben Entwickeln vorbehalten. Beim Speichern und Wiederherstellen der
+  Anwendungseinstellungen mit Verwalten bleiben die vorhandenen Pfade für Python-Interpreter, C++-Compiler und
+  C++-Cache erhalten.
 
 ## Release-Pakete (Entscheidung: in der Prüfdatenbank)
 

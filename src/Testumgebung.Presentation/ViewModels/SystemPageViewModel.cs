@@ -41,6 +41,7 @@ public sealed class SystemPageViewModel : ObservableObject
     private readonly IFileDialogService? _dialogs;
     private readonly Func<bool> _anyRunning;
     private readonly Func<bool> _canManage;
+    private readonly Func<bool> _canDevelop;
     private readonly Func<BackupSource, bool> _canUseSource;
     private readonly Action? _afterRestore;
     private readonly IUiDispatcher _ui;
@@ -53,13 +54,14 @@ public sealed class SystemPageViewModel : ObservableObject
 
     public SystemPageViewModel(Func<SystemCheckContext> context, IReadOnlyList<BackupSource> sources, IFileDialogService? dialogs,
         Func<bool> anyRunning, IUiDispatcher ui, Action? afterRestore = null, Testumgebung.Workers.CodeRuntime? pythonRuntime = null,
-        Func<bool>? canManage = null, Func<BackupSource, bool>? canUseSource = null)
+        Func<bool>? canManage = null, Func<BackupSource, bool>? canUseSource = null, Func<bool>? canDevelop = null)
     {
         _context = context;
         _sources = sources;
         _dialogs = dialogs;
         _anyRunning = anyRunning;
         _canManage = canManage ?? (() => true);
+        _canDevelop = canDevelop ?? (() => true);
         _canUseSource = canUseSource ?? (_ => true);
         _ui = ui;
         _afterRestore = afterRestore;
@@ -231,13 +233,13 @@ public sealed class SystemPageViewModel : ObservableObject
         if (targets.Count == 0) return;
         try
         {
-            var result = ConfigBackup.Restore(_restorePath, targets, DateTimeOffset.Now);
+            var result = ConfigBackup.Restore(_restorePath, targets, DateTimeOffset.Now, preserveRuntime: !_canDevelop());
             BackupStatus = $"Wiederhergestellt: {string.Join(", ", result.Restored.Select(Path.GetFileName))}. "
                            + (result.PreviousCopies.Count > 0 ? "Vorherige Stände daneben gesichert. " : "")
                            + "Anwendung neu starten, damit Einstellungen und Zugang vollständig wirksam werden.";
             _ui.Post(() => _afterRestore?.Invoke());
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
         {
             BackupStatus = "Wiederherstellung fehlgeschlagen: " + ex.Message;
         }

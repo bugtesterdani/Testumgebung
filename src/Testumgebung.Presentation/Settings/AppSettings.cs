@@ -172,13 +172,36 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         }
     }
 
-    public void Save(AppSettings settings)
+    public void Save(AppSettings settings, bool preserveRuntime = false)
     {
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
         var temp = Path + ".tmp";
-        File.WriteAllText(temp, Serialize(settings));
+        var data = System.Text.Encoding.UTF8.GetBytes(Serialize(settings));
+        File.WriteAllBytes(temp, preserveRuntime ? PreserveRuntime(data, Path) : data);
         File.Move(temp, Path, overwrite: true);
     }
+
+    internal static byte[] PreserveRuntime(byte[] data, string currentPath)
+    {
+        using var incoming = JsonDocument.Parse(System.Text.Encoding.UTF8.GetString(data).TrimStart('\uFEFF'));
+        using var current = JsonDocument.Parse(File.Exists(currentPath) ? File.ReadAllText(currentPath) : "{}");
+        if (incoming.RootElement.ValueKind != JsonValueKind.Object || current.RootElement.ValueKind != JsonValueKind.Object)
+            throw new JsonException("Die Einstellungen müssen ein JSON-Objekt sein.");
+
+        using var buffer = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(buffer, new JsonWriterOptions { Indented = true }))
+        {
+            writer.WriteStartObject();
+            foreach (var property in incoming.RootElement.EnumerateObject())
+                if (!IsRuntimeProperty(property.Name)) property.WriteTo(writer);
+            foreach (var property in current.RootElement.EnumerateObject())
+                if (IsRuntimeProperty(property.Name)) property.WriteTo(writer);
+            writer.WriteEndObject();
+        }
+        return buffer.ToArray();
+    }
+
+    private static bool IsRuntimeProperty(string name) => name is "pythonExecutable" or "cppCompiler" or "cppCacheDirectory";
 
     public string Serialize(AppSettings s)
     {

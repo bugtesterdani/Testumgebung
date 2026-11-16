@@ -84,7 +84,21 @@ public sealed class ManageRightsTests
             foreach (var page in new[] { ShellPage.Editor, ShellPage.Debug, ShellPage.Library, ShellPage.Access, ShellPage.Releases, ShellPage.Python, ShellPage.Selection })
                 Assert.False(shell.NavigateCommand.CanExecute(page));
 
-            shell.SettingsPage!.Save();
+            var settingsPage = shell.SettingsPage!;
+            settingsPage.PythonExecutable = "unapproved-python";
+            settingsPage.Save();
+            Assert.Contains("Entwickeln", settingsPage.SaveStatus);
+            settingsPage.Revert();
+            settingsPage.CppCompiler = "unapproved-cpp";
+            settingsPage.Save();
+            Assert.Contains("Entwickeln", settingsPage.SaveStatus);
+            settingsPage.Revert();
+            settingsPage.CppCacheDirectory = "unapproved-cache";
+            settingsPage.Save();
+            Assert.Contains("Entwickeln", settingsPage.SaveStatus);
+            Assert.False(File.Exists(settings.Path));
+            settingsPage.Revert();
+            settingsPage.Save();
             Assert.True(File.Exists(settings.Path), shell.SettingsPage.SaveStatus);
             shell.StationsPage.Save();
             Assert.True(File.Exists(stationStore.Path), shell.StationsPage.Error);
@@ -99,13 +113,41 @@ public sealed class ManageRightsTests
             var originalAccess = File.ReadAllText(access.Path);
             var otherAccess = PathFor("other-access.json");
             new AccessConfigStore(otherAccess).Save(new AccessConfig { Users = [new() { Upn = Manager, Develop = true }] });
-            ConfigBackup.Create(privilegedZip, [new("zugang.json", otherAccess, "Zugang"), new("pruefplaetze.json", stationStore.Path, "Prüfplätze")], DateTimeOffset.UtcNow);
+            var saved = settings.Load();
+            saved.PythonExecutable = "existing-python";
+            saved.CppCompiler = "existing-cpp";
+            saved.CppCacheDirectory = "existing-cache";
+            settings.Save(saved);
+
+            var otherSettings = PathFor("other-settings.json");
+            new SettingsStore(otherSettings, PlainSecretProtector.Instance).Save(new AppSettings
+            {
+                ResultFolder = PathFor("restored-results"), PythonExecutable = "unapproved-python",
+                CppCompiler = "unapproved-cpp", CppCacheDirectory = "unapproved-cache"
+            });
+            ConfigBackup.Create(privilegedZip, [
+                new("zugang.json", otherAccess, "Zugang"),
+                new("pruefplaetze.json", stationStore.Path, "Prüfplätze"),
+                new("einstellungen.json", otherSettings, "Einstellungen")
+            ], DateTimeOffset.UtcNow);
             shell.SystemPage.InspectBackup(privilegedZip);
             Assert.False(shell.SystemPage.BackupFiles.Single(row => row.Name == "zugang.json").CanRestore);
             Assert.True(shell.SystemPage.BackupFiles.Single(row => row.Name == "pruefplaetze.json").CanRestore);
             shell.SystemPage.Restore();
             Assert.Contains("pruefplaetze.json", shell.SystemPage.BackupStatus);
             Assert.Equal(originalAccess, File.ReadAllText(access.Path));
+            var restored = settings.Load();
+            Assert.Equal(PathFor("restored-results"), restored.ResultFolder);
+            Assert.Equal(("existing-python", "existing-cpp", "existing-cache"),
+                (restored.PythonExecutable, restored.CppCompiler, restored.CppCacheDirectory));
+
+            // The loaded runtime can lag behind the settings on disk until restart.
+            settingsPage.ResultFolder = PathFor("manager-results");
+            settingsPage.Save();
+            var resaved = settings.Load();
+            Assert.Equal(PathFor("manager-results"), resaved.ResultFolder);
+            Assert.Equal(("existing-python", "existing-cpp", "existing-cache"),
+                (resaved.PythonExecutable, resaved.CppCompiler, resaved.CppCacheDirectory));
 
             await shell.LogoutAsync();
             ui.Pump();

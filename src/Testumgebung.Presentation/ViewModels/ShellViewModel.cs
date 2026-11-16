@@ -169,7 +169,7 @@ public sealed class ShellViewModel : ObservableObject
             if (services is not null)
             {
                 var page = new SettingsViewModel(services, settingsStore ?? new Settings.SettingsStore(Settings.SettingsStore.DefaultPath, Settings.PlainSecretProtector.Instance), _ui,
-                    ValidateStationDisplay, () => Coordinator.Setup.Stations.Select(station => station.Name).ToList());
+                    ValidateStationDisplay, () => Coordinator.Setup.Stations.Select(station => station.Name).ToList(), () => Session.CanDevelop);
                 Coordinator.SetupChanged += () => _ui.Post(page.RefreshStationNames);
                 services.Applied += () => _ui.Post(Results.SettingsChanged);
                 services.Applied += () => _ui.Post(() => ApplyStationDisplay(services.Current));
@@ -265,7 +265,7 @@ public sealed class ShellViewModel : ObservableObject
                     }
                 }, pythonRuntime: codeRuntime as Testumgebung.Workers.CodeRuntime,
                 canManage: () => Session.CanManage, canUseSource: source => Session.CanDevelop || source.Name is
-                    "einstellungen.json" or "pruefplaetze.json" or WearCounterStore.FileName);
+                    "einstellungen.json" or "pruefplaetze.json" or WearCounterStore.FileName, canDevelop: () => Session.CanDevelop);
         }
 
         Editor.PropertyChanged += (_, eventArgs) =>
