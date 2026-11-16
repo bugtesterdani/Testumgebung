@@ -55,8 +55,49 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Contains("^GB", zpl);
             Assert.Contains("^FD{Kennung}", zpl);
             VerifyCabFileImport(folder, properties, field);
+            VerifyCabLabelDesigner(dispatcher, folder, properties);
         }
         finally { Directory.Delete(folder, recursive: true); }
+    }
+
+    private static void VerifyCabLabelDesigner(Dispatcher dispatcher, string folder, StepPropertiesViewModel properties)
+    {
+        var format = properties.Parameters.Single(row => row.Descriptor.Name == LabelPrintingBlocks.FormatParameter);
+        format.Value = LabelPrintingBlocks.Cab;
+        var cab = properties.Parameters.Single(row => row.IsCabLabel);
+        properties.SaveCabLabelLayout(new());
+        var source = new Border();
+        var owner = Sta.ShowHost(source);
+        try
+        {
+            dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                var dialog = owner.OwnedWindows.OfType<LabelDesignerWindow>().Single();
+                try
+                {
+                    Assert.Equal("cab-Etikett gestalten", dialog.Title);
+                    dialog.ImportImage(Path.Combine(folder, "logo.png"));
+                    foreach (var button in Descendants(dialog).OfType<Button>().Where(button => button.Tag is string).ToArray())
+                        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Descendants(dialog).OfType<Button>().Single(button => Equals(button.Content, "Vorlage übernehmen"))
+                        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+                finally { if (dialog.IsVisible) dialog.Close(); }
+            }));
+            LabelDesignerWindow.Edit(source, cab);
+
+            var layout = LabelLayout.Load(properties.Step.Parameters[CabLabelLayout.Parameter]);
+            Assert.Equal(5, layout.Elements.Count);
+            Assert.Equal(CabLabelLayout.Render(layout), Convert.FromBase64String(cab.Value));
+
+            var imported = new byte[] { 0, 0x1B, 0xFF };
+            properties.ImportCabPrintData(imported);
+            dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+                owner.OwnedWindows.OfType<LabelDesignerWindow>().Single().Close()));
+            LabelDesignerWindow.Edit(source, cab);
+            Assert.Equal(imported, Convert.FromBase64String(cab.Value));
+        }
+        finally { owner.Close(); }
     }
 
     private static void VerifyCabFileImport(string folder, StepPropertiesViewModel properties, ParameterRowViewModel zpl)

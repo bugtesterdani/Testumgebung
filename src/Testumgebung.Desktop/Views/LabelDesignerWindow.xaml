@@ -12,6 +12,10 @@
                 <TextBox Width="55" Text="{Binding HeightMm, NotifyOnSourceUpdated=True}" Margin="0,0,12,0" />
                 <TextBlock Text="Druckauflösung (dpi)" VerticalAlignment="Center" Margin="0,0,5,0" />
                 <TextBox Width="58" Text="{Binding Dpi, NotifyOnSourceUpdated=True}" />
+                <StackPanel x:Name="GapFields" Orientation="Horizontal" Margin="12,0,0,0">
+                    <TextBlock Text="Etikettenabstand (mm)" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <TextBox Width="55" Text="{Binding GapMm, NotifyOnSourceUpdated=True}" />
+                </StackPanel>
             </WrapPanel>
             <WrapPanel Margin="0,8,0,0">
                 <Button Content="Text" Tag="Text" Click="OnAdd" Margin="0,0,6,0" />
@@ -47,10 +51,12 @@
                     <TextBox Text="{Binding Length, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
                 </StackPanel>
                 <StackPanel x:Name="TextFields">
-                    <TextBlock Text="Text / Ausdruck, z. B. {Kennung}" />
+                    <TextBlock x:Name="TextLabel" Text="Text / Ausdruck, z. B. {Kennung}" />
                     <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
-                    <TextBlock Text="Beispielwert für die Vorschau" />
-                    <TextBox Text="{Binding Preview, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    <StackPanel x:Name="PreviewFields">
+                        <TextBlock Text="Beispielwert für die Vorschau" />
+                        <TextBox Text="{Binding Preview, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </StackPanel>

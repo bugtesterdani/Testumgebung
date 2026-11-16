@@ -13,15 +13,24 @@ namespace Testumgebung.Desktop.Views;
 public partial class LabelDesignerWindow : Window
 {
     private readonly LabelLayout _layout;
+    private readonly bool _cab;
     private Func<bool>? _replacesManualTemplate;
     private LabelElement? _dragged;
     private Border? _dragVisual;
     private Point _dragOffset;
 
-    internal LabelDesignerWindow(LabelLayout layout)
+    internal LabelDesignerWindow(LabelLayout layout, bool cab = false)
     {
         _layout = layout;
+        _cab = cab;
         InitializeComponent();
+        GapFields.Visibility = VisibleIf(cab);
+        PreviewFields.Visibility = VisibleIf(!cab);
+        if (cab)
+        {
+            Title = "cab-Etikett gestalten";
+            TextLabel.Text = "Text / Barcodeinhalt";
+        }
         DataContext = layout;
         ReloadElements();
     }
@@ -29,27 +38,35 @@ public partial class LabelDesignerWindow : Window
     internal static void Edit(FrameworkElement source, ParameterRowViewModel row)
     {
         var owner = Window.GetWindow(source);
-        var layout = ReadLayout(row);
-        var originalZpl = layout.ToZpl();
-        var dialog = new LabelDesignerWindow(layout)
+        var cab = row.IsCabLabel;
+        var layout = ReadLayout(row, cab);
+        var original = RenderValue(layout, cab);
+        var dialog = new LabelDesignerWindow(layout, cab)
         {
             Owner = owner,
-            _replacesManualTemplate = () => HasManualTemplate(row, originalZpl),
+            _replacesManualTemplate = () => HasManualTemplate(row, original),
         };
+        if (cab && HasManualTemplate(row, original))
+            dialog.Status.Text = "Die eingebettete LBL bleibt erhalten, bis du eine neue Vorlage übernimmst.";
         if (dialog.ShowDialog() != true) return;
-        row.Owner.SaveLabelLayout(layout);
+        if (cab) row.Owner.SaveCabLabelLayout(layout);
+        else row.Owner.SaveLabelLayout(layout);
     }
 
-    private static bool HasManualTemplate(ParameterRowViewModel row, string originalZpl)
-        => row.Value != row.Descriptor.Default && row.Value.ReplaceLineEndings("\n") != originalZpl;
+    private static string RenderValue(LabelLayout layout, bool cab)
+        => cab ? Convert.ToBase64String(CabLabelLayout.Render(layout)) : layout.ToZpl();
 
-    private static LabelLayout ReadLayout(ParameterRowViewModel row)
+    private static bool HasManualTemplate(ParameterRowViewModel row, string original)
+        => row.Value != row.Descriptor.Default && row.Value.ReplaceLineEndings("\n") != original;
+
+    private static LabelLayout ReadLayout(ParameterRowViewModel row, bool cab)
     {
-        if (!row.Owner.Step.Parameters.TryGetValue(LabelLayout.Parameter, out var json)) return new();
+        var parameter = cab ? CabLabelLayout.Parameter : LabelLayout.Parameter;
+        if (!row.Owner.Step.Parameters.TryGetValue(parameter, out var json)) return new();
         try
         {
             var layout = LabelLayout.Load(json);
-            _ = layout.ToZpl();
+            _ = RenderValue(layout, cab);
             return layout;
         }
         catch (Exception error) when (error is JsonException or InvalidDataException) { return new(); }
@@ -67,6 +84,7 @@ public partial class LabelDesignerWindow : Window
     {
         var kind = Enum.Parse<LabelElementKind>((string)((Button)sender).Tag);
         var element = new LabelElement { Kind = kind, X = 12, Y = 12 };
+        if (_cab) element.Value = element.Preview;
         element.Size = kind switch { LabelElementKind.Qr => 4, LabelElementKind.Line => 3, LabelElementKind.Code128 => 60, _ => 30 };
         Insert(element);
     }
@@ -144,10 +162,10 @@ public partial class LabelDesignerWindow : Window
         Sheet.Children.Add(visual);
     }
 
-    private static FrameworkElement Preview(LabelElement element)
+    private FrameworkElement Preview(LabelElement element)
     {
         var size = Math.Clamp(element.Size, 1, LabelLayout.MaximumDots);
-        var example = element.Value?.Contains('{') == true ? element.Preview : element.Value;
+        var example = !_cab && element.Value?.Contains('{') == true ? element.Preview : element.Value;
         return element.Kind switch
         {
             LabelElementKind.Image => new Image { Source = LabelImage.Preview(element), Width = element.ImageWidth, Height = element.ImageHeight },
@@ -199,7 +217,9 @@ public partial class LabelDesignerWindow : Window
     private bool ConfirmManualTemplateReplacement()
     {
         if (_replacesManualTemplate?.Invoke() != true) return true;
-        return MessageBox.Show(this, "Die ZPL-Vorlage enthält manuell erstellten Code. Soll der Designer ihn ersetzen?",
+        var message = _cab ? "Soll der Designer die eingebettete cab-Druckdatei ersetzen?"
+            : "Die ZPL-Vorlage enthält manuell erstellten Code. Soll der Designer ihn ersetzen?";
+        return MessageBox.Show(this, message,
             Title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
     }
 
@@ -207,7 +227,7 @@ public partial class LabelDesignerWindow : Window
     {
         try
         {
-            _ = _layout.ToZpl();
+            _ = RenderValue(_layout, _cab);
             if (!ConfirmManualTemplateReplacement()) return;
             DialogResult = true;
         }

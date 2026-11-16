@@ -21,7 +21,7 @@ internal static class CabLabelFile
         {
             var bytes = File.ReadAllBytes(path);
             if (bytes.Length == 0) return "Die Druckdatei ist leer.";
-            row.Value = Convert.ToBase64String(bytes);
+            row.Owner.ImportCabPrintData(bytes);
             return null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

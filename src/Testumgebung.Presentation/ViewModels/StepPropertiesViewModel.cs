@@ -252,6 +252,26 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         Parameters.FirstOrDefault(row => row.IsLabelTemplate)?.RefreshValue();
     }
 
+    public void SaveCabLabelLayout(LabelLayout layout)
+    {
+        var data = CabLabelLayout.Render(layout);
+        Step.Parameters[CabLabelLayout.Parameter] = layout.Save();
+        SetCabPrintData(data);
+    }
+
+    public void ImportCabPrintData(byte[] data)
+    {
+        Step.Parameters.Remove(CabLabelLayout.Parameter);
+        SetCabPrintData(data);
+    }
+
+    private void SetCabPrintData(byte[] data)
+    {
+        Step.Parameters[LabelPrintingBlocks.CabDataParameter] = Convert.ToBase64String(data);
+        ParametersChanged();
+        Parameters.FirstOrDefault(row => row.IsCabLabel)?.RefreshValue();
+    }
+
     public void ApplyTableValues(IReadOnlyDictionary<string, string> values)
     {
         var changed = Parameters.Where(row => values.TryGetValue(row.Descriptor.Name, out var value) && row.Value != value).ToArray();

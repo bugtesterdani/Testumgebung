@@ -86,11 +86,14 @@ public sealed partial class InlineBlockEditor : UserControl
 
     private static FrameworkElement CabLabelInput(ParameterRowViewModel row)
     {
+        var designer = new Button { Content = "cab-Etikett gestalten …", HorizontalAlignment = HorizontalAlignment.Left };
+        designer.Click += (_, _) => LabelDesignerWindow.Edit(designer, row);
         var import = new Button { Content = "LBL-Datei einbetten …", HorizontalAlignment = HorizontalAlignment.Left };
         import.Click += (_, _) => CabLabelFile.Import(import, row);
         var status = new TextBlock();
-                status.SetBinding(TextBlock.TextProperty, new Binding(nameof(ParameterRowViewModel.CabFileStatus)) { Source = row, Mode = BindingMode.OneWay });
+        status.SetBinding(TextBlock.TextProperty, new Binding(nameof(ParameterRowViewModel.CabFileStatus)) { Source = row, Mode = BindingMode.OneWay });
         var panel = new StackPanel();
+        panel.Children.Add(designer);
         panel.Children.Add(import);
         panel.Children.Add(status);
         return panel;

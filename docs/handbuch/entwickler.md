@@ -42,7 +42,16 @@ PNG, JPEG, BMP, GIF oder TIFF als Schwarzweißgrafik in die Vorlage ein.
 
 Unter **Vorlagenformat** den Wert **cab LBL** wählen und die Druckdatei über **LBL-Datei einbetten …** auswählen. Benötigt wird ein druckfertiger cab-JScript-Export. In cablabel S3 Pro kann er über **Drucken in Datei** erstellt werden. Beim Ziel **Datei** enthält der Export auch eingebettete Bilder und Schriften in binärer Form. Ein bearbeitbares Layout zunächst in eine solche Druckdatei exportieren. [cablabel-S3-Handbuch](https://www.cab.de/media/pushfile.cfm?file=2238)
 
-Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über TCP oder als RAW-Auftrag an eine Windows-Druckwarteschlange. Die Simulation zeigt die Byteanzahl. Eingebettete Bilder bleiben damit unverändert. ZPL-Platzhalter und der ZPL-Designer sind für cab-Dateien nicht verfügbar.
+Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über TCP oder als RAW-Auftrag an eine Windows-Druckwarteschlange. Die Simulation zeigt die Byteanzahl. Eingebettete Bilder bleiben damit unverändert.
+
+Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
+Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
+Der Designer erzeugt eine druckfertige JScript-Datei mit eingebetteten Bilddaten und speichert das bearbeitbare Layout im Prüfprojekt.
+Die Text- und Barcodefelder des cab-Designers verwenden feste Inhalte. ZPL-Platzhalter bleiben im ZPL-Format verfügbar.
+
+Extern importierte LBL-Dateien bleiben als Druckdateien im Projekt. Der Designer kann eigene Layouts wieder öffnen.
+Bei einem externen Import startet er mit einer leeren Vorlage. Erst eine bestätigte Übernahme ersetzt den Import.
+[Programmierhandbuch cab JScript](https://www.cab.de/media/pushfile.cfm?file=3047)
 
 ## Werkeransicht gestalten
 

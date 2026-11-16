@@ -27,6 +27,7 @@ public sealed class LabelLayout
     public int WidthMm { get; set; } = 60;
     public int HeightMm { get; set; } = 40;
     public int Dpi { get; set; } = 203;
+    public decimal GapMm { get; set; } = 3;
     public List<LabelElement> Elements { get; set; } = [];
 
     public int WidthDots => ToDots(WidthMm);
