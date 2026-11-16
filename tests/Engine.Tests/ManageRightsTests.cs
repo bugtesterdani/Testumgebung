@@ -77,6 +77,7 @@ public sealed class ManageRightsTests
             Assert.False(shell.IsDeveloper);
             Assert.False(shell.CanRelease);
             Assert.Equal(ShellPage.Stations, shell.Page);
+            Assert.Equal("VERWALTUNGSANSICHT", shell.ViewTitle);
             Assert.Contains("Verwalten", shell.UserDetail);
             foreach (var page in new[] { ShellPage.Settings, ShellPage.Notifications, ShellPage.System })
                 Assert.True(shell.NavigateCommand.CanExecute(page));
