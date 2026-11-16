@@ -99,7 +99,7 @@ public sealed class ManageRightsTests
             Assert.False(File.Exists(settings.Path));
             settingsPage.Revert();
             settingsPage.Save();
-            Assert.True(File.Exists(settings.Path), shell.SettingsPage.SaveStatus);
+            Assert.True(File.Exists(settings.Path), settingsPage.SaveStatus);
             shell.StationsPage.Save();
             Assert.True(File.Exists(stationStore.Path), shell.StationsPage.Error);
             Assert.False(shell.AccessPage.Save());
