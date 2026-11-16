@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private readonly ReleaseHub _releases;
     private readonly DispatcherTimer _inactivity = new() { Interval = TimeSpan.FromSeconds(30) };
     private readonly StationCoordinator _coordinator;
+    private readonly string? _remoteStationId;
 
     private readonly Testumgebung.Presentation.Releases.ProgramStartupLoader _programStartupLoader;
 
@@ -68,6 +69,7 @@ public partial class MainWindow : Window
         Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), CreateFileDialogService(startup), project: exampleProject, codeRuntime: _codeRuntime,
             services: _services, settingsStore: store, identity: identity, releases: _releases,
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
+        _remoteStationId = startup is null && !developmentMode ? RemoteSettingsClient.StationIdFromEnvironment() : null;
         Shell.ReleasesPage?.Sources.ConfigureAuthentication(new SourceCredentialStore(SourceCredentialStore.DefaultFile, new RepositorySecretProtector()));
         ConfigureExampleMode(exampleMode);
         DataContext = Shell;
@@ -80,7 +82,11 @@ public partial class MainWindow : Window
         // Optionale Inaktivitätssperre: Eingaben merken, regelmäßig prüfen. Ein laufender Test wird nie beeinflusst.
         PreviewMouseDown += (_, _) => Shell.NoteActivity();
         PreviewKeyDown += OnWindowKeyDown;
-        _inactivity.Tick += (_, _) => CheckInactivityAndCalibration();
+        _inactivity.Tick += async (_, _) =>
+        {
+            CheckInactivityAndCalibration();
+            await PollRemoteSettingsAsync();
+        };
         _inactivity.Start();
         // Manuelles Öffnen der Anwendung: offene Runs aus der lokalen Outbox laden und Übertragung fortsetzen (P04).
         _services.Outbox.Start();

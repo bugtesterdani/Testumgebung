@@ -498,6 +498,18 @@ public sealed class ShellViewModel : ObservableObject
     public bool IsDeveloper => Session.CanDevelop;
 
     public bool CanManage => Session.CanManage;
+
+    public RemoteSettingsReport ReportRemoteSettings(Settings.AppSettings current)
+        => new(Settings.RemoteStationConfiguration.Read(current), RemoteStationNames());
+
+    public string? ApplyRemoteSettings(RemoteSettingsChange change)
+    {
+        if (PairedStations.IsBusy || Coordinator.RunningStations.Count != 0
+            || Stations.Any(station => station.IsRunning || station.Selection.IsActive)) return null;
+        return SettingsPage?.ApplyRemoteSettings(change, RemoteStationNames());
+    }
+
+    private string[] RemoteStationNames() => Coordinator.Setup.Stations.Select(station => station.Name).ToArray();
     public bool ShowAccessNav => IsDeveloper && HasSettings;
 
     /// <summary>Recht „Freigeben“.</summary>

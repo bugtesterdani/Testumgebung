@@ -41,6 +41,8 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
 
     public SqlDialect Dialect { get; }
 
+    public SqlRemoteSettingsStore RemoteSettings => field ??= new(this);
+
     public string Name => $"{Dialect.DisplayName} ({DescribeTarget(_connectionString)})";
 
     /// <summary>Wird nach erfolgreichem Commit vor der Rückkehr aufgerufen (Tests: „Antwort nach Commit verloren“).</summary>

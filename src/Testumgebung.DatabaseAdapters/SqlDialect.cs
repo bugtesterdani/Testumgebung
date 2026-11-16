@@ -63,6 +63,24 @@ public abstract class SqlDialect
         ? $"IF OBJECT_ID(N'tu_program_catalog', N'U') IS NULL CREATE TABLE tu_program_catalog (version {Big} NOT NULL PRIMARY KEY, generation {Big} NOT NULL, payload {Text} NOT NULL)"
         : $"CREATE TABLE IF NOT EXISTS tu_program_catalog (version {Big} NOT NULL PRIMARY KEY, generation {Big} NOT NULL, payload {Text} NOT NULL){TableSuffix}";
 
+    public string CreateRemoteSettingsTable
+    {
+        get
+        {
+            var create = Provider == DatabaseProvider.SqlServer
+                ? "IF OBJECT_ID(N'tu_station_settings', N'U') IS NULL CREATE TABLE"
+                : "CREATE TABLE IF NOT EXISTS";
+            return $"""
+                {create} tu_station_settings (
+                    station_id {Key} NOT NULL, revision {Big} NOT NULL, generation {Big} NOT NULL,
+                    pending_revision {Big} NOT NULL, seen {Short} NOT NULL, names {Text},
+                    settings {Text} NOT NULL, actor {Text}, previous {Text}, status {Short}, completed {Short},
+                    PRIMARY KEY (station_id, revision)
+                ){TableSuffix}
+                """;
+        }
+    }
+
     public int LatestVersion => Migrations[^1].Version;
 
     private IReadOnlyList<string> Version1() =>
