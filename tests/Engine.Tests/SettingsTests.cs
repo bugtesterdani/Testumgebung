@@ -26,6 +26,37 @@ public sealed class SettingsTests : IDisposable
 
     private string P(string name) => Path.Combine(_dir, name);
 
+    [Fact]
+    public async Task Remote_change_waits_for_idle_and_unsaved_edits_and_only_updates_allowed_settings()
+    {
+        var initial = new AppSettings { ResultFolder = P("results"), PythonExecutable = "approved-python" };
+        var store = new SettingsStore(P("remote.json"), PlainSecretProtector.Instance);
+        store.Save(initial);
+        await using var services = new ResultServices(initial, new TestRegistry(), P("outbox"), P("database"),
+            recoveryFolder: P("recovery"));
+        var shell = new ShellViewModel(new QueueDispatcher(), project: SampleProjects.AcPruefung(), services: services, settingsStore: store);
+        var report = shell.ReportRemoteSettings(services.Current);
+        var change = new RemoteSettingsChange(1, report.Current, report.Current with { OutboxThreshold = 12, ResultFolderAlarm = true });
+        var station = shell.SelectedStation.Name;
+        shell.Coordinator.TryBeginRun(station, shell.Editor.Project.Definition);
+        Assert.Null(shell.ApplyRemoteSettings(change));
+        shell.Coordinator.EndRun(station);
+
+        var page = shell.SettingsPage!;
+        page.Alarms.OutboxThreshold = 9;
+        Assert.Null(shell.ApplyRemoteSettings(change));
+        page.Revert();
+
+        Assert.Equal("invalid", shell.ApplyRemoteSettings(change with { Desired = change.Desired with { ErrorStreak = -1 } }));
+        Assert.Equal("conflict", shell.ApplyRemoteSettings(change with { Expected = change.Expected with { ErrorStreak = 5 } }));
+        Assert.Equal("applied", shell.ApplyRemoteSettings(change));
+        Assert.Equal("applied", shell.ApplyRemoteSettings(change));
+        Assert.Equal(change.Desired, RemoteStationConfiguration.Read(store.Load()));
+        Assert.Equal("approved-python", store.Load().PythonExecutable);
+        Assert.Equal(P("results"), store.Load().ResultFolder);
+        Assert.Equal(12, page.Alarms.OutboxThreshold);
+    }
+
     private sealed class TestRegistry : IDatabaseProviderRegistry
     {
         public DbProviderFactory? Factory(DatabaseProvider provider) => provider == DatabaseProvider.Sqlite ? NativeSqliteFactory.Instance : null;

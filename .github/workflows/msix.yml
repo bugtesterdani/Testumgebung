@@ -111,6 +111,22 @@ jobs:
         run: |
           ./build/tests/verify-coverage-goals.ps1
           ./build/coverage.ps1 -EnforceTargets -RunDirectory artifacts/coverage/ci -PythonForSsh (Get-Command python).Source
+      - name: Fernverwaltung testen und paketieren
+        shell: pwsh
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          dotnet test tests/RemoteAdmin.Tests -c Release
+          if ($LASTEXITCODE) { throw 'Fernverwaltung: Tests fehlgeschlagen.' }
+          dotnet publish src/Testumgebung.RemoteAdmin -c Release --no-self-contained -p:Version=$env:BUILD_VERSION -o artifacts/remote-admin
+          if ($LASTEXITCODE) { throw 'Fernverwaltung: Paketierung fehlgeschlagen.' }
+          Copy-Item docs/fernverwaltung.md,LICENSE,THIRD-PARTY-NOTICES.md,THIRD-PARTY-TERMS.md artifacts/remote-admin
+          Compress-Archive -Path 'artifacts/remote-admin/*' -DestinationPath "artifacts/Testumgebung-Fernverwaltung-$env:BUILD_VERSION.zip"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Fernverwaltung-${{ steps.version.outputs.version }}
+          path: artifacts/Testumgebung-Fernverwaltung-${{ steps.version.outputs.version }}.zip
+          if-no-files-found: error
       - name: Aufgelöste Pakete auf bekannte Sicherheitslücken prüfen
         shell: pwsh
         run: |
@@ -240,6 +256,8 @@ jobs:
           if ($LASTEXITCODE) { throw 'Release-Artefakt konnte nicht heruntergeladen werden.' }
           gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "CLI-$env:RELEASE_VERSION" --dir release
           if ($LASTEXITCODE) { throw 'CLI-Artefakt konnte nicht heruntergeladen werden.' }
+          gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "Fernverwaltung-$env:RELEASE_VERSION" --dir release
+          if ($LASTEXITCODE) { throw 'Fernverwaltungs-Artefakt konnte nicht heruntergeladen werden.' }
           $assets=Get-ChildItem release -Recurse -File | Where-Object { $_.Extension -in '.msixbundle','.cer','.pdf','.zip','.sha256' -or $_.Name -in 'SHA256SUMS.txt','INSTALLATION.md','LICENSE-VERIFICATION.json','BUILD-INFO.json','PUBLICATION.md','LICENSE','THIRD-PARTY-TERMS.md','THIRD-PARTY-NOTICES.md' }
           if (-not ($assets | Where-Object Name -EQ "Testumgebung-EntraBroker-$env:RELEASE_VERSION-win-x64.zip")) { throw 'Entra-Anmeldepaket fehlt.' }
           if (-not ($assets | Where-Object Extension -EQ '.msixbundle')) { throw 'MSIX-Bundle fehlt.' }

@@ -8,6 +8,10 @@ public sealed record RemoteStationSettings(bool ShowPairedStations, string First
         && ErrorStreak >= 0 && OutboxThreshold >= 0
         && (!ShowPairedStations || !string.IsNullOrWhiteSpace(FirstPairedStation)
             && !string.IsNullOrWhiteSpace(SecondPairedStation) && FirstPairedStation != SecondPairedStation);
+
+    public bool MatchesStations(string[] stations) => !ShowPairedStations
+        || stations.Contains(FirstPairedStation, StringComparer.Ordinal)
+        && stations.Contains(SecondPairedStation, StringComparer.Ordinal);
 }
 
 public sealed record RemoteSettingsReport(RemoteStationSettings Current, string[] Stations, long? Revision = null, string? Status = null);

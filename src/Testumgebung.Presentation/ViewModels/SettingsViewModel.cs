@@ -502,6 +502,23 @@ public sealed class SettingsViewModel : ObservableObject
             || edited.CppCompiler != current.CppCompiler
             || edited.CppCacheDirectory != current.CppCacheDirectory;
 
+    public string? ApplyRemoteSettings(Testumgebung.Contracts.RemoteSettingsChange change, string[] stations)
+    {
+        var current = RemoteStationConfiguration.Read(_services.Current);
+        if (current == change.Desired) return "applied";
+        if (current != change.Expected) return "conflict";
+        if (!change.Desired.IsValid || !change.Desired.MatchesStations(stations)) return "invalid";
+        if (RemoteStationConfiguration.Read(_edit) != current) return null;
+
+        var updated = Copy(_services.Current);
+        RemoteStationConfiguration.Write(updated, change.Desired);
+        _store.Save(Copy(updated), preserveRuntime: true);
+        _services.Apply(updated);
+        RemoteStationConfiguration.Write(_edit, change.Desired);
+        OnPropertyChanged(string.Empty);
+        return "applied";
+    }
+
     public void Revert()
     {
         _edit = Copy(_services.Current);
