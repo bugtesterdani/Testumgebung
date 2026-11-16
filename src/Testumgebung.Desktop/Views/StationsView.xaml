@@ -83,6 +83,53 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </DockPanel>
+            <Expander Header="Verschleißzähler am gewählten Prüfplatz" Margin="0,8,0,0">
+                <StackPanel Margin="8">
+                    <WrapPanel Margin="0,0,0,6">
+                        <Button Style="{StaticResource ToolButton}" Content="Zähler hinzufügen" Command="{Binding AddWearCounterCommand}" />
+                        <Button Style="{StaticResource ToolButton}" Content="Entfernen" Command="{Binding RemoveWearCounterCommand}" />
+                        <Button Style="{StaticResource ToolButton}" Content="Stand aktualisieren" Command="{Binding RefreshWearCountersCommand}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Nach Wartung zurücksetzen" Command="{Binding ResetWearCounterCommand}" />
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="Grenze 0 ist ausgeschaltet. Änderungen an Namen und Grenzen über Zuordnung speichern." Margin="0,0,0,4" />
+                    <DataGrid ItemsSource="{Binding WearCounters}" SelectedItem="{Binding SelectedWearCounter}" MaxHeight="170"
+                              AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
+                            <DataGridTextColumn Header="Stand" Binding="{Binding Count, Mode=OneWay}" IsReadOnly="True" Width="*" />
+                            <DataGridTextColumn Header="Warngrenze" Binding="{Binding WarningAt}" Width="*" />
+                            <DataGridTextColumn Header="Sperrgrenze" Binding="{Binding StopAt}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Expander Header="Rücksetzprotokoll" Margin="0,6,0,0">
+                        <DataGrid ItemsSource="{Binding WearResets}" AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="125">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Zeit" Binding="{Binding At, StringFormat=g}" Width="*" />
+                                <DataGridTextColumn Header="Zähler" Binding="{Binding Name}" Width="*" />
+                                <DataGridTextColumn Header="Alter Stand" Binding="{Binding PreviousCount}" Width="*" />
+                                <DataGridTextColumn Header="Benutzer" Binding="{Binding User}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Expander>
+                </StackPanel>
+            </Expander>
+            <Expander Header="Referenzprüfung und Schichtzeiten am gewählten Prüfplatz" Margin="0,8,0,0">
+                <StackPanel Margin="8">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="Schichtbeginn (HH:mm;HH:mm)" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox Text="{Binding ReferenceShiftStarts}" MinWidth="170" />
+                    </StackPanel>
+                    <CheckBox Content="Gut- und Schlechtmuster verlangen" IsChecked="{Binding ReferenceEnabled}" />
+                    <WrapPanel IsEnabled="{Binding ReferenceEnabled}" Margin="0,6,0,0">
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Kennung Gutmuster" /><TextBox Text="{Binding ReferenceGoodId}" MinWidth="120" /></StackPanel>
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Kennung Schlechtmuster" /><TextBox Text="{Binding ReferenceBadId}" MinWidth="120" /></StackPanel>
+
+                        <StackPanel Margin="0,0,10,0"><TextBlock Text="Nach n Prüflingen" /><TextBox Text="{Binding ReferenceDutInterval}" MinWidth="85" /></StackPanel>
+                        <StackPanel><TextBlock Text="Nach t Stunden" /><TextBox Text="{Binding ReferenceHoursInterval}" MinWidth="85" /></StackPanel>
+                    </WrapPanel>
+                    <TextBlock Style="{StaticResource Caption}" Text="Intervall 0 deaktiviert die jeweilige Wiederholungsregel." Margin="0,4,0,0" />
+                </StackPanel>
+            </Expander>
             <Border Style="{StaticResource ErrorBox}" Margin="0,8,0,0" Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
                 <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" />
             </Border>
@@ -390,6 +437,17 @@
                             <ComboBox ItemsSource="{Binding DataContext.AdapterChoices, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                                       SelectedItem="{Binding Adapter}" Margin="0,0,0,6" />
                             <StackPanel Visibility="{Binding IsReal, Converter={StaticResource BoolVis}}">
+                                <TextBlock Style="{StaticResource Label}" Text="Prüfmittel und Kalibrierung" />
+                                <TextBlock Style="{StaticResource Label}" Text="Seriennummer" />
+                                <TextBox Text="{Binding CalibrationSerialNumber, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Style="{StaticResource Label}" Text="Kalibriert am" />
+                                <DatePicker SelectedDate="{Binding CalibrationDate}" />
+                                <TextBlock Style="{StaticResource Label}" Text="Kalibrierintervall [Tage], 0 = deaktiviert" />
+                                <TextBox Text="{Binding CalibrationIntervalDays, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Style="{StaticResource Label}" Text="Vorwarnung [Tage]" />
+                                <TextBox Text="{Binding CalibrationWarningDays, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Text="{Binding CalibrationDue, StringFormat='Nächste Fälligkeit: {0}'}" />
+                                <CheckBox Content="Werkerstart nach Ablauf sperren" IsChecked="{Binding BlockOverdueCalibration}" Margin="0,4,0,8" />
                                 <TextBlock Style="{StaticResource Label}" Text="Modell" Margin="0,0,0,2" />
                                 <ComboBox ItemsSource="{Binding Models}" Text="{Binding Model, UpdateSourceTrigger=LostFocus}" IsEditable="True" Margin="0,0,0,6" />
                                 <StackPanel Visibility="{Binding HasConnectionChoices, Converter={StaticResource BoolVis}}">

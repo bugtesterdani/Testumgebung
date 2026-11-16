@@ -181,6 +181,9 @@ public interface IStepContext
     /// <summary>Werkerinteraktion; liefert Antwort bzw. Eingabewert (null bei „fortsetzen ohne Warten“).</summary>
     Task<object?> AskOperatorAsync(OperatorPrompt prompt);
 
+    /// <summary>Gibt false zurück, wenn der Lauf Etiketten nur simuliert.</summary>
+    Task<bool> PrintLabelAsync(LabelPrintRequest request) => Task.FromResult(false);
+
     void Log(string message);
 
     /// <summary>Aktualisiert die laufende Werkeranzeige ohne Eingabeaufforderung oder Bewertungsänderung.</summary>
@@ -193,6 +196,7 @@ public interface IStepContext
     /// <summary>Python-Umgebung aus dem Auswahlprogramm dieses Laufs.</summary>
     string? ProgramPythonVenv => null;
     PairedStationContext? PairedStation => null;
+    bool IsReferenceRun => false;
 
     /// <summary>Ausführungsumgebung für Codebausteine; null, wenn nicht konfiguriert.</summary>
     Code.ICodeRuntime? CodeRuntime { get; }

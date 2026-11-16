@@ -51,3 +51,10 @@ Nach jedem Lauf werden die Geräte des Prüfplatzes zusätzlich in den sicheren 
 
 Werker müssen sich nicht anmelden. **Anmelden** (oben rechts) ist für Entwickler und Freigeber; laufende Prüfungen
 laufen beim Abmelden weiter.
+
+## Sprache der Werkeransicht
+
+Oben im Hauptfenster zwischen **Deutsch** und **English** wechseln. Die Auswahl
+gilt für das aktuelle Fenster. Bedienelemente der Werkeransicht und die Start-
+und Abbruchleiste ändern ihre Sprache direkt. Prüfprogrammtexte und
+Laufmeldungen werden in ihrer vorhandenen Sprache angezeigt.

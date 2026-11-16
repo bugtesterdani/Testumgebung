@@ -204,6 +204,15 @@
                            Text="Gemeinsame Auftragsdaten: Init ermittelt sie, der Test Loop liest sie." />
                 <ContentControl Content="{Binding Variables}" ContentTemplate="{StaticResource VariableListTemplate}" />
 
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Grenzwertsätze" Margin="0,16,0,6" />
+                <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                           Text="Erste Spalte: Variante. Weitere Spalten: Namen der Prüfvariablen. Auswahl über Variante=&lt;Name&gt; in den Prüfparametern." />
+                <ItemsControl ItemsSource="{Binding LimitSetNames}" Margin="0,4" />
+                <WrapPanel>
+                    <Button Style="{StaticResource OutlineButton}" Content="Tabelle importieren und ersetzen"
+                            Command="{Binding ImportLimitSetsCommand}" Margin="0,0,6,0" />
+                    <Button Style="{StaticResource OutlineButton}" Content="Grenzwertsätze entfernen" Command="{Binding ClearLimitSetsCommand}" />
+                </WrapPanel>
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Werkeransicht: Layout und Darstellung" Margin="0,16,0,6" />
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -489,6 +498,8 @@
                 </Grid>
 
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Parameter" Margin="0,14,0,6" />
+                <CheckBox Content="Erweitert" IsChecked="{Binding ShowAdvanced}" Margin="0,0,0,6"
+                          Visibility="{Binding HasAdvancedParameters, Converter={StaticResource BoolVis}}" />
                 <ItemsControl ItemsSource="{Binding Parameters}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -499,6 +510,10 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Style="{StaticResource Label}" Text="{Binding Label}" TextWrapping="Wrap" />
                                 <StackPanel Grid.Column="1">
+                                    <Button Content="Etikett gestalten …" Click="OnLabelDesigner" HorizontalAlignment="Left"
+                                            Visibility="{Binding IsLabelTemplate, Converter={StaticResource BoolVis}}" />
+                                    <Button Content="Tabelle bearbeiten …" Click="OnParameterTable" HorizontalAlignment="Left"
+                                            Visibility="{Binding IsTable, Converter={StaticResource BoolVis}}" />
                                     <TextBox x:Name="TextEditor" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                                              AcceptsReturn="{Binding IsMultiline}" TextWrapping="Wrap" MaxHeight="180" VerticalScrollBarVisibility="Auto"
                                              Visibility="{Binding IsText, Converter={StaticResource BoolVis}}" />

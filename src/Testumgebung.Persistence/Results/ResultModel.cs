@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Beschreibt gespeicherte Läufe, Ereignisse, Kurven und Anhänge unabhängig von Dateiformat und Anzeige.
  */
@@ -50,6 +50,10 @@ public sealed record ResultWaveform(string Id, long EventSequence, string? NodeI
 public sealed record ResultAttachment(string Id, string Name, string MediaType, byte[] Data);
 
 /// <summary>Ein Prüflingstest – Inhalt einer Ergebnisdatei bzw. eines Outbox-Eintrags.</summary>
+public sealed record ResultDevice(string Name, string? SerialNumber, DateOnly? CalibratedOn, DateOnly? DueOn);
+
+public enum ResultRunKind { Production, GoodReference, BadReference }
+
 public sealed class ResultRun
 {
     public required string RunId { get; init; }
@@ -64,6 +68,7 @@ public sealed class ResultRun
     public ResultRating Rating { get; init; }
     public bool OperatorAbort { get; init; }
     public bool IsDevelopmentRun { get; init; }
+    public ResultRunKind Kind { get; init; }
 
     /// <summary>Für welches Ziel gefiltert wurde („Ergebnisdatei“, „Datenbank“, leer = ungefiltert).</summary>
     public string FilteredFor { get; init; } = "";
@@ -72,6 +77,7 @@ public sealed class ResultRun
 
     public RunStatus Status => new(Rating, OperatorAbort);
 
+    public IReadOnlyList<ResultDevice> Devices { get; set; } = [];
     public List<ResultNode> Structure { get; init; } = [];
     public List<ResultEvent> Events { get; init; } = [];
     public List<ResultWaveform> Waveforms { get; init; } = [];
@@ -91,8 +97,10 @@ public sealed class ResultRun
         Rating = Rating,
         OperatorAbort = OperatorAbort,
         IsDevelopmentRun = IsDevelopmentRun,
+        Kind = Kind,
         FilteredFor = filteredFor,
         Application = Application,
+        Devices = Devices,
         Structure = Structure,
         Events = events,
         Waveforms = waveforms,

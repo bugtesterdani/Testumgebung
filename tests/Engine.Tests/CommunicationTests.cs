@@ -247,7 +247,7 @@ public sealed class CommunicationTests
         Assert.NotEmpty(BlockCatalog.Default.Rebuild(S(CommunicationBlocks.CanSend, "e", ("Ressource", "R"), ("Id", "0x20000000"))));
         Assert.NotEmpty(BlockCatalog.Default.Rebuild(S(CommunicationBlocks.Send, "f", ("Ressource", "R"), ("Format", "Hex"), ("Daten", "0Z"))));
         Assert.Empty(BlockCatalog.Default.Rebuild(S(CommunicationBlocks.Query, "g", ("Ressource", "R"), ("Format", "Hex"), ("Daten", "01 03 00 00 00 01"), ("Ende", "Länge"), ("Laenge", "7"))));
-        Assert.Contains(BlockCatalog.Default.Categories, c => c == CommunicationBlocks.Category);
+        Assert.Contains(BlockCatalog.Default.Categories, c => c == CommunicationBlocks.SerialCategory);
     }
 
     // ------------------------------------------------------------------ Treiber gegen lokale Gegenstellen

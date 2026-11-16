@@ -43,7 +43,9 @@ public sealed partial class EditorViewModel : ObservableObject
         Project = project;
 
         _palette = Catalog.All
-            .Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download))
+            .Where(block => block.Type is not (BlockCatalog.SetRating or BlockCatalog.RaiseError or NetworkBlocks.Download)
+                && CurveOutputBlocks.LegacyAction(block.Type) is null
+                && ProcessBlocks.Replacement(block.Type) is null)
             .GroupBy(block => block.Category)
             .Select(group => new PaletteCategory(group.Key, group.Select(block => new PaletteItem(block.Type, block.DisplayName, block.Description, IconFor(block.Type))).ToList()))
             .Append(new PaletteCategory("Struktur", [new PaletteItem(null, "Gruppe", "Untergruppe mit Variablen, Bedingung, Wiederholung und Exit-Gruppe.", NodeIcon.Group)]))
@@ -570,11 +572,30 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void NewProject()
     {
-        var def = new TestDefinition("Neues Projekt", "0.1",
+        var request = _dialogs is null ? new NewProjectRequest("Neues Projekt") : _dialogs.ChooseNewProject();
+        if (request is null || string.IsNullOrWhiteSpace(request.Name)) return;
+        try
+        {
+            var project = CreateNewProject(request);
+            if (!PrepareProjectReplacement()) return;
+            Load(project);
+            MarkChanged();
+        }
+        catch (Exception ex) when (ex is ProjectFormatException or IOException or UnauthorizedAccessException)
+        {
+            _dialogs?.ShowError($"Vorlage konnte nicht geladen werden: {ex.Message}");
+        }
+    }
+
+    private TestProject CreateNewProject(NewProjectRequest request)
+    {
+        var name = request.Name.Trim();
+        if (request.TemplatePath is { } path) return _serializer.LoadTemplate(path, name);
+
+        return new TestProject(new TestDefinition(name, "0.1",
             new GroupDefinition("init", "Test Start / Init"),
             new GroupDefinition("loop", "Test Loop / Testing") { Repetition = Repetition.Endless },
-            new GroupDefinition("fin", "Test End / Finalization"));
-        Load(new TestProject(def));
+            new GroupDefinition("fin", "Test End / Finalization")));
     }
 
     private void Open()

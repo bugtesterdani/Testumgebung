@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verwaltet Anmeldung, Rechteprüfung und Inaktivität; überholte Anmeldeantworten dürfen neue Sitzungen nicht überschreiben.
  */
@@ -53,6 +53,7 @@ public sealed class SessionService
     public bool IsSignedIn => User is not null;
     public bool CanDevelop => (Rights & UserRights.Develop) != 0;
     public bool CanRelease => (Rights & UserRights.Release) != 0;
+    public bool CanManage => (Rights & (UserRights.Manage | UserRights.Develop)) != 0;
 
     public event Action? Changed;
 
@@ -164,6 +165,10 @@ public sealed class SessionService
 
     public static string RightsText(UserRights r) => r switch
     {
+        UserRights.Develop | UserRights.Release | UserRights.Manage => "Entwickeln, Freigeben, Verwalten",
+        UserRights.Develop | UserRights.Manage => "Entwickeln, Verwalten",
+        UserRights.Release | UserRights.Manage => "Freigeben, Verwalten",
+        UserRights.Manage => "Verwalten",
         UserRights.Develop | UserRights.Release => "Entwickeln, Freigeben",
         UserRights.Develop => "Entwickeln",
         UserRights.Release => "Freigeben",

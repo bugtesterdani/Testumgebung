@@ -398,7 +398,7 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionTitle}" Text="Testausgabe (Simulation)" />
                         <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
-                                   Text="Im Ablauf über die Bausteine „Kurve laden / übertragen / starten / stoppen“. Hier zum Ausprobieren gegen die Simulation." />
+                                   Text="Im Ablauf über den Baustein „Kurvenausgabe“ mit der gewünschten Aktion. Hier zum Ausprobieren gegen die Simulation." />
                         <WrapPanel Margin="0,0,0,6">
                             <Button Style="{StaticResource ToolButton}" Command="{Binding LoadCommand}" Content="1 Laden" Margin="0,0,6,6" />
                             <Button Style="{StaticResource ToolButton}" Command="{Binding TransferCommand}" Content="2 Übertragen" Margin="0,0,6,6" />

@@ -1,4 +1,4 @@
-﻿using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Persistence;
 using Testumgebung.Presentation.ViewModels;
@@ -52,8 +52,19 @@ public sealed class CatalogValidationTests
         var copy = serializer.Clone(project);
         var copiedStep = Assert.IsType<StepDefinition>(copy.Definition.Find("step"));
         Assert.Equal(value, copiedStep.Parameters[parameter]);
-        Assert.Equal(type, copiedStep.BlockType);
-        Assert.Equal(diagnostics, catalog.Rebuild(copiedStep));
-        Assert.Equal(serializer.Serialize(project), serializer.Serialize(copy));
+        var replacement = ProcessBlocks.Replacement(type);
+        if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
+            replacement = (BlockCatalog.CurveOutput, curveAction);
+        var fixedRating = type == BlockCatalog.SetRating;
+        Assert.Equal(fixedRating ? BlockCatalog.Evaluate : replacement?.Type ?? type, copiedStep.BlockType);
+        var expectedDiagnostics = fixedRating
+            ? diagnostics.Select(message => message.Replace("„Bewertung“", "„Festes Ergebnis“", StringComparison.Ordinal))
+            : diagnostics;
+        Assert.Equal(expectedDiagnostics, catalog.Rebuild(copiedStep));
+        if (fixedRating) Assert.Equal(BlockCatalog.FixedRatingMode, copiedStep.Parameters["Art"]);
+        if (replacement is { } target)
+            Assert.Equal(target.Action, copiedStep.Parameters["Aktion"]);
+        var expected = replacement is null && !fixedRating ? project : serializer.Clone(copy);
+        Assert.Equal(serializer.Serialize(expected), serializer.Serialize(copy));
     }
 }

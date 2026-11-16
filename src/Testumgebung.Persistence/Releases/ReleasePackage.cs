@@ -193,6 +193,7 @@ public static class ReleasePackage
         flow.Remove("simulation");
         flow.Remove("simulationOutputs");
         flow.Remove("curves");
+        flow.Remove("limitSets");
         list.Add(new ManifestEntry("Ablauf", definition.Name, definition.Version, Sha256(flow.ToJsonString())));
 
         AddBlockEntries(root["library"] as JsonArray, list);
@@ -212,6 +213,9 @@ public static class ReleasePackage
                 list.Add(new ManifestEntry("Kurven", (string?)node!["name"] ?? (string)node["id"]!, (string?)node["version"] ?? "", Sha256(node.ToJsonString())));
         else
             list.Add(new ManifestEntry("Kurven", "keine", "", Sha256("")));
+        if (root["limitSets"] is JsonObject limitSets)
+            foreach (var (name, values) in limitSets)
+                list.Add(new ManifestEntry("Definitionen", $"Grenzwertsatz: {name}", definition.Version, Sha256(values!.ToJsonString())));
         list.Add(new ManifestEntry("Definitionen", "Hardwareprofil (Simulation)", definition.Version,
             Sha256((root["simulation"]?.ToJsonString() ?? "[]") + (root["simulationOutputs"]?.ToJsonString() ?? ""))));
         return list;
@@ -283,6 +287,11 @@ public static class DefinitionCompatibility
             return false;
         }
         if (!SameOuterFlow(jsonObject, jsonObject2, out reason)) return false;
+        if (!LimitSetTable.SameBindings(current, next))
+        {
+            reason = "Variablen der Grenzwertsätze geändert";
+            return false;
+        }
         foreach (var id in curvesA.Union(curvesB))
         {
             if (Curve(jsonObject, id) != Curve(jsonObject2, id))
@@ -308,6 +317,7 @@ public static class DefinitionCompatibility
         (string Key, string Reason)[] properties =
         [
             ("variables", "Hauptablauf-Variablen geändert"),
+            ("limitSets", "Grenzwertsätze geändert"),
             ("assemblies", ".NET-DLLs geändert; neue Prüfsitzung erforderlich"),
             ("init", "Init geändert"),
             ("finalization", "Finalization geändert"),
@@ -360,8 +370,7 @@ public static class DefinitionCompatibility
             if ((string?)jsonObject2["block"] is TraceBlocks.Start or TraceBlocks.Record)
                 CollectTraceCurveReferences(parameters, curves);
             if ((string?)parameters["Baustein"] is { Length: > 0 } block) used.Add(block);
-            if ((string?)parameters["Kurve"] is { Length: > 0 } curve)
-                curves.Add(curve + "@" + ((string?)parameters["Version"] ?? ""));
+            CollectOutputCurveReference((string?)jsonObject2["block"], parameters, curves);
         }
 
         Walk(root["init"]);
@@ -371,6 +380,15 @@ public static class DefinitionCompatibility
         usedOutside = used;
         curvesOutside = curves;
         return root;
+    }
+
+    private static void CollectOutputCurveReference(string? block, JsonObject parameters, HashSet<string> curves)
+    {
+        if (block == BlockCatalog.CurveOutput &&
+            ((string?)parameters[CurveOutputBlocks.ActionParameter] ?? CurveOutputBlocks.Load) != CurveOutputBlocks.Load)
+            return;
+        if ((string?)parameters["Kurve"] is { Length: > 0 } curve)
+            curves.Add(curve + "@" + ((string?)parameters["Version"] ?? ""));
     }
 
     private static void CollectTraceCurveReferences(JsonObject parameters, HashSet<string> curves)

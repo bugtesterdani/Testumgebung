@@ -25,7 +25,10 @@ public enum ParameterKind
     Image,
     /// <summary>Mehrzeiliger Quelltext (CodeBlock).</summary>
     Code,
+    Table,
 }
+
+public sealed record ParameterVisibility(string Parameter, string Value);
 
 public sealed record ParameterDescriptor(
     string Name,
@@ -34,7 +37,9 @@ public sealed record ParameterDescriptor(
     string Default = "",
     bool Required = false,
     IReadOnlyList<string>? Choices = null,
-    string? Hint = null);
+    string? Hint = null,
+    ParameterVisibility? VisibleWhen = null,
+    bool Advanced = false);
 
 /// <summary>Beschreibung eines Bausteins der Palette.</summary>
 public sealed record BlockDescriptor(
@@ -182,6 +187,7 @@ public sealed class BlockCatalog
     public const string Measure = "analog.messen";
     public const string Output = "analog.ausgeben";
     public const string Capture = "kurve.aufnehmen";
+    public const string CurveOutput = "kurve.ausgabe";
     public const string CurveLoad = "kurve.laden";
     public const string CurveTransfer = "kurve.uebertragen";
     public const string CurveStart = "kurve.starten";
@@ -189,6 +195,7 @@ public sealed class BlockCatalog
     public const string DigitalRead = "digital.lesen";
     public const string DigitalWrite = "digital.setzen";
     public const string Evaluate = "bewertung";
+    public const string FixedRatingMode = "Festes Ergebnis";
     public const string SetRating = "bewertung.setzen";
     public const string Wait = "warten";
     public const string RaiseError = "fehler";
@@ -292,6 +299,7 @@ public sealed class BlockCatalog
                 });
             }));
 
+        CurveOutputBlocks.Register(blockCatalog);
         const string output = "Kurvenausgabe";
         blockCatalog.Register(new(CurveLoad, "Kurve laden", output, "arrow",
             "Lädt eine Ausgabekurve (feste Version) und prüft die Geräteeignung. Keine automatische Skalierung oder Abtastratenänderung.",
@@ -307,13 +315,7 @@ public sealed class BlockCatalog
                 var version = parameters2.Optional("Version");
                 return new DelegateAction(async ctx =>
                 {
-                    var curve = ctx.FindCurve(id, version);
-                    if (curve is null) return StepOutcome.Error($"Kurve '{id}'{(version is null ? "" : $" v{version}")} ist im Projekt nicht vorhanden.");
-                    var output = curve.ToOutput();
-                    var errors = ctx.CheckOutput(resource, output).Where(issue => issue.IsError).ToList();
-                    if (errors.Count > 0) return StepOutcome.Error("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
-                    await ctx.CurveOutputAsync(resource, CurveCommand.Load, output).ConfigureAwait(false);
-                    return StepOutcome.Unrated(curve.Key, $"{curve.Name} v{curve.Version} geladen ({curve.Channels.Count} Kanäle, {curve.Count} Samples)");
+                    return await LoadCurveAsync(ctx, resource, id, version).ConfigureAwait(false);
                 });
             }));
         foreach (var (type, name, command, text) in new[]
@@ -391,7 +393,7 @@ public sealed class BlockCatalog
                 new("Testkennung", "Testkennung", ParameterKind.Expression, Required: true, Hint: "z. B. \"AC-Prüfung\" oder eine Variable"),
                 new("Version", "Version (leer = aktuell freigegebene)", ParameterKind.Expression),
                 new("Auftrag", "Auftrag", ParameterKind.Expression),
-                new("Pruefparameter", "Prüfparameter", ParameterKind.Expression, Hint: "Text „GrenzwertMin=220;GrenzwertMax=240“"),
+                new("Pruefparameter", "Prüfparameter", ParameterKind.Expression, Hint: "Text „Variante=Standard“ oder „GrenzwertMin=220;GrenzwertMax=240“"),
                 new("PythonVenv", "Python-Umgebung (optional)", ParameterKind.Expression, Hint: "Absoluter Ordnerpfad als String oder Variable; fehlende Umgebung fällt auf die nächste Stufe zurück."),
             ],
             parameters2 =>
@@ -500,6 +502,7 @@ public sealed class BlockCatalog
         TraceBlocks.Register(blockCatalog);
         ProcessBlocks.Register(blockCatalog);
         LiveLogBlocks.Register(blockCatalog);
+        LabelPrintingBlocks.Register(blockCatalog);
         CommunicationBlocks.Register(blockCatalog);
         BusBlocks.Register(blockCatalog);
         return blockCatalog;
@@ -604,6 +607,17 @@ public sealed class BlockCatalog
             "Gibt den zuvor erhaltenen Kanal an die andere Seite weiter, z. B. nach Bestätigung der Entnahme.",
             [new("Kanal", "Freigabekanal", ParameterKind.Text, "Pruefung", Required: true)],
             parameters => new HandoverReleaseAction(parameters.Text("Kanal")!)));
+    }
+
+    internal static async Task<StepOutcome> LoadCurveAsync(IStepContext ctx, string resource, string id, string? version)
+    {
+        var curve = ctx.FindCurve(id, version);
+        if (curve is null) return StepOutcome.Error($"Kurve '{id}'{(version is null ? "" : $" v{version}")} ist im Projekt nicht vorhanden.");
+        var output = curve.ToOutput();
+        var errors = ctx.CheckOutput(resource, output).Where(issue => issue.IsError).ToList();
+        if (errors.Count > 0) return StepOutcome.Error("Gerät ungeeignet: " + string.Join(" ", errors.Select(issue => issue.Text)));
+        await ctx.CurveOutputAsync(resource, CurveCommand.Load, output).ConfigureAwait(false);
+        return StepOutcome.Unrated(curve.Key, $"{curve.Name} v{curve.Version} geladen ({curve.Channels.Count} Kanäle, {curve.Count} Samples)");
     }
 
     internal static double ToDouble(object value, string what) => value switch

@@ -43,6 +43,9 @@ public enum ShellPage
     System,
     /// <summary>Auswertung und Berichte (Entwickeln oder Freigeben).</summary>
     Reports,
+    Notifications,
+    Access,
+    Python,
 }
 
 /// <summary>
@@ -92,9 +95,10 @@ public sealed class ShellViewModel : ObservableObject
         CurvesPage = CreateCurvesPage();
         SettingsPage = CreateSettingsPage();
         ReleasesPage = CreateReleasesPage();
-        AccessPage = new AccessSettingsViewModel(_identity);
+        AccessPage = new AccessSettingsViewModel(_identity, () => IsDeveloper);
         ConnectProjectEvents();
-        StationsPage = new StationsViewModel(Coordinator, Editor, stationStore, _ui, () => Stations.Any(st => st.IsRunning));
+        StationsPage = new StationsViewModel(Coordinator, Editor, stationStore, _ui, () => Stations.Any(st => st.IsRunning),
+            () => CanManage ? Session.User?.Upn : null, () => CanManage);
         var accessStore = _identity.Store;
         SystemPage = CreateSystemPage();
         SelectionPage = CreateSelectionPage();
@@ -107,12 +111,10 @@ public sealed class ShellViewModel : ObservableObject
         ExecuteSelectedCommand = new RelayCommand(
             () => _ = SelectedStation.Debug.ExecuteTargetedAsync(Editor.SelectedNode!.Id, SelectedStation.CreateTargetedRun),
             () => IsDeveloper && Editor.SelectedNode is { IsSection: false } && !SelectedStation.IsRunning);
-        StartSimulationCommand = new RelayCommand(() =>
-        {
-            if (!SelectedStation.CanStart) return;
-            _ = SelectedStation.StartSimulationAsync();
-            Page = ShellPage.Editor;
-        }, () => IsDeveloper && SelectedStation.CanStart && !SelectedStation.Selection.IsActive);
+        StartSimulationCommand = CreateStartSimulationCommand();
+        RefreshSimulationVariants();
+        Editor.Changed += RefreshSimulationVariants;
+        Editor.ProjectReplaced += ResetSimulationVariant;
         void ConnectProjectEvents()
         {
             Session.Changed += () => _ui.Post(RaiseUser);
@@ -167,7 +169,7 @@ public sealed class ShellViewModel : ObservableObject
             if (services is not null)
             {
                 var page = new SettingsViewModel(services, settingsStore ?? new Settings.SettingsStore(Settings.SettingsStore.DefaultPath, Settings.PlainSecretProtector.Instance), _ui,
-                    ValidateStationDisplay, () => Coordinator.Setup.Stations.Select(station => station.Name).ToList());
+                    ValidateStationDisplay, () => Coordinator.Setup.Stations.Select(station => station.Name).ToList(), () => Session.CanDevelop);
                 Coordinator.SetupChanged += () => _ui.Post(page.RefreshStationNames);
                 services.Applied += () => _ui.Post(Results.SettingsChanged);
                 services.Applied += () => _ui.Post(() => ApplyStationDisplay(services.Current));
@@ -179,7 +181,7 @@ public sealed class ShellViewModel : ObservableObject
 
         string? ValidateStationDisplay(Settings.AppSettings settings)
         {
-            if (!Session.CanDevelop) return "Die Einstellungen dürfen nur mit Entwicklerberechtigung geändert werden.";
+            if (!Session.CanManage) return "Zum Ändern der Einstellungen ist das Recht Verwalten erforderlich.";
             var current = services!.Current;
             var changed = settings.ShowPairedStations != current.ShowPairedStations || settings.FirstPairedStation != current.FirstPairedStation
                 || settings.SecondPairedStation != current.SecondPairedStation;
@@ -227,7 +229,8 @@ public sealed class ShellViewModel : ObservableObject
         ReportsViewModel CreateReportsPage()
         {
             return new ReportsViewModel(() => results?.Files?.Folder ?? Testumgebung.Persistence.Results.ResultFileStore.DefaultFolder, dialogs, _ui,
-                () => services?.Database is { CanQuery: true } db ? db : null);
+                () => services?.Database is { CanQuery: true } db ? db : null,
+                station => Coordinator.Setup.Station(station)?.ReferenceCheck?.ReadShifts() ?? []);
         }
 
         SystemPageViewModel CreateSystemPage()
@@ -242,7 +245,8 @@ public sealed class ShellViewModel : ObservableObject
                     AccessStore = accessStore,
                     PythonExecutable = (codeRuntime as Testumgebung.Workers.CodeRuntime)?.Options.PythonExecutable,
                 },
-                Pilot.ConfigBackup.DefaultSources(settingsPath, accessStore?.Path ?? AccessConfigStore.DefaultPath, stationStore?.Path ?? StationSetupStore.DefaultPath),
+                Pilot.ConfigBackup.DefaultSources(settingsPath, accessStore?.Path ?? AccessConfigStore.DefaultPath, stationStore?.Path ?? StationSetupStore.DefaultPath,
+                    services is null ? null : Path.Combine(services.ReleaseFolder, "Quellen", "programmquellen.json")),
                 dialogs, () => Stations.Any(st => st.IsRunning || st.Selection.IsActive), _ui,
                 afterRestore: () =>
                 {
@@ -259,7 +263,9 @@ public sealed class ShellViewModel : ObservableObject
                     {
                         Coordinator.LoadError = ex.Message;
                     }
-                }, pythonRuntime: codeRuntime as Testumgebung.Workers.CodeRuntime);
+                }, pythonRuntime: codeRuntime as Testumgebung.Workers.CodeRuntime,
+                canManage: () => Session.CanManage, canUseSource: source => Session.CanDevelop || source.Name is
+                    "einstellungen.json" or "pruefplaetze.json" or WearCounterStore.FileName, canDevelop: () => Session.CanDevelop);
         }
 
         Editor.PropertyChanged += (_, eventArgs) =>
@@ -347,7 +353,11 @@ public sealed class ShellViewModel : ObservableObject
             if (at >= 0 && at != index && index < Stations.Count) Stations.Move(at, index);
         }
         if (!Stations.Contains(_selectedStation)) SelectedStation = Stations.First();
-        foreach (var station in Stations) station.RaiseStartState();
+        foreach (var station in Stations)
+        {
+            station.RaiseStartState();
+            station.RefreshReferenceCheck();
+        }
     }
 
     public string AppTitle => "Testumgebung";
@@ -417,6 +427,43 @@ public sealed class ShellViewModel : ObservableObject
     public RelayCommand ExecuteSelectedCommand { get; }
     public RelayCommand StartSimulationCommand { get; }
 
+    private string? _simulationVariant;
+    public IReadOnlyList<string> SimulationVariants { get; private set; } = [];
+    public bool HasSimulationVariants => SimulationVariants.Count > 0;
+
+    public string? SimulationVariant
+    {
+        get => _simulationVariant;
+        set
+        {
+            if (SetProperty(ref _simulationVariant, value)) StartSimulationCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    private RelayCommand CreateStartSimulationCommand() => new(() =>
+    {
+        if (!SelectedStation.CanStart) return;
+        _ = SelectedStation.StartSimulationAsync(SimulationVariant);
+        Page = ShellPage.Editor;
+    }, () => IsDeveloper && SelectedStation.CanStart && !SelectedStation.Selection.IsActive
+        && (!HasSimulationVariants || SimulationVariants.Contains(SimulationVariant)));
+
+    private void ResetSimulationVariant()
+    {
+        SimulationVariant = null;
+        RefreshSimulationVariants();
+    }
+
+    private void RefreshSimulationVariants()
+    {
+        var variants = Editor.Project.LimitSets.Keys.ToArray();
+        if (SimulationVariants.SequenceEqual(variants)) return;
+        SimulationVariants = variants;
+        if (!SimulationVariants.Contains(SimulationVariant)) SimulationVariant = null;
+        OnPropertiesChanged(nameof(SimulationVariants), nameof(HasSimulationVariants));
+        StartSimulationCommand.RaiseCanExecuteChanged();
+    }
+
     public string ProjectName => Editor.ProjectName;
     public string Version => Editor.Version;
 
@@ -450,6 +497,9 @@ public sealed class ShellViewModel : ObservableObject
     /// <summary>Recht „Entwickeln“ der angemeldeten, bestätigten Person.</summary>
     public bool IsDeveloper => Session.CanDevelop;
 
+    public bool CanManage => Session.CanManage;
+    public bool ShowAccessNav => IsDeveloper && HasSettings;
+
     /// <summary>Recht „Freigeben“.</summary>
     public bool CanRelease => Session.CanRelease;
 
@@ -463,7 +513,12 @@ public sealed class ShellViewModel : ObservableObject
     public bool IsSimulatedLogin => Session.Provider is SimulatedIdentityProvider;
     public string UserText => Session.User?.DisplayName ?? (Session.IsSigningIn ? "Anmeldung läuft …" : "Anmelden");
     public string UserDetail => Session.User is { } userIdentity ? $"{userIdentity.Upn} · {SessionService.RightsText(Session.Rights)}{(userIdentity.IsConfirmed ? "" : IsLocalPasswordLogin ? " · lokaler Passwortzugang" : " · simuliert")}" : "";
-    public string ViewTitle => IsSignedIn && Page is not (ShellPage.Operator or ShellPage.Protocol) ? "ENTWICKLERANSICHT" : "WERKERANSICHT";
+    public string ViewTitle => Page switch
+    {
+        ShellPage.Operator or ShellPage.Protocol => "WERKERANSICHT",
+        ShellPage.Stations or ShellPage.Settings or ShellPage.Notifications or ShellPage.System when !IsDeveloper => "VERWALTUNGSANSICHT",
+        _ => "ENTWICKLERANSICHT",
+    };
 
     /// <summary>Kopfzeile „Aktive Prüfsoftware“.</summary>
     public string ActiveSoftwareText => SelectedStation.IsRunning ? SelectedStation.RunningVersionText
@@ -473,7 +528,9 @@ public sealed class ShellViewModel : ObservableObject
     {
         ShellPage.Operator or ShellPage.Protocol => true,
         ShellPage.Releases => HasReleases && (Session.CanDevelop || Session.CanRelease),
-        ShellPage.Settings => Session.CanDevelop && HasSettings,
+        ShellPage.Stations or ShellPage.System => CanManage,
+        ShellPage.Settings or ShellPage.Notifications => CanManage && HasSettings,
+        ShellPage.Access => ShowAccessNav,
         ShellPage.Reports => Session.CanDevelop || Session.CanRelease,
         _ => Session.CanDevelop,
     };
@@ -499,7 +556,14 @@ public sealed class ShellViewModel : ObservableObject
     {
         var ok = await Session.SignInAsync(selectAccount).ConfigureAwait(true);
         if (!ok) return;
-        Page = Session.CanDevelop ? ShellPage.Editor : Session.CanRelease && HasReleases ? ShellPage.Releases : ShellPage.Operator;
+        Page = DefaultSignedInPage();
+    }
+
+    private ShellPage DefaultSignedInPage()
+    {
+        if (Session.CanDevelop) return ShellPage.Editor;
+        if (Session.CanManage) return ShellPage.Stations;
+        return Session.CanRelease && HasReleases ? ShellPage.Releases : ShellPage.Operator;
     }
 
     /// <summary>Abmelden entfernt erhöhte Rechte; laufende Tests laufen weiter (auch ein pausierter Lauf wird nicht fortgesetzt).</summary>
@@ -555,9 +619,11 @@ public sealed class ShellViewModel : ObservableObject
     private void RaiseUser()
     {
         AccessPage.RefreshSession();
+        SystemPage.RefreshBackupRights();
+        StationsPage.SaveCommand.RaiseCanExecuteChanged();
         HandlePausedOnSignOut();
         if (!Allowed(Page)) Page = ShellPage.Operator;
-        OnPropertiesChanged(nameof(IsDeveloper), nameof(CanRelease), nameof(IsSignedIn), nameof(IsSigningIn), nameof(LoginError),
+        OnPropertiesChanged(nameof(IsDeveloper), nameof(CanManage), nameof(ShowAccessNav), nameof(CanRelease), nameof(IsSignedIn), nameof(IsSigningIn), nameof(LoginError),
             nameof(UserText), nameof(UserDetail), nameof(ViewTitle), nameof(IsSimulatedLogin), nameof(IsLocalPasswordLogin), nameof(ShowsLoginName), nameof(LoginExplanation), nameof(AccountSwitchLabel), nameof(ShowReleasesNav), nameof(CanSeeReports), nameof(CanEnableDevelopmentLogin));
         LoginCommand.RaiseCanExecuteChanged();
         DevelopmentLoginCommand.RaiseCanExecuteChanged();

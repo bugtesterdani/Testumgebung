@@ -48,6 +48,8 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 
 [Dirs]
 Name: "{commonappdata}\Testumgebung"; Flags: uninsneveruninstall
+; Nur der Verschleißzustand muss für die Werkerkonten schreibbar sein.
+Name: "{commonappdata}\Testumgebung\Verschleiss"; Permissions: users-modify; Flags: uninsneveruninstall
 
 [Icons]
 Name: "{group}\Testumgebung"; Filename: "{app}\Testumgebung.Desktop.exe"

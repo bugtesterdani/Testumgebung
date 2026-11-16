@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Verdrahtet Ergebnisablage, Datenbank und Meldewege mit den aktuellen Anwendungseinstellungen.
  */
@@ -23,7 +23,7 @@ public interface IDatabaseProviderRegistry
 /// Speicherdienste der Anwendung: Ergebnisdateien, Outbox, Datenbank und Meldeweg. Einstellungen werden ohne
 /// Neustart übernommen; offene Outbox-Einträge bleiben erhalten und gehen an die neu eingestellte Datenbank.
 /// </summary>
-public sealed class ResultServices : IAsyncDisposable
+public sealed partial class ResultServices : IAsyncDisposable
 {
     private readonly IDatabaseProviderRegistry _registry;
     private MqttNotifier? _mqtt;
@@ -51,6 +51,10 @@ public sealed class ResultServices : IAsyncDisposable
             // Zwischenaufzeichnung: in Tests neben dem angegebenen Wiederherstellungsordner, sonst im Benutzerprofil.
             Journal = new RunJournal(journalFolder ?? (recoveryFolder is not null ? Path.Combine(recoveryFolder, "Zwischenaufzeichnung") : RunJournal.DefaultFolder)),
         };
+        _alarmClock = clock ?? SystemClock.Instance;
+        Pipeline.RunReceived += OnRunReceived;
+        Pipeline.Processed += OnStorageProcessed;
+        Outbox.Changed += OnOutboxChanged;
         Apply(settings);
     }
 
@@ -87,7 +91,7 @@ public sealed class ResultServices : IAsyncDisposable
     {
         Current = settings;
         ApplyWarning = null;
-        Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(settings.ResultFolder) ? ResultFileStore.DefaultFolder : settings.ResultFolder, RecoveryFolder);
+        ConfigureResultFiles(settings.ResultFolder);
 
         var outbox = settings.Outbox;
         Outbox.Options = new OutboxOptions
@@ -98,12 +102,13 @@ public sealed class ResultServices : IAsyncDisposable
             AttemptTimeout = TimeSpan.FromSeconds(Math.Max(1, outbox.AttemptTimeoutSeconds)),
         };
 
-        Database.Inner = CreateDatabase(settings.Database, out var warning);
+        var database = ApplicationOverrides.Database(settings.Database);
+        Database.Inner = CreateDatabase(database, out var warning);
         ReleaseStore.Inner = Database.Inner is SqlRunDatabase sql ? new SqlReleaseStore(sql) : new FolderReleaseStore(ReleaseFolder);
         ProgramCatalog.Inner = Database.Inner is SqlRunDatabase programDb ? new SqlProgramCatalogStore(programDb)
             : new Testumgebung.Persistence.Programs.FolderProgramCatalogStore(Path.Combine(ReleaseFolder, "Quellen"));
         ApplyWarning = warning;
-        Pipeline.DatabaseEnabled = settings.Database.Provider != DatabaseChoice.None;
+        Pipeline.DatabaseEnabled = database.Provider != DatabaseChoice.None;
 
         var old = _mqtt;
         _mqtt = null;
@@ -124,7 +129,14 @@ public sealed class ResultServices : IAsyncDisposable
         if (old is not null) _ = old.DisposeAsync().AsTask();
         if (oldHttp is not null) _ = oldHttp.DisposeAsync().AsTask();
         if (oldOpc is not null) _ = oldOpc.DisposeAsync().AsTask();
+        ConfigureAlarms(settings.Alarms);
         Applied?.Invoke();
+    }
+
+    private void ConfigureResultFiles(string? configuredFolder)
+    {
+        var folder = ApplicationOverrides.Value("TESTUMGEBUNG_ERGEBNISSE") ?? configuredFolder;
+        Pipeline.Files = new ResultFileStore(string.IsNullOrWhiteSpace(folder) ? ResultFileStore.DefaultFolder : folder, RecoveryFolder);
     }
 
     private void ConfigureOpcUa(OpcUaSettings settings)
@@ -214,6 +226,7 @@ public sealed class ResultServices : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await Outbox.StopAsync().ConfigureAwait(false);
+        await DisposeAlarmsAsync().ConfigureAwait(false);
         if (_mqtt is not null) await _mqtt.DisposeAsync().ConfigureAwait(false);
         if (_http is not null) await _http.DisposeAsync().ConfigureAwait(false);
         if (_opcUa is not null) await _opcUa.DisposeAsync().ConfigureAwait(false);

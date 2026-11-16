@@ -29,6 +29,7 @@ public sealed class TestProject(TestDefinition definition)
 {
     public TestDefinition Definition { get; set; } = definition;
     public string? Description { get; set; }
+    public SortedDictionary<string, SortedDictionary<string, string>> LimitSets { get; } = new(StringComparer.Ordinal);
     public List<SimulatedResource> Simulation { get; } = [];
 
     /// <summary>Simulierte Kurvenausgänge (z. B. programmierbare AC-Quelle) mit Rückwirkung auf Messkanäle.</summary>
@@ -84,6 +85,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             Name = def.Name,
             Version = def.Version,
             Description = project.Description,
+            LimitSets = project.LimitSets.Count == 0 ? null : project.LimitSets,
             Assemblies = def.Assemblies.Count == 0 ? null : def.Assemblies.OrderBy(managedAssembly => managedAssembly.Name, StringComparer.Ordinal).ToList(),
             Variables = def.Root.Variables.Select(ToDto).ToList(),
             Init = ToDto(def.Init),
@@ -116,7 +118,9 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         return JsonSerializer.Serialize(dto, Options);
     }
 
-    public TestProject Deserialize(string json)
+    public TestProject Deserialize(string json) => DeserializeProject(json, null);
+
+    private TestProject DeserializeProject(string json, string? nameOverride)
     {
         ProjectDto? dto;
         try
@@ -131,15 +135,32 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         if (dto.FormatVersion > FormatVersion) throw new ProjectFormatException($"Formatversion {dto.FormatVersion} wird von dieser Anwendung nicht unterstützt.");
         if (dto.Init is null || dto.Loop is null || dto.Finalization is null) throw new ProjectFormatException("Init, Loop oder Finalization fehlt.");
 
-        var def = new TestDefinition(dto.Name ?? "Unbenannt", dto.Version ?? "0.1", FromDto(dto.Init), FromDto(dto.Loop), FromDto(dto.Finalization));
+        var def = new TestDefinition(nameOverride ?? dto.Name ?? "Unbenannt", dto.Version ?? "0.1", FromDto(dto.Init), FromDto(dto.Loop), FromDto(dto.Finalization));
         foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
+        ReadLimitSets(dto.LimitSets, project);
+        ReadSimulation(dto, project);
+        ReadDeviceProfiles(dto.DeviceProfiles, project);
+        return project;
+    }
+
+    private static void ReadLimitSets(IReadOnlyDictionary<string, SortedDictionary<string, string>>? sets, TestProject project)
+    {
+        if (sets is null) return;
+        foreach (var (name, values) in sets)
+        {
+            if (values is null || values.Any(entry => entry.Value is null))
+                throw new ProjectFormatException($"Grenzwertsatz „{name}“ enthält ungültige Werte.");
+            project.LimitSets.Add(name, new(values, StringComparer.Ordinal));
+        }
+    }
+
+    private static void ReadSimulation(ProjectDto dto, TestProject project)
+    {
         if (dto.Simulation is not null) project.Simulation.AddRange(dto.Simulation);
         if (dto.SimulationOutputs is not null) project.SimulationOutputs.AddRange(dto.SimulationOutputs);
         if (dto.SimulationComm is not null) project.SimulationComm.AddRange(dto.SimulationComm);
-        ReadDeviceProfiles(dto.DeviceProfiles, project);
-        return project;
     }
 
     private static void ReadDeviceProfiles(List<Testumgebung.Instruments.CustomDeviceProfile>? profiles, TestProject project)
@@ -207,6 +228,13 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     }
 
     public TestProject Load(string path) => Deserialize(File.ReadAllText(path));
+
+    public TestProject LoadTemplate(string path, string name)
+    {
+        var project = DeserializeProject(File.ReadAllText(path), name);
+        project.Definition.Version = "0.1";
+        return project;
+    }
 
     /// <summary>Unveränderliche Kopie für einen Lauf: laufende Prüflinge behalten ihre gestartete Version.</summary>
     public TestProject Clone(TestProject project) => Deserialize(Serialize(project));
@@ -385,12 +413,46 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     {
         var type = Require(dto.Block, "block");
         if (!catalog.TryGet(type, out _)) throw new ProjectFormatException($"Schritt '{dto.Name}': unbekannter Baustein '{type}'.");
-        var step = catalog.Create(type, Require(dto.Id, "id"), dto.Name, dto.Parameters);
+        var id = Require(dto.Id, "id");
+        var step = CreateLoadedStep(dto, id, type);
         step.Description = dto.Description;
         step.Disabled = dto.Disabled == true;
         RestoreDebugRules(step, dto);
         step.Storage = FromDto(dto.Storage);
         return step;
+    }
+
+    private StepDefinition CreateLoadedStep(StepDto dto, string id, string type)
+    {
+        if (type == BlockCatalog.SetRating && catalog.TryGet(BlockCatalog.Evaluate, out _))
+            return MigrateFixedRating(dto, id);
+
+        var replacement = ProcessBlocks.Replacement(type);
+        if (CurveOutputBlocks.LegacyAction(type) is { } curveAction)
+            replacement = (BlockCatalog.CurveOutput, curveAction);
+        return replacement is { } target && catalog.TryGet(target.Type, out _)
+            ? MigrateActionBlock(dto, id, type, target.Type, target.Action)
+            : catalog.Create(type, id, dto.Name, dto.Parameters);
+    }
+
+    private StepDefinition MigrateFixedRating(StepDto dto, string id)
+    {
+        var parameters = new Dictionary<string, string>(dto.Parameters ?? [])
+        {
+            ["Art"] = BlockCatalog.FixedRatingMode
+        };
+        // These names had no effect in the legacy block.
+        parameters.Remove("Wert");
+        parameters.Remove("Einheit");
+        parameters.Remove("Meldung");
+        return catalog.Create(BlockCatalog.Evaluate, id, dto.Name ?? catalog.Get(BlockCatalog.SetRating).DisplayName, parameters);
+    }
+
+    private StepDefinition MigrateActionBlock(StepDto dto, string id, string type, string target, string action)
+    {
+        var parameters = new Dictionary<string, string>(dto.Parameters ?? []);
+        parameters["Aktion"] = action;
+        return catalog.Create(target, id, dto.Name ?? catalog.Get(type).DisplayName, parameters);
     }
 
     private static void RestoreDebugRules(NodeDefinition node, NodeDto dto)
@@ -486,6 +548,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         public string? Name { get; set; }
         public string? Version { get; set; }
         public string? Description { get; set; }
+        public IReadOnlyDictionary<string, SortedDictionary<string, string>>? LimitSets { get; set; }
         public List<VariableDto>? Variables { get; set; }
         public GroupDto? Init { get; set; }
         public GroupDto? Loop { get; set; }

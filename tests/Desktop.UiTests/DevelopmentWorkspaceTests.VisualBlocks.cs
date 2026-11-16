@@ -59,6 +59,7 @@ public sealed partial class DevelopmentWorkspaceTests
         {
             Sta.Flush(dispatcher); view.UpdateLayout();
             VerifyCompactPalette(view, editor, host, dispatcher);
+            VerifyParameterTable(view, editor, host, dispatcher);
             var serializer = new ProjectSerializer(); var beforeMode = serializer.Serialize(editor.Project);
             var mode = Descendants(view).OfType<CheckBox>().Single(c => c.Content?.ToString() == "Blockansicht");
             mode.IsChecked = true; Sta.Flush(dispatcher); view.UpdateLayout();

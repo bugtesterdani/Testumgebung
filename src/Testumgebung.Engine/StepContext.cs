@@ -55,6 +55,13 @@ internal sealed class StepContext(
 
     public object Get(string name) => scope.Get(name);
 
+    public async Task<bool> PrintLabelAsync(LabelPrintRequest request)
+    {
+        if (run.Options.LabelPrinter is not { } printer) return false;
+        await printer.SendAsync(request, CancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
     public object? Preset(string name) => run.Options.Presets is { } entries && entries.TryGetValue(name, out var value) ? value
         : run.Options.SessionPresets is { } entries2 && entries2.TryGetValue(name, out var sv) ? sv : null;
 
@@ -83,7 +90,10 @@ internal sealed class StepContext(
 
     /// <summary>Zugriff im gemeinsamen Protokoll erfassen (falls vorhanden).</summary>
     private IDisposable? Track(ResourceBinding binding, string operation)
-        => run.Options.AccessJournal?.Begin(run.RunId, run.Options.StationName, binding, operation);
+    {
+        run.Options.OnDeviceAccess?.Invoke(binding);
+        return run.Options.AccessJournal?.Begin(run.RunId, run.Options.StationName, binding, operation);
+    }
 
     public Testumgebung.Domain.Curves.CurveDefinition? FindCurve(string id, string? version) => run.Definition.Curves.Find(id, version);
 
@@ -179,6 +189,7 @@ internal sealed class StepContext(
 
     public string? ProgramPythonVenv => run.Options.PythonVenv;
     public PairedStationContext? PairedStation => run.Options.PairedStation;
+    public bool IsReferenceRun => run.Options.ReferenceRun;
 
     public Testumgebung.Domain.Code.ICodeRuntime? CodeRuntime => run.Options.CodeRuntime;
 

@@ -24,7 +24,7 @@ public sealed class SlopeTraceTests
         var parameters = properties.Parameters.ToDictionary(row => row.Descriptor.Name);
         var mode = parameters[TraceBlocks.EvaluationParameter];
 
-        Assert.False(parameters["Grenzkurven"].IsHidden);
+        Assert.True(parameters["Kanaele"].IsTable);
         Assert.True(parameters["Steigungsfenster"].IsHidden);
         Assert.True(parameters["SteigungMin"].IsHidden);
 

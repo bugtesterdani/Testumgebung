@@ -72,7 +72,7 @@ Ein Auftrag darf viele Prüflinge umfassen. Eine Seriennummer gehört zu einem e
 3. Die `.msixbundle`-Datei öffnen und die angebotene Installation oder Aktualisierung durchführen.
 4. Die Software über das Startmenü starten.
 
-Das x64-MSIX bündelt die .NET-Laufzeit, C#- und C++-Worker sowie C++-Compiler und GDB. Python 3.15.2 einschließlich Standardbibliothek ist portabel enthalten und wird von Python-CodeBlocks automatisch verwendet. Unter **System & Sicherung → Python-Umgebung und Konsole** lässt sich eine beschreibbare temporäre Kopie erstellen. Die Konsole zeigt vorbereitete pip-Befehle; anschließend aktiviert **Diese Umgebung verwenden** die Kopie für Python-Bausteine. Die [Python-Anleitung](../portable-python.md) beschreibt die Schritte, Paketinstallation und Rückkehr zur mitgelieferten Laufzeit. Herstellerabhängige Hardware kann zusätzliche Treiber wie VISA oder NI-DAQmx benötigen.
+Das x64-MSIX bündelt die .NET-Laufzeit, C#- und C++-Worker sowie C++-Compiler und GDB. Python 3.15.2 einschließlich Standardbibliothek ist portabel enthalten und wird von Python-CodeBlocks automatisch verwendet. Unter **Verwaltung → Python** lässt sich eine beschreibbare temporäre Kopie erstellen. Die Konsole zeigt vorbereitete pip-Befehle; anschließend aktiviert **Diese Umgebung verwenden** die Kopie für Python-Bausteine. Die [Python-Anleitung](../portable-python.md) beschreibt die Schritte, Paketinstallation und Rückkehr zur mitgelieferten Laufzeit. Herstellerabhängige Hardware kann zusätzliche Treiber wie VISA oder NI-DAQmx benötigen.
 
 Je ausgewähltem Testprogramm gilt: **Umgebung aus dem Auswahlprogramm → String-Variable `PythonVenv` → allgemeine Vorgabe aus Registry → Python aus MSIX**. Fehlende Umgebungen werden übersprungen. Die Auswahl erfolgt mit `SelectTest(..., pythonVenv: pfad)` oder im Baustein „Test auswählen“ über „Python-Umgebung (optional)“. Die [Beispiele zur Programmauswahl](../portable-python.md#python-je-ausgewähltem-testprogramm-festlegen) erklären alle Varianten einschließlich einer Änderung im Start-/Init-Abschnitt.
 
@@ -88,22 +88,18 @@ Die Beispieldaten bedeuten A123 → Programm A, B123 → Programm B, C123 → Pr
 
 Oben im Fenster den gewünschten Prüfplatz auswählen. Die Navigation links öffnet die verschiedenen Arbeitsbereiche. Der ausgewählte Prüfplatz bleibt für seine Prüfung maßgeblich.
 
-| Seite | Dort erledigen Sie |
+| Bereich | Reiter und Funktionen |
 | --- | --- |
-| Prüfen / Werkeransicht | Auftrag und Seriennummer erfassen, Anweisungen beantworten, Ergebnisse beobachten |
-| Ablaufeditor | Projekt öffnen, Schritte einfügen, Variablen und Ablauf ändern |
-| CodeBlocks | Wiederverwendbare Bausteine erstellen, DLLs importieren, Schnittstellen prüfen |
-| Prüfplatzkonfiguration | Geräte und abstrakte Ressourcen zuordnen |
-| Auswahl & Auftrag | Eigenen Auswahlablauf, Kennungsregeln und Auftragsmodus konfigurieren |
+| Prüfen | Auftrag und Seriennummer erfassen, Anweisungen beantworten |
+| Ergebnisse | Aktueller Lauf (Protokoll), Einzelne Läufe, Statistik |
 | Releases | Prüfprogramme versionieren, prüfen und freigeben |
-| Ergebnisse | Einzelne Ergebnisdateien und Wiederherstellung ansehen |
-| Auswertung | Ergebnisse filtern, Kennzahlen und Berichte erstellen |
-| Kurven | Kurven importieren, untersuchen und verwenden |
-| Debug | Haltepunkte und Einzelschritte während der Entwicklung nutzen |
-| Einstellungen | Ergebnisablage, Datenbank und Meldewege einstellen |
-| System & Sicherung | Systemprüfung, Sicherung und Wiederherstellung |
+| Ablaufeditor | Ablauf bearbeiten und Debugger verwenden |
+| Bibliothek | CodeBlocks und Kurven bearbeiten |
+| Prüfplatz | Konfiguration sowie Auswahl & Auftrag |
+| Verwaltung | Datenbank und Ergebnisablage, Meldewege, Zugang, Python und Sicherung |
 
-Werker benötigen für den normalen Prüfablauf keine Entwickleranmeldung. Änderungen und Freigaben setzen entsprechende Rechte voraus. Über **Anmelden** anmelden; der lokale Entwicklungsmodus ohne Produktionszugang ist vom Firmenzugang zu unterscheiden. Zugangsdaten und Rechte werden nach der [Entra-Anleitung](../entra-registrierung.md) eingerichtet.
+
+Werker benötigen für den normalen Prüfablauf keine Entwickleranmeldung. Im Bereich **Ergebnisse** sehen sie ohne erweiterte Rechte nur **Aktueller Lauf**. Änderungen und Freigaben setzen entsprechende Rechte voraus. Über **Anmelden** anmelden; der lokale Entwicklungsmodus ohne Produktionszugang ist vom Firmenzugang zu unterscheiden. Zugangsdaten und Rechte werden nach der [Entra-Anleitung](../entra-registrierung.md) eingerichtet.
 
 Wenn eine Schaltfläche grau bleibt, zuerst prüfen: Ist ein Objekt gewählt? Ist der Prüfplatz bereit? Liegt das benötigte Recht vor? Eine laufende Prüfung kann weitere Aktionen einschränken.
 
@@ -166,10 +162,12 @@ zeigt beide Ansichten mit Bildern und einem ausführbaren Beispiel.
 
 ### 5.1 Projekt anlegen und speichern
 
-1. Im Ablaufeditor **Neu** verwenden oder ein bestehendes `.tproj.json` über **Öffnen** laden.
-2. Name und Version in den Projekteigenschaften setzen.
+1. Im Ablaufeditor **Neu** wählen. Im Assistenten eine Vorlage oder einen leeren Ablauf auswählen und den Projektnamen eingeben. Ein bestehendes `.tproj.json` lässt sich über **Öffnen** laden.
+2. Bei einem neuen Projekt wird eine unabhängige Kopie mit Version 0.1 angelegt. Die Vorlage bleibt erhalten.
 3. Hauptvariablen anlegen, beispielsweise `Auftrag` und `Artikel` als String.
 4. Unter einem eindeutigen Namen speichern, z. B. `programm-a.tproj.json`.
+
+**F1** öffnet die Hilfe für den aktiven Bereich. Bei einem ausgewählten Schritt zeigt die Hilfe auch die Beschreibung und Parameter seines Bausteins.
 
 Projektdateien enthalten den Ablauf und eingebettete DLLs. **Speichern** ist keine Freigabe. Nach Änderungen ist ein erneuter Test und bei Produktivbetrieb eine neue Testprogrammfreigabe erforderlich.
 
@@ -225,7 +223,7 @@ return Measured(Spannung, 220.0, 240.0, "V");
 
 ![Bild 3: Bibliothek mit DLL-Aufruf und Auftrag-Eingang](bilder/04-dll-baustein.png)
 
-1. In der Navigation **CodeBlocks** öffnen.
+1. **Bibliothek → CodeBlocks** öffnen.
 2. **+ C#-Baustein** wählen und einen verständlichen Namen vergeben.
 3. Nicht benötigte Beispielports entfernen.
 4. Mit **Port hinzufügen** die eigene Schnittstelle definieren.
@@ -409,7 +407,7 @@ Standardbewertung: HTTP 200–299 ist PASS. Andere Erwartungen lassen sich festl
 
 Für reine TCP-Protokolle den TCP-Client verwenden, für Telnet den Telnet-Adapter. Adresse `Host:Port`, danach Senden und Empfangen nutzen. Bei interaktiven Login-Dialogen erst den Prompt empfangen, dann die Antwort senden. „Abfrage“ verwirft vorherige Eingabedaten und ist deshalb nicht für jeden Promptdialog geeignet. Telnet-Verhandlung wird behandelt; eine vollständige Terminalemulation ist nicht enthalten.
 
-Alle neuen Protokolle sind direkt in der Software verfügbar. Die [Kommunikationsanleitung](../dynamische-verbindungen.md) enthält sämtliche Parameter und die C#-/Python-Hilfsfunktionen.
+Die Palette gruppiert die Kommunikationsbausteine nach CAN/J1939, LIN, Diagnose (UDS, DoIP), Modbus/OPC UA, Seriell/TCP/UDP und Netzwerk/Dateien (HTTP, SSH, SFTP). Mit **Bausteine suchen** lassen sich die Einträge nach Name, Beschreibung oder Protokoll filtern. Die [Kommunikationsanleitung](../dynamische-verbindungen.md) enthält sämtliche Parameter und die C#-/Python-Hilfsfunktionen.
 
 ## 11. Simulation und Debugger
 
@@ -479,13 +477,19 @@ Die Seite **Kurven** dient dem Import und der Untersuchung von Kurvendaten. Im A
 4. Gerätezuordnung und Ausgabeparameter prüfen.
 5. Anzeige und Speicherung der Kurven im Projekt bewusst einstellen.
 
-Eine Vorschau ist noch keine tatsächliche Kurvenausgabe am Gerät. Vor Hardwarebetrieb Wertebereich und sichere Ausgangszustände prüfen.
+Im Ablauf für jede Aktion den Baustein **Kurvenausgabe** mit **Laden**, **Übertragen**, **Starten** oder **Stoppen** einsetzen. Beim Laden Kurven-ID und bei Bedarf Version angeben. Eine Vorschau ist noch keine tatsächliche Kurvenausgabe am Gerät. Vor Hardwarebetrieb Wertebereich und sichere Ausgangszustände prüfen.
 
 ## 15. Einstellungen, Sicherung und Betrieb
 
+Unter **Prüfplatz → Konfiguration** lassen sich bei realen Geräten Seriennummer, Kalibrierdatum, Intervall und Vorwarnzeit hinterlegen. Die Systemprüfung meldet fällige und überfällige Kalibrierungen. Die optionale Startsperre prüft vor dem Werkerstart alle dem Prüfplatz zugeordneten realen Geräte, da CodeBlocks auch auf Ressourcen ohne statischen Verweis im Ablauf zugreifen können. Der Fälligkeitstag zählt noch zur Frist. Entwurfsprüfungen bleiben möglich. Ergebnisdatei und Prüfbericht enthalten die bis zum jeweiligen Ergebnis im Lauf angesprochenen realen Geräte samt Kalibrierstand.
+
+Unter **Verwaltung → Datenbank** lassen sich die Pfade für Python, den C++-Compiler und den C++-Cache speichern. Sie gelten nach dem Neustart. Die Umgebungsvariablen `TESTUMGEBUNG_PYTHON`, `TESTUMGEBUNG_CXX` und `TESTUMGEBUNG_CPP_CACHE` haben Vorrang vor diesen Feldern. `TESTUMGEBUNG_ERGEBNISSE` überschreibt den Ergebnisordner, `TESTUMGEBUNG_DB=aus` schaltet die Datenbankspeicherung aus. Die gespeicherten Vorgaben bleiben dabei erhalten.
+
+**Verwaltung → Sicherung** zeigt die lokalen Konfigurationsdateien mit Pfad und Zweck. **Ordner öffnen** öffnet den Ablageort im Explorer.
+
 ![Bild 12: Ergebnisablage, Datenbank und Meldewege](bilder/07-einstellungen.png)
 
-In **Einstellungen** den Ergebnisordner, Datenbank und benötigte Meldewege konfigurieren. Einstellungen können je Windows-Benutzer getrennt sein; beim Wechsel des Benutzerkontos daher Ablage und Releases kontrollieren.
+Unter **Verwaltung → Datenbank** den Ergebnisordner und die Datenbank konfigurieren. Unter **Verwaltung → Meldewege** die benötigten Meldewege einrichten. Einstellungen können je Windows-Benutzer getrennt sein; beim Wechsel des Benutzerkontos daher Ablage und Releases kontrollieren.
 
 1. Einen vorhandenen, beschreibbaren Ergebnisordner festlegen.
 2. Falls verwendet, Datenbankanbieter und Verbindung einstellen.
@@ -499,7 +503,7 @@ Bei einem Datenbankausfall können Ergebnisse lokal in der Outbox verbleiben und
 
 ### 15.1 Systemprüfung und Sicherung
 
-**System & Sicherung** öffnen. Vor produktiver Inbetriebnahme die Systemprüfung ausführen; reale Geräte nur bewusst ansprechen. Fehler beheben, danach **Sicherung erstellen** und die Sicherung außerhalb des Prüfrechners aufbewahren.
+**Verwaltung → Sicherung** öffnen. Vor produktiver Inbetriebnahme die Systemprüfung ausführen; reale Geräte nur bewusst ansprechen. Fehler beheben, danach **Sicherung erstellen** und die Sicherung außerhalb des Prüfrechners aufbewahren.
 
 Die Konfigurationssicherung ersetzt keine Sicherung der eigenen Projektdateien, Release-Pakete und Ergebnisse. Diese Ablagen zusätzlich sichern.
 
@@ -587,7 +591,7 @@ Unter **Releases → Programmquellen & Versionen …** werden zentrale Quellen, 
 
 ## Lokaler Benutzerlogin mit Passwort
 
-Als Übergang bis zur Entra-Einrichtung lässt sich unter **Einstellungen → Zugang** ein lokaler Passwortzugang aktivieren. Für jedes Konto ein Passwort über **Setzen / ändern** hinterlegen, die Option aktivieren und **Zugang speichern**. Danach werden beim lokalen Login Benutzername und Passwort abgefragt. Entra hat bei vollständiger Einrichtung Vorrang. Die [ausführliche Anleitung](../lokaler-passwortzugang.md) beschreibt Ersteinrichtung, Passwortwechsel und das Deaktivieren.
+Als Übergang bis zur Entra-Einrichtung lässt sich unter **Verwaltung → Zugang** ein lokaler Passwortzugang aktivieren. Für jedes Konto ein Passwort über **Setzen / ändern** hinterlegen, die Option aktivieren und **Zugang speichern**. Danach werden beim lokalen Login Benutzername und Passwort abgefragt. Entra hat bei vollständiger Einrichtung Vorrang. Die [ausführliche Anleitung](../lokaler-passwortzugang.md) beschreibt Ersteinrichtung, Passwortwechsel und das Deaktivieren.
 
 
 ## Ergebnis bei Werkerabbruch
@@ -612,4 +616,4 @@ Der Baustein **Bewertung** bietet unter **Art** zwei Möglichkeiten:
 
 Die Felder **Bedingung** und **Festes Ergebnis** erscheinen passend zur gewählten Art. Beim Umschalten bleiben eingegebene Werte erhalten. Nicht aktive Bedingungen werden nicht ausgewertet.
 
-**Bewertung setzen**, **Fehler erzeugen** und der separate **SFTP-Datei herunterladen**-Eintrag entfallen aus der Auswahl in allen Ansichten. Bereits gespeicherte Schritte dieser Typen funktionieren weiterhin unverändert. Alte Bewertungen ohne Art-Angabe bleiben Bedingungsprüfungen; alte Uploads ohne Richtungsangabe bleiben Uploads. Codefunktionen für SFTP-Upload und -Download bleiben ebenfalls erhalten.
+**Bewertung setzen**, **Fehler erzeugen** und der separate **SFTP-Datei herunterladen**-Eintrag entfallen aus der Auswahl in allen Ansichten. Beim Öffnen eines älteren Projekts wird **Bewertung setzen** als **Bewertung → Festes Ergebnis** übernommen. Die gespeicherte Bewertung bleibt erhalten. **Fehler erzeugen** und separate SFTP-Downloads funktionieren in bestehenden Projekten weiterhin. Alte Bewertungen ohne Art-Angabe bleiben Bedingungsprüfungen; alte Uploads ohne Richtungsangabe bleiben Uploads. Codefunktionen für SFTP-Upload und -Download bleiben ebenfalls erhalten.

@@ -350,6 +350,10 @@ public sealed class ParallelTests : IDisposable
         Assert.Equal("Prüfplatz 03", page.SelectedStation);
         Assert.True(page.IsDirty);
         page.Save();
+        Assert.False(store.Exists);
+        await shell.LoginAsync(false);
+        Assert.True(shell.CanManage);
+        page.Save();
         Assert.Null(page.Error);
         ui.Pump();
         Assert.True(store.Exists);

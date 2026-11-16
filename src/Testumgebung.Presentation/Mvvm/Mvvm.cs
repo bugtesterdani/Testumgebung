@@ -83,10 +83,13 @@ public sealed class SynchronizationContextDispatcher(SynchronizationContext cont
 public enum UnsavedProjectDecision { Save, Discard, Cancel }
 
 /// <summary>Dateiauswahl und Projektbestätigung – in WPF über Standarddialoge, in Tests ersetzt.</summary>
+public sealed record NewProjectRequest(string Name, string? TemplatePath = null);
+
 public interface IFileDialogService
 {
     /// <summary>Ask before replacing a dirty editor project. Missing UI defaults to preserving the project.</summary>
     UnsavedProjectDecision AskSaveProjectChanges() => UnsavedProjectDecision.Cancel;
+    NewProjectRequest? ChooseNewProject() => new("Neues Projekt");
     string? OpenProject();
     string? SaveProject(string suggestedName);
     void ShowError(string message);

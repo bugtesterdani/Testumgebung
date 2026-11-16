@@ -46,7 +46,7 @@ public sealed class DatabaseAdapterTests : IDisposable
     {
 
         var text = await Sqlite().TestConnectionAsync(default);
-        Assert.Contains("Schema v3", text);
+        Assert.Contains("Schema v4", text);
         Assert.Contains("0 Run(s)", text);
 
         await using var connection = NativeSqliteFactory.Instance.CreateConnection()!;
@@ -55,7 +55,26 @@ public sealed class DatabaseAdapterTests : IDisposable
         Assert.Equal(0, await new SchemaMigrator(new SqliteDialect()).MigrateAsync(connection, default)); // nichts mehr zu tun
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM tu_schema_version";
-        Assert.Equal(3L, await cmd.ExecuteScalarAsync());                    // v1 Messdaten, v2 Releases
+        Assert.Equal(4L, await cmd.ExecuteScalarAsync());
+    }
+
+    [SqliteFact]
+    public async Task SQLite_rundlauf_mit_Referenzlaufauszeichnung()
+    {
+        var db = Sqlite();
+        var run = new ResultRun
+        {
+            RunId = "reference",
+            DutId = "BAD",
+            Started = DateTimeOffset.UnixEpoch,
+            Ended = DateTimeOffset.UnixEpoch.AddSeconds(1),
+            Rating = ResultRating.Fail,
+            Kind = ResultRunKind.BadReference,
+        };
+        await db.StoreAsync(run, default);
+        var loaded = await db.LoadRunAsync(run.RunId, default);
+        Assert.NotNull(loaded);
+        Assert.Equal(ResultRunKind.BadReference, loaded.Kind);
     }
 
     [SqliteFact]

@@ -19,7 +19,7 @@ public sealed class SettingsPersistenceContractTests
     }
 
     [Fact]
-    public async Task Paired_display_is_saved_restored_and_requires_developer_rights_and_idle_stations()
+    public async Task Paired_display_is_saved_restored_and_requires_management_rights_and_idle_stations()
     {
         var folder = Path.Combine(Path.GetTempPath(), "tu-paired-setting-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder);
         try
@@ -30,7 +30,7 @@ public sealed class SettingsPersistenceContractTests
             var shell = new ShellViewModel(ui: new InlineDispatcher(), services: services, settingsStore: store);
             var page = shell.SettingsPage!; var names = page.StationNames;
             page.ShowPairedStations = true; page.FirstPairedStation = names[0]; page.SecondPairedStation = names[1];
-            page.Save(); Assert.Contains("Entwicklerberechtigung", page.SaveStatus); Assert.False(shell.PairedStations.Enabled); Assert.False(File.Exists(store.Path));
+            page.Save(); Assert.Contains("Verwalten", page.SaveStatus); Assert.False(shell.PairedStations.Enabled); Assert.False(File.Exists(store.Path));
             await shell.LoginAsync(false); Assert.True(shell.IsDeveloper);
             page.SecondPairedStation = names[0]; page.Save(); Assert.Contains("verschiedene", page.SaveStatus);
             page.SecondPairedStation = "missing"; page.Save(); Assert.Contains("vorhandene", page.SaveStatus);

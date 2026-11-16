@@ -147,8 +147,8 @@
         },
         {
           "name": "Textregeln",
-          "label": "Text-/Regex-Regeln (JSON-Liste)",
-          "kind": "Text",
+          "label": "Text-/Regex-Regeln",
+          "kind": "Table",
           "default": "[]",
           "required": false,
           "choices": null,
@@ -232,7 +232,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Text \u201EGrenzwertMin=220;GrenzwertMax=240\u201C"
+          "hint": "Text \u201EVariante=Standard\u201C oder \u201EGrenzwertMin=220;GrenzwertMax=240\u201C"
         },
         {
           "name": "PythonVenv",
@@ -366,7 +366,7 @@
     {
       "type": "can.botschaft.senden",
       "displayName": "CAN-Botschaft senden (DBC)",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Setzt die Botschaft aus Signalwerten zusammen (nicht genannte Signale mit Startwert, Multiplexer automatisch) und sendet sie \u2013 optional mehrfach im Zyklus. J1939-Botschaften \u00FCber 8 Bytes laufen \u00FCber das Transportprotokoll.",
       "parameters": [
         {
@@ -437,7 +437,7 @@
     {
       "type": "can.empfangen",
       "displayName": "CAN empfangen",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Wartet auf einen Rahmen (ID/Maske), optional nach einer Anfrage; pr\u00FCft Daten oder liest ein Signal (Startbit, L\u00E4nge, Byteorder, Faktor, Offset).",
       "parameters": [
         {
@@ -622,7 +622,7 @@
     {
       "type": "can.senden",
       "displayName": "CAN senden",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Sendet einen CAN- oder CAN-FD-Rahmen. Daten in Hex; {Ausdruck} f\u00FCgt ein Byte ein.",
       "parameters": [
         {
@@ -684,7 +684,7 @@
     {
       "type": "can.signal.lesen",
       "displayName": "CAN-Signal lesen (DBC)",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Wartet auf die Botschaft des Signals (frisch nach Verwerfen alter Rahmen), dekodiert es nach der Datenbank (Faktor, Offset, Byteorder, Multiplex, Wertetabelle) und bewertet gegen Sollwert oder Grenzwerte.",
       "parameters": [
         {
@@ -889,7 +889,7 @@
     {
       "type": "doip.suche",
       "displayName": "DoIP Fahrzeugsuche",
-      "category": "Kommunikation",
+      "category": "Diagnose (UDS, DoIP)",
       "description": "Sendet eine DoIP-Fahrzeugsuche (Vehicle Identification Request, UDP 13400) und sammelt die antwortenden Steuerger\u00E4te/Gateways (VIN, logische Adresse). Ohne Hardware-Reservierung. Optional auf eine erwartete VIN oder Adresse pr\u00FCfen.",
       "parameters": [
         {
@@ -958,6 +958,92 @@
       ]
     },
     {
+      "type": "etikett.drucken",
+      "displayName": "Etikett drucken",
+      "category": "Werkerinteraktion",
+      "description": "Rendert eine ZPL-Vorlage und \u00FCbergibt das Etikett an einen TCP-Drucker, eine Windows-Druckwarteschlange oder die Simulation.",
+      "parameters": [
+        {
+          "name": "Druckart",
+          "label": "Druckart",
+          "kind": "Choice",
+          "default": "Simulation",
+          "required": false,
+          "choices": [
+            "Simulation",
+            "TCP",
+            "Windows"
+          ],
+          "hint": null
+        },
+        {
+          "name": "ZplVorlage",
+          "label": "ZPL-Vorlage",
+          "kind": "Text",
+          "default": "^XA\n^CI28\n^FO30,30^FD{Kennung}^FS\n^XZ",
+          "required": true,
+          "choices": null,
+          "hint": "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern."
+        },
+        {
+          "name": "Host",
+          "label": "Druckername / IP-Adresse",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "TCP"
+          },
+          "advanced": false
+        },
+        {
+          "name": "Port",
+          "label": "TCP-Port",
+          "kind": "Number",
+          "default": "9100",
+          "required": false,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "TCP"
+          },
+          "advanced": false
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "TCP-Zeitlimit [ms]",
+          "kind": "Number",
+          "default": "5000",
+          "required": false,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "TCP"
+          },
+          "advanced": false
+        },
+        {
+          "name": "Warteschlange",
+          "label": "Windows-Druckwarteschlange",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Druckart",
+            "value": "Windows"
+          },
+          "advanced": false
+        }
+      ]
+    },
+    {
       "type": "fehler",
       "displayName": "Fehler erzeugen",
       "category": "Ablauf",
@@ -994,7 +1080,7 @@
     {
       "type": "j1939.adresse",
       "displayName": "J1939 Adresse beanspruchen",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Beansprucht eine Quelladresse nach J1939-81 (Address Claimed, PGN 60928) mit dem eigenen 64-Bit-NAME und pr\u00FCft 250 ms lang auf Gegenanspr\u00FCche. Verliert die eigene Station (kleinerer NAME der Gegenstelle), ist der Schritt FAIL. Optional vorher alle Teilnehmer abfragen und in eine Variable schreiben.",
       "parameters": [
         {
@@ -1047,7 +1133,7 @@
     {
       "type": "j1939.empfangen",
       "displayName": "J1939 empfangen",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Empf\u00E4ngt eine Parametergruppe (PGN) \u2013 einzeln, als BAM oder per RTS/CTS \u2013 optional nach einer Anforderung (PGN 59904). Signal aus der Datenbank oder \u00FCber Startbit/L\u00E4nge; \u201Enicht verf\u00FCgbar\u201C (alle Bits 1) ist FAIL.",
       "parameters": [
         {
@@ -1250,7 +1336,7 @@
     {
       "type": "j1939.senden",
       "displayName": "J1939 senden",
-      "category": "Kommunikation",
+      "category": "CAN/J1939",
       "description": "Sendet eine Parametergruppe mit Priorit\u00E4t, Quell- und Zieladresse; mehr als 8 Bytes \u00FCber das Transportprotokoll (global BAM, sonst RTS/CTS).",
       "parameters": [
         {
@@ -1339,7 +1425,7 @@
     {
       "type": "komm.abfrage",
       "displayName": "Abfrage",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "Verwirft alte Eingangsdaten, sendet einen Befehl und wertet die Antwort aus (Muster, Zahlenwert, Grenzwerte).",
       "parameters": [
         {
@@ -1497,7 +1583,7 @@
     {
       "type": "komm.empfangen",
       "displayName": "Empfangen",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "Empf\u00E4ngt eine Antwort (bis Zeilenende, L\u00E4nge oder Ruhe), pr\u00FCft optional ein Muster und bewertet einen enthaltenen Zahlenwert.",
       "parameters": [
         {
@@ -1646,7 +1732,7 @@
     {
       "type": "komm.senden",
       "displayName": "Senden",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "Sendet Text oder Bytes an den Pr\u00FCfling (RS-232/RS-485, TCP, UDP). Unbewertet.",
       "parameters": [
         {
@@ -1716,7 +1802,7 @@
     {
       "type": "komm.verbindung",
       "displayName": "Verbindung konfigurieren",
-      "category": "Kommunikation",
+      "category": "Seriell/TCP/UDP",
       "description": "\u00C4ndert COM-Port oder Netzwerkadresse und Optionen aus aktuellen Variablen. Eine bestehende Streamverbindung wird geschlossen.",
       "parameters": [
         {
@@ -1811,6 +1897,55 @@
       ]
     },
     {
+      "type": "kurve.ausgabe",
+      "displayName": "Kurvenausgabe",
+      "category": "Kurvenausgabe",
+      "description": "L\u00E4dt eine Kurve mit Ger\u00E4teeignungspr\u00FCfung, \u00FCbertr\u00E4gt, startet oder stoppt die Ausgabe.",
+      "parameters": [
+        {
+          "name": "Aktion",
+          "label": "Aktion",
+          "kind": "Choice",
+          "default": "Laden",
+          "required": false,
+          "choices": [
+            "Laden",
+            "\u00DCbertragen",
+            "Starten",
+            "Stoppen"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Ressource",
+          "label": "Ausgabeger\u00E4t",
+          "kind": "Resource",
+          "default": "AC_Kurvenquelle",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Kurve",
+          "label": "Kurve (ID)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Beim Laden erforderlich."
+        },
+        {
+          "name": "Version",
+          "label": "Version",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)"
+        }
+      ]
+    },
+    {
       "type": "kurve.laden",
       "displayName": "Kurve laden",
       "category": "Kurvenausgabe",
@@ -1899,7 +2034,7 @@
     {
       "type": "lin.fahrplan",
       "displayName": "LIN-Fahrplan",
-      "category": "Kommunikation",
+      "category": "LIN",
       "description": "Arbeitet eine LIN-Fahrplantabelle ab: je Zeile ein Frame (empfangen oder senden) mit festem Abstand. Optional mehrere Durchl\u00E4ufe. Unbeantwortete Subscriber-Frames sind FAIL (oder nur Hinweis).",
       "parameters": [
         {
@@ -1952,7 +2087,7 @@
     {
       "type": "lin.lesen",
       "displayName": "LIN lesen",
-      "category": "Kommunikation",
+      "category": "LIN",
       "description": "Sendet als Master den Header und liest die Slave-Antwort; pr\u00FCft Daten oder ein Signal (aus der LDF oder Startbit/L\u00E4nge).",
       "parameters": [
         {
@@ -2149,7 +2284,7 @@
     {
       "type": "lin.senden",
       "displayName": "LIN senden",
-      "category": "Kommunikation",
+      "category": "LIN",
       "description": "Sendet als Master einen Frame mit Daten (Hex) oder aus Signalwerten der LDF.",
       "parameters": [
         {
@@ -2214,7 +2349,7 @@
     {
       "type": "modbus.lesen",
       "displayName": "Modbus lesen",
-      "category": "Kommunikation",
+      "category": "Modbus/OPC UA",
       "description": "Liest Register oder Bits (RTU/TCP), wandelt den Datentyp, skaliert (Wert \u00D7 Faktor \u002B Offset) und bewertet gegen Grenzwerte bzw. Sollwert.",
       "parameters": [
         {
@@ -2342,7 +2477,7 @@
     {
       "type": "modbus.schreiben",
       "displayName": "Modbus schreiben",
-      "category": "Kommunikation",
+      "category": "Modbus/OPC UA",
       "description": "Schreibt einen Wert in Holding-Register oder Coils; optional Zur\u00FCcklesen (Abweichung = FAIL).",
       "parameters": [
         {
@@ -2416,7 +2551,7 @@
     {
       "type": "netz.http",
       "displayName": "HTTP-Anfrage (GET / POST / \u2026)",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "HTTP/HTTPS direkt ohne curl-Installation. Antwort und Statuscode als Variablen; maximal 1 MiB Antwort.",
       "parameters": [
         {
@@ -2540,7 +2675,7 @@
     {
       "type": "netz.sftp.download",
       "displayName": "SFTP-Datei herunterladen",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
       "parameters": [
         {
@@ -2665,7 +2800,7 @@
     {
       "type": "netz.sftp.upload",
       "displayName": "SFTP-Dateitransfer",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "\u00DCbertr\u00E4gt eine Datei \u00FCber SSH/SFTP. Pfade unterst\u00FCtzen Variablen. \u00DCberschreiben ist ausdr\u00FCcklich w\u00E4hlbar.",
       "parameters": [
         {
@@ -2802,7 +2937,7 @@
     {
       "type": "netz.ssh",
       "displayName": "SSH-Befehl",
-      "category": "Kommunikation",
+      "category": "Netzwerk/Dateien (HTTP, SSH, SFTP)",
       "description": "F\u00FChrt einen Befehl \u00FCber SSH aus. Passwort oder Schl\u00FCsseldatei; HostKeySHA256 oder ausdr\u00FCcklich HostKeyPruefung=Akzeptieren in Verbindungsoptionen. Pro Schritt eigene SSH-Verbindung.",
       "parameters": [
         {
@@ -2909,7 +3044,7 @@
     {
       "type": "opcua.zugriff",
       "displayName": "OPC UA",
-      "category": "Kommunikation",
+      "category": "Modbus/OPC UA",
       "description": "Liest oder schreibt einen OPC-UA-Variablenknoten, ruft eine Methode auf oder wartet auf eine Daten\u00E4nderung (Abo). Gelesene/zur\u00FCckgegebene Werte k\u00F6nnen gegen Sollwert oder Grenzwerte gepr\u00FCft werden.",
       "parameters": [
         {
@@ -3119,6 +3254,114 @@
       ]
     },
     {
+      "type": "prozess.kommunikation",
+      "displayName": "Prozess: Kommunikation",
+      "category": "Prozesse",
+      "description": "Sendet Text oder wartet auf ein Signal in stdout oder stderr.",
+      "parameters": [
+        {
+          "name": "Aktion",
+          "label": "Aktion",
+          "kind": "Choice",
+          "default": "Senden",
+          "required": false,
+          "choices": [
+            "Senden",
+            "Auf Ausgabe warten"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "Text",
+          "label": "Zu sendender Text",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeilenende",
+          "label": "Zeilenende",
+          "kind": "Choice",
+          "default": "LF",
+          "required": false,
+          "choices": [
+            "Keines",
+            "LF",
+            "CRLF"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Schliessen",
+          "label": "stdin danach schlie\u00DFen (EOF)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Sendezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Muster",
+          "label": "Gesuchter Text / Regex",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Regex",
+          "label": "Regul\u00E4rer Ausdruck",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "Stream",
+          "label": "Ausgabestream",
+          "kind": "Choice",
+          "default": "stdout",
+          "required": false,
+          "choices": [
+            "stdout",
+            "stderr"
+          ],
+          "hint": null
+        },
+        {
+          "name": "TrefferZiel",
+          "label": "Treffer \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "prozess.senden",
       "displayName": "An Prozess senden",
       "category": "Prozesse",
@@ -3206,8 +3449,8 @@
         },
         {
           "name": "Argumente",
-          "label": "Argumente (JSON-Liste)",
-          "kind": "Text",
+          "label": "Argumente",
+          "kind": "Table",
           "default": "[]",
           "required": false,
           "choices": null,
@@ -3220,16 +3463,20 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt."
+          "hint": "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt.",
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Umgebung",
-          "label": "Umgebungsvariablen (JSON-Objekt)",
-          "kind": "Text",
+          "label": "Umgebungsvariablen",
+          "kind": "Table",
           "default": "{}",
           "required": false,
           "choices": null,
-          "hint": "Stringwerte; nicht protokolliert. Beispiel: {\u0022MODE\u0022:\u0022test\u0022}"
+          "hint": "Stringwerte; nicht protokolliert. Beispiel: {\u0022MODE\u0022:\u0022test\u0022}",
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Typ",
@@ -3238,7 +3485,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Art",
+            "value": "DLL-Main"
+          },
+          "advanced": false
         },
         {
           "name": "Python",
@@ -3247,7 +3499,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Leer = bestehende Python-Auswahl des Pr\u00FCfprogramms."
+          "hint": "Leer = bestehende Python-Auswahl des Pr\u00FCfprogramms.",
+          "visibleWhen": {
+            "parameter": "Art",
+            "value": "Python"
+          },
+          "advanced": true
         },
         {
           "name": "Modus",
@@ -3268,7 +3525,9 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Ausgabe",
@@ -3286,7 +3545,9 @@
           "default": "utf-8",
           "required": false,
           "choices": null,
-          "hint": "Python: utf-8; \u00E4ltere EXE ggf. windows-1252 oder ibm850."
+          "hint": "Python: utf-8; \u00E4ltere EXE ggf. windows-1252 oder ibm850.",
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Ausgabelimit",
@@ -3295,7 +3556,9 @@
           "default": "65536",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": null,
+          "advanced": true
         },
         {
           "name": "Warten",
@@ -3461,6 +3724,99 @@
       ]
     },
     {
+      "type": "prozess.status-ende",
+      "displayName": "Prozess: Status/Ende",
+      "category": "Prozesse",
+      "description": "Fragt den Prozessstatus ab, wartet auf das Ende oder beendet den Prozess.",
+      "parameters": [
+        {
+          "name": "Aktion",
+          "label": "Aktion",
+          "kind": "Choice",
+          "default": "Abfragen",
+          "required": false,
+          "choices": [
+            "Abfragen",
+            "Warten",
+            "Beenden"
+          ],
+          "hint": null
+        },
+        {
+          "name": "Prozess",
+          "label": "Prozesskennung",
+          "kind": "Text",
+          "default": "",
+          "required": true,
+          "choices": null,
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "ExitcodeZiel",
+          "label": "Exitcode \u2192 Intvariable (erst nach Ende g\u00FCltig)",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StdoutZiel",
+          "label": "stdout \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "StderrZiel",
+          "label": "stderr \u2192 Stringvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "FertigZiel",
+          "label": "Prozess beendet \u2192 Boolvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ErwarteteExitcodes",
+          "label": "Erlaubte Exitcodes",
+          "kind": "Text",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt."
+        },
+        {
+          "name": "Protokoll",
+          "label": "Ausgabe protokollieren",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        },
+        {
+          "name": "Zeitlimit",
+          "label": "Wartezeitlimit [ms]",
+          "kind": "Number",
+          "default": "30000",
+          "required": false,
+          "choices": null,
+          "hint": null
+        }
+      ]
+    },
+    {
       "type": "prozess.warten",
       "displayName": "Auf Prozess warten",
       "category": "Prozesse",
@@ -3589,7 +3945,7 @@
     {
       "type": "uds.anfrage",
       "displayName": "UDS-Diagnose",
-      "category": "Kommunikation",
+      "category": "Diagnose (UDS, DoIP)",
       "description": "Sendet eine Diagnoseanfrage \u00FCber ISO-TP auf CAN (Segmentierung, Flusssteuerung, erweiterte Adressierung) oder DoIP auf Ethernet und wertet die positive Antwort aus (Daten ab Byte als Hex, Text oder Zahl) oder pr\u00FCft eine erwartete negative Antwort.",
       "parameters": [
         {
@@ -3621,7 +3977,12 @@
           "default": "0x7E0",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": false
         },
         {
           "name": "AntwortId",
@@ -3630,7 +3991,12 @@
           "default": "0x7E8",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": false
         },
         {
           "name": "Erweitert",
@@ -3639,7 +4005,12 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "Fd",
@@ -3648,7 +4019,12 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "AdresseTx",
@@ -3657,7 +4033,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal"
+          "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal",
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "AdresseRx",
@@ -3666,7 +4047,12 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "erstes Datenbyte der Antworten, z. B. 0xF1"
+          "hint": "erstes Datenbyte der Antworten, z. B. 0xF1",
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "Fuellbyte",
@@ -3675,7 +4061,12 @@
           "default": "CC",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "CAN (ISO-TP)"
+          },
+          "advanced": true
         },
         {
           "name": "TesterAdresse",
@@ -3684,7 +4075,12 @@
           "default": "0x0E00",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "DoIP (Ethernet)"
+          },
+          "advanced": false
         },
         {
           "name": "SteuergeraetAdresse",
@@ -3693,7 +4089,12 @@
           "default": "0x1000",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "DoIP (Ethernet)"
+          },
+          "advanced": false
         },
         {
           "name": "Nad",
@@ -3702,7 +4103,12 @@
           "default": "0x01",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Transport",
+            "value": "LIN (Transportprotokoll)"
+          },
+          "advanced": false
         },
         {
           "name": "Anfrage",
@@ -3861,7 +4267,7 @@
     {
       "type": "uds.sicherheit",
       "displayName": "UDS-Sicherheitszugang",
-      "category": "Kommunikation",
+      "category": "Diagnose (UDS, DoIP)",
       "description": "Fordert einen Seed an (Dienst 0x27, Stufe ungerade), berechnet den Schl\u00FCssel und sendet ihn (Stufe\u002B1). Schl\u00FCsselverfahren w\u00E4hlbar (XOR/Addition/Invertieren/Add-Rotate-XOR) oder \u201EAusdruck je Byte\u201C (s = Seedbyte, i = Index). Seed aus lauter Nullen = bereits freigeschaltet. Negative Antwort (z. B. falscher Schl\u00FCssel) = FAIL.",
       "parameters": [
         {
@@ -4064,8 +4470,8 @@
         },
         {
           "name": "Kanaele",
-          "label": "Kanalnamen (Komma)",
-          "kind": "Text",
+          "label": "Messkan\u00E4le",
+          "kind": "Table",
           "default": "Spannung",
           "required": true,
           "choices": null,
@@ -4447,8 +4853,8 @@
         },
         {
           "name": "Kanaele",
-          "label": "Kanalnamen (Komma)",
-          "kind": "Text",
+          "label": "Messkan\u00E4le",
+          "kind": "Table",
           "default": "Spannung",
           "required": true,
           "choices": null,

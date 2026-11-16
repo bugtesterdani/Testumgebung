@@ -140,14 +140,17 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
     {
         try
         {
+            if (File.Exists(_selectionFile))
+            {
+                var path = JsonSerializer.Deserialize<string>(File.ReadAllText(_selectionFile));
+                return PythonEnvironmentResolver.Interpreter(path);
+            }
             if (_registryKey is not null && OperatingSystem.IsWindows())
             {
                 using var key = Registry.CurrentUser.OpenSubKey(_registryKey);
                 if (PythonEnvironmentResolver.Interpreter(key?.GetValue(RegistryValue) as string) is { } saved) return saved;
             }
-            if (!File.Exists(_selectionFile)) return null;
-            var path = JsonSerializer.Deserialize<string>(File.ReadAllText(_selectionFile));
-            return PythonEnvironmentResolver.Interpreter(path);
+            return null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return null; }
     }

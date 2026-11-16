@@ -51,6 +51,12 @@ public sealed partial class InlineBlockEditor : UserControl
     }
     private void BuildStep(Panel fields, StepPropertiesViewModel step)
     {
+        if (step.HasAdvancedParameters)
+        {
+            var advanced = new CheckBox { Content = "Erweitert", VerticalAlignment = VerticalAlignment.Center };
+            advanced.SetBinding(ToggleButton.IsCheckedProperty, Bind(step, nameof(step.ShowAdvanced)));
+            fields.Children.Add(advanced);
+        }
         foreach (var row in step.Parameters)
         {
             if (row.IsVariable && row.Value.StartsWith("_BlockZweig_", StringComparison.Ordinal)) continue;
@@ -71,10 +77,21 @@ public sealed partial class InlineBlockEditor : UserControl
         => field.SetBinding(VisibilityProperty, new Binding(nameof(row.IsHidden))
         { Source = row, Converter = (IValueConverter)FindResource("BoolVis"), ConverterParameter = "invert" });
 
+    private static Button TableButton(ParameterRowViewModel row)
+    {
+        var button = new Button { Content = "Tabelle bearbeiten …" };
+        button.Click += (_, _) => ParameterTableDialog.Edit(button, row);
+        return button;
+    }
+
     private FrameworkElement ParameterInput(ParameterRowViewModel row)
     {
         FrameworkElement input;
-        if (row.IsBool)
+        if (row.IsTable)
+        {
+            input = TableButton(row);
+        }
+        else if (row.IsBool)
         {
             var check = new CheckBox { Content = "Ja", VerticalAlignment = VerticalAlignment.Center };
             check.SetBinding(ToggleButton.IsCheckedProperty, Bind(row, "BoolValue")); input = check;
@@ -104,6 +121,15 @@ public sealed partial class InlineBlockEditor : UserControl
         else input = Text(row, "Value", row.IsMultiline ? 300 : 185, row.IsMultiline);
         input.DataContext = row;
         AutomationProperties.SetName(input, row.Label);
+        if (row.IsLabelTemplate)
+        {
+            var designer = new Button { Content = "Etikett gestalten …", HorizontalAlignment = HorizontalAlignment.Left };
+            designer.Click += (_, _) => LabelDesignerWindow.Edit(designer, row);
+            var labelInputs = new StackPanel();
+            labelInputs.Children.Add(designer);
+            labelInputs.Children.Add(input);
+            return labelInputs;
+        }
         if (!row.HasVisualBuilder) return input;
         var stack = new StackPanel(); stack.Children.Add(input);
         stack.Children.Add(ExpressionSlot(row, null)); return stack;

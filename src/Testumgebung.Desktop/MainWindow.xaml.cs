@@ -41,14 +41,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         _ = new AdaptiveWindowLayout(this, LayoutViewport, LayoutContent);
         _showMessage = startup?.ShowMessage ?? ((text, buttons, icon) => MessageBox.Show(text, "Testumgebung", buttons, icon));
-        // Explizite Umgebung, gespeicherte externe Kopie, sonst mitgelieferte Laufzeit.
-        _codeRuntime = new CodeRuntime(new CodeRuntimeOptions
-        {
-            PythonExecutable = Environment.GetEnvironmentVariable("TESTUMGEBUNG_PYTHON") is { Length: > 0 } py ? py : new PythonEnvironments().LoadSelection(),
-        });
-
         var (store, services) = LoadResultServices(startup);
         _services = services;
+        _codeRuntime = new CodeRuntime(ApplicationOverrides.Runtime(services.Current, new PythonEnvironments().LoadSelection()));
 
         var arguments = startup?.Arguments ?? Environment.GetCommandLineArgs();
         var developmentMode = arguments.Contains("--development", StringComparer.OrdinalIgnoreCase);
@@ -63,13 +58,14 @@ public partial class MainWindow : Window
         // Ohne Datei: Vorschlag aus dem Projekt. Beschädigt: Anzeige, kein Prüfplatz startet bis zur Korrektur.
         var stationStore = startup?.StationStore ?? new StationSetupStore(StationSetupStore.DefaultPath);
         var (exampleProject, stationSetup, stationError) = LoadStationSetup(startup, stationStore, exampleMode);
-        var coordinator = _coordinator = new StationCoordinator(stationSetup ?? StationSetup.Default(SampleProjects.AcPruefung()), new ResourceManager())
+        var wear = CreateWearStore(stationStore, exampleMode);
+        var coordinator = _coordinator = new StationCoordinator(stationSetup ?? StationSetup.Default(SampleProjects.AcPruefung()), new ResourceManager(), wear: wear)
         {
             IsSuggestion = stationSetup is null && stationError is null,
             LoadError = stationError,
         };
 
-        Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), new FileDialogService(), project: exampleProject, codeRuntime: _codeRuntime,
+        Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), CreateFileDialogService(startup), project: exampleProject, codeRuntime: _codeRuntime,
             services: _services, settingsStore: store, identity: identity, releases: _releases,
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
         Shell.ReleasesPage?.Sources.ConfigureAuthentication(new SourceCredentialStore(SourceCredentialStore.DefaultFile, new RepositorySecretProtector()));
@@ -83,8 +79,8 @@ public partial class MainWindow : Window
 
         // Optionale Inaktivitätssperre: Eingaben merken, regelmäßig prüfen. Ein laufender Test wird nie beeinflusst.
         PreviewMouseDown += (_, _) => Shell.NoteActivity();
-        PreviewKeyDown += (_, _) => Shell.NoteActivity();
-        _inactivity.Tick += (_, _) => Shell.CheckInactivity();
+        PreviewKeyDown += OnWindowKeyDown;
+        _inactivity.Tick += (_, _) => CheckInactivityAndCalibration();
         _inactivity.Start();
         // Manuelles Öffnen der Anwendung: offene Runs aus der lokalen Outbox laden und Übertragung fortsetzen (P04).
         _services.Outbox.Start();
@@ -94,6 +90,12 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Keeps account configuration and provider selection together during startup.</summary>
+    private void CheckInactivityAndCalibration()
+    {
+        Shell.CheckInactivity();
+        _services.ObserveCalibration(_coordinator.Setup.Devices);
+    }
+
     private void OnLocalPasswordKey(object sender, System.Windows.Input.KeyEventArgs eventArgs)
     {
         if (eventArgs.Key != System.Windows.Input.Key.Enter || !Shell.LoginCommand.CanExecute(null)) return;
@@ -141,12 +143,10 @@ public partial class MainWindow : Window
     private static (SettingsStore Store, ResultServices Services) LoadResultServices(MainWindowStartup? startup)
     {
         // Einstellungen: %LOCALAPPDATA%\Testumgebung\einstellungen.json (Geheimnisse per DPAPI geschützt).
-        // Ohne Datei gelten die Standardwerte; TESTUMGEBUNG_ERGEBNISSE und TESTUMGEBUNG_DB=aus wirken nur dann.
         var store = startup?.SettingsStore ?? new SettingsStore(SettingsStore.DefaultPath, new DpapiSecretProtector());
-        var defaults = new AppSettings { ResultFolder = Env("TESTUMGEBUNG_ERGEBNISSE") };
-        if (string.Equals(Env("TESTUMGEBUNG_DB"), "aus", StringComparison.OrdinalIgnoreCase)) defaults.Database.Provider = DatabaseChoice.None;
-        var services = startup?.CreateResultServices is { } createServices ? createServices(store.Load(defaults))
-            : new ResultServices(store.Load(defaults), new DatabaseProviderRegistry());
+        var settings = store.Load();
+        var services = startup?.CreateResultServices is { } createServices ? createServices(settings)
+            : new ResultServices(settings, new DatabaseProviderRegistry());
 
         return (store, services);
     }
@@ -163,7 +163,6 @@ public partial class MainWindow : Window
 
     public ShellViewModel Shell { get; }
 
-    private static string? Env(string name) => Environment.GetEnvironmentVariable(name) is { Length: > 0 } value ? value : null;
 
     private void UpdateClock()
         => ClockText.Text = DateTime.Now.ToString("ddd, dd.MM.yyyy   HH:mm", CultureInfo.GetCultureInfo("de-DE"));
@@ -243,6 +242,54 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
+
+    private static FileDialogService CreateFileDialogService(MainWindowStartup? startup) => new(startup?.ExamplesDirectory);
+
+    private ResourceDictionary? _operatorEnglish;
+
+    private void OnOperatorLanguageChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs args)
+    {
+        if (sender is not System.Windows.Controls.ComboBox { SelectedIndex: 1 })
+        {
+            if (_operatorEnglish is not null) Resources.MergedDictionaries.Remove(_operatorEnglish);
+            return;
+        }
+
+        _operatorEnglish ??= new ResourceDictionary
+        {
+            Source = new Uri("/Testumgebung.Desktop;component/Localization/Operator.en.xaml", UriKind.Relative),
+        };
+        if (!Resources.MergedDictionaries.Contains(_operatorEnglish)) Resources.MergedDictionaries.Add(_operatorEnglish);
+    }
+
+    private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs args)
+    {
+        Shell.NoteActivity();
+        if (args.Key != System.Windows.Input.Key.F1) return;
+        args.Handled = true;
+        ShowContextHelp();
+    }
+
+    private void ShowContextHelp()
+    {
+        var block = (Shell.Editor.SelectedNode?.InlineProperties as StepPropertiesViewModel)?.Block;
+        try
+        {
+            var folder = System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "handbuch");
+            var help = ContextHelp.Load(folder, Shell.Page, block);
+            new Testumgebung.Desktop.Views.ContextHelpWindow(help) { Owner = this }.ShowDialog();
+        }
+        catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _showMessage("Das mitgelieferte Handbuch konnte nicht geöffnet werden. " + error.Message,
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private static WearCounterStore CreateWearStore(StationSetupStore store, bool exampleMode)
+    {
+        return exampleMode ? new() : new(WearCounterStore.PathForStationSetup(store.Path));
+    }
 }
 
 internal sealed class MainWindowStartup
@@ -254,4 +301,5 @@ internal sealed class MainWindowStartup
     public IReadOnlyList<string>? Arguments { get; init; }
     public string? ExamplesDirectory { get; init; }
     public Func<string, MessageBoxButton, MessageBoxImage, MessageBoxResult>? ShowMessage { get; init; }
+
 }

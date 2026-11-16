@@ -11,7 +11,7 @@ public static class EvaluationBlocks
         catalog.Register(new(BlockCatalog.Evaluate, "Bewertung", "Bewertung", "check",
             "Prüft eine Bedingung (PASS/FAIL) oder setzt ein festes Ergebnis einschließlich ERROR mit Meldung.",
             [
-                new("Art", "Art", ParameterKind.Choice, "Bedingung prüfen", Choices: ["Bedingung prüfen", "Festes Ergebnis"]),
+                new("Art", "Art", ParameterKind.Choice, "Bedingung prüfen", Choices: ["Bedingung prüfen", BlockCatalog.FixedRatingMode]),
                 new("Bedingung", "Bedingung", ParameterKind.Expression, "true", Required: true),
                 new("Bewertung", "Festes Ergebnis", ParameterKind.Choice, "PASS", Choices: BlockCatalog.Ratings),
                 new("Wert", "Angezeigter Wert", ParameterKind.Expression),
@@ -22,7 +22,7 @@ public static class EvaluationBlocks
 
     private static IStepAction Create(BlockParameters parameters)
     {
-        var fixedResult = parameters.Choice("Art") == "Festes Ergebnis";
+        var fixedResult = parameters.Choice("Art") == BlockCatalog.FixedRatingMode;
         var rating = fixedResult ? (ResultRating)Array.IndexOf(BlockCatalog.Ratings, parameters.Choice("Bewertung")) : ResultRating.NResult;
         var condition = fixedResult ? null : parameters.Expr("Bedingung");
         var shown = parameters.Expr("Wert");

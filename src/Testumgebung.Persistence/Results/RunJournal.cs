@@ -17,6 +17,7 @@ public sealed class JournalHeader
     public string RunId { get; set; } = "";
     public string StationRunId { get; set; } = "";
     public string Station { get; set; } = "";
+    public ResultRunKind Kind { get; set; }
     public string TestName { get; set; } = "";
     public string TestVersion { get; set; } = "";
     public DateTimeOffset Started { get; set; }
@@ -199,6 +200,7 @@ public sealed class RunJournal(string folder)
             RunId = header.RunId,
             StationRunId = header.StationRunId,
             Station = header.Station,
+            Kind = header.Kind,
             DutId = header.DutId ?? "",
             Order = header.Order ?? "",
             TestName = header.TestName,

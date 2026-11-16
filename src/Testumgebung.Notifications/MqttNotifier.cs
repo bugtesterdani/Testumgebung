@@ -58,6 +58,7 @@ public sealed class MqttNotifier : IRunNotifier, IAsyncDisposable
         RunNotificationKind.RetryFailed => "retry_failed",
         RunNotificationKind.StoredLater => "stored_later",
         RunNotificationKind.OutboxDamaged => "outbox_damaged",
+        RunNotificationKind.Alarm => "alarm",
         _ => kind.ToString().ToLowerInvariant(),
     };
 

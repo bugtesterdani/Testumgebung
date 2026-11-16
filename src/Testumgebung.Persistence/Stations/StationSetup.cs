@@ -24,6 +24,9 @@ public sealed class DeviceConfig
 
     public string? Description { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DeviceCalibration? Calibration { get; set; }
+
     /// <summary>Modell (z. B. 34465A, E36312A, DSOX3034T) – bestimmt Kanäle und Grenzen des Treibers.</summary>
     public string? Model { get; set; }
 
@@ -78,6 +81,8 @@ public sealed class StationConfig
 
     /// <summary>Auswahl- und Auftragsablauf (Abschnitt 5); null = der Prüfplatz prüft den geöffneten bzw. freigegebenen Ablauf.</summary>
     public SelectionConfig? Selection { get; set; }
+    public ReferenceCheckConfig? ReferenceCheck { get; set; }
+    public List<WearCounterConfig> WearCounters { get; set; } = [];
 }
 
 /// <summary>

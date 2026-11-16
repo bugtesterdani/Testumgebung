@@ -11,6 +11,9 @@
    <Button Content="+ Block" Click="OnAddBlock" Style="{StaticResource ToolButton}"/>
    <Button Content="Rückgängig" Command="{Binding Editor.UndoCommand}" Style="{StaticResource ToolButton}"/>
    <Button Content="Speichern" Command="{Binding Editor.SaveCommand}" Style="{StaticResource ToolButton}"/>
+   <ComboBox ItemsSource="{Binding SimulationVariants}" SelectedItem="{Binding SimulationVariant, Mode=TwoWay}"
+             Visibility="{Binding HasSimulationVariants, Converter={StaticResource BoolVis}}" MinWidth="120" Margin="8,0,0,0"
+             AutomationProperties.Name="Variante für Simulation" ToolTip="Variante für die Simulation auswählen"/>
    <Button Content="Simulation starten" Command="{Binding StartSimulationCommand}" Style="{StaticResource PrimaryButton}" Margin="8,0"/>
    <ComboBox ItemsSource="{Binding Stations}" SelectedItem="{Binding SelectedStation}" DisplayMemberPath="Name" Width="120" ToolTip="Prüfplatz für Simulation und Debugwerte"/>
    <Button Content="−" Click="OnZoomOut" Style="{StaticResource ToolButton}" ToolTip="Herauszoomen"/>

@@ -99,13 +99,15 @@ public sealed record ResourceBinding(string Name, IHardwareAdapter Adapter, stri
 /// <summary>Zugriff auf Hardware ohne gültige Reservierung.</summary>
 public sealed class UnreservedHardwareAccessException(string message) : Exception(message);
 
-/// <summary>Rechte (Abschnitt 6.1): Entwickeln und Freigeben getrennt, Kombination möglich.</summary>
+/// <summary>Kombinierbare Rechte für Entwicklung, Freigabe und Verwaltung.</summary>
 [Flags]
 public enum UserRights
 {
     None = 0,
-    /// <summary>Entwurf, Test, Simulation, Debugger, Einstellungen.</summary>
+    /// <summary>Entwurf, Test, Simulation und Debugger.</summary>
     Develop = 1,
     /// <summary>Geprüfte Pakete ausdrücklich freigeben.</summary>
     Release = 2,
+    /// <summary>Prüfplatz, Geräte, Anwendungseinstellungen und Konfigurationssicherung verwalten.</summary>
+    Manage = 4,
 }

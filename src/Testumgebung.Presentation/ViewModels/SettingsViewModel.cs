@@ -35,15 +35,17 @@ public sealed class SettingsViewModel : ObservableObject
     private string? _saveStatus;
     private bool _isBusy;
     private readonly Func<AppSettings, string?>? _validate;
+    private readonly Func<bool> _canDevelop;
     private readonly Func<IReadOnlyList<string>> _stationNames;
 
     public SettingsViewModel(ResultServices services, SettingsStore store, IUiDispatcher ui,
-        Func<AppSettings, string?>? validate = null, Func<IReadOnlyList<string>>? stationNames = null)
+        Func<AppSettings, string?>? validate = null, Func<IReadOnlyList<string>>? stationNames = null, Func<bool>? canDevelop = null)
     {
         _services = services;
         _store = store;
         _ui = ui;
         _validate = validate;
+        _canDevelop = canDevelop ?? (() => true);
         _stationNames = stationNames ?? (() => []);
         _edit = Copy(services.Current);
         SaveCommand = new RelayCommand(Save);
@@ -67,6 +69,8 @@ public sealed class SettingsViewModel : ObservableObject
         });
         foreach (var warning in store.Warnings) Warnings.Add(warning);
     }
+
+    public AlarmSettings Alarms => _edit.Alarms;
 
     public IReadOnlyList<string> StationNames => _stationNames();
     public void RefreshStationNames() => OnPropertyChanged(nameof(StationNames));
@@ -291,6 +295,26 @@ public sealed class SettingsViewModel : ObservableObject
         set { _edit.ResultFolder = string.IsNullOrWhiteSpace(value) ? null : value.Trim(); OnPropertyChanged(); }
     }
 
+    public string PythonExecutable
+    {
+        get => _edit.PythonExecutable ?? "";
+        set { _edit.PythonExecutable = OptionalPath(value); OnPropertyChanged(); }
+    }
+
+    public string CppCompiler
+    {
+        get => _edit.CppCompiler ?? "";
+        set { _edit.CppCompiler = OptionalPath(value); OnPropertyChanged(); }
+    }
+
+    public string CppCacheDirectory
+    {
+        get => _edit.CppCacheDirectory ?? "";
+        set { _edit.CppCacheDirectory = OptionalPath(value); OnPropertyChanged(); }
+    }
+
+    private static string? OptionalPath(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     public string ResultFolderHint => $"Leer = {Testumgebung.Persistence.Results.ResultFileStore.DefaultFolder}";
 
     // ------------------------------------------------------------------ Datenbank
@@ -454,17 +478,29 @@ public sealed class SettingsViewModel : ObservableObject
                 SaveStatus = "Nicht gespeichert: " + refusal;
                 return;
             }
+            var preserveRuntime = !_canDevelop();
+            if (preserveRuntime && RuntimeChanged(applied, _services.Current))
+            {
+                SaveStatus = "Nicht gespeichert: Zum Ändern der Code-Laufzeit ist das Recht Entwickeln erforderlich.";
+                return;
+            }
+            _store.Save(Copy(applied), preserveRuntime);
             _services.Apply(applied);
-            _store.Save(Copy(applied));
+
             SaveStatus = _services.ApplyWarning is { } text
                 ? $"Gespeichert, aber: {text}"
                 : $"Gespeichert und übernommen ({DateTime.Now:HH:mm:ss}).";
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
             SaveStatus = "Speichern fehlgeschlagen: " + ex.Message;
         }
     }
+
+    private static bool RuntimeChanged(AppSettings edited, AppSettings current)
+        => edited.PythonExecutable != current.PythonExecutable
+            || edited.CppCompiler != current.CppCompiler
+            || edited.CppCacheDirectory != current.CppCacheDirectory;
 
     public void Revert()
     {

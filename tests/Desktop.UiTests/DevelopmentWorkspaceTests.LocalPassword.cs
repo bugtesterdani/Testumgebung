@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -59,6 +59,7 @@ public sealed partial class DevelopmentWorkspaceTests
             var key = new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(input), 0, Key.Enter) { RoutedEvent = Keyboard.KeyDownEvent };
             input.RaiseEvent(key); Wait(() => shell.IsSignedIn, dispatcher); Wait(() => input.Password.Length == 0, dispatcher);
             Assert.True(key.Handled); Assert.True(shell.IsDeveloper); Assert.Contains("lokaler Passwortzugang", shell.UserDetail);
+            shell.Page = Testumgebung.Presentation.ViewModels.ShellPage.Access;
             var settingsView = new SettingsView { DataContext = shell };
             var settingsHost = new Window { Content = settingsView, Width = 1280, Height = 1000, ShowInTaskbar = false, ShowActivated = false, Left = -10000, Top = -10000 };
             settingsHost.Show(); Sta.Flush(dispatcher);

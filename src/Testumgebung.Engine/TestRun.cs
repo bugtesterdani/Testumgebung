@@ -24,6 +24,7 @@ public sealed class TestRunOptions
 
     /// <summary>Gemeinsames Zugriffsprotokoll aller Prüfplätze (Nachweis: kein widersprüchlicher Gerätezugriff).</summary>
     public HardwareAccessJournal? AccessJournal { get; init; }
+    public Action<ResourceBinding>? OnDeviceAccess { get; init; }
 
     public IOperatorInterface? Operator { get; init; }
     public DebugController? Debugger { get; init; }
@@ -44,8 +45,11 @@ public sealed class TestRunOptions
     /// der Lauf endet regulär über die Finalization. null = unbegrenzt.
     /// </summary>
     public int? DutLimit { get; init; }
+    public Func<bool>? CanBeginDut { get; init; }
+    public Func<string?>? ReserveDutUsage { get; init; }
 
     public bool ContinuousLoop { get; init; }
+    public bool ReferenceRun { get; init; }
     public IReadOnlyDictionary<string, object?>? SessionPresets { get; init; }
 
     /// <summary>
@@ -59,6 +63,8 @@ public sealed class TestRunOptions
     public int EventHistoryLimit { get; init; } = int.MaxValue;
     public bool RetainWaveformsInHistory { get; init; } = true;
     public bool DevelopmentRun { get; init; }
+    /// <summary>Ohne Drucker werden Etiketten als Vorschau zurückgegeben.</summary>
+    public ILabelPrinter? LabelPrinter { get; init; }
 }
 
 /// <summary>
@@ -493,7 +499,13 @@ public sealed class TestRun
     private bool CanEnterGroup(GroupDefinition group, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
     {
         if ((phase.IsCancelled || DutExitPending(phase)) && !forceEnter) return false;
-        if (group.IsDutRun && !isExit && Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
+        return !group.IsDutRun || isExit || CanEnterDut(group, parentPath, parentIteration);
+    }
+
+    private bool CanEnterDut(GroupDefinition group, string parentPath, int parentIteration)
+    {
+        if (Options.CanBeginDut?.Invoke() == false) return false;
+        if (Options.DutLimit is { } limit && Volatile.Read(ref _dutsCompleted) >= limit)
         {
             Emit(new GroupNotEntered($"Prüflingsanzahl {limit} erreicht") { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = Combine(parentPath, group.Name), Iteration = parentIteration });
             return false;
@@ -524,6 +536,9 @@ public sealed class TestRun
         try { return await ExecuteGroupCoreAsync(group, parentScope, phase, parentPath, parentIteration, forceEnter, isExit).ConfigureAwait(false); }
         finally { Volatile.Write(ref _activeDut, 0); }
     }
+
+    private string? DutUsageRefusal(GroupDefinition group, bool isExit)
+        => group.IsDutRun && !isExit ? Options.ReserveDutUsage?.Invoke() : null;
 
     private async Task<NodeResult?> ExecuteGroupCoreAsync(
         GroupDefinition group, Scope? parentScope, ExecutionPhase phase, string parentPath, int parentIteration, bool forceEnter, bool isExit)
@@ -559,6 +574,14 @@ public sealed class TestRun
         var (entered, entryResult) = EvaluateEntry();
         if (!entered) return entryResult;
 
+        (bool Entered, NodeResult? Result) ReserveUsageForEntry()
+        {
+            if (DutUsageRefusal(group, isExit) is not { } refusal) return (true, null);
+            scope.Discard();
+            Emit(new Diagnostic(group.Id, refusal) { Time = Clock.Now, RunId = RunId });
+            return (false, new NodeResult(ResultRating.Error, null));
+        }
+
         (bool Entered, NodeResult? Result) EvaluateEntry()
         {
             // 2. Eintrittsbedingung (in der Abbruchfolge für Exit-Gruppen ignoriert)
@@ -584,7 +607,7 @@ public sealed class TestRun
                 }
             }
 
-            return (true, null);
+            return ReserveUsageForEntry();
         }
 
         ApplyDutPresets(group, scope, isExit);
@@ -717,9 +740,16 @@ public sealed class TestRun
         return new NodeResult(accumulator.Rating, snapshot);
     }
 
+    private Repetition MainLoopRepetition(Repetition configured)
+    {
+        if (Options.ReferenceRun) return Repetition.Once;
+        return Options.ContinuousLoop ? Repetition.Endless : configured;
+    }
+
     private async Task<int> RunIterationsAsync(GroupDefinition group, Scope scope, ExecutionPhase phase, ResultAccumulator accumulator, string path, string childPath)
     {
-        var repetition = Options.ContinuousLoop && group == Definition.Loop ? Repetition.Endless : group.Repetition;
+        var isMainLoop = ReferenceEquals(group, Definition.Loop);
+        var repetition = isMainLoop ? MainLoopRepetition(group.Repetition) : group.Repetition;
         var repeatExpression = repetition.Expression is { } errorText ? Expression.Parse(errorText) : null;
         var start = Clock.Now;
         var iteration = 0;
@@ -752,6 +782,7 @@ public sealed class TestRun
 
         bool CanRepeat()
         {
+            if (isMainLoop && Options.CanBeginDut?.Invoke() == false) return false;
             if (iteration > 0 && Options.DutLimit is { } dutLimit && Volatile.Read(ref _dutsCompleted) >= dutLimit) return false;
             if (iteration > 0)
             {

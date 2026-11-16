@@ -118,6 +118,11 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
     public void Select(string? executable)
     {
         if (_runtime is null) return;
+        if (Testumgebung.Presentation.Settings.ApplicationOverrides.Value("TESTUMGEBUNG_PYTHON") is not null)
+        {
+            Status = "TESTUMGEBUNG_PYTHON hat Vorrang. Die aktive Laufzeit bleibt unverändert.";
+            return;
+        }
         if (_anyRunning()) { Status = "Bitte zuerst alle Prüfungen und Auftragsauswertungen beenden. Die Python-Laufzeit bleibt unverändert."; return; }
         try
         {

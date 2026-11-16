@@ -38,6 +38,21 @@ public sealed class SettingsTests : IDisposable
         public string? Unprotect(string stored) => stored.StartsWith("rev:", StringComparison.Ordinal) ? new string(stored[4..].Reverse().ToArray()) : null;
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Runtime_paths_are_saved_and_environment_values_take_precedence(bool useEnvironment)
+    {
+        var store = new SettingsStore(P("runtime-settings.json"), PlainSecretProtector.Instance);
+        store.Save(new AppSettings { PythonExecutable = "saved-python", CppCompiler = "saved-cxx", CppCacheDirectory = "saved-cache" });
+        var settings = store.Load();
+        var runtime = ApplicationOverrides.Runtime(settings, "selected-python", name => useEnvironment ? name : null);
+        Assert.Equal(useEnvironment ? "TESTUMGEBUNG_PYTHON" : "saved-python", runtime.PythonExecutable);
+        Assert.Equal(useEnvironment ? "TESTUMGEBUNG_CXX" : "saved-cxx", runtime.CppCompiler);
+        Assert.Equal(useEnvironment ? "TESTUMGEBUNG_CPP_CACHE" : "saved-cache", runtime.CppCacheDirectory);
+        Assert.Equal("saved-python", settings.PythonExecutable);
+    }
+
     [Fact]
     public void Einstellungsdatei_speichert_Geheimnisse_geschuetzt_und_meldet_Unlesbares()
     {
@@ -69,6 +84,126 @@ public sealed class SettingsTests : IDisposable
         var broken = new SettingsStore(P("kaputt.json"), new ReversingProtector());
         Assert.Equal(DatabaseChoice.Simulated, broken.Load().Database.Provider);
         Assert.Single(broken.Warnings);
+    }
+
+    [Fact]
+    public void Alarm_settings_default_off_and_protect_smtp_password_and_teams_url()
+    {
+        var path = P("alarms.json");
+        var store = new SettingsStore(path, new ReversingProtector());
+        File.WriteAllText(path, "{}");
+        var defaults = store.Load().Alarms;
+        Assert.False(defaults.SmtpEnabled);
+        Assert.False(defaults.TeamsEnabled);
+        Assert.Equal(0, defaults.ErrorStreak);
+        Assert.Equal(0, defaults.OutboxThreshold);
+        Assert.False(defaults.ResultFolder);
+        Assert.False(defaults.Calibration);
+
+        store.Save(new AppSettings
+        {
+            Alarms = new AlarmSettings
+            {
+                SmtpEnabled = true, TeamsEnabled = true, ErrorStreak = 3, OutboxThreshold = 5,
+                ResultFolder = true, Calibration = true,
+                SmtpPassword = "smtp-credential", TeamsUrl = "https://example.test/?sig=workflow-secret"
+            }
+        });
+        var json = File.ReadAllText(path);
+        Assert.DoesNotContain("smtp-credential", json);
+        Assert.DoesNotContain("workflow-secret", json);
+        var alarms = store.Load().Alarms;
+        Assert.Equal(("smtp-credential", "https://example.test/?sig=workflow-secret"), (alarms.SmtpPassword, alarms.TeamsUrl));
+        Assert.Equal((true, true, 3, 5, true, true),
+            (alarms.SmtpEnabled, alarms.TeamsEnabled, alarms.ErrorStreak, alarms.OutboxThreshold, alarms.ResultFolder, alarms.Calibration));
+    }
+
+    [Fact]
+    public async Task Smtp_error_alarm_uses_run_order_when_database_writes_finish_out_of_order()
+    {
+        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var received = ReceiveSmtpAlarmAsync(listener, timeout.Token);
+        var settings = new AppSettings
+        {
+            ResultFolder = P("results"),
+            Database = new DatabaseSettings { Provider = DatabaseChoice.Simulated },
+            Alarms = new AlarmSettings
+            {
+                ErrorStreak = 2, SmtpEnabled = true, SmtpHost = "127.0.0.1", SmtpPort = port, SmtpStartTls = false,
+                SmtpSender = "alarms@example.test", SmtpRecipient = "worker@example.test"
+            }
+        };
+        await using var services = new ResultServices(settings, new TestRegistry(), P("outbox"), P("simdb"), recoveryFolder: P("recovery"));
+        var delivered = new TaskCompletionSource<Testumgebung.Notifications.NotifyDelivery>(TaskCreationOptions.RunContinuationsAsynchronously);
+        services.NotifyDelivered += result => delivered.TrySetResult(result);
+
+        var database = new DelayedAlarmTestDatabase();
+        services.Database.Inner = database;
+        var resolver = new Testumgebung.Domain.Storage.StorageResolver(SampleProjects.AcPruefung().Definition);
+        Task<StorageReport> Process(string id, ResultRating rating) =>
+            services.Pipeline.ProcessAsync(new ResultRun { RunId = id, Station = "P1", Rating = rating }, resolver);
+
+        var firstError = Process("slow-error", ResultRating.Error);
+        try
+        {
+            await database.Started.Task.Within();
+            await Process("pass", ResultRating.Pass);
+            await Process("second-error", ResultRating.Error);
+        }
+        finally
+        {
+            database.Release.TrySetResult();
+            await firstError;
+        }
+
+        await Process("third-error", ResultRating.Error);
+        var result = await delivered.Task.Within();
+        Assert.Equal("third-error", result.Notification.RunId);
+        Assert.True(result.Sent, result.Error);
+        Assert.Equal("SMTP", result.Channel);
+        var message = await received;
+        Assert.Contains("worker@example.test", message);
+        var body = message[(message.IndexOf("\r\n\r\n", StringComparison.Ordinal) + 4)..];
+        var encoded = body[..body.IndexOf("\r\n.\r\n", StringComparison.Ordinal)];
+        var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+        Assert.Contains("P1: 2 Prüfläufe in Folge mit ERROR.", decoded);
+    }
+
+    private sealed class DelayedAlarmTestDatabase : IRunDatabase
+    {
+        public string Name => "Alarmtest";
+        public TaskCompletionSource<bool> Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task StoreAsync(ResultRun run, CancellationToken cancellationToken)
+        {
+            if (run.RunId != "slow-error") return;
+            Started.TrySetResult(true);
+            await Release.Task.WaitAsync(cancellationToken);
+        }
+    }
+
+    private static async Task<string> ReceiveSmtpAlarmAsync(System.Net.Sockets.TcpListener listener, CancellationToken ct)
+    {
+        using var connection = await listener.AcceptTcpClientAsync(ct);
+        using var stream = connection.GetStream();
+        using var reader = new StreamReader(stream);
+        await using var writer = new StreamWriter(stream, leaveOpen: true) { AutoFlush = true, NewLine = "\r\n" };
+        await writer.WriteLineAsync("220 localhost");
+        var message = new System.Text.StringBuilder();
+        var inData = false;
+        while (await reader.ReadLineAsync(ct) is { } command)
+        {
+            message.AppendLine(command);
+            if (inData && command != ".") continue;
+            if (command == "QUIT") break;
+            inData = command == "DATA";
+            await writer.WriteLineAsync(inData ? "354 Start mail input" : "250 OK");
+        }
+        return message.ToString();
     }
 
     private sealed class FailingProtector : ISecretProtector

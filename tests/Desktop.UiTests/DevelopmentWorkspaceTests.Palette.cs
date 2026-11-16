@@ -1,3 +1,4 @@
+using System.Data;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -15,13 +16,14 @@ public sealed partial class DevelopmentWorkspaceTests
         var panel = (FrameworkElement)view.FindName("PalettePanel");
         var categories = Descendants(panel).OfType<Expander>().ToList();
         Assert.DoesNotContain(categories, category => category.Header?.ToString() == "Steuerung");
-        var communication = categories.Single(category => category.Header?.ToString() == "Kommunikation");
+        var communication = categories.Single(category => category.Header?.ToString() == CommunicationBlocks.AutomationCategory);
         Assert.False(communication.IsExpanded);
         communication.IsExpanded = true; Sta.Flush(dispatcher);
         Assert.True(communication.IsExpanded);
         communication.IsExpanded = false;
         CaptureVisual(host, "editor-palette-compact.png");
         var search = Descendants(panel).OfType<TextBox>().Single(box => AutomationProperties.GetName(box) == "Bausteine suchen");
+        Assert.True(search.Focusable && search.IsTabStop && search.IsEnabled);
         search.Text = "Modbus"; Sta.Flush(dispatcher); view.UpdateLayout();
         Assert.Equal("Modbus", editor.PaletteSearch);
         Assert.Single(editor.Palette);
@@ -32,6 +34,43 @@ public sealed partial class DevelopmentWorkspaceTests
         Assert.Equal(Visibility.Visible, Descendants(panel).OfType<TextBlock>().Single(text => text.Text == "Keine passenden Bausteine gefunden.").Visibility);
         search.Text = ""; Sta.Flush(dispatcher);
         Assert.NotEmpty(editor.Palette);
+    }
+
+    private static void VerifyParameterTable(EditorView view, EditorViewModel editor, Window host, Dispatcher dispatcher)
+    {
+        var item = editor.Palette.SelectMany(category => category.Items).Single(item => item.BlockType == ProcessBlocks.Start);
+        var node = editor.InsertAt(item, editor.FindNode(editor.Project.Definition.Loop.Id)!, 0);
+        Sta.Flush(dispatcher);
+        view.UpdateLayout();
+        var panel = (FrameworkElement)view.FindName("PropertiesPanel");
+        var open = Descendants(panel).OfType<Button>().Single(button => button.IsVisible &&
+            button.Content?.ToString() == "Tabelle bearbeiten …" &&
+            button.DataContext is ParameterRowViewModel row && row.Descriptor.Name == "Argumente");
+
+        var interaction = dispatcher.InvokeAsync(() =>
+        {
+            var dialog = Application.Current.Windows.OfType<Window>().Single(window => window.Owner == host && window.Title == "Argumente");
+            try
+            {
+                dialog.UpdateLayout();
+                Click(dialog, "Zeile hinzufügen");
+                var grid = Assert.Single(Descendants(dialog).OfType<DataGrid>());
+                var rows = Assert.IsType<DataView>(grid.ItemsSource);
+                rows[0][0] = "Text mit Komma, und Leerzeichen";
+                Click(dialog, "Übernehmen");
+                Assert.Equal(true, dialog.DialogResult);
+            }
+            finally
+            {
+                if (dialog.IsVisible) dialog.Close();
+            }
+        }, DispatcherPriority.Background);
+        Click(open);
+        interaction.Task.GetAwaiter().GetResult();
+        Assert.Equal("[\"Text mit Komma, und Leerzeichen\"]", node.Step!.Parameters["Argumente"]);
+        while (editor.UndoCommand.CanExecute(null)) editor.UndoCommand.Execute(null);
+        editor.Load(editor.Project);
+        Sta.Flush(dispatcher);
     }
 
     private static void VerifyEvaluationOptions(EditorView view, EditorViewModel editor, Dispatcher dispatcher)

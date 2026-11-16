@@ -134,6 +134,60 @@ public sealed class CurveTests : IDisposable
         Assert.Contains("Init", reason);
     }
 
+    [Fact]
+    public async Task Legacy_curve_output_steps_migrate_and_execute_all_four_actions()
+    {
+        var serializer = new ProjectSerializer();
+        var json = serializer.Serialize(SampleProjects.AcPruefung());
+        var legacy = new[]
+        {
+            ("init.kurve.laden", BlockCatalog.CurveLoad, CurveOutputBlocks.Load),
+            ("init.kurve.uebertragen", BlockCatalog.CurveTransfer, CurveOutputBlocks.Transfer),
+            ("init.kurve.starten", BlockCatalog.CurveStart, CurveOutputBlocks.Start),
+            ("fin.kurve.stoppen", BlockCatalog.CurveStop, CurveOutputBlocks.Stop)
+        };
+        var root = System.Text.Json.Nodes.JsonNode.Parse(json)!;
+        var steps = new[] { "init", "finalization" }
+            .SelectMany(group => root[group]!["children"]!.AsArray());
+        foreach (var (id, type, _) in legacy)
+        {
+            var step = steps.Single(node => (string?)node!["id"] == id)!;
+            step["block"] = type;
+            step["parameters"]!.AsObject().Remove(CurveOutputBlocks.ActionParameter);
+        }
+
+        var project = serializer.Deserialize(root.ToJsonString());
+
+        foreach (var (id, _, action) in legacy)
+        {
+            var step = Assert.IsType<StepDefinition>(project.Definition.Find(id));
+            Assert.Equal(BlockCatalog.CurveOutput, step.BlockType);
+            Assert.Equal(action, step.Parameters[CurveOutputBlocks.ActionParameter]);
+        }
+
+        var content = ResultFile.Read(await RecordToFile(project));
+        Assert.Contains(content.Run.Events, e => e.NodeId == "netzkurven" && e.Rating == ResultRating.Pass);
+    }
+
+    [Fact]
+    public void Curve_output_palette_and_editor_offer_one_block_with_load_only_fields()
+    {
+        var editor = new EditorViewModel(SampleProjects.AcPruefung());
+        var category = Assert.Single(editor.Palette, category => category.Name == "Kurvenausgabe");
+        var item = Assert.Single(category.Items);
+        Assert.Equal(BlockCatalog.CurveOutput, item.BlockType);
+
+        editor.SelectedNode = editor.FindNode("init.kurve.laden");
+        var properties = Assert.IsType<StepPropertiesViewModel>(editor.Properties);
+        var fields = properties.Parameters.ToDictionary(row => row.Descriptor.Name);
+        Assert.False(fields["Kurve"].IsHidden);
+        Assert.False(fields["Version"].IsHidden);
+        fields[CurveOutputBlocks.ActionParameter].Value = CurveOutputBlocks.Stop;
+        Assert.True(fields["Kurve"].IsHidden);
+        Assert.True(fields["Version"].IsHidden);
+        Assert.Equal("AC_Profil", fields["Kurve"].Value);
+    }
+
     // ------------------------------------------------------------------ Weg 2: Datei
 
     [Fact]

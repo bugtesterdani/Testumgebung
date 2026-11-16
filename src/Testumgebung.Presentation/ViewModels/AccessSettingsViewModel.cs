@@ -16,11 +16,13 @@ public sealed class RightsEditRow : ObservableObject
     private string _name = "";
     private bool _develop;
     private bool _release;
+    private bool _manage;
 
     public string Upn { get => _upn; set => SetProperty(ref _upn, value); }
     public string Name { get => _name; set => SetProperty(ref _name, value); }
     public bool Develop { get => _develop; set => SetProperty(ref _develop, value); }
     public bool Release { get => _release; set => SetProperty(ref _release, value); }
+    public bool Manage { get => _manage; set => SetProperty(ref _manage, value); }
     public string? PasswordHash { get; set; }
     public string PasswordStatus => LocalPasswordHash.IsValid(PasswordHash) ? "gesetzt" : "nicht gesetzt";
     public void SetPassword(string password) { PasswordHash = LocalPasswordHash.Create(password); OnPropertyChanged(nameof(PasswordStatus)); }
@@ -33,6 +35,7 @@ public sealed class RightsEditRow : ObservableObject
 public sealed class AccessSettingsViewModel : ObservableObject
 {
     private readonly IdentityServices _identity;
+    private readonly Func<bool> _canEditAccess;
     private string _clientId = "";
     private string _tenantId = "";
     private string _entraRedirectUri = "";
@@ -41,15 +44,17 @@ public sealed class AccessSettingsViewModel : ObservableObject
     private string _rightsSource = "Lokal";
     private string _developRole = "Testumgebung.Entwickeln";
     private string _releaseRole = "Testumgebung.Freigeben";
+    private string _manageRole = "Testumgebung.Verwalten";
     private string? _status;
     private bool _allowLocalPasswords;
 
-    public AccessSettingsViewModel(IdentityServices identity)
+    public AccessSettingsViewModel(IdentityServices identity, Func<bool>? canEditAccess = null)
     {
         _identity = identity;
+        _canEditAccess = canEditAccess ?? (() => true);
         AddCommand = new RelayCommand(() => Users.Add(new RightsEditRow { Develop = true }));
         RemoveCommand = new RelayCommand(parameter => { if (parameter is RightsEditRow user) Users.Remove(user); });
-        SaveCommand = new RelayCommand(() => Save(), () => _identity.Store is not null);
+        SaveCommand = new RelayCommand(() => Save(), () => _identity.Store is not null && _canEditAccess());
         ReloadCommand = new RelayCommand(Load);
         Load();
     }
@@ -88,6 +93,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
     public string RightsSource { get => _rightsSource; set => SetProperty(ref _rightsSource, string.IsNullOrWhiteSpace(value) ? "Lokal" : value); }
     public string DevelopRole { get => _developRole; set => SetProperty(ref _developRole, value?.Trim() ?? ""); }
     public string ReleaseRole { get => _releaseRole; set => SetProperty(ref _releaseRole, value?.Trim() ?? ""); }
+    public string ManageRole { get => _manageRole; set => SetProperty(ref _manageRole, value?.Trim() ?? ""); }
 
     public string? Status
     {
@@ -103,8 +109,9 @@ public sealed class AccessSettingsViewModel : ObservableObject
         RightsSource = accessConfig?.RightsSource ?? "Lokal";
         DevelopRole = accessConfig?.DevelopRole ?? "Testumgebung.Entwickeln";
         ReleaseRole = accessConfig?.ReleaseRole ?? "Testumgebung.Freigeben";
+        ManageRole = accessConfig?.ManageRole ?? "Testumgebung.Verwalten";
         Users.Clear();
-        foreach (var user in accessConfig?.Users ?? []) Users.Add(new RightsEditRow { Upn = user.Upn, Name = user.Name ?? "", Develop = user.Develop, Release = user.Release, PasswordHash = user.PasswordHash });
+        foreach (var user in accessConfig?.Users ?? []) Users.Add(new RightsEditRow { Upn = user.Upn, Name = user.Name ?? "", Develop = user.Develop, Release = user.Release, Manage = user.Manage, PasswordHash = user.PasswordHash });
         RefreshSession();
     }
 
@@ -115,6 +122,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
             && _identity.Session.CanDevelop && _identity.Session.User is { } user)
             Users.Add(new RightsEditRow { Upn = user.Upn, Name = user.DisplayName, Develop = true, Release = _identity.Session.CanRelease });
         OnPropertyChanged(nameof(ModeText));
+        SaveCommand.RaiseCanExecuteChanged();
     }
 
     private void LoadIdentitySettings(AccessConfig? accessConfig)
@@ -131,7 +139,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
 
     public bool Save()
     {
-        if (_identity.Store is not { } store) return false;
+        if (!_canEditAccess() || _identity.Store is not { } store) return false;
         if (Users.Any(user => string.IsNullOrWhiteSpace(user.Upn)))
         {
             Status = "Jede Zeile braucht einen Anmeldenamen (UPN).";
@@ -148,20 +156,7 @@ public sealed class AccessSettingsViewModel : ObservableObject
             return false;
         }
         if (!ValidateEntraCallback()) return false;
-        var config = new AccessConfig
-        {
-            ClientId = ClientId.Length == 0 ? null : ClientId,
-            TenantId = TenantId.Length == 0 ? null : TenantId,
-            EntraRedirectUri = EntraRedirectUri.Length == 0 ? null : EntraRedirectUri,
-            EntraBrokerTlsSha256 = EntraBrokerTlsSha256.Length == 0 ? null : EntraBrokerTlsSha256,
-            InactivityMinutes = InactivityMinutes,
-            AllowLocalPasswords = AllowLocalPasswords,
-            AllowLocalDevelopment = SaveLocalDevelopmentMode,
-            RightsSource = RightsSource,
-            DevelopRole = DevelopRole.Length == 0 ? "Testumgebung.Entwickeln" : DevelopRole,
-            ReleaseRole = ReleaseRole.Length == 0 ? "Testumgebung.Freigeben" : ReleaseRole,
-            Users = Users.Select(user => new RightsEntry { Upn = user.Upn.Trim(), Name = user.Name.Length == 0 ? null : user.Name, Develop = user.Develop, Release = user.Release, PasswordHash = user.PasswordHash }).ToList(),
-        };
+        var config = BuildConfig();
         if (!ValidateReachableAccess(config)) return false;
         try
         {
@@ -182,6 +177,22 @@ public sealed class AccessSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ModeText));
         return true;
     }
+
+    private AccessConfig BuildConfig() => new()
+    {
+        ClientId = ClientId.Length == 0 ? null : ClientId,
+        TenantId = TenantId.Length == 0 ? null : TenantId,
+        EntraRedirectUri = EntraRedirectUri.Length == 0 ? null : EntraRedirectUri,
+        EntraBrokerTlsSha256 = EntraBrokerTlsSha256.Length == 0 ? null : EntraBrokerTlsSha256,
+        InactivityMinutes = InactivityMinutes,
+        AllowLocalPasswords = AllowLocalPasswords,
+        AllowLocalDevelopment = SaveLocalDevelopmentMode,
+        RightsSource = RightsSource,
+        DevelopRole = DevelopRole.Length == 0 ? "Testumgebung.Entwickeln" : DevelopRole,
+        ReleaseRole = ReleaseRole.Length == 0 ? "Testumgebung.Freigeben" : ReleaseRole,
+        ManageRole = ManageRole.Length == 0 ? "Testumgebung.Verwalten" : ManageRole,
+        Users = Users.Select(user => new RightsEntry { Upn = user.Upn.Trim(), Name = user.Name.Length == 0 ? null : user.Name, Develop = user.Develop, Release = user.Release, Manage = user.Manage, PasswordHash = user.PasswordHash }).ToList(),
+    };
 
     private bool ValidateEntraCallback()
     {

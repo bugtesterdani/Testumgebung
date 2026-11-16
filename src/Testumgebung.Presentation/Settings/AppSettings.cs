@@ -105,11 +105,15 @@ public sealed class AppSettings
     public string? FirstPairedStation { get; set; }
     public string? SecondPairedStation { get; set; }
     public string? ResultFolder { get; set; }
+    public string? PythonExecutable { get; set; }
+    public string? CppCompiler { get; set; }
+    public string? CppCacheDirectory { get; set; }
     public DatabaseSettings Database { get; set; } = new();
     public OutboxSettings Outbox { get; set; } = new();
     public MqttSettings Mqtt { get; set; } = new();
     public HttpNotifySettings Http { get; set; } = new();
     public OpcUaSettings OpcUa { get; set; } = new();
+    public AlarmSettings Alarms { get; set; } = new();
 
     public AppSettings Clone(ISecretProtector protector)
     {
@@ -168,13 +172,36 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         }
     }
 
-    public void Save(AppSettings settings)
+    public void Save(AppSettings settings, bool preserveRuntime = false)
     {
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
         var temp = Path + ".tmp";
-        File.WriteAllText(temp, Serialize(settings));
+        var data = System.Text.Encoding.UTF8.GetBytes(Serialize(settings));
+        File.WriteAllBytes(temp, preserveRuntime ? PreserveRuntime(data, Path) : data);
         File.Move(temp, Path, overwrite: true);
     }
+
+    internal static byte[] PreserveRuntime(byte[] data, string currentPath)
+    {
+        using var incoming = JsonDocument.Parse(System.Text.Encoding.UTF8.GetString(data).TrimStart('\uFEFF'));
+        using var current = JsonDocument.Parse(File.Exists(currentPath) ? File.ReadAllText(currentPath) : "{}");
+        if (incoming.RootElement.ValueKind != JsonValueKind.Object || current.RootElement.ValueKind != JsonValueKind.Object)
+            throw new JsonException("Die Einstellungen müssen ein JSON-Objekt sein.");
+
+        using var buffer = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(buffer, new JsonWriterOptions { Indented = true }))
+        {
+            writer.WriteStartObject();
+            foreach (var property in incoming.RootElement.EnumerateObject())
+                if (!IsRuntimeProperty(property.Name)) property.WriteTo(writer);
+            foreach (var property in current.RootElement.EnumerateObject())
+                if (IsRuntimeProperty(property.Name)) property.WriteTo(writer);
+            writer.WriteEndObject();
+        }
+        return buffer.ToArray();
+    }
+
+    private static bool IsRuntimeProperty(string name) => name is "pythonExecutable" or "cppCompiler" or "cppCacheDirectory";
 
     public string Serialize(AppSettings s)
     {
@@ -182,6 +209,7 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         s.Mqtt.ProtectedPassword = string.IsNullOrEmpty(s.Mqtt.Password) ? null : protector.Protect(s.Mqtt.Password);
         s.Http.ProtectedHeaderValue = string.IsNullOrEmpty(s.Http.HeaderValue) ? null : protector.Protect(s.Http.HeaderValue);
         s.OpcUa.ProtectedPassword = string.IsNullOrEmpty(s.OpcUa.Password) ? null : protector.Protect(s.OpcUa.Password);
+        ProtectAlarmSecrets(s.Alarms);
         return JsonSerializer.Serialize(s, Json);
     }
 
@@ -193,9 +221,34 @@ public sealed class SettingsStore(string path, ISecretProtector protector)
         appSettings.Mqtt ??= new MqttSettings();
         appSettings.Http ??= new HttpNotifySettings();
         appSettings.OpcUa ??= new OpcUaSettings();
+        appSettings.Alarms ??= new();
         RestoreSecrets(appSettings);
+        RestoreAlarmSecrets(appSettings.Alarms);
         return appSettings;
     }
+    private void ProtectAlarmSecrets(AlarmSettings alarms)
+    {
+        alarms.ProtectedSmtpPassword = ProtectOptional(alarms.SmtpPassword);
+        alarms.ProtectedTeamsUrl = ProtectOptional(alarms.TeamsUrl);
+    }
+
+    private string? ProtectOptional(string? secret)
+        => string.IsNullOrEmpty(secret) ? null : protector.Protect(secret);
+
+    private void RestoreAlarmSecrets(AlarmSettings alarms)
+    {
+        alarms.SmtpPassword = RestoreOptional(alarms.ProtectedSmtpPassword, "SMTP-Passwort");
+        alarms.TeamsUrl = RestoreOptional(alarms.ProtectedTeamsUrl, "Teams-Webhook-URL");
+    }
+
+    private string? RestoreOptional(string? value, string name)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        var secret = protector.Unprotect(value);
+        if (secret is null) Warnings.Add($"{name} nicht entschlüsselbar – bitte neu eingeben.");
+        return secret;
+    }
+
     private void RestoreSecrets(AppSettings appSettings)
     {
         if (appSettings.Http.ProtectedHeaderValue is { Length: > 0 } hv)

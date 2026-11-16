@@ -64,13 +64,24 @@ public sealed class ConsolidatedBlockTests
     }
 
     [Theory]
+    [InlineData(BlockCatalog.SetRating, "NRESULT", ResultRating.NResult)]
+    [InlineData(BlockCatalog.SetRating, "PASS", ResultRating.Pass)]
     [InlineData(BlockCatalog.SetRating, "FAIL", ResultRating.Fail)]
+    [InlineData(BlockCatalog.SetRating, "ERROR", ResultRating.Error)]
     [InlineData(BlockCatalog.RaiseError, "", ResultRating.Error)]
     public async Task Hidden_legacy_blocks_still_roundtrip_and_execute(string type, string rating, ResultRating expected)
     {
         var step = BlockCatalog.Default.Create(type, "legacy", parameters: new Dictionary<string,string> { ["Bewertung"] = rating, ["Meldung"] = "Altbestand" });
         var project = new ProjectSerializer().Clone(new TestProject(Test(Group("loop").Add(step))));
         var run = new TestRun(project.Definition); await run.RunAsync().Within();
-        Assert.Equal(expected, Assert.Single(run.Steps("legacy")).Rating);
+        var result = Assert.Single(run.Steps("legacy"));
+        Assert.Equal(expected, result.Rating);
+        if (type == BlockCatalog.SetRating)
+        {
+            var migrated = Assert.IsType<StepDefinition>(project.Definition.Find("legacy"));
+            Assert.Equal(BlockCatalog.Evaluate, migrated.BlockType);
+            Assert.Equal(BlockCatalog.FixedRatingMode, migrated.Parameters["Art"]);
+            Assert.Null(result.Message);
+        }
     }
 }

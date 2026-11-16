@@ -19,6 +19,7 @@ namespace Testumgebung.Persistence.Results;
 public sealed class ResultRecorder
 {
     private readonly TestRun _run;
+    private readonly ResultRunKind _kind;
     private List<ResultNode> _structure;
     private TestDefinition _structureOf;
     private readonly object _gate = new();
@@ -30,9 +31,10 @@ public sealed class ResultRecorder
 
     /// <param name="journal">Zwischenaufzeichnung je Prüflingstest (Wiederherstellung nach Absturz/Stromausfall).</param>
     /// <param name="resolver">Filter, die eine spätere Wiederherstellung beachten muss.</param>
-    public ResultRecorder(TestRun run, RunJournal? journal = null, StorageResolver? resolver = null)
+    public ResultRecorder(TestRun run, RunJournal? journal = null, StorageResolver? resolver = null, ResultRunKind kind = ResultRunKind.Production)
     {
         _run = run;
+        _kind = kind;
         _journal = journal;
         _resolver = resolver;
         _structure = BuildStructure(run.Definition);
@@ -111,6 +113,7 @@ public sealed class ResultRecorder
             RunId = dutRunStarted.DutRunId,
             StationRunId = dutRunStarted.RunId,
             Station = _run.Options.StationName,
+            Kind = _kind,
             TestName = def.Name,
             TestVersion = def.Version,
             Started = dutRunStarted.Time,
@@ -274,6 +277,7 @@ public sealed class ResultRecorder
             Rating = dc.Status.Rating,
             OperatorAbort = dc.Status.OperatorAbort,
             IsDevelopmentRun = _development,
+            Kind = owner._kind,
             Structure = owner._structure,
             Events = _events,
             Waveforms = _waveforms,

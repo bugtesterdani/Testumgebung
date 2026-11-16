@@ -17,22 +17,43 @@ public static class ProcessBlocks
 {
     public const string Start = "prozess.start", Wait = "prozess.warten", Status = "prozess.status", Stop = "prozess.beenden";
     public const string WaitOutput = "prozess.ausgabe-warten", Send = "prozess.senden";
+    public const string Communication = "prozess.kommunikation", StatusEnd = "prozess.status-ende";
+    public const string ActionParameter = "Aktion";
+    private static readonly (string LegacyType, string Type, string Action)[] Actions =
+    [
+        (Send, Communication, "Senden"),
+        (WaitOutput, Communication, "Auf Ausgabe warten"),
+        (Status, StatusEnd, "Abfragen"),
+        (Wait, StatusEnd, "Warten"),
+        (Stop, StatusEnd, "Beenden")
+    ];
+
+    public static (string Type, string Action)? Replacement(string? type)
+    {
+        foreach (var action in Actions)
+            if (action.LegacyType == type) return (action.Type, action.Action);
+        return null;
+    }
+
+    public static string? ActionBlock(string type, string action) =>
+        Actions.FirstOrDefault(entry => entry.Type == type && entry.Action == action).LegacyType;
+
     private static readonly string[] Kinds = ["EXE", "Python", ".NET-DLL", "DLL-Main"];
     public static void Register(BlockCatalog catalog)
     {
         catalog.Register(new(Start, "Prozess starten", "Prozesse", "arrow", "Startet ein Programm, Python-Skript oder .NET-DLL. Gebundene Prozesse werden beim Prüflingsende aufgeräumt.",
         [new("Art", "Aufrufart", ParameterKind.Choice, Kinds[0], Choices: Kinds),
          new("Datei", "Absoluter Datei-/Skriptpfad", ParameterKind.Text, Required: true, Hint: "Platzhalter {Variable} erlaubt."),
-         new("Argumente", "Argumente (JSON-Liste)", ParameterKind.Text, "[]", Hint: "Beispiel: [\"--serial\",\"{Kennung}\"]"),
-         new("Arbeitsverzeichnis", "Arbeitsverzeichnis", ParameterKind.Text, Hint: "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt."),
-         new("Umgebung", "Umgebungsvariablen (JSON-Objekt)", ParameterKind.Text, "{}", Hint: "Stringwerte; nicht protokolliert. Beispiel: {\"MODE\":\"test\"}"),
-         new("Typ", "DLL-Main: vollständiger .NET-Typname", ParameterKind.Text),
-         new("Python", "Eigener Python-Interpreter (optional)", ParameterKind.Text, Hint: "Leer = bestehende Python-Auswahl des Prüfprogramms."),
+         new("Argumente", "Argumente", ParameterKind.Table, "[]", Hint: "Beispiel: [\"--serial\",\"{Kennung}\"]"),
+         new("Arbeitsverzeichnis", "Arbeitsverzeichnis", ParameterKind.Text, Hint: "Leer = Verzeichnis der Programm-/Skriptdatei. Absoluter Pfad; {Variable} erlaubt.", Advanced: true),
+         new("Umgebung", "Umgebungsvariablen", ParameterKind.Table, "{}", Hint: "Stringwerte; nicht protokolliert. Beispiel: {\"MODE\":\"test\"}", Advanced: true),
+         new("Typ", "DLL-Main: vollständiger .NET-Typname", ParameterKind.Text, VisibleWhen: new("Art", "DLL-Main")),
+         new("Python", "Eigener Python-Interpreter (optional)", ParameterKind.Text, Hint: "Leer = bestehende Python-Auswahl des Prüfprogramms.", VisibleWhen: new("Art", "Python"), Advanced: true),
          new("Modus", "Lebensdauer", ParameterKind.Choice, "Gebunden", Choices: ["Gebunden", "Unabhängig"]),
-         new("Fenster", "Konsolenfenster zulassen", ParameterKind.Bool, "false"),
+         new("Fenster", "Konsolenfenster zulassen", ParameterKind.Bool, "false", Advanced: true),
          new("Ausgabe", "stdout/stderr erfassen", ParameterKind.Bool, "true"),
-         new("Kodierung", "Ausgabekodierung", ParameterKind.Text, "utf-8", Hint: "Python: utf-8; ältere EXE ggf. windows-1252 oder ibm850."),
-         new("Ausgabelimit", "Max. Zeichen je Ausgabestream", ParameterKind.Number, "65536"),
+         new("Kodierung", "Ausgabekodierung", ParameterKind.Text, "utf-8", Hint: "Python: utf-8; ältere EXE ggf. windows-1252 oder ibm850.", Advanced: true),
+         new("Ausgabelimit", "Max. Zeichen je Ausgabestream", ParameterKind.Number, "65536", Advanced: true),
          new("Warten", "Auf Prozessende warten", ParameterKind.Bool, "true"),
          new("Zeitlimit", "Wartezeitlimit [ms]", ParameterKind.Number, "30000"),
          new("ProzessZiel", "Prozesskennung → Stringvariable", ParameterKind.Variable),
@@ -56,7 +77,25 @@ public static class ProcessBlocks
          new("Schliessen", "stdin danach schließen (EOF)", ParameterKind.Bool, "false"),
          new("Zeitlimit", "Sendezeitlimit [ms]", ParameterKind.Number, "30000")],
          parameters => new SendAction(parameters.Text("Prozess"), parameters.Text("Text"), parameters.Choice("Zeilenende"), parameters.Bool("Schliessen"), Timeout(parameters))));
+        RegisterCombined(catalog, Communication, "Prozess: Kommunikation", "Sendet Text oder wartet auf ein Signal in stdout oder stderr.");
+        RegisterCombined(catalog, StatusEnd, "Prozess: Status/Ende", "Fragt den Prozessstatus ab, wartet auf das Ende oder beendet den Prozess.");
     }
+
+    private static void RegisterCombined(BlockCatalog catalog, string type, string title, string description)
+    {
+        var actions = Actions.Where(entry => entry.Type == type).ToArray();
+        var descriptors = actions.ToDictionary(entry => entry.Action, entry => catalog.Get(entry.LegacyType));
+        var fields = descriptors.Values.SelectMany(block => block.Parameters).DistinctBy(field => field.Name);
+        var choices = actions.Select(entry => entry.Action).ToArray();
+        catalog.Register(new(type, title, "Prozesse", "arrow", description,
+            [new(ActionParameter, "Aktion", ParameterKind.Choice, choices[0], Choices: choices), .. fields],
+            parameters =>
+            {
+                var descriptor = descriptors[parameters.Choice(ActionParameter)];
+                return descriptor.Factory(new BlockParameters(descriptor, parameters.Raw));
+            }));
+    }
+
     private static ParameterDescriptor HandleParameter() => new("Prozess", "Prozesskennung", ParameterKind.Text, Required: true, Hint: "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID.");
     private static ParameterDescriptor[] ResultParameters() =>
     [new("ExitcodeZiel", "Exitcode → Intvariable (erst nach Ende gültig)", ParameterKind.Variable),

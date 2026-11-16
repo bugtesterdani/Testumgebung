@@ -1,6 +1,6 @@
 # Releases über GitHub-Issues und Pull Requests
 
-Release Notes werden ausschließlich direkt im GitHub-Release erzeugt. Eine Release-Notes-Datei oder ein CHANGELOG wird nicht eingecheckt.
+Versionsbezogene Release Notes werden direkt im GitHub-Release erzeugt. Die historische Übersicht im [CHANGELOG](../CHANGELOG.md) dokumentiert die Entwicklungsetappen.
 
 ## Planung und Softwareversion getrennt halten
 

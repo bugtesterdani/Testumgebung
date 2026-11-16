@@ -41,6 +41,41 @@ public sealed class PythonEnvironmentTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Restored_file_overrides_newer_registry_selection(bool reset)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var root = Temp();
+        Directory.CreateDirectory(root);
+        var registry = @"Software\Testumgebung.Tests\" + Guid.NewGuid().ToString("N");
+        var config = Path.Combine(root, "selection.json");
+        var old = Path.Combine(root, "old", "python.exe");
+        var current = Path.Combine(root, "current", "python.exe");
+        try
+        {
+            foreach (var executable in new[] { old, current })
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(executable)!);
+                File.WriteAllText(executable, "fixture");
+            }
+            var service = new PythonEnvironments(selectionFile: config, registryKey: registry);
+            service.SaveSelection(reset ? null : old);
+            var backup = File.ReadAllBytes(config);
+            service.SaveSelection(current);
+            File.Delete(config);
+            Assert.Equal(current, service.LoadSelection());
+            File.WriteAllBytes(config, backup);
+            Assert.Equal(reset ? null : old, service.LoadSelection());
+        }
+        finally
+        {
+            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(registry, false);
+            Directory.Delete(root, true);
+        }
+    }
+
     [Fact]
     public async Task Missing_bundle_and_console_fail_with_status_without_switching_runtime()
     {

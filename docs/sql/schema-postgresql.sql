@@ -157,3 +157,8 @@ CREATE INDEX ix_tu_runs_order ON tu_runs (order_id);
 
 INSERT INTO tu_schema_version (version, applied_utc) VALUES (3, 'manuell');
 
+-- Version 4
+ALTER TABLE tu_runs ADD run_kind VARCHAR(128);
+
+INSERT INTO tu_schema_version (version, applied_utc) VALUES (4, 'manuell');
+

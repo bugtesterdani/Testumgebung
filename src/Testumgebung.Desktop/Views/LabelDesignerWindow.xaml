@@ -1,0 +1,64 @@
+<Window x:Class="Testumgebung.Desktop.Views.LabelDesignerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Etikett gestalten" Width="960" Height="670" MinWidth="720" MinHeight="520"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="16" SourceUpdated="OnPropertiesUpdated">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <WrapPanel>
+                <TextBlock Text="Breite (mm)" VerticalAlignment="Center" Margin="0,0,5,0" />
+                <TextBox Width="55" Text="{Binding WidthMm, NotifyOnSourceUpdated=True}" Margin="0,0,12,0" />
+                <TextBlock Text="Höhe (mm)" VerticalAlignment="Center" Margin="0,0,5,0" />
+                <TextBox Width="55" Text="{Binding HeightMm, NotifyOnSourceUpdated=True}" Margin="0,0,12,0" />
+                <TextBlock Text="Druckauflösung (dpi)" VerticalAlignment="Center" Margin="0,0,5,0" />
+                <TextBox Width="58" Text="{Binding Dpi, NotifyOnSourceUpdated=True}" />
+            </WrapPanel>
+            <WrapPanel Margin="0,8,0,0">
+                <Button Content="Text" Tag="Text" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="Code 128" Tag="Code128" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="QR-Code" Tag="Qr" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="Linie" Tag="Line" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="Bild importieren …" Click="OnImage" />
+            </WrapPanel>
+        </StackPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+            <WrapPanel DockPanel.Dock="Right">
+                <Button Content="Abbrechen" IsCancel="True" Margin="0,0,8,0" />
+                <Button Content="Vorlage übernehmen" Click="OnSave" />
+            </WrapPanel>
+            <TextBlock x:Name="Status" TextWrapping="Wrap" Style="{StaticResource Caption}" />
+        </DockPanel>
+        <StackPanel DockPanel.Dock="Right" Width="214" Margin="14,0,0,0">
+            <TextBlock Text="Elemente" FontWeight="SemiBold" />
+            <ListBox x:Name="Elements" DisplayMemberPath="Kind" SelectionChanged="OnSelect" MaxHeight="130" Margin="0,4,0,6" />
+            <Button Content="Auswahl löschen" Click="OnDelete" HorizontalAlignment="Left" />
+            <StackPanel x:Name="Properties" Margin="0,12,0,0">
+                <TextBlock Text="X / Y (Druckpunkte)" />
+                <WrapPanel Margin="0,3,0,6">
+                    <TextBox Width="85" Text="{Binding X, NotifyOnSourceUpdated=True}" Margin="0,0,8,0" />
+                    <TextBox Width="85" Text="{Binding Y, NotifyOnSourceUpdated=True}" />
+                </WrapPanel>
+                <StackPanel x:Name="SizeFields">
+                    <TextBlock x:Name="SizeLabel" />
+                    <TextBox Text="{Binding Size, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                </StackPanel>
+                <StackPanel x:Name="LengthFields">
+                    <TextBlock Text="Länge (Druckpunkte)" />
+                    <TextBox Text="{Binding Length, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                </StackPanel>
+                <StackPanel x:Name="TextFields">
+                    <TextBlock Text="Text / Ausdruck, z. B. {Kennung}" />
+                    <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    <TextBlock Text="Beispielwert für die Vorschau" />
+                    <TextBox Text="{Binding Preview, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <Border Background="{StaticResource SurfaceBrush}" Padding="16" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Viewbox Stretch="Uniform">
+                <Canvas x:Name="Sheet" Background="White" ClipToBounds="True"
+                        MouseMove="OnDrag" MouseLeftButtonUp="OnDragEnd" LostMouseCapture="OnDragEnd" />
+            </Viewbox>
+        </Border>
+    </DockPanel>
+</Window>

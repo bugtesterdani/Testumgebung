@@ -4,7 +4,7 @@
              xmlns:vm="clr-namespace:Testumgebung.Presentation.ViewModels;assembly=Testumgebung.Presentation">
     <!-- Einstellungen (Etappe 6): Ergebnisdateien | Datenbank und Outbox | MQTT-Meldeweg -->
     <DockPanel Margin="16" DataContext="{Binding SettingsPage}">
-        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="14,10">
+        <Border DockPanel.Dock="Bottom" Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Settings;Notifications}" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="14,10">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Style="{StaticResource ToolButton}" Command="{Binding RevertCommand}" Margin="0,0,10,0">
@@ -40,14 +40,11 @@
         </ItemsControl>
 
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+
 
             <!-- ============================== Ergebnisdateien + Datenbank -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Settings}">
                 <StackPanel>
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                         <StackPanel>
@@ -58,6 +55,20 @@
                             <TextBlock Text="Prüfplatz auf Seite 2" Style="{StaticResource Label}" />
                             <ComboBox ItemsSource="{Binding StationNames}" SelectedItem="{Binding SecondPairedStation}" />
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,8,0,0" Text="Mit Speichern und übernehmen aktivieren. Werker können weder die Anzeige noch die Seitenzuordnung ändern. Änderungen sind erst nach Ende aller Prüfungen möglich." />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12"
+                            Visibility="{Binding DataContext.IsDeveloper, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolVis}}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Code-Laufzeit" />
+                            <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                       Text="Die Pfade gelten nach einem Neustart. Leere Felder verwenden die automatische Auswahl. Umgebungsvariablen haben Vorrang." />
+                            <TextBlock Text="Python-Interpreter" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding PythonExecutable, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="C++-Compiler" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding CppCompiler, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="C++-Cache-Ordner" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding CppCacheDirectory, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
@@ -144,6 +155,11 @@
                         </StackPanel>
                     </Border>
 
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Access}">
                     <!-- Zugang: Entra-App und Rechte je Konto (zugang.json, nur Administratoren) -->
                     <Border Style="{StaticResource Card}" Margin="0,12,0,0"
                             DataContext="{Binding DataContext.AccessPage, RelativeSource={RelativeSource AncestorType=UserControl}}">
@@ -206,6 +222,8 @@
                             </Grid>
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
                                        Text="Lokal = Liste unten je Prüfplatz; AppRollen = zentral über die App-Rollen der Entra-App (Claim „roles“); Beide = Vereinigung." />
+                            <TextBlock Text="App-Rolle „Verwalten“" Style="{StaticResource Label}" />
+                            <TextBox Text="{Binding ManageRole, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource CodeBox}" Margin="0,0,0,8" />
                             <CheckBox Content="Lokalen Benutzer-/Passwortzugang als Übergang aktivieren" IsChecked="{Binding AllowLocalPasswords}" Margin="0,8"/>
                             <TextBlock Text="Vor dem Aktivieren für jedes Konto ein Passwort setzen. Passwörter werden gesalzen gehasht in zugang.json gespeichert. Werkerbetrieb ohne Anmeldung bleibt möglich; für zentrale Firmenidentitäten Entra verwenden." Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             <TextBlock Text="Rechte je Konto" FontWeight="SemiBold" Margin="0,4,0,4" />
@@ -215,6 +233,7 @@
                                     <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="*" />
                                     <DataGridCheckBoxColumn Header="Entwickeln" Binding="{Binding Develop, UpdateSourceTrigger=PropertyChanged}" Width="85" />
                                     <DataGridCheckBoxColumn Header="Freigeben" Binding="{Binding Release, UpdateSourceTrigger=PropertyChanged}" Width="85" />
+                                    <DataGridCheckBoxColumn Header="Verwalten" Binding="{Binding Manage, UpdateSourceTrigger=PropertyChanged}" Width="85" />
                                     <DataGridTextColumn Header="Passwort" Binding="{Binding PasswordStatus}" IsReadOnly="True" Width="100"/>
                                     <DataGridTemplateColumn Header="Lokales Passwort" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                                         <Button Content="Setzen / ändern" Click="OnSetLocalPassword" Style="{StaticResource ToolButton}"/>
@@ -249,11 +268,11 @@
                             </TextBlock>
                         </StackPanel>
                     </Border>
-                </StackPanel>
             </ScrollViewer>
 
             <!-- ============================== MQTT -->
-            <Border Grid.Column="2" Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}"
+                    Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Notifications}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <StackPanel>
@@ -399,7 +418,32 @@
                     <TextBlock Text="{Binding OpcUaStatus}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"
                                Visibility="{Binding OpcUaStatus, Converter={StaticResource NullVis}}" />
 
-                    <TextBlock Style="{StaticResource SectionTitle}" Text="Gesendete Meldungen (HTTP, OPC UA)" Margin="0,14,0,6" />
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Alarmierung" Margin="0,14,0,6" />
+                    <TextBlock Text="ERROR-Prüfläufe in Folge (0 = aus)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.ErrorStreak}" />
+                    <TextBlock Text="Offene Outbox-Einträge (0 = aus)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.OutboxThreshold}" />
+                    <CheckBox IsChecked="{Binding Alarms.ResultFolder}" Content="Bei nicht erreichbarem Ergebnisordner melden" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding Alarms.Calibration}" Content="Bei fälliger Kalibrierung melden" Margin="0,6,0,0" />
+                    <CheckBox IsChecked="{Binding Alarms.SmtpEnabled}" Content="Alarme per SMTP-E-Mail senden" Margin="0,6,0,0" />
+                    <TextBlock Text="SMTP-Server" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpHost}" />
+                    <TextBlock Text="Port" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpPort}" />
+                    <TextBlock Text="Absenderadresse" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpSender}" />
+                    <TextBlock Text="Empfängeradresse" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpRecipient}" />
+                    <TextBlock Text="Benutzername (optional)" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <TextBox Text="{Binding Alarms.SmtpUsername}" />
+                    <CheckBox IsChecked="{Binding Alarms.SmtpStartTls}" Content="SMTP-Verbindung mit STARTTLS verschlüsseln" Margin="0,6,0,0" />
+                    <TextBlock Text="SMTP-Passwort" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <PasswordBox x:Name="SmtpPasswordBox" PasswordChanged="SmtpPasswordChanged" />
+                    <CheckBox IsChecked="{Binding Alarms.TeamsEnabled}" Content="Alarme an Microsoft Teams senden" Margin="0,6,0,0" />
+                    <TextBlock Text="Teams-Workflow-Webhook-URL" Style="{StaticResource Label}" Margin="0,6,0,0" />
+                    <PasswordBox x:Name="TeamsUrlBox" PasswordChanged="TeamsUrlChanged" />
+
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="Gesendete Meldungen" Margin="0,14,0,6" />
                     <ListBox ItemsSource="{Binding NotifyLog}" BorderThickness="0" MaxHeight="180">
                         <ListBox.ItemTemplate>
                             <DataTemplate>

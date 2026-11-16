@@ -98,6 +98,59 @@ public sealed class PairedStationsTests
     }
 
     [Fact]
+    public async Task Paired_program_can_qualify_both_stations_in_standalone_reference_runs()
+    {
+        var project = Program();
+        var dut = (GroupDefinition)project.Definition.Loop.Children[0];
+        dut.Children[2] = Block(BlockCatalog.Evaluate, "check", ("Bedingung", "Kennung != \"BAD\""), ("Wert", "Kennung"));
+        var setup = StationSetup.Default(project, 2);
+        foreach (var station in setup.Stations)
+        {
+            station.ReferenceCheck = new() { Enabled = true, GoodId = "GOOD", BadId = "BAD" };
+            station.Selection = new SelectionConfig { Rules = [new SelectionRule { Pattern = "A*", Test = project.Definition.Name }] };
+        }
+        var ui = new QueueDispatcher();
+        var shell = new ShellViewModel(ui, project: project, clock: SystemClock.Instance,
+            stations: new StationCoordinator(setup, new ResourceManager()));
+        var pair = shell.PairedStations;
+        pair.Enabled = true;
+        pair.Order = "A123";
+        await pair.StartAsync().Within();
+        Assert.Contains("gesperrt", pair.Status);
+
+        foreach (var station in shell.Stations)
+        {
+            await CheckSample(station, "GOOD");
+            await CheckSample(station, "BAD");
+            Assert.Contains(station.Protocol, row => row.Status == "Produktion freigegeben");
+        }
+
+        var production = pair.StartAsync();
+        await ui.Until(() => pair.First!.Run?.Options.PairedStation is not null && pair.Second!.Run?.Options.PairedStation is not null,
+            "Produktion nach Referenzprüfung");
+        pair.Abort();
+        await ui.Until(() => production.IsCompleted, "Produktionsabbruch");
+        await production;
+
+        async Task CheckSample(StationViewModel station, string id)
+        {
+            station.ReferenceScan = id;
+            var reference = station.StartReferenceAsync();
+            await ui.Until(() => station.ActiveContent is { IsAwaiting: true, Text: "Prüfling entnommen" }, "Referenzmuster entnommen");
+            station.ActiveContent!.ConfirmCommand.Execute(null);
+            await ui.Until(() => reference.IsCompleted, "Referenzlauf abgeschlossen");
+            await reference;
+            Assert.Contains(station.Protocol, row => row.Text == "Referenzprüfung bestätigt");
+            var run = Assert.IsType<TestRun>(station.Run);
+            var completed = Assert.Single(run.Events.OfType<DutRunCompleted>());
+            Assert.Equal(id, completed.DutId);
+            Assert.Equal(id == "GOOD" ? ResultRating.Pass : ResultRating.Fail, completed.Status.Rating);
+            Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("wait")).Rating);
+            Assert.Equal(ResultRating.NResult, Assert.Single(run.Steps("release")).Rating);
+        }
+    }
+
+    [Fact]
     public async Task Shared_order_separate_serials_and_removal_controls_partner()
     {
         var project = Program(); var setup = StationSetup.Default(project, 2);
