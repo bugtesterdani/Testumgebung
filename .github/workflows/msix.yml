@@ -111,14 +111,13 @@ jobs:
         run: |
           ./build/tests/verify-coverage-goals.ps1
           ./build/coverage.ps1 -EnforceTargets -RunDirectory artifacts/coverage/ci -PythonForSsh (Get-Command python).Source
-      - name: Fernverwaltung testen und paketieren
+      - name: Fernverwaltung paketieren
         shell: pwsh
         env:
           BUILD_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          dotnet test tests/RemoteAdmin.Tests -c Release
-          if ($LASTEXITCODE) { throw 'Fernverwaltung: Tests fehlgeschlagen.' }
-          dotnet publish src/Testumgebung.RemoteAdmin -c Release --no-self-contained -p:Version=$env:BUILD_VERSION -o artifacts/remote-admin
+
+          dotnet publish src/Testumgebung.RemoteAdmin -c Release -r win-x64 --no-self-contained -p:Version=$env:BUILD_VERSION -o artifacts/remote-admin
           if ($LASTEXITCODE) { throw 'Fernverwaltung: Paketierung fehlgeschlagen.' }
           Copy-Item docs/fernverwaltung.md,LICENSE,THIRD-PARTY-NOTICES.md,THIRD-PARTY-TERMS.md artifacts/remote-admin
           Compress-Archive -Path 'artifacts/remote-admin/*' -DestinationPath "artifacts/Testumgebung-Fernverwaltung-$env:BUILD_VERSION.zip"

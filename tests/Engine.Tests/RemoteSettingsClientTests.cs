@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Http.Json;
 using Testumgebung.Contracts;
 using Testumgebung.Presentation.Settings;
 
@@ -7,62 +5,54 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class RemoteSettingsClientTests
 {
-    private static readonly string Token = new('f', 64);
     private static readonly RemoteStationSettings Initial = new(false, "", "", 0, 0, false, false);
 
     [Theory]
-    [InlineData(null, "lab", true)]
-    [InlineData("http://example.test", "lab", true)]
-    [InlineData("https://user@example.test", "lab", true)]
-    [InlineData("https://example.test/?x=1", "lab", true)]
-    [InlineData("https://example.test/#test", "lab", true)]
-    [InlineData("https://example.test", "../../lab", true)]
-    [InlineData("https://example.test", null, true)]
-    [InlineData("https://example.test", "lab", false)]
-    public void Agent_requires_trusted_transport_id_and_token(string? address, string? id, bool validToken)
-        => Assert.Null(RemoteSettingsClient.TryCreate(address, id, validToken ? Token : "short"));
+    [InlineData("lab_1", true)]
+    [InlineData("Lab-02", true)]
+    [InlineData("../../lab", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void An_opted_in_agent_needs_a_stable_station_id(string? id, bool valid)
+        => Assert.Equal(valid, RemoteSettingsClient.IsValidStationId(id));
 
     [Fact]
-    public async Task Reports_current_settings_then_retries_acknowledgment_without_applying_twice()
+    public async Task A_lost_acknowledgment_does_not_reapply_an_already_saved_change()
     {
         var desired = Initial with { ErrorStreak = 3 };
-        var handler = new FakeTransport(
-            new(HttpStatusCode.OK) { Content = JsonContent.Create(new RemoteSettingsChange(7, Initial, desired)) },
-            new(HttpStatusCode.ServiceUnavailable), new(HttpStatusCode.NoContent));
-        using var http = new HttpClient(handler);
-        var client = RemoteSettingsClient.TryCreate("https://example.test/", "lab_1", Token, http)!;
+        var client = new RemoteSettingsClient();
         var current = Initial;
         var changes = new List<long>();
         var errors = new List<Exception>();
-        for (var attempt = 0; attempt < 3; attempt++)
+        var reports = new List<RemoteSettingsReport>();
+
+        Task<RemoteSettingsChange?> Exchange(RemoteSettingsReport report)
         {
-            await client.PollAsync(() => new(current, ["P1", "P2"]), change =>
+            reports.Add(report);
+            return reports.Count switch
+            {
+                2 => Task.FromException<RemoteSettingsChange?>(new IOException("Verbindung verloren")),
+                4 => Task.FromResult<RemoteSettingsChange?>(null),
+                _ => Task.FromResult<RemoteSettingsChange?>(new(7, Initial, desired)),
+            };
+        }
+
+        string Apply(RemoteSettingsChange change)
+        {
+            if (current != change.Desired)
             {
                 changes.Add(change.Revision);
                 current = change.Desired;
-                return "applied";
-            }, errors.Add);
+            }
+            return "applied";
         }
+
+        await client.PollAsync(Exchange, () => new(current, ["P1", "P2"]), Apply, errors.Add);
+        await client.PollAsync(Exchange, () => new(current, ["P1", "P2"]), Apply, errors.Add);
+
         Assert.Equal([7L], changes);
-        Assert.IsType<HttpRequestException>(Assert.Single(errors));
-        Assert.Equal(new RemoteSettingsReport(Initial, handler.Reports[0].Stations), handler.Reports[0]);
-        Assert.Equal((7L, "applied", desired), (handler.Reports[1].Revision, handler.Reports[1].Status, handler.Reports[1].Current));
-        Assert.Equal(handler.Reports[1].Revision, handler.Reports[2].Revision);
-        Assert.Equal(handler.Reports[1].Status, handler.Reports[2].Status);
-        Assert.Equal(handler.Reports[1].Current, handler.Reports[2].Current);
-    }
-
-    private sealed class FakeTransport(params HttpResponseMessage[] responses) : HttpMessageHandler
-    {
-        public List<RemoteSettingsReport> Reports { get; } = [];
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            Assert.Equal("https://example.test/agent/lab_1", request.RequestUri!.AbsoluteUri);
-            Assert.Equal("Bearer", request.Headers.Authorization?.Scheme);
-            Assert.Equal(Token, request.Headers.Authorization?.Parameter);
-            Reports.Add((await request.Content!.ReadFromJsonAsync<RemoteSettingsReport>(cancellationToken))!);
-            return responses[Reports.Count - 1];
-        }
+        Assert.IsType<IOException>(Assert.Single(errors));
+        Assert.Equal((null, Initial), (reports[0].Revision, reports[0].Current));
+        Assert.Equal((7L, "applied", desired), (reports[3].Revision, reports[3].Status, reports[3].Current));
     }
 }

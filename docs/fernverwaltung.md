@@ -1,27 +1,28 @@
 # Prüfplatz-Fernverwaltung
 
-Die separate Webanwendung zeigt den gemeldeten Stand angeschlossener Prüfplatzrechner und bietet Änderungen an der gemeinsamen Prüfplatzanzeige und den Alarmauslösern an. Die Prüfplatzsoftware bezieht die Änderungen ausgehend über HTTPS und übernimmt sie zwischen Prüfungen und Aufträgen. Der Prüfplatz bleibt bei Dienstausfall mit seinen letzten lokalen Einstellungen betriebsfähig.
+`Testumgebung.RemoteAdmin.exe` ist eine separate Windows-Anwendung. Sie läuft auch auf einem anderen Rechner parallel zur Testumgebung und verbindet sich direkt mit derselben SQL-Datenbank wie die Prüfprotokolle. Die Entra-Anmeldung öffnet den Systembrowser. Für die Fernverwaltung sind weder ein Webdienst noch der lokale Entra-Broker erforderlich.
 
-Die zentrale SQLite-Datei enthält den letzten gemeldeten Stand pro Rechner sowie jede angenommene Änderung mit Entra-Objekt-ID, UTC-Zeit und Vorher-/Nachherwerten. Der Verlauf zeigt, ob der Prüfplatz die Änderung übernommen, einen Konflikt gemeldet oder die Werte abgelehnt hat. Hat jemand am Prüfplatz seit der Anforderung dieselben Einstellungen geändert, wird der Filialstand nicht überschrieben. Pro Rechner kann eine Änderung ausstehen.
+Die Oberfläche zeigt den letzten gemeldeten Stand der verbundenen Prüfplatzrechner. Änderbar sind die gemeinsame Prüfplatzanzeige und die Alarmauslöser. Ein Prüfplatz holt die Änderung über seine vorhandene Datenbankverbindung ab und übernimmt sie im Leerlauf. Der Testbetrieb verwendet bei einer unterbrochenen Verbindung weiterhin die zuletzt gespeicherten lokalen Einstellungen.
 
-## Server einrichten
+## Windows-Anwendung einrichten
 
-1. In einem einzelnen Entra-Mandanten eine App-Registrierung vom Typ **Web** anlegen. Die HTTPS-Rückleitung ist `https://<server>/signin-oidc`; für die Abmeldung zusätzlich `https://<server>/signout-callback-oidc` registrieren. Die App-Rolle `Testumgebung.Fernverwaltung` für Benutzer und Gruppen definieren und den vorgesehenen Personen zuweisen. Diese Rolle gilt für alle im Dienst angeschlossenen Prüfplätze.
-2. Prozesskonfiguration setzen: `Entra__TenantId`, `Entra__ClientId` und `Entra__ClientSecret`. Das Secret über die Secret-Verwaltung des Serverprozesses setzen. Kestrel mit HTTPS und einem für Browser und Prüfplätze vertrauenswürdigen Zertifikat konfigurieren.
-3. Mit `DatabasePath` den Pfad zu einer dauerhaft gespeicherten, durch Betriebssystemrechte geschützten SQLite-Datei setzen. Die Datei gehört in die Datensicherung des Servers.
-4. Für jeden Rechner eine eindeutige ID aus Buchstaben, Ziffern, Bindestrichen und Unterstrichen und einen zufälligen Schlüssel aus 64 Hex-Zeichen vergeben. Serverseitig unter `StationTokenHashes__<ID>` den SHA-256-Hash des **Schlüsseltexts** als Hex-String hinterlegen.
+1. Eine Entra-App als öffentlichen Desktopclient im gewünschten Mandanten registrieren. Den in `zugang.json` eingetragenen Loopback-Redirect (standardmäßig `http://localhost`) unter **Mobile und Desktopanwendungen** hinterlegen. Die Entra-App-Rolle `Testumgebung.Fernverwaltung` den vorgesehenen Personen oder Gruppen zuweisen. Die Rolle gilt für alle Prüfplätze, die das Datenbankkonto lesen kann.
+2. Mandanten- und Anwendungs-ID in `%ProgramData%\Testumgebung\zugang.json` eintragen. Für eine getrennte Registrierung kann `TESTUMGEBUNG_REMOTE_ACCESS` auf eine eigene Zugangsdatei zeigen. Die Datei enthält für die Anwendung die Felder `tenantId`, `clientId` und optional `entraRedirectUri`.
+3. `Testumgebung.RemoteAdmin.exe` öffnen, bei Entra anmelden und dieselbe Datenbank wie an den Prüfplätzen auswählen. Auf einem Rechner mit bereits eingerichteter Testumgebung wird dessen Verbindung beim ersten Start vorgeschlagen. Die Fernverwaltung speichert ihre Verbindung separat im Windows-Benutzerprofil und schützt sie mit DPAPI.
+4. An jedem beteiligten Prüfplatz `TESTUMGEBUNG_REMOTE_ID` im Windows-Kontext der Prüfplatzanwendung auf eine eindeutige, dauerhaft verwendete Rechner-ID setzen. Erlaubt sind maximal 64 Buchstaben, Ziffern, Bindestriche oder Unterstriche. Danach die Prüfplatzanwendung neu starten. Eine ID kennzeichnet eine laufende Installation und deren lokale Prüfplätze. Nach der ersten Meldung den Prüfplatz in der Fernverwaltung über **Prüfplätze aktualisieren** laden.
 
-Die ausführbare Webanwendung lässt sich separat veröffentlichen:
+Das Release-ZIP **Testumgebung-Fernverwaltung** enthält die Anwendung. Für das ZIP werden Windows x64 und die .NET-Desktop-Runtime 10 benötigt. Aus dem Quellcode erzeugen:
 
 ```powershell
-dotnet publish src/Testumgebung.RemoteAdmin -c Release -o artifacts/remote-admin
-dotnet artifacts/remote-admin/Testumgebung.RemoteAdmin.dll
+dotnet publish src/Testumgebung.RemoteAdmin -c Release -r win-x64 --no-self-contained -o artifacts/remote-admin
 ```
 
-ASP.NET Core muss auf dem Server vorhanden sein. Details zur Entra-Registrierung und den Rückleitungen beschreibt die [ASP.NET-Core-Dokumentation zu OpenID Connect](https://learn.microsoft.com/aspnet/core/security/authentication/configure-oidc-web-authentication).
+## Datenbank und Protokoll
 
-## Prüfplatz verbinden
+Die Tabelle `tu_station_settings` liegt in derselben Datenbank wie die Prüfprotokolle. Die Anwendung legt die Tabelle bei der ersten Nutzung an, sofern das verwendete Datenbankkonto sie anlegen darf. Anschließend benötigen die Anwendungen Zugriff auf die Tabelle. Für verschiedene Rechner eine gemeinsam erreichbare SQL-Server-, PostgreSQL- oder MySQL-Datenbank verwenden. SQLite eignet sich für einen lokalen Test auf einem Rechner.
 
-Im Windows-Kontext, unter dem die Prüfplatzanwendung läuft, `TESTUMGEBUNG_REMOTE_URL` auf die HTTPS-Adresse des Servers, `TESTUMGEBUNG_REMOTE_ID` auf die vergebene Rechner-ID und `TESTUMGEBUNG_REMOTE_TOKEN` auf den unverschlüsselten Schlüssel setzen. Danach die Prüfplatzanwendung neu starten. Der Rechner erscheint nach seiner ersten Meldung in der Webanwendung. Jede Meldung bezieht sich auf das lokale Windows-Profil der laufenden Anwendung.
+Die Tabelle enthält je Rechner den gemeldeten Konfigurationsstand und die einzelnen Änderungsrevisionen mit Entra-Anmeldename, Objekt-ID, UTC-Zeit, Vorher-/Nachherwerten und Ergebnis der Übernahme. Die Anwendung meldet zwischenzeitliche lokale Änderungen als Konflikt, damit sie nicht still überschrieben werden. Pro Rechner kann eine Änderung ausstehen.
 
-Übertragen werden nur die einstellbaren Anzeigewerte, Alarmauslöser und Prüfplatznamen. Zugangsdaten, Programme, Laufzeitpfade und Versandziele bleiben am Prüfplatz. Der Dienst stellt keine Bedienfunktionen für den laufenden Test bereit.
+Die Entra-Rolle schützt den Zugang zur Windows-Oberfläche. Direkte Datenbankzugriffe richten sich nach den Berechtigungen der verwendeten Datenbankkonten. Verteilen Sie keine gemeinsam genutzten administrativen Datenbankzugänge, wenn der Änderungsverlauf einzelnen Personen zugeordnet werden soll. Direkte Tabellenänderungen außerhalb der Anwendungen sind von deren Protokollierung unabhängig.
+
+Laufzeitpfade, Versandziele, Zugangsdaten und Prüfprogramme werden über die Fernverwaltung nicht übertragen. Start und Stopp eines Prüflaufs bleiben am Prüfplatz.

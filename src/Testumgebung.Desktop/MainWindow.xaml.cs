@@ -31,7 +31,7 @@ public partial class MainWindow : Window
     private readonly ReleaseHub _releases;
     private readonly DispatcherTimer _inactivity = new() { Interval = TimeSpan.FromSeconds(30) };
     private readonly StationCoordinator _coordinator;
-    private readonly RemoteSettingsClient? _remoteSettings;
+    private readonly string? _remoteStationId;
 
     private readonly Testumgebung.Presentation.Releases.ProgramStartupLoader _programStartupLoader;
 
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), CreateFileDialogService(startup), project: exampleProject, codeRuntime: _codeRuntime,
             services: _services, settingsStore: store, identity: identity, releases: _releases,
             stations: coordinator, stationStore: exampleMode ? null : stationStore);
-        _remoteSettings = startup is null && !developmentMode ? RemoteSettingsClient.FromEnvironment() : null;
+        _remoteStationId = startup is null && !developmentMode ? RemoteSettingsClient.StationIdFromEnvironment() : null;
         Shell.ReleasesPage?.Sources.ConfigureAuthentication(new SourceCredentialStore(SourceCredentialStore.DefaultFile, new RepositorySecretProtector()));
         ConfigureExampleMode(exampleMode);
         DataContext = Shell;

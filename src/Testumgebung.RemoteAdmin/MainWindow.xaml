@@ -1,0 +1,60 @@
+<Window x:Class="Testumgebung.RemoteAdmin.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Testumgebung – Prüfplatz-Fernverwaltung" Width="1024" Height="740" MinWidth="760" MinHeight="560"
+    FontFamily="Segoe UI" FontSize="14" Background="#F2F5F9">
+    <Window.Resources>
+        <Style TargetType="Button"><Setter Property="Padding" Value="12,5"/><Setter Property="Margin" Value="0,0,8,0"/></Style>
+        <Style TargetType="TextBox"><Setter Property="Padding" Value="5,2"/></Style>
+        <Style TargetType="ComboBox"><Setter Property="Padding" Value="5,2"/></Style>
+    </Window.Resources>
+    <DockPanel Margin="24" LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+            <TextBlock Text="Prüfplatz-Fernverwaltung" FontSize="26" FontWeight="SemiBold" Foreground="#162B42"/>
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,8">
+                <Button x:Name="LoginButton" Content="Mit Microsoft Entra anmelden" Click="Login"/>
+                <Button x:Name="LogoutButton" Content="Abmelden" Click="Logout" IsEnabled="False"/>
+            </StackPanel>
+            <TextBlock x:Name="StatusText" TextWrapping="Wrap" MinHeight="24"/>
+        </StackPanel>
+        <Grid x:Name="Workspace" IsEnabled="False">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="Prüfprotokoll-Datenbank" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="155"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <ComboBox x:Name="ProviderBox" Margin="0,0,8,0" AutomationProperties.Name="Datenbanktyp"/>
+                    <PasswordBox x:Name="ConnectionBox" Grid.Column="1" Margin="0,0,8,0" AutomationProperties.Name="Datenbank-Verbindungsstring"/>
+                    <Button Content="Prüfplätze aktualisieren" Grid.Column="2" Click="Refresh"/>
+                </Grid>
+            </StackPanel>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <ListBox x:Name="StationList" DisplayMemberPath="Id" SelectionChanged="SelectStation" AutomationProperties.Name="Prüfplatzrechner"/>
+                <ScrollViewer Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="EditorPanel" IsEnabled="False" Margin="1,0,14,0">
+                        <TextBlock x:Name="SeenText" FontWeight="SemiBold" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                        <CheckBox x:Name="PairedBox" Content="Zwei Prüfplätze gemeinsam anzeigen" Margin="0,0,0,8"/>
+                        <TextBlock Text="Erster Prüfplatz"/><ComboBox x:Name="FirstBox" Margin="0,0,0,6" AutomationProperties.Name="Erster Prüfplatz"/>
+                        <TextBlock Text="Zweiter Prüfplatz"/><ComboBox x:Name="SecondBox" Margin="0,0,0,10" AutomationProperties.Name="Zweiter Prüfplatz"/>
+                        <TextBlock Text="ERROR-Prüfläufe in Folge (0 = aus)"/><TextBox x:Name="ErrorBox" Margin="0,0,0,6" AutomationProperties.Name="ERROR-Prüfläufe in Folge"/>
+                        <TextBlock Text="Offene Outbox-Einträge (0 = aus)"/><TextBox x:Name="OutboxBox" Margin="0,0,0,6" AutomationProperties.Name="Offene Outbox-Einträge"/>
+                        <CheckBox x:Name="FolderBox" Content="Alarm bei nicht erreichbarem Ergebnisordner" Margin="0,0,0,6"/>
+                        <CheckBox x:Name="CalibrationBox" Content="Alarm bei fälliger Kalibrierung" Margin="0,0,0,8"/>
+                        <Button x:Name="SaveButton" Content="Änderung anfordern" Click="Save" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+                        <TextBlock Text="Änderungsverlauf" FontWeight="SemiBold"/>
+                        <ItemsControl x:Name="HistoryList" Margin="0,6,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="10" Margin="0,0,0,8" Background="White" BorderBrush="#D2DCE7" BorderThickness="1">
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>
