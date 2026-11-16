@@ -53,9 +53,11 @@
                 <StackPanel x:Name="TextFields">
                     <TextBlock x:Name="TextLabel" Text="Text / Ausdruck, z. B. {Kennung}" />
                     <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
-                    <StackPanel x:Name="PreviewFields">
-                        <TextBlock Text="Beispielwert für die Vorschau" />
-                        <TextBox Text="{Binding Preview, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    <StackPanel>
+                        <TextBlock Text="Beispielwerte für Platzhalter" />
+                        <TextBlock Text="Eine Zeile je Platzhalter, z. B. Kennung=SN-123" TextWrapping="Wrap" />
+                        <TextBox Text="{Binding ExampleValues, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto" MinHeight="58" MaxHeight="125" Margin="0,3,0,6" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

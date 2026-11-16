@@ -79,6 +79,13 @@ public sealed partial class DevelopmentWorkspaceTests
                     dialog.ImportImage(Path.Combine(folder, "logo.png"));
                     foreach (var button in Descendants(dialog).OfType<Button>().Where(button => button.Tag is string).ToArray())
                         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    var list = Descendants(dialog).OfType<ListBox>().Single();
+                    list.SelectedItem = list.Items.Cast<LabelElement>().Single(item => item.Kind == LabelElementKind.Text);
+                    var sample = Descendants(dialog).OfType<TextBox>().Single(box =>
+                        box.GetBindingExpression(TextBox.TextProperty)?.ParentBinding.Path.Path == nameof(LabelElement.ExampleValues));
+                    sample.SetCurrentValue(TextBox.TextProperty, "Kennung=DEMO-101");
+                    sample.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                    Assert.Contains(Descendants(dialog).OfType<TextBlock>(), text => text.Text == "DEMO-101");
                     Descendants(dialog).OfType<Button>().Single(button => Equals(button.Content, "Vorlage übernehmen"))
                         .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 }

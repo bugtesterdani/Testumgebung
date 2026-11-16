@@ -175,6 +175,41 @@ public sealed class LabelPrintingTests
         Assert.Contains("Druckwarteschlange öffnen", error.Message);
     }
 
+    [Theory]
+    [InlineData("REAL-42", false)]
+    [InlineData("X\rA 9", true)]
+    [InlineData("ä", true)]
+    public async Task Cab_designer_renders_actual_values_without_modifying_binary_images(string id, bool fails)
+    {
+        var layout = new LabelLayout
+        {
+            Elements =
+            [
+                new() { Kind = LabelElementKind.Image, ImageWidth = 8, ImageHeight = 1, Bitmap = [0x1B] },
+                new() { Kind = LabelElementKind.Code128, Value = "ID-{Kennung}", ExampleValues = "Kennung=EXAMPLE-ONLY" },
+            ],
+        };
+        var bytes = CabLabelLayout.Render(layout, out var offset);
+        var definition = WithCab(Program("Windows", id), Convert.ToBase64String(bytes));
+        var step = (StepDefinition)definition.Find("label")!;
+        step.Parameters[LabelPrintingBlocks.CabTextOffsetParameter] = offset.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        BlockCatalog.Default.Rebuild(step);
+        var printer = new RecordingPrinter();
+        var run = new TestRun(definition, new() { LabelPrinter = printer });
+        var result = await run.RunAsync().Within();
+        if (fails)
+        {
+            Assert.Equal(ResultRating.Error, result.Rating);
+            Assert.Empty(printer.Requests);
+            return;
+        }
+        var printed = Assert.Single(printer.Requests).Data;
+        Assert.Equal(bytes[..offset], printed[..offset]);
+        var text = Encoding.UTF8.GetString(printed, offset, printed.Length - offset);
+        Assert.Contains("ID-REAL-42", text);
+        Assert.DoesNotContain("EXAMPLE-ONLY", text);
+    }
+
     private sealed class RecordingPrinter : ILabelPrinter
     {
         public List<LabelPrintRequest> Requests { get; } = [];

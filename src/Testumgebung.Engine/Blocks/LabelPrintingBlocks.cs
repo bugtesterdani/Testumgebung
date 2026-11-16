@@ -9,6 +9,7 @@ public static class LabelPrintingBlocks
     public const string Print = "etikett.drucken";
     public const string FormatParameter = "Vorlagenformat", CabDataParameter = "CabLblDaten";
     public const string Zpl = "ZPL", Cab = "cab LBL";
+    public const string CabTextOffsetParameter = "CabLblTextOffset";
 
     private const string Simulated = "Simulation", Tcp = "TCP", Windows = "Windows";
 
@@ -33,7 +34,7 @@ public static class LabelPrintingBlocks
     private static IStepAction Create(BlockParameters parameters)
     {
         var format = parameters.Choice(FormatParameter);
-        var render = format == Cab ? CabRenderer(parameters.Text(CabDataParameter)) : ZplRenderer(parameters.Text("ZplVorlage"));
+        var render = format == Cab ? CabRenderer(parameters.Text(CabDataParameter), parameters.Raw.GetValueOrDefault(CabTextOffsetParameter)) : ZplRenderer(parameters.Text("ZplVorlage"));
         return parameters.Choice("Druckart") switch
         {
             Tcp => CreateTcp(parameters, render, format),
@@ -61,7 +62,7 @@ public static class LabelPrintingBlocks
         return (Encoding.UTF8.GetBytes(zpl), zpl);
     };
 
-    private static RenderLabel CabRenderer(string data)
+    private static RenderLabel CabRenderer(string data, string? textOffset)
     {
 
         byte[] bytes;
@@ -69,7 +70,42 @@ public static class LabelPrintingBlocks
         catch (FormatException) { throw new BlockConfigurationException("Die eingebettete cab-LBL-Druckdatei enthält ungültige Base64-Daten."); }
         if (bytes.Length == 0)
             throw new BlockConfigurationException("Die eingebettete cab-LBL-Druckdatei ist leer.");
-        return _ => (bytes, (long)bytes.Length);
+        if (textOffset is null) return _ => (bytes, (long)bytes.Length);
+        if (!int.TryParse(textOffset, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var offset)
+            || offset >= bytes.Length || !bytes.AsSpan(offset).StartsWith("J\r"u8))
+            throw new BlockConfigurationException("Ungültiger Textabschnitt in der cab-Druckvorlage.");
+        return CabTemplateRenderer(bytes, offset);
+    }
+
+    private static RenderLabel CabTemplateRenderer(byte[] bytes, int offset)
+    {
+        string[] commands;
+        try { commands = new UTF8Encoding(false, true).GetString(bytes, offset, bytes.Length - offset).Split('\r'); }
+        catch (DecoderFallbackException) { throw new BlockConfigurationException("Textabschnitt der cab-Druckvorlage ist kein gültiges UTF-8."); }
+        return context =>
+        {
+            var text = string.Join('\r', commands.Select(command => RenderCabCommand(command, context)));
+            var suffix = Encoding.UTF8.GetBytes(text);
+            var rendered = new byte[offset + suffix.Length];
+            bytes.AsSpan(0, offset).CopyTo(rendered);
+            suffix.CopyTo(rendered.AsSpan(offset));
+            return (rendered, (long)rendered.Length);
+        };
+    }
+
+    private static string RenderCabCommand(string command, IStepContext context)
+    {
+        if (!command.StartsWith("T ", StringComparison.Ordinal) && !command.StartsWith("B ", StringComparison.Ordinal))
+            return command;
+        var separator = command.IndexOf(';');
+        if (separator < 0) return command;
+        var header = command[..separator];
+        var content = CommunicationBlocks.Interpolate(command[(separator + 1)..], context);
+        if (content.Any(c => char.IsControl(c) || c is '[' or ']'))
+            throw new FormatException("cab-Etikettvariable enthält ein Steuerzeichen oder eine eckige Klammer.");
+        if (header.Contains(",CODE128,", StringComparison.Ordinal) && (content.Length == 0 || content.Any(c => !char.IsAscii(c))))
+            throw new FormatException("cab Code 128 benötigt druckbare ASCII-Zeichen.");
+        return header + ";" + content;
     }
 
     private sealed class PrintLabelAction(RenderLabel render, string format, LabelPrinterKind? kind, string destination, int port, TimeSpan timeout) : IStepAction

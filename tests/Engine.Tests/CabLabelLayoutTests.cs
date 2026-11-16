@@ -60,6 +60,23 @@ public sealed class CabLabelLayoutTests
             Convert.FromBase64String(properties.Step.Parameters[LabelPrintingBlocks.CabDataParameter]));
     }
 
+    [Fact]
+    public void Sample_values_only_change_the_preview_and_keep_surrounding_text()
+    {
+        var item = new LabelElement
+        {
+            Value = "{{Los}} {Kennung} / {Pruefwert} {Unbekannt}",
+            ExampleValues = "Kennung=SN-42\r\nPruefwert=12,50 V",
+        };
+        Assert.Equal("{Los} SN-42 / 12,50 V {Unbekannt}", item.PreviewText());
+
+        var layout = LabelLayout.Load(new LabelLayout { Elements = [item] }.Save());
+        Assert.Equal(item.PreviewText(), Assert.Single(layout.Elements).PreviewText());
+        var text = Encoding.UTF8.GetString(CabLabelLayout.Render(layout));
+        Assert.Contains(item.Value, text);
+        Assert.DoesNotContain("SN-42", text);
+    }
+
     [Theory]
     [InlineData(LabelElementKind.Text, "Text\rA 99")]
     [InlineData(LabelElementKind.Text, "[DATE]")]

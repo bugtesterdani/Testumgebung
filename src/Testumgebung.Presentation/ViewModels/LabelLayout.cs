@@ -15,6 +15,25 @@ public sealed class LabelElement
     public int Length { get; set; } = 150;
     public string Value { get; set; } = "{Kennung}";
     public string Preview { get; set; } = "SN-123";
+    public string? ExampleValues { get; set; }
+
+    public string PreviewText()
+    {
+        if (ExampleValues is null)
+            return Value?.Contains('{') == true ? Preview : Value ?? "";
+        var examples = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var line in ExampleValues.ReplaceLineEndings("\n").Split('\n'))
+        {
+            var equals = line.IndexOf('=');
+            if (equals > 0) examples[line[..equals].Trim()] = line[(equals + 1)..];
+        }
+        return System.Text.RegularExpressions.Regex.Replace(Value ?? "", @"\{\{|\}\}|\{([^{}]+)\}", match => match.Value switch
+        {
+            "{{" => "{",
+            "}}" => "}",
+            _ => examples.GetValueOrDefault(match.Groups[1].Value.Trim(), match.Value),
+        });
+    }
     public int ImageWidth { get; set; }
     public int ImageHeight { get; set; }
     public byte[] Bitmap { get; set; } = [];

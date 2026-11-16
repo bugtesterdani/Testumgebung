@@ -25,11 +25,11 @@ public partial class LabelDesignerWindow : Window
         _cab = cab;
         InitializeComponent();
         GapFields.Visibility = VisibleIf(cab);
-        PreviewFields.Visibility = VisibleIf(!cab);
+
         if (cab)
         {
             Title = "cab-Etikett gestalten";
-            TextLabel.Text = "Text / Barcodeinhalt";
+            TextLabel.Text = "Text / Barcodeinhalt, z. B. {Kennung}";
         }
         DataContext = layout;
         ReloadElements();
@@ -84,7 +84,7 @@ public partial class LabelDesignerWindow : Window
     {
         var kind = Enum.Parse<LabelElementKind>((string)((Button)sender).Tag);
         var element = new LabelElement { Kind = kind, X = 12, Y = 12 };
-        if (_cab) element.Value = element.Preview;
+        element.ExampleValues = "Kennung=SN-123";
         element.Size = kind switch { LabelElementKind.Qr => 4, LabelElementKind.Line => 3, LabelElementKind.Code128 => 60, _ => 30 };
         Insert(element);
     }
@@ -162,10 +162,10 @@ public partial class LabelDesignerWindow : Window
         Sheet.Children.Add(visual);
     }
 
-    private FrameworkElement Preview(LabelElement element)
+    private static FrameworkElement Preview(LabelElement element)
     {
         var size = Math.Clamp(element.Size, 1, LabelLayout.MaximumDots);
-        var example = !_cab && element.Value?.Contains('{') == true ? element.Preview : element.Value;
+        var example = element.PreviewText();
         return element.Kind switch
         {
             LabelElementKind.Image => new Image { Source = LabelImage.Preview(element), Width = element.ImageWidth, Height = element.ImageHeight },

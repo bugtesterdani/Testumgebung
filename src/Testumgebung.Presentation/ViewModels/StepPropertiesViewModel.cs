@@ -254,7 +254,8 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     public void SaveCabLabelLayout(LabelLayout layout)
     {
-        var data = CabLabelLayout.Render(layout);
+        var data = CabLabelLayout.Render(layout, out var textOffset);
+        Step.Parameters[LabelPrintingBlocks.CabTextOffsetParameter] = textOffset.ToString(CultureInfo.InvariantCulture);
         Step.Parameters[CabLabelLayout.Parameter] = layout.Save();
         SetCabPrintData(data);
     }
@@ -262,6 +263,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     public void ImportCabPrintData(byte[] data)
     {
         Step.Parameters.Remove(CabLabelLayout.Parameter);
+        Step.Parameters.Remove(LabelPrintingBlocks.CabTextOffsetParameter);
         SetCabPrintData(data);
     }
 

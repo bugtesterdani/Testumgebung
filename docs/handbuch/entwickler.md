@@ -47,7 +47,9 @@ Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über
 Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
 Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
 Der Designer erzeugt eine druckfertige JScript-Datei mit eingebetteten Bilddaten und speichert das bearbeitbare Layout im Prüfprojekt.
-Die Text- und Barcodefelder des cab-Designers verwenden feste Inhalte. ZPL-Platzhalter bleiben im ZPL-Format verfügbar.
+In Text- und Barcodefeldern kannst du Platzhalter wie `{Kennung}` einsetzen. Unter **Beispielwerte für Platzhalter**
+gibst du je Zeile einen Wert im Format `Kennung=SN-123` ein. Der Designer setzt diese Werte in die Vorschau ein und lässt
+den übrigen Text stehen. Beim Drucken werden die tatsächlichen Prüfvariablen verwendet. Externe LBL-Druckdateien werden weiterhin bytegenau gesendet.
 
 Extern importierte LBL-Dateien bleiben als Druckdateien im Projekt. Der Designer kann eigene Layouts wieder öffnen.
 Bei einem externen Import startet er mit einer leeren Vorlage. Erst eine bestätigte Übernahme ersetzt den Import.

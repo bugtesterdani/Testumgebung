@@ -10,7 +10,9 @@ public static class CabLabelLayout
     public const string Parameter = "CabLblLayout";
     private const byte Escape = 0x1B;
 
-    public static byte[] Render(LabelLayout layout)
+    public static byte[] Render(LabelLayout layout) => Render(layout, out _);
+
+    public static byte[] Render(LabelLayout layout, out int textOffset)
     {
         if (layout.WidthMm <= 0 || layout.HeightMm <= 0 || layout.Dpi <= 0 || layout.GapMm < 0)
             throw new InvalidDataException("Breite, Höhe und Auflösung müssen positiv sein. Der Etikettenabstand darf nicht negativ sein.");
@@ -22,6 +24,7 @@ public static class CabLabelLayout
         foreach (var element in layout.Elements ?? throw new InvalidDataException("Etikettenelemente fehlen."))
             fields.Append(Field(layout, element ?? throw new InvalidDataException("Leeres Etikettenelement."), output)).Append('\r');
 
+        textOffset = checked((int)output.Length);
         Write(output, fields.Append("A 1\r").ToString());
         return output.ToArray();
     }
@@ -55,7 +58,7 @@ public static class CabLabelLayout
     private static string Code128(string? value)
     {
         var text = Literal(value);
-        if (text.Length == 0 || text.Any(c => !char.IsAscii(c)))
+        if (text.Length == 0 || (!text.Contains('{') && text.Any(c => !char.IsAscii(c))))
             throw new InvalidDataException("cab Code 128 benötigt mindestens ein druckbares ASCII-Zeichen.");
         return text;
     }
