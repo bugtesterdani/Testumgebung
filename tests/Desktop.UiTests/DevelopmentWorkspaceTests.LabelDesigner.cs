@@ -80,6 +80,20 @@ public sealed partial class DevelopmentWorkspaceTests
                     foreach (var button in Descendants(dialog).OfType<Button>().Where(button => button.Tag is string).ToArray())
                         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     var list = Descendants(dialog).OfType<ListBox>().Single();
+                    var gs1 = list.Items.Cast<LabelElement>().Single(item => item.Kind == LabelElementKind.Gs1DataMatrix);
+                    list.SelectedItem = gs1;
+                    var identifiers = Assert.IsType<ComboBox>(dialog.FindName("Gs1Identifiers"));
+                    var serial = identifiers.Items.Cast<Gs1ApplicationIdentifier>().Single(item => item.Id == "21");
+                    Assert.Contains("Seriennummer", serial.Display);
+                    identifiers.SelectedItem = serial;
+                    var content = Assert.IsType<TextBox>(dialog.FindName("BarcodeContent"));
+                    content.Select(content.Text.Length, 0);
+                    Descendants(dialog).OfType<Button>().Single(button => Equals(button.Content, "Kennung einfügen"))
+                        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.EndsWith("(21)", gs1.Value);
+                    content.SetCurrentValue(TextBox.TextProperty, gs1.Value + "{Kennung}");
+                    content.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+
                     list.SelectedItem = list.Items.Cast<LabelElement>().Single(item => item.Kind == LabelElementKind.Text);
                     var sample = Descendants(dialog).OfType<TextBox>().Single(box =>
                         box.GetBindingExpression(TextBox.TextProperty)?.ParentBinding.Path.Path == nameof(LabelElement.ExampleValues));
@@ -94,7 +108,10 @@ public sealed partial class DevelopmentWorkspaceTests
             LabelDesignerWindow.Edit(source, cab);
 
             var layout = LabelLayout.Load(properties.Step.Parameters[CabLabelLayout.Parameter]);
-            Assert.Equal(5, layout.Elements.Count);
+            Assert.Equal(8, layout.Elements.Count);
+            Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.DataMatrix);
+            Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.Gs1DataMatrix);
+            Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.Gs1Qr);
             Assert.Equal(CabLabelLayout.Render(layout), Convert.FromBase64String(cab.Value));
 
             var imported = new byte[] { 0, 0x1B, 0xFF };

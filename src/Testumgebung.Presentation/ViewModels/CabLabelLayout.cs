@@ -40,11 +40,17 @@ public static class CabLabelLayout
             LabelElementKind.Text => $"T {x},{y},0,5,{size};{Literal(item.Value)}",
             LabelElementKind.Code128 => $"B {x},{y},0,CODE128,{size},{Mm(2, layout.Dpi)};{Code128(item.Value)}",
             LabelElementKind.Qr => $"B {x},{y},0,QRCODE,{Mm(Math.Clamp(item.Size, 1, 10), layout.Dpi)};{Literal(item.Value)}",
-            LabelElementKind.Line => $"G {x},{y},0;L:{length},{size}",
+            LabelElementKind.DataMatrix => MatrixField(x, y, layout.Dpi, item, "DATAMATRIX"),
+            LabelElementKind.Gs1DataMatrix => MatrixField(x, y, layout.Dpi, item, "GS1-DATAMATRIX"),
+            LabelElementKind.Gs1Qr => MatrixField(x, y, layout.Dpi, item, "GS1QRCODE"),
+            LabelElementKind.Line =>$"G {x},{y},0;L:{length},{size}",
             LabelElementKind.Image => $"I {x},{y},0;{DownloadImage(output, item)}",
             _ => throw new InvalidDataException("Unbekanntes Etikettenelement."),
         };
     }
+
+    private static string MatrixField(string x, string y, int dpi, LabelElement item, string type)
+        => $"B {x},{y},0,{type},{Mm(Math.Clamp(item.Size, 1, 10), dpi)};{Literal(item.Value)}";
 
     private static string Mm(int dots, int dpi) => (dots * 25.4m / dpi).ToString("0.###", CultureInfo.InvariantCulture);
 

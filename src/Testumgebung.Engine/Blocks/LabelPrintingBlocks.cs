@@ -34,7 +34,7 @@ public static class LabelPrintingBlocks
     private static IStepAction Create(BlockParameters parameters)
     {
         var format = parameters.Choice(FormatParameter);
-        var render = format == Cab ? CabRenderer(parameters.Text(CabDataParameter), parameters.Raw.GetValueOrDefault(CabTextOffsetParameter)) : ZplRenderer(parameters.Text("ZplVorlage"));
+        var render = format == Cab ? CabRenderer(parameters.Text(CabDataParameter), parameters.Raw.GetValueOrDefault(CabTextOffsetParameter)) : ZplRenderer(parameters.Text("ZplVorlage"), parameters.Raw.ContainsKey("ZplLayout"));
         return parameters.Choice("Druckart") switch
         {
             Tcp => CreateTcp(parameters, render, format),
@@ -56,9 +56,10 @@ public static class LabelPrintingBlocks
 
     private delegate (byte[] Bytes, object Preview) RenderLabel(IStepContext context);
 
-    private static RenderLabel ZplRenderer(string template) => context =>
+    private static RenderLabel ZplRenderer(string template, bool fromDesigner) => context =>
     {
         var zpl = CommunicationBlocks.Interpolate(template, context, FormatLabelValue);
+        if (fromDesigner) zpl = Gs1LabelData.RenderZpl(zpl);
         return (Encoding.UTF8.GetBytes(zpl), zpl);
     };
 
@@ -105,6 +106,7 @@ public static class LabelPrintingBlocks
             throw new FormatException("cab-Etikettvariable enthält ein Steuerzeichen oder eine eckige Klammer.");
         if (header.Contains(",CODE128,", StringComparison.Ordinal) && (content.Length == 0 || content.Any(c => !char.IsAscii(c))))
             throw new FormatException("cab Code 128 benötigt druckbare ASCII-Zeichen.");
+        if (header.Contains(",GS1", StringComparison.Ordinal)) content = Gs1LabelData.Cab(content);
         return header + ";" + content;
     }
 

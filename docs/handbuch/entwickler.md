@@ -46,6 +46,8 @@ Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über
 
 Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
 Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
+DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der Druckbaustein setzt die erforderlichen Trennzeichen für GS1 ein. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
+
 Der Designer erzeugt eine druckfertige JScript-Datei mit eingebetteten Bilddaten und speichert das bearbeitbare Layout im Prüfprojekt.
 In Text- und Barcodefeldern kannst du Platzhalter wie `{Kennung}` einsetzen. Unter **Beispielwerte für Platzhalter**
 gibst du je Zeile einen Wert im Format `Kennung=SN-123` ein. Der Designer setzt diese Werte in die Vorschau ein und lässt

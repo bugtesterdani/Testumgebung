@@ -210,6 +210,61 @@ public sealed class LabelPrintingTests
         Assert.DoesNotContain("EXAMPLE-ONLY", text);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Designer_prints_datamatrix_and_native_gs1_variants(bool cab)
+    {
+        var layout = new LabelLayout
+        {
+            Elements =
+            [
+                new() { Kind = LabelElementKind.DataMatrix, Value = "{Kennung}", Size = 4 },
+                new() { Kind = LabelElementKind.Gs1DataMatrix, Value = "(01)09506000134376(10)LOT(21){Kennung}", Size = 4 },
+                new() { Kind = LabelElementKind.Gs1Qr, Value = "(01)09506000134376(10)LOT(21){Kennung}", Size = 4 },
+            ],
+        };
+        var definition = Program("Windows", "SN42");
+        var step = (StepDefinition)definition.Find("label")!;
+        if (cab)
+        {
+            var data = CabLabelLayout.Render(layout, out var offset);
+            WithCab(definition, Convert.ToBase64String(data));
+            step.Parameters[LabelPrintingBlocks.CabTextOffsetParameter] = offset.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            step.Parameters[LabelLayout.Parameter] = layout.Save();
+            step.Parameters["ZplVorlage"] = layout.ToZpl();
+        }
+        BlockCatalog.Default.Rebuild(step);
+        var printer = new RecordingPrinter();
+        var run = new TestRun(definition, new() { LabelPrinter = printer });
+        Assert.Equal(ResultRating.NResult, (await run.RunAsync().Within()).Rating);
+        var raw = Encoding.UTF8.GetString(Assert.Single(printer.Requests).Data);
+        if (cab)
+        {
+            Assert.Contains(",DATAMATRIX,0.5;SN42", raw);
+            Assert.Contains(",GS1-DATAMATRIX,0.5;(01)09506000134376(10)LOT(21)SN42", raw);
+            Assert.Contains(",GS1QRCODE,0.5;(01)09506000134376(10)LOT(21)SN42", raw);
+        }
+        else
+        {
+            Assert.Contains("^BXN,4,200^FDSN42^FS", raw);
+            Assert.Contains("^FD_1010950600013437610LOT_121SN42^FS", raw);
+            Assert.Contains("^FD>;>8010950600013437610LOT>821SN42^FS", raw);
+            Assert.DoesNotContain("@TU-GS1-", raw);
+        }
+    }
+
+    [Theory]
+    [InlineData("(01)12")]
+    [InlineData("(17)abc123")]
+    [InlineData("(99)not-in-catalog")]
+    [InlineData("unlabeled")]
+    public void Invalid_gs1_values_are_not_rendered(string value)
+        => Assert.Throws<FormatException>(() => Gs1LabelData.Cab(value));
+
     private sealed class RecordingPrinter : ILabelPrinter
     {
         public List<LabelPrintRequest> Requests { get; } = [];

@@ -21,6 +21,9 @@
                 <Button Content="Text" Tag="Text" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="Code 128" Tag="Code128" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="QR-Code" Tag="Qr" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="DataMatrix" Tag="DataMatrix" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="GS1 DataMatrix" Tag="Gs1DataMatrix" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="GS1 QR" Tag="Gs1Qr" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="Linie" Tag="Line" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="Bild importieren …" Click="OnImage" />
             </WrapPanel>
@@ -51,8 +54,15 @@
                     <TextBox Text="{Binding Length, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
                 </StackPanel>
                 <StackPanel x:Name="TextFields">
+                    <StackPanel x:Name="Gs1Fields" Visibility="Collapsed" Margin="0,0,0,8">
+                        <TextBlock Text="GS1-Kennung (AI)" />
+                        <ComboBox x:Name="Gs1Identifiers" DisplayMemberPath="Display" MaxDropDownHeight="320"
+                                  AutomationProperties.Name="GS1-Kennung und Bedeutung" />
+                        <TextBlock Text="{Binding SelectedItem.Display, ElementName=Gs1Identifiers}" TextWrapping="Wrap" />
+                        <Button Content="Kennung einfügen" Click="OnInsertGs1Identifier" HorizontalAlignment="Left" />
+                    </StackPanel>
                     <TextBlock x:Name="TextLabel" Text="Text / Ausdruck, z. B. {Kennung}" />
-                    <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    <TextBox x:Name="BarcodeContent" Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
                     <StackPanel>
                         <TextBlock Text="Beispielwerte für Platzhalter" />
                         <TextBlock Text="Eine Zeile je Platzhalter, z. B. Kennung=SN-123" TextWrapping="Wrap" />

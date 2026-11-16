@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
 using Testumgebung.Presentation.ViewModels;
+using Testumgebung.Engine.Blocks;
 
 namespace Testumgebung.Desktop.Views;
 
@@ -25,6 +26,8 @@ public partial class LabelDesignerWindow : Window
         _cab = cab;
         InitializeComponent();
         GapFields.Visibility = VisibleIf(cab);
+        Gs1Identifiers.ItemsSource = Gs1LabelData.Identifiers;
+        Gs1Identifiers.SelectedIndex = 1;
 
         if (cab)
         {
@@ -85,8 +88,21 @@ public partial class LabelDesignerWindow : Window
         var kind = Enum.Parse<LabelElementKind>((string)((Button)sender).Tag);
         var element = new LabelElement { Kind = kind, X = 12, Y = 12 };
         element.ExampleValues = "Kennung=SN-123";
-        element.Size = kind switch { LabelElementKind.Qr => 4, LabelElementKind.Line => 3, LabelElementKind.Code128 => 60, _ => 30 };
+        if (element.IsGs1)
+        {
+            element.Value = "(01){GTIN}";
+            element.ExampleValues = "GTIN=09506000134376";
+        }
+        element.Size = kind switch { LabelElementKind.Qr or LabelElementKind.DataMatrix or LabelElementKind.Gs1DataMatrix or LabelElementKind.Gs1Qr => 4, LabelElementKind.Line => 3, LabelElementKind.Code128 => 60, _ => 30 };
         Insert(element);
+    }
+
+    private void OnInsertGs1Identifier(object sender, RoutedEventArgs e)
+    {
+        if (Gs1Identifiers.SelectedItem is not Gs1ApplicationIdentifier identifier) return;
+        BarcodeContent.SelectedText = $"({identifier.Id})";
+        BarcodeContent.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+        BarcodeContent.Focus();
     }
 
     private void Insert(LabelElement element)
@@ -127,12 +143,17 @@ public partial class LabelDesignerWindow : Window
         Properties.DataContext = element;
         Properties.Visibility = VisibleIf(element is not null);
         var kind = element?.Kind;
-        TextFields.Visibility = VisibleIf(kind is LabelElementKind.Text or LabelElementKind.Code128 or LabelElementKind.Qr);
+        var matrix = IsMatrix(kind);
+        TextFields.Visibility = VisibleIf(matrix || kind is LabelElementKind.Text or LabelElementKind.Code128);
+        Gs1Fields.Visibility = VisibleIf(element?.IsGs1 == true);
         SizeFields.Visibility = VisibleIf(kind is not LabelElementKind.Image);
         LengthFields.Visibility = VisibleIf(kind == LabelElementKind.Line);
-        SizeLabel.Text = kind == LabelElementKind.Qr ? "QR-Modulgröße (1–10)" : "Höhe / Dicke (Druckpunkte)";
+        SizeLabel.Text = matrix ? "Modulgröße (1–10 Druckpunkte)" : "Höhe / Dicke (Druckpunkte)";
         UpdateSheet();
     }
+
+    private static bool IsMatrix(LabelElementKind? kind) => kind is LabelElementKind.Qr or LabelElementKind.DataMatrix
+        or LabelElementKind.Gs1DataMatrix or LabelElementKind.Gs1Qr;
 
     private static Visibility VisibleIf(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
 
@@ -172,6 +193,9 @@ public partial class LabelDesignerWindow : Window
             LabelElementKind.Line => new Border { Background = Brushes.Black, Width = Math.Clamp(element.Length, 1, LabelLayout.MaximumDots), Height = size },
             LabelElementKind.Text => new TextBlock { Text = example, FontSize = size, Foreground = Brushes.Black },
             LabelElementKind.Qr => BarcodePreview($"QR · {example}", Math.Clamp(size, 1, 10) * 25),
+            LabelElementKind.DataMatrix => BarcodePreview($"DataMatrix · {example}", Math.Clamp(size, 1, 10) * 25),
+            LabelElementKind.Gs1DataMatrix => BarcodePreview($"GS1 DataMatrix · {example}", Math.Clamp(size, 1, 10) * 25),
+            LabelElementKind.Gs1Qr => BarcodePreview($"GS1 QR · {example}", Math.Clamp(size, 1, 10) * 25),
             _ => BarcodePreview($"Code 128 · {example}", size),
         };
     }
