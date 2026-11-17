@@ -128,6 +128,23 @@ public sealed class EnvelopeTraceTests
         }
     }
 
+    [Theory]
+    [InlineData(0, 1, true)]
+    [InlineData(1, 2, false)]
+    public void Manual_target_capture_requires_start_coverage(double first, double second, bool complete)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", Band())], Now, duration: 2,
+            target: new TraceTargetBand(4, 6, 2));
+        recordings.Add("owner", "trace", first, [5], Now);
+        var result = recordings.Add("owner", "trace", second, [5], Now)!;
+
+        Assert.True(result.TargetReached);
+        Assert.Equal(complete, result.Passed);
+        Assert.Equal(complete, result.Complete);
+        if (!complete) Assert.Contains("Zeitfenster nicht abgedeckt", result.IncompleteReason);
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {

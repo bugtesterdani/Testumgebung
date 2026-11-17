@@ -416,11 +416,16 @@ internal sealed class EnvelopeRecording
         var measuredDuration = _times[^1] - _times[0];
         if (measuredDuration + TimeTolerance(_minimumDuration) < _minimumDuration)
             return $"Messdauer zu kurz: {measuredDuration:G6} s gemessen, mindestens {_minimumDuration:G6} s erforderlich.";
-        if (_target is not null) return TargetReached ? null : "Messdaten unvollständig: stabiles Zielband wurde nicht erreicht.";
-        if (_duration is { } duration && (_times[0] > TimeTolerance(duration) || _times[^1] < duration - TimeTolerance(duration)))
+        if (_duration is { } duration && HasUncoveredWindow(duration))
             return $"Zeitfenster nicht abgedeckt: {_times[0]:G6}..{_times[^1]:G6} s gemessen, 0..{duration:G6} s erforderlich.";
-        return null;
+        return _target is not null && !TargetReached ? "Messdaten unvollständig: stabiles Zielband wurde nicht erreicht." : null;
     }
+    private bool HasUncoveredWindow(double duration)
+    {
+        var tolerance = TimeTolerance(duration);
+        return _times[0] > tolerance || (_target is null && _times[^1] < duration - tolerance);
+    }
+
     private bool Inside(double value, double low, double high) => _touchAllowed ? value >= low && value <= high : value > low && value < high;
 }
 
