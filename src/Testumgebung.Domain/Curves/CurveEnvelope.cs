@@ -82,6 +82,7 @@ public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTra
 {
     public EnvelopeEarlyStop? EarlyStop { get; init; }
     public bool Finished { get; init; }
+    public string? IncompleteReason { get; init; }
     public bool Passed => EarlyStop is null && Complete && Channels.All(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount == 0);
     public int Violations => Channels.Sum(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount);
 }
@@ -102,7 +103,7 @@ internal sealed class EnvelopeRecording
     private readonly DateTimeOffset _start;
     private DateTimeOffset? _pausedAt;
     private TimeSpan _pausedDuration;
-    private readonly int _maxPoints;
+    private readonly int _maxPoints, _minimumPoints;
     private readonly double _maxGap, _minimumDuration;
     private readonly bool _touchAllowed;
     private bool _faulted;
@@ -112,10 +113,12 @@ internal sealed class EnvelopeRecording
     public bool Ended => EarlyStop is not null || (_duration is { } duration && _times.Count > 1 && _times[^1] >= duration - TimeTolerance(duration));
     public EnvelopeEarlyStop? EarlyStop { get; private set; }
     private DateTimeOffset _lastPreview;
-    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute)
+    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute, int minimumPoints)
     {
         ValidateChannels(channels);
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
+        if (minimumPoints < 2 || minimumPoints > maxPoints) throw new ArgumentOutOfRangeException(nameof(minimumPoints));
+        _minimumPoints = minimumPoints;
         _stopMargin = StopMargin.Create(stopPercent, stopAbsolute);
         _slope = slope;
         if (formula is not null && slope is not null)
@@ -206,9 +209,10 @@ internal sealed class EnvelopeRecording
     }
     public TraceEvaluation Evaluate(bool stopped)
     {
-        var complete = stopped && EarlyStop is null && !_faulted && HasFullDuration();
-        if (_slope is { } slope) return EvaluateSlopes(slope, complete);
-        if (_times.Count == 0) return new(new([]), [], false);
+        var reason = IncompleteReason(stopped);
+        var complete = EarlyStop is null && reason is null;
+        if (_slope is { } slope) return EvaluateSlopes(slope, complete) with { IncompleteReason = reason };
+        if (_times.Count == 0) return new(new([]), [], false) { IncompleteReason = reason };
         var grid = _formula is not null ? _times.ToArray() : AllEnvelopes().SelectMany(curveEnvelope => curveEnvelope.Times).Concat(EarlyStop is { } early ? new[] { early.Time } : []).Where(concat => concat >= _times[0] && concat <= _times[^1]).Concat(_times).Distinct().Order().ToArray();
         var waves = new List<Waveform>(); var metadata = new List<EnvelopeTraceMetadata>();
         for (var channel = 0; channel < _channels.Length; channel++)
@@ -216,7 +220,7 @@ internal sealed class EnvelopeRecording
             EvaluateChannel(channel, grid, complete, waves, metadata);
             AppendAbortLines(channel, grid, waves);
         }
-        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended };
+        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended, IncompleteReason = reason };
     }
     private void CheckSlope(SlopeLimits limits)
     {
@@ -364,11 +368,20 @@ internal sealed class EnvelopeRecording
     private double MeasuredAt(int channel, double time) => _times.Count == 1 ? _values[channel][0]
         : CurveEnvelope.Interpolate(_times, _values[channel], time);
 
-    private bool HasFullDuration()
+    private string? IncompleteReason(bool stopped)
     {
-        if (_times.Count < 2 || (_slope is not null && _slopeTimes.Count == 0)) return false;
-        if (_times[^1] - _times[0] + TimeTolerance(_minimumDuration) < _minimumDuration) return false;
-        return _duration is not { } duration || (_times[0] <= TimeTolerance(duration) && _times[^1] >= duration - TimeTolerance(duration));
+        if (_faulted) return "Messdaten ungültig: Aufnahme durch einen vorausgegangenen Datenfehler unterbrochen.";
+        if (!stopped) return "Messdaten unvollständig: Aufnahme nicht regulär abgeschlossen.";
+        if (_times.Count < _minimumPoints)
+            return $"Messdaten unvollständig: {_times.Count} gültige Messpunkte vorhanden, mindestens {_minimumPoints} erforderlich.";
+        if (_slope is not null && _slopeTimes.Count == 0)
+            return "Messdaten unvollständig: kein vollständiges Steigungsfenster vorhanden.";
+        var measuredDuration = _times[^1] - _times[0];
+        if (measuredDuration + TimeTolerance(_minimumDuration) < _minimumDuration)
+            return $"Messdauer zu kurz: {measuredDuration:G6} s gemessen, mindestens {_minimumDuration:G6} s erforderlich.";
+        if (_duration is { } duration && (_times[0] > TimeTolerance(duration) || _times[^1] < duration - TimeTolerance(duration)))
+            return $"Zeitfenster nicht abgedeckt: {_times[0]:G6}..{_times[^1]:G6} s gemessen, 0..{duration:G6} s erforderlich.";
+        return null;
     }
     private bool Inside(double value, double low, double high) => _touchAllowed ? value >= low && value <= high : value > low && value < high;
 }
@@ -378,13 +391,13 @@ public sealed class EnvelopeRecordings
 {
     private readonly object _gate = new();
     private readonly Dictionary<(string Owner, string Name), EnvelopeRecording> _recordings = [];
-    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null, double? stopAbsolute = null)
+    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null, double? stopAbsolute = null, int minimumPoints = 2)
     {
         lock (_gate)
         {
             if (string.IsNullOrWhiteSpace(name) || _recordings.ContainsKey((owner, name))) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
             if (_recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
-            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute));
+            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute, minimumPoints));
         }
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)
