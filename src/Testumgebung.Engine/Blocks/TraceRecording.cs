@@ -138,8 +138,10 @@ internal sealed class TraceSampleReader
     private readonly bool _devices;
     private readonly string[] _resources;
     private readonly Expression[] _expressions;
+    private readonly Expression? _attempts;
     public TraceSampleReader(BlockParameters p)
     {
+        _attempts = p.Expr("Messversuche");
         _devices = p.Choice("Quelle") == "Geräte"; _resources = TraceRecordingSettings.Split(p.Text("Ressourcen"), ',');
         try { _expressions = _devices ? [] : TraceRecordingSettings.Split(p.Text("Werte"), ';').Select(Expression.Parse).ToArray(); }
         catch (ExpressionException ex) { throw new BlockConfigurationException("Wertausdrücke: " + ex.Message); }
@@ -148,26 +150,68 @@ internal sealed class TraceSampleReader
     {
         try
         {
-            var requested = ctx.Clock.Now;
-            var values = new List<double>();
-            if (_devices)
-            {
-                var units = new List<string>();
-                foreach (var resource in _resources)
-                {
-                    var reading = await ctx.UseDeviceAsync(resource, "Verlauf lesen", async (adapter, channel, token) =>
-                        (Value: await adapter.ReadAsync(channel, token).ConfigureAwait(false), Unit: adapter.GetCapabilities(channel).Unit)).ConfigureAwait(false);
-                    values.Add(reading.Value); units.Add(reading.Unit);
-                }
-                ctx.Recordings.CheckUnits(ctx.ProcessOwner, name, units);
-            }
-            else foreach (var expression in _expressions) values.Add(BlockCatalog.ToDouble(expression.Evaluate(new ContextResolver(ctx)), "Messwert"));
-            ctx.CancellationToken.ThrowIfCancellationRequested();
-            if (maxReadSeconds is { } limit && (ctx.Clock.Now - requested).TotalSeconds > limit) throw new TimeoutException("Messgeräteabfrage überschreitet die maximale Abfragedauer.");
+            var resolver = new ContextResolver(ctx);
+            var count = _attempts is null ? 1 : BlockCatalog.ToDouble(_attempts.Evaluate(resolver), "Messversuche");
+            if (count < 1 || count > 10 || count != Math.Truncate(count))
+                throw new BlockConfigurationException("Messversuche müssen ganzzahlig zwischen 1 und 10 liegen.");
+            var values = await ReadWithRetriesAsync(ctx, resolver, name, (int)count, maxReadSeconds).ConfigureAwait(false);
             return ctx.Recordings.Add(ctx.ProcessOwner, name, time, values, ctx.Clock.Now);
         }
         catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, name); throw; }
     }
+
+    private async Task<double[]> ReadWithRetriesAsync(IStepContext ctx, ContextResolver resolver, string name, int attempts, double? maxReadSeconds)
+    {
+        var started = ctx.Clock.Now;
+        var source = _devices ? string.Join(", ", _resources) : "Wertausdrücke";
+        for (var attempt = 1; ; attempt++)
+        {
+            ctx.CancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var values = _devices ? await ReadDevicesAsync(ctx, name).ConfigureAwait(false)
+                    : _expressions.Select(expression => BlockCatalog.ToDouble(expression.Evaluate(resolver), "Messwert")).ToArray();
+                ctx.CancellationToken.ThrowIfCancellationRequested();
+                if (ReadTimeExceeded(ctx, started, maxReadSeconds))
+                    throw new TimeoutException($"Messgeräteabfrage ({source}) überschreitet die maximale Abfragedauer.");
+                return values;
+            }
+            catch (Exception error) when (error is SampleReadException or ResourceTimeoutException || (!_devices && error is ExpressionException or BlockConfigurationException))
+            {
+                if (attempt == attempts || ReadTimeExceeded(ctx, started, maxReadSeconds))
+                    throw new InvalidOperationException($"Messung ({source}) nach {attempt} von maximal {attempts} Versuch(en) fehlgeschlagen: {error.Message}", error);
+            }
+        }
+    }
+
+    private async Task<double[]> ReadDevicesAsync(IStepContext ctx, string name)
+    {
+        var values = new double[_resources.Length];
+        var units = new string[_resources.Length];
+        for (var index = 0; index < _resources.Length; index++)
+        {
+            var resource = _resources[index];
+            var reading = await ctx.UseDeviceAsync(resource, "Verlauf lesen", async (adapter, channel, token) =>
+            {
+                double value;
+                try { value = await adapter.ReadAsync(channel, token).ConfigureAwait(false); }
+                catch (Exception error) when (error is not OperationCanceledException and not NotSupportedException)
+                { throw new SampleReadException($"Gerät „{resource}“: {error.Message}", error); }
+                if (!double.IsFinite(value))
+                    throw new SampleReadException($"Gerät „{resource}“ liefert keinen endlichen Messwert.");
+                return (Value: value, Unit: adapter.GetCapabilities(channel).Unit);
+            }).ConfigureAwait(false);
+            values[index] = reading.Value;
+            units[index] = reading.Unit;
+        }
+        ctx.Recordings.CheckUnits(ctx.ProcessOwner, name, units);
+        return values;
+    }
+
+    private static bool ReadTimeExceeded(IStepContext ctx, DateTimeOffset started, double? limit)
+        => limit is { } seconds && (ctx.Clock.Now - started).TotalSeconds > seconds;
+
+    private sealed class SampleReadException(string message, Exception? inner = null) : Exception(message, inner);
 }
 
 /// <summary>Software-paced sampling, with explicit first/final trigger positions and no run-wide cancellation.</summary>

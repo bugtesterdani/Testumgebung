@@ -55,7 +55,9 @@ public static class TraceBlocks
     private static ParameterDescriptor ResultTarget() => new("ErgebnisZiel", "Auswertungsdetails → Stringvariable (JSON)", ParameterKind.Variable);
     private static ParameterDescriptor[] ReaderParameters() =>
     [new("Quelle", "Datenquelle", ParameterKind.Choice, "Ausdrücke", Choices: ["Ausdrücke", "Geräte"]),
-     new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"), new("Ressourcen", "Gerätenamen (Komma)", ParameterKind.Text)];
+     new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"), new("Ressourcen", "Gerätenamen (Komma)", ParameterKind.Text),
+     new("Messversuche", "Maximale Messversuche je Messpunkt", ParameterKind.Expression, "1",
+        Hint: "Ganzzahl oder Prüfparameter von 1 bis 10. Für die PSU-Prüfung sind 3 Versuche ein Ausgangswert.")];
     private static ParameterDescriptor[] RecordingParameters(bool timed) =>
     [Name(), new("Kanaele", "Messkanäle", ParameterKind.Table, "Spannung", Required: true),
      new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
