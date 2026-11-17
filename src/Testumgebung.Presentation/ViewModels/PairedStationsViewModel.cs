@@ -6,6 +6,7 @@
 using System.Collections.ObjectModel;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Engine;
+using Testumgebung.Persistence;
 using Testumgebung.Persistence.Stations;
 using Testumgebung.Presentation.Mvvm;
 
@@ -77,7 +78,7 @@ public sealed class PairedStationsViewModel : ObservableObject
             await Task.WhenAll(firstRun, secondRun).ConfigureAwait(true);
             Status = "Gemeinsamer Auftrag beendet. Zum Fortsetzen oder Wechsel erneut einen Fertigungsauftrag scannen.";
         }
-        catch (Exception ex) when (ex is InvalidOperationException or IOException or ArgumentException)
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or ArgumentException or ProjectFormatException)
         { Status = "Gemeinsamer Auftrag konnte nicht ausgeführt werden: " + ex.Message; }
         finally
         {
