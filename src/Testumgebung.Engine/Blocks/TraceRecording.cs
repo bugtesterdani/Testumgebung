@@ -10,6 +10,7 @@ internal sealed class TraceRecordingSettings
 {
     private readonly string[] _names, _units, _curves, _abortCurves;
     private readonly double _minimumDuration;
+    private readonly Expression? _minimumPoints;
     private readonly Expression? _targetMinimum, _targetMaximum, _targetPoints;
     private readonly bool _touchAllowed;
     private readonly double? _stopPercent, _stopAbsolute;
@@ -25,6 +26,7 @@ internal sealed class TraceRecordingSettings
         if (_names.Length != _units.Length) throw new BlockConfigurationException("Je Messkanal eine Einheit angeben.");
         var maximum = p.Number("MaxPunkte") ?? 0;
         if (maximum != Math.Truncate(maximum) || maximum is < 2 or > 100000) throw new BlockConfigurationException("Ganzzahliges Punktlimit 2..100000 angeben.");
+        _minimumPoints = p.Expr("MinPunkte");
         Maximum = (int)maximum; MaxGap = p.Number("MaxLuecke") ?? 0;
         var mode = p.Choice(TraceBlocks.EvaluationParameter);
         _slope = ReadSlopeLimits(p, Maximum, mode);
@@ -48,7 +50,10 @@ internal sealed class TraceRecordingSettings
         {
             AbortLimits = _abortCurves[index].Length == 0 ? null : Resolve(ctx, _abortCurves[index])
         }).ToArray();
-        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula, _stopAbsolute, ResolveTarget(ctx));
+        var minimum = _minimumPoints is null ? 2 : BlockCatalog.ToDouble(_minimumPoints.Evaluate(new ContextResolver(ctx)), "Mindestanzahl");
+        if (minimum < 2 || minimum > Maximum || minimum != Math.Truncate(minimum))
+            throw new BlockConfigurationException("Mindestanzahl gültiger Messpunkte muss ganzzahlig zwischen 2 und dem Punktlimit liegen.");
+        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula, _stopAbsolute, (int)minimum, ResolveTarget(ctx));
     }
     private TraceTargetBand? ResolveTarget(IStepContext ctx)
     {

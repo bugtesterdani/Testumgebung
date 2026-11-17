@@ -76,6 +76,8 @@ public static class TraceBlocks
      new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
      new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
      new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),
+     new("MinPunkte", "Mindestanzahl gültiger Messpunkte je Kanal", ParameterKind.Expression, "2",
+        Hint: "Ganzzahl oder Prüfparameter. Mindestens 2, höchstens das Punktlimit."),
      new("ZielbandMin", "Zielband-Untergrenze (erster Messkanal)", ParameterKind.Expression),
      new("ZielbandMax", "Zielband-Obergrenze (erster Messkanal)", ParameterKind.Expression),
      new("ZielbandPunkte", "Aufeinanderfolgende Messpunkte im Zielband", ParameterKind.Expression, "10",
@@ -166,9 +168,7 @@ public static class TraceBlocks
         var value = includeData ? result.Data : null;
         if (result.EarlyStop is { } early)
             return StepOutcome.Fail(EarlyStopMessage(early, exitDut), value) with { ExitDut = exitDut };
-        if (!result.Complete && result.TargetRequired && !result.TargetReached)
-            return new(ResultRating.Error, value, Message: "Messdaten unvollständig: stabiles Zielband wurde nicht erreicht.");
-        if (!result.Complete) return new(ResultRating.Error, value, Message: "Aufnahme unvollständig, ungültig oder abgebrochen; vollständigen Zeitraum prüfen.");
+        if (!result.Complete) return new(ResultRating.Error, value, Message: result.IncompleteReason ?? "Messdaten unvollständig.");
         return result.Passed ? new(ResultRating.Pass, value, Message: "Vollständiger Messverlauf innerhalb des Grenzbandes.")
             : StepOutcome.Fail($"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e).", value);
     }

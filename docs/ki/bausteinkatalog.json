@@ -4623,6 +4623,15 @@
           "hint": null
         },
         {
+          "name": "MinPunkte",
+          "label": "Mindestanzahl g\u00FCltiger Messpunkte je Kanal",
+          "kind": "Expression",
+          "default": "2",
+          "required": false,
+          "choices": null,
+          "hint": "Ganzzahl oder Pr\u00FCfparameter. Mindestens 2, h\u00F6chstens das Punktlimit."
+        },
+        {
           "name": "ZielbandMin",
           "label": "Zielband-Untergrenze (erster Messkanal)",
           "kind": "Expression",
@@ -5040,6 +5049,15 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "MinPunkte",
+          "label": "Mindestanzahl g\u00FCltiger Messpunkte je Kanal",
+          "kind": "Expression",
+          "default": "2",
+          "required": false,
+          "choices": null,
+          "hint": "Ganzzahl oder Pr\u00FCfparameter. Mindestens 2, h\u00F6chstens das Punktlimit."
         },
         {
           "name": "ZielbandMin",

@@ -60,6 +60,25 @@ public sealed class EnvelopeTraceTests
     }
 
     [Theory]
+    [InlineData("3", "0", "0", ResultRating.Error, "mindestens 3")]
+    [InlineData("2", "2", "0", ResultRating.Error, "Messdauer zu kurz")]
+    [InlineData("2", "0", "2", ResultRating.Error, "Zeitfenster nicht abgedeckt")]
+    [InlineData("2", "1", "1", ResultRating.Pass, "Vollständiger Messverlauf")]
+    public async Task Trace_reports_why_a_recording_is_incomplete(string points, string minimumDuration,
+        string duration, ResultRating rating, string message)
+    {
+        var definition = Test(Group("loop").Add(
+            Block(TraceBlocks.Start, "start", ("Grenzkurven", "band@1"), ("MinPunkte", points), ("MinDauer", minimumDuration), ("Dauer", duration)),
+            Block(TraceBlocks.Point, "first", ("Zeit", "0"), ("Werte", "5")),
+            Block(TraceBlocks.Point, "second", ("Zeit", "1"), ("Werte", "5")),
+            Block(TraceBlocks.Stop, "stop")));
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition);
+        Assert.Equal(rating, (await run.RunAsync().Within()).Rating);
+        Assert.Contains(message, Assert.Single(run.Steps("stop")).Message);
+    }
+
+    [Theory]
     [InlineData(5, true)]
     [InlineData(2, false)]
     public void Stable_target_resets_after_a_point_outside_the_band(double last, bool reached)
@@ -80,7 +99,7 @@ public sealed class EnvelopeTraceTests
     }
 
     [Theory]
-    [InlineData("4", "6", "Zielpunkte", ResultRating.Pass, "Vollständiger Messverlauf", 3)]
+    [InlineData("4", "6", "Zielpunkte", ResultRating.Pass, "Vollständiger Messverlauf", 4)]
     [InlineData("4", "5", "", ResultRating.Pass, "Vollständiger Messverlauf", 10)]
     [InlineData("6", "8", "3", ResultRating.Error, "stabiles Zielband wurde nicht erreicht", 11)]
     [InlineData("4", "", "3", ResultRating.Error, "Beide Zielbandgrenzen", 0)]
@@ -93,7 +112,7 @@ public sealed class EnvelopeTraceTests
     {
         var loop = Group("loop").Var("Zielpunkte", VarType.Int, 3).Add(
             Block(TraceBlocks.Record, "record", ("Grenzkurven", "band@1"), ("Dauer", "2"),
-                ("Intervall", "0.2"), ("MaxPunkte", "20"), ("Werte", "5"), ("ZielbandMin", lower),
+                ("Intervall", "0.2"), ("MaxPunkte", "20"), ("MinPunkte", "4"), ("Werte", "5"), ("ZielbandMin", lower),
                 ("ZielbandMax", upper), ("ZielbandPunkte", points)));
         var definition = Test(loop);
         definition.Curves.Add(Band());
