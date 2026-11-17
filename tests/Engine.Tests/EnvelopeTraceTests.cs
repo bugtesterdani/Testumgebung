@@ -35,20 +35,30 @@ public sealed class EnvelopeTraceTests
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
     [Theory]
-    [InlineData("3", "0", "0", ResultRating.Error, "mindestens 3")]
-    [InlineData("2", "2", "0", ResultRating.Error, "Messdauer zu kurz")]
-    [InlineData("2", "0", "2", ResultRating.Error, "Zeitfenster nicht abgedeckt")]
-    [InlineData("2", "1", "1", ResultRating.Pass, "Vollständiger Messverlauf")]
-    public async Task Trace_reports_why_a_recording_is_incomplete(string points, string minimumDuration,
-        string duration, ResultRating rating, string message)
+    [InlineData(0, "Messzeitpunkt steigt nicht")]
+    [InlineData(1.2, "Maximale Messlücke überschritten")]
+    [InlineData(0.98, null)]
+    public void Manual_trace_distinguishes_invalid_timestamps_and_accepts_jitter(double time, string? error)
     {
-        var definition = Test(Group("loop").Add(
-            Block(TraceBlocks.Start, "start", ("Grenzkurven", "band@1"), ("MinPunkte", points), ("MinDauer", minimumDuration), ("Dauer", duration)),
-            Block(TraceBlocks.Point, "first", ("Zeit", "0"), ("Werte", "5")),
-            Block(TraceBlocks.Point, "second", ("Zeit", "1"), ("Werte", "5")),
-            Block(TraceBlocks.Stop, "stop")));
-        definition.Curves.Add(Band());
-        var run = new TestRun(definition);
+        var recordings = Start(gap: 1);
+        recordings.Add("owner", "trace", 0, [5], Now);
+        if (error is null)
+        {
+            recordings.Add("owner", "trace", time, [5], Now);
+            Assert.True(recordings.Stop("owner", "trace").Passed);
+            return;
+        }
+
+        var exception = Assert.Throws<ArgumentException>(() => recordings.Add("owner", "trace", time, [5], Now));
+        Assert.Contains(error, exception.Message);
+        if (time > 0)
+        {
+            Assert.Contains($"{time:G9} s gemessen", exception.Message);
+            Assert.Contains("1 s zulässig", exception.Message);
+        }
+        Assert.False(recordings.Stop("owner", "trace").Complete);
+    }
+
         Assert.Equal(rating, (await run.RunAsync().Within()).Rating);
         Assert.Contains(message, Assert.Single(run.Steps("stop")).Message);
     }
