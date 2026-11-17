@@ -4587,6 +4587,24 @@
           "hint": null
         },
         {
+          "name": "SicherheitMin",
+          "label": "Harte Messwert-Untergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SicherheitMax",
+          "label": "Harte Messwert-Obergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
           "name": "Abbruchgrenzkurven",
           "label": "Abbruchgrenzkurven: ID@Version (Komma)",
           "kind": "Text",
@@ -4621,6 +4639,42 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "MinPunkte",
+          "label": "Mindestanzahl g\u00FCltiger Messpunkte je Kanal",
+          "kind": "Expression",
+          "default": "2",
+          "required": false,
+          "choices": null,
+          "hint": "Ganzzahl oder Pr\u00FCfparameter. Mindestens 2, h\u00F6chstens das Punktlimit."
+        },
+        {
+          "name": "ZielbandMin",
+          "label": "Zielband-Untergrenze (erster Messkanal)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ZielbandMax",
+          "label": "Zielband-Obergrenze (erster Messkanal)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ZielbandPunkte",
+          "label": "Aufeinanderfolgende Messpunkte im Zielband",
+          "kind": "Expression",
+          "default": "10",
+          "required": false,
+          "choices": null,
+          "hint": "Mindestens 2. Nur wirksam, wenn beide Zielbandgrenzen angegeben sind."
         },
         {
           "name": "MinDauer",
@@ -4875,6 +4929,15 @@
           "hint": null
         },
         {
+          "name": "StabilesZiel",
+          "label": "Stabiles Ziel erreicht \u2192 Boolvariable",
+          "kind": "Variable",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
           "name": "BeiVorzeitigemEndeZurExitGruppe",
           "label": "Bei vorzeitigem Ende zur Pr\u00FCflings-Exit-Gruppe",
           "kind": "Bool",
@@ -4988,6 +5051,24 @@
           "hint": null
         },
         {
+          "name": "SicherheitMin",
+          "label": "Harte Messwert-Untergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SicherheitMax",
+          "label": "Harte Messwert-Obergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
           "name": "Abbruchgrenzkurven",
           "label": "Abbruchgrenzkurven: ID@Version (Komma)",
           "kind": "Text",
@@ -5022,6 +5103,42 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "MinPunkte",
+          "label": "Mindestanzahl g\u00FCltiger Messpunkte je Kanal",
+          "kind": "Expression",
+          "default": "2",
+          "required": false,
+          "choices": null,
+          "hint": "Ganzzahl oder Pr\u00FCfparameter. Mindestens 2, h\u00F6chstens das Punktlimit."
+        },
+        {
+          "name": "ZielbandMin",
+          "label": "Zielband-Untergrenze (erster Messkanal)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ZielbandMax",
+          "label": "Zielband-Obergrenze (erster Messkanal)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "ZielbandPunkte",
+          "label": "Aufeinanderfolgende Messpunkte im Zielband",
+          "kind": "Expression",
+          "default": "10",
+          "required": false,
+          "choices": null,
+          "hint": "Mindestens 2. Nur wirksam, wenn beide Zielbandgrenzen angegeben sind."
         },
         {
           "name": "MinDauer",
