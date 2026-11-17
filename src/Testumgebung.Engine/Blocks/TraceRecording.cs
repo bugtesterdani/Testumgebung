@@ -11,6 +11,7 @@ internal sealed class TraceRecordingSettings
     private readonly string[] _names, _units, _curves, _abortCurves;
     private readonly double _minimumDuration;
     private readonly Expression? _minimumPoints;
+    private readonly Expression? _targetMinimum, _targetMaximum, _targetPoints;
     private readonly bool _touchAllowed;
     private readonly double? _stopPercent, _stopAbsolute;
     private readonly SlopeLimits? _slope;
@@ -38,6 +39,9 @@ internal sealed class TraceRecordingSettings
         Duration = duration == 0 ? null : duration;
         _minimumDuration = p.Number("MinDauer") ?? 0; _touchAllowed = p.Bool("Beruehren");
         (_stopPercent, _stopAbsolute) = ReadStopMargins(p);
+        _targetMinimum = p.Expr("ZielbandMin");
+        _targetMaximum = p.Expr("ZielbandMax");
+        _targetPoints = p.Expr("ZielbandPunkte");
     }
     public void Begin(IStepContext ctx)
     {
@@ -49,8 +53,26 @@ internal sealed class TraceRecordingSettings
         var minimum = _minimumPoints is null ? 2 : BlockCatalog.ToDouble(_minimumPoints.Evaluate(new ContextResolver(ctx)), "Mindestanzahl");
         if (minimum < 2 || minimum > Maximum || minimum != Math.Truncate(minimum))
             throw new BlockConfigurationException("Mindestanzahl gültiger Messpunkte muss ganzzahlig zwischen 2 und dem Punktlimit liegen.");
-        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula, _stopAbsolute, (int)minimum);
+        ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula, _stopAbsolute, (int)minimum, ResolveTarget(ctx));
     }
+    private TraceTargetBand? ResolveTarget(IStepContext ctx)
+    {
+        if (_targetMinimum is null && _targetMaximum is null) return null;
+        if (_targetMinimum is null || _targetMaximum is null)
+            throw new BlockConfigurationException("Beide Zielbandgrenzen angeben.");
+        var resolver = new ContextResolver(ctx);
+        return new(BlockCatalog.ToDouble(_targetMinimum.Evaluate(resolver), "Zielband-Untergrenze"),
+            BlockCatalog.ToDouble(_targetMaximum.Evaluate(resolver), "Zielband-Obergrenze"), ResolveTargetPoints(resolver));
+    }
+
+    private int ResolveTargetPoints(ContextResolver resolver)
+    {
+        var count = _targetPoints is null ? 10 : BlockCatalog.ToDouble(_targetPoints.Evaluate(resolver), "Zielbandpunkte");
+        if (count < 2 || count > Maximum || count != Math.Truncate(count))
+            throw new BlockConfigurationException("Zielbandpunkte müssen ganzzahlig zwischen 2 und dem Punktlimit liegen.");
+        return (int)count;
+    }
+
     private static (double? Percent, double? Absolute) ReadStopMargins(BlockParameters p)
     {
         if (!p.Bool(TraceBlocks.StopEnabledParameter)) return (null, null);

@@ -78,6 +78,73 @@ public sealed class EnvelopeTraceTests
         Assert.Contains(message, Assert.Single(run.Steps("stop")).Message);
     }
 
+    [Theory]
+    [InlineData(5, true)]
+    [InlineData(2, false)]
+    public void Stable_target_resets_after_a_point_outside_the_band(double last, bool reached)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", Band())], Now, duration: 2,
+            target: new TraceTargetBand(4, 6, 2));
+        foreach (var (time, value) in new[] { (0d, 5d), (0.25, 2d), (0.5, 5d) })
+        {
+            recordings.Add("owner", "trace", time, [value], Now);
+            Assert.False(recordings.IsEnded("owner", "trace"));
+        }
+        recordings.Add("owner", "trace", 0.75, [last], Now);
+        Assert.Equal(reached, recordings.IsEnded("owner", "trace"));
+        var result = recordings.Stop("owner", "trace");
+        Assert.Equal(reached, result.TargetReached);
+        Assert.Equal(reached, result.Passed);
+    }
+
+    [Theory]
+    [InlineData("4", "6", "Zielpunkte", ResultRating.Pass, "Vollständiger Messverlauf", 4)]
+    [InlineData("4", "5", "", ResultRating.Pass, "Vollständiger Messverlauf", 10)]
+    [InlineData("6", "8", "3", ResultRating.Error, "stabiles Zielband wurde nicht erreicht", 11)]
+    [InlineData("4", "", "3", ResultRating.Error, "Beide Zielbandgrenzen", 0)]
+    [InlineData("7", "6", "3", ResultRating.Error, "Untergrenze", 0)]
+    [InlineData("4", "6", "1", ResultRating.Error, "ganzzahlig", 0)]
+    [InlineData("4", "6", "21", ResultRating.Error, "Punktlimit", 0)]
+    [InlineData("4", "6", "2.5", ResultRating.Error, "ganzzahlig", 0)]
+    public async Task Timed_trace_resolves_and_validates_target_settings(string lower, string upper,
+        string points, ResultRating rating, string message, int expectedSamples)
+    {
+        var loop = Group("loop").Var("Zielpunkte", VarType.Int, 3).Add(
+            Block(TraceBlocks.Record, "record", ("Grenzkurven", "band@1"), ("Dauer", "2"),
+                ("Intervall", "0.2"), ("MaxPunkte", "20"), ("MinPunkte", "4"), ("Werte", "5"), ("ZielbandMin", lower),
+                ("ZielbandMax", upper), ("ZielbandPunkte", points)));
+        var definition = Test(loop);
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(rating, (await run.RunAsync().Within()).Rating);
+        var result = Assert.Single(run.Steps("record"));
+        Assert.Contains(message, result.Message);
+        if (expectedSamples == 0) Assert.Null(result.Value);
+        else
+        {
+            var wave = Assert.IsType<WaveformSet>(result.Value).Channels[0];
+            Assert.Equal(expectedSamples, EnvelopeTraceMetadata.Decode(wave.Quality)!.OriginalTimes.Length);
+        }
+    }
+
+    [Theory]
+    [InlineData(0, 1, true)]
+    [InlineData(1, 2, false)]
+    public void Manual_target_capture_requires_start_coverage(double first, double second, bool complete)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", Band())], Now, duration: 2,
+            target: new TraceTargetBand(4, 6, 2));
+        recordings.Add("owner", "trace", first, [5], Now);
+        var result = recordings.Add("owner", "trace", second, [5], Now)!;
+
+        Assert.True(result.TargetReached);
+        Assert.Equal(complete, result.Passed);
+        Assert.Equal(complete, result.Complete);
+        if (!complete) Assert.Contains("Zeitfenster nicht abgedeckt", result.IncompleteReason);
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {
