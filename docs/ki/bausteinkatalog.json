@@ -4587,6 +4587,24 @@
           "hint": null
         },
         {
+          "name": "SicherheitMin",
+          "label": "Harte Messwert-Untergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SicherheitMax",
+          "label": "Harte Messwert-Obergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
           "name": "Abbruchgrenzkurven",
           "label": "Abbruchgrenzkurven: ID@Version (Komma)",
           "kind": "Text",
@@ -5009,6 +5027,24 @@
           "name": "SteigungMax",
           "label": "Maximale Steigung [Kanaleinheit/s]",
           "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SicherheitMin",
+          "label": "Harte Messwert-Untergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SicherheitMax",
+          "label": "Harte Messwert-Obergrenze (alle Kan\u00E4le)",
+          "kind": "Expression",
           "default": "",
           "required": false,
           "choices": null,

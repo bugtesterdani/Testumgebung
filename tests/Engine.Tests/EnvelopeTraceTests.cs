@@ -145,6 +145,61 @@ public sealed class EnvelopeTraceTests
         if (!complete) Assert.Contains("Zeitfenster nicht abgedeckt", result.IncompleteReason);
     }
 
+    [Theory]
+    [InlineData(TraceBlocks.ValueBand)]
+    [InlineData(TraceBlocks.FormulaBand)]
+    [InlineData(TraceBlocks.PairSlope)]
+    [InlineData(TraceBlocks.DisjointSlope)]
+    [InlineData(TraceBlocks.RollingSlope)]
+    public async Task Hard_measurement_limit_trips_on_the_first_point_in_every_mode(string mode)
+    {
+        var definition = Test(Group("loop").Add(
+            Block(TraceBlocks.Record, "capture", ("Grenzauswertung", mode), ("Grenzkurven", "band@1"),
+                ("SteigungMin", "-100"), ("SteigungMax", "100"), ("Untergrenzenformel", "0"),
+                ("Obergrenzenformel", "10"), ("SicherheitMax", "6"), ("Werte", "7"))));
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(ResultRating.Fail, (await run.RunAsync().Within()).Rating);
+        var result = Assert.Single(run.Steps("capture"));
+        Assert.Contains("harte Messwert-Sicherheitsgrenze 6", result.Message);
+        var wave = Assert.Single(Assert.IsType<WaveformSet>(result.Value).Channels);
+        Assert.Equal(7d, Assert.Single(wave.Values));
+        Assert.True(EnvelopeTraceMetadata.Decode(wave.Quality)!.EarlyStop!.HardLimit);
+    }
+
+    [Theory]
+    [InlineData("Wert", "band@1")]
+    [InlineData("Formel", "Formelgrenzen")]
+    [InlineData("Steigung", "Steigung")]
+    public void Hard_stop_preserves_prior_quality_results(string mode, string curve)
+    {
+        var band = Band();
+        var recordings = new EnvelopeRecordings();
+        var slope = mode == "Steigung" ? new SlopeLimits(SlopeWindowMode.Consecutive, 2, 0, 10) : null;
+        var formula = mode == "Formel" ? new FormulaLimits("0", "10") : null;
+        recordings.Start("owner", "trace", [new("U", "V", band) { SafetyMaximum = 12 }], Now,
+            slope: slope, formula: formula, target: new TraceTargetBand(10, 20, 2));
+        recordings.Add("owner", "trace", 0, [5], Now);
+        recordings.Add("owner", "trace", 0.5, [11], Now);
+        var stopped = recordings.Add("owner", "trace", 1, [15], Now)!;
+        var result = recordings.Stop("owner", "trace");
+
+        Assert.True(stopped.Finished);
+        Assert.False(result.TargetReached);
+        Assert.True(result.EarlyStop!.HardLimit);
+        var details = Assert.Single(result.Channels);
+        Assert.Equal(curve, details.Curve);
+        if (mode == "Wert") Assert.Equal(band.ContentHash(), details.Hash);
+        Assert.Equal(0.5, Assert.Single(details.Violations));
+        Assert.True(details.MaximumDeviation > 0);
+        Assert.Equal(result.EarlyStop, details.EarlyStop);
+        Assert.Contains(result.Data.Channels, wave => wave.Channel.Contains("Untergrenze"));
+        Assert.Contains(result.Data.Channels, wave => wave.Channel.Contains("Obergrenze"));
+        var last = Assert.Single(result.Data.Channels, wave => wave.Channel.EndsWith("Sicherheitsabbruch"));
+        Assert.Equal("V", last.Unit);
+        Assert.Equal(15d, Assert.Single(last.Values));
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {
