@@ -221,9 +221,20 @@ internal sealed class EnvelopeRecording
         if (_times.Count >= _maxPoints) throw new InvalidOperationException("Maximale Messpunktzahl erreicht.");
         if (values.Count != _channels.Length || values.Any(value => !double.IsFinite(value)) || !double.IsFinite(time) || time < 0)
             throw new ArgumentException("Für jeden Kanal einen endlichen Messwert und eine nichtnegative Zeit angeben.");
-        if (_times.Count > 0 && (time <= _times[^1] || time - _times[^1] > _maxGap + Math.Max(1, _maxGap) * 1e-12)) throw new ArgumentException("Zeitpunkte müssen streng steigen und dürfen die maximale Messlücke nicht überschreiten.");
+        if (_times.Count > 0) ValidateTimeGap(time);
+
         foreach (var envelope in AllEnvelopes()) _ = envelope.At(time);
     }
+    private void ValidateTimeGap(double time)
+    {
+        var previous = _times[^1];
+        var gap = time - previous;
+        if (gap <= 0)
+            throw new ArgumentException($"Messzeitpunkt steigt nicht: aktuell {time:G9} s, zuvor {previous:G9} s.");
+        if (gap > _maxGap + TimeTolerance(_maxGap))
+            throw new ArgumentException($"Maximale Messlücke überschritten: {gap:G9} s gemessen, {_maxGap:G9} s zulässig.");
+    }
+
     public TraceEvaluation Evaluate(bool stopped)
     {
         var complete = stopped && EarlyStop is null && !_faulted && HasFullDuration();

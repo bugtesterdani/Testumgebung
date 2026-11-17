@@ -35,6 +35,31 @@ public sealed class EnvelopeTraceTests
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
     [Theory]
+    [InlineData(0, "Messzeitpunkt steigt nicht")]
+    [InlineData(1.2, "Maximale Messlücke überschritten")]
+    [InlineData(0.98, null)]
+    public void Manual_trace_distinguishes_invalid_timestamps_and_accepts_jitter(double time, string? error)
+    {
+        var recordings = Start(gap: 1);
+        recordings.Add("owner", "trace", 0, [5], Now);
+        if (error is null)
+        {
+            recordings.Add("owner", "trace", time, [5], Now);
+            Assert.True(recordings.Stop("owner", "trace").Passed);
+            return;
+        }
+
+        var exception = Assert.Throws<ArgumentException>(() => recordings.Add("owner", "trace", time, [5], Now));
+        Assert.Contains(error, exception.Message);
+        if (time > 0)
+        {
+            Assert.Contains($"{time:G9} s gemessen", exception.Message);
+            Assert.Contains("1 s zulässig", exception.Message);
+        }
+        Assert.False(recordings.Stop("owner", "trace").Complete);
+    }
+
+    [Theory]
     [InlineData(5, true)]
     [InlineData(2, false)]
     public void Stable_target_resets_after_a_point_outside_the_band(double last, bool reached)
