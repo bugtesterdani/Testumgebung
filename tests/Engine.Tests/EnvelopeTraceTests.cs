@@ -79,6 +79,36 @@ public sealed class EnvelopeTraceTests
         Assert.Equal(reached, result.Passed);
     }
 
+    [Theory]
+    [InlineData("4", "6", "Zielpunkte", ResultRating.Pass, "Vollständiger Messverlauf", 3)]
+    [InlineData("4", "5", "", ResultRating.Pass, "Vollständiger Messverlauf", 10)]
+    [InlineData("6", "8", "3", ResultRating.Error, "stabiles Zielband wurde nicht erreicht", 11)]
+    [InlineData("4", "", "3", ResultRating.Error, "Beide Zielbandgrenzen", 0)]
+    [InlineData("7", "6", "3", ResultRating.Error, "Untergrenze", 0)]
+    [InlineData("4", "6", "1", ResultRating.Error, "ganzzahlig", 0)]
+    [InlineData("4", "6", "21", ResultRating.Error, "Punktlimit", 0)]
+    [InlineData("4", "6", "2.5", ResultRating.Error, "ganzzahlig", 0)]
+    public async Task Timed_trace_resolves_and_validates_target_settings(string lower, string upper,
+        string points, ResultRating rating, string message, int expectedSamples)
+    {
+        var loop = Group("loop").Var("Zielpunkte", VarType.Int, 3).Add(
+            Block(TraceBlocks.Record, "record", ("Grenzkurven", "band@1"), ("Dauer", "2"),
+                ("Intervall", "0.2"), ("MaxPunkte", "20"), ("Werte", "5"), ("ZielbandMin", lower),
+                ("ZielbandMax", upper), ("ZielbandPunkte", points)));
+        var definition = Test(loop);
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(rating, (await run.RunAsync().Within()).Rating);
+        var result = Assert.Single(run.Steps("record"));
+        Assert.Contains(message, result.Message);
+        if (expectedSamples == 0) Assert.Null(result.Value);
+        else
+        {
+            var wave = Assert.IsType<WaveformSet>(result.Value).Channels[0];
+            Assert.Equal(expectedSamples, EnvelopeTraceMetadata.Decode(wave.Quality)!.OriginalTimes.Length);
+        }
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {

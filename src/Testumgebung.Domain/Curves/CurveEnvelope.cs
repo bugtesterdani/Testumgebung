@@ -88,7 +88,16 @@ public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTra
     public int Violations => Channels.Sum(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount);
 }
 
-public sealed record TraceTargetBand(double Minimum, double Maximum, int ConsecutivePoints);
+public sealed record TraceTargetBand(double Minimum, double Maximum, int ConsecutivePoints)
+{
+    internal void Validate(int maxPoints)
+    {
+        if (!double.IsFinite(Minimum) || !double.IsFinite(Maximum) || Minimum > Maximum)
+            throw new ArgumentException("Zielband benötigt endliche Grenzen mit Untergrenze ≤ Obergrenze.");
+        if (ConsecutivePoints < 2 || ConsecutivePoints > maxPoints)
+            throw new ArgumentException("Zielband benötigt mindestens zwei aufeinanderfolgende Messpunkte innerhalb des Punktlimits.");
+    }
+}
 
 /// <summary>One finite recording with a common receipt-time base for all channels.</summary>
 internal sealed class EnvelopeRecording
@@ -136,9 +145,7 @@ internal sealed class EnvelopeRecording
             ? new CurveEnvelope(limits, channel.Unit) : null).ToArray();
         ValidateDuration(duration, minimumDuration);
         _duration = duration;
-        if (target is not null && (!double.IsFinite(target.Minimum) || !double.IsFinite(target.Maximum)
-            || target.Minimum > target.Maximum || target.ConsecutivePoints < 2 || target.ConsecutivePoints > maxPoints))
-            throw new ArgumentException("Zielband benötigt endliche Grenzen und mindestens zwei aufeinanderfolgende Messpunkte.");
+        target?.Validate(maxPoints);
         _target = target;
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
         _slopes = channels.Select(_ => new List<double>()).ToArray();

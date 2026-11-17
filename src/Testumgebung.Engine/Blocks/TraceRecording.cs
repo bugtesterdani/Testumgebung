@@ -56,11 +56,16 @@ internal sealed class TraceRecordingSettings
         if (_targetMinimum is null || _targetMaximum is null)
             throw new BlockConfigurationException("Beide Zielbandgrenzen angeben.");
         var resolver = new ContextResolver(ctx);
+        return new(BlockCatalog.ToDouble(_targetMinimum.Evaluate(resolver), "Zielband-Untergrenze"),
+            BlockCatalog.ToDouble(_targetMaximum.Evaluate(resolver), "Zielband-Obergrenze"), ResolveTargetPoints(resolver));
+    }
+
+    private int ResolveTargetPoints(ContextResolver resolver)
+    {
         var count = _targetPoints is null ? 10 : BlockCatalog.ToDouble(_targetPoints.Evaluate(resolver), "Zielbandpunkte");
         if (count < 2 || count > Maximum || count != Math.Truncate(count))
             throw new BlockConfigurationException("Zielbandpunkte müssen ganzzahlig zwischen 2 und dem Punktlimit liegen.");
-        return new(BlockCatalog.ToDouble(_targetMinimum.Evaluate(resolver), "Zielband-Untergrenze"),
-            BlockCatalog.ToDouble(_targetMaximum.Evaluate(resolver), "Zielband-Obergrenze"), (int)count);
+        return (int)count;
     }
 
     private static (double? Percent, double? Absolute) ReadStopMargins(BlockParameters p)
