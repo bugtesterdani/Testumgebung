@@ -93,12 +93,45 @@ public sealed class TimedTraceTests
         Assert.Equal(new double[] { 0, 0.5, 1, 1.5, 2 }, metadata.OriginalTimes); Assert.True(metadata.Complete);
         var plot = new WaveformPlotViewModel(); plot.SetData(data); Assert.Equal(5, plot.SampleMarkers.Count);
     }
+    [Theory]
+    [InlineData(double.NaN, true)]
+    [InlineData(double.PositiveInfinity, true)]
+    [InlineData(double.PositiveInfinity, false)]
+    public async Task Transient_samples_are_retried_without_adding_invalid_points(double badReading, bool recovers)
+    {
+        var meter = new Meter(recovers ? [badReading, 5] : [badReading]);
+        var definition = Test(Group("loop").Add(Capture(("Quelle", "Geräte"), ("Ressourcen", "U"), ("Messversuche", "3"))));
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock(),
+            Hardware = new Testumgebung.Hardware.HardwareRegistry().Bind("U", meter, "u") });
+        var status = await run.RunAsync().Within();
+        var result = Assert.Single(run.Steps("capture"));
+        if (recovers)
+        {
+            Assert.Equal(ResultRating.Pass, status.Rating);
+            Assert.Equal(6, meter.Calls);
+            var wave = Assert.IsType<WaveformSet>(result.Value).Channels[0];
+            Assert.Equal(Enumerable.Repeat(5d, 5), wave.Values);
+        }
+        else
+        {
+            Assert.Equal(ResultRating.Error, status.Rating);
+            Assert.Equal(3, meter.Calls);
+            Assert.Contains("Messung (U) nach 3", result.Message);
+            Assert.Contains("Verbindung unterbrochen", result.Message);
+        }
+    }
+
     private sealed class Meter(params double[] readings) : IHardwareAdapter
     {
         public int Calls { get; private set; }
         public string Name => "Timed fixture";
         public ChannelCapabilities GetCapabilities(string channel) => new("V", -100, 100);
-        public Task<double> ReadAsync(string channel, CancellationToken token) => Task.FromResult(readings[Math.Min(Calls++, readings.Length - 1)]);
+        public Task<double> ReadAsync(string channel, CancellationToken token)
+        {
+            var reading = readings[Math.Min(Calls++, readings.Length - 1)];
+            return double.IsPositiveInfinity(reading) ? Task.FromException<double>(new IOException("Verbindung unterbrochen")) : Task.FromResult(reading);
+        }
         public Task WriteAsync(string channel, double value, CancellationToken token) => Task.CompletedTask;
     }
     [Fact]

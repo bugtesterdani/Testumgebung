@@ -5347,6 +5347,15 @@
           "hint": null
         },
         {
+          "name": "Messversuche",
+          "label": "Maximale Messversuche je Messpunkt",
+          "kind": "Expression",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": "Ganzzahl oder Pr\u00FCfparameter von 1 bis 10. F\u00FCr die PSU-Pr\u00FCfung sind 3 Versuche ein Ausgangswert."
+        },
+        {
           "name": "Intervall",
           "label": "Abfrageintervall [s]",
           "kind": "Number",
@@ -5507,6 +5516,15 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "Messversuche",
+          "label": "Maximale Messversuche je Messpunkt",
+          "kind": "Expression",
+          "default": "1",
+          "required": false,
+          "choices": null,
+          "hint": "Ganzzahl oder Pr\u00FCfparameter von 1 bis 10. F\u00FCr die PSU-Pr\u00FCfung sind 3 Versuche ein Ausgangswert."
         },
         {
           "name": "Zeit",
