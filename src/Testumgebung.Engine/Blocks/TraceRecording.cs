@@ -10,6 +10,7 @@ internal sealed class TraceRecordingSettings
 {
     private readonly string[] _names, _units, _curves, _abortCurves;
     private readonly double _minimumDuration;
+    private readonly Expression? _safetyMinimum, _safetyMaximum;
     private readonly bool _touchAllowed;
     private readonly double? _stopPercent, _stopAbsolute;
     private readonly SlopeLimits? _slope;
@@ -36,13 +37,19 @@ internal sealed class TraceRecordingSettings
         Duration = duration == 0 ? null : duration;
         _minimumDuration = p.Number("MinDauer") ?? 0; _touchAllowed = p.Bool("Beruehren");
         (_stopPercent, _stopAbsolute) = ReadStopMargins(p);
+        _safetyMinimum = p.Expr("SicherheitMin");
+        _safetyMaximum = p.Expr("SicherheitMax");
     }
     public void Begin(IStepContext ctx)
     {
         if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
+        var resolver = new ContextResolver(ctx);
+        var safetyMin = _safetyMinimum is null ? (double?)null : BlockCatalog.ToDouble(_safetyMinimum.Evaluate(resolver), "Sicherheitsuntergrenze");
+        var safetyMax = _safetyMaximum is null ? (double?)null : BlockCatalog.ToDouble(_safetyMaximum.Evaluate(resolver), "Sicherheitsobergrenze");
         var channels = _names.Select((name, index) => new TraceChannelDefinition(name, _units[index], _slope is null && _formula is null ? Resolve(ctx, _curves[index]) : null)
         {
-            AbortLimits = _abortCurves[index].Length == 0 ? null : Resolve(ctx, _abortCurves[index])
+            AbortLimits = _abortCurves[index].Length == 0 ? null : Resolve(ctx, _abortCurves[index]),
+            SafetyMinimum = safetyMin, SafetyMaximum = safetyMax
         }).ToArray();
         ctx.Recordings.Start(ctx.ProcessOwner, Name, channels, ctx.Clock.Now, Maximum, MaxGap, _minimumDuration, _touchAllowed, _stopPercent, Duration, _slope, _formula, _stopAbsolute);
     }

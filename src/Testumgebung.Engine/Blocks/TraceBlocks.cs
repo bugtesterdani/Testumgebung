@@ -70,6 +70,8 @@ public static class TraceBlocks
         Hint: "Für getrennte und gleitende Fenster. Nur vollständige Fenster werden bewertet."),
      new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
+     new("SicherheitMin", "Harte Messwert-Untergrenze (alle Kanäle)", ParameterKind.Expression),
+     new("SicherheitMax", "Harte Messwert-Obergrenze (alle Kanäle)", ParameterKind.Expression),
      new(AbortCurvesParameter, "Abbruchgrenzkurven: ID@Version (Komma)", ParameterKind.Text,
         Hint: "Nur für Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gewählte Abweichungsregel. Eine eingetragene Kurve ersetzt die gewählte Abweichungsregel dieses Kanals."),
      new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
@@ -141,7 +143,9 @@ public static class TraceBlocks
     }
     private static string EarlyStopMessage(EnvelopeEarlyStop early, bool exitDut)
     {
-        var limit = early.AbortCurve is { } curve
+        var limit = early.HardLimit
+            ? $"harte Messwert-Sicherheitsgrenze {(early.Value < early.Lower ? early.Lower : early.Upper):G6}"
+            : early.AbortCurve is { } curve
             ? $"Abbruchgrenzkurve {curve}, Grenzen {early.Lower:G6}..{early.Upper:G6}"
             : $"Grenzband {early.Lower:G6}..{early.Upper:G6}, zusätzliche Abweichung {DescribeMargin(early)}";
         var continuation = exitDut ? "Regulären Prüflingsablauf beenden und Exit-Gruppe ausführen." : "Nächste Prüfschritte werden ausgeführt.";
