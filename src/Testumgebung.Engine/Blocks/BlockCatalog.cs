@@ -137,7 +137,26 @@ public sealed class BlockCatalog
 
     public IReadOnlyList<string> Categories => _blocks.Values.Select(block => block.Category).Distinct().ToList();
 
-    public void Register(BlockDescriptor descriptor) => _blocks[descriptor.Type] = descriptor;
+    public const string ExitDutOnErrorParameter = "BeiFehlerZurExitGruppe";
+
+    public void Register(BlockDescriptor descriptor)
+    {
+        var label = descriptor.Type is SetRating or Evaluate ? "Bei ERROR oder FAIL zur Prüflings-Exit-Gruppe" : "Bei ERROR zur Prüflings-Exit-Gruppe";
+        _blocks[descriptor.Type] = descriptor with
+        {
+            Parameters = [.. descriptor.Parameters.Where(parameter => parameter.Name != ExitDutOnErrorParameter), new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
+                Hint: "Überspringt bei einem Fehler die restlichen regulären Schritte dieses Prüflings.", Advanced: true)]
+        };
+    }
+
+    internal bool RequestsErrorExit(StepDefinition step, ResultRating rating)
+    {
+        if (step.BlockType is not { } type || !TryGet(type, out var descriptor)) return false;
+        var parameters = new BlockParameters(descriptor, step.Parameters);
+        if (rating == ResultRating.Error) return parameters.Bool(ExitDutOnErrorParameter);
+        var fixedRating = type == SetRating || (type == Evaluate && parameters.Text("Art") == FixedRatingMode);
+        return rating == ResultRating.Fail && fixedRating && parameters.Bool(ExitDutOnErrorParameter);
+    }
 
     public BlockDescriptor Get(string type)
         => _blocks.TryGetValue(type, out var block) ? block : throw new KeyNotFoundException($"Unbekannter Bausteintyp '{type}'.");
@@ -654,6 +673,7 @@ public sealed class MeasureExpressionAction(string resource, string? target, Exp
     public async Task<StepOutcome> ExecuteAsync(IStepContext context)
     {
         var value = await context.ReadAsync(resource).ConfigureAwait(false);
+        if (!double.IsFinite(value)) return StepOutcome.Error($"Gerät „{resource}“ liefert keinen endlichen Messwert.");
         if (target is not null) context.Set(target, value);
         var resolver = new ContextResolver(context);
         double? lo = low is null ? null : BlockCatalog.ToDouble(low.Evaluate(resolver), "Untergrenze");

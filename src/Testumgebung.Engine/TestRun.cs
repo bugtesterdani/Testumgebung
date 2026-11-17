@@ -5,6 +5,7 @@
 
 using System.Collections.Concurrent;
 using Testumgebung.Contracts;
+using Testumgebung.Engine.Blocks;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
 using Testumgebung.Domain.Results;
@@ -453,7 +454,8 @@ public sealed class TestRun
             Path = path,
             Iteration = iteration,
         });
-        if (outcome.ExitDut && !phase.IsExit && _dutFlow.Value is { } flow)
+        if (!phase.IsExit && _dutFlow.Value is { } flow &&
+            (outcome.ExitDut || (Options.Catalog ?? BlockCatalog.Default).RequestsErrorExit(step, outcome.Rating)))
             flow.ExitRequested = true;
         return outcome.Rating;
     }
