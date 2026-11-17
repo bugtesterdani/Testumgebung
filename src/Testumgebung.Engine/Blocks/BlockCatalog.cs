@@ -137,7 +137,24 @@ public sealed class BlockCatalog
 
     public IReadOnlyList<string> Categories => _blocks.Values.Select(block => block.Category).Distinct().ToList();
 
-    public void Register(BlockDescriptor descriptor) => _blocks[descriptor.Type] = descriptor;
+    public const string ExitDutOnErrorParameter = "BeiFehlerZurExitGruppe";
+
+    public void Register(BlockDescriptor descriptor)
+    {
+        var label = descriptor.Type == SetRating ? "Bei ERROR oder FAIL zur Prüflings-Exit-Gruppe" : "Bei ERROR zur Prüflings-Exit-Gruppe";
+        _blocks[descriptor.Type] = descriptor with
+        {
+            Parameters = [.. descriptor.Parameters, new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
+                Hint: "Überspringt bei einem Fehler die restlichen regulären Schritte dieses Prüflings.", Advanced: true)]
+        };
+    }
+
+    internal bool RequestsErrorExit(StepDefinition step, ResultRating rating)
+    {
+        if (step.BlockType is not { } type || !TryGet(type, out var descriptor)) return false;
+        if (rating != ResultRating.Error && (type != SetRating || rating != ResultRating.Fail)) return false;
+        return new BlockParameters(descriptor, step.Parameters).Bool(ExitDutOnErrorParameter);
+    }
 
     public BlockDescriptor Get(string type)
         => _blocks.TryGetValue(type, out var block) ? block : throw new KeyNotFoundException($"Unbekannter Bausteintyp '{type}'.");
