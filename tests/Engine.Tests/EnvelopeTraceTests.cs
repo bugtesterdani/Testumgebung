@@ -34,6 +34,28 @@ public sealed class EnvelopeTraceTests
         var plot = new WaveformPlotViewModel(); plot.SetData(result.Data);
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
+    [Theory]
+    [InlineData(TraceBlocks.ValueBand)]
+    [InlineData(TraceBlocks.FormulaBand)]
+    [InlineData(TraceBlocks.PairSlope)]
+    [InlineData(TraceBlocks.DisjointSlope)]
+    [InlineData(TraceBlocks.RollingSlope)]
+    public async Task Hard_measurement_limit_trips_on_the_first_point_in_every_mode(string mode)
+    {
+        var definition = Test(Group("loop").Add(
+            Block(TraceBlocks.Record, "capture", ("Grenzauswertung", mode), ("Grenzkurven", "band@1"),
+                ("SteigungMin", "-100"), ("SteigungMax", "100"), ("Untergrenzenformel", "0"),
+                ("Obergrenzenformel", "10"), ("SicherheitMax", "6"), ("Werte", "7"))));
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition, new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(ResultRating.Fail, (await run.RunAsync().Within()).Rating);
+        var result = Assert.Single(run.Steps("capture"));
+        Assert.Contains("harte Messwert-Sicherheitsgrenze 6", result.Message);
+        var wave = Assert.Single(Assert.IsType<WaveformSet>(result.Value).Channels);
+        Assert.Equal(7d, Assert.Single(wave.Values));
+        Assert.True(EnvelopeTraceMetadata.Decode(wave.Quality)!.EarlyStop!.HardLimit);
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {
