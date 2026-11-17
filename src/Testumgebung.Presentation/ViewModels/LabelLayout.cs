@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using Testumgebung.Engine.Blocks;
 
 namespace Testumgebung.Presentation.ViewModels;
 
-public enum LabelElementKind { Text, Code128, Qr, Line, Image }
+public enum LabelElementKind { Text, Code128, Qr, Line, Image, DataMatrix, Gs1DataMatrix, Gs1Qr }
 
 public sealed class LabelElement
 {
@@ -15,6 +16,27 @@ public sealed class LabelElement
     public int Length { get; set; } = 150;
     public string Value { get; set; } = "{Kennung}";
     public string Preview { get; set; } = "SN-123";
+    public string? ExampleValues { get; set; }
+
+    public bool IsGs1 => Kind is LabelElementKind.Gs1DataMatrix or LabelElementKind.Gs1Qr;
+
+    public string PreviewText()
+    {
+        if (ExampleValues is null)
+            return Value?.Contains('{') == true ? Preview : Value ?? "";
+        var examples = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var line in ExampleValues.ReplaceLineEndings("\n").Split('\n'))
+        {
+            var equals = line.IndexOf('=');
+            if (equals > 0) examples[line[..equals].Trim()] = line[(equals + 1)..];
+        }
+        return System.Text.RegularExpressions.Regex.Replace(Value ?? "", @"\{\{|\}\}|\{([^{}]+)\}", match => match.Value switch
+        {
+            "{{" => "{",
+            "}}" => "}",
+            _ => examples.GetValueOrDefault(match.Groups[1].Value.Trim(), match.Value),
+        });
+    }
     public int ImageWidth { get; set; }
     public int ImageHeight { get; set; }
     public byte[] Bitmap { get; set; } = [];
@@ -27,6 +49,7 @@ public sealed class LabelLayout
     public int WidthMm { get; set; } = 60;
     public int HeightMm { get; set; } = 40;
     public int Dpi { get; set; } = 203;
+    public decimal GapMm { get; set; } = 3;
     public List<LabelElement> Elements { get; set; } = [];
 
     public int WidthDots => ToDots(WidthMm);
@@ -60,6 +83,9 @@ public sealed class LabelLayout
             LabelElementKind.Text => FormattableString.Invariant($"^A0N,{size},{size}^FD{Field(element.Value)}^FS"),
             LabelElementKind.Code128 => FormattableString.Invariant($"^BY2^BCN,{size},Y,N,N^FD{Field(element.Value)}^FS"),
             LabelElementKind.Qr => FormattableString.Invariant($"^BQN,2,{Math.Clamp(size, 1, 10)}^FDLA,{Field(element.Value)}^FS"),
+            LabelElementKind.DataMatrix => FormattableString.Invariant($"^BXN,{Math.Clamp(size, 1, 10)},200,0,0,1,_,1^FD{Gs1LabelData.ZplLiteralMatrixMarker}{Field(element.Value)}^FS"),
+            LabelElementKind.Gs1DataMatrix => FormattableString.Invariant($"^BXN,{Math.Clamp(size, 1, 10)},200,0,0,1,_,1^FH\\^FD{Gs1LabelData.ZplMatrixMarker}{Field(element.Value)}^FS"),
+            LabelElementKind.Gs1Qr => FormattableString.Invariant($"^BQN,2,{Math.Clamp(size, 1, 10)}^FH\\^FD{Gs1LabelData.ZplQrMarker}{Field(element.Value)}^FS"),
             LabelElementKind.Line => FormattableString.Invariant($"^GB{length},{size},{size}^FS"),
             LabelElementKind.Image => Graphic(element),
             _ => throw new InvalidDataException("Unbekanntes Etikettenelement."),

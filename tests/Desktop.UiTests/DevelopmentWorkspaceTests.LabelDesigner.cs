@@ -54,8 +54,99 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Contains("^BQN,", zpl);
             Assert.Contains("^GB", zpl);
             Assert.Contains("^FD{Kennung}", zpl);
+            VerifyCabFileImport(folder, properties, field);
+            VerifyCabLabelDesigner(dispatcher, folder, properties);
         }
         finally { Directory.Delete(folder, recursive: true); }
+    }
+
+    private static void VerifyCabLabelDesigner(Dispatcher dispatcher, string folder, StepPropertiesViewModel properties)
+    {
+        var format = properties.Parameters.Single(row => row.Descriptor.Name == LabelPrintingBlocks.FormatParameter);
+        format.Value = LabelPrintingBlocks.Cab;
+        var cab = properties.Parameters.Single(row => row.IsCabLabel);
+        properties.SaveCabLabelLayout(new());
+        var source = new Border();
+        var owner = Sta.ShowHost(source);
+        try
+        {
+            dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                var dialog = owner.OwnedWindows.OfType<LabelDesignerWindow>().Single();
+                try
+                {
+                    Assert.Equal("cab-Etikett gestalten", dialog.Title);
+                    dialog.ImportImage(Path.Combine(folder, "logo.png"));
+                    foreach (var button in Descendants(dialog).OfType<Button>().Where(button => button.Tag is string).ToArray())
+                        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    var list = Descendants(dialog).OfType<ListBox>().Single();
+                    var gs1 = list.Items.Cast<LabelElement>().Single(item => item.Kind == LabelElementKind.Gs1DataMatrix);
+                    list.SelectedItem = gs1;
+                    var identifiers = Assert.IsType<ComboBox>(dialog.FindName("Gs1Identifiers"));
+                    var serial = identifiers.Items.Cast<Gs1ApplicationIdentifier>().Single(item => item.Id == "21");
+                    Assert.Contains("Seriennummer", serial.Display);
+                    identifiers.SelectedItem = serial;
+                    var content = Assert.IsType<TextBox>(dialog.FindName("BarcodeContent"));
+                    content.Select(content.Text.Length, 0);
+                    Descendants(dialog).OfType<Button>().Single(button => Equals(button.Content, "Kennung einfügen"))
+                        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.EndsWith("(21)", gs1.Value);
+                    content.SetCurrentValue(TextBox.TextProperty, gs1.Value + "{Kennung}");
+                    content.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+
+                    list.SelectedItem = list.Items.Cast<LabelElement>().Single(item => item.Kind == LabelElementKind.Text);
+                    var sample = Descendants(dialog).OfType<TextBox>().Single(box =>
+                        box.GetBindingExpression(TextBox.TextProperty)?.ParentBinding.Path.Path == nameof(LabelElement.ExampleValues));
+                    sample.SetCurrentValue(TextBox.TextProperty, "Kennung=DEMO-101");
+                    sample.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                    Assert.Contains(Descendants(dialog).OfType<TextBlock>(), text => text.Text == "DEMO-101");
+                    Descendants(dialog).OfType<Button>().Single(button => Equals(button.Content, "Vorlage übernehmen"))
+                        .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+                finally { if (dialog.IsVisible) dialog.Close(); }
+            }));
+            LabelDesignerWindow.Edit(source, cab);
+
+            var layout = LabelLayout.Load(properties.Step.Parameters[CabLabelLayout.Parameter]);
+            Assert.Equal(8, layout.Elements.Count);
+            Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.DataMatrix);
+            Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.Gs1DataMatrix);
+            Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.Gs1Qr);
+            Assert.Equal(CabLabelLayout.Render(layout), Convert.FromBase64String(cab.Value));
+
+            var imported = new byte[] { 0, 0x1B, 0xFF };
+            properties.ImportCabPrintData(imported);
+            dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+                owner.OwnedWindows.OfType<LabelDesignerWindow>().Single().Close()));
+            LabelDesignerWindow.Edit(source, cab);
+            Assert.Equal(imported, Convert.FromBase64String(cab.Value));
+        }
+        finally { owner.Close(); }
+    }
+
+    private static void VerifyCabFileImport(string folder, StepPropertiesViewModel properties, ParameterRowViewModel zpl)
+    {
+        var format = properties.Parameters.Single(row => row.Descriptor.Name == LabelPrintingBlocks.FormatParameter);
+        var cab = properties.Parameters.Single(row => row.IsCabLabel);
+        Assert.True(cab.IsHidden);
+        format.Value = LabelPrintingBlocks.Cab;
+        Assert.False(cab.IsHidden);
+        Assert.False(cab.IsText);
+        Assert.True(zpl.IsHidden);
+        Assert.Equal("Keine Datei eingebettet", cab.CabFileStatus);
+        var path = Path.Combine(folder, "bild.lbl");
+        Assert.NotNull(CabLabelFile.TryEmbed(path, cab));
+        File.WriteAllBytes(path, []);
+        Assert.NotNull(CabLabelFile.TryEmbed(path, cab));
+        byte[] data = [0x00, 0x1B, 0xFF, 0x80, 0x0D, 0x0A];
+        File.WriteAllBytes(path, data);
+        Assert.Null(CabLabelFile.TryEmbed(path, cab));
+        Assert.Equal(data, Convert.FromBase64String(cab.Value));
+        Assert.Equal("Druckdatei eingebettet", cab.CabFileStatus);
+        Assert.Equal(LabelPrintingBlocks.Cab, format.Value);
+        format.Value = LabelPrintingBlocks.Zpl;
+        Assert.False(zpl.IsHidden);
+        Assert.True(cab.IsHidden);
     }
 
     private static void VerifyLabelImages(string folder, LabelLayout layout, BitmapSource bitmap)

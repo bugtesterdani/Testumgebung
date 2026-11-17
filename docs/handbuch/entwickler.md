@@ -29,7 +29,7 @@ seines Bausteins.
 
 ## Etikett drucken und gestalten
 
-Der Baustein **Etikett drucken** verwendet eine ZPL-Vorlage. Platzhalter wie
+Der Baustein **Etikett drucken** verwendet standardmäßig eine ZPL-Vorlage. Platzhalter wie
 `{Kennung}` werden beim Ausführen ersetzt. Für den Druck kannst du einen
 TCP-Drucker oder eine Windows-Druckwarteschlange wählen. Die Simulation zeigt
 den erzeugten ZPL-Text als Schrittergebnis.
@@ -37,6 +37,25 @@ den erzeugten ZPL-Text als Schrittergebnis.
 Über **Etikett gestalten …** lassen sich Elemente und Bilder visuell platzieren.
 Die Druckauflösung muss zum Drucker passen. Der Designer bettet Bilder aus
 PNG, JPEG, BMP, GIF oder TIFF als Schwarzweißgrafik in die Vorlage ein.
+
+### cab-Drucker mit LBL-Datei
+
+Unter **Vorlagenformat** den Wert **cab LBL** wählen und die Druckdatei über **LBL-Datei einbetten …** auswählen. Benötigt wird ein druckfertiger cab-JScript-Export. In cablabel S3 Pro kann er über **Drucken in Datei** erstellt werden. Beim Ziel **Datei** enthält der Export auch eingebettete Bilder und Schriften in binärer Form. Ein bearbeitbares Layout zunächst in eine solche Druckdatei exportieren. [cablabel-S3-Handbuch](https://www.cab.de/media/pushfile.cfm?file=2238)
+
+Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über TCP oder als RAW-Auftrag an eine Windows-Druckwarteschlange. Die Simulation zeigt die Byteanzahl. Eingebettete Bilder bleiben damit unverändert.
+
+Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
+Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
+DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der Druckbaustein setzt die erforderlichen Trennzeichen für GS1 ein. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
+
+Der Designer erzeugt eine druckfertige JScript-Datei mit eingebetteten Bilddaten und speichert das bearbeitbare Layout im Prüfprojekt.
+In Text- und Barcodefeldern kannst du Platzhalter wie `{Kennung}` einsetzen. Unter **Beispielwerte für Platzhalter**
+gibst du je Zeile einen Wert im Format `Kennung=SN-123` ein. Der Designer setzt diese Werte in die Vorschau ein und lässt
+den übrigen Text stehen. Beim Drucken werden die tatsächlichen Prüfvariablen verwendet. Externe LBL-Druckdateien werden weiterhin bytegenau gesendet.
+
+Extern importierte LBL-Dateien bleiben als Druckdateien im Projekt. Der Designer kann eigene Layouts wieder öffnen.
+Bei einem externen Import startet er mit einer leeren Vorlage. Erst eine bestätigte Übernahme ersetzt den Import.
+[Programmierhandbuch cab JScript](https://www.cab.de/media/pushfile.cfm?file=3047)
 
 ## Werkeransicht gestalten
 

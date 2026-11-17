@@ -12,11 +12,18 @@
                 <TextBox Width="55" Text="{Binding HeightMm, NotifyOnSourceUpdated=True}" Margin="0,0,12,0" />
                 <TextBlock Text="Druckauflösung (dpi)" VerticalAlignment="Center" Margin="0,0,5,0" />
                 <TextBox Width="58" Text="{Binding Dpi, NotifyOnSourceUpdated=True}" />
+                <StackPanel x:Name="GapFields" Orientation="Horizontal" Margin="12,0,0,0">
+                    <TextBlock Text="Etikettenabstand (mm)" VerticalAlignment="Center" Margin="0,0,5,0" />
+                    <TextBox Width="55" Text="{Binding GapMm, NotifyOnSourceUpdated=True}" />
+                </StackPanel>
             </WrapPanel>
             <WrapPanel Margin="0,8,0,0">
                 <Button Content="Text" Tag="Text" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="Code 128" Tag="Code128" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="QR-Code" Tag="Qr" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="DataMatrix" Tag="DataMatrix" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="GS1 DataMatrix" Tag="Gs1DataMatrix" Click="OnAdd" Margin="0,0,6,0" />
+                <Button Content="GS1 QR" Tag="Gs1Qr" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="Linie" Tag="Line" Click="OnAdd" Margin="0,0,6,0" />
                 <Button Content="Bild importieren …" Click="OnImage" />
             </WrapPanel>
@@ -47,10 +54,21 @@
                     <TextBox Text="{Binding Length, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
                 </StackPanel>
                 <StackPanel x:Name="TextFields">
-                    <TextBlock Text="Text / Ausdruck, z. B. {Kennung}" />
-                    <TextBox Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
-                    <TextBlock Text="Beispielwert für die Vorschau" />
-                    <TextBox Text="{Binding Preview, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    <StackPanel x:Name="Gs1Fields" Visibility="Collapsed" Margin="0,0,0,8">
+                        <TextBlock Text="GS1-Kennung (AI)" />
+                        <ComboBox x:Name="Gs1Identifiers" DisplayMemberPath="Display" MaxDropDownHeight="320"
+                                  AutomationProperties.Name="GS1-Kennung und Bedeutung" />
+                        <TextBlock Text="{Binding SelectedItem.Display, ElementName=Gs1Identifiers}" TextWrapping="Wrap" />
+                        <Button Content="Kennung einfügen" Click="OnInsertGs1Identifier" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <TextBlock x:Name="TextLabel" Text="Text / Ausdruck, z. B. {Kennung}" />
+                    <TextBox x:Name="BarcodeContent" Text="{Binding Value, NotifyOnSourceUpdated=True}" Margin="0,3,0,6" />
+                    <StackPanel>
+                        <TextBlock Text="Beispielwerte für Platzhalter" />
+                        <TextBlock Text="Eine Zeile je Platzhalter, z. B. Kennung=SN-123" TextWrapping="Wrap" />
+                        <TextBox Text="{Binding ExampleValues, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto" MinHeight="58" MaxHeight="125" Margin="0,3,0,6" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
