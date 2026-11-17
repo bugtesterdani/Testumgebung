@@ -34,6 +34,25 @@ public sealed class EnvelopeTraceTests
         var plot = new WaveformPlotViewModel(); plot.SetData(result.Data);
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
+    [Theory]
+    [InlineData("3", "0", "0", ResultRating.Error, "mindestens 3")]
+    [InlineData("2", "2", "0", ResultRating.Error, "Messdauer zu kurz")]
+    [InlineData("2", "0", "2", ResultRating.Error, "Zeitfenster nicht abgedeckt")]
+    [InlineData("2", "1", "1", ResultRating.Pass, "Vollständiger Messverlauf")]
+    public async Task Trace_reports_why_a_recording_is_incomplete(string points, string minimumDuration,
+        string duration, ResultRating rating, string message)
+    {
+        var definition = Test(Group("loop").Add(
+            Block(TraceBlocks.Start, "start", ("Grenzkurven", "band@1"), ("MinPunkte", points), ("MinDauer", minimumDuration), ("Dauer", duration)),
+            Block(TraceBlocks.Point, "first", ("Zeit", "0"), ("Werte", "5")),
+            Block(TraceBlocks.Point, "second", ("Zeit", "1"), ("Werte", "5")),
+            Block(TraceBlocks.Stop, "stop")));
+        definition.Curves.Add(Band());
+        var run = new TestRun(definition);
+        Assert.Equal(rating, (await run.RunAsync().Within()).Rating);
+        Assert.Contains(message, Assert.Single(run.Steps("stop")).Message);
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {
