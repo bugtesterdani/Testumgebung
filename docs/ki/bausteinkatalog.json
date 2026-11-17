@@ -25,6 +25,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -78,6 +89,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -189,6 +211,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -242,6 +275,17 @@
           "required": false,
           "choices": null,
           "hint": "Absoluter Ordnerpfad als String oder Variable; fehlende Umgebung f\u00E4llt auf die n\u00E4chste Stufe zur\u00FCck."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -268,6 +312,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -338,6 +393,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR oder FAIL zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -360,6 +426,17 @@
             "ERROR"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR oder FAIL zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -431,6 +508,17 @@
           "required": false,
           "choices": null,
           "hint": "\u00FCberschreibt die Adresse aus der ID, z. B. 0xF9"
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -616,6 +704,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -678,6 +777,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -779,6 +889,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -818,6 +939,17 @@
           "required": false,
           "choices": null,
           "hint": "Reagiert der Code nicht auf den Abbruch, wird der Worker-Prozess danach beendet."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -857,6 +989,17 @@
             "false"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -883,6 +1026,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -954,6 +1108,17 @@
           "required": false,
           "choices": null,
           "hint": "Liste \u201EVIN@0xAdresse\u201C"
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1071,6 +1236,17 @@
             "value": "Windows"
           },
           "advanced": false
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1088,6 +1264,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1105,6 +1292,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1158,6 +1356,17 @@
           "required": false,
           "choices": null,
           "hint": "Liste \u201EAdresse=NAME\u201C (bei Abfrage)"
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1361,6 +1570,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1450,6 +1670,17 @@
           "required": false,
           "choices": null,
           "hint": "Signal = Ausdruck; \u2026"
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1608,6 +1839,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1757,6 +1999,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1827,6 +2080,17 @@
             "Keins"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1862,6 +2126,17 @@
           "required": false,
           "choices": null,
           "hint": "Optional: eine Zeile Schl\u00FCssel=Wert, Platzhalter {Variable}; ersetzt die Optionen. Z.B. Baud=115200 oder Benutzer={Benutzer}. Geheimnisse nicht als feste Werte speichern."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1924,6 +2199,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -1973,6 +2259,17 @@
           "required": false,
           "choices": null,
           "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)"
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2008,6 +2305,17 @@
           "required": false,
           "choices": null,
           "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)"
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2025,6 +2333,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2042,6 +2361,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2059,6 +2389,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2112,6 +2453,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2309,6 +2661,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2374,6 +2737,17 @@
             "Klassisch (LIN 1.x)"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2502,6 +2876,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2576,6 +2961,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2700,6 +3096,17 @@
           "required": false,
           "choices": null,
           "hint": "Eine Zeile Name: Wert; z.B. Content-Type: application/json oder Authorization: Bearer {Token}. Nicht protokolliert."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2825,6 +3232,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -2962,6 +3380,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3069,6 +3498,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3199,6 +3639,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3264,6 +3715,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3281,6 +3743,17 @@
           "required": true,
           "choices": null,
           "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3352,6 +3825,17 @@
           "hint": null
         },
         {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
+        },
+        {
           "name": "Muster",
           "label": "Gesuchter Text / Regex",
           "kind": "Text",
@@ -3389,6 +3873,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3446,6 +3941,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3680,6 +4186,17 @@
           "required": false,
           "choices": null,
           "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3751,6 +4268,17 @@
           "required": false,
           "choices": null,
           "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3837,6 +4365,17 @@
           "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
         },
         {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
+        },
+        {
           "name": "Zeitlimit",
           "label": "Wartezeitlimit [ms]",
           "kind": "Number",
@@ -3844,6 +4383,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3924,6 +4474,17 @@
           "required": false,
           "choices": null,
           "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3941,6 +4502,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -3970,6 +4542,17 @@
             "2"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -4292,6 +4875,17 @@
             "FAIL"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -4481,6 +5075,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -4735,6 +5340,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -4761,6 +5377,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -4790,6 +5417,17 @@
             "Fortsetzen"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -4864,6 +5502,17 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -5061,6 +5710,17 @@
           "required": false,
           "choices": null,
           "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung."
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -5078,6 +5738,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -5216,6 +5887,17 @@
             "Bis Gruppenende sichtbar"
           ],
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     },
@@ -5242,6 +5924,17 @@
           "required": true,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "BeiFehlerZurExitGruppe",
+          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
+          "visibleWhen": null,
+          "advanced": true
         }
       ]
     }
