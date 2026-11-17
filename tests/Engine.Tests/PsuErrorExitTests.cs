@@ -60,6 +60,36 @@ public sealed class PsuErrorExitTests
         Assert.All(hardware.Outputs.Values, value => Assert.Equal(0, value));
     }
 
+    [Theory]
+    [InlineData("true", false)]
+    [InlineData("false", true)]
+    public async Task Error_exit_respects_the_run_catalog_for_custom_blocks(string option, bool runsFollowingStep)
+    {
+        const string customType = "fixture.measurement-error";
+        var catalog = new BlockCatalog();
+        catalog.Register(new(customType, "Messfehler", "Tests", "", "", [],
+            _ => new DelegateAction(_ => Task.FromResult(StepOutcome.Error("Messgerät antwortet nicht.")))));
+        var faulty = catalog.Create(customType, "fault", parameters: new Dictionary<string, string>
+        {
+            [BlockCatalog.ExitDutOnErrorParameter] = option
+        });
+        var hardware = new Fixture("Timeout");
+        var dut = Group("dut").Var("Kennung", VarType.String, "PSU-1");
+        dut.IsDutRun = true;
+        dut.Add(Output("enable", "Quelle", "1"), faulty, Output("following", "Quelle", "2"));
+        dut.ExitGroup = Group("exit").Add(Output("disable", "Quelle", "0"));
+        var run = new TestRun(Test(Group("loop").Add(dut)), new TestRunOptions
+        {
+            Catalog = catalog,
+            Hardware = new HardwareRegistry().Bind("Quelle", hardware, "Quelle")
+        });
+
+        Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
+        Assert.Equal(runsFollowingStep, run.Steps("following").Any());
+        Assert.Single(run.Steps("disable"));
+        Assert.Equal(0d, hardware.Outputs["Quelle"]);
+    }
+
     private static StepDefinition Block(string type, string id, params (string Key, string Value)[] parameters)
         => BlockCatalog.Default.Create(type, id, parameters: parameters.ToDictionary(parameter => parameter.Key, parameter => parameter.Value));
 

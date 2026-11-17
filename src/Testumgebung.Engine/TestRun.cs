@@ -455,7 +455,7 @@ public sealed class TestRun
             Iteration = iteration,
         });
         if (!phase.IsExit && _dutFlow.Value is { } flow &&
-            (outcome.ExitDut || BlockCatalog.Default.RequestsErrorExit(step, outcome.Rating)))
+            (outcome.ExitDut || (Options.Catalog ?? BlockCatalog.Default).RequestsErrorExit(step, outcome.Rating)))
             flow.ExitRequested = true;
         return outcome.Rating;
     }
