@@ -122,6 +122,43 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
 
     private TestProject DeserializeProject(string json, string? nameOverride)
     {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            ValidateCollectionEntries(document.RootElement, "$");
+            return ReadProject(json, nameOverride);
+        }
+        catch (ProjectFormatException) { throw; }
+        catch (Exception error) when (error is JsonException or ArgumentException or InvalidOperationException
+            or NullReferenceException or FormatException or OverflowException or KeyNotFoundException
+            or IndexOutOfRangeException or BlockConfigurationException)
+        {
+            throw new ProjectFormatException($"Projektdatei enthält ungültige Daten: {error.Message}");
+        }
+    }
+
+    private static void ValidateCollectionEntries(JsonElement element, string path)
+    {
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            var index = 0;
+            foreach (var entry in element.EnumerateArray())
+            {
+                var entryPath = $"{path}[{index++}]";
+                if (entry.ValueKind == JsonValueKind.Null)
+                    throw new ProjectFormatException($"Leerer Listeneintrag bei {entryPath}.");
+                ValidateCollectionEntries(entry, entryPath);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+                ValidateCollectionEntries(property.Value, $"{path}.{property.Name}");
+        }
+    }
+
+    private TestProject ReadProject(string json, string? nameOverride)
+    {
         ProjectDto? dto;
         try
         {
@@ -142,6 +179,8 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         ReadLimitSets(dto.LimitSets, project);
         ReadSimulation(dto, project);
         ReadDeviceProfiles(dto.DeviceProfiles, project);
+        var duplicate = def.AllNodes().GroupBy(node => node.Id, StringComparer.Ordinal).FirstOrDefault(group => group.Count() > 1);
+        if (duplicate is not null) throw new ProjectFormatException($"Knoten-ID „{duplicate.Key}“ ist mehrfach vergeben.");
         return project;
     }
 
