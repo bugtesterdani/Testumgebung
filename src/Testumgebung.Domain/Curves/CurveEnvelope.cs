@@ -82,9 +82,13 @@ public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTra
 {
     public EnvelopeEarlyStop? EarlyStop { get; init; }
     public bool Finished { get; init; }
+    public bool TargetReached { get; init; }
+    public bool TargetRequired { get; init; }
     public bool Passed => EarlyStop is null && Complete && Channels.All(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount == 0);
     public int Violations => Channels.Sum(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount);
 }
+
+public sealed record TraceTargetBand(double Minimum, double Maximum, int ConsecutivePoints);
 
 /// <summary>One finite recording with a common receipt-time base for all channels.</summary>
 internal sealed class EnvelopeRecording
@@ -108,11 +112,14 @@ internal sealed class EnvelopeRecording
     private bool _faulted;
     private readonly StopMargin? _stopMargin;
     private readonly double? _duration;
+    private readonly TraceTargetBand? _target;
+    private int _targetStreak;
+    public bool TargetReached { get; private set; }
     public bool HasViolation { get; private set; }
-    public bool Ended => EarlyStop is not null || (_duration is { } duration && _times.Count > 1 && _times[^1] >= duration - TimeTolerance(duration));
+    public bool Ended => EarlyStop is not null || TargetReached || (_duration is { } duration && _times.Count > 1 && _times[^1] >= duration - TimeTolerance(duration));
     public EnvelopeEarlyStop? EarlyStop { get; private set; }
     private DateTimeOffset _lastPreview;
-    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute)
+    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute, TraceTargetBand? target)
     {
         ValidateChannels(channels);
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
@@ -129,6 +136,10 @@ internal sealed class EnvelopeRecording
             ? new CurveEnvelope(limits, channel.Unit) : null).ToArray();
         ValidateDuration(duration, minimumDuration);
         _duration = duration;
+        if (target is not null && (!double.IsFinite(target.Minimum) || !double.IsFinite(target.Maximum)
+            || target.Minimum > target.Maximum || target.ConsecutivePoints < 2 || target.ConsecutivePoints > maxPoints))
+            throw new ArgumentException("Zielband benötigt endliche Grenzen und mindestens zwei aufeinanderfolgende Messpunkte.");
+        _target = target;
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
         _slopes = channels.Select(_ => new List<double>()).ToArray();
         _maxPoints = maxPoints; _maxGap = maxGap; _minimumDuration = minimumDuration; _touchAllowed = touchAllowed;
@@ -185,14 +196,23 @@ internal sealed class EnvelopeRecording
         else if (_slope is null) CheckSegment();
         else
         {
-            if (!_slope.IsWindowEnd(_times.Count) && !Ended) return false;
             try { CheckSlope(_slope); }
             catch { _faulted = true; throw; }
         }
+        CheckTarget(time, values[0]);
+        if (_slope is not null && !_slope.IsWindowEnd(_times.Count) && !Ended) return false;
         if (Ended || (HasViolation && !alreadyFailed)) return true;
         if (_times.Count > 2 && now - _lastPreview < TimeSpan.FromMilliseconds(250)) return false;
         _lastPreview = now; return true;
     }
+    private void CheckTarget(double time, double value)
+    {
+        if (_target is not { } target || EarlyStop is not null) return;
+        _targetStreak = value >= target.Minimum && value <= target.Maximum ? _targetStreak + 1 : 0;
+        TargetReached = _targetStreak >= target.ConsecutivePoints && time - _times[0] + TimeTolerance(_minimumDuration) >= _minimumDuration
+            && (_slope is null || _slopeTimes.Count != 0);
+    }
+
     private void Validate(double time, IReadOnlyList<double> values)
     {
         if (Ended) throw new InvalidOperationException("Aufnahme ist bereits beendet.");
@@ -216,7 +236,7 @@ internal sealed class EnvelopeRecording
             EvaluateChannel(channel, grid, complete, waves, metadata);
             AppendAbortLines(channel, grid, waves);
         }
-        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended };
+        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended, TargetReached = TargetReached, TargetRequired = _target is not null };
     }
     private void CheckSlope(SlopeLimits limits)
     {
@@ -270,7 +290,7 @@ internal sealed class EnvelopeRecording
             waves.Add(new(definition.Name + " · Untergrenze (Steigung)", unit, 0, _start, lower, times));
             waves.Add(new(definition.Name + " · Obergrenze (Steigung)", unit, 0, _start, upper, times));
         }
-        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended };
+        return new(new(waves), metadata, complete) { EarlyStop = EarlyStop, Finished = Ended, TargetReached = TargetReached, TargetRequired = _target is not null };
     }
 
     private void EvaluateChannel(int channel, double[] grid, bool complete, List<Waveform> waves, List<EnvelopeTraceMetadata> metadata)
@@ -368,6 +388,7 @@ internal sealed class EnvelopeRecording
     {
         if (_times.Count < 2 || (_slope is not null && _slopeTimes.Count == 0)) return false;
         if (_times[^1] - _times[0] + TimeTolerance(_minimumDuration) < _minimumDuration) return false;
+        if (_target is not null) return TargetReached;
         return _duration is not { } duration || (_times[0] <= TimeTolerance(duration) && _times[^1] >= duration - TimeTolerance(duration));
     }
     private bool Inside(double value, double low, double high) => _touchAllowed ? value >= low && value <= high : value > low && value < high;
@@ -378,13 +399,13 @@ public sealed class EnvelopeRecordings
 {
     private readonly object _gate = new();
     private readonly Dictionary<(string Owner, string Name), EnvelopeRecording> _recordings = [];
-    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null, double? stopAbsolute = null)
+    public void Start(string owner, string name, IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset now, int maxPoints = 10000, double maxGap = 1, double minimumDuration = 0, bool touchAllowed = true, double? stopPercent = null, double? duration = null, SlopeLimits? slope = null, FormulaLimits? formula = null, double? stopAbsolute = null, TraceTargetBand? target = null)
     {
         lock (_gate)
         {
             if (string.IsNullOrWhiteSpace(name) || _recordings.ContainsKey((owner, name))) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
             if (_recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
-            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute));
+            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute, target));
         }
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)
@@ -407,6 +428,7 @@ public sealed class EnvelopeRecordings
     }
     public bool IsPaused(string owner, string name) { lock (_gate) return Get(owner, name).IsPaused; }
     public bool IsEnded(string owner, string name) { lock (_gate) return Get(owner, name).Ended; }
+    public bool TargetReached(string owner, string name) { lock (_gate) return Get(owner, name).TargetReached; }
     public bool HasViolation(string owner, string name) { lock (_gate) return Get(owner, name).HasViolation; }
     public void Invalidate(string owner, string name) { lock (_gate) { if (_recordings.TryGetValue((owner, name), out var recording)) recording.Invalidate(); } }
     public TraceEvaluation Stop(string owner, string name, bool complete = true)

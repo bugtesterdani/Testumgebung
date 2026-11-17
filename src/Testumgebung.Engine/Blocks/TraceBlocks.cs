@@ -34,7 +34,8 @@ public static class TraceBlocks
             CreatePauseTime));
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
             new[] { Name() }.Concat(ReaderParameters()).Concat([new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression),
-                new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable), ExitDutOption()]).ToArray(), CreatePoint));
+                new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable),
+                new("StabilesZiel", "Stabiles Ziel erreicht → Boolvariable", ParameterKind.Variable), ExitDutOption()]).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
             [Name(), ResultTarget()], parameters => new DelegateAction(ctx =>
             {
@@ -75,6 +76,10 @@ public static class TraceBlocks
      new("Dauer", timed ? "Messdauer [s]" : "Messdauer [s], 0 = manuelles Ende", ParameterKind.Number, timed ? "1" : "0"),
      new("MaxPunkte", "Punktlimit je Kanal (2..100000)", ParameterKind.Number, "10000"),
      new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),
+     new("ZielbandMin", "Zielband-Untergrenze (erster Messkanal)", ParameterKind.Expression),
+     new("ZielbandMax", "Zielband-Obergrenze (erster Messkanal)", ParameterKind.Expression),
+     new("ZielbandPunkte", "Aufeinanderfolgende Messpunkte im Zielband", ParameterKind.Expression, "10",
+        Hint: "Mindestens 2. Nur wirksam, wenn beide Zielbandgrenzen angegeben sind."),
      new("MinDauer", "Mindestdauer der Aufnahme [s]", ParameterKind.Number, "0"),
      new("Beruehren", "Berühren einer Grenzlinie zulässig", ParameterKind.Bool, "true"),
      new(StopEnabledParameter, "Aufnahme bei zusätzlicher Abweichung vorzeitig beenden (FAIL)", ParameterKind.Bool, "false"),
@@ -97,17 +102,21 @@ public static class TraceBlocks
     {
         var reader = new TraceSampleReader(parameters); var time = parameters.Expr("Zeit"); var name = parameters.Text("Aufnahme");
         var earlyStopTarget = parameters.Optional("VorzeitigesEndeZiel");
+        var stableTarget = parameters.Optional("StabilesZiel");
         var exitDut = parameters.Bool(ExitDutOnEarlyStopParameter);
         return new DelegateAction(async ctx =>
         {
             if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
             if (ctx.Recordings.IsPaused(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Messzeit pausiert; keine Messung.");
             ValidateEarlyStopTarget(ctx, earlyStopTarget);
+            if (stableTarget is not null && ctx.Get(stableTarget) is not bool)
+                throw new BlockConfigurationException("StabilesZiel muss eine Boolvariable sein.");
             try
             {
                 double? xValue = time is null ? null : BlockCatalog.ToDouble(time.Evaluate(new ContextResolver(ctx)), "Zeit");
                 var preview = await reader.AppendAsync(ctx, name, xValue).ConfigureAwait(false);
                 WriteEarlyStop(ctx, earlyStopTarget, preview);
+                if (stableTarget is not null) ctx.Set(stableTarget, ctx.Recordings.TargetReached(ctx.ProcessOwner, name));
                 if (preview is not null)
                 {
                     if (preview.Finished) return Outcome(preview, true, exitDut);
@@ -157,6 +166,8 @@ public static class TraceBlocks
         var value = includeData ? result.Data : null;
         if (result.EarlyStop is { } early)
             return StepOutcome.Fail(EarlyStopMessage(early, exitDut), value) with { ExitDut = exitDut };
+        if (!result.Complete && result.TargetRequired && !result.TargetReached)
+            return new(ResultRating.Error, value, Message: "Messdaten unvollständig: stabiles Zielband wurde nicht erreicht.");
         if (!result.Complete) return new(ResultRating.Error, value, Message: "Aufnahme unvollständig, ungültig oder abgebrochen; vollständigen Zeitraum prüfen.");
         return result.Passed ? new(ResultRating.Pass, value, Message: "Vollständiger Messverlauf innerhalb des Grenzbandes.")
             : StepOutcome.Fail($"Grenzband verletzt: {result.Violations} Prüfstützpunkt(e).", value);
