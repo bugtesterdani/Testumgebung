@@ -179,6 +179,8 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         ReadLimitSets(dto.LimitSets, project);
         ReadSimulation(dto, project);
         ReadDeviceProfiles(dto.DeviceProfiles, project);
+        var duplicate = def.AllNodes().GroupBy(node => node.Id, StringComparer.Ordinal).FirstOrDefault(group => group.Count() > 1);
+        if (duplicate is not null) throw new ProjectFormatException($"Knoten-ID „{duplicate.Key}“ ist mehrfach vergeben.");
         return project;
     }
 
