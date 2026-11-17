@@ -3825,17 +3825,6 @@
           "hint": null
         },
         {
-          "name": "BeiFehlerZurExitGruppe",
-          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
-          "kind": "Bool",
-          "default": "false",
-          "required": false,
-          "choices": null,
-          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
-          "visibleWhen": null,
-          "advanced": true
-        },
-        {
           "name": "Muster",
           "label": "Gesuchter Text / Regex",
           "kind": "Text",
@@ -4363,17 +4352,6 @@
           "required": false,
           "choices": null,
           "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
-        },
-        {
-          "name": "BeiFehlerZurExitGruppe",
-          "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
-          "kind": "Bool",
-          "default": "false",
-          "required": false,
-          "choices": null,
-          "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
-          "visibleWhen": null,
-          "advanced": true
         },
         {
           "name": "Zeitlimit",

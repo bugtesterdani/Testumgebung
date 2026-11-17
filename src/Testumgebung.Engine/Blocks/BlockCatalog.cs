@@ -144,7 +144,7 @@ public sealed class BlockCatalog
         var label = descriptor.Type is SetRating or Evaluate ? "Bei ERROR oder FAIL zur Prüflings-Exit-Gruppe" : "Bei ERROR zur Prüflings-Exit-Gruppe";
         _blocks[descriptor.Type] = descriptor with
         {
-            Parameters = [.. descriptor.Parameters, new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
+            Parameters = [.. descriptor.Parameters.Where(parameter => parameter.Name != ExitDutOnErrorParameter), new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
                 Hint: "Überspringt bei einem Fehler die restlichen regulären Schritte dieses Prüflings.", Advanced: true)]
         };
     }
