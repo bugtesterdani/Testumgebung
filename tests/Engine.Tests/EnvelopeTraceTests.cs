@@ -34,6 +34,26 @@ public sealed class EnvelopeTraceTests
         var plot = new WaveformPlotViewModel(); plot.SetData(result.Data);
         Assert.Equal(pass ? 0 : 3, plot.ViolationMarkers.Count); plot.Clear(); Assert.Empty(plot.ViolationMarkers);
     }
+    [Theory]
+    [InlineData(5, true)]
+    [InlineData(2, false)]
+    public void Stable_target_resets_after_a_point_outside_the_band(double last, bool reached)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", Band())], Now, duration: 2,
+            target: new TraceTargetBand(4, 6, 2));
+        foreach (var (time, value) in new[] { (0d, 5d), (0.25, 2d), (0.5, 5d) })
+        {
+            recordings.Add("owner", "trace", time, [value], Now);
+            Assert.False(recordings.IsEnded("owner", "trace"));
+        }
+        recordings.Add("owner", "trace", 0.75, [last], Now);
+        Assert.Equal(reached, recordings.IsEnded("owner", "trace"));
+        var result = recordings.Stop("owner", "trace");
+        Assert.Equal(reached, result.TargetReached);
+        Assert.Equal(reached, result.Passed);
+    }
+
     [Fact]
     public void Pausing_excludes_wall_time_and_keeps_prior_points_and_violations()
     {
