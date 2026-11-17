@@ -83,7 +83,7 @@ public sealed class LabelLayout
             LabelElementKind.Text => FormattableString.Invariant($"^A0N,{size},{size}^FD{Field(element.Value)}^FS"),
             LabelElementKind.Code128 => FormattableString.Invariant($"^BY2^BCN,{size},Y,N,N^FD{Field(element.Value)}^FS"),
             LabelElementKind.Qr => FormattableString.Invariant($"^BQN,2,{Math.Clamp(size, 1, 10)}^FDLA,{Field(element.Value)}^FS"),
-            LabelElementKind.DataMatrix => FormattableString.Invariant($"^BXN,{Math.Clamp(size, 1, 10)},200^FD{Field(element.Value)}^FS"),
+            LabelElementKind.DataMatrix => FormattableString.Invariant($"^BXN,{Math.Clamp(size, 1, 10)},200,0,0,1,_,1^FD{Gs1LabelData.ZplLiteralMatrixMarker}{Field(element.Value)}^FS"),
             LabelElementKind.Gs1DataMatrix => FormattableString.Invariant($"^BXN,{Math.Clamp(size, 1, 10)},200,0,0,1,_,1^FH\\^FD{Gs1LabelData.ZplMatrixMarker}{Field(element.Value)}^FS"),
             LabelElementKind.Gs1Qr => FormattableString.Invariant($"^BQN,2,{Math.Clamp(size, 1, 10)}^FH\\^FD{Gs1LabelData.ZplQrMarker}{Field(element.Value)}^FS"),
             LabelElementKind.Line => FormattableString.Invariant($"^GB{length},{size},{size}^FS"),

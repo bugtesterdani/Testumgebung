@@ -219,12 +219,12 @@ public sealed class LabelPrintingTests
         {
             Elements =
             [
-                new() { Kind = LabelElementKind.DataMatrix, Value = "{Kennung}", Size = 4 },
+                new() { Kind = LabelElementKind.DataMatrix, Value = "_1:{Kennung}", Size = 4 },
                 new() { Kind = LabelElementKind.Gs1DataMatrix, Value = "(01)09506000134376(10)LOT(21){Kennung}", Size = 4 },
                 new() { Kind = LabelElementKind.Gs1Qr, Value = "(01)09506000134376(10)LOT(21){Kennung}", Size = 4 },
             ],
         };
-        var definition = Program("Windows", "SN42");
+        var definition = Program("Windows", "SN_123");
         var step = (StepDefinition)definition.Find("label")!;
         if (cab)
         {
@@ -244,16 +244,16 @@ public sealed class LabelPrintingTests
         var raw = Encoding.UTF8.GetString(Assert.Single(printer.Requests).Data);
         if (cab)
         {
-            Assert.Contains(",DATAMATRIX,0.5;SN42", raw);
-            Assert.Contains(",GS1-DATAMATRIX,0.5;(01)09506000134376(10)LOT(21)SN42", raw);
-            Assert.Contains(",GS1QRCODE,0.5;(01)09506000134376(10)LOT(21)SN42", raw);
+            Assert.Contains(",DATAMATRIX,0.5;_1:SN_123", raw);
+            Assert.Contains(",GS1-DATAMATRIX,0.5;(01)09506000134376(10)LOT(21)SN_123", raw);
+            Assert.Contains(",GS1QRCODE,0.5;(01)09506000134376(10)LOT(21)SN_123", raw);
         }
         else
         {
-            Assert.Contains("^BXN,4,200^FDSN42^FS", raw);
-            Assert.Contains("^FD_1010950600013437610LOT_121SN42^FS", raw);
-            Assert.Contains("^FD>;>8010950600013437610LOT>821SN42^FS", raw);
-            Assert.DoesNotContain("@TU-GS1-", raw);
+            Assert.Contains("^BXN,4,200,0,0,1,_,1^FD__1:SN__123^FS", raw);
+            Assert.Contains("^FD_1010950600013437610LOT_121SN__123^FS", raw);
+            Assert.Contains("^FD>;>8010950600013437610LOT>821SN_123^FS", raw);
+            Assert.DoesNotContain("@TU-", raw);
         }
     }
 

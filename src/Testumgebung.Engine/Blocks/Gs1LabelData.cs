@@ -33,10 +33,11 @@ public static class Gs1LabelData
         new("420", "Postleitzahl des Lieferorts", 20, false, true),
     ];
 
+    public const string ZplLiteralMatrixMarker = "@TU-DM@";
     public const string ZplMatrixMarker = "@TU-GS1-DM@";
     public const string ZplQrMarker = "@TU-GS1-QR@";
     private static readonly Regex Ai = new(@"\((\d{2,4})\)", RegexOptions.CultureInvariant);
-    private static readonly Regex ZplFields = new(@"\^FD@TU-GS1-(DM|QR)@([^\^]*)\^FS", RegexOptions.CultureInvariant);
+    private static readonly Regex ZplFields = new(@"\^FD@TU-(DM|GS1-DM|GS1-QR)@([^\^]*)\^FS", RegexOptions.CultureInvariant);
     private const string SpecialCharacters = "!\"%&'()*+,-./:;<=>?_";
 
     private static List<(Gs1ApplicationIdentifier Identifier, string Value)> Parse(string input)
@@ -77,7 +78,12 @@ public static class Gs1LabelData
     }
 
     public static string RenderZpl(string zpl) => ZplFields.Replace(zpl, match =>
-        "^FD" + ZplData(match.Groups[2].Value, match.Groups[1].Value == "QR") + "^FS");
+    {
+        var format = match.Groups[1].Value;
+        var value = match.Groups[2].Value;
+        var field = format == "DM" ? EscapeMatrixValue(value) : ZplData(value, format == "GS1-QR");
+        return "^FD" + field + "^FS";
+    });
 
     private static string ZplData(string input, bool qr)
     {
@@ -94,9 +100,11 @@ public static class Gs1LabelData
         return result.ToString();
     }
 
+    private static string EscapeMatrixValue(string value) => value.Replace("_", "__", StringComparison.Ordinal);
+
     private static string EscapeZplValue(string value, bool qr)
     {
-        if (!qr) return value.Replace("_", "__", StringComparison.Ordinal);
+        if (!qr) return EscapeMatrixValue(value);
         if (value.Contains('>')) throw new FormatException("Das Zeichen > ist im Zebra GS1-QR ein Steuerzeichen.");
         return value;
     }
