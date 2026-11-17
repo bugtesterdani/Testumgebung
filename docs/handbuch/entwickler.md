@@ -161,6 +161,14 @@ Wiederholung „Zeitspanne“ prüft die Frist standardmäßig zwischen den Iter
 prüfen“ werden nach Ablauf die restlichen Schritte der laufenden Iteration übersprungen (ein laufender Schritt wird nicht
 unterbrochen, die Exit-Gruppe läuft).
 
+Für die PSU-Prüfung an fehlerrelevanten Standard-Schritten unter **Erweitert** die Option
+**Bei ERROR zur Prüflings-Exit-Gruppe** aktivieren. Bei der festen Bewertung kann die Option
+auch beim expliziten FAIL auslösen. Die Engine überspringt weitere reguläre Schritte des
+Prüflings und führt dessen aktive Exit-Gruppen von innen nach außen aus. In der Exit-Gruppe
+die für den Prüfplatz konfigurierten Standard-Ausgabeschritte zum Abschalten von Quelle,
+Lade- und Entladeansteuerung hinterlegen. Die Ergebnisbewertung des Prüflings wird nach
+diesem Abschluss veröffentlicht.
+
 ## Externe Programme
 
 Die Palette **Prozesse** startet EXE, Python-Skripte und .NET-DLL-Einstiegspunkte. Gebundene Lebensdauer, getrennte Argumente, spätere Warte-/Statusabfragen und Exitcode-Bewertung sind in [Externe Prozesse](../externe-prozesse.md) beschrieben.
