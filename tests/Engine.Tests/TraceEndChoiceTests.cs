@@ -64,6 +64,17 @@ public sealed class TraceEndChoiceTests
     }
 
     [Fact]
+    public void Null_legacy_exit_flags_migrate_as_disabled()
+    {
+        var values = new Dictionary<string, string>
+        {
+            [TraceBlocks.ExitDutOnEarlyStopParameter] = null!, [TraceBlocks.ExitDutOnEndParameter] = null!,
+            [BlockCatalog.ExitDutOnErrorParameter] = null!
+        };
+        Assert.Equal(TraceEndOptions.Continue, TraceEndOptions.Migrate(TraceBlocks.Point, values)![TraceEndOptions.Parameter]);
+    }
+
+    [Fact]
     public async Task Invalid_selection_produces_a_regular_error_without_breaking_error_handling()
     {
         var step = BlockCatalog.Default.Create(TraceBlocks.Point, "invalid", parameters: new Dictionary<string, string>

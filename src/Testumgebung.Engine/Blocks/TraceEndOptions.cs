@@ -12,7 +12,7 @@ public static class TraceEndOptions
     private static bool IsFlag(string name) => name is TraceBlocks.ExitDutOnEarlyStopParameter
         or TraceBlocks.ExitDutOnEndParameter or BlockCatalog.ExitDutOnErrorParameter;
     private static bool Read(IReadOnlyDictionary<string, string> values, string name)
-        => values.TryGetValue(name, out var text) && (text.Equals("true", StringComparison.OrdinalIgnoreCase) || text == "1" || text.Equals("ja", StringComparison.OrdinalIgnoreCase));
+        => values.TryGetValue(name, out var text) && text is not null && (text.Equals("true", StringComparison.OrdinalIgnoreCase) || text == "1" || text.Equals("ja", StringComparison.OrdinalIgnoreCase));
 
     private static string Mode(IReadOnlyDictionary<string, string> values)
     {
