@@ -42,12 +42,13 @@ public static class TraceBlocks
                 new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable),
                 new("StabilesZiel", "Stabiles Ziel erreicht → Boolvariable", ParameterKind.Variable), ExitDutOption(), ExitOnEndOption()]).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
-            [Name(), ResultTarget(), ExitOnEndOption()], parameters => new DelegateAction(ctx =>
+            [Name(), ResultTarget(), ExitDutOption(), ExitOnEndOption()], parameters => new DelegateAction(ctx =>
             {
                 ValidateTarget(ctx, parameters.Optional("ErgebnisZiel"));
                 var result = ctx.Recordings.Stop(ctx.ProcessOwner, parameters.Text("Aufnahme"), !ctx.IsOperatorAborted);
                 WriteDetails(ctx, parameters.Optional("ErgebnisZiel"), result);
-                return Task.FromResult(Outcome(result, !result.Finished) with { ExitDut = parameters.Bool(ExitDutOnEndParameter) });
+                return Task.FromResult(Outcome(result, !result.Finished) with
+                { ExitDut = parameters.Bool(ExitDutOnEndParameter) || (parameters.Bool(ExitDutOnEarlyStopParameter) && result.EarlyStop is not null) });
             })));
         catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
             RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget(), ExitDutOption(), ExitOnEndOption()]).ToArray(),

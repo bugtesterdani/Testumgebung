@@ -22,6 +22,12 @@ public sealed class TraceCatalogTests
             }
             else
             {
+                if (parameter.Name == BlockCatalog.ExitDutOnErrorParameter)
+                {
+                    Assert.Null(parameter.VisibleWhen);
+                    Assert.NotNull(timedParameter.VisibleWhen);
+                    timedParameter = timedParameter with { VisibleWhen = null };
+                }
                 Assert.Equal(System.Text.Json.JsonSerializer.Serialize(parameter with { Choices = null }),
                     System.Text.Json.JsonSerializer.Serialize(timedParameter with { Choices = null }));
                 Assert.Equal(parameter.Choices, timedParameter.Choices);
@@ -30,7 +36,7 @@ public sealed class TraceCatalogTests
         }
 
         Assert.Equal(
-            new[] { TraceBlocks.ExitDutOnEndParameter, "ErgebnisZiel", "Intervall", "Messversuche", "Quelle", "Ressourcen", "Werte", TraceBlocks.ExitDutOnEarlyStopParameter }.Order(StringComparer.Ordinal),
+            new[] { TraceEndOptions.Parameter, TraceBlocks.ExitDutOnEndParameter, "ErgebnisZiel", "Intervall", "Messversuche", "Quelle", "Ressourcen", "Werte", TraceBlocks.ExitDutOnEarlyStopParameter }.Order(StringComparer.Ordinal),
             timed.Keys.Order(StringComparer.Ordinal));
     }
 }

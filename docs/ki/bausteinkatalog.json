@@ -6446,7 +6446,14 @@
           "required": false,
           "choices": null,
           "hint": null,
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
           "section": "Ende und Exit"
         },
@@ -6458,7 +6465,14 @@
           "required": false,
           "choices": null,
           "hint": null,
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
           "section": "Ende und Exit"
         },
@@ -6470,8 +6484,33 @@
           "required": false,
           "choices": null,
           "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
+          "section": "Ende und Exit"
+        },
+        {
+          "name": "NachAufnahmeende",
+          "label": "Nach Aufnahmeende",
+          "kind": "Choice",
+          "default": "Weiter mit n\u00E4chstem Schritt",
+          "required": false,
+          "choices": [
+            "Weiter mit n\u00E4chstem Schritt",
+            "Exit bei vorzeitigem Ende",
+            "Exit bei ERROR",
+            "Exit bei vorzeitigem Ende oder ERROR",
+            "Immer Exit (PASS / FAIL / ERROR)"
+          ],
+          "hint": "\u00DCberspringt bei der gew\u00E4hlten Bedingung regul\u00E4re Folgeschritte und f\u00FChrt die Exit-Gruppen aus.",
+          "visibleWhen": null,
+          "advanced": false,
           "section": "Ende und Exit"
         }
       ]
@@ -6507,6 +6546,25 @@
           "section": "Ende und Exit"
         },
         {
+          "name": "BeiVorzeitigemEndeZurExitGruppe",
+          "label": "Bei vorzeitigem Ende zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": true,
+          "section": "Ende und Exit"
+        },
+        {
           "name": "BeiAufnahmeendeZurExitGruppe",
           "label": "Bei Aufnahmeende immer zur Pr\u00FCflings-Exit-Gruppe (PASS / FAIL / ERROR)",
           "kind": "Bool",
@@ -6514,7 +6572,14 @@
           "required": false,
           "choices": null,
           "hint": null,
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
           "section": "Ende und Exit"
         },
@@ -6526,8 +6591,33 @@
           "required": false,
           "choices": null,
           "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
+          "section": "Ende und Exit"
+        },
+        {
+          "name": "NachAufnahmeende",
+          "label": "Nach Aufnahmeende",
+          "kind": "Choice",
+          "default": "Weiter mit n\u00E4chstem Schritt",
+          "required": false,
+          "choices": [
+            "Weiter mit n\u00E4chstem Schritt",
+            "Exit bei vorzeitigem Ende",
+            "Exit bei ERROR",
+            "Exit bei vorzeitigem Ende oder ERROR",
+            "Immer Exit (PASS / FAIL / ERROR)"
+          ],
+          "hint": "\u00DCberspringt bei der gew\u00E4hlten Bedingung regul\u00E4re Folgeschritte und f\u00FChrt die Exit-Gruppen aus.",
+          "visibleWhen": null,
+          "advanced": false,
           "section": "Ende und Exit"
         }
       ]
@@ -6700,7 +6790,14 @@
           "required": false,
           "choices": null,
           "hint": null,
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
           "section": "Ende und Exit"
         },
@@ -6712,7 +6809,14 @@
           "required": false,
           "choices": null,
           "hint": null,
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
           "section": "Ende und Exit"
         },
@@ -6724,8 +6828,33 @@
           "required": false,
           "choices": null,
           "hint": "\u00DCberspringt bei einem Fehler die restlichen regul\u00E4ren Schritte dieses Pr\u00FCflings.",
-          "visibleWhen": null,
+          "visibleWhen": {
+            "parameter": "NachAufnahmeende",
+            "value": "",
+            "allowedValues": [],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
           "advanced": true,
+          "section": "Ende und Exit"
+        },
+        {
+          "name": "NachAufnahmeende",
+          "label": "Nach Aufnahmeende",
+          "kind": "Choice",
+          "default": "Weiter mit n\u00E4chstem Schritt",
+          "required": false,
+          "choices": [
+            "Weiter mit n\u00E4chstem Schritt",
+            "Exit bei vorzeitigem Ende",
+            "Exit bei ERROR",
+            "Exit bei vorzeitigem Ende oder ERROR",
+            "Immer Exit (PASS / FAIL / ERROR)"
+          ],
+          "hint": "\u00DCberspringt bei der gew\u00E4hlten Bedingung regul\u00E4re Folgeschritte und f\u00FChrt die Exit-Gruppen aus.",
+          "visibleWhen": null,
+          "advanced": false,
           "section": "Ende und Exit"
         }
       ]

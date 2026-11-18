@@ -105,6 +105,7 @@ public sealed class BlockParameters(BlockDescriptor descriptor, IReadOnlyDiction
 
     public bool Bool(string name)
     {
+        if (TraceEndOptions.TryFlag(descriptor.Type, values, name, out var selected)) return selected;
         var text = Optional(name);
         return text is not null && (text.Equals("true", StringComparison.OrdinalIgnoreCase) || text == "1" || text.Equals("ja", StringComparison.OrdinalIgnoreCase));
     }
@@ -162,11 +163,13 @@ public sealed class BlockCatalog
     public void Register(BlockDescriptor descriptor)
     {
         var label = descriptor.Type is SetRating or Evaluate ? "Bei ERROR oder FAIL zur Prüflings-Exit-Gruppe" : "Bei ERROR zur Prüflings-Exit-Gruppe";
-        _blocks[descriptor.Type] = descriptor with
+        var configured = descriptor with
         {
             Parameters = [.. descriptor.Parameters.Where(parameter => parameter.Name != ExitDutOnErrorParameter).Select(parameter => BlockParameterSections.Apply(descriptor.Type, parameter)), new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
                 Hint: "Überspringt bei einem Fehler die restlichen regulären Schritte dieses Prüflings.", Advanced: true, Section: "Ende und Exit")]
         };
+        _blocks[descriptor.Type] = TraceEndOptions.Applies(descriptor.Type)
+            ? configured with { Parameters = TraceEndOptions.Describe(configured.Parameters) } : configured;
     }
 
     internal bool RequestsErrorExit(StepDefinition step, ResultRating rating)
@@ -190,6 +193,7 @@ public sealed class BlockCatalog
     public StepDefinition Create(string type, string id, string? name = null, IReadOnlyDictionary<string, string>? parameters = null)
     {
         var block = Get(type);
+        parameters = TraceEndOptions.Migrate(type, parameters);
         var step = new StepDefinition(id, name ?? block.DisplayName, new ErrorAction("Nicht konfiguriert")) { BlockType = type };
         foreach (var parameter in block.Parameters) step.Parameters[parameter.Name] = parameter.Default;
         if (parameters is not null)
@@ -216,6 +220,7 @@ public sealed class BlockCatalog
         }
         try
         {
+            TraceEndOptions.Validate(step.BlockType, step.Parameters);
             step.Action = block.Factory(new BlockParameters(block, step.Parameters));
             return [];
         }
