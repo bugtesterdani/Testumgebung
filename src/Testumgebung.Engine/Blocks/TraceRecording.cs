@@ -17,12 +17,14 @@ internal sealed class TraceRecordingSettings
     private readonly double? _stopPercent, _stopAbsolute;
     private readonly SlopeLimits? _slope;
     private readonly FormulaLimits? _formula;
+    public bool ExitOnEnd { get; }
     public string Name { get; }
     public int Maximum { get; }
     public double MaxGap { get; }
     public double? Duration { get; }
     public TraceRecordingSettings(BlockParameters p)
     {
+        ExitOnEnd = p.Raw.ContainsKey(TraceBlocks.ExitDutOnEndParameter) && p.Bool(TraceBlocks.ExitDutOnEndParameter);
         Name = p.Text("Aufnahme"); _names = Split(p.Text("Kanaele"), ','); _units = Split(p.Text("Einheiten"), ','); _curves = Split(p.Text("Grenzkurven"), ',');
         if (_names.Length != _units.Length) throw new BlockConfigurationException("Je Messkanal eine Einheit angeben.");
         var maximum = p.Number("MaxPunkte") ?? 0;
@@ -221,10 +223,10 @@ internal sealed class TimedTraceAction : IStepAction
     private readonly TraceSampleReader _reader;
     private readonly double _interval, _duration;
     private readonly string? _target;
-    private readonly bool _exitDut;
+    private readonly bool _exitDut, _exitOnEnd;
     public TimedTraceAction(TraceRecordingSettings settings, TraceSampleReader reader, double interval, string? target, bool exitDut)
     {
-        _settings = settings; _reader = reader; _target = target; _interval = interval; _exitDut = exitDut;
+        _settings = settings; _reader = reader; _target = target; _interval = interval; _exitDut = exitDut; _exitOnEnd = settings.ExitOnEnd;
         _duration = settings.Duration ?? throw new BlockConfigurationException("Zeitgesteuerte Messung benötigt eine Dauer > 0.");
         if (!double.IsFinite(interval) || interval < 1e-7 || _duration > TimeSpan.MaxValue.TotalSeconds)
             throw new BlockConfigurationException("Endliche Dauer und Abfrageintervall >= 0,0000001 s angeben.");
@@ -250,7 +252,7 @@ internal sealed class TimedTraceAction : IStepAction
             }
             var result = ctx.Recordings.Stop(ctx.ProcessOwner, _settings.Name, !ctx.IsOperatorAborted);
             TraceBlocks.WriteDetails(ctx, _target, result);
-            return TraceBlocks.Outcome(result, true, _exitDut);
+            return TraceBlocks.Outcome(result, true, _exitDut) with { ExitDut = _exitOnEnd || (_exitDut && result.EarlyStop is not null) };
         }
         catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, _settings.Name); throw; }
     }

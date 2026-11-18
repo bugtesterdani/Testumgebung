@@ -18,6 +18,10 @@ public static class TraceBlocks
     public const string PercentMargin = "Prozent", AbsoluteMargin = "Absolut";
     public const string PercentMarginParameter = "AbweichungProzent", AbsoluteMarginParameter = "AbweichungAbsolut";
     public const string AbortCurvesParameter = "Abbruchgrenzkurven";
+    public const string ExitDutOnEndParameter = "BeiAufnahmeendeZurExitGruppe";
+    private static ParameterDescriptor ExitOnEndOption() => new(ExitDutOnEndParameter,
+        "Bei Aufnahmeende immer zur Prüflings-Exit-Gruppe (PASS / FAIL / ERROR)", ParameterKind.Bool, "false");
+
     public const string ExitDutOnEarlyStopParameter = "BeiVorzeitigemEndeZurExitGruppe";
 
     public static void Register(BlockCatalog catalog)
@@ -35,17 +39,17 @@ public static class TraceBlocks
         catalog.Register(new(Point, "Messpunkt ergänzen", "Messwertverläufe", "measure", "Ergänzt alle Kanäle. Eine Grenzverletzung bleibt FAIL; die zusätzliche Abbruchabweichung beendet nur die Aufnahme. Bereits beendete Aufnahmen werden nicht weiter abgefragt.",
             new[] { Name() }.Concat(ReaderParameters()).Concat([new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression),
                 new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable),
-                new("StabilesZiel", "Stabiles Ziel erreicht → Boolvariable", ParameterKind.Variable), ExitDutOption()]).ToArray(), CreatePoint));
+                new("StabilesZiel", "Stabiles Ziel erreicht → Boolvariable", ParameterKind.Variable), ExitDutOption(), ExitOnEndOption()]).ToArray(), CreatePoint));
         catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
-            [Name(), ResultTarget()], parameters => new DelegateAction(ctx =>
+            [Name(), ResultTarget(), ExitOnEndOption()], parameters => new DelegateAction(ctx =>
             {
                 ValidateTarget(ctx, parameters.Optional("ErgebnisZiel"));
                 var result = ctx.Recordings.Stop(ctx.ProcessOwner, parameters.Text("Aufnahme"), !ctx.IsOperatorAborted);
                 WriteDetails(ctx, parameters.Optional("ErgebnisZiel"), result);
-                return Task.FromResult(Outcome(result, !result.Finished));
+                return Task.FromResult(Outcome(result, !result.Finished) with { ExitDut = parameters.Bool(ExitDutOnEndParameter) });
             })));
         catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
-            RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget(), ExitDutOption()]).ToArray(),
+            RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget(), ExitDutOption(), ExitOnEndOption()]).ToArray(),
             parameters => new TimedTraceAction(new(parameters), new(parameters), parameters.Number("Intervall") ?? 0,
                 parameters.Optional("ErgebnisZiel"), parameters.Bool(ExitDutOnEarlyStopParameter))));
     }
@@ -125,7 +129,8 @@ public static class TraceBlocks
                 if (stableTarget is not null) ctx.Set(stableTarget, ctx.Recordings.TargetReached(ctx.ProcessOwner, name));
                 if (preview is not null)
                 {
-                    if (preview.Finished) return Outcome(preview, true, exitDut);
+                    if (preview.Finished) return Outcome(preview, true, exitDut) with
+                        { ExitDut = parameters.Bool(ExitDutOnEndParameter) || (exitDut && preview.EarlyStop is not null) };
                     ctx.ReportTrace(preview.Data);
                 }
                 return ctx.Recordings.HasViolation(ctx.ProcessOwner, name)

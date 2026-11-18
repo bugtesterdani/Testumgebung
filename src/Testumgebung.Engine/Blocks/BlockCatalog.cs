@@ -153,10 +153,13 @@ public sealed class BlockCatalog
     {
         if (step.BlockType is not { } type || !TryGet(type, out var descriptor)) return false;
         var parameters = new BlockParameters(descriptor, step.Parameters);
-        if (rating == ResultRating.Error) return parameters.Bool(ExitDutOnErrorParameter);
+        if (rating == ResultRating.Error) return parameters.Bool(ExitDutOnErrorParameter) || RequestsTraceEndExit(type, parameters);
         var fixedRating = type == SetRating || (type == Evaluate && parameters.Text("Art") == FixedRatingMode);
         return rating == ResultRating.Fail && fixedRating && parameters.Bool(ExitDutOnErrorParameter);
     }
+
+    private static bool RequestsTraceEndExit(string type, BlockParameters parameters)
+        => type is TraceBlocks.Point or TraceBlocks.Stop or TraceBlocks.Record && parameters.Bool(TraceBlocks.ExitDutOnEndParameter);
 
     public BlockDescriptor Get(string type)
         => _blocks.TryGetValue(type, out var block) ? block : throw new KeyNotFoundException($"Unbekannter Bausteintyp '{type}'.");
