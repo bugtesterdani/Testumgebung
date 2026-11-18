@@ -336,11 +336,15 @@ internal sealed class EnvelopeRecording
         if (!limits.IsWindowEnd(_times.Count)) return;
         var first = _times.Count - limits.Points;
         var time = _times[^1];
+        var last = _times.Count - 1;
+        // Validate the entire window before changing timestamps, samples, or per-channel filter state.
+        var candidates = _values.Select((values, channel) => _slopeFilters[channel].Calculate(first, last, _times, values)).ToArray();
         var index = _slopeTimes.Count;
         _slopeTimes.Add(time);
         for (var channel = 0; channel < _values.Length; channel++)
         {
-            var (value, evaluate) = _slopeFilters[channel].Observe(first, _times.Count - 1, _times, _values[channel], index, _touchAllowed);
+            var (start, value) = candidates[channel];
+            var evaluate = _slopeFilters[channel].Observe(start, last, value, _times, _values[channel], index, _touchAllowed);
             _slopes[channel].Add(value);
             if (!evaluate) continue;
             HasViolation |= !Inside(value, limits.Minimum, limits.Maximum);

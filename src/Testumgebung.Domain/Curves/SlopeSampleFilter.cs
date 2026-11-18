@@ -11,23 +11,28 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
     public HashSet<int> SuppressedIndices { get; } = [];
     public int EvaluatedCount { get; private set; }
 
-    public (double Value, bool Evaluate) Observe(int first, int last, IReadOnlyList<double> times,
-        IReadOnlyList<double> values, int slopeIndex, bool touchAllowed)
+    public (int First, double Value) Calculate(int first, int last, IReadOnlyList<double> times, IReadOnlyList<double> values)
     {
         first = _pendingStart ?? first;
         var value = (values[last] - values[first]) / (times[last] - times[first]);
         if (!double.IsFinite(value) || !double.IsFinite(Math.Max(limits.Minimum - value, value - limits.Maximum)))
             throw new ArgumentException("Wertebereich der Steigungsauswertung überschritten.");
+        return (first, value);
+    }
+
+    public bool Observe(int first, int last, double value, IReadOnlyList<double> times,
+        IReadOnlyList<double> values, int slopeIndex, bool touchAllowed)
+    {
         var reason = Reason(value, touchAllowed);
         _pendingStart = reason == "Mindeststeigung nicht erreicht" ? first : null;
         if (reason is not null)
         {
             SuppressedIndices.Add(slopeIndex);
             Suppressed.Add(new(times[last], value, times[first], values[first], values[last], reason));
-            return (value, false);
+            return false;
         }
         EvaluatedCount++;
-        return (value, true);
+        return true;
     }
 
     private string? Reason(double value, bool touchAllowed)

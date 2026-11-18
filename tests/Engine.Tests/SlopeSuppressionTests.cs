@@ -128,6 +128,35 @@ public sealed class SlopeSuppressionTests
         Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Later_channel_overflow_keeps_all_prior_samples_and_filter_state_consistent(bool closeOwner)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null), new("I", "A", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -10, 10) { InitialExceptionCount = 1, InitialExceptionAbove = 20 });
+        recordings.Add("owner", "trace", 0, [0, -1e308], Now);
+        recordings.Add("owner", "trace", 1, [0, -1e308], Now);
+        Assert.Throws<ArgumentException>(() => recordings.Add("owner", "trace", 2, [100, 1e308], Now));
+
+        var result = closeOwner ? Assert.Single(recordings.CloseOwner("owner")) : recordings.Stop("owner", "trace");
+        Assert.False(result.Complete);
+        Assert.All(result.Data.Channels, wave =>
+        {
+            Assert.Single(wave.Values);
+            Assert.Single(wave.Times!);
+        });
+        Assert.All(result.Channels, channel =>
+        {
+            Assert.Empty(channel.SuppressedSlopes);
+            Assert.Empty(channel.Violations);
+        });
+        var plot = new Testumgebung.Presentation.ViewModels.WaveformPlotViewModel();
+        plot.SetData(result.Data);
+        Assert.NotEmpty(plot.Channels);
+    }
+
     [Fact]
     public async Task Standard_blocks_serialize_configuration_and_write_suppression_details()
     {
