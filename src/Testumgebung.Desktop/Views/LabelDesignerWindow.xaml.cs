@@ -26,6 +26,8 @@ public partial class LabelDesignerWindow : Window
         _cab = cab;
         InitializeComponent();
         GapFields.Visibility = VisibleIf(cab);
+        OpenCabButton.Visibility = VisibleIf(cab);
+        SaveCabButton.Visibility = VisibleIf(cab);
         Gs1Identifiers.ItemsSource = Gs1LabelData.Identifiers;
         Gs1Identifiers.SelectedIndex = 1;
 
@@ -42,15 +44,21 @@ public partial class LabelDesignerWindow : Window
     {
         var owner = Window.GetWindow(source);
         var cab = row.IsCabLabel;
-        var layout = ReadLayout(row, cab);
+        LabelLayout layout;
+        try { layout = ReadLayout(row, cab); }
+        catch (Exception error) when (error is InvalidDataException or FormatException)
+        {
+            MessageBox.Show(owner, error.Message, "LBL kann nicht im Designer geöffnet werden", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
         var original = RenderValue(layout, cab);
         var dialog = new LabelDesignerWindow(layout, cab)
         {
             Owner = owner,
-            _replacesManualTemplate = () => HasManualTemplate(row, original),
+            _replacesManualTemplate = () => !cab && HasManualTemplate(row, original),
         };
         if (cab && HasManualTemplate(row, original))
-            dialog.Status.Text = "Die eingebettete LBL bleibt erhalten, bis du eine neue Vorlage übernimmst.";
+            dialog.Status.Text = "Vorhandene LBL geladen. Änderungen werden mit „Vorlage übernehmen“ gespeichert. Druckauflösung prüfen.";
         if (dialog.ShowDialog() != true) return;
         if (cab) row.Owner.SaveCabLabelLayout(layout);
         else row.Owner.SaveLabelLayout(layout);
@@ -62,17 +70,67 @@ public partial class LabelDesignerWindow : Window
     private static bool HasManualTemplate(ParameterRowViewModel row, string original)
         => row.Value != row.Descriptor.Default && row.Value.ReplaceLineEndings("\n") != original;
 
-    private static LabelLayout ReadLayout(ParameterRowViewModel row, bool cab)
+    internal static LabelLayout ReadLayout(ParameterRowViewModel row, bool cab)
     {
         var parameter = cab ? CabLabelLayout.Parameter : LabelLayout.Parameter;
-        if (!row.Owner.Step.Parameters.TryGetValue(parameter, out var json)) return new();
+        if (!row.Owner.Step.Parameters.TryGetValue(parameter, out var json))
+            return cab && row.Value.Length > 0 ? CabLabelImport.Read(Convert.FromBase64String(row.Value)) : new();
         try
         {
             var layout = LabelLayout.Load(json);
             _ = RenderValue(layout, cab);
             return layout;
         }
-        catch (Exception error) when (error is JsonException or InvalidDataException) { return new(); }
+        catch (Exception error) when (error is JsonException or InvalidDataException)
+        {
+            if (cab) throw new InvalidDataException("Das gespeicherte cab-Layout ist ungültig. " + error.Message, error);
+            return new();
+        }
+    }
+
+    private void OnOpenCab(object sender, RoutedEventArgs e)
+    {
+        var picker = new OpenFileDialog { Filter = "cab-LBL-Druckdateien (*.lbl)|*.lbl", CheckFileExists = true };
+        if (picker.ShowDialog(this) != true) return;
+        OpenCabFile(picker.FileName);
+    }
+
+    internal void OpenCabFile(string path)
+    {
+        try { ImportCab(File.ReadAllBytes(path)); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
+        { Status.Text = error.Message; }
+    }
+
+    private void OnSaveCab(object sender, RoutedEventArgs e)
+    {
+        var picker = new SaveFileDialog { Filter = "cab-LBL-Druckdateien (*.lbl)|*.lbl", DefaultExt = ".lbl", FileName = "Etikett.lbl" };
+        if (picker.ShowDialog(this) != true) return;
+        SaveCabFile(picker.FileName);
+    }
+
+    internal void SaveCabFile(string path)
+    {
+        try
+        {
+            File.WriteAllBytes(path, CabLabelLayout.Render(_layout));
+            Status.Text = "LBL-Datei gespeichert.";
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
+        { Status.Text = error.Message; }
+    }
+
+    internal void ImportCab(byte[] bytes)
+    {
+        var imported = CabLabelImport.Read(bytes, _layout.Dpi);
+        _layout.WidthMm = imported.WidthMm;
+        _layout.HeightMm = imported.HeightMm;
+        _layout.GapMm = imported.GapMm;
+        _layout.Elements = imported.Elements;
+        DataContext = null;
+        DataContext = _layout;
+        ReloadElements();
+        Status.Text = "LBL geladen. Texte, Platzhalter und Elemente können bearbeitet werden.";
     }
 
     private void ReloadElements(LabelElement? selection = null)
