@@ -59,7 +59,7 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
             return SlopeSuppressionReason.BelowThreshold;
         var inside = touchAllowed ? value >= limits.Minimum && value <= limits.Maximum
             : value > limits.Minimum && value < limits.Maximum;
-        if (!inside && _exceptions < limits.InitialExceptionCount && value > limits.InitialExceptionAbove)
+        if (!inside && EvaluatedCount == 0 && _exceptions < limits.InitialExceptionCount && value > limits.InitialExceptionAbove)
         {
             _exceptions++;
             return SlopeSuppressionReason.InitialException;
