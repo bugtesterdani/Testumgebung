@@ -38,7 +38,10 @@ public sealed record ParameterVisibility(string Parameter = "", string Value = "
         if (Parameter.Length == 0) return true;
         var text = valueOf(Parameter) ?? "";
         if (Boolean is { } expected)
-            return expected == (text.Equals("true", StringComparison.OrdinalIgnoreCase) || text == "1" || text.Equals("ja", StringComparison.OrdinalIgnoreCase));
+        {
+            var booleanText = text.Trim();
+            return expected == (booleanText.Equals("true", StringComparison.OrdinalIgnoreCase) || booleanText == "1" || booleanText.Equals("ja", StringComparison.OrdinalIgnoreCase));
+        }
         if (GreaterThanZero)
             return double.TryParse(text.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) && double.IsFinite(number) && number > 0;
         return AllowedValues?.Contains(text) ?? text == Value;
@@ -74,6 +77,7 @@ public sealed class BlockParameters(BlockDescriptor descriptor, IReadOnlyDiction
 {
     /// <summary>Alle Rohwerte inkl. dynamischer Parameter (z. B. Bindungen „in.Spannung“).</summary>
     public IReadOnlyDictionary<string, string> Raw => values;
+    public string Label(string name) => Descriptor(name).Label;
 
     public string Text(string name)
     {

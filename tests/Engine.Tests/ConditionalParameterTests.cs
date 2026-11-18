@@ -44,6 +44,30 @@ public sealed class ConditionalParameterTests
         Assert.True(rows["AnfrageId"].IsHidden);
     }
 
+    [Theory]
+    [InlineData("Fuellbyte", 1)]
+    [InlineData("AdresseTx", 1)]
+    [InlineData("AdresseRx", 1)]
+    [InlineData("TesterAdresse", 0)]
+    [InlineData("SteuergeraetAdresse", 0)]
+    [InlineData("Nad", 0)]
+    public void Aliased_transport_diagnostics_reveal_the_specific_inactive_field(string name, int transport)
+    {
+        var rows = Select(BusBlocks.UdsRequest, out var properties);
+        properties.ShowAdvanced = true;
+        rows["Transport"].Value = BusBlocks.DiagTransports[transport];
+        var field = rows[name];
+        var original = field.Value;
+        Assert.True(field.IsHidden);
+        field.Value = "ungültig";
+        Assert.True(properties.HasDiagnostics);
+        Assert.False(field.IsHidden);
+        Assert.Contains(properties.Diagnostics, message => message.Contains(field.Label));
+        field.Value = original;
+        Assert.False(properties.HasDiagnostics);
+        Assert.True(field.IsHidden);
+    }
+
     [Fact]
     public void Process_fields_follow_call_type_and_retain_saved_input()
     {

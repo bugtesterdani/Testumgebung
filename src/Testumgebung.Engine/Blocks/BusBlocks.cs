@@ -661,14 +661,14 @@ internal sealed record DiagSpec(int Transport, IsoTpSettings IsoTp, DoIpSettings
         var ext = p.Bool("Erweitert");
         var tx = CanIdSpec.Parse(p.Optional("AnfrageId") ?? "0x7E0", ext, "AnfrageId");
         var rx = CanIdSpec.Parse(p.Optional("AntwortId") ?? "0x7E8", ext, "AntwortId");
-        var iso = new IsoTpSettings(tx.Id, rx.Id, tx.Extended || rx.Extended, p.Bool("Fd"), BusBlocks.ParseAddress(p.Optional("Fuellbyte"), "Füllbyte") ?? 0xCC)
+        var iso = new IsoTpSettings(tx.Id, rx.Id, tx.Extended || rx.Extended, p.Bool("Fd"), BusBlocks.ParseAddress(p.Optional("Fuellbyte"), p.Label("Fuellbyte")) ?? 0xCC)
         {
-            TxAddress = BusBlocks.ParseAddress(p.Optional("AdresseTx"), "Adressbyte Anfrage"),
-            RxAddress = BusBlocks.ParseAddress(p.Optional("AdresseRx"), "Adressbyte Antwort"),
+            TxAddress = BusBlocks.ParseAddress(p.Optional("AdresseTx"), p.Label("AdresseTx")),
+            RxAddress = BusBlocks.ParseAddress(p.Optional("AdresseRx"), p.Label("AdresseRx")),
         };
-        var dip = new DoIpSettings(BusBlocks.ParseWord(p.Optional("TesterAdresse"), 0x0E00, "Tester-Adresse"),
-            BusBlocks.ParseWord(p.Optional("SteuergeraetAdresse"), 0x1000, "Steuergerät-Adresse"));
-        return new DiagSpec(transport, iso, dip, BusBlocks.ParseAddress(p.Optional("Nad"), "NAD") ?? 0x01);
+        var dip = new DoIpSettings(BusBlocks.ParseWord(p.Optional("TesterAdresse"), 0x0E00, p.Label("TesterAdresse")),
+            BusBlocks.ParseWord(p.Optional("SteuergeraetAdresse"), 0x1000, p.Label("SteuergeraetAdresse")));
+        return new DiagSpec(transport, iso, dip, BusBlocks.ParseAddress(p.Optional("Nad"), p.Label("Nad")) ?? 0x01);
     }
 
     public IDiagnosticTransport Create(IHardwareAdapter adapter, string channel)

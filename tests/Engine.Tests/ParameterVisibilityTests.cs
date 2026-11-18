@@ -8,6 +8,9 @@ public sealed class ParameterVisibilityTests
     [InlineData("true", true)]
     [InlineData("ja", true)]
     [InlineData("1", true)]
+    [InlineData(" true ", true)]
+    [InlineData(" 1 ", true)]
+    [InlineData(" \tJA\r\n ", true)]
     [InlineData("FALSE", false)]
     [InlineData("", false)]
     public void Boolean_conditions_accept_existing_boolean_spellings(string value, bool expected)
