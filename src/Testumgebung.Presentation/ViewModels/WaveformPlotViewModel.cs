@@ -190,12 +190,21 @@ public sealed class WaveformPlotViewModel : ObservableObject
             if (keepView && visible.TryGetValue(plotSource.Id, out var flag)) ch.IsVisible = flag;
             Channels.Add(ch);
         }
-        var durationValue = Duration;
-        if (!keepView || _viewEnd <= _viewStart || _viewEnd > durationValue + 1e-12 || (pointTrace && wasFullView)) { _viewStart = 0; _viewEnd = durationValue; }
-        if (!keepView || _cursor > durationValue) _cursor = null;
+        RestoreView(keepView, wasFullView);
         foreach (var relayCommand in new[] { ZoomInCommand, ZoomOutCommand, ZoomAllCommand, PanLeftCommand, PanRightCommand, ClearCursorCommand })
             relayCommand.RaiseCanExecuteChanged();
         Render();
+    }
+
+    private void RestoreView(bool keepView, bool wasFullView)
+    {
+        var duration = Duration;
+        if (!keepView || _viewEnd <= _viewStart || _viewEnd > duration + 1e-12 || (_pointTrace && wasFullView))
+        {
+            _viewStart = 0;
+            _viewEnd = duration;
+        }
+        if (!keepView || _cursor > duration) _cursor = null;
     }
 
     public void SetData(CurveDefinition curve, bool keepView = false)
