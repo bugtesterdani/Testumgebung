@@ -109,6 +109,9 @@ public static class TraceBlocks
         => parameters.Select(parameter => parameter with { VisibleWhen = RecordingVisibility(parameter.Name) }).ToArray();
 
     private static ParameterVisibility? RecordingVisibility(string name)
+        => EvaluationVisibility(name) ?? StopVisibility(name);
+
+    private static ParameterVisibility? EvaluationVisibility(string name)
     {
         if (name == "Steigungsfenster")
             return new(EvaluationParameter, AllowedValues: [DisjointSlope, RollingSlope]);
@@ -118,14 +121,17 @@ public static class TraceBlocks
             return new(EvaluationParameter, FormulaBand);
         if (name is "Grenzkurven" or AbortCurvesParameter)
             return new(EvaluationParameter, ValueBand);
-        return name switch
+        return null;
+    }
+
+    private static ParameterVisibility? StopVisibility(string name)
+        => name switch
         {
             StopMarginModeParameter => new(StopEnabledParameter, Boolean: true),
             PercentMarginParameter => new(All: [new(StopEnabledParameter, Boolean: true), new(StopMarginModeParameter, PercentMargin)]),
             AbsoluteMarginParameter => new(All: [new(StopEnabledParameter, Boolean: true), new(StopMarginModeParameter, AbsoluteMargin)]),
             _ => null
         };
-    }
 
     private static IStepAction CreatePauseTime(BlockParameters parameters)
     {
