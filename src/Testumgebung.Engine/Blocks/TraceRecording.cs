@@ -221,10 +221,10 @@ internal sealed class TimedTraceAction : IStepAction
     private readonly TraceSampleReader _reader;
     private readonly double _interval, _duration;
     private readonly string? _target;
-    private readonly bool _exitDut;
-    public TimedTraceAction(TraceRecordingSettings settings, TraceSampleReader reader, double interval, string? target, bool exitDut)
+    private readonly bool _exitDut, _exitOnEnd;
+    public TimedTraceAction(TraceRecordingSettings settings, TraceSampleReader reader, double interval, string? target, bool exitDut, bool exitOnEnd)
     {
-        _settings = settings; _reader = reader; _target = target; _interval = interval; _exitDut = exitDut;
+        _settings = settings; _reader = reader; _target = target; _interval = interval; _exitDut = exitDut; _exitOnEnd = exitOnEnd;
         _duration = settings.Duration ?? throw new BlockConfigurationException("Zeitgesteuerte Messung benötigt eine Dauer > 0.");
         if (!double.IsFinite(interval) || interval < 1e-7 || _duration > TimeSpan.MaxValue.TotalSeconds)
             throw new BlockConfigurationException("Endliche Dauer und Abfrageintervall >= 0,0000001 s angeben.");
@@ -250,7 +250,7 @@ internal sealed class TimedTraceAction : IStepAction
             }
             var result = ctx.Recordings.Stop(ctx.ProcessOwner, _settings.Name, !ctx.IsOperatorAborted);
             TraceBlocks.WriteDetails(ctx, _target, result);
-            return TraceBlocks.Outcome(result, true, _exitDut);
+            return TraceBlocks.Outcome(result, true, _exitDut) with { ExitDut = _exitOnEnd || (_exitDut && result.EarlyStop is not null) };
         }
         catch { ctx.Recordings.Invalidate(ctx.ProcessOwner, _settings.Name); throw; }
     }

@@ -29,7 +29,7 @@ public sealed class TraceCatalogTests
         }
 
         Assert.Equal(
-            new[] { "ErgebnisZiel", "Intervall", "Messversuche", "Quelle", "Ressourcen", "Werte", TraceBlocks.ExitDutOnEarlyStopParameter }.Order(StringComparer.Ordinal),
+            new[] { TraceBlocks.ExitDutOnEndParameter, "ErgebnisZiel", "Intervall", "Messversuche", "Quelle", "Ressourcen", "Werte", TraceBlocks.ExitDutOnEarlyStopParameter }.Order(StringComparer.Ordinal),
             timed.Keys.Order(StringComparer.Ordinal));
     }
 }
