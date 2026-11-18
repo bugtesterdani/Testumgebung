@@ -347,3 +347,9 @@ Die Auswahl „Sprache Werkeransicht“ betrifft die Werkeroberfläche. Entwickl
 ### Steigungsfilter im Editor
 
 Die Sammelschwellen und Anlaufausnahmen stehen unter „Erweitert“. Die Anzahl 0 schaltet Anlaufausnahmen aus; erst bei positiver Anzahl werden Schwelle und Richtung angeboten. Minimale und maximale Steigung sowie die bei Fensterauswertung benötigte Fenstergröße bleiben im Grundbereich. Die gespeicherten Parameternamen ändern sich nicht.
+
+### Parameterabschnitte und Zielerkennung
+
+Große Bausteine gliedern ihre Eingaben in aufklappbare Abschnitte. Messwertaufnahmen verwenden Kanäle und Quelle, Grenzauswertung, Sicherheit, Zeit und Vollständigkeit, Zielerkennung sowie Ende und Exit. Gerätequelle und Wertausdrücke zeigen jeweils ihre eigenen Eingaben. Punktlimit, Messlücke, Mindestpunkte, Mindestdauer, Grenzberührung, Messversuche und JSON-Auswertungsziel stehen unter Erweitert. UDS-Diagnose und Prozessstart verwenden dieselbe Abschnittsmetadatenstruktur.
+
+„Stabiles Ziel erkennen“ schaltet die Zielbandauswertung ausdrücklich ein. Beim Laden alter Projekte aktivieren vorhandene Zielbandgrenzen die Erkennung automatisch; unvollständige Altangaben bleiben als Fehler erkennbar. Ausschalten bewahrt vorhandene Grenzwerte, wertet sie aber nicht aus. Bei neuen Aufnahmen ist die Erkennung zunächst aus.

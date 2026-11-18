@@ -24,6 +24,7 @@ public sealed class ParameterRowViewModel : ObservableObject
     public StepPropertiesViewModel Owner => _owner;
     public ParameterDescriptor Descriptor { get; }
     public string Label => Descriptor.Label;
+    public string Section => Descriptor.Section.Length == 0 ? "Parameter" : Descriptor.Section;
     public string? Hint => Descriptor.Hint;
     public ParameterKind Kind => Descriptor.Kind;
     public IReadOnlyList<string> Choices => Descriptor.Choices ?? [];

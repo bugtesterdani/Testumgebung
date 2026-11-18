@@ -18,6 +18,7 @@ public static class TraceBlocks
     public const string PercentMargin = "Prozent", AbsoluteMargin = "Absolut";
     public const string PercentMarginParameter = "AbweichungProzent", AbsoluteMarginParameter = "AbweichungAbsolut";
     public const string AbortCurvesParameter = "Abbruchgrenzkurven";
+    public const string TargetEnabledParameter = "ZielerkennungAktiv";
     public const string ExitDutOnEndParameter = "BeiAufnahmeendeZurExitGruppe";
     private static ParameterDescriptor ExitOnEndOption() => new(ExitDutOnEndParameter,
         "Bei Aufnahmeende immer zur Prüflings-Exit-Gruppe (PASS / FAIL / ERROR)", ParameterKind.Bool, "false");
@@ -94,6 +95,7 @@ public static class TraceBlocks
      new("MaxLuecke", "Maximale Messlücke / Abfragedauer [s]", ParameterKind.Number, "1"),
      new("MinPunkte", "Mindestanzahl gültiger Messpunkte je Kanal", ParameterKind.Expression, "2",
         Hint: "Ganzzahl oder Prüfparameter. Mindestens 2, höchstens das Punktlimit."),
+     new(TargetEnabledParameter, "Stabiles Ziel erkennen", ParameterKind.Bool, "false"),
      new("ZielbandMin", "Zielband-Untergrenze (erster Messkanal)", ParameterKind.Expression),
      new("ZielbandMax", "Zielband-Obergrenze (erster Messkanal)", ParameterKind.Expression),
      new("ZielbandPunkte", "Aufeinanderfolgende Messpunkte im Zielband", ParameterKind.Expression, "10",
@@ -118,6 +120,8 @@ public static class TraceBlocks
 
     private static ParameterVisibility? EvaluationVisibility(string name)
     {
+        if (name is "ZielbandMin" or "ZielbandMax" or "ZielbandPunkte")
+            return new(TargetEnabledParameter, Boolean: true);
         if (name == "Steigungsfenster")
             return new(EvaluationParameter, AllowedValues: [DisjointSlope, RollingSlope]);
         if (name is "SteigungAnlaufSchwelle" or "SteigungAnlaufrichtung")
