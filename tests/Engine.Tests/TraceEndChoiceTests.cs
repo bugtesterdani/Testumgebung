@@ -64,6 +64,20 @@ public sealed class TraceEndChoiceTests
     }
 
     [Fact]
+    public void Legacy_boolean_spellings_keep_their_meaning_with_surrounding_whitespace()
+    {
+        foreach (var (name, expected) in new[]
+        {
+            (TraceBlocks.ExitDutOnEarlyStopParameter, TraceEndOptions.Early),
+            (TraceBlocks.ExitDutOnEndParameter, TraceEndOptions.Always),
+            (BlockCatalog.ExitDutOnErrorParameter, TraceEndOptions.Error)
+        })
+            foreach (var value in new[] { " true ", " 1 ", " \tJA\r\n " })
+                Assert.Equal(expected, TraceEndOptions.Migrate(TraceBlocks.Point, new Dictionary<string, string>
+                    { [name] = value })![TraceEndOptions.Parameter]);
+    }
+
+    [Fact]
     public void Null_legacy_exit_flags_migrate_as_disabled()
     {
         var values = new Dictionary<string, string>
