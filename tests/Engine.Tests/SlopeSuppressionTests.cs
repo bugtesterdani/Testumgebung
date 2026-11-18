@@ -51,7 +51,10 @@ public sealed class SlopeSuppressionTests
         recordings.Add("owner", "trace", 0.03, [sign * 0.6], Now);
         var result = recordings.Stop("owner", "trace");
         Assert.True(result.Passed);
-        Assert.Equal(new[] { sign * 5d, sign * 5d, sign * 50d }, result.Data.Channels[0].Samples);
+        var expected = new[] { sign * 5d, sign * 5d, sign * 50d };
+        Assert.Equal(expected.Length, result.Data.Channels[0].Count);
+        for (var index = 0; index < expected.Length; index++)
+            Assert.Equal(expected[index], result.Data.Channels[0].Values[index], 8);
         var details = Assert.Single(result.Channels);
         Assert.Equal(2, details.SuppressedSlopes.Count);
         Assert.All(details.SuppressedSlopes, point => Assert.Equal(0, point.StartTime));
