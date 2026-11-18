@@ -28,6 +28,9 @@ public sealed class CurveEnvelope
     }
     private static CurveChannel FindChannel(CurveDefinition curve, string name)
         => curve.Channels.SingleOrDefault(curveChannel => curveChannel.Id.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException($"Grenzkurvenkanal {name} fehlt.");
+    private static SlopeSampleFilter[] CreateSlopeFilters(SlopeLimits? limits, int channelCount)
+        => limits is null ? [] : Enumerable.Range(0, channelCount).Select(_ => new SlopeSampleFilter(limits)).ToArray();
+
     private static void ValidateChannels(CurveDefinition curve, CurveChannel lower, CurveChannel upper, string unit)
     {
         if (lower.Unit != unit || upper.Unit != unit) throw new ArgumentException("Einheit der Grenzkurven passt nicht zur Aufnahme.");
@@ -158,9 +161,12 @@ internal sealed class EnvelopeRecording
         _target = target;
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
         _slopes = channels.Select(_ => new List<double>()).ToArray();
-        _slopeFilters = slope is null ? [] : channels.Select(_ => new SlopeSampleFilter(slope)).ToArray();
+        _slopeFilters = CreateSlopeFilters(slope, channels.Count);
         _maxPoints = maxPoints; _maxGap = maxGap; _minimumDuration = minimumDuration; _touchAllowed = touchAllowed;
     }
+    private static SlopeSampleFilter[] CreateSlopeFilters(SlopeLimits? limits, int channelCount)
+        => limits is null ? [] : Enumerable.Range(0, channelCount).Select(_ => new SlopeSampleFilter(limits)).ToArray();
+
     private static void ValidateChannels(IReadOnlyList<TraceChannelDefinition> channels)
     {
         if (channels.Count is < 1 or > 8 || channels.Select(traceChannelDefinition => traceChannelDefinition.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(traceChannelDefinition => string.IsNullOrWhiteSpace(traceChannelDefinition.Name) || traceChannelDefinition.Name.Contains(" · ", StringComparison.Ordinal)))

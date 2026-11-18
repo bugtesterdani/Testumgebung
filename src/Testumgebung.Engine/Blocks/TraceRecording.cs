@@ -112,10 +112,15 @@ internal sealed class TraceRecordingSettings
             TraceBlocks.DisjointSlope => SlopeWindowMode.Disjoint,
             _ => SlopeWindowMode.Rolling
         };
+        return ReadSlopeSuppression(p, maximum, new(window, (int)points, low, high));
+    }
+
+    private static SlopeLimits ReadSlopeSuppression(BlockParameters p, int maximum, SlopeLimits limits)
+    {
         var count = p.Number("SteigungAnlaufAnzahl") ?? 0;
         if (count < 0 || count > maximum || count != Math.Truncate(count))
             throw new BlockConfigurationException("Anlaufausnahmen müssen ganzzahlig zwischen 0 und dem Punktlimit liegen.");
-        return new(window, (int)points, low, high)
+        return limits with
         {
             InitialExceptionCount = (int)count,
             InitialExceptionAbove = p.Number("SteigungAnlaufSchwelle") ?? 0,

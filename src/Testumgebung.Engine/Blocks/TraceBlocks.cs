@@ -184,6 +184,16 @@ public static class TraceBlocks
 
     internal static StepOutcome Outcome(TraceEvaluation result, bool includeData, bool exitDut = false)
     {
+        var outcome = EvaluateOutcome(result, includeData, exitDut);
+        var suppressed = result.Channels.Sum(channel => channel.SuppressedSlopes.Count);
+        return suppressed == 0 ? outcome : outcome with
+        {
+            Message = outcome.Message + $" {suppressed} Steigung(en) von der Bewertung ausgenommen und mit Zeit, Wert und Grund protokolliert."
+        };
+    }
+
+    private static StepOutcome EvaluateOutcome(TraceEvaluation result, bool includeData, bool exitDut)
+    {
         var value = includeData ? result.Data : null;
         if (result.EarlyStop is { } early)
             return StepOutcome.Fail(EarlyStopMessage(early, exitDut), value) with { ExitDut = exitDut };

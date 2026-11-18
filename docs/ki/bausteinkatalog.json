@@ -5170,6 +5170,42 @@
           "hint": null
         },
         {
+          "name": "SteigungAnlaufAnzahl",
+          "label": "Erste X Grenzverletzungen oberhalb Y ausnehmen",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."
+        },
+        {
+          "name": "SteigungAnlaufSchwelle",
+          "label": "Y f\u00FCr Anlaufausnahmen [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SteigungSchwellePositiv",
+          "label": "Positive Mindeststeigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."
+        },
+        {
+          "name": "SteigungSchwelleNegativ",
+          "label": "Negative Mindeststeigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter."
+        },
+        {
           "name": "SicherheitMin",
           "label": "Harte Messwert-Untergrenze (alle Kan\u00E4le)",
           "kind": "Expression",
@@ -5703,6 +5739,42 @@
           "required": false,
           "choices": null,
           "hint": null
+        },
+        {
+          "name": "SteigungAnlaufAnzahl",
+          "label": "Erste X Grenzverletzungen oberhalb Y ausnehmen",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."
+        },
+        {
+          "name": "SteigungAnlaufSchwelle",
+          "label": "Y f\u00FCr Anlaufausnahmen [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "SteigungSchwellePositiv",
+          "label": "Positive Mindeststeigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."
+        },
+        {
+          "name": "SteigungSchwelleNegativ",
+          "label": "Negative Mindeststeigung [Kanaleinheit/s]",
+          "kind": "Number",
+          "default": "0",
+          "required": false,
+          "choices": null,
+          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter."
         },
         {
           "name": "SicherheitMin",
