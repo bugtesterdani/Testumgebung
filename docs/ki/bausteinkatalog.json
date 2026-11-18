@@ -5383,6 +5383,15 @@
           "hint": null
         },
         {
+          "name": "BeiAufnahmeendeZurExitGruppe",
+          "label": "Bei Aufnahmeende immer zur Pr\u00FCflings-Exit-Gruppe (PASS / FAIL / ERROR)",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
           "name": "BeiFehlerZurExitGruppe",
           "label": "Bei ERROR zur Pr\u00FCflings-Exit-Gruppe",
           "kind": "Bool",
@@ -5415,6 +5424,15 @@
           "label": "Auswertungsdetails \u2192 Stringvariable (JSON)",
           "kind": "Variable",
           "default": "",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "BeiAufnahmeendeZurExitGruppe",
+          "label": "Bei Aufnahmeende immer zur Pr\u00FCflings-Exit-Gruppe (PASS / FAIL / ERROR)",
+          "kind": "Bool",
+          "default": "false",
           "required": false,
           "choices": null,
           "hint": null
@@ -5556,6 +5574,15 @@
         {
           "name": "BeiVorzeitigemEndeZurExitGruppe",
           "label": "Bei vorzeitigem Ende zur Pr\u00FCflings-Exit-Gruppe",
+          "kind": "Bool",
+          "default": "false",
+          "required": false,
+          "choices": null,
+          "hint": null
+        },
+        {
+          "name": "BeiAufnahmeendeZurExitGruppe",
+          "label": "Bei Aufnahmeende immer zur Pr\u00FCflings-Exit-Gruppe (PASS / FAIL / ERROR)",
           "kind": "Bool",
           "default": "false",
           "required": false,

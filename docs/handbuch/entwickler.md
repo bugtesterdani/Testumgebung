@@ -161,6 +161,14 @@ Wiederholung „Zeitspanne“ prüft die Frist standardmäßig zwischen den Iter
 prüfen“ werden nach Ablauf die restlichen Schritte der laufenden Iteration übersprungen (ein laufender Schritt wird nicht
 unterbrochen, die Exit-Gruppe läuft).
 
+Bei **Messwertverlauf aufnehmen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten**
+kann **Bei Aufnahmeende immer zur Prüflings-Exit-Gruppe (PASS / FAIL / ERROR)** aktiviert werden.
+Die Option überspringt nach Abschluss der Aufnahme die regulären Folgeschritte und führt die
+aktiven Exit-Gruppen des Prüflings von innen nach außen aus. Bei manueller Aufnahme die Option
+am Messpunkt oder am abschließenden Bewertungsbaustein setzen. Während einer noch laufenden
+Aufnahme werden weitere Messpunkte auch nach einer normalen Grenzverletzung aufgenommen.
+Ein ERROR des so konfigurierten Bausteins führt ebenfalls direkt zur Exit-Gruppe.
+
 Für die PSU-Prüfung an fehlerrelevanten Standard-Schritten unter **Erweitert** die Option
 **Bei ERROR zur Prüflings-Exit-Gruppe** aktivieren. Bei der festen Bewertung kann die Option
 auch beim expliziten FAIL auslösen. Die Engine überspringt weitere reguläre Schritte des

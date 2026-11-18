@@ -51,7 +51,7 @@ public static class TraceBlocks
         catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
             RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget(), ExitDutOption(), ExitOnEndOption()]).ToArray(),
             parameters => new TimedTraceAction(new(parameters), new(parameters), parameters.Number("Intervall") ?? 0,
-                parameters.Optional("ErgebnisZiel"), parameters.Bool(ExitDutOnEarlyStopParameter))));
+                parameters.Optional("ErgebnisZiel"), parameters.Bool(ExitDutOnEarlyStopParameter), parameters.Bool(ExitDutOnEndParameter))));
     }
     private static ParameterDescriptor Name() => new("Aufnahme", "Aufnahmekennung", ParameterKind.Text, "Verlauf", Required: true);
     private static ParameterDescriptor ExitDutOption() => new(ExitDutOnEarlyStopParameter,
@@ -116,7 +116,8 @@ public static class TraceBlocks
         var exitDut = parameters.Bool(ExitDutOnEarlyStopParameter);
         return new DelegateAction(async ctx =>
         {
-            if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.");
+            if (ctx.Recordings.IsEnded(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Aufnahme bereits beendet; keine weitere Messung.")
+                with { ExitDut = parameters.Bool(ExitDutOnEndParameter) };
             if (ctx.Recordings.IsPaused(ctx.ProcessOwner, name)) return StepOutcome.Unrated(message: "Messzeit pausiert; keine Messung.");
             ValidateEarlyStopTarget(ctx, earlyStopTarget);
             if (stableTarget is not null && ctx.Get(stableTarget) is not bool)
