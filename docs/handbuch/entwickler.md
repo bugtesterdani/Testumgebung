@@ -178,6 +178,8 @@ unterbrochen, die Exit-Gruppe läuft).
 Bei der Grenzauswertung **Steigung** lassen sich im vorhandenen Aufnahmebaustein zusätzliche Regeln einstellen.
 **Erste X Grenzverletzungen oberhalb Y ausnehmen** zählt je Kanal ausschließlich Grenzverletzungen,
 deren Steigung größer als **Y für Anlaufausnahmen** ist. X = 0 deaktiviert diese Ausnahme.
+Anlaufausnahmen gelten nur bis zur ersten regulär bewerteten Steigung je Kanal.
+Ein späterer Sprung wird daher auch bei unverbrauchter Ausnahmeanzahl bewertet.
 Ausgenommene Werte lösen die Steigungsbewertung und deren zusätzliche Abbruchabweichung nicht aus.
 
 **Positive Mindeststeigung** und **Negative Mindeststeigung** sind direkt in der Kanaleinheit pro Sekunde
