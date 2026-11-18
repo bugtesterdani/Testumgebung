@@ -187,6 +187,10 @@ angegeben, zum Beispiel V/s. Die nächste Steigung wird bewertet, sobald sie gr�
 Schwelle oder kleiner als die negative Schwelle ist. Werte zwischen beiden Schwellen einschließlich
 der Grenzen werden protokolliert. Der Ausgangspunkt und die gesamte verstrichene Zeit bleiben
 für den nächsten Vergleich erhalten. Beide Schwellen 0 deaktivieren diesen Filter.
+Der gesamte ausgenommene Bereich muss innerhalb der normalen Steigungsgrenzen liegen.
+Wenn Berühren nicht zulässig ist, müssen die Schwellen streng innerhalb liegen.
+Ein aktivierter Mindeststeigungsfilter ist bei einer geforderten minimalen Steigung über 0 nicht verwendbar.
+Ungültige Kombinationen bleiben beim Laden erhalten und werden als Konfigurationsdiagnose angezeigt.
 Die Regeln gelten auch für getrennte und gleitende Fenster. Dort bestimmt das gewählte Fenster weiterhin,
 wann ein neuer Vergleich erfolgt. Bei ausgenommenen Vergleichen bleibt dessen erster Ausgangspunkt bestehen.
 

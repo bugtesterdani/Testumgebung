@@ -120,7 +120,7 @@ internal sealed class TraceRecordingSettings
         var count = p.Number("SteigungAnlaufAnzahl") ?? 0;
         if (count < 0 || count > maximum || count != Math.Truncate(count))
             throw new BlockConfigurationException("Anlaufausnahmen müssen ganzzahlig zwischen 0 und dem Punktlimit liegen.");
-        return limits with
+        var configured = limits with
         {
             InitialExceptionCount = (int)count,
             ExceptionDirection = ReadExceptionDirection(p),
@@ -128,6 +128,9 @@ internal sealed class TraceRecordingSettings
             PositiveThreshold = p.Number("SteigungSchwellePositiv") ?? 0,
             NegativeThreshold = p.Number("SteigungSchwelleNegativ") ?? 0
         };
+        try { configured.ValidateThresholdRange(p.Bool("Beruehren")); }
+        catch (ArgumentException error) { throw new BlockConfigurationException(error.Message); }
+        return configured;
     }
 
     private static SlopeExceptionDirection ReadExceptionDirection(BlockParameters p)

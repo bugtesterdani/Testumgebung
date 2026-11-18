@@ -34,6 +34,15 @@ public sealed record SlopeLimits(SlopeWindowMode Mode, int Points, double Minimu
             throw new ArgumentException("Die positive Mindeststeigung muss ≥ 0 und die negative ≤ 0 sein.");
     }
 
+    public void ValidateThresholdRange(bool touchAllowed)
+    {
+        if (!HasSlopeThreshold) return;
+        var inside = touchAllowed ? NegativeThreshold >= Minimum && PositiveThreshold <= Maximum
+            : NegativeThreshold > Minimum && PositiveThreshold < Maximum;
+        if (!inside)
+            throw new ArgumentException("Der Bereich der Mindeststeigungen muss vollständig innerhalb der Steigungsgrenzen liegen. Ohne zulässiges Berühren müssen beide Schwellen streng innerhalb liegen.");
+    }
+
     internal bool IsWindowEnd(int count) => count >= Points &&
         (Mode != SlopeWindowMode.Disjoint || count % Points == 0);
 }
