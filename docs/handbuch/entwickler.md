@@ -343,3 +343,7 @@ Die Auswahl „Sprache Werkeransicht“ betrifft die Werkeroberfläche. Entwickl
 ### Sichtbare Bausteinparameter
 
 `VisibleWhen` im Bausteinkatalog beschreibt erlaubte Auswahlwerte (`AllowedValues`), Ja/Nein-Schalter (`Boolean`) und positive endliche Zahlen (`GreaterThanZero`). Bedingungen unter `All` gelten gemeinsam. Fehlende Projektwerte verwenden den Vorgabewert des jeweiligen Parameters. Der Editor wertet diese Metadaten einheitlich aus; bei Diagnosen bleiben Eingabefelder zur Korrektur erreichbar. Nur die als Tabelle bearbeiteten Kanal-Einheiten und Grenzkurven bleiben als doppelte Texteingaben verborgen. Die Bedingungen sind ebenfalls im KI-Bausteinkatalog enthalten.
+
+### Steigungsfilter im Editor
+
+Die Sammelschwellen und Anlaufausnahmen stehen unter „Erweitert“. Die Anzahl 0 schaltet Anlaufausnahmen aus; erst bei positiver Anzahl werden Schwelle und Richtung angeboten. Minimale und maximale Steigung sowie die bei Fensterauswertung benötigte Fenstergröße bleiben im Grundbereich. Die gespeicherten Parameternamen ändern sich nicht.

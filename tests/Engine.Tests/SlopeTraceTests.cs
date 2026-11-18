@@ -41,6 +41,11 @@ public sealed class SlopeTraceTests
         Assert.True(parameters["Steigungsfenster"].IsHidden);
         Assert.False(parameters["SteigungMin"].IsHidden);
         Assert.False(parameters["SteigungMax"].IsHidden);
+        Assert.All(suppressionFields, name => Assert.True(parameters[name].IsHidden));
+        properties.ShowAdvanced = true;
+        Assert.False(parameters["SteigungAnlaufAnzahl"].IsHidden);
+        Assert.True(parameters["SteigungAnlaufSchwelle"].IsHidden);
+        parameters["SteigungAnlaufAnzahl"].Value = "1";
         Assert.All(suppressionFields, name => Assert.False(parameters[name].IsHidden));
 
         mode.Value = TraceBlocks.DisjointSlope;
