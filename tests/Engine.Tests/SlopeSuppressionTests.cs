@@ -88,8 +88,8 @@ public sealed class SlopeSuppressionTests
         recordings.Add("owner", "trace", 0.01, [0.5, 2], Now);
         recordings.Add("owner", "trace", 0.02, [2.5, 4], Now);
         var result = recordings.Stop("owner", "trace");
-        Assert.Single(result.Channels[0].SuppressedSlopes);
-        Assert.Empty(result.Channels[0].Violations);
+        Assert.Empty(result.Channels[0].SuppressedSlopes);
+        Assert.Single(result.Channels[0].Violations);
         Assert.Single(result.Channels[1].SuppressedSlopes);
         Assert.Single(result.Channels[1].Violations);
     }
@@ -155,6 +155,22 @@ public sealed class SlopeSuppressionTests
         var plot = new Testumgebung.Presentation.ViewModels.WaveformPlotViewModel();
         plot.SetData(result.Data);
         Assert.NotEmpty(plot.Channels);
+    }
+
+    [Fact]
+    public void Unused_initial_exceptions_cannot_hide_a_later_spike()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, maxGap: 4,
+            slope: new(SlopeWindowMode.Consecutive, 2, -2, 2) { InitialExceptionCount = 3, InitialExceptionAbove = 10 });
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 1, [1], Now);
+        recordings.Add("owner", "trace", 4, [1], Now);
+        recordings.Add("owner", "trace", 4.01, [2], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.False(result.Passed);
+        Assert.Empty(result.Channels[0].SuppressedSlopes);
+        Assert.Equal(4.01, Assert.Single(result.Channels[0].Violations));
     }
 
     [Fact]
