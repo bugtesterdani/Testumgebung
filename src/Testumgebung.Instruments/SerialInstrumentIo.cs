@@ -57,6 +57,21 @@ public sealed class SerialInstrumentIo : IInstrumentIo
         }
         catch (Testumgebung.Contracts.CommunicationException ex) { throw new InstrumentException(ex.Message, ex); }
     }
+    public async Task<DiscardedInput> DiscardInputAsync(TimeSpan settleTime, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _transport.OpenAsync(cancellationToken).ConfigureAwait(false);
+            return await InputDiscard.DrainAsync(settleTime, async (slice, token) =>
+            {
+                var buffer = new byte[4096];
+                var count = await _transport.ReadAsync(buffer, slice, token).ConfigureAwait(false);
+                return buffer[..count];
+            }, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Testumgebung.Contracts.CommunicationException ex) { throw new InstrumentException(ex.Message, ex); }
+    }
+
     public Task ClearAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested(); _transport.Close(); return Task.CompletedTask;

@@ -31,6 +31,7 @@ internal static class InputDiscard
             preview.AddRange(data.Take(Math.Max(0, 200 - preview.Count)));
             if (total > 1_048_576) throw new InstrumentException("Eingangspuffer liefert fortlaufend Daten; vor dem Senden keine Ruhe erreicht.");
             if (data.Length == 0 && watch.Elapsed >= settleTime) break;
+            if (data.Length == 0) await Task.Delay(1, token).ConfigureAwait(false);
         } while (true);
         return new(total, preview.ToArray());
     }

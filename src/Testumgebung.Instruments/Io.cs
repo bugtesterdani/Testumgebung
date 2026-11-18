@@ -29,6 +29,10 @@ public interface IInstrumentIo : IDisposable
 
     /// <summary>Gerät zurücksetzen (Device Clear): laufende Ein-/Ausgabe verwerfen.</summary>
     Task ClearAsync(CancellationToken cancellationToken);
+
+    /// <summary>Read and discard input without Device Clear or reconnecting; retain only a bounded log preview.</summary>
+    Task<DiscardedInput> DiscardInputAsync(TimeSpan settleTime, CancellationToken cancellationToken)
+        => throw new NotSupportedException("Dieser Transport unterstützt keine Eingangsbereinigung.");
 }
 
 /// <summary>
@@ -138,6 +142,24 @@ public sealed class TcpSocketIo : IInstrumentIo
         return Task.CompletedTask;
     }
 
+    public async Task<DiscardedInput> DiscardInputAsync(TimeSpan settleTime, CancellationToken cancellationToken)
+    {
+        var stream = await StreamAsync(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+        return await InputDiscard.DrainAsync(settleTime, async (slice, token) =>
+        {
+            using var stop = CancellationTokenSource.CreateLinkedTokenSource(token);
+            stop.CancelAfter(slice);
+            try
+            {
+                var buffer = new byte[4096];
+                var count = await stream.ReadAsync(buffer, stop.Token).ConfigureAwait(false);
+                if (count == 0) throw new InstrumentException("Verbindung beim Leeren des Eingangs geschlossen.");
+                return buffer[..count];
+            }
+            catch (OperationCanceledException) when (!token.IsCancellationRequested) { return []; }
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
     private void Drop()
     {
         _stream?.Dispose();
@@ -244,6 +266,18 @@ public sealed class VisaIo : IInstrumentIo
         if (!_open) return;
         _api.Check(_vi, _api.Clear(_vi), "viClear");
     }, CancellationToken.None);
+
+    public Task<DiscardedInput> DiscardInputAsync(TimeSpan settleTime, CancellationToken cancellationToken)
+        => InputDiscard.DrainAsync(settleTime, (slice, token) => Task.Run(() =>
+        {
+            token.ThrowIfCancellationRequested();
+            var vi = Session();
+            _api.SetAttribute(vi, AttrTimeout, (ulong)Math.Max(1, slice.TotalMilliseconds));
+            var buffer = new byte[4096];
+            var status = _api.Read(vi, buffer, (uint)buffer.Length, out var count);
+            if (status != ErrorTimeout) _api.Check(vi, status, "viRead (Eingang verwerfen)");
+            return buffer[..(int)count];
+        }, CancellationToken.None), cancellationToken);
 
     public void Dispose()
     {

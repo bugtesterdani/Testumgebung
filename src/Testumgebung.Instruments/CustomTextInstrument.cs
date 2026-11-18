@@ -28,7 +28,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
     {
         var definition = Definition(channel);
         var commands = ChannelCommands(definition, definition.ReadQuery, definition.ReadEndings);
-        var response = (await Session.ExecuteCustomAsync(commands, readReply: true, ct).ConfigureAwait(false)).Trim();
+        var response = (await Session.ExecuteCustomAsync(commands, readReply: true, ct, discardInput: _profile.InputDiscard).ConfigureAwait(false)).Trim();
         if (response.Equals("ON", StringComparison.OrdinalIgnoreCase)) return 1;
         if (response.Equals("OFF", StringComparison.OrdinalIgnoreCase)) return 0;
         if (!TryReadNumber(response, channel.Unit, out var value))
@@ -54,14 +54,16 @@ public sealed class CustomTextInstrument : ScpiInstrument
         if (!double.IsFinite(value)) throw new ArgumentOutOfRangeException(nameof(value), "Wert muss endlich sein.");
         var definition = Definition(channel);
         var command = definition.WriteCommand.Replace("{value}", value.ToString("G17", CultureInfo.InvariantCulture), StringComparison.Ordinal);
-        return Session.ExecuteCustomAsync(ChannelCommands(definition, command, definition.WriteEndings), readReply: false, ct);
+        return Session.ExecuteCustomAsync(ChannelCommands(definition, command, definition.WriteEndings), readReply: false, ct, discardInput: _profile.InputDiscard);
     }
 
-    private CustomCommand[] ChannelCommands(CustomDeviceChannel channel, string commands, string endings) =>
-    [
-        ..CustomCommandSequence.Parse(channel.SelectCommands, channel.SelectEndings, split: true),
-        ..CustomCommandSequence.Parse(commands, endings, _profile.SplitCommandSequences)
-    ];
+    private CustomCommand[] ChannelCommands(CustomDeviceChannel channel, string commands, string endings)
+    {
+        var selection = CustomCommandSequence.Parse(channel.SelectCommands, channel.SelectEndings, split: true);
+        var operation = CustomCommandSequence.Parse(commands, endings, _profile.SplitCommandSequences);
+        if (selection.Length > 0 && operation.Length > 0) operation[0] = operation[0] with { DiscardBefore = true };
+        return [.. selection, .. operation];
+    }
 
     public override async Task SafeStateAsync(CancellationToken cancellationToken)
     {
@@ -69,7 +71,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
         if (commands.Length == 0 && Channels.Any(channel => channel.Access.HasFlag(ChannelAccess.Write)))
             throw new InstrumentException($"{Model}: keine Befehle für den sicheren Zustand definiert.");
         var failures = new List<Exception>();
-        await Session.ExecuteCustomAsync(commands, readReply: false, cancellationToken, failures).ConfigureAwait(false);
+        await Session.ExecuteCustomAsync(commands, readReply: false, cancellationToken, failures, _profile.InputDiscard).ConfigureAwait(false);
         if (failures.Count > 0) throw new InstrumentException(string.Join("; ", failures.Select(error => error.Message)));
     }
 
@@ -80,7 +82,7 @@ public sealed class CustomTextInstrument : ScpiInstrument
         try
         {
             var commands = CustomCommandSequence.Parse(_profile.ProbeQuery, _profile.ProbeEndings, _profile.SplitCommandSequences);
-            var identity = await Session.ExecuteCustomAsync(commands, readReply: true, cancellationToken).ConfigureAwait(false);
+            var identity = await Session.ExecuteCustomAsync(commands, readReply: true, cancellationToken, discardInput: _profile.InputDiscard).ConfigureAwait(false);
             return new(!string.IsNullOrWhiteSpace(identity), identity, ["Kanäle: " + string.Join(", ", Channels.Select(channel => channel.Name))], Log);
         }
         catch (Exception ex) when (ex is InstrumentException or TimeoutException or IOException)

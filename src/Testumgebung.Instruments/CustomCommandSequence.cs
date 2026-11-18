@@ -1,6 +1,6 @@
 namespace Testumgebung.Instruments;
 
-internal readonly record struct CustomCommand(string Text, string? Ending);
+internal readonly record struct CustomCommand(string Text, string? Ending, bool DiscardBefore = false);
 
 internal static class CustomCommandSequence
 {

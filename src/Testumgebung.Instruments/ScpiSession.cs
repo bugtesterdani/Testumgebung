@@ -132,16 +132,18 @@ public sealed class ScpiSession : IDisposable
     }
 
     internal async Task<string> ExecuteCustomAsync(
-        IReadOnlyList<CustomCommand> commands, bool readReply, CancellationToken ct, List<Exception>? failures = null)
+        IReadOnlyList<CustomCommand> commands, bool readReply, CancellationToken ct, List<Exception>? failures = null, CustomInputDiscardOptions? discardInput = null)
     {
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            if (commands.Count > 0) await DiscardCustomInputAsync(discardInput, ct, failures).ConfigureAwait(false);
             foreach (var command in commands)
             {
                 try
                 {
                     ct.ThrowIfCancellationRequested();
+                    if (command.DiscardBefore) await DiscardCustomInputAsync(discardInput, ct, failures).ConfigureAwait(false);
                     await PrepareAsync(ct).ConfigureAwait(false);
                     await SendAsync(command.Text, ct, command.Ending).ConfigureAwait(false);
                 }
@@ -156,6 +158,24 @@ public sealed class ScpiSession : IDisposable
         finally
         {
             _gate.Release();
+        }
+    }
+
+    private async Task DiscardCustomInputAsync(CustomInputDiscardOptions? options, CancellationToken token, List<Exception>? failures)
+    {
+        if (options is null) return;
+        try
+        {
+            await PrepareAsync(token).ConfigureAwait(false);
+            var discarded = await Io.DiscardInputAsync(TimeSpan.FromMilliseconds(options.SettleMilliseconds), token).ConfigureAwait(false);
+            Note(InputDiscard.Describe(discarded));
+        }
+        catch (Exception error)
+        {
+            _dirty = true;
+            Note("! Eingang verwerfen: " + error.Message);
+            if (failures is null || error is not (InstrumentException or TimeoutException or IOException)) throw;
+            failures.Add(error);
         }
     }
 
