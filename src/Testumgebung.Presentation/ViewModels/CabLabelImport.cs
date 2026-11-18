@@ -20,35 +20,46 @@ public static class CabLabelImport
         var layout = new LabelLayout { Dpi = dpi };
         var images = new Dictionary<string, LabelElement>(StringComparer.Ordinal);
         var offset = 0;
-        var started = false;
-        var sized = false;
-        var ended = false;
+        var state = new JobState();
         while (offset < data.Length)
         {
             var command = ReadLine(data, ref offset);
             if (command.Length == 0) continue;
             if (command.StartsWith("d BMP;", StringComparison.Ordinal))
             {
-                if (started) throw Unsupported(command);
-                images.Add(command[6..], ReadBitmap(ReadBinary(data, ref offset)));
+                if (state.Started) throw Unsupported(command);
+                if (!images.TryAdd(command[6..], ReadBitmap(ReadBinary(data, ref offset))))
+                    throw new InvalidDataException("Bildname ist in der LBL mehrfach vergeben.");
                 continue;
             }
-            if (command is "\u001BoUTF-8;" or "m m") continue;
-            if (command == "J" && !started) { started = true; continue; }
-            if (!started || ended) throw Unsupported(command);
-            if (command.StartsWith("S ", StringComparison.Ordinal) && !sized && layout.Elements.Count == 0)
-            {
-                ReadSize(command, layout);
-                sized = true;
-                continue;
-            }
-            if (!sized) throw Unsupported(command);
-            if (command == "A 1") { ended = true; continue; }
-            layout.Elements.Add(ReadElement(command, layout, images));
+            state.ReadCommand(command, layout, images);
         }
-        if (!ended) throw new InvalidDataException("Vollständiger cab-JScript-Druckauftrag mit J, S und A 1 erforderlich.");
+        if (!state.Ended) throw new InvalidDataException("Vollständiger cab-JScript-Druckauftrag mit J, S und A 1 erforderlich.");
         _ = CabLabelLayout.Render(layout);
         return layout;
+    }
+
+    private sealed class JobState
+    {
+        public bool Started { get; private set; }
+        public bool Ended { get; private set; }
+        private bool _sized;
+
+        public void ReadCommand(string command, LabelLayout layout, Dictionary<string, LabelElement> images)
+        {
+            if (command is "\u001BoUTF-8;" or "m m") return;
+            if (command == "J" && !Started) { Started = true; return; }
+            if (!Started || Ended) throw Unsupported(command);
+            if (command.StartsWith("S ", StringComparison.Ordinal) && !_sized && layout.Elements.Count == 0)
+            {
+                ReadSize(command, layout);
+                _sized = true;
+                return;
+            }
+            if (!_sized) throw Unsupported(command);
+            if (command == "A 1") { Ended = true; return; }
+            layout.Elements.Add(ReadElement(command, layout, images));
+        }
     }
 
     private static string ReadLine(byte[] data, ref int offset)
@@ -57,7 +68,7 @@ public static class CabLabelImport
         while (offset < data.Length && data[offset] is not (10 or 13)) offset++;
         var line = new UTF8Encoding(false, true).GetString(data, start, offset - start);
         while (offset < data.Length && data[offset] is 10 or 13) offset++;
-        return line.Trim();
+        return line.TrimStart();
     }
 
     private static byte[] ReadBinary(byte[] data, ref int offset)
@@ -86,12 +97,8 @@ public static class CabLabelImport
         var width = BinaryPrimitives.ReadInt32LittleEndian(span[18..]);
         var height = BinaryPrimitives.ReadInt32LittleEndian(span[22..]);
         var start = BinaryPrimitives.ReadInt32LittleEndian(span[10..]);
-        if (width is < 1 or > LabelLayout.MaximumDots || height is < 1 or > LabelLayout.MaximumDots
-            || start < 62 || BinaryPrimitives.ReadInt32LittleEndian(span[14..]) != 40
-            || BinaryPrimitives.ReadInt16LittleEndian(span[26..]) != 1
-            || BinaryPrimitives.ReadInt16LittleEndian(span[28..]) != 1
-            || BinaryPrimitives.ReadInt32LittleEndian(span[30..]) != 0)
-            throw new InvalidDataException("Unterstützt werden unkomprimierte monochrome Windows-BMP-Bilder.");
+        ValidateBitmapDimensions(width, height, start);
+        ValidateBitmapFormat(span);
         var rowBytes = LabelLayout.BytesPerRow(width);
         var stride = (rowBytes + 3) / 4 * 4;
         if ((long)start + (long)stride * height > bytes.Length)
@@ -110,6 +117,21 @@ public static class CabLabelImport
             }
         }
         return new() { Kind = LabelElementKind.Image, ImageWidth = width, ImageHeight = height, Bitmap = bitmap };
+    }
+
+    private static void ValidateBitmapDimensions(int width, int height, int start)
+    {
+        if (width is < 1 or > LabelLayout.MaximumDots || height is < 1 or > LabelLayout.MaximumDots || start < 62)
+            throw new InvalidDataException("Ungültige BMP-Abmessungen.");
+    }
+
+    private static void ValidateBitmapFormat(ReadOnlySpan<byte> span)
+    {
+        if (BinaryPrimitives.ReadInt32LittleEndian(span[14..]) != 40
+            || BinaryPrimitives.ReadInt16LittleEndian(span[26..]) != 1
+            || BinaryPrimitives.ReadInt16LittleEndian(span[28..]) != 1
+            || BinaryPrimitives.ReadInt32LittleEndian(span[30..]) != 0)
+            throw new InvalidDataException("Unterstützt werden unkomprimierte monochrome Windows-BMP-Bilder.");
     }
 
     private static void ReadSize(string command, LabelLayout layout)
@@ -137,20 +159,23 @@ public static class CabLabelImport
         var fields = command[2..separator].Split(',');
         if (fields.Length < 3 || Number(fields[2]) != 0) throw Unsupported(command);
         var value = command[(separator + 1)..];
-        var item = command[0] switch
+        var item = ReadContent(command[0], fields, value, layout, images);
+        item.X = Dots(fields[0], layout, true);
+        item.Y = Dots(fields[1], layout, true);
+        if (item.X >= layout.WidthDots || item.Y >= layout.HeightDots) throw Unsupported(command);
+        return item;
+    }
+
+    private static LabelElement ReadContent(char kind, string[] fields, string value, LabelLayout layout, Dictionary<string, LabelElement> images)
+        => kind switch
         {
             'T' when fields.Length == 5 && fields[3] == "5" => new LabelElement { Kind = LabelElementKind.Text, Size = Dots(fields[4], layout), Value = value },
             'B' => ReadBarcode(fields, value, layout),
             'G' when fields.Length == 3 => ReadLineElement(value, layout),
             'I' when fields.Length == 3 && images.TryGetValue(value, out var image) => new LabelElement
                 { Kind = LabelElementKind.Image, ImageWidth = image.ImageWidth, ImageHeight = image.ImageHeight, Bitmap = image.Bitmap.ToArray() },
-            _ => throw Unsupported(command)
+            _ => throw Unsupported(kind.ToString())
         };
-        item.X = Dots(fields[0], layout, true);
-        item.Y = Dots(fields[1], layout, true);
-        if (item.X >= layout.WidthDots || item.Y >= layout.HeightDots) throw Unsupported(command);
-        return item;
-    }
 
     private static LabelElement ReadBarcode(string[] fields, string value, LabelLayout layout)
     {

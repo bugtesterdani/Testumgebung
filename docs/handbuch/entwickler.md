@@ -45,6 +45,20 @@ Unter **Vorlagenformat** den Wert **cab LBL** wählen und die Druckdatei über *
 Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über TCP oder als RAW-Auftrag an eine Windows-Druckwarteschlange. Die Simulation zeigt die Byteanzahl. Eingebettete Bilder bleiben damit unverändert.
 
 Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
+
+Eine bereits eingebettete unterstützte LBL wird beim Öffnen des Designers in bearbeitbare Elemente eingelesen.
+Im Designer kann über **LBL öffnen …** außerdem eine vorhandene Druckdatei ausgewählt werden.
+**LBL speichern …** exportiert das bearbeitete Etikett als eigenständige Druckdatei.
+**Vorlage übernehmen** speichert es im Projekt. Abbrechen lässt die eingebettete Druckdatei unverändert.
+Die Druckauflösung vor dem Dateiimport auf den Zielwert einstellen. Bei einer erstmals aus dem Projekt
+eingelesenen LBL verwendet der Designer 203 dpi als Ausgangswert.
+
+Der Import unterstützt einen einzelnen cab-JScript-Druckauftrag in Millimetern mit UTF-8-Text,
+Textfeldern mit Schrift 5 ohne Drehung, Code 128 mit zwei Punkten Modulbreite, QR, DataMatrix,
+GS1 DataMatrix, GS1 QR, horizontalen Linien und eingebetteten unkomprimierten monochromen Windows-BMP-Bildern.
+Die Matrix-Modulgröße darf bis zu zehn Punkte betragen. Etikettenbreite und -höhe sind ganzzahlige Millimeter.
+Bei weiteren Befehlen, Schriftarten, Drehungen oder Bildformaten nennt die Anwendung den nicht unterstützten Inhalt.
+Die unveränderte Druckdatei lässt sich weiterhin einbetten und drucken. [cab-JScript-Programmierhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
 Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
 DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der Druckbaustein setzt die erforderlichen Trennzeichen für GS1 ein. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
 
