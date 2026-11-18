@@ -28,6 +28,14 @@ public sealed class ParameterVisibilityTests
         => Assert.Equal(expected, new ParameterVisibility("count", GreaterThanZero: true).Matches(_ => value));
 
     [Fact]
+    public void Null_legacy_values_are_treated_as_empty_input()
+    {
+        Assert.False(new ParameterVisibility("value", Boolean: true).Matches(_ => null!));
+        Assert.False(new ParameterVisibility("value", GreaterThanZero: true).Matches(_ => null!));
+        Assert.True(new ParameterVisibility("value", "").Matches(_ => null!));
+    }
+
+    [Fact]
     public void All_conditions_use_defaults_and_require_every_condition()
     {
         var condition = new ParameterVisibility(All:

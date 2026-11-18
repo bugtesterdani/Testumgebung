@@ -36,7 +36,7 @@ public sealed record ParameterVisibility(string Parameter = "", string Value = "
     {
         if (All is not null && !All.All(condition => condition.Matches(valueOf))) return false;
         if (Parameter.Length == 0) return true;
-        var text = valueOf(Parameter);
+        var text = valueOf(Parameter) ?? "";
         if (Boolean is { } expected)
             return expected == (text.Equals("true", StringComparison.OrdinalIgnoreCase) || text == "1" || text.Equals("ja", StringComparison.OrdinalIgnoreCase));
         if (GreaterThanZero)
