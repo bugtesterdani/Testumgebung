@@ -51,7 +51,7 @@ public sealed class SlopeSuppressionTests
         recordings.Add("owner", "trace", 0.03, [sign * 0.6], Now);
         var result = recordings.Stop("owner", "trace");
         Assert.True(result.Passed);
-        Assert.Equal(new[] { sign * 5d, sign * 5d, sign * 20d }, result.Data.Channels[0].Samples);
+        Assert.Equal(new[] { sign * 5d, sign * 5d, sign * 50d }, result.Data.Channels[0].Samples);
         var details = Assert.Single(result.Channels);
         Assert.Equal(2, details.SuppressedSlopes.Count);
         Assert.All(details.SuppressedSlopes, point => Assert.Equal(0, point.StartTime));
@@ -155,6 +155,26 @@ public sealed class SlopeSuppressionTests
         var plot = new Testumgebung.Presentation.ViewModels.WaveformPlotViewModel();
         plot.SetData(result.Data);
         Assert.NotEmpty(plot.Channels);
+    }
+
+    [Theory]
+    [InlineData(10)]
+    [InlineData(50)]
+    [InlineData(500)]
+    public void A_jump_after_any_plateau_is_evaluated_at_the_current_window(int plateauPoints)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -2, 2) { PositiveThreshold = 1, NegativeThreshold = -1 });
+        for (var i = 0; i <= plateauPoints; i++)
+            recordings.Add("owner", "trace", i * 0.01, [12], Now);
+        recordings.Add("owner", "trace", (plateauPoints + 1) * 0.01, [13], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.False(result.Passed);
+        Assert.True(result.Complete);
+        Assert.Equal(100, result.Data.Channels[0].Values.Last(), 8);
+        Assert.Single(result.Channels[0].Violations);
+        Assert.Equal(plateauPoints, result.Channels[0].SuppressedSlopes.Count);
     }
 
     [Fact]
