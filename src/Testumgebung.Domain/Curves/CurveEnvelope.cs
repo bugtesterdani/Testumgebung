@@ -138,9 +138,6 @@ internal sealed class EnvelopeRecording
     public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute, int minimumPoints, TraceTargetBand? target)
     {
         ValidateChannels(channels);
-        if (channels.Any(channel => !double.IsFinite(channel.SafetyMinimum ?? 0) || !double.IsFinite(channel.SafetyMaximum ?? 0)
-            || channel.SafetyMinimum > channel.SafetyMaximum))
-            throw new ArgumentException("Sicherheitsgrenzen müssen endlich und in aufsteigender Reihenfolge sein.");
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
         if (minimumPoints < 2 || minimumPoints > maxPoints) throw new ArgumentOutOfRangeException(nameof(minimumPoints));
         _minimumPoints = minimumPoints;
@@ -150,6 +147,7 @@ internal sealed class EnvelopeRecording
             throw new ArgumentException("Für die Aufnahme entweder Formelgrenzen oder Steigungsgrenzen wählen.");
         _formula = formula;
         slope?.Validate(maxPoints);
+        slope?.ValidateThresholdRange(touchAllowed);
         _channels = channels.ToArray();
         _envelopes = slope is null && formula is null ? channels.Select(channel => new CurveEnvelope(
             channel.Limits ?? throw new ArgumentException("Je Messkanal eine Grenzkurve angeben."), channel.Unit)).ToArray() : [];
@@ -169,6 +167,9 @@ internal sealed class EnvelopeRecording
 
     private static void ValidateChannels(IReadOnlyList<TraceChannelDefinition> channels)
     {
+        if (channels.Any(channel => !double.IsFinite(channel.SafetyMinimum ?? 0) || !double.IsFinite(channel.SafetyMaximum ?? 0)
+            || channel.SafetyMinimum > channel.SafetyMaximum))
+            throw new ArgumentException("Sicherheitsgrenzen müssen endlich und in aufsteigender Reihenfolge sein.");
         if (channels.Count is < 1 or > 8 || channels.Select(traceChannelDefinition => traceChannelDefinition.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(traceChannelDefinition => string.IsNullOrWhiteSpace(traceChannelDefinition.Name) || traceChannelDefinition.Name.Contains(" · ", StringComparison.Ordinal)))
             throw new ArgumentException("1 bis 8 eindeutig benannte Messkanäle erforderlich.");
     }
