@@ -31,6 +31,7 @@
     <sys:String x:Key="Operator_AbortAgain">Aborting again ends the current exit group.</sys:String>
     <sys:String x:Key="Operator_DutPrefix" xml:space="preserve">  •  Unit </sys:String>
     <sys:String x:Key="Operator_Language">Operator view language</sys:String>
+    <sys:String x:Key="Operator_LanguageHint">Changes the operator view language. Development, administration and test program content are not translated.</sys:String>
     <sys:String x:Key="Operator_CurrentDut">Current unit</sys:String>
     <sys:String x:Key="Operator_CurrentOrder">Current order</sys:String>
     <sys:String x:Key="Operator_ActiveSoftware">Active test software</sys:String>

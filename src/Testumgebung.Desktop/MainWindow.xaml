@@ -40,8 +40,9 @@
                 </TextBlock>
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,20,0" VerticalAlignment="Center">
+                <TextBlock Text="{DynamicResource Operator_Language}" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <ComboBox x:Name="OperatorLanguage" SelectedIndex="0" SelectionChanged="OnOperatorLanguageChanged" VerticalAlignment="Center" Margin="0,0,12,0"
-                          AutomationProperties.Name="{DynamicResource Operator_Language}" ToolTip="{DynamicResource Operator_Language}">
+                          AutomationProperties.Name="{DynamicResource Operator_Language}" ToolTip="{DynamicResource Operator_LanguageHint}">
                     <ComboBoxItem Content="Deutsch" Tag="de" />
                     <ComboBoxItem Content="English" Tag="en" />
                 </ComboBox>

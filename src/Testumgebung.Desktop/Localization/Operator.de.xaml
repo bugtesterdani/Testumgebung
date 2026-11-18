@@ -30,7 +30,8 @@
     <sys:String x:Key="Operator_Abort">Werkerabbruch</sys:String>
     <sys:String x:Key="Operator_AbortAgain">Erneuter Abbruch beendet nur die aktuelle Exit-Gruppe.</sys:String>
     <sys:String x:Key="Operator_DutPrefix" xml:space="preserve">  •  Prüfling </sys:String>
-    <sys:String x:Key="Operator_Language">Sprache der Werkeransicht</sys:String>
+    <sys:String x:Key="Operator_Language">Sprache Werkeransicht</sys:String>
+    <sys:String x:Key="Operator_LanguageHint">Ändert die Sprache der Werkeransicht. Entwicklung, Verwaltung und Inhalte des Prüfprogramms werden nicht übersetzt.</sys:String>
     <sys:String x:Key="Operator_CurrentDut">Aktueller Prüfling</sys:String>
     <sys:String x:Key="Operator_CurrentOrder">Aktueller Auftrag</sys:String>
     <sys:String x:Key="Operator_ActiveSoftware">Aktive Prüfsoftware</sys:String>
