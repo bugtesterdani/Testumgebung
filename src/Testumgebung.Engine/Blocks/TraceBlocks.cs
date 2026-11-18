@@ -77,6 +77,13 @@ public static class TraceBlocks
         Hint: "Für getrennte und gleitende Fenster. Nur vollständige Fenster werden bewertet."),
      new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
+     new("SteigungAnlaufAnzahl", "Erste X Grenzverletzungen oberhalb Y ausnehmen", ParameterKind.Number, "0",
+        Hint: "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."),
+     new("SteigungAnlaufSchwelle", "Y für Anlaufausnahmen [Kanaleinheit/s]", ParameterKind.Number, "0"),
+     new("SteigungSchwellePositiv", "Positive Mindeststeigung [Kanaleinheit/s]", ParameterKind.Number, "0",
+        Hint: "Bewerten bei Steigung > Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."),
+     new("SteigungSchwelleNegativ", "Negative Mindeststeigung [Kanaleinheit/s]", ParameterKind.Number, "0",
+        Hint: "Bewerten bei Steigung < Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter."),
      new("SicherheitMin", "Harte Messwert-Untergrenze (alle Kanäle)", ParameterKind.Expression),
      new("SicherheitMax", "Harte Messwert-Obergrenze (alle Kanäle)", ParameterKind.Expression),
      new(AbortCurvesParameter, "Abbruchgrenzkurven: ID@Version (Komma)", ParameterKind.Text,
@@ -176,6 +183,16 @@ public static class TraceBlocks
         : $"{early.Percent:G6} %";
 
     internal static StepOutcome Outcome(TraceEvaluation result, bool includeData, bool exitDut = false)
+    {
+        var outcome = EvaluateOutcome(result, includeData, exitDut);
+        var suppressed = result.Channels.Sum(channel => channel.SuppressedSlopes.Count);
+        return suppressed == 0 ? outcome : outcome with
+        {
+            Message = outcome.Message + $" {suppressed} Steigung(en) von der Bewertung ausgenommen und mit Zeit, Wert und Grund protokolliert."
+        };
+    }
+
+    private static StepOutcome EvaluateOutcome(TraceEvaluation result, bool includeData, bool exitDut)
     {
         var value = includeData ? result.Data : null;
         if (result.EarlyStop is { } early)

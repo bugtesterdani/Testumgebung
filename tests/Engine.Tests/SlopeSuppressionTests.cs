@@ -1,0 +1,182 @@
+using Testumgebung.Contracts;
+using Testumgebung.Domain.Curves;
+using Testumgebung.Domain.Definitions;
+using Testumgebung.Engine.Blocks;
+using Testumgebung.Persistence;
+using static Testumgebung.Engine.Tests.Kit;
+
+namespace Testumgebung.Engine.Tests;
+
+public sealed class SlopeSuppressionTests
+{
+    private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
+
+    [Theory]
+    [InlineData(SlopeWindowMode.Consecutive, 2)]
+    [InlineData(SlopeWindowMode.Disjoint, 2)]
+    [InlineData(SlopeWindowMode.Rolling, 2)]
+    public void Only_the_first_matching_violations_are_exempt_and_the_next_one_stops(SlopeWindowMode mode, int points)
+    {
+        var settings = new SlopeLimits(mode, points, -10, 10)
+        { InitialExceptionCount = 1, InitialExceptionAbove = 20 };
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, slope: settings, stopPercent: 10);
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 0.01, [0.5], Now);
+        Assert.False(recordings.IsEnded("owner", "trace"));
+        recordings.Add("owner", "trace", 0.02, [0.5], Now);
+        var end = recordings.Add("owner", "trace", 0.03, [1], Now)!;
+        Assert.True(recordings.IsEnded("owner", "trace"));
+        Assert.NotNull(end.EarlyStop);
+        var metadata = Assert.Single(end.Channels);
+        var exempt = Assert.Single(metadata.SuppressedSlopes);
+        Assert.Equal(50, exempt.Slope, 8);
+        Assert.Contains("Anlaufausnahme", exempt.Reason);
+        Assert.Equal(0.03, Assert.Single(metadata.Violations), 8);
+        Assert.Equal(exempt, Assert.Single(EnvelopeTraceMetadata.Decode(end.Data.Channels[0].Quality)!.SuppressedSlopes));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(-1)]
+    public void Threshold_keeps_the_initial_time_until_a_signed_slope_is_large_enough(int sign)
+    {
+        var settings = new SlopeLimits(SlopeWindowMode.Consecutive, 2, -100, 100)
+        { PositiveThreshold = 10, NegativeThreshold = -10 };
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, slope: settings);
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 0.01, [sign * 0.05], Now);
+        recordings.Add("owner", "trace", 0.02, [sign * 0.1], Now);
+        recordings.Add("owner", "trace", 0.03, [sign * 0.6], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.True(result.Passed);
+        Assert.Equal(new[] { sign * 5d, sign * 5d, sign * 20d }, result.Data.Channels[0].Samples);
+        var details = Assert.Single(result.Channels);
+        Assert.Equal(2, details.SuppressedSlopes.Count);
+        Assert.All(details.SuppressedSlopes, point => Assert.Equal(0, point.StartTime));
+        Assert.Empty(details.Violations);
+    }
+
+    [Fact]
+    public void Suppressed_only_data_is_incomplete_and_hard_limits_still_stop_every_sample()
+    {
+        var settings = new SlopeLimits(SlopeWindowMode.Consecutive, 2, -1, 1)
+        { PositiveThreshold = 100, NegativeThreshold = -100 };
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null) { SafetyMaximum = 1 }], Now, slope: settings);
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 0.01, [0.5], Now);
+        var stop = recordings.Add("owner", "trace", 0.02, [2], Now)!;
+        Assert.True(stop.EarlyStop!.HardLimit);
+        Assert.Single(Assert.Single(stop.Channels).SuppressedSlopes);
+        Assert.False(stop.Passed);
+
+        recordings.Start("owner", "small", [new("U", "V", null)], Now, slope: settings);
+        recordings.Add("owner", "small", 0, [0], Now);
+        recordings.Add("owner", "small", 0.01, [0.1], Now);
+        Assert.False(recordings.Stop("owner", "small").Complete);
+    }
+
+    [Fact]
+    public void Channels_have_independent_exception_counts_and_only_limit_violations_use_the_quota()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null), new("I", "A", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -10, 100) { InitialExceptionCount = 1, InitialExceptionAbove = 20 });
+        recordings.Add("owner", "trace", 0, [0, 0], Now);
+        recordings.Add("owner", "trace", 0.01, [0.5, 2], Now);
+        recordings.Add("owner", "trace", 0.02, [2.5, 4], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.Single(result.Channels[0].SuppressedSlopes);
+        Assert.Empty(result.Channels[0].Violations);
+        Assert.Single(result.Channels[1].SuppressedSlopes);
+        Assert.Single(result.Channels[1].Violations);
+    }
+
+    [Theory]
+    [InlineData(10, 0)]
+    [InlineData(20, 1)]
+    [InlineData(-10, 0)]
+    [InlineData(-20, 1)]
+    public void Direction_thresholds_are_strict_and_remain_in_force_at_the_boundary(double slope, int evaluated)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -100, 100) { PositiveThreshold = 10, NegativeThreshold = -10 });
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 1, [slope], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.Equal(evaluated == 1, result.Complete);
+        Assert.Equal(1 - evaluated, Assert.Single(result.Channels).SuppressedSlopes.Count);
+    }
+
+    [Theory]
+    [InlineData("SteigungAnlaufAnzahl", "-1")]
+    [InlineData("SteigungAnlaufAnzahl", "1.5")]
+    [InlineData("SteigungSchwellePositiv", "-1")]
+    [InlineData("SteigungSchwelleNegativ", "1")]
+    [InlineData("SteigungAnlaufSchwelle", "NaN")]
+    public async Task Invalid_filter_configuration_errors(string parameter, string value)
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Record, "record", parameters: new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope,
+            ["SteigungMin"] = "-100", ["SteigungMax"] = "100", ["Werte"] = "0", [parameter] = value
+        });
+        var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Later_channel_overflow_keeps_all_prior_samples_and_filter_state_consistent(bool closeOwner)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null), new("I", "A", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -10, 10) { InitialExceptionCount = 1, InitialExceptionAbove = 20 });
+        recordings.Add("owner", "trace", 0, [0, -1e308], Now);
+        recordings.Add("owner", "trace", 1, [0, -1e308], Now);
+        Assert.Throws<ArgumentException>(() => recordings.Add("owner", "trace", 2, [100, 1e308], Now));
+
+        var result = closeOwner ? Assert.Single(recordings.CloseOwner("owner")) : recordings.Stop("owner", "trace");
+        Assert.False(result.Complete);
+        Assert.All(result.Data.Channels, wave =>
+        {
+            Assert.Single(wave.Values);
+            Assert.Single(wave.Times!);
+        });
+        Assert.All(result.Channels, channel =>
+        {
+            Assert.Empty(channel.SuppressedSlopes);
+            Assert.Empty(channel.Violations);
+        });
+        var plot = new Testumgebung.Presentation.ViewModels.WaveformPlotViewModel();
+        plot.SetData(result.Data);
+        Assert.NotEmpty(plot.Channels);
+    }
+
+    [Fact]
+    public async Task Standard_blocks_serialize_configuration_and_write_suppression_details()
+    {
+        var parameters = new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope,
+            ["SteigungMin"] = "-10", ["SteigungMax"] = "10", ["SteigungAnlaufAnzahl"] = "1",
+            ["SteigungAnlaufSchwelle"] = "20", ["ErgebnisZiel"] = "Details"
+        };
+        var capture = BlockCatalog.Default.Create(TraceBlocks.Start, "begin", parameters: parameters);
+        var loop = Group("loop").Var("Details", VarType.String).Add(capture,
+            BlockCatalog.Default.Create(TraceBlocks.Point, "one", parameters: new Dictionary<string, string> { ["Zeit"] = "0", ["Werte"] = "0" }),
+            BlockCatalog.Default.Create(TraceBlocks.Point, "two", parameters: new Dictionary<string, string> { ["Zeit"] = "0.01", ["Werte"] = "0.5" }),
+            BlockCatalog.Default.Create(TraceBlocks.Point, "three", parameters: new Dictionary<string, string> { ["Zeit"] = "0.02", ["Werte"] = "0.5" }),
+            BlockCatalog.Default.Create(TraceBlocks.Stop, "stop", parameters: new Dictionary<string, string> { ["ErgebnisZiel"] = "Details" }));
+        var project = new ProjectSerializer().Clone(new TestProject(Test(loop)));
+        var run = new TestRun(project.Definition);
+        Assert.Equal(ResultRating.Pass, (await run.RunAsync().Within()).Rating);
+        var wave = Assert.IsType<WaveformSet>(Assert.Single(run.Steps("stop")).Value);
+        Assert.Contains("Anlaufausnahme", wave.Channels[0].Quality);
+        Assert.Contains("1 Steigung(en)", Assert.Single(run.Steps("stop")).Message);
+    }
+}

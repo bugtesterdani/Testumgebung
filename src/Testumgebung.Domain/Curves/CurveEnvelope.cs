@@ -28,6 +28,9 @@ public sealed class CurveEnvelope
     }
     private static CurveChannel FindChannel(CurveDefinition curve, string name)
         => curve.Channels.SingleOrDefault(curveChannel => curveChannel.Id.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException($"Grenzkurvenkanal {name} fehlt.");
+    private static SlopeSampleFilter[] CreateSlopeFilters(SlopeLimits? limits, int channelCount)
+        => limits is null ? [] : Enumerable.Range(0, channelCount).Select(_ => new SlopeSampleFilter(limits)).ToArray();
+
     private static void ValidateChannels(CurveDefinition curve, CurveChannel lower, CurveChannel upper, string unit)
     {
         if (lower.Unit != unit || upper.Unit != unit) throw new ArgumentException("Einheit der Grenzkurven passt nicht zur Aufnahme.");
@@ -111,6 +114,7 @@ internal sealed class EnvelopeRecording
     private readonly Dictionary<double, (double Lower, double Upper)> _formulaBounds = [];
     private readonly List<double> _slopeTimes = [];
     private readonly List<double>[] _slopes;
+    private readonly SlopeSampleFilter[] _slopeFilters;
     private readonly CurveEnvelope?[] _abortEnvelopes;
     private readonly List<double> _times = [];
     private readonly List<double>[] _values;
@@ -157,8 +161,12 @@ internal sealed class EnvelopeRecording
         _target = target;
         _values = channels.Select(_ => new List<double>()).ToArray(); _start = start;
         _slopes = channels.Select(_ => new List<double>()).ToArray();
+        _slopeFilters = CreateSlopeFilters(slope, channels.Count);
         _maxPoints = maxPoints; _maxGap = maxGap; _minimumDuration = minimumDuration; _touchAllowed = touchAllowed;
     }
+    private static SlopeSampleFilter[] CreateSlopeFilters(SlopeLimits? limits, int channelCount)
+        => limits is null ? [] : Enumerable.Range(0, channelCount).Select(_ => new SlopeSampleFilter(limits)).ToArray();
+
     private static void ValidateChannels(IReadOnlyList<TraceChannelDefinition> channels)
     {
         if (channels.Count is < 1 or > 8 || channels.Select(traceChannelDefinition => traceChannelDefinition.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != channels.Count || channels.Any(traceChannelDefinition => string.IsNullOrWhiteSpace(traceChannelDefinition.Name) || traceChannelDefinition.Name.Contains(" · ", StringComparison.Ordinal)))
@@ -260,7 +268,7 @@ internal sealed class EnvelopeRecording
         if (_target is not { } target || EarlyStop is not null) return;
         _targetStreak = value >= target.Minimum && value <= target.Maximum ? _targetStreak + 1 : 0;
         TargetReached = _times.Count >= _minimumPoints && _targetStreak >= target.ConsecutivePoints && time - _times[0] + TimeTolerance(_minimumDuration) >= _minimumDuration
-            && (_slope is null || _slopeTimes.Count != 0);
+            && (_slope is null || _slopeFilters.All(filter => filter.EvaluatedCount > 0));
     }
 
     private void Validate(double time, IReadOnlyList<double> values)
@@ -327,18 +335,18 @@ internal sealed class EnvelopeRecording
     {
         if (!limits.IsWindowEnd(_times.Count)) return;
         var first = _times.Count - limits.Points;
-        var elapsed = _times[^1] - _times[first];
-        var slopes = _values.Select(values => (values[^1] - values[first]) / elapsed).ToArray();
-        if (slopes.Any(value => !double.IsFinite(value) ||
-            !double.IsFinite(Math.Max(limits.Minimum - value, value - limits.Maximum))))
-            throw new ArgumentException("Wertebereich der Steigungsauswertung überschritten.");
-
         var time = _times[^1];
+        var last = _times.Count - 1;
+        // Validate the entire window before changing timestamps, samples, or per-channel filter state.
+        var candidates = _values.Select((values, channel) => _slopeFilters[channel].Calculate(first, last, _times, values)).ToArray();
+        var index = _slopeTimes.Count;
         _slopeTimes.Add(time);
-        for (var channel = 0; channel < slopes.Length; channel++)
+        for (var channel = 0; channel < _values.Length; channel++)
         {
-            var value = slopes[channel];
+            var (start, value) = candidates[channel];
+            var evaluate = _slopeFilters[channel].Observe(start, last, value, _times, _values[channel], index, _touchAllowed);
             _slopes[channel].Add(value);
+            if (!evaluate) continue;
             HasViolation |= !Inside(value, limits.Minimum, limits.Maximum);
             EarlyStop ??= _stopMargin?.Check(_channels[channel].Name, time, value, limits.Minimum, limits.Maximum);
         }
@@ -360,7 +368,7 @@ internal sealed class EnvelopeRecording
             for (var index = 0; index < values.Length; index++)
             {
                 var value = values[index];
-                if (!Inside(value, limits.Minimum, limits.Maximum))
+                if (!_slopeFilters[channel].SuppressedIndices.Contains(index) && !Inside(value, limits.Minimum, limits.Maximum))
                     details.Add(new(times[index], value, limits.Minimum, limits.Maximum,
                         Math.Max(0, Math.Max(limits.Minimum - value, value - limits.Maximum))));
             }
@@ -368,7 +376,7 @@ internal sealed class EnvelopeRecording
             var info = new EnvelopeTraceMetadata("Steigung", "", definition.Name, times,
                 details.Select(detail => detail.Time).ToArray(), details.Count,
                 details.Count == 0 ? 0 : details.Max(detail => detail.Deviation), complete)
-                { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration };
+                { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration, SuppressedSlopes = _slopeFilters[channel].Suppressed.ToArray() };
             metadata.Add(info);
             var unit = definition.Unit + "/s";
             waves.Add(new(definition.Name, unit, 0, _start, values, times, info.Encode()));
@@ -475,8 +483,8 @@ internal sealed class EnvelopeRecording
         if (!stopped) return "Messdaten unvollständig: Aufnahme nicht regulär abgeschlossen.";
         if (_times.Count < _minimumPoints)
             return $"Messdaten unvollständig: {_times.Count} gültige Messpunkte vorhanden, mindestens {_minimumPoints} erforderlich.";
-        if (_slope is not null && _slopeTimes.Count == 0)
-            return "Messdaten unvollständig: kein vollständiges Steigungsfenster vorhanden.";
+        if (_slope is not null && _slopeFilters.Any(filter => filter.EvaluatedCount == 0))
+            return "Messdaten unvollständig: kein auswertbares Steigungsfenster vorhanden.";
         var measuredDuration = _times[^1] - _times[0];
         if (measuredDuration + TimeTolerance(_minimumDuration) < _minimumDuration)
             return $"Messdauer zu kurz: {measuredDuration:G6} s gemessen, mindestens {_minimumDuration:G6} s erforderlich.";

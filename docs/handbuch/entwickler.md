@@ -175,6 +175,31 @@ Wiederholung „Zeitspanne“ prüft die Frist standardmäßig zwischen den Iter
 prüfen“ werden nach Ablauf die restlichen Schritte der laufenden Iteration übersprungen (ein laufender Schritt wird nicht
 unterbrochen, die Exit-Gruppe läuft).
 
+Bei der Grenzauswertung **Steigung** lassen sich im vorhandenen Aufnahmebaustein zusätzliche Regeln einstellen.
+**Erste X Grenzverletzungen oberhalb Y ausnehmen** zählt je Kanal ausschließlich Grenzverletzungen,
+deren Steigung größer als **Y für Anlaufausnahmen** ist. X = 0 deaktiviert diese Ausnahme.
+Ausgenommene Werte lösen die Steigungsbewertung und deren zusätzliche Abbruchabweichung nicht aus.
+
+**Positive Mindeststeigung** und **Negative Mindeststeigung** sind direkt in der Kanaleinheit pro Sekunde
+angegeben, zum Beispiel V/s. Die nächste Steigung wird bewertet, sobald sie größer als die positive
+Schwelle oder kleiner als die negative Schwelle ist. Werte zwischen beiden Schwellen einschließlich
+der Grenzen werden protokolliert. Der Ausgangspunkt und die gesamte verstrichene Zeit bleiben
+für den nächsten Vergleich erhalten. Beide Schwellen 0 deaktivieren diesen Filter.
+Die Regeln gelten auch für getrennte und gleitende Fenster. Dort bestimmt das gewählte Fenster weiterhin,
+wann ein neuer Vergleich erfolgt. Bei ausgenommenen Vergleichen bleibt dessen erster Ausgangspunkt bestehen.
+
+Beispielsweise ergeben 0 V bei 0 ms, 0,05 V bei 10 ms und 0,1 V bei 20 ms jeweils 5 V/s.
+Bei einer positiven Schwelle von 10 V/s bleiben diese Vergleiche ausgenommen. 0,6 V bei 30 ms
+ergeben anschließend 20 V/s bezogen auf 0 V bei 0 ms. Nach diesem Vergleich beginnt die nächste
+Bewertung wieder gemäß dem gewählten Fenstermodus.
+
+Im Prüfergebnis stehen Anzahl und Details unter **SuppressedSlopes** in den gespeicherten
+Kurvenmetadaten und der JSON-Ergebnisvariable. Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
+Ausgangswert, Endwert und den Ausnahmegrund. Die normale Steigungsdarstellung enthält die
+berechneten Werte, ausgenommene Vergleiche erhalten keine Grenzverletzungsmarkierung.
+Eine Aufnahme ohne einen regulär auswertbaren Steigungsvergleich je Kanal ergibt ERROR.
+Harte Messwert-Sicherheitsgrenzen bleiben bei jedem Rohmesswert wirksam.
+
 Bei **Messwertverlauf aufnehmen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten**
 kann **Bei Aufnahmeende immer zur Prüflings-Exit-Gruppe (PASS / FAIL / ERROR)** aktiviert werden.
 Die Option überspringt nach Abschluss der Aufnahme die regulären Folgeschritte und führt die

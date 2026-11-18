@@ -27,6 +27,8 @@ public sealed class SlopeTraceTests
         Assert.True(parameters["Kanaele"].IsTable);
         Assert.True(parameters["Steigungsfenster"].IsHidden);
         Assert.True(parameters["SteigungMin"].IsHidden);
+        string[] suppressionFields = ["SteigungAnlaufAnzahl", "SteigungAnlaufSchwelle", "SteigungSchwellePositiv", "SteigungSchwelleNegativ"];
+        Assert.All(suppressionFields, name => Assert.True(parameters[name].IsHidden));
 
         mode.Value = TraceBlocks.PairSlope;
         Assert.True(parameters["Grenzkurven"].IsHidden);
@@ -34,11 +36,15 @@ public sealed class SlopeTraceTests
         Assert.True(parameters["Steigungsfenster"].IsHidden);
         Assert.False(parameters["SteigungMin"].IsHidden);
         Assert.False(parameters["SteigungMax"].IsHidden);
+        Assert.All(suppressionFields, name => Assert.False(parameters[name].IsHidden));
 
         mode.Value = TraceBlocks.DisjointSlope;
         Assert.False(parameters["Steigungsfenster"].IsHidden);
         mode.Value = TraceBlocks.RollingSlope;
         Assert.False(parameters["Steigungsfenster"].IsHidden);
+        Assert.All(suppressionFields, name => Assert.False(parameters[name].IsHidden));
+        mode.Value = TraceBlocks.FormulaBand;
+        Assert.All(suppressionFields, name => Assert.True(parameters[name].IsHidden));
     }
 
     [Theory]

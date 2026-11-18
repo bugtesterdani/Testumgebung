@@ -5,6 +5,7 @@ namespace Testumgebung.Contracts;
 public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Channel, double[] OriginalTimes, double[] Violations, int ViolationCount, double MaximumDeviation, bool Complete)
 {
     public IReadOnlyList<EnvelopeViolation> Details { get; init; } = [];
+    public IReadOnlyList<SuppressedSlopeSample> SuppressedSlopes { get; init; } = [];
     public EnvelopeEarlyStop? EarlyStop { get; init; }
     public double? PlannedDuration { get; init; }
     public const string Prefix = "Grenzband:";
@@ -16,6 +17,7 @@ public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Cha
         catch (JsonException) { return null; }
     }
 }
+public sealed record SuppressedSlopeSample(double Time, double Slope, double StartTime, double StartValue, double EndValue, string Reason);
 public sealed record EnvelopeViolation(double Time, double Value, double Lower, double Upper, double Deviation);
 
 /// <summary>Automatic FAIL trigger, distinct from operator cancellation. Percent refers to the absolute limit value.</summary>
