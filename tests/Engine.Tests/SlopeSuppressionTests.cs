@@ -68,7 +68,7 @@ public sealed class SlopeSuppressionTests
     [Fact]
     public void Suppressed_only_data_is_incomplete_and_hard_limits_still_stop_every_sample()
     {
-        var settings = new SlopeLimits(SlopeWindowMode.Consecutive, 2, -1, 1)
+        var settings = new SlopeLimits(SlopeWindowMode.Consecutive, 2, -1000, 1000)
         { PositiveThreshold = 100, NegativeThreshold = -100 };
         var recordings = new EnvelopeRecordings();
         recordings.Start("owner", "trace", [new("U", "V", null) { SafetyMaximum = 1 }], Now, slope: settings);
@@ -162,6 +162,35 @@ public sealed class SlopeSuppressionTests
         var plot = new Testumgebung.Presentation.ViewModels.WaveformPlotViewModel();
         plot.SetData(result.Data);
         Assert.NotEmpty(plot.Channels);
+    }
+
+    [Theory]
+    [InlineData(-2, 5, -1, 10, true, false)]
+    [InlineData(1, 5, -0.5, 0.5, true, false)]
+    [InlineData(-2, 2, -1, 1, true, true)]
+    [InlineData(-2, 2, -2, 2, true, true)]
+    [InlineData(-2, 2, -2, 2, false, false)]
+    [InlineData(-2, 2, -1, 1, false, true)]
+    public void Invalid_threshold_regions_load_but_are_diagnosed(double lower, double upper,
+        double negative, double positive, bool touch, bool valid)
+    {
+        static string N(double value) => value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var step = BlockCatalog.Default.Create(TraceBlocks.Start, "begin", parameters: new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope,
+            ["SteigungMin"] = N(lower), ["SteigungMax"] = N(upper),
+            ["SteigungSchwelleNegativ"] = N(negative), ["SteigungSchwellePositiv"] = N(positive),
+            ["Beruehren"] = touch.ToString()
+        });
+        var serializer = new ProjectSerializer();
+        var copy = serializer.Clone(new TestProject(Test(Group("loop").Add(step))));
+        var loaded = Assert.IsType<StepDefinition>(copy.Definition.Find("begin"));
+        Assert.Equal(valid, BlockCatalog.Default.Rebuild(loaded).Count == 0);
+        if (!valid)
+        {
+            var error = Assert.IsType<ErrorAction>(loaded.Action);
+            Assert.NotNull(error);
+        }
     }
 
     [Theory]
