@@ -31,7 +31,7 @@ public sealed class SlopeSuppressionTests
         var metadata = Assert.Single(end.Channels);
         var exempt = Assert.Single(metadata.SuppressedSlopes);
         Assert.Equal(50, exempt.Slope, 8);
-        Assert.Contains("Anlaufausnahme", exempt.Reason);
+        Assert.Equal("Anlaufausnahme 1 von 1", exempt.Reason);
         Assert.Equal(0.03, Assert.Single(metadata.Violations), 8);
         Assert.Equal(exempt, Assert.Single(EnvelopeTraceMetadata.Decode(end.Data.Channels[0].Quality)!.SuppressedSlopes));
     }
@@ -54,7 +54,11 @@ public sealed class SlopeSuppressionTests
         Assert.Equal(new[] { sign * 5d, sign * 5d, sign * 20d }, result.Data.Channels[0].Samples);
         var details = Assert.Single(result.Channels);
         Assert.Equal(2, details.SuppressedSlopes.Count);
-        Assert.All(details.SuppressedSlopes, point => Assert.Equal(0, point.StartTime));
+        Assert.All(details.SuppressedSlopes, point =>
+        {
+            Assert.Equal(0, point.StartTime);
+            Assert.Equal("Mindeststeigung nicht erreicht", point.Reason);
+        });
         Assert.Empty(details.Violations);
     }
 

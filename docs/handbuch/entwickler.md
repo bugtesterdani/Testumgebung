@@ -194,7 +194,8 @@ ergeben anschließend 20 V/s bezogen auf 0 V bei 0 ms. Nach diesem Vergleich beg
 Bewertung wieder gemäß dem gewählten Fenstermodus.
 
 Im Prüfergebnis stehen Anzahl und Details unter **SuppressedSlopes** in den gespeicherten
-Kurvenmetadaten und der JSON-Ergebnisvariable. Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
+Kurvenmetadaten und der JSON-Ergebnisvariable. Die gespeicherten Gründe „Mindeststeigung nicht erreicht“ und „Anlaufausnahme X von Y“ bleiben lesbar.
+Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
 Ausgangswert, Endwert und den Ausnahmegrund. Die normale Steigungsdarstellung enthält die
 berechneten Werte, ausgenommene Vergleiche erhalten keine Grenzverletzungsmarkierung.
 Eine Aufnahme ohne einen regulär auswertbaren Steigungsvergleich je Kanal ergibt ERROR.

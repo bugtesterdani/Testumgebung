@@ -3,6 +3,8 @@ using Testumgebung.Contracts;
 namespace Testumgebung.Domain.Curves;
 
 /// <summary>Per-channel state for optional slope suppression. Raw samples remain owned by the recording.</summary>
+internal enum SlopeSuppressionReason { None, BelowThreshold, InitialException }
+
 internal sealed class SlopeSampleFilter(SlopeLimits limits)
 {
     private int? _pendingStart;
@@ -24,28 +26,35 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
         IReadOnlyList<double> values, int slopeIndex, bool touchAllowed)
     {
         var reason = Reason(value, touchAllowed);
-        _pendingStart = reason == "Mindeststeigung nicht erreicht" ? first : null;
-        if (reason is not null)
+        _pendingStart = reason == SlopeSuppressionReason.BelowThreshold ? first : null;
+        if (reason != SlopeSuppressionReason.None)
         {
             SuppressedIndices.Add(slopeIndex);
-            Suppressed.Add(new(times[last], value, times[first], values[first], values[last], reason));
+            Suppressed.Add(new(times[last], value, times[first], values[first], values[last], Describe(reason)));
             return false;
         }
         EvaluatedCount++;
         return true;
     }
 
-    private string? Reason(double value, bool touchAllowed)
+    private string Describe(SlopeSuppressionReason reason) => reason switch
+    {
+        SlopeSuppressionReason.BelowThreshold => "Mindeststeigung nicht erreicht",
+        SlopeSuppressionReason.InitialException => $"Anlaufausnahme {_exceptions} von {limits.InitialExceptionCount}",
+        _ => ""
+    };
+
+    private SlopeSuppressionReason Reason(double value, bool touchAllowed)
     {
         if (limits.HasSlopeThreshold && value <= limits.PositiveThreshold && value >= limits.NegativeThreshold)
-            return "Mindeststeigung nicht erreicht";
+            return SlopeSuppressionReason.BelowThreshold;
         var inside = touchAllowed ? value >= limits.Minimum && value <= limits.Maximum
             : value > limits.Minimum && value < limits.Maximum;
         if (!inside && _exceptions < limits.InitialExceptionCount && value > limits.InitialExceptionAbove)
         {
             _exceptions++;
-            return $"Anlaufausnahme {_exceptions} von {limits.InitialExceptionCount}";
+            return SlopeSuppressionReason.InitialException;
         }
-        return null;
+        return SlopeSuppressionReason.None;
     }
 }
