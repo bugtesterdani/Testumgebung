@@ -116,12 +116,13 @@ public static class TraceBlocks
         }).ToArray();
 
     private static ParameterVisibility? RecordingVisibility(string name)
-        => EvaluationVisibility(name) ?? StopVisibility(name);
+        => TargetVisibility(name) ?? EvaluationVisibility(name) ?? StopVisibility(name);
+
+    private static ParameterVisibility? TargetVisibility(string name)
+        => name is "ZielbandMin" or "ZielbandMax" or "ZielbandPunkte" ? new(TargetEnabledParameter, Boolean: true) : null;
 
     private static ParameterVisibility? EvaluationVisibility(string name)
     {
-        if (name is "ZielbandMin" or "ZielbandMax" or "ZielbandPunkte")
-            return new(TargetEnabledParameter, Boolean: true);
         if (name == "Steigungsfenster")
             return new(EvaluationParameter, AllowedValues: [DisjointSlope, RollingSlope]);
         if (name is "SteigungAnlaufSchwelle" or "SteigungAnlaufrichtung")
