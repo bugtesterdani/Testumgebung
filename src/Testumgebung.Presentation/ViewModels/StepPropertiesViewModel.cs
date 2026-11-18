@@ -222,7 +222,8 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         {
             "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
             "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
-            "SteigungMin" or "SteigungMax" => mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand),
+            "SteigungMin" or "SteigungMax" or "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
+                or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ" => mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand),
             _ => true
         };
     }
