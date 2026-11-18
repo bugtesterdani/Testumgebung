@@ -192,7 +192,10 @@ wann ein neuer Vergleich erfolgt. Bei ausgenommenen Vergleichen bleibt dessen er
 
 Beispielsweise ergeben 0 V bei 0 ms, 0,05 V bei 10 ms und 0,1 V bei 20 ms jeweils 5 V/s.
 Bei einer positiven Schwelle von 10 V/s bleiben diese Vergleiche ausgenommen. 0,6 V bei 30 ms
-ergeben anschließend 20 V/s bezogen auf 0 V bei 0 ms. Nach diesem Vergleich beginnt die nächste
+ergeben im aktuellen 10-ms-Fenster 50 V/s. Dieser schnelle Sprung wird direkt bewertet.
+Eine vorherige lange flache Phase kann ihn dadurch nicht verdünnen. Nur solange auch das aktuelle
+Fenster zwischen den Mindeststeigungen liegt, wird der gesammelte Vergleich verwendet.
+Nach einem direkt bewerteten Fenster beginnt die nächste
 Bewertung wieder gemäß dem gewählten Fenstermodus.
 
 Im Prüfergebnis stehen Anzahl und Details unter **SuppressedSlopes** in den gespeicherten
