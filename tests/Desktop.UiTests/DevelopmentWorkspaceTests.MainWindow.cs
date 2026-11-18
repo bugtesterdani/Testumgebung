@@ -130,6 +130,7 @@ public sealed partial class DevelopmentWorkspaceTests
         Select(buttons.Single(button => Equals(button.CommandParameter, "Reports")));
         Assert.True(results.IsChecked);
         Select(areas.Single(button => AutomationProperties.GetName(button) == "Verwaltung"));
+        Assert.Equal(ShellPage.Settings, window.Shell.Page);
         Select(buttons.Single(button => Equals(button.CommandParameter, "Notifications")));
         var visibleHeadings = Descendants(window).OfType<TextBlock>().Where(text => text.IsVisible).Select(text => text.Text).ToArray();
         Assert.Contains("MQTT-Meldeweg", visibleHeadings);

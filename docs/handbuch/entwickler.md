@@ -333,6 +333,9 @@ Beide Ansichten bearbeiten denselben Projektstand.
 Die [Knotenansicht](../knotenansicht.md) ergänzt manuelle Verbindungen, Zoom,
 Verschieben und Debugwerte am bisherigen Haltepunkt vor der Ergebnisweitergabe.
 
+### Einstieg in die Verwaltung
+
+„Verwaltung“ öffnet den ersten erlaubten und verfügbaren Unterpunkt in der sichtbaren Reihenfolge: Datenbank, Meldewege, Zugang, Python, Sicherung. Dadurch führt der Einstieg bei vorhandener Datenbankkonfiguration zuerst dorthin. Das Auftragssymbol (Liste) unterscheidet sich vom Releases-Symbol.
 ### Sprache der Werkeransicht
 
 Die Auswahl „Sprache Werkeransicht“ betrifft die Werkeroberfläche. Entwicklung, Verwaltung und selbst erstellte Prüfprogramminhalte behalten ihre bisherigen Texte. Der Hinweis direkt an der Auswahl beschreibt diesen Geltungsbereich.
