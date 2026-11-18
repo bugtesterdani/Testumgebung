@@ -205,8 +205,7 @@ Nach einem direkt bewerteten Fenster beginnt die nächste
 Bewertung wieder gemäß dem gewählten Fenstermodus.
 
 Im Prüfergebnis stehen Anzahl und Details unter **SuppressedSlopes** in den gespeicherten
-Kurvenmetadaten und der JSON-Ergebnisvariable. Die gespeicherten Gründe „Mindeststeigung nicht erreicht“ und „Anlaufausnahme X von Y“ bleiben lesbar.
-Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
+Kurvenmetadaten und der JSON-Ergebnisvariable. Graue Rauten in der Kurvenansicht kennzeichnen ausgeschlossene Steigungen; der Hinweistext zeigt Kanal, Zeit, Steigung, Ausgangszeit und beide Messwerte mit Ausschlussgrund. In gespeicherten Ergebnissen listet „Ausgeschlossene Steigungen (je Kanal)“ diese Angaben auf. Alte Ergebnisse ohne Ausschlüsse bleiben darstellbar. Die gespeicherten Gründe „Mindeststeigung nicht erreicht“ und „Anlaufausnahme X von Y“ bleiben lesbar. Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
 Ausgangswert, Endwert und den Ausnahmegrund. Die normale Steigungsdarstellung enthält die
 berechneten Werte, ausgenommene Vergleiche erhalten keine Grenzverletzungsmarkierung.
 Eine Aufnahme ohne einen regulär auswertbaren Steigungsvergleich je Kanal ergibt ERROR.
