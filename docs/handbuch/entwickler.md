@@ -329,3 +329,7 @@ Beide Ansichten bearbeiten denselben Projektstand.
 
 Die [Knotenansicht](../knotenansicht.md) ergänzt manuelle Verbindungen, Zoom,
 Verschieben und Debugwerte am bisherigen Haltepunkt vor der Ergebnisweitergabe.
+
+### Sprache der Werkeransicht
+
+Die Auswahl „Sprache Werkeransicht“ betrifft die Werkeroberfläche. Entwicklung, Verwaltung und selbst erstellte Prüfprogramminhalte behalten ihre bisherigen Texte. Der Hinweis direkt an der Auswahl beschreibt diesen Geltungsbereich.
