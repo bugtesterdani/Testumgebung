@@ -659,8 +659,8 @@ internal sealed record DiagSpec(int Transport, IsoTpSettings IsoTp, DoIpSettings
     {
         var transport = Array.IndexOf(BusBlocks.DiagTransports, p.Choice("Transport"));
         var ext = p.Bool("Erweitert");
-        var tx = CanIdSpec.Parse(p.Optional("AnfrageId") ?? "0x7E0", ext);
-        var rx = CanIdSpec.Parse(p.Optional("AntwortId") ?? "0x7E8", ext);
+        var tx = CanIdSpec.Parse(p.Optional("AnfrageId") ?? "0x7E0", ext, "AnfrageId");
+        var rx = CanIdSpec.Parse(p.Optional("AntwortId") ?? "0x7E8", ext, "AntwortId");
         var iso = new IsoTpSettings(tx.Id, rx.Id, tx.Extended || rx.Extended, p.Bool("Fd"), BusBlocks.ParseAddress(p.Optional("Fuellbyte"), "Füllbyte") ?? 0xCC)
         {
             TxAddress = BusBlocks.ParseAddress(p.Optional("AdresseTx"), "Adressbyte Anfrage"),
