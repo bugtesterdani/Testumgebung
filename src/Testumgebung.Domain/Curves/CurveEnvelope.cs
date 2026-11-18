@@ -28,9 +28,6 @@ public sealed class CurveEnvelope
     }
     private static CurveChannel FindChannel(CurveDefinition curve, string name)
         => curve.Channels.SingleOrDefault(curveChannel => curveChannel.Id.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? throw new ArgumentException($"Grenzkurvenkanal {name} fehlt.");
-    private static SlopeSampleFilter[] CreateSlopeFilters(SlopeLimits? limits, int channelCount)
-        => limits is null ? [] : Enumerable.Range(0, channelCount).Select(_ => new SlopeSampleFilter(limits)).ToArray();
-
     private static void ValidateChannels(CurveDefinition curve, CurveChannel lower, CurveChannel upper, string unit)
     {
         if (lower.Unit != unit || upper.Unit != unit) throw new ArgumentException("Einheit der Grenzkurven passt nicht zur Aufnahme.");
