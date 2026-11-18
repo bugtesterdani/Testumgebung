@@ -29,6 +29,35 @@ public sealed class CabLabelImportTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Repeated_image_downloads_accept_matching_content_and_reject_conflicts(bool conflict)
+    {
+        var layout = new LabelLayout { Elements =
+        [
+            new() { Kind = LabelElementKind.Image, X = 0, ImageWidth = 8, ImageHeight = 1, Bitmap = [0x1b] },
+            new() { Kind = LabelElementKind.Image, X = 20, ImageWidth = 8, ImageHeight = 1, Bitmap = [0x1b] }
+        ] };
+        var bytes = CabLabelLayout.Render(layout);
+        if (conflict)
+        {
+            var firstHeader = Encoding.ASCII.GetString(bytes, 0, bytes.Length).IndexOf("d BMP;", StringComparison.Ordinal);
+            var secondHeader = Encoding.ASCII.GetString(bytes, 0, bytes.Length).IndexOf("d BMP;", firstHeader + 1, StringComparison.Ordinal);
+            var bitmapStart = bytes.AsSpan(secondHeader).IndexOf(new byte[] { 0x1b, (byte)'.' }) + secondHeader + 2;
+            bytes[bitmapStart + 62] = 0x1c;
+            bytes[bitmapStart + 63] = 0;
+            Assert.Throws<InvalidDataException>(() => CabLabelImport.Read(bytes));
+            return;
+        }
+
+        var imported = CabLabelImport.Read(bytes);
+        Assert.Equal(2, imported.Elements.Count);
+        Assert.Equal(20, imported.Elements[1].X);
+        Assert.Equal(imported.Elements[0].Bitmap, imported.Elements[1].Bitmap);
+        Assert.Equal(bytes, CabLabelLayout.Render(imported));
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("J\r")]
     [InlineData("J\rT 0,0,0,5,3;test\rA 1\r")]

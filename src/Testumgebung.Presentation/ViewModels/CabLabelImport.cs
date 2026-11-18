@@ -28,8 +28,7 @@ public static class CabLabelImport
             if (command.StartsWith("d BMP;", StringComparison.Ordinal))
             {
                 if (state.Started) throw Unsupported(command);
-                if (!images.TryAdd(command[6..], ReadBitmap(ReadBinary(data, ref offset))))
-                    throw new InvalidDataException("Bildname ist in der LBL mehrfach vergeben.");
+                ReadImage(command[6..], ReadBinary(data, ref offset), images);
                 continue;
             }
             state.ReadCommand(command, layout, images);
@@ -37,6 +36,19 @@ public static class CabLabelImport
         if (!state.Ended) throw new InvalidDataException("Vollständiger cab-JScript-Druckauftrag mit J, S und A 1 erforderlich.");
         _ = CabLabelLayout.Render(layout);
         return layout;
+    }
+
+    private static void ReadImage(string name, byte[] bytes, Dictionary<string, LabelElement> images)
+    {
+        var image = ReadBitmap(bytes);
+        if (images.TryGetValue(name, out var existing))
+        {
+            if (image.ImageWidth != existing.ImageWidth || image.ImageHeight != existing.ImageHeight
+                || !image.Bitmap.AsSpan().SequenceEqual(existing.Bitmap))
+                throw new InvalidDataException("Bildname ist mit unterschiedlichen Bilddaten mehrfach vergeben.");
+            return;
+        }
+        images.Add(name, image);
     }
 
     private sealed class JobState

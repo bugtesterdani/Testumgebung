@@ -92,8 +92,13 @@ public partial class LabelDesignerWindow : Window
     {
         var picker = new OpenFileDialog { Filter = "cab-LBL-Druckdateien (*.lbl)|*.lbl", CheckFileExists = true };
         if (picker.ShowDialog(this) != true) return;
-        try { ImportCab(File.ReadAllBytes(picker.FileName)); }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        OpenCabFile(picker.FileName);
+    }
+
+    internal void OpenCabFile(string path)
+    {
+        try { ImportCab(File.ReadAllBytes(path)); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
         { Status.Text = error.Message; }
     }
 
@@ -101,12 +106,17 @@ public partial class LabelDesignerWindow : Window
     {
         var picker = new SaveFileDialog { Filter = "cab-LBL-Druckdateien (*.lbl)|*.lbl", DefaultExt = ".lbl", FileName = "Etikett.lbl" };
         if (picker.ShowDialog(this) != true) return;
+        SaveCabFile(picker.FileName);
+    }
+
+    internal void SaveCabFile(string path)
+    {
         try
         {
-            File.WriteAllBytes(picker.FileName, CabLabelLayout.Render(_layout));
+            File.WriteAllBytes(path, CabLabelLayout.Render(_layout));
             Status.Text = "LBL-Datei gespeichert.";
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
         { Status.Text = error.Message; }
     }
 

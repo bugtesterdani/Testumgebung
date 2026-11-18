@@ -80,8 +80,23 @@ public sealed partial class DevelopmentWorkspaceTests
                     dialog.ImportCab(CabLabelLayout.Render(existing));
                     var importedList = Descendants(dialog).OfType<ListBox>().Single();
                     Assert.Equal("Vorhandene LBL", Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>())).Value);
-                    Assert.Throws<InvalidDataException>(() => dialog.ImportCab([0, 1, 2]));
+                    var invalidFile = Path.Combine(folder, "invalid.lbl");
+                    File.WriteAllBytes(invalidFile, [0, 1, 2]);
+                    dialog.OpenCabFile(invalidFile);
+                    var status = Assert.IsType<TextBlock>(dialog.FindName("Status"));
+                    Assert.NotEmpty(status.Text);
                     Assert.Equal("Vorhandene LBL", Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>())).Value);
+                    var retained = existing.Elements[0];
+                    var active = Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>()));
+                    active.Value = "[DATE]";
+                    var exportPath = Path.Combine(folder, "invalid-export.lbl");
+                    File.WriteAllText(exportPath, "original");
+                    dialog.SaveCabFile(exportPath);
+                    Assert.Contains("eckigen Klammern", status.Text);
+                    Assert.Equal("original", File.ReadAllText(exportPath));
+                    active.Value = retained.Value;
+                    dialog.SaveCabFile(exportPath);
+                    Assert.Single(CabLabelImport.Read(File.ReadAllBytes(exportPath)).Elements);
                     dialog.ImportCab(CabLabelLayout.Render(new LabelLayout()));
                     dialog.ImportImage(Path.Combine(folder, "logo.png"));
                     foreach (var button in Descendants(dialog).OfType<Button>().Where(button => button.Tag is string).ToArray())
