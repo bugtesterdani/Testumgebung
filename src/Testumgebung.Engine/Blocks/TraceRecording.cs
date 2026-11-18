@@ -40,14 +40,18 @@ internal sealed class TraceRecordingSettings
         Duration = duration == 0 ? null : duration;
         _minimumDuration = p.Number("MinDauer") ?? 0; _touchAllowed = p.Bool("Beruehren");
         (_stopPercent, _stopAbsolute) = ReadStopMargins(p);
-        _targetEnabled = p.Raw.ContainsKey(TraceBlocks.TargetEnabledParameter) ? p.Bool(TraceBlocks.TargetEnabledParameter)
-            : p.Optional("ZielbandMin") is not null || p.Optional("ZielbandMax") is not null;
-        _targetMinimum = _targetEnabled ? p.Expr("ZielbandMin") : null;
-        _targetMaximum = _targetEnabled ? p.Expr("ZielbandMax") : null;
-        _targetPoints = _targetEnabled ? p.Expr("ZielbandPunkte") : null;
+        (_targetEnabled, _targetMinimum, _targetMaximum, _targetPoints) = ReadTargetSettings(p);
         _safetyMinimum = p.Expr("SicherheitMin");
         _safetyMaximum = p.Expr("SicherheitMax");
     }
+    private static (bool Enabled, Expression? Minimum, Expression? Maximum, Expression? Points) ReadTargetSettings(BlockParameters p)
+    {
+        var enabled = p.Raw.ContainsKey(TraceBlocks.TargetEnabledParameter) ? p.Bool(TraceBlocks.TargetEnabledParameter)
+            : p.Optional("ZielbandMin") is not null || p.Optional("ZielbandMax") is not null;
+        return enabled ? (true, p.Expr("ZielbandMin"), p.Expr("ZielbandMax"), p.Expr("ZielbandPunkte"))
+            : (false, null, null, null);
+    }
+
     public void Begin(IStepContext ctx)
     {
         if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");

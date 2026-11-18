@@ -15,6 +15,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Themes/VisualBlocks.xaml"/></ResourceDictionary.MergedDictionaries>
+        <controls:ParameterGroupsConverter x:Key="ParameterGroups"/>
 
         <DataTemplate x:Key="InlineEnumTemplate"><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}"/></DataTemplate>
         <DataTemplate x:Key="InlinePortTemplate">
@@ -477,11 +478,7 @@
 
         <!-- Schritt (Katalogbaustein) -->
         <DataTemplate DataType="{x:Type vm:StepPropertiesViewModel}">
-            <DataTemplate.Resources>
-                <CollectionViewSource x:Key="GroupedParameters" Source="{Binding Parameters}">
-                    <CollectionViewSource.GroupDescriptions><PropertyGroupDescription PropertyName="Section"/></CollectionViewSource.GroupDescriptions>
-                </CollectionViewSource>
-            </DataTemplate.Resources>
+
             <StackPanel>
                 <TextBlock Style="{StaticResource SectionTitle}" FontSize="20">
                     <Run Text="Baustein: " /><Run Text="{Binding Title, Mode=OneWay}" />
@@ -505,7 +502,7 @@
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Parameter" Margin="0,14,0,6" />
                 <CheckBox Content="Erweitert" IsChecked="{Binding ShowAdvanced}" Margin="0,0,0,6"
                           Visibility="{Binding HasAdvancedParameters, Converter={StaticResource BoolVis}}" />
-                <ItemsControl ItemsSource="{Binding Source={StaticResource GroupedParameters}}">
+                <ItemsControl ItemsSource="{Binding Parameters, Converter={StaticResource ParameterGroups}}">
                     <ItemsControl.GroupStyle><GroupStyle>
                         <GroupStyle.ContainerStyle><Style TargetType="GroupItem">
                             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="GroupItem">

@@ -40,14 +40,19 @@ internal static class BlockParameterSections
         };
     }
 
-    private static string Section(string name) => name switch
+    private static readonly IReadOnlyDictionary<string, string> TraceSections = CreateTraceSections();
+    private static IReadOnlyDictionary<string, string> CreateTraceSections()
     {
-        "Aufnahme" or "Kanaele" or "Einheiten" or "Quelle" or "Werte" or "Ressourcen" or "Messversuche" => "Kanäle und Quelle",
-        "SicherheitMin" or "SicherheitMax" or TraceBlocks.StopEnabledParameter or TraceBlocks.StopMarginModeParameter
-            or TraceBlocks.PercentMarginParameter or TraceBlocks.AbsoluteMarginParameter or TraceBlocks.AbortCurvesParameter => "Sicherheit",
-        "Dauer" or "Zeit" or "Intervall" or "MaxPunkte" or "MaxLuecke" or "MinPunkte" or "MinDauer" => "Zeit und Vollständigkeit",
-        TraceBlocks.TargetEnabledParameter or "ZielbandMin" or "ZielbandMax" or "ZielbandPunkte" or "StabilesZiel" => "Zielerkennung",
-        "ErgebnisZiel" or "VorzeitigesEndeZiel" or TraceBlocks.ExitDutOnEarlyStopParameter or TraceBlocks.ExitDutOnEndParameter => "Ende und Exit",
-        _ => "Grenzauswertung"
-    };
+        var groups = new (string Title, string[] Fields)[]
+        {
+            ("Kanäle und Quelle", ["Aufnahme", "Kanaele", "Einheiten", "Quelle", "Werte", "Ressourcen", "Messversuche"]),
+            ("Sicherheit", ["SicherheitMin", "SicherheitMax", TraceBlocks.StopEnabledParameter, TraceBlocks.StopMarginModeParameter, TraceBlocks.PercentMarginParameter, TraceBlocks.AbsoluteMarginParameter, TraceBlocks.AbortCurvesParameter]),
+            ("Zeit und Vollständigkeit", ["Dauer", "Zeit", "Intervall", "MaxPunkte", "MaxLuecke", "MinPunkte", "MinDauer"]),
+            ("Zielerkennung", [TraceBlocks.TargetEnabledParameter, "ZielbandMin", "ZielbandMax", "ZielbandPunkte", "StabilesZiel"]),
+            ("Ende und Exit", ["ErgebnisZiel", "VorzeitigesEndeZiel", TraceBlocks.ExitDutOnEarlyStopParameter, TraceBlocks.ExitDutOnEndParameter])
+        };
+        return groups.SelectMany(group => group.Fields.Select(field => (field, group.Title)))
+            .ToDictionary(entry => entry.field, entry => entry.Title, StringComparer.Ordinal);
+    }
+    private static string Section(string name) => TraceSections.GetValueOrDefault(name, "Grenzauswertung");
 }
