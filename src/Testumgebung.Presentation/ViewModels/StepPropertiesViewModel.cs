@@ -218,15 +218,19 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
         if (name is TraceBlocks.LowerFormulaParameter or TraceBlocks.UpperFormulaParameter)
             return mode == TraceBlocks.FormulaBand;
+        if (IsSlopeLimitParameter(name))
+            return mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand);
         return name switch
         {
             "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
             "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
-            "SteigungMin" or "SteigungMax" or "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
-                or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ" => mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand),
             _ => true
         };
     }
+
+    private static bool IsSlopeLimitParameter(string name)
+        => name is "SteigungMin" or "SteigungMax" or "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
+            or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ";
 
     private bool? TraceMarginVisibility(string name)
     {
