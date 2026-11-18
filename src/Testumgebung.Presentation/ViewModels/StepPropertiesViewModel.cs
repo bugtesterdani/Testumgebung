@@ -138,7 +138,8 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
     {
         if (!parameter.Advanced && parameter.VisibleWhen is null) return true;
         // A diagnostic can originate in an inactive transport field. Keep those fields editable until it is fixed.
-        if (HasDiagnostics) return true;
+        if (Diagnostics.Any(message => message.Contains(parameter.Name, StringComparison.OrdinalIgnoreCase)
+            || message.Contains(parameter.Label, StringComparison.OrdinalIgnoreCase))) return true;
         if (parameter.Advanced && !ShowAdvanced) return false;
         if (parameter.VisibleWhen is not { } condition) return true;
         return condition.Matches(name => Step.Parameters.GetValueOrDefault(name,
