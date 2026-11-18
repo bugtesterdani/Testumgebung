@@ -44,8 +44,7 @@ public static class TraceEndOptions
     internal static bool TryFlag(string type, IReadOnlyDictionary<string, string> values, string name, out bool selected)
     {
         selected = false;
-        if (!Applies(type) || !IsFlag(name) || !values.ContainsKey(Parameter)) return false;
-        var mode = Mode(values);
+        if (!Applies(type) || !IsFlag(name) || !values.TryGetValue(Parameter, out var mode) || !Choices.Contains(mode)) return false;
         selected = name switch
         {
             TraceBlocks.ExitDutOnEndParameter => mode == Always,

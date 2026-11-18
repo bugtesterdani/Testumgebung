@@ -64,6 +64,17 @@ public sealed class TraceEndChoiceTests
     }
 
     [Fact]
+    public async Task Invalid_selection_produces_a_regular_error_without_breaking_error_handling()
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Point, "invalid", parameters: new Dictionary<string, string>
+            { [TraceEndOptions.Parameter] = "invalid" });
+        var run = new TestRun(Test(Group("loop").Add(step,
+            BlockCatalog.Default.Create(BlockCatalog.SetRating, "following", parameters: new Dictionary<string, string> { ["Bewertung"] = "NRESULT" }))));
+        Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
+        Assert.Single(run.Steps("following"));
+    }
+
+    [Fact]
     public void Invalid_choice_loads_with_a_diagnostic_and_other_blocks_keep_error_switch()
     {
         var step = BlockCatalog.Default.Create(TraceBlocks.Point, "invalid", parameters: new Dictionary<string, string> { [TraceEndOptions.Parameter] = "invalid" });
