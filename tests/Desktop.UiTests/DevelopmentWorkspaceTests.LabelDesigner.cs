@@ -76,6 +76,28 @@ public sealed partial class DevelopmentWorkspaceTests
                 try
                 {
                     Assert.Equal("cab-Etikett gestalten", dialog.Title);
+                    var existing = new LabelLayout { Elements = [new() { Value = "Vorhandene LBL" }] };
+                    dialog.ImportCab(CabLabelLayout.Render(existing));
+                    var importedList = Descendants(dialog).OfType<ListBox>().Single();
+                    Assert.Equal("Vorhandene LBL", Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>())).Value);
+                    var invalidFile = Path.Combine(folder, "invalid.lbl");
+                    File.WriteAllBytes(invalidFile, [0, 1, 2]);
+                    dialog.OpenCabFile(invalidFile);
+                    var status = Assert.IsType<TextBlock>(dialog.FindName("Status"));
+                    Assert.NotEmpty(status.Text);
+                    Assert.Equal("Vorhandene LBL", Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>())).Value);
+                    var retained = existing.Elements[0];
+                    var active = Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>()));
+                    active.Value = "[DATE]";
+                    var exportPath = Path.Combine(folder, "invalid-export.lbl");
+                    File.WriteAllText(exportPath, "original");
+                    dialog.SaveCabFile(exportPath);
+                    Assert.Contains("eckigen Klammern", status.Text);
+                    Assert.Equal("original", File.ReadAllText(exportPath));
+                    active.Value = retained.Value;
+                    dialog.SaveCabFile(exportPath);
+                    Assert.Single(CabLabelImport.Read(File.ReadAllBytes(exportPath)).Elements);
+                    dialog.ImportCab(CabLabelLayout.Render(new LabelLayout()));
                     dialog.ImportImage(Path.Combine(folder, "logo.png"));
                     foreach (var button in Descendants(dialog).OfType<Button>().Where(button => button.Tag is string).ToArray())
                         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -114,11 +136,18 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Contains(layout.Elements, item => item.Kind == LabelElementKind.Gs1Qr);
             Assert.Equal(CabLabelLayout.Render(layout), Convert.FromBase64String(cab.Value));
 
-            var imported = new byte[] { 0, 0x1B, 0xFF };
-            properties.ImportCabPrintData(imported);
+            properties.ImportCabPrintData(CabLabelLayout.Render(layout));
+            var readExisting = LabelDesignerWindow.ReadLayout(cab, true);
+            Assert.Equal(layout.Elements.Count, readExisting.Elements.Count);
             dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
                 owner.OwnedWindows.OfType<LabelDesignerWindow>().Single().Close()));
+            var beforeCancel = cab.Value;
             LabelDesignerWindow.Edit(source, cab);
+            Assert.Equal(beforeCancel, cab.Value);
+
+            var imported = new byte[] { 0, 0x1B, 0xFF };
+            properties.ImportCabPrintData(imported);
+            Assert.Throws<InvalidDataException>(() => LabelDesignerWindow.ReadLayout(cab, true));
             Assert.Equal(imported, Convert.FromBase64String(cab.Value));
         }
         finally { owner.Close(); }
