@@ -85,7 +85,10 @@ public static class ProcessBlocks
     {
         var actions = Actions.Where(entry => entry.Type == type).ToArray();
         var descriptors = actions.ToDictionary(entry => entry.Action, entry => catalog.Get(entry.LegacyType));
-        var fields = descriptors.Values.SelectMany(block => block.Parameters).DistinctBy(field => field.Name);
+        var fields = descriptors.Values.SelectMany(block => block.Parameters).DistinctBy(field => field.Name)
+            .Select(field => field with { VisibleWhen = new(All:
+                [new(ActionParameter, AllowedValues: descriptors.Where(pair => pair.Value.Parameters.Any(p => p.Name == field.Name)).Select(pair => pair.Key).ToArray()),
+                 .. field.VisibleWhen is { } condition ? new[] { condition } : []]) });
         var choices = actions.Select(entry => entry.Action).ToArray();
         catalog.Register(new(type, title, "Prozesse", "arrow", description,
             [new(ActionParameter, "Aktion", ParameterKind.Choice, choices[0], Choices: choices), .. fields],

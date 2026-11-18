@@ -23,8 +23,8 @@ public static class CurveOutputBlocks
         [
             new(ActionParameter, "Aktion", ParameterKind.Choice, Load, Choices: [Load, Transfer, Start, Stop]),
             new("Ressource", "Ausgabegerät", ParameterKind.Resource, "AC_Kurvenquelle", Required: true),
-            new("Kurve", "Kurve (ID)", ParameterKind.Text, Hint: "Beim Laden erforderlich."),
-            new("Version", "Version", ParameterKind.Text, Hint: "Leer = neueste gespeicherte Version (für Freigaben feste Version angeben)"),
+            new("Kurve", "Kurve (ID)", ParameterKind.Text, Hint: "Beim Laden erforderlich.", VisibleWhen: new(ActionParameter, Load)),
+            new("Version", "Version", ParameterKind.Text, Hint: "Leer = neueste gespeicherte Version (für Freigaben feste Version angeben)", VisibleWhen: new(ActionParameter, Load)),
         ], Create));
 
     private static IStepAction Create(BlockParameters parameters)

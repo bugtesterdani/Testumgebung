@@ -141,8 +141,8 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
         if (HasDiagnostics) return true;
         if (parameter.Advanced && !ShowAdvanced) return false;
         if (parameter.VisibleWhen is not { } condition) return true;
-        var controllingField = Block?.Parameters.FirstOrDefault(field => field.Name == condition.Parameter);
-        return Step.Parameters.GetValueOrDefault(condition.Parameter, controllingField?.Default ?? "") == condition.Value;
+        return condition.Matches(name => Step.Parameters.GetValueOrDefault(name,
+            Block?.Parameters.FirstOrDefault(field => field.Name == name)?.Default ?? ""));
     }
 
     public string Name
@@ -170,84 +170,10 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     public bool HasDiagnostics => _diagnostics.Count > 0;
 
+    // These legacy storage fields are edited in the channel table, not as duplicate text inputs.
     internal bool IsParameterActive(string name)
-    {
-        if (Step.BlockType is TraceBlocks.Start or TraceBlocks.Record)
-            return TraceTableVisibility(name) ?? TraceMarginVisibility(name) ?? IsTraceParameterActive(name);
-        if (Step.BlockType == BlockCatalog.CurveOutput)
-            return IsCurveOutputParameterActive(name);
-        if (Step.BlockType is ProcessBlocks.Communication or ProcessBlocks.StatusEnd)
-            return IsProcessParameterActive(Step.BlockType, name);
-        if (Step.BlockType == LabelPrintingBlocks.Print)
-            return IsLabelFormatParameterActive(name);
-        if (Step.BlockType != BlockCatalog.Evaluate) return true;
-        var fixedResult = Step.Parameters.GetValueOrDefault("Art", "Bedingung prüfen") == BlockCatalog.FixedRatingMode;
-        return name switch { "Bedingung" => !fixedResult, "Bewertung" => fixedResult, _ => true };
-    }
-
-    private bool IsLabelFormatParameterActive(string name)
-    {
-        var format = Step.Parameters.GetValueOrDefault(LabelPrintingBlocks.FormatParameter, LabelPrintingBlocks.Zpl);
-        return name switch
-        {
-            "ZplVorlage" => format != LabelPrintingBlocks.Cab,
-            LabelPrintingBlocks.CabDataParameter => format == LabelPrintingBlocks.Cab,
-            _ => true,
-        };
-    }
-
-    private bool IsProcessParameterActive(string type, string name)
-    {
-        if (name == ProcessBlocks.ActionParameter) return true;
-        var action = Step.Parameters.GetValueOrDefault(ProcessBlocks.ActionParameter)
-            ?? Block!.Parameters[0].Default;
-        var legacyType = ProcessBlocks.ActionBlock(type, action);
-        return legacyType is not null && _editor.Catalog.Get(legacyType).Parameters.Any(field => field.Name == name);
-    }
-
-    private bool IsCurveOutputParameterActive(string name) => name is not ("Kurve" or "Version")
-        || Step.Parameters.GetValueOrDefault(CurveOutputBlocks.ActionParameter, CurveOutputBlocks.Load) == CurveOutputBlocks.Load;
-
-    private bool? TraceTableVisibility(string name) => name is "Einheiten" or "Grenzkurven" or TraceBlocks.AbortCurvesParameter
-        ? false
-        : null;
-
-    private bool IsTraceParameterActive(string name)
-    {
-
-        var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.EvaluationParameter, TraceBlocks.ValueBand);
-        if (name is TraceBlocks.LowerFormulaParameter or TraceBlocks.UpperFormulaParameter)
-            return mode == TraceBlocks.FormulaBand;
-        if (IsSlopeLimitParameter(name))
-            return mode is not (TraceBlocks.ValueBand or TraceBlocks.FormulaBand);
-        return name switch
-        {
-            "Grenzkurven" or TraceBlocks.AbortCurvesParameter => mode == TraceBlocks.ValueBand,
-            "Steigungsfenster" => mode is TraceBlocks.DisjointSlope or TraceBlocks.RollingSlope,
-            _ => true
-        };
-    }
-
-    private static bool IsSlopeLimitParameter(string name)
-        => name is "SteigungMin" or "SteigungMax" or "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
-            or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ" or "SteigungAnlaufrichtung";
-
-    private bool? TraceMarginVisibility(string name)
-    {
-        if (name is not (TraceBlocks.StopMarginModeParameter or TraceBlocks.PercentMarginParameter or TraceBlocks.AbsoluteMarginParameter))
-            return null;
-        var enabled = Step.Parameters.GetValueOrDefault(TraceBlocks.StopEnabledParameter, "");
-        if (!(enabled.Equals("true", StringComparison.OrdinalIgnoreCase) || enabled.Equals("ja", StringComparison.OrdinalIgnoreCase) || enabled == "1"))
-            return false;
-        var mode = Step.Parameters.GetValueOrDefault(TraceBlocks.StopMarginModeParameter, TraceBlocks.PercentMargin);
-        return name switch
-        {
-            TraceBlocks.PercentMarginParameter => mode == TraceBlocks.PercentMargin,
-            TraceBlocks.AbsoluteMarginParameter => mode == TraceBlocks.AbsoluteMargin,
-            _ => true
-        };
-    }
-
+        => Step.BlockType is not (TraceBlocks.Start or TraceBlocks.Record)
+            || name is not ("Einheiten" or "Grenzkurven" or TraceBlocks.AbortCurvesParameter);
     public void SaveLabelLayout(LabelLayout layout)
     {
         var zpl = layout.ToZpl();

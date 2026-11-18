@@ -62,7 +62,7 @@ public static class TraceBlocks
      new("Werte", "Wertausdrücke (Semikolon)", ParameterKind.Text, "Spannung"), new("Ressourcen", "Gerätenamen (Komma)", ParameterKind.Text),
      new("Messversuche", "Maximale Messversuche je Messpunkt", ParameterKind.Expression, "1",
         Hint: "Ganzzahl oder Prüfparameter von 1 bis 10. Für die PSU-Prüfung sind 3 Versuche ein Ausgangswert.")];
-    private static ParameterDescriptor[] RecordingParameters(bool timed) =>
+    private static ParameterDescriptor[] RecordingParameters(bool timed) => ConfigureRecordingParameters(
     [Name(), new("Kanaele", "Messkanäle", ParameterKind.Table, "Spannung", Required: true),
      new("Einheiten", "Einheiten (Komma, gleiche Reihenfolge)", ParameterKind.Text, "V"),
      new(EvaluationParameter, "Grenzauswertung", ParameterKind.Choice, ValueBand,
@@ -104,7 +104,29 @@ public static class TraceBlocks
      new(StopMarginModeParameter, "Art der Abbruchabweichung", ParameterKind.Choice, PercentMargin, Choices: [PercentMargin, AbsoluteMargin]),
      new(PercentMarginParameter, "Zusätzliche Abweichung [% vom Betrag des Grenzwerts]", ParameterKind.Number, "10"),
      new(AbsoluteMarginParameter, "Zusätzliche Abweichung [Einheit der Auswertung]", ParameterKind.Number, "0",
-        Hint: "Zum Beispiel V bei Spannung oder V/s bei Steigung.")];
+        Hint: "Zum Beispiel V bei Spannung oder V/s bei Steigung.")]);
+    private static ParameterDescriptor[] ConfigureRecordingParameters(ParameterDescriptor[] parameters)
+        => parameters.Select(parameter => parameter with { VisibleWhen = RecordingVisibility(parameter.Name) }).ToArray();
+
+    private static ParameterVisibility? RecordingVisibility(string name)
+    {
+        if (name == "Steigungsfenster")
+            return new(EvaluationParameter, AllowedValues: [DisjointSlope, RollingSlope]);
+        if (name.StartsWith("Steigung", StringComparison.Ordinal))
+            return new(EvaluationParameter, AllowedValues: [PairSlope, DisjointSlope, RollingSlope]);
+        if (name is LowerFormulaParameter or UpperFormulaParameter)
+            return new(EvaluationParameter, FormulaBand);
+        if (name is "Grenzkurven" or AbortCurvesParameter)
+            return new(EvaluationParameter, ValueBand);
+        return name switch
+        {
+            StopMarginModeParameter => new(StopEnabledParameter, Boolean: true),
+            PercentMarginParameter => new(All: [new(StopEnabledParameter, Boolean: true), new(StopMarginModeParameter, PercentMargin)]),
+            AbsoluteMarginParameter => new(All: [new(StopEnabledParameter, Boolean: true), new(StopMarginModeParameter, AbsoluteMargin)]),
+            _ => null
+        };
+    }
+
     private static IStepAction CreatePauseTime(BlockParameters parameters)
     {
         var name = parameters.Text("Aufnahme");
