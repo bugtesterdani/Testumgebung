@@ -7,7 +7,7 @@ namespace Testumgebung.Engine.Tests;
 public sealed class SlopeAuditDisplayTests
 {
     private static readonly SuppressedSlopeSample Sample = new(1, 100, 0.99, 0, 1, "Anlaufausnahme 1 von 1");
-    private static Waveform Wave(string channel, bool metadata = true) => new(channel, "V", 1, DateTimeOffset.UnixEpoch, Enumerable.Range(0, 11).Select(i => (double)i).ToArray(), Enumerable.Range(0, 11).Select(i => (double)i).ToArray(),
+    private static Waveform Wave(string channel, bool metadata = true) => new(channel, "V", 1, DateTimeOffset.UnixEpoch, Enumerable.Range(0, 11).Select(i => i == 1 ? 100.0 : i).ToArray(), Enumerable.Range(0, 11).Select(i => (double)i).ToArray(),
         metadata ? new EnvelopeTraceMetadata("Steigung", "", channel, [0, 1, 2], [], 0, 0, true) { SuppressedSlopes = [Sample] }.Encode() : null);
 
     [Fact]
@@ -18,6 +18,7 @@ public sealed class SlopeAuditDisplayTests
         Assert.Equal(2, plot.SuppressionMarkers.Count);
         var marker = plot.SuppressionMarkers[0];
         Assert.Equal(100, marker.X);
+        Assert.Equal(plot.Series[0].Points.Single(point => point.X == marker.X).Y, marker.Y);
         Assert.Contains("Steigung=100", marker.Description);
         Assert.Contains("Start t=", marker.Description);
         Assert.Contains("Endwert=1", marker.Description);

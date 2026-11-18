@@ -434,10 +434,10 @@ public sealed class WaveformPlotViewModel : ObservableObject
         if (_viewEnd <= _viewStart) return;
         var visible = Channels.Where(channel => channel.IsVisible).Select(channel => channel.Id).ToHashSet();
         foreach (var row in _suppressedSlopes.Where(row => visible.Contains(row.Channel) &&
-            double.IsFinite(row.Sample.Time) && double.IsFinite(row.Sample.EndValue) &&
+            double.IsFinite(row.Sample.Time) && double.IsFinite(row.Sample.Slope) &&
             row.Sample.Time >= _viewStart && row.Sample.Time <= _viewEnd).Take(1000))
             SuppressionMarkers.Add(new((row.Sample.Time - _viewStart) / (_viewEnd - _viewStart) * PlotWidth,
-                Y(row.Sample.EndValue), row.Description));
+                Y(row.Sample.Slope), row.Description));
     }
 
     private void UpdateCursor()
