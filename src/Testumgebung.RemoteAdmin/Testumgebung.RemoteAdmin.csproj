@@ -7,6 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="../Testumgebung.Presentation/Testumgebung.Presentation.csproj" />
     <Compile Include="../Testumgebung.Desktop/MsalIdentityProvider.cs" Link="MsalIdentityProvider.cs" />
+    <Compile Include="../Testumgebung.Desktop/EntraIdentityProviderFactory.cs" Link="EntraIdentityProviderFactory.cs" />
+    <Compile Include="../Testumgebung.Desktop/EntraBrokerIdentityProvider.cs" Link="EntraBrokerIdentityProvider.cs" />
     <Compile Include="../Testumgebung.Desktop/PlatformServices.cs" Link="PlatformServices.cs" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.92.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
