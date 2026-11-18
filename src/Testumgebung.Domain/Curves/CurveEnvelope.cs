@@ -150,6 +150,7 @@ internal sealed class EnvelopeRecording
             throw new ArgumentException("Für die Aufnahme entweder Formelgrenzen oder Steigungsgrenzen wählen.");
         _formula = formula;
         slope?.Validate(maxPoints);
+        slope?.ValidateThresholdRange(touchAllowed);
         _channels = channels.ToArray();
         _envelopes = slope is null && formula is null ? channels.Select(channel => new CurveEnvelope(
             channel.Limits ?? throw new ArgumentException("Je Messkanal eine Grenzkurve angeben."), channel.Unit)).ToArray() : [];
