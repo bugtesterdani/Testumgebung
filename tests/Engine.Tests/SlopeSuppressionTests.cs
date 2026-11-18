@@ -157,6 +157,38 @@ public sealed class SlopeSuppressionTests
         Assert.NotEmpty(plot.Channels);
     }
 
+    [Theory]
+    [InlineData(SlopeExceptionDirection.Falling, -50, true)]
+    [InlineData(SlopeExceptionDirection.Falling, 50, false)]
+    [InlineData(SlopeExceptionDirection.Rising, 50, true)]
+    [InlineData(SlopeExceptionDirection.Rising, -50, false)]
+    [InlineData(SlopeExceptionDirection.Both, -50, true)]
+    [InlineData(SlopeExceptionDirection.Both, 50, true)]
+    public void Initial_exception_direction_is_explicit(SlopeExceptionDirection direction, double slope, bool excluded)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -2, 2)
+            { InitialExceptionCount = 1, InitialExceptionAbove = 10, ExceptionDirection = direction });
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 1, [slope], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.Equal(excluded ? 1 : 0, result.Channels[0].SuppressedSlopes.Count);
+        Assert.Equal(excluded ? 0 : 1, result.Channels[0].ViolationCount);
+    }
+
+    [Fact]
+    public void Legacy_slope_parameters_load_with_rising_direction()
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Start, "begin");
+        step.Parameters.Remove("SteigungAnlaufrichtung");
+        step.Parameters["SteigungAnlaufSchwelle"] = "-3";
+        var copy = new ProjectSerializer().Clone(new TestProject(Test(Group("loop").Add(step))));
+        var loaded = Assert.IsType<StepDefinition>(copy.Definition.Find("begin"));
+        Assert.Equal("Steigend", loaded.Parameters["SteigungAnlaufrichtung"]);
+        Assert.Equal("-3", loaded.Parameters["SteigungAnlaufSchwelle"]);
+    }
+
     [Fact]
     public async Task Standard_blocks_serialize_configuration_and_write_suppression_details()
     {

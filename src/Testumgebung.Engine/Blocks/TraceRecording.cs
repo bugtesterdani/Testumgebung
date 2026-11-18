@@ -123,11 +123,20 @@ internal sealed class TraceRecordingSettings
         return limits with
         {
             InitialExceptionCount = (int)count,
+            ExceptionDirection = ReadExceptionDirection(p),
             InitialExceptionAbove = p.Number("SteigungAnlaufSchwelle") ?? 0,
             PositiveThreshold = p.Number("SteigungSchwellePositiv") ?? 0,
             NegativeThreshold = p.Number("SteigungSchwelleNegativ") ?? 0
         };
     }
+
+    private static SlopeExceptionDirection ReadExceptionDirection(BlockParameters p)
+        => p.Choice("SteigungAnlaufrichtung") switch
+        {
+            "Fallend" => SlopeExceptionDirection.Falling,
+            "Beide" => SlopeExceptionDirection.Both,
+            _ => SlopeExceptionDirection.Rising
+        };
 
     private static string[] ReadAbortCurves(string value, int channelCount)
     {

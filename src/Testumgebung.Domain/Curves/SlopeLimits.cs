@@ -1,9 +1,12 @@
 namespace Testumgebung.Domain.Curves;
 
+public enum SlopeExceptionDirection { Rising, Falling, Both }
+
 public enum SlopeWindowMode { Consecutive, Disjoint, Rolling }
 
 public sealed record SlopeLimits(SlopeWindowMode Mode, int Points, double Minimum, double Maximum)
 {
+    public SlopeExceptionDirection ExceptionDirection { get; init; } = SlopeExceptionDirection.Rising;
     public int InitialExceptionCount { get; init; }
     public double InitialExceptionAbove { get; init; }
     public double PositiveThreshold { get; init; }
@@ -22,6 +25,8 @@ public sealed record SlopeLimits(SlopeWindowMode Mode, int Points, double Minimu
 
     private void ValidateSuppression(int maxPoints)
     {
+        if (!Enum.IsDefined(ExceptionDirection) || (ExceptionDirection != SlopeExceptionDirection.Rising && InitialExceptionAbove < 0))
+            throw new ArgumentException("Für fallende oder beidseitige Anlaufausnahmen eine nichtnegative Schwelle angeben.");
         if (InitialExceptionCount < 0 || InitialExceptionCount > maxPoints || !double.IsFinite(InitialExceptionAbove))
             throw new ArgumentException("Anlaufausnahmen benötigen eine Anzahl zwischen 0 und dem Punktlimit und eine endliche Schwelle.");
         if (!double.IsFinite(PositiveThreshold) || !double.IsFinite(NegativeThreshold)

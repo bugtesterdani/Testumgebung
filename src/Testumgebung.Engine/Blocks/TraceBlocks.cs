@@ -79,6 +79,7 @@ public static class TraceBlocks
      new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungAnlaufAnzahl", "Erste X Grenzverletzungen oberhalb Y ausnehmen", ParameterKind.Number, "0",
         Hint: "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."),
+     new("SteigungAnlaufrichtung", "Richtung der Anlaufausnahmen", ParameterKind.Choice, "Steigend", Choices: ["Steigend", "Fallend", "Beide"]),
      new("SteigungAnlaufSchwelle", "Y für Anlaufausnahmen [Kanaleinheit/s]", ParameterKind.Number, "0"),
      new("SteigungSchwellePositiv", "Positive Mindeststeigung [Kanaleinheit/s]", ParameterKind.Number, "0",
         Hint: "Bewerten bei Steigung > Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."),

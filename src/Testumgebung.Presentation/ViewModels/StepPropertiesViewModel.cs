@@ -230,7 +230,7 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     private static bool IsSlopeLimitParameter(string name)
         => name is "SteigungMin" or "SteigungMax" or "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
-            or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ";
+            or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ" or "SteigungAnlaufrichtung";
 
     private bool? TraceMarginVisibility(string name)
     {
