@@ -531,13 +531,14 @@ internal sealed record CanIdSpec(uint Id, bool Extended)
 
     public static CanIdSpec Parse(string text, bool extended, string? parameter = null)
     {
+        var prefix = parameter is null ? "" : parameter + ": ";
         var text2 = text.Trim();
         var ok = text2.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
             ? uint.TryParse(text2[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var id)
             : uint.TryParse(text2, NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
-        if (!ok) throw new BlockConfigurationException($"{parameter}: CAN-ID „{text}“ ungültig (z. B. 0x7E0 oder 2016).");
+        if (!ok) throw new BlockConfigurationException($"{prefix}CAN-ID „{text}“ ungültig (z. B. 0x7E0 oder 2016).");
         var ext = extended || id > 0x7FF;
-        if (id > 0x1FFFFFFF) throw new BlockConfigurationException($"{parameter}: CAN-ID 0x{id:X} größer als 29 Bit.");
+        if (id > 0x1FFFFFFF) throw new BlockConfigurationException($"{prefix}CAN-ID 0x{id:X} größer als 29 Bit.");
         return new CanIdSpec(id, ext);
     }
 }
