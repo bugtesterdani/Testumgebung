@@ -36,3 +36,13 @@ Lesende Kanäle erwarten eine einzelne endliche Zahl mit Dezimalpunkt; wissensch
 Die Profile unterstützen einzelne numerische Werte über Textprotokolle. Binäre Protokolle, proprietäre USB-Treiber, Kurvenübertragung und mehrstufige Antwortauswertung benötigen einen spezifischen Treiber oder die vorhandenen Kommunikations-/Codebausteine.
 
 Nach Änderungen an einem Profil erneut **Profile ins Projekt übernehmen** und die Projektdatei speichern. Bereits freigegebene Programmversionen behalten ihre eigene gespeicherte Definition. Ein Profil kann erst entfernt werden, wenn kein Gerät im Konfigurationsentwurf mehr auf dieses Profil verweist.
+
+## Eingangspuffer vor Befehlen leeren
+
+Die Option **Eingangspuffer vor dem Senden leeren** verwirft alte Antworten vor jeder Befehlsfolge des Geräteprofils: Prüfabfrage, Lesen, Schreiben und sicherer Zustand. Vor der eigentlichen Lese- oder Schreibfolge nach einer Kanalauswahl wird erneut geleert, damit auch eine Auswahlquittung nicht als Messwert gelesen wird. Die gesamte Transaktion bleibt gegen parallele Zugriffe gesperrt.
+
+Die **Nachlaufzeit [ms]** (0 bis 5000, Vorgabe 20) erfasst auch Antworten, die gerade noch unterwegs sind. Die Zeit auf das Antwortverhalten des Geräts abstimmen. Es werden ausschließlich Eingangsbytes gelesen und verworfen, ohne Device Clear oder Verbindungsneuaufbau. Das Treiberprotokoll nennt die Byteanzahl und bis zu 200 Bytes als gekürzten Antworttext. Bei dauerhaftem Datenstrom wird die Bereinigung spätestens 250 ms nach Ende der Nachlaufzeit oder bei mehr als 1 MiB mit einer Diagnose abgebrochen. Dadurch blockiert auch ein langsamer, ununterbrochener Datenstrom die nachfolgenden Sicherheitsbefehle nicht dauerhaft. Sicherheitsbefehle werden auch nach einem Bereinigungsfehler weiterhin bestmöglich versucht; der Fehler wird gemeldet.
+
+**Abfragen im sicheren Zustand** wie `*IDN?`, `OUTP?` oder `SYST:ERR?` nur mit dieser Option verwenden. Ohne sie werden dort erzeugte Antworten weiterhin nicht gelesen und können die nächste Messabfrage verfälschen. Eine Nachlaufzeit kann keine beliebig spät eintreffenden Antworten ausschließen.
+
+Die Option gilt für RS-232/RS-485, TCP sowie VISA (unter anderem USB und GPIB). Sie wird mit dem Profil in `.tproj.json` und `.tdevice.json` gespeichert. Bei bestehenden Profilen ist sie aus. Solange sie aus ist, werden keine neuen Profileinstellungen serialisiert; die bisherige Profilsignatur bleibt unverändert.

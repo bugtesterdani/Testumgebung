@@ -229,6 +229,15 @@
                             </Grid>
                             <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,6,0,0"
                                        Text="Zeilenenden rechts eintragen. Je Befehl LF, CR, CRLF, KEINS oder STANDARD, durch Kommas getrennt (z. B. CRLF, LF). Leere Felder verwenden das Zeilenende der Verbindung. Bei Abfragen liefert der letzte Befehl die Antwort." />
+                            <StackPanel DataContext="{Binding SelectedProfile}" Margin="0,8,0,0">
+                                <CheckBox IsChecked="{Binding DiscardInputBeforeSend}" Content="Eingangspuffer vor dem Senden leeren"
+                                          ToolTip="Verwirft alte Antworten vor jeder Befehlsfolge, ohne Geräte-Reset oder neue Verbindung. Verworfene Bytes werden im Treiberprotokoll angezeigt."/>
+                                <StackPanel Orientation="Horizontal" Margin="20,4,0,0" IsEnabled="{Binding DiscardInputBeforeSend}">
+                                    <TextBlock Text="Nachlaufzeit [ms]" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox Text="{Binding DiscardInputSettleMilliseconds, UpdateSourceTrigger=LostFocus}" Width="80"
+                                             ToolTip="0 bis 5000 ms: Auch während dieser Zeit noch eintreffende Antworten verwerfen. Vorgabe: 20 ms."/>
+                                </StackPanel>
+                            </StackPanel>
                             <DataGrid ItemsSource="{Binding ProfileChannels}" SelectedItem="{Binding SelectedProfileChannel}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" MaxHeight="240" Margin="0,8,0,4">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Kanal" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="*" />

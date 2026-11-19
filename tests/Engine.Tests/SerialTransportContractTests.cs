@@ -20,6 +20,7 @@ public sealed class SerialTransportContractTests
         public SerialTransport.Native.CommTimeouts Timeouts;
         public List<uint> Purges = [];
         public Action? OnRead;
+        public Queue<byte[]>? Input;
         public SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr security, uint creation, uint flags, IntPtr template)
         { Opens++; Name = name; return Fail == "open" ? new SafeFileHandle(new IntPtr(-1), false) : Handle; }
         public bool GetCommState(SafeFileHandle handle, ref SerialTransport.Native.Dcb dcb) => Fail != "get";
@@ -27,10 +28,34 @@ public sealed class SerialTransportContractTests
         public bool SetCommTimeouts(SafeFileHandle handle, ref SerialTransport.Native.CommTimeouts timeouts) { Timeouts = timeouts; return true; }
         public bool PurgeComm(SafeFileHandle handle, uint flags) { Purges.Add(flags); return Fail != "purge"; }
         public bool ReadFile(SafeFileHandle handle, byte[] buffer, int count, out int read, IntPtr overlapped)
-        { OnRead?.Invoke(); read = Math.Min(count, 3); for (var i = 0; i < read; i++) buffer[i] = (byte)(i + 1); return Fail != "read"; }
+        {
+            OnRead?.Invoke();
+            if (Input is not null)
+            {
+                var data = Input.Count > 0 ? Input.Dequeue() : [];
+                read = data.Length; data.CopyTo(buffer, 0); return true;
+            }
+            read = Math.Min(count, 3); for (var i = 0; i < read; i++) buffer[i] = (byte)(i + 1); return Fail != "read";
+        }
         public bool WriteFile(SafeFileHandle handle, byte[] buffer, int count, out int written, IntPtr overlapped)
         { Written = buffer.ToArray(); written = PartialWrite ? count - 1 : count; return Fail != "write"; }
         public bool CancelIoEx(SafeFileHandle handle, IntPtr overlapped) { Cancels++; return true; }
+    }
+
+    [Fact]
+    public async Task Input_discard_reads_serial_bytes_without_purging_or_closing_the_port()
+    {
+        var api = new Api();
+        using var transport = new SerialTransport(new SerialSettings("COM_TEST"), api);
+        using var io = new SerialInstrumentIo("COM_TEST", transport, "LF");
+        await io.WriteAsync("START\n"u8.ToArray(), TimeSpan.FromSeconds(1), default);
+        var purges = api.Purges.Count;
+        api.Input = new(["old reply\n"u8.ToArray()]);
+        var discarded = await io.DiscardInputAsync(TimeSpan.Zero, default);
+        Assert.Equal("old reply\n", Encoding.ASCII.GetString(discarded.Preview));
+        Assert.Equal(api.Purges.Count, purges); Assert.True(transport.IsOpen); Assert.Equal(1, api.Opens);
+        api.Input.Enqueue("12.5\n"u8.ToArray());
+        Assert.Equal("12.5\n", Encoding.ASCII.GetString((await io.ReadAsync(TimeSpan.FromSeconds(1), default)).Data));
     }
 
     [Theory]

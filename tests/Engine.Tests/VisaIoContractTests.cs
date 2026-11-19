@@ -32,6 +32,22 @@ public sealed class VisaIoContractTests
         public void Check(uint vi, int status, string call) { if (status < 0) throw new InstrumentException(call); }
     }
 
+    [Fact]
+    public async Task Discard_reads_pending_bytes_without_device_clear_or_reopening()
+    {
+        var api = new Api { ClearStatus = -1 };
+        api.Reads.Enqueue((0, "IDN reply\n"u8.ToArray()));
+        using var io = new VisaIo("TEST::INSTR", api);
+        var discarded = await io.DiscardInputAsync(TimeSpan.Zero, default);
+        Assert.Equal(10, discarded.ByteCount);
+        Assert.Equal("IDN reply\n", System.Text.Encoding.ASCII.GetString(discarded.Preview));
+        Assert.Equal(1, api.Opens); Assert.Empty(api.Closed);
+        api.Reads.Enqueue((0, "12.5\n"u8.ToArray()));
+        await io.WriteAsync("MEAS?\n"u8.ToArray(), TimeSpan.FromSeconds(1), default);
+        Assert.Equal("12.5\n", System.Text.Encoding.ASCII.GetString((await io.ReadAsync(TimeSpan.FromSeconds(1), default)).Data));
+        Assert.Equal(1, api.Opens);
+    }
+
     [Theory]
     [InlineData(0, true)]
     [InlineData(0x3fff0005, true)]
