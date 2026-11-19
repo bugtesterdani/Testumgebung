@@ -135,6 +135,8 @@ Aufnahmen sind je Prüfling und Lauf getrennt. Maximal acht Kanäle pro Aufnahme
 
 ## Live-Diagramm und gespeicherte Daten
 
+Auch bei Steigungsauswertung werden Rohmesswerte unabhängig vom Steigungsfenster aktualisiert. Die Steigungsreihe enthält nur abgeschlossene Fenster (beim regulären Ende zusätzlich das verkürzte getrennte Restfenster). Bei 50-Punkte-Fenstern und 10-ms-Raster erscheinen Rohmesswerte damit schon vor dem ersten Fenster und anschließend spätestens nach jeweils 250 ms; die Drosselung bleibt auch bei großen Aufnahmen erhalten.
+
 Der erste Wert erscheint sofort als farbiger Punkt. Weitere tatsächlich gelieferte Messwerte stehen an ihren Zeitpositionen und werden durch Linien verbunden. Beide ersten Punkte, die erste Grenzverletzung und das Aufnahmeende werden sofort gemeldet; sonst wird die Darstellung bei schnellen Aufnahmen auf etwa vier Aktualisierungen pro Sekunde begrenzt. Die Kurve ist in der Einzelansicht und getrennt je Seite in der Doppelplatzansicht sichtbar. Auf kleinen Bildschirmen bleibt der Bereich scrollbar.
 
 Die Anzeige nennt bereits während der Aufnahme **FAIL festgestellt**, sobald eine normale Grenzverletzung bekannt ist. Dies beendet die Aufnahme ohne zusätzliche Abweichung noch nicht. Messung, Unter-/Obergrenze und rote Verletzungsmarkierungen bleiben sichtbar. Bis zu 1.000 sichtbare Originalpunkte je Kanal werden als Punkte dargestellt, bei größeren Mengen einschließlich erstem und neuestem Punkt reduziert. Zusätzlich interpolierte Stützpunkte erhalten keine Punktmarkierung. Die Bewertung verwendet weiterhin sämtliche Daten.

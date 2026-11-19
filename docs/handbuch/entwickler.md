@@ -197,6 +197,8 @@ Ein aktivierter Mindeststeigungsfilter ist bei einer geforderten minimalen Steig
 Ungültige Kombinationen bleiben beim Laden erhalten und werden als Konfigurationsdiagnose angezeigt.
 Getrennte Fenster prüfen beim regulären Aufnahmeende, Zielband-Ende und manuellen Bewerten zusätzlich ein verkürztes Restfenster. Bei einem Restpunkt zählt der letzte Punkt des vorherigen Fensters als Ausgangspunkt; bei mehreren Restpunkten zählt der erste Restpunkt. Die Bewertung erfolgt genau einmal und nicht bei Live-Vorschauen. Sicherheitsabbruch, bereits ausgelöste Abbruchgrenzen und ungültige Aufnahmen erhalten keine zusätzliche Restbewertung. `PartialWindowTimes` enthält die Endzeit, die Kurvenansicht nennt den verkürzten Vergleich. Gespeicherte Bewertungen bleiben maßgeblich; alte Läufe erhalten wegen neuer Restfenster nur bei zusätzlichen Grenzverletzungen einen Hinweis.
 
+Die Live-Anzeige wartet nicht auf abgeschlossene Steigungsfenster: Die ersten beiden Rohmesspunkte, die erste Grenzverletzung und das Aufnahmeende erscheinen sofort; weitere Vorschauen werden auf etwa vier pro Sekunde begrenzt. Steigungspunkte werden weiterhin erst nach abgeschlossenem Fenster berechnet. Die Aktualisierungshäufigkeit ändert weder Grenzbewertung noch Schrittergebnis oder `StabilesZiel`.
+
 Die Regeln gelten auch für getrennte und gleitende Fenster. Dort bestimmt das gewählte Fenster weiterhin,
 wann ein neuer Vergleich erfolgt. Bei ausgenommenen Vergleichen bleibt dessen erster Ausgangspunkt bestehen.
 

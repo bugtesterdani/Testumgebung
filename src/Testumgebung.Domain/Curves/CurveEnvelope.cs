@@ -225,7 +225,6 @@ internal sealed class EnvelopeRecording
             catch { _faulted = true; throw; }
         }
         CheckTarget(time, values[0]);
-        if (_slope is not null && !_slope.IsWindowEnd(_times.Count) && !Ended) return false;
         if (Ended || (HasViolation && !alreadyFailed)) return true;
         if (_times.Count > 2 && now - _lastPreview < TimeSpan.FromMilliseconds(250)) return false;
         _lastPreview = now; return true;

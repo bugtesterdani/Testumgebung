@@ -47,6 +47,33 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Equal(2, Descendants(plot).OfType<WaveformPlot>().Count());
             Assert.Contains(Descendants(plot).OfType<CheckBox>(), box => Equals(box.Content, "Messwert") && box.IsVisible);
             CaptureVisual(window, "messwert-steigung-getrennte-einheiten.png");
+            var liveSlopes = new EnvelopeRecordings();
+            liveSlopes.Start("owner", "preview", [new("U", "V", null)], DateTimeOffset.UnixEpoch,
+                slope: new(SlopeWindowMode.Disjoint, 50, -1, 1));
+            var firstSlopePreview = liveSlopes.Add("owner", "preview", 0, [5], DateTimeOffset.UnixEpoch);
+            Assert.NotNull(firstSlopePreview);
+            model.SetData(firstSlopePreview.Data);
+            Sta.Flush(dispatcher); window.UpdateLayout();
+            Assert.Single(model.SampleMarkers);
+            Assert.Contains(Descendants(plot).OfType<Ellipse>(), ellipse => ellipse.ActualWidth > 0);
+            for (var i = 1; i <= 26; i++)
+            {
+                var preview = liveSlopes.Add("owner", "preview", i * 0.01, [5], DateTimeOffset.UnixEpoch.AddMilliseconds(i * 10));
+                if (preview is not null) model.SetData(preview.Data);
+            }
+            Sta.Flush(dispatcher); window.UpdateLayout();
+            Assert.Equal(27, model.SampleMarkers.Count);
+            Assert.All(model.Channels, channel => Assert.Equal("V", channel.Unit));
+            CaptureVisual(window, "messwert-steigung-live-vor-fenster.png");
+            for (var i = 27; i <= 51; i++)
+            {
+                var preview = liveSlopes.Add("owner", "preview", i * 0.01, [5], DateTimeOffset.UnixEpoch.AddMilliseconds(i * 10));
+                if (preview is not null) model.SetData(preview.Data);
+            }
+            Sta.Flush(dispatcher); window.UpdateLayout();
+            Assert.Contains(model.Panes, pane => pane.PaneTitle == "V/s");
+            Assert.Contains(model.Panes, pane => pane.PaneTitle == "V" && pane.SampleMarkers.Count == 52);
+
         }
         finally { window.Close(); }
     }
