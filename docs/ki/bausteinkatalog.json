@@ -5725,7 +5725,20 @@
             "Fallend",
             "Beide"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufSchwelle",
@@ -6496,7 +6509,20 @@
             "Fallend",
             "Beide"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufSchwelle",

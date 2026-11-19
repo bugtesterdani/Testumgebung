@@ -16,6 +16,32 @@ public sealed class ConditionalParameterTests
         return properties.Parameters.ToDictionary(row => row.Descriptor.Name);
     }
 
+    [Theory]
+    [InlineData(TraceBlocks.Start)]
+    [InlineData(TraceBlocks.Record)]
+    public void Startup_direction_follows_evaluation_mode_after_metadata_migration(string type)
+    {
+        var rows = Select(type, out var properties);
+        properties.ShowAdvanced = true;
+        rows["SteigungAnlaufAnzahl"].Value = "2";
+        rows["SteigungMin"].Value = "-10";
+        rows["SteigungMax"].Value = "10";
+        rows[TraceBlocks.LowerFormulaParameter].Value = "0";
+        rows[TraceBlocks.UpperFormulaParameter].Value = "10";
+        var direction = rows["SteigungAnlaufrichtung"];
+        foreach (var mode in new[] { TraceBlocks.PairSlope, TraceBlocks.DisjointSlope, TraceBlocks.RollingSlope })
+        {
+            rows[TraceBlocks.EvaluationParameter].Value = mode;
+            Assert.False(direction.IsHidden);
+        }
+        foreach (var mode in new[] { TraceBlocks.ValueBand, TraceBlocks.FormulaBand })
+        {
+            rows[TraceBlocks.EvaluationParameter].Value = mode;
+            Assert.True(direction.IsHidden);
+        }
+        Assert.Equal("Steigend", direction.Value);
+    }
+
     [Fact]
     public void Uds_fields_follow_transport_and_reveal_an_invalid_hidden_can_field()
     {
