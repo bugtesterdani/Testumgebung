@@ -5725,7 +5725,7 @@
       "type": "verlauf.aufnehmen",
       "displayName": "Messwertverlauf aufnehmen",
       "category": "Messwertverl\u00E4ufe",
-      "description": "Misst \u00FCber die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zus\u00E4tzliche Abweichung beendet diese Aufnahme fr\u00FCher. Danach folgen die n\u00E4chsten Schritte.",
+      "description": "Misst \u00FCber die eingestellte Dauer im Abfragetakt. Rohmesswerte erscheinen sofort, auch vor dem ersten vollst\u00E4ndigen Steigungsfenster. Jede Grenzverletzung ergibt FAIL; zus\u00E4tzliche Abweichung beendet diese Aufnahme fr\u00FCher. Danach folgen die n\u00E4chsten Schritte.",
       "parameters": [
         {
           "name": "Aufnahme",

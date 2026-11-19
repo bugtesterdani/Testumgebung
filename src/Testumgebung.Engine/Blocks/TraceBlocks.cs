@@ -66,7 +66,7 @@ public static class TraceBlocks
                 return Task.FromResult(Outcome(result, !result.Finished) with
                 { ExitDut = parameters.Bool(ExitDutOnEndParameter) || (parameters.Bool(ExitDutOnEarlyStopParameter) && result.EarlyStop is not null) });
             })));
-        catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
+        catalog.Register(new(Record, "Messwertverlauf aufnehmen", "Messwertverläufe", "measure", "Misst über die eingestellte Dauer im Abfragetakt. Rohmesswerte erscheinen sofort, auch vor dem ersten vollständigen Steigungsfenster. Jede Grenzverletzung ergibt FAIL; zusätzliche Abweichung beendet diese Aufnahme früher. Danach folgen die nächsten Schritte.",
             RecordingParameters(true).Concat(ReaderParameters()).Concat([new("Intervall", "Abfrageintervall [s]", ParameterKind.Number, "0.1"), ResultTarget(), ExitDutOption(), ExitOnEndOption()]).ToArray(),
             parameters => new TimedTraceAction(new(parameters), new(parameters), parameters.Number("Intervall") ?? 0,
                 parameters.Optional("ErgebnisZiel"), parameters.Bool(ExitDutOnEarlyStopParameter), parameters.Bool(ExitDutOnEndParameter))));
