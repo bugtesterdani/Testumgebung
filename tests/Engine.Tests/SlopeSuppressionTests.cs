@@ -12,6 +12,27 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(SlopeWindowMode.Consecutive, 2)]
+    [InlineData(SlopeWindowMode.Disjoint, 5)]
+    [InlineData(SlopeWindowMode.Rolling, 5)]
+    public void Holding_and_mixed_channels_are_complete_without_target(SlopeWindowMode mode, int points)
+    {
+        foreach (var ramp in new[] { false, true })
+        {
+            var recordings = new EnvelopeRecordings();
+            recordings.Start("owner", "trace", [new("U", "V", null), new("I", "A", null)], Now,
+                slope: new(mode, points, -1, 1) { PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+            for (var index = 0; index <= 300; index++)
+                recordings.Add("owner", "trace", index * 0.01,
+                    [8.5 + (ramp ? index * 0.005 : index % 2 * 0.001), 1], Now);
+            var result = recordings.Stop("owner", "trace");
+            Assert.True(result.Complete);
+            Assert.True(result.Passed);
+        }
+    }
+
+
+    [Theory]
     [InlineData(SlopeWindowMode.Consecutive)]
     [InlineData(SlopeWindowMode.Disjoint)]
     [InlineData(SlopeWindowMode.Rolling)]
