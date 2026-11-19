@@ -86,6 +86,7 @@ public sealed record TraceEvaluation(WaveformSet Data, IReadOnlyList<EnvelopeTra
     public EnvelopeEarlyStop? EarlyStop { get; init; }
     public bool Finished { get; init; }
     public string? IncompleteReason { get; init; }
+    public string? ConfigurationWarning { get; init; }
     public bool TargetReached { get; init; }
     public bool Passed => EarlyStop is null && Complete && Channels.All(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount == 0);
     public int Violations => Channels.Sum(envelopeTraceMetadata => envelopeTraceMetadata.ViolationCount);
@@ -300,7 +301,11 @@ internal sealed class EnvelopeRecording
 
     public TraceEvaluation Evaluate(bool stopped)
     {
-        var evaluation = EvaluateQuality(stopped);
+        var evaluation = EvaluateQuality(stopped) with
+        {
+            ConfigurationWarning = _slope is { InitialExceptionCount: > 0, InitialExceptionWindow: null }
+                ? "Anlaufphase unbegrenzt (bestehende Konfiguration ohne Anlaufdauer)." : null
+        };
         if (EarlyStop is { HardLimit: true } hardStop) evaluation = WithHardStopSample(evaluation, hardStop);
         return _captureSource ? evaluation with { Data = evaluation.Data with { Recording = CaptureSource(evaluation, stopped) } } : evaluation;
     }

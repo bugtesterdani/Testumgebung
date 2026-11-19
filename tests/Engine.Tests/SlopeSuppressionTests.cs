@@ -12,6 +12,101 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void Domain_recording_rejects_invalid_startup_windows_even_when_exceptions_are_disabled(double duration)
+    {
+        var recordings = new EnvelopeRecordings();
+        Assert.Throws<ArgumentException>(() => recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -1, 1) { InitialExceptionWindow = duration }));
+    }
+
+
+    [Theory]
+    [InlineData(TraceBlocks.Start)]
+    [InlineData(TraceBlocks.Record)]
+    public void New_startup_windows_are_required_but_legacy_projects_remain_executable(string type)
+    {
+        var fresh = BlockCatalog.Default.Create(type, "fresh");
+        Assert.Equal("1", fresh.Parameters["SteigungAnlaufDauer"]);
+        fresh.Parameters[TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope;
+        fresh.Parameters["SteigungMin"] = "-1";
+        fresh.Parameters["SteigungMax"] = "1";
+        fresh.Parameters["SteigungAnlaufAnzahl"] = "1";
+        fresh.Parameters["SteigungAnlaufDauer"] = "";
+        Assert.NotEmpty(BlockCatalog.Default.Rebuild(fresh));
+
+        fresh.Parameters.Remove("SteigungAnlaufDauer");
+        var project = new TestProject(Test(Group("loop").Add(fresh)));
+        var copy = new ProjectSerializer().Clone(project);
+        var legacy = Assert.IsType<StepDefinition>(copy.Definition.Find("fresh"));
+        Assert.False(legacy.Parameters.ContainsKey("SteigungAnlaufDauer"));
+        Assert.Empty(BlockCatalog.Default.Rebuild(legacy));
+        var editor = new Testumgebung.Presentation.ViewModels.EditorViewModel(copy);
+        Assert.Contains(editor.DiagnosticsFor(legacy), message => message.Contains("Anlaufphase unbegrenzt"));
+        legacy.Parameters["SteigungAnlaufDauer"] = "1";
+        Assert.Empty(editor.DiagnosticsFor(legacy));
+        legacy.Parameters["SteigungAnlaufDauer"] = "0";
+        Assert.NotEmpty(editor.DiagnosticsFor(legacy));
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("NaN")]
+    [InlineData("Infinity")]
+    [InlineData("")]
+    public async Task Invalid_startup_duration_is_rejected(string duration)
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Record, "record", parameters: new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope, ["Werte"] = "0",
+            ["SteigungMin"] = "-1", ["SteigungMax"] = "1", ["SteigungAnlaufAnzahl"] = "1",
+            ["SteigungAnlaufDauer"] = duration
+        });
+        var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
+    }
+
+    [Fact]
+    public async Task Legacy_startup_phase_is_explicitly_reported_as_unlimited()
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Record, "record", parameters: new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope, ["Werte"] = "0",
+            ["SteigungMin"] = "-1", ["SteigungMax"] = "1", ["SteigungAnlaufAnzahl"] = "1"
+        });
+        var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { Clock = new VirtualClock() });
+        await run.RunAsync().Within();
+        Assert.Contains("Anlaufphase unbegrenzt", Assert.Single(run.Steps("record")).Message);
+    }
+
+
+    [Theory]
+    [InlineData(4.01, false)]
+    [InlineData(0.52, true)]
+    [InlineData(1.0, true)]
+    [InlineData(1.01, false)]
+    public void Startup_exceptions_are_limited_by_time_from_first_sample(double elapsed, bool exempt)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, maxGap: 10,
+            slope: new(SlopeWindowMode.Consecutive, 2, -1, 1)
+            { InitialExceptionCount = 3, InitialExceptionAbove = 5, InitialExceptionWindow = 1,
+              PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+        recordings.Add("owner", "trace", 10, [8.5], Now);
+        recordings.Add("owner", "trace", 10 + elapsed - 0.01, [8.5], Now);
+        recordings.Add("owner", "trace", 10 + elapsed, [9.1], Now);
+        recordings.Add("owner", "trace", 10 + elapsed + 0.1, [9.05], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.Equal(exempt, result.Passed);
+        Assert.Equal(exempt ? 0 : 1, result.Violations);
+    }
+
+
+    [Theory]
     [InlineData(SlopeWindowMode.Consecutive, 2)]
     [InlineData(SlopeWindowMode.Disjoint, 5)]
     [InlineData(SlopeWindowMode.Rolling, 5)]

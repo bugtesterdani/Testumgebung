@@ -6014,6 +6014,46 @@
           "section": "Grenzauswertung"
         },
         {
+          "name": "SteigungAnlaufDauer",
+          "label": "Anlaufausnahmen: nur bis [s] nach Aufnahmebeginn",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Bei positiver Ausnahmeanzahl erforderlich. Neue Bausteine verwenden 1 s. Gemessen ab dem ersten Messpunkt; alte Konfigurationen ohne Feld bleiben unbegrenzt.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
+          },
+          "advanced": true,
+          "section": "Grenzauswertung"
+        },
+        {
           "name": "SteigungSchwellePositiv",
           "label": "Kleine Steigungen sammeln bis \u002B [Kanaleinheit/s] (0 = aus)",
           "kind": "Number",
@@ -7119,6 +7159,46 @@
           "required": false,
           "choices": null,
           "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
+          },
+          "advanced": true,
+          "section": "Grenzauswertung"
+        },
+        {
+          "name": "SteigungAnlaufDauer",
+          "label": "Anlaufausnahmen: nur bis [s] nach Aufnahmebeginn",
+          "kind": "Number",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "Bei positiver Ausnahmeanzahl erforderlich. Neue Bausteine verwenden 1 s. Gemessen ab dem ersten Messpunkt; alte Konfigurationen ohne Feld bleiben unbegrenzt.",
           "visibleWhen": {
             "parameter": "",
             "value": "",

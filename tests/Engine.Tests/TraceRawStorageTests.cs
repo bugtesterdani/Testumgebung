@@ -229,6 +229,33 @@ public sealed class TraceRawStorageTests
         Assert.Equal(!historicalIncomplete, EnvelopeTraceMetadata.Decode(wave.Quality)!.Complete);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Startup_time_limit_roundtrips_and_missing_legacy_field_preserves_assessment(bool limited)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, maxGap: 5,
+            slope: new(SlopeWindowMode.Consecutive, 2, -1, 1)
+            { InitialExceptionCount = 3, InitialExceptionAbove = 5, InitialExceptionWindow = limited ? 1 : null,
+              PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+        recordings.Add("owner", "trace", 0, [8.5], Now);
+        recordings.Add("owner", "trace", 4, [8.5], Now);
+        recordings.Add("owner", "trace", 4.01, [9.1], Now);
+        recordings.Add("owner", "trace", 4.11, [9.05], Now);
+        var trace = recordings.Stop("owner", "trace");
+        Assert.Equal(!limited, trace.Passed);
+        var source = trace.Data.Recording!;
+        var json = System.Text.Json.Nodes.JsonNode.Parse(source.Snapshot)!;
+        if (!limited) json["Slope"]!.AsObject().Remove("InitialExceptionWindow");
+        var snapshot = TraceRecordingSnapshot.Parse(json.ToJsonString());
+        Assert.Equal(limited ? 1d : (double?)null, snapshot.Slope!.InitialExceptionWindow);
+        var replay = snapshot.Reconstruct(source.RawChannels);
+        var wave = replay.Channels.Single(w => w.Channel == "U");
+        Assert.Null(wave.DisplayWarning);
+        Assert.Equal(trace.Channels[0].ViolationCount, EnvelopeTraceMetadata.Decode(wave.Quality)!.ViolationCount);
+    }
+
     [Fact]
     public void Algorithm_change_warns_without_replacing_saved_assessment()
     {

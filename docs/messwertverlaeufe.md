@@ -27,6 +27,8 @@ Unvollständige Fenster am Ende bleiben unbewertet. Ohne vollständiges Fenster 
 
 Eine vollständig erfasste Haltephase unterhalb der Mindeststeigung zählt je Kanal als gültiges Steigungsfenster, auch ohne Zielband. Nur fehlende Fenster oder ausschließlich Anlaufausnahmen ergeben ERROR; beide Fälle werden getrennt erläutert. Ein stabiles Ziel darf bereits vor dem ersten vollständigen Fenster erreicht werden.
 
+Anlaufausnahmen lassen sich zusätzlich mit **SteigungAnlaufDauer** auf eine endliche Dauer > 0 s nach dem ersten Messpunkt begrenzen. Das Feld steht unter „Erweitert“ bei positiver Ausnahmeanzahl. Neue Bausteine verwenden 1 s. Eine spätere Spitze bleibt eine echte Grenzverletzung, auch nach einer langen flachen Phase. Alte Konfigurationen ohne Dauer bleiben kompatibel und melden „Anlaufphase unbegrenzt“; die Zeitgrenze wird in gespeicherten Aufnahmen mitgeführt.
+
 ## Zwei getrennte Grenzen: Bewertung und vorzeitiges Aufnahmeende
 
 Das normale Grenzband entscheidet immer über PASS/FAIL. Die zusätzliche Abweichung erweitert dieses zulässige Band nicht. Sie entscheidet ausschließlich, ob die Aufnahme früher endet. Die nächsten Prüfschritte laufen anschließend regulär weiter; ein späteres PASS überschreibt das bereits entstandene FAIL nicht.

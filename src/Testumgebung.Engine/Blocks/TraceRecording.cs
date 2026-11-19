@@ -131,12 +131,22 @@ internal sealed class TraceRecordingSettings
             InitialExceptionCount = (int)count,
             ExceptionDirection = ReadExceptionDirection(p),
             InitialExceptionAbove = p.Number("SteigungAnlaufSchwelle") ?? 0,
+            InitialExceptionWindow = ReadInitialWindow(p, count),
             PositiveThreshold = p.Number("SteigungSchwellePositiv") ?? 0,
             NegativeThreshold = p.Number("SteigungSchwelleNegativ") ?? 0
         };
         try { configured.ValidateThresholdRange(p.Bool("Beruehren")); }
         catch (ArgumentException error) { throw new BlockConfigurationException(error.Message); }
         return configured;
+    }
+
+    private static double? ReadInitialWindow(BlockParameters p, double count)
+    {
+        if (!p.Raw.ContainsKey("SteigungAnlaufDauer")) return null;
+        var duration = p.Number("SteigungAnlaufDauer");
+        if ((duration is null && count > 0) || duration is { } value && (!double.IsFinite(value) || value <= 0))
+            throw new BlockConfigurationException("Für Anlaufausnahmen eine endliche Anlaufdauer > 0 s angeben.");
+        return duration;
     }
 
     private static SlopeExceptionDirection ReadExceptionDirection(BlockParameters p)

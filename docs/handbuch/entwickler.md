@@ -180,7 +180,9 @@ Bei der Grenzauswertung **Steigung** lassen sich im vorhandenen Aufnahmebaustein
 deren Steigung größer als **Anlaufausnahmen: nur ab Steigung** ist. X = 0 deaktiviert diese Ausnahme.
 **Richtung der Anlaufausnahmen** wählt Steigend (> Y), Fallend (< −Y) oder Beide (Betrag > Y).
 Bei Fallend und Beide ist Y ein nichtnegativer Betrag. Alte Projekte erhalten beim Laden Steigend als Vorgabe.
-Anlaufausnahmen gelten nur bis zur ersten regulär bewerteten Steigung je Kanal.
+Anlaufausnahmen gelten nur bis zur ersten regulär bewerteten Steigung je Kanal und höchstens bis zur **Anlaufdauer** nach dem ersten Messpunkt. Unter „Erweitert“ erscheint **Anlaufausnahmen: nur bis [s] nach Aufnahmebeginn**, sobald die Anzahl positiv ist. Neue Bausteine verwenden 1 s; ein endlicher Wert > 0 ist erforderlich. Alte Projekte und gespeicherte Aufnahmen ohne dieses Feld behalten die unbegrenzte Dauer und zeigen „Anlaufphase unbegrenzt“ als Diagnose bzw. Ergebnishinweis.
+
+Beispiele: Nach 4 s konstant 8,5 V wird ein Sprung um 0,6 V in 10 ms (60 V/s) bei 1 s Anlaufdauer regulär bewertet und verletzt Grenzen von −1 bis 1 V/s: FAIL. Beginnt die Aufnahme dagegen 0,5 s vor dem Einschalten bei 0 V und entsteht der gewollte Überschwinger bei 0,52 s, kann er bei 1 s Anlaufdauer noch ausgenommen werden. Fensterenden genau auf der Zeitgrenze sind eingeschlossen. Gesammelte flache Fenster beenden die Anlaufphase nicht vorzeitig.
 Ein späterer Sprung wird daher auch bei unverbrauchter Ausnahmeanzahl bewertet.
 Ausgenommene Werte lösen die Steigungsbewertung und deren zusätzliche Abbruchabweichung nicht aus.
 
