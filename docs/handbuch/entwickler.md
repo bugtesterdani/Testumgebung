@@ -176,15 +176,15 @@ prüfen“ werden nach Ablauf die restlichen Schritte der laufenden Iteration ü
 unterbrochen, die Exit-Gruppe läuft).
 
 Bei der Grenzauswertung **Steigung** lassen sich im vorhandenen Aufnahmebaustein zusätzliche Regeln einstellen.
-**Erste X Grenzverletzungen oberhalb Y ausnehmen** zählt je Kanal ausschließlich Grenzverletzungen,
-deren Steigung größer als **Y für Anlaufausnahmen** ist. X = 0 deaktiviert diese Ausnahme.
+**Anlaufausnahmen: Anzahl je Kanal** zählt je Kanal ausschließlich Grenzverletzungen,
+deren Steigung größer als **Anlaufausnahmen: nur ab Steigung** ist. X = 0 deaktiviert diese Ausnahme.
 **Richtung der Anlaufausnahmen** wählt Steigend (> Y), Fallend (< −Y) oder Beide (Betrag > Y).
 Bei Fallend und Beide ist Y ein nichtnegativer Betrag. Alte Projekte erhalten beim Laden Steigend als Vorgabe.
 Anlaufausnahmen gelten nur bis zur ersten regulär bewerteten Steigung je Kanal.
 Ein späterer Sprung wird daher auch bei unverbrauchter Ausnahmeanzahl bewertet.
 Ausgenommene Werte lösen die Steigungsbewertung und deren zusätzliche Abbruchabweichung nicht aus.
 
-**Positive Mindeststeigung** und **Negative Mindeststeigung** sind direkt in der Kanaleinheit pro Sekunde
+**Kleine Steigungen sammeln bis + / −** sind direkt in der Kanaleinheit pro Sekunde
 angegeben, zum Beispiel V/s. Die nächste Steigung wird bewertet, sobald sie größer als die positive
 Schwelle oder kleiner als die negative Schwelle ist. Werte zwischen beiden Schwellen einschließlich
 der Grenzen werden protokolliert. Der Ausgangspunkt und die gesamte verstrichene Zeit bleiben
@@ -343,3 +343,7 @@ Die Auswahl „Sprache Werkeransicht“ betrifft die Werkeroberfläche. Entwickl
 ### Sichtbare Bausteinparameter
 
 `VisibleWhen` im Bausteinkatalog beschreibt erlaubte Auswahlwerte (`AllowedValues`), Ja/Nein-Schalter (`Boolean`) und positive endliche Zahlen (`GreaterThanZero`). Bedingungen unter `All` gelten gemeinsam. Fehlende Projektwerte verwenden den Vorgabewert des jeweiligen Parameters. Der Editor wertet diese Metadaten einheitlich aus; bei Diagnosen bleiben Eingabefelder zur Korrektur erreichbar. Nur die als Tabelle bearbeiteten Kanal-Einheiten und Grenzkurven bleiben als doppelte Texteingaben verborgen. Die Bedingungen sind ebenfalls im KI-Bausteinkatalog enthalten.
+
+### Steigungsfilter im Editor
+
+Die Sammelschwellen und Anlaufausnahmen stehen unter „Erweitert“. Die Anzahl 0 schaltet Anlaufausnahmen aus; erst bei positiver Anzahl werden Schwelle und Richtung angeboten. Minimale und maximale Steigung sowie die bei Fensterauswertung benötigte Fenstergröße bleiben im Grundbereich. Die gespeicherten Parameternamen ändern sich nicht.

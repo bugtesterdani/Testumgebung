@@ -5694,7 +5694,7 @@
         },
         {
           "name": "SteigungAnlaufAnzahl",
-          "label": "Erste X Grenzverletzungen oberhalb Y ausnehmen",
+          "label": "Anlaufausnahmen: Anzahl je Kanal (0 = aus)",
           "kind": "Number",
           "default": "0",
           "required": false,
@@ -5712,7 +5712,7 @@
             "greaterThanZero": false,
             "all": null
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungAnlaufrichtung",
@@ -5727,49 +5727,83 @@
           ],
           "hint": null,
           "visibleWhen": {
-            "parameter": "Grenzauswertung",
+            "parameter": "",
             "value": "",
-            "allowedValues": [
-              "Steigung je Nachbarpaar",
-              "Steigung in getrennten Fenstern",
-              "Steigung im gleitenden Fenster"
-            ],
+            "allowedValues": null,
             "boolean": null,
             "greaterThanZero": false,
-            "all": null
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungAnlaufSchwelle",
-          "label": "Y f\u00FCr Anlaufausnahmen [Kanaleinheit/s]",
+          "label": "Anlaufausnahmen: nur ab Steigung [Kanaleinheit/s]",
           "kind": "Number",
           "default": "0",
           "required": false,
           "choices": null,
           "hint": null,
           "visibleWhen": {
-            "parameter": "Grenzauswertung",
+            "parameter": "",
             "value": "",
-            "allowedValues": [
-              "Steigung je Nachbarpaar",
-              "Steigung in getrennten Fenstern",
-              "Steigung im gleitenden Fenster"
-            ],
+            "allowedValues": null,
             "boolean": null,
             "greaterThanZero": false,
-            "all": null
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungSchwellePositiv",
-          "label": "Positive Mindeststeigung [Kanaleinheit/s]",
+          "label": "Kleine Steigungen sammeln bis \u002B [Kanaleinheit/s] (0 = aus)",
           "kind": "Number",
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten.",
+          "hint": "Kleine \u00C4nderungen zusammen auswerten. Die gesamte vergangene Messzeit wird mitgerechnet. Schnelle Spr\u00FCnge werden sofort gepr\u00FCft.",
           "visibleWhen": {
             "parameter": "Grenzauswertung",
             "value": "",
@@ -5782,16 +5816,16 @@
             "greaterThanZero": false,
             "all": null
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungSchwelleNegativ",
-          "label": "Negative Mindeststeigung [Kanaleinheit/s]",
+          "label": "Kleine Steigungen sammeln bis \u2212 [Kanaleinheit/s] (0 = aus)",
           "kind": "Number",
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter.",
+          "hint": "F\u00FCr fallende Werte eine negative Schwelle angeben. Beide Schwellen 0 schalten das Sammeln kleiner Steigungen aus.",
           "visibleWhen": {
             "parameter": "Grenzauswertung",
             "value": "",
@@ -5804,7 +5838,7 @@
             "greaterThanZero": false,
             "all": null
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SicherheitMin",
@@ -6478,7 +6512,7 @@
         },
         {
           "name": "SteigungAnlaufAnzahl",
-          "label": "Erste X Grenzverletzungen oberhalb Y ausnehmen",
+          "label": "Anlaufausnahmen: Anzahl je Kanal (0 = aus)",
           "kind": "Number",
           "default": "0",
           "required": false,
@@ -6496,7 +6530,7 @@
             "greaterThanZero": false,
             "all": null
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungAnlaufrichtung",
@@ -6511,49 +6545,83 @@
           ],
           "hint": null,
           "visibleWhen": {
-            "parameter": "Grenzauswertung",
+            "parameter": "",
             "value": "",
-            "allowedValues": [
-              "Steigung je Nachbarpaar",
-              "Steigung in getrennten Fenstern",
-              "Steigung im gleitenden Fenster"
-            ],
+            "allowedValues": null,
             "boolean": null,
             "greaterThanZero": false,
-            "all": null
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungAnlaufSchwelle",
-          "label": "Y f\u00FCr Anlaufausnahmen [Kanaleinheit/s]",
+          "label": "Anlaufausnahmen: nur ab Steigung [Kanaleinheit/s]",
           "kind": "Number",
           "default": "0",
           "required": false,
           "choices": null,
           "hint": null,
           "visibleWhen": {
-            "parameter": "Grenzauswertung",
+            "parameter": "",
             "value": "",
-            "allowedValues": [
-              "Steigung je Nachbarpaar",
-              "Steigung in getrennten Fenstern",
-              "Steigung im gleitenden Fenster"
-            ],
+            "allowedValues": null,
             "boolean": null,
             "greaterThanZero": false,
-            "all": null
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungSchwellePositiv",
-          "label": "Positive Mindeststeigung [Kanaleinheit/s]",
+          "label": "Kleine Steigungen sammeln bis \u002B [Kanaleinheit/s] (0 = aus)",
           "kind": "Number",
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten.",
+          "hint": "Kleine \u00C4nderungen zusammen auswerten. Die gesamte vergangene Messzeit wird mitgerechnet. Schnelle Spr\u00FCnge werden sofort gepr\u00FCft.",
           "visibleWhen": {
             "parameter": "Grenzauswertung",
             "value": "",
@@ -6566,16 +6634,16 @@
             "greaterThanZero": false,
             "all": null
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungSchwelleNegativ",
-          "label": "Negative Mindeststeigung [Kanaleinheit/s]",
+          "label": "Kleine Steigungen sammeln bis \u2212 [Kanaleinheit/s] (0 = aus)",
           "kind": "Number",
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter.",
+          "hint": "F\u00FCr fallende Werte eine negative Schwelle angeben. Beide Schwellen 0 schalten das Sammeln kleiner Steigungen aus.",
           "visibleWhen": {
             "parameter": "Grenzauswertung",
             "value": "",
@@ -6588,7 +6656,7 @@
             "greaterThanZero": false,
             "all": null
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SicherheitMin",

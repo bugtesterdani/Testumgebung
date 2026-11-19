@@ -77,14 +77,14 @@ public static class TraceBlocks
         Hint: "Für getrennte und gleitende Fenster. Nur vollständige Fenster werden bewertet."),
      new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
-     new("SteigungAnlaufAnzahl", "Erste X Grenzverletzungen oberhalb Y ausnehmen", ParameterKind.Number, "0",
+     new("SteigungAnlaufAnzahl", "Anlaufausnahmen: Anzahl je Kanal (0 = aus)", ParameterKind.Number, "0",
         Hint: "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."),
      new("SteigungAnlaufrichtung", "Richtung der Anlaufausnahmen", ParameterKind.Choice, "Steigend", Choices: ["Steigend", "Fallend", "Beide"]),
-     new("SteigungAnlaufSchwelle", "Y für Anlaufausnahmen [Kanaleinheit/s]", ParameterKind.Number, "0"),
-     new("SteigungSchwellePositiv", "Positive Mindeststeigung [Kanaleinheit/s]", ParameterKind.Number, "0",
-        Hint: "Bewerten bei Steigung > Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."),
-     new("SteigungSchwelleNegativ", "Negative Mindeststeigung [Kanaleinheit/s]", ParameterKind.Number, "0",
-        Hint: "Bewerten bei Steigung < Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter."),
+     new("SteigungAnlaufSchwelle", "Anlaufausnahmen: nur ab Steigung [Kanaleinheit/s]", ParameterKind.Number, "0"),
+     new("SteigungSchwellePositiv", "Kleine Steigungen sammeln bis + [Kanaleinheit/s] (0 = aus)", ParameterKind.Number, "0",
+        Hint: "Kleine Änderungen zusammen auswerten. Die gesamte vergangene Messzeit wird mitgerechnet. Schnelle Sprünge werden sofort geprüft."),
+     new("SteigungSchwelleNegativ", "Kleine Steigungen sammeln bis − [Kanaleinheit/s] (0 = aus)", ParameterKind.Number, "0",
+        Hint: "Für fallende Werte eine negative Schwelle angeben. Beide Schwellen 0 schalten das Sammeln kleiner Steigungen aus."),
      new("SicherheitMin", "Harte Messwert-Untergrenze (alle Kanäle)", ParameterKind.Expression),
      new("SicherheitMax", "Harte Messwert-Obergrenze (alle Kanäle)", ParameterKind.Expression),
      new(AbortCurvesParameter, "Abbruchgrenzkurven: ID@Version (Komma)", ParameterKind.Text,
@@ -106,7 +106,12 @@ public static class TraceBlocks
      new(AbsoluteMarginParameter, "Zusätzliche Abweichung [Einheit der Auswertung]", ParameterKind.Number, "0",
         Hint: "Zum Beispiel V bei Spannung oder V/s bei Steigung.")]);
     private static ParameterDescriptor[] ConfigureRecordingParameters(ParameterDescriptor[] parameters)
-        => parameters.Select(parameter => parameter with { VisibleWhen = RecordingVisibility(parameter.Name) }).ToArray();
+        => parameters.Select(parameter => parameter with
+        {
+            VisibleWhen = RecordingVisibility(parameter.Name),
+            Advanced = parameter.Advanced || parameter.Name is "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
+                or "SteigungAnlaufrichtung" or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ"
+        }).ToArray();
 
     private static ParameterVisibility? RecordingVisibility(string name)
         => EvaluationVisibility(name) ?? StopVisibility(name);
@@ -115,6 +120,9 @@ public static class TraceBlocks
     {
         if (name == "Steigungsfenster")
             return new(EvaluationParameter, AllowedValues: [DisjointSlope, RollingSlope]);
+        if (name is "SteigungAnlaufSchwelle" or "SteigungAnlaufrichtung")
+            return new(All: [new(EvaluationParameter, AllowedValues: [PairSlope, DisjointSlope, RollingSlope]),
+                new("SteigungAnlaufAnzahl", GreaterThanZero: true)]);
         if (name.StartsWith("Steigung", StringComparison.Ordinal))
             return new(EvaluationParameter, AllowedValues: [PairSlope, DisjointSlope, RollingSlope]);
         if (name is LowerFormulaParameter or UpperFormulaParameter)
