@@ -5970,7 +5970,8 @@
               }
             ]
           },
-          "advanced": true
+          "advanced": true,
+          "section": "Grenzauswertung"
         },
         {
           "name": "SteigungAnlaufSchwelle",
@@ -6978,7 +6979,8 @@
               }
             ]
           },
-          "advanced": true
+          "advanced": true,
+          "section": "Grenzauswertung"
         },
         {
           "name": "SteigungAnlaufSchwelle",
