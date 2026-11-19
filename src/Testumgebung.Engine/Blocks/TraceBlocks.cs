@@ -41,7 +41,7 @@ public static class TraceBlocks
             new[] { Name() }.Concat(ReaderParameters()).Concat([new("Zeit", "Zeit [s], leer = seit Aufnahmebeginn", ParameterKind.Expression),
                 new("VorzeitigesEndeZiel", "Vorzeitiges Ende → Boolvariable", ParameterKind.Variable),
                 new("StabilesZiel", "Stabiles Ziel erreicht → Boolvariable", ParameterKind.Variable), ExitDutOption(), ExitOnEndOption()]).ToArray(), CreatePoint));
-        catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR.",
+        catalog.Register(new(Stop, "Verlauf beenden und bewerten", "Messwertverläufe", "measure", "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollständige Daten ergeben ERROR. Wegen Mindeststeigung gesammelte Fenster zählen als vollständig; ausschließlich Anlaufausnahmen nicht.",
             [Name(), ResultTarget(), ExitDutOption(), ExitOnEndOption()], parameters => new DelegateAction(ctx =>
             {
                 ValidateTarget(ctx, parameters.Optional("ErgebnisZiel"));

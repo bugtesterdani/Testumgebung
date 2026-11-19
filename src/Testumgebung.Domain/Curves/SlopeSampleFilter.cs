@@ -12,6 +12,9 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
     public List<SuppressedSlopeSample> Suppressed { get; } = [];
     public HashSet<int> SuppressedIndices { get; } = [];
     public int EvaluatedCount { get; private set; }
+    public int CollectedCount { get; private set; }
+    public int ExceptionCount => _exceptions;
+    public bool HasUsableWindow => EvaluatedCount > 0 || CollectedCount > 0;
 
     public (int First, double Value) Calculate(int first, int last, IReadOnlyList<double> times, IReadOnlyList<double> values)
     {
@@ -33,6 +36,7 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
     {
         var reason = Reason(value, touchAllowed);
         _pendingStart = reason == SlopeSuppressionReason.BelowThreshold ? first : null;
+        if (reason == SlopeSuppressionReason.BelowThreshold) CollectedCount++;
         if (reason != SlopeSuppressionReason.None)
         {
             SuppressedIndices.Add(slopeIndex);

@@ -25,6 +25,8 @@ Für jedes vollständige Fenster wird die Differenz zwischen End- und Startwert 
 
 Unvollständige Fenster am Ende bleiben unbewertet. Ohne vollständiges Fenster ergibt die Aufnahme ERROR. Der optionale Sofortabbruch verwendet die Steigungsgrenzen. Separate Abbruchgrenzkurven stehen für das Wert-Grenzband zur Verfügung.
 
+Eine vollständig erfasste Haltephase unterhalb der Mindeststeigung zählt je Kanal als gültiges Steigungsfenster, auch ohne Zielband. Nur fehlende Fenster oder ausschließlich Anlaufausnahmen ergeben ERROR; beide Fälle werden getrennt erläutert. Ein stabiles Ziel darf bereits vor dem ersten vollständigen Fenster erreicht werden.
+
 ## Zwei getrennte Grenzen: Bewertung und vorzeitiges Aufnahmeende
 
 Das normale Grenzband entscheidet immer über PASS/FAIL. Die zusätzliche Abweichung erweitert dieses zulässige Band nicht. Sie entscheidet ausschließlich, ob die Aufnahme früher endet. Die nächsten Prüfschritte laufen anschließend regulär weiter; ein späteres PASS überschreibt das bereits entstandene FAIL nicht.
