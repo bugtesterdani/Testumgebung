@@ -208,7 +208,7 @@ Im Prüfergebnis stehen Anzahl und Details unter **SuppressedSlopes** in den ges
 Kurvenmetadaten und der JSON-Ergebnisvariable. Graue Rauten in der Kurvenansicht kennzeichnen ausgeschlossene Steigungen; der Hinweistext zeigt Kanal, Zeit, Steigung, Ausgangszeit und beide Messwerte mit Ausschlussgrund. In gespeicherten Ergebnissen listet „Ausgeschlossene Steigungen (je Kanal)“ diese Angaben auf. Alte Ergebnisse ohne Ausschlüsse bleiben darstellbar. Die gespeicherten Gründe „Mindeststeigung nicht erreicht“ und „Anlaufausnahme X von Y“ bleiben lesbar. Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
 Ausgangswert, Endwert und den Ausnahmegrund. Die normale Steigungsdarstellung enthält die
 berechneten Werte, ausgenommene Vergleiche erhalten keine Grenzverletzungsmarkierung.
-Eine Aufnahme ohne einen regulär auswertbaren Steigungsvergleich je Kanal ergibt ERROR.
+Je Kanal muss mindestens ein regulär bewertetes oder wegen Mindeststeigung gesammeltes Fenster vorliegen. Vollständig erfasste Haltephasen ergeben damit PASS. Ohne Fenster (zu wenige Punkte) oder bei ausschließlich Anlaufausnahmen ergibt sich jeweils eine eigene ERROR-Meldung. Ein erreichtes stabiles Zielband darf weiterhin vor dem ersten vollständigen Steigungsfenster erfolgreich enden.
 Harte Messwert-Sicherheitsgrenzen bleiben bei jedem Rohmesswert wirksam.
 
 Bei **Messwertverlauf aufnehmen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten**

@@ -510,10 +510,9 @@ internal sealed class EnvelopeRecording
     {
         if (_faulted) return "Messdaten ungültig: Aufnahme durch einen vorausgegangenen Datenfehler unterbrochen.";
         if (!stopped) return "Messdaten unvollständig: Aufnahme nicht regulär abgeschlossen.";
+        if (SlopeIncompleteReason() is { } slopeReason) return slopeReason;
         if (_times.Count < _minimumPoints)
             return $"Messdaten unvollständig: {_times.Count} gültige Messpunkte vorhanden, mindestens {_minimumPoints} erforderlich.";
-        if (_slope is not null && !TargetReached && _slopeFilters.Any(filter => filter.EvaluatedCount == 0))
-            return "Messdaten unvollständig: kein auswertbares Steigungsfenster vorhanden.";
         var measuredDuration = _times[^1] - _times[0];
         if (measuredDuration + TimeTolerance(_minimumDuration) < _minimumDuration)
             return $"Messdauer zu kurz: {measuredDuration:G6} s gemessen, mindestens {_minimumDuration:G6} s erforderlich.";
@@ -521,6 +520,16 @@ internal sealed class EnvelopeRecording
             return $"Zeitfenster nicht abgedeckt: {_times[0]:G6}..{_times[^1]:G6} s gemessen, 0..{duration:G6} s erforderlich.";
         return _target is not null && !TargetReached ? "Messdaten unvollständig: stabiles Zielband wurde nicht erreicht." : null;
     }
+    private string? SlopeIncompleteReason()
+    {
+        if (_slope is null || TargetReached) return null;
+        var missing = _slopeFilters.FirstOrDefault(filter => !filter.HasUsableWindow);
+        if (missing is null) return null;
+        return missing.ExceptionCount > 0
+            ? "Messdaten unvollständig: ausschließlich Anlaufausnahmen vorhanden."
+            : "Messdaten unvollständig: kein Steigungsfenster vorhanden (zu wenige Messpunkte).";
+    }
+
     private bool HasUncoveredWindow(double duration)
     {
         var tolerance = TimeTolerance(duration);

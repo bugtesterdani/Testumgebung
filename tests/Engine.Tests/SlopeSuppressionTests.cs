@@ -12,6 +12,50 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(SlopeWindowMode.Consecutive, 2)]
+    [InlineData(SlopeWindowMode.Disjoint, 5)]
+    [InlineData(SlopeWindowMode.Rolling, 5)]
+    public void Missing_windows_and_only_startup_exceptions_have_distinct_incomplete_reasons(SlopeWindowMode mode, int points)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(mode, points, -1, 1) { InitialExceptionCount = 10, InitialExceptionAbove = 5 });
+        recordings.Add("owner", "trace", 0, [0], Now);
+        var missing = recordings.Stop("owner", "trace");
+        Assert.False(missing.Complete);
+        Assert.Contains("kein Steigungsfenster vorhanden", missing.IncompleteReason);
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(mode, points, -1, 1) { InitialExceptionCount = 10, InitialExceptionAbove = 5 });
+        for (var index = 0; index < points; index++)
+            recordings.Add("owner", "trace", index * 0.01, [index], Now);
+        var exempt = recordings.Stop("owner", "trace");
+        Assert.False(exempt.Complete);
+        Assert.Contains("ausschließlich Anlaufausnahmen", exempt.IncompleteReason);
+    }
+
+
+    [Theory]
+    [InlineData(SlopeWindowMode.Consecutive, 2)]
+    [InlineData(SlopeWindowMode.Disjoint, 5)]
+    [InlineData(SlopeWindowMode.Rolling, 5)]
+    public void Holding_and_mixed_channels_are_complete_without_target(SlopeWindowMode mode, int points)
+    {
+        foreach (var ramp in new[] { false, true })
+        {
+            var recordings = new EnvelopeRecordings();
+            recordings.Start("owner", "trace", [new("U", "V", null), new("I", "A", null)], Now,
+                slope: new(mode, points, -1, 1) { PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+            for (var index = 0; index <= 300; index++)
+                recordings.Add("owner", "trace", index * 0.01,
+                    [8.5 + (ramp ? index * 0.005 : index % 2 * 0.001), 1], Now);
+            var result = recordings.Stop("owner", "trace");
+            Assert.True(result.Complete);
+            Assert.True(result.Passed);
+        }
+    }
+
+
+    [Theory]
     [InlineData(SlopeWindowMode.Consecutive)]
     [InlineData(SlopeWindowMode.Disjoint)]
     [InlineData(SlopeWindowMode.Rolling)]
@@ -130,7 +174,7 @@ public sealed class SlopeSuppressionTests
         recordings.Start("owner", "small", [new("U", "V", null)], Now, slope: settings);
         recordings.Add("owner", "small", 0, [0], Now);
         recordings.Add("owner", "small", 0.01, [0.1], Now);
-        Assert.False(recordings.Stop("owner", "small").Complete);
+        Assert.True(recordings.Stop("owner", "small").Passed);
     }
 
     [Fact]
@@ -162,7 +206,7 @@ public sealed class SlopeSuppressionTests
         recordings.Add("owner", "trace", 0, [0], Now);
         recordings.Add("owner", "trace", 1, [slope], Now);
         var result = recordings.Stop("owner", "trace");
-        Assert.Equal(evaluated == 1, result.Complete);
+        Assert.True(result.Complete);
         Assert.Equal(1 - evaluated, Assert.Single(result.Channels).SuppressedSlopes.Count);
     }
 

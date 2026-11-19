@@ -6519,7 +6519,7 @@
       "type": "verlauf.bewerten",
       "displayName": "Verlauf beenden und bewerten",
       "category": "Messwertverl\u00E4ufe",
-      "description": "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollst\u00E4ndige Daten ergeben ERROR.",
+      "description": "Bewertet den Verlauf. Normale Grenzverletzungen und vorzeitiges Ende wegen Abweichung ergeben FAIL. Fehlende vollst\u00E4ndige Daten ergeben ERROR. Wegen Mindeststeigung gesammelte Fenster z\u00E4hlen als vollst\u00E4ndig; ausschlie\u00DFlich Anlaufausnahmen nicht.",
       "parameters": [
         {
           "name": "Aufnahme",

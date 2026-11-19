@@ -209,6 +209,26 @@ public sealed class TraceRawStorageTests
             legacy.Waveforms.Sum(wave => wave.Data.Count));
         Assert.Empty(ResultFile.Read(rawBytes).Problems);
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Collected_window_replay_warns_only_when_saved_completeness_differs(bool historicalIncomplete)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -1, 1) { PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+        recordings.Add("owner", "trace", 0, [8.5], Now);
+        recordings.Add("owner", "trace", 1, [8.5], Now);
+        var source = recordings.Stop("owner", "trace").Data.Recording!;
+        var snapshot = TraceRecordingSnapshot.Parse(source.Snapshot);
+        if (historicalIncomplete)
+            snapshot = snapshot with { Complete = false, Assessments = snapshot.Assessments.Select(a => a with { Complete = false }).ToArray() };
+        var replay = snapshot.Reconstruct(source.RawChannels);
+        var wave = replay.Channels.Single(w => w.Channel == "U");
+        Assert.Equal(historicalIncomplete, wave.DisplayWarning is not null);
+        Assert.Equal(!historicalIncomplete, EnvelopeTraceMetadata.Decode(wave.Quality)!.Complete);
+    }
+
     [Fact]
     public void Algorithm_change_warns_without_replacing_saved_assessment()
     {
