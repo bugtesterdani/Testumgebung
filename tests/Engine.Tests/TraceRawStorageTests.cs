@@ -164,6 +164,41 @@ public sealed class TraceRawStorageTests
         Assert.NotEmpty(snapshot.Channels[0].Limits!.Hash);
     }
     [Fact]
+    public void Saved_exclusion_audit_survives_raw_replay_and_shared_plot_filters()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -5, 5)
+            { InitialExceptionCount = 1, InitialExceptionAbove = 20 });
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 1, [100], Now);
+        recordings.Add("owner", "trace", 2, [101], Now);
+        var trace = recordings.Stop("owner", "trace");
+        var stored = ResultFile.Read(ResultFile.ToBytes(Run(trace)));
+        Assert.Empty(stored.Problems);
+        var document = new ResultDocumentViewModel(stored.Run);
+        var audit = Assert.Single(document.SuppressedSlopes);
+        Assert.Contains("Anlaufausnahme", audit.Description);
+        var plot = document.WaveformPlot;
+        var slopes = Assert.Single(plot.Panes, pane => pane.PaneTitle == "V/s");
+        var values = Assert.Single(plot.Panes, pane => pane.PaneTitle == "V");
+        Assert.Empty(values.SuppressionMarkers);
+        Assert.Equal(audit.Description, Assert.Single(slopes.SuppressionMarkers).Description);
+        plot.ShowSuppressed = false;
+        Assert.Empty(slopes.SuppressionMarkers);
+        Assert.Single(document.SuppressedSlopes);
+        plot.ShowSuppressed = true;
+        Assert.Single(slopes.SuppressionMarkers);
+        plot.ShowSlopes = false;
+        Assert.Empty(slopes.SuppressionMarkers);
+        plot.ShowSlopes = true;
+        Assert.Single(slopes.SuppressionMarkers);
+        slopes.Channels.Single(channel => channel.Id == "U").IsVisible = false;
+        Assert.Empty(slopes.SuppressionMarkers);
+        Assert.Single(document.SuppressedSlopes);
+    }
+
+    [Fact]
     public void Unit_panes_share_cursor_and_zoom_but_keep_independent_units_and_filters()
     {
         var plot = new WaveformPlotViewModel(); plot.SetData(Record(true).Data);
