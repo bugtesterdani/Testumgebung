@@ -24,6 +24,7 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
     EnvelopeTraceMetadata[] Assessments)
 {
     public const int CurrentAlgorithmVersion = 1;
+    public bool InvalidData { get; init; }
 
     public static TraceRecordingSnapshot Parse(string json)
     {
@@ -43,6 +44,7 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
             Duration, Slope, LowerFormula is null ? null : new FormulaLimits(LowerFormula, UpperFormula!), null, MinimumPoints, Target, false);
         for (var index = 0; index < AssessedRawPoints; index++)
             replay.Add(raw[0].TimeOf(index), raw.Select(channel => channel.Values[index]).ToArray(), raw[0].Start);
+        if (InvalidData) replay.Invalidate();
         var (baseline, calculated, hasSavedPartial) = EvaluateReplay(replay);
         var comparison = hasSavedPartial ? calculated : baseline;
         var newPartialViolation = !hasSavedPartial && calculated.Violations > baseline.Violations;
@@ -65,7 +67,7 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
         var stop = Assessments.Select(assessment => assessment.EarlyStop).FirstOrDefault(value => value is { HardLimit: false });
         if (!savedPartial) replay.RestoreDisplayStop(stop);
         var baseline = replay.Evaluate(Stopped, finalizePartialWindows: false);
-        var canFinalize = Assessments.All(assessment => assessment.EarlyStop is null
+        var canFinalize = !InvalidData && Assessments.All(assessment => assessment.EarlyStop is null
             || savedPartial && assessment.EarlyStop is { HardLimit: false } early && assessment.PartialWindowTimes.Contains(early.Time));
         var calculated = replay.Evaluate(Stopped, finalizePartialWindows: canFinalize);
         if (savedPartial)

@@ -307,6 +307,30 @@ public sealed class TraceRawStorageTests
     }
 
     [Fact]
+    public void Invalid_data_state_prevents_remainder_reassessment_after_roundtrip()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, minimumPoints: 5,
+            slope: new(SlopeWindowMode.Disjoint, 3, -1, 1));
+        for (var i = 0; i < 4; i++) recordings.Add("owner", "trace", i, [i == 3 ? 10 : 0], Now);
+        recordings.Invalidate("owner", "trace");
+        var trace = recordings.Stop("owner", "trace");
+        Assert.False(trace.Complete);
+        Assert.Empty(trace.Channels[0].Violations);
+        var source = trace.Data.Recording!;
+        var snapshot = TraceRecordingSnapshot.Parse(source.Snapshot);
+        Assert.True(snapshot.InvalidData);
+        var replay = snapshot.Reconstruct(source.RawChannels);
+        var wave = replay.Channels.Single(w => w.Channel == "U");
+        Assert.Null(wave.DisplayWarning);
+        Assert.Single(wave.Values);
+        var metadata = EnvelopeTraceMetadata.Decode(wave.Quality)!;
+        Assert.False(metadata.Complete);
+        Assert.Empty(metadata.Violations);
+        Assert.Empty(metadata.PartialWindowTimes);
+    }
+
+    [Fact]
     public void Algorithm_change_warns_without_replacing_saved_assessment()
     {
         var trace = Record();

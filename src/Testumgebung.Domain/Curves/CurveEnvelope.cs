@@ -328,7 +328,7 @@ internal sealed class EnvelopeRecording
             _stopMargin is { Absolute: false } percent ? percent.Value : null,
             _stopMargin is { Absolute: true } absolute ? absolute.Value : null,
             _times.Count, stopped, evaluation.Complete,
-            evaluation.Channels.Select(metadata => metadata with { OriginalTimes = [] }).ToArray());
+            evaluation.Channels.Select(metadata => metadata with { OriginalTimes = [] }).ToArray()) { InvalidData = _faulted };
         return new(System.Text.Json.JsonSerializer.Serialize(snapshot), channels);
     }
 
