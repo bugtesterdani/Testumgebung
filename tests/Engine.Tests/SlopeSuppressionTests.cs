@@ -245,16 +245,21 @@ public sealed class SlopeSuppressionTests
         Assert.Equal(plateauPoints, result.Channels[0].SuppressedSlopes.Count);
     }
 
-    [Fact]
-    public void Unused_initial_exceptions_cannot_hide_a_later_spike()
+    [Theory]
+    [InlineData(SlopeExceptionDirection.Rising, 1)]
+    [InlineData(SlopeExceptionDirection.Falling, -1)]
+    [InlineData(SlopeExceptionDirection.Both, 1)]
+    [InlineData(SlopeExceptionDirection.Both, -1)]
+    public void Unused_initial_exceptions_cannot_hide_a_later_spike(SlopeExceptionDirection direction, int sign)
     {
         var recordings = new EnvelopeRecordings();
         recordings.Start("owner", "trace", [new("U", "V", null)], Now, maxGap: 4,
-            slope: new(SlopeWindowMode.Consecutive, 2, -2, 2) { InitialExceptionCount = 3, InitialExceptionAbove = 10 });
+            slope: new(SlopeWindowMode.Consecutive, 2, -2, 2)
+            { InitialExceptionCount = 3, InitialExceptionAbove = 10, ExceptionDirection = direction });
         recordings.Add("owner", "trace", 0, [0], Now);
-        recordings.Add("owner", "trace", 1, [1], Now);
-        recordings.Add("owner", "trace", 4, [1], Now);
-        recordings.Add("owner", "trace", 4.01, [2], Now);
+        recordings.Add("owner", "trace", 1, [sign], Now);
+        recordings.Add("owner", "trace", 4, [sign], Now);
+        recordings.Add("owner", "trace", 4.01, [2 * sign], Now);
         var result = recordings.Stop("owner", "trace");
         Assert.False(result.Passed);
         Assert.Empty(result.Channels[0].SuppressedSlopes);
