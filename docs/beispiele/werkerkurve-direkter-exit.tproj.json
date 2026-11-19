@@ -318,7 +318,8 @@
                   "Werte": "",
                   "Ressourcen": "Demo_DMM_Spannung",
                   "Zeit": "2",
-                  "BeiVorzeitigemEndeZurExitGruppe": "true"
+                  "BeiVorzeitigemEndeZurExitGruppe": "true",
+                  "NachAufnahmeende": "Exit bei vorzeitigem Ende"
                 },
                 "id": "demo-point-2",
                 "name": "Messpunkt 2 s"
