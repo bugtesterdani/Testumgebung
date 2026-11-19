@@ -12,6 +12,28 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(4.01, false)]
+    [InlineData(0.52, true)]
+    [InlineData(1.0, true)]
+    [InlineData(1.01, false)]
+    public void Startup_exceptions_are_limited_by_time_from_first_sample(double elapsed, bool exempt)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, maxGap: 10,
+            slope: new(SlopeWindowMode.Consecutive, 2, -1, 1)
+            { InitialExceptionCount = 3, InitialExceptionAbove = 5, InitialExceptionWindow = 1,
+              PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+        recordings.Add("owner", "trace", 10, [8.5], Now);
+        recordings.Add("owner", "trace", 10 + elapsed - 0.01, [8.5], Now);
+        recordings.Add("owner", "trace", 10 + elapsed, [9.1], Now);
+        recordings.Add("owner", "trace", 10 + elapsed + 0.1, [9.05], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.Equal(exempt, result.Passed);
+        Assert.Equal(exempt ? 0 : 1, result.Violations);
+    }
+
+
+    [Theory]
     [InlineData(SlopeWindowMode.Consecutive, 2)]
     [InlineData(SlopeWindowMode.Disjoint, 5)]
     [InlineData(SlopeWindowMode.Rolling, 5)]
