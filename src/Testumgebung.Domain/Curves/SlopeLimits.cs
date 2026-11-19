@@ -26,8 +26,7 @@ public sealed record SlopeLimits(SlopeWindowMode Mode, int Points, double Minimu
 
     private void ValidateSuppression(int maxPoints)
     {
-        if (InitialExceptionWindow is { } window && (!double.IsFinite(window) || window <= 0))
-            throw new ArgumentException("Die Anlaufdauer muss endlich und > 0 sein.");
+        ValidateInitialWindow();
         if (!Enum.IsDefined(ExceptionDirection) || (ExceptionDirection != SlopeExceptionDirection.Rising && InitialExceptionAbove < 0))
             throw new ArgumentException("Für fallende oder beidseitige Anlaufausnahmen eine nichtnegative Schwelle angeben.");
         if (InitialExceptionCount < 0 || InitialExceptionCount > maxPoints || !double.IsFinite(InitialExceptionAbove))
@@ -35,6 +34,12 @@ public sealed record SlopeLimits(SlopeWindowMode Mode, int Points, double Minimu
         if (!double.IsFinite(PositiveThreshold) || !double.IsFinite(NegativeThreshold)
             || PositiveThreshold < 0 || NegativeThreshold > 0)
             throw new ArgumentException("Die positive Mindeststeigung muss ≥ 0 und die negative ≤ 0 sein.");
+    }
+
+    private void ValidateInitialWindow()
+    {
+        if (InitialExceptionWindow is { } window && (!double.IsFinite(window) || window <= 0))
+            throw new ArgumentException("Die Anlaufdauer muss endlich und > 0 sein.");
     }
 
     public void ValidateThresholdRange(bool touchAllowed)

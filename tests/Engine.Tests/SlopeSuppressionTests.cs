@@ -12,6 +12,19 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void Domain_recording_rejects_invalid_startup_windows_even_when_exceptions_are_disabled(double duration)
+    {
+        var recordings = new EnvelopeRecordings();
+        Assert.Throws<ArgumentException>(() => recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -1, 1) { InitialExceptionWindow = duration }));
+    }
+
+
+    [Theory]
     [InlineData(TraceBlocks.Start)]
     [InlineData(TraceBlocks.Record)]
     public void New_startup_windows_are_required_but_legacy_projects_remain_executable(string type)
