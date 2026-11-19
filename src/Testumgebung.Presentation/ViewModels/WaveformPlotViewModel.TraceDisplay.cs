@@ -15,6 +15,8 @@ public sealed partial class WaveformPlotViewModel
     public bool ShowContentFilters => !IsPane && _hasTraceData;
     public string PaneTitle { get; private set; } = "";
     public string ReplayWarning { get; private set; } = "";
+    public string PartialWindowHint { get; private set; } = "";
+    public bool HasPartialWindowHint => PartialWindowHint.Length > 0;
     public bool HasReplayWarning => ReplayWarning.Length > 0;
     public double PreferredHeight => HasPanes ? 500 : 230;
     public bool ShowMeasurements { get => _showMeasurements; set { if (SetProperty(ref _showMeasurements, value)) FilterChanged(); } }
@@ -94,6 +96,9 @@ public sealed partial class WaveformPlotViewModel
         ReplayWarning = string.Join(" ", waves.Select(wave => wave.DisplayWarning).Where(warning => !string.IsNullOrWhiteSpace(warning)).Distinct());
         SetData(waves.Select(wave => Resample(wave, times)).ToArray(), 0, times, keepView: true,
             violations: violations, pointTrace: samples.Count > 0, sampleTimes: samples, suppressedSlopes: suppressed);
+        PartialWindowHint = string.Join("; ", metadata.SelectMany(pair => (pair.Value?.PartialWindowTimes ?? [])
+            .Select(time => $"{pair.Key}: verkürztes Steigungs-Restfenster bei t={time:G6} s")));
+        OnPropertiesChanged(nameof(PartialWindowHint), nameof(HasPartialWindowHint));
     }
 
     private static PlotSource Resample(Waveform wave, double[] times)

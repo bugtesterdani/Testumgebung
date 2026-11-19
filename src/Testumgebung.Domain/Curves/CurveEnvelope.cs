@@ -112,6 +112,7 @@ internal sealed class EnvelopeRecording
     private readonly FormulaLimits? _formula;
     private readonly Dictionary<double, (double Lower, double Upper)> _formulaBounds = [];
     private readonly List<double> _slopeTimes = [];
+    private double? _partialWindowTime;
     private readonly List<double>[] _slopes;
     private readonly SlopeSampleFilter[] _slopeFilters;
     private readonly CurveEnvelope?[] _abortEnvelopes;
@@ -299,8 +300,9 @@ internal sealed class EnvelopeRecording
         EarlyStop = stop;
     }
 
-    public TraceEvaluation Evaluate(bool stopped)
+    public TraceEvaluation Evaluate(bool stopped, bool finalizePartialWindows = true)
     {
+        if (finalizePartialWindows && stopped) FinalizePartialSlope();
         var evaluation = EvaluateQuality(stopped) with
         {
             ConfigurationWarning = _slope is { InitialExceptionCount: > 0, InitialExceptionWindow: null }
@@ -367,7 +369,23 @@ internal sealed class EnvelopeRecording
     private void CheckSlope(SlopeLimits limits)
     {
         if (!limits.IsWindowEnd(_times.Count)) return;
-        var first = _times.Count - limits.Points;
+        AppendSlope(limits, _times.Count - limits.Points);
+    }
+
+    private void FinalizePartialSlope()
+    {
+        if (_slope is not { Mode: SlopeWindowMode.Disjoint } limits || _faulted || EarlyStop is not null
+            || _partialWindowTime is not null || _times.Count < 2) return;
+        var remainder = _times.Count % limits.Points;
+        if (remainder == 0) return;
+        var first = remainder == 1 ? _times.Count - 2 : _times.Count - remainder;
+        try { AppendSlope(limits, first); }
+        catch { _faulted = true; throw; }
+        _partialWindowTime = _times[^1];
+    }
+
+    private void AppendSlope(SlopeLimits limits, int first)
+    {
         var time = _times[^1];
         var last = _times.Count - 1;
         // Validate the entire window before changing timestamps, samples, or per-channel filter state.
@@ -388,7 +406,7 @@ internal sealed class EnvelopeRecording
     private TraceEvaluation EvaluateSlopes(SlopeLimits limits, bool complete)
     {
         if (_slopeTimes.Count == 0 && !TargetReached) return new(new([]), [], false) { Finished = Ended };
-                var times = _slopeTimes.ToArray();
+        var times = _slopeTimes.ToArray();
         var lower = Enumerable.Repeat(limits.Minimum, times.Length).ToArray();
         var upper = Enumerable.Repeat(limits.Maximum, times.Length).ToArray();
         var waves = new List<Waveform>();
@@ -409,7 +427,8 @@ internal sealed class EnvelopeRecording
             var info = new EnvelopeTraceMetadata("Steigung", "", definition.Name, times,
                 details.Select(detail => detail.Time).ToArray(), details.Count,
                 details.Count == 0 ? 0 : details.Max(detail => detail.Deviation), complete)
-                { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration, SuppressedSlopes = _slopeFilters[channel].Suppressed.ToArray() };
+                { Details = details, EarlyStop = EarlyStop, PlannedDuration = _duration, SuppressedSlopes = _slopeFilters[channel].Suppressed.ToArray(),
+                  PartialWindowTimes = _partialWindowTime is { } partial ? [partial] : [] };
             metadata.Add(info);
             var unit = definition.Unit + "/s";
             waves.Add(new(definition.Name, unit, 0, _start, values, times, info.Encode()));

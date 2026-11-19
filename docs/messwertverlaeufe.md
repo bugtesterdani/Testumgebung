@@ -21,6 +21,8 @@ In **Messwertverlauf beginnen** oder **Messwertverlauf aufnehmen** die **Grenzau
 | Steigung in getrennten Fenstern | bei 5 Punkten: 1–5, 6–10, 11–15, … |
 | Steigung im gleitenden Fenster | bei 5 Punkten: 1–5, 2–6, 3–7, … |
 
+Bei getrennten Fenstern wird am regulären Ende, beim erreichten Zielband und beim manuellen Bewerten auch das angebrochene Restfenster genau einmal geprüft. Ein einzelner Restpunkt verwendet den letzten Punkt des vorherigen Fensters. Sicherheits- und bereits ausgelöste Abbruchgrenzen verhindern diese Zusatzprüfung. Dieselben Grenzen, Sammelschwellen und Anlaufausnahmen gelten; `PartialWindowTimes` kennzeichnet die Endzeit in den Metadaten. Die Kurvenansicht nennt das verkürzte Restfenster im Hinweistext. Alte gespeicherte Bewertungen bleiben maßgeblich; zusätzliche Restfenster ohne neue Grenzverletzung erzeugen keinen pauschalen Abweichungshinweis.
+
 Für jedes vollständige Fenster wird die Differenz zwischen End- und Startwert durch die verstrichene Messzeit in Sekunden geteilt. Eine Änderung von 2 V auf 5 V in 2 s ergibt +1,5 V/s. Das Diagramm zeigt diese Steigung am letzten Zeitpunkt des Fensters und die eingestellten Min-/Max-Grenzen. Die Grenzen gelten für jeden Kanal in seiner jeweiligen Einheit pro Sekunde.
 
 Unvollständige Fenster am Ende bleiben unbewertet. Ohne vollständiges Fenster ergibt die Aufnahme ERROR. Der optionale Sofortabbruch verwendet die Steigungsgrenzen. Separate Abbruchgrenzkurven stehen für das Wert-Grenzband zur Verfügung.

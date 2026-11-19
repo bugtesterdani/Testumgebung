@@ -195,6 +195,8 @@ Der gesamte ausgenommene Bereich muss innerhalb der normalen Steigungsgrenzen li
 Wenn Berühren nicht zulässig ist, müssen die Schwellen streng innerhalb liegen.
 Ein aktivierter Mindeststeigungsfilter ist bei einer geforderten minimalen Steigung über 0 nicht verwendbar.
 Ungültige Kombinationen bleiben beim Laden erhalten und werden als Konfigurationsdiagnose angezeigt.
+Getrennte Fenster prüfen beim regulären Aufnahmeende, Zielband-Ende und manuellen Bewerten zusätzlich ein verkürztes Restfenster. Bei einem Restpunkt zählt der letzte Punkt des vorherigen Fensters als Ausgangspunkt; bei mehreren Restpunkten zählt der erste Restpunkt. Die Bewertung erfolgt genau einmal und nicht bei Live-Vorschauen. Sicherheitsabbruch, bereits ausgelöste Abbruchgrenzen und ungültige Aufnahmen erhalten keine zusätzliche Restbewertung. `PartialWindowTimes` enthält die Endzeit, die Kurvenansicht nennt den verkürzten Vergleich. Gespeicherte Bewertungen bleiben maßgeblich; alte Läufe erhalten wegen neuer Restfenster nur bei zusätzlichen Grenzverletzungen einen Hinweis.
+
 Die Regeln gelten auch für getrennte und gleitende Fenster. Dort bestimmt das gewählte Fenster weiterhin,
 wann ein neuer Vergleich erfolgt. Bei ausgenommenen Vergleichen bleibt dessen erster Ausgangspunkt bestehen.
 

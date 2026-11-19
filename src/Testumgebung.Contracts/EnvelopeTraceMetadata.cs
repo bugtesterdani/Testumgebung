@@ -6,6 +6,7 @@ public sealed record EnvelopeTraceMetadata(string Curve, string Hash, string Cha
 {
     public IReadOnlyList<EnvelopeViolation> Details { get; init; } = [];
     public IReadOnlyList<SuppressedSlopeSample> SuppressedSlopes { get; init; } = [];
+    public IReadOnlyList<double> PartialWindowTimes { get; init; } = [];
     public EnvelopeEarlyStop? EarlyStop { get; init; }
     public double? PlannedDuration { get; init; }
     public const string Prefix = "Grenzband:";
