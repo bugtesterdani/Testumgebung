@@ -116,8 +116,7 @@ public partial class MainWindow : Window
         var access = accessStore.Load();
         IIdentityProvider Provider(AccessConfig? accessConfig) => accessConfig switch
         {
-            { UsesEntra: true, EntraBrokerTlsSha256.Length: > 0 } => new EntraBrokerIdentityProvider(accessConfig),
-            { UsesEntra: true } => new MsalIdentityProvider(accessConfig.ClientId!, accessConfig.TenantId!, accessConfig.EntraRedirectUri),
+            { UsesEntra: true } => EntraIdentityProviderFactory.Create(accessConfig),
             { UsesLocalPasswords: true } => new LocalPasswordIdentityProvider(accessConfig, () => (Shell?.LoginName ?? "", LocalLoginPassword.Password)),
             _ => new SimulatedIdentityProvider(() => Shell?.LoginName ?? "")
         };

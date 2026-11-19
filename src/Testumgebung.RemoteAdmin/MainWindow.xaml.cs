@@ -16,7 +16,7 @@ public partial class MainWindow : Window
     private const string ManageRole = "Testumgebung.Fernverwaltung";
     private readonly SettingsStore _preferences = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Testumgebung", "Fernverwaltung", "einstellungen.json"), new DpapiSecretProtector());
-    private MsalIdentityProvider? _identityProvider;
+    private IIdentityProvider? _identityProvider;
     private UserIdentity? _user;
     private SqlRemoteSettingsStore? _store;
     private StationSnapshot? _selected;
@@ -42,7 +42,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var provider = new MsalIdentityProvider(config.ClientId!, config.TenantId!, config.EntraRedirectUri);
+        var provider = EntraIdentityProviderFactory.Create(config);
         var identity = await provider.SignInAsync(selectAccount: true, CancellationToken.None);
         if (!IsAllowed(identity, config.TenantId!))
         {
