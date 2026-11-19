@@ -12,6 +12,54 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(SlopeWindowMode.Consecutive)]
+    [InlineData(SlopeWindowMode.Disjoint)]
+    [InlineData(SlopeWindowMode.Rolling)]
+    public void Stable_target_can_finish_when_all_channels_have_only_suppressed_slopes(SlopeWindowMode mode)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null), new("I", "A", null)], Now,
+            minimumDuration: 3, minimumPoints: 4,
+            slope: new(mode, 2, -100, 100) { PositiveThreshold = 10, NegativeThreshold = -10 },
+            target: new TraceTargetBand(4, 6, 2));
+        recordings.Add("owner", "trace", 0, [5, 1], Now);
+        recordings.Add("owner", "trace", 1, [5, 1], Now);
+        Assert.False(recordings.TargetReached("owner", "trace"));
+        recordings.Add("owner", "trace", 2, [5, 1], Now);
+        Assert.False(recordings.IsEnded("owner", "trace"));
+        var preview = recordings.Add("owner", "trace", 3, [5, 1], Now)!;
+        Assert.True(preview.TargetReached);
+        Assert.True(recordings.IsEnded("owner", "trace"));
+        var result = recordings.Stop("owner", "trace");
+        Assert.True(result.TargetReached);
+        Assert.True(result.Complete);
+        Assert.True(result.Passed);
+        Assert.All(result.Channels, channel =>
+        {
+            Assert.NotEmpty(channel.SuppressedSlopes);
+            Assert.Empty(channel.Violations);
+        });
+    }
+
+    [Fact]
+    public void Stable_target_does_not_erase_an_earlier_slope_violation()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -10, 10) { PositiveThreshold = 1, NegativeThreshold = -1 },
+            target: new TraceTargetBand(4, 6, 2));
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 0.1, [5], Now);
+        recordings.Add("owner", "trace", 0.2, [5], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.True(result.TargetReached);
+        Assert.True(result.Complete);
+        Assert.False(result.Passed);
+        Assert.Single(Assert.Single(result.Channels).Violations);
+    }
+
+
+    [Theory]
     [InlineData(SlopeWindowMode.Consecutive, 2)]
     [InlineData(SlopeWindowMode.Disjoint, 2)]
     [InlineData(SlopeWindowMode.Rolling, 2)]
