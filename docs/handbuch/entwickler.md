@@ -178,6 +178,8 @@ unterbrochen, die Exit-Gruppe läuft).
 Bei der Grenzauswertung **Steigung** lassen sich im vorhandenen Aufnahmebaustein zusätzliche Regeln einstellen.
 **Erste X Grenzverletzungen oberhalb Y ausnehmen** zählt je Kanal ausschließlich Grenzverletzungen,
 deren Steigung größer als **Y für Anlaufausnahmen** ist. X = 0 deaktiviert diese Ausnahme.
+**Richtung der Anlaufausnahmen** wählt Steigend (> Y), Fallend (< −Y) oder Beide (Betrag > Y).
+Bei Fallend und Beide ist Y ein nichtnegativer Betrag. Alte Projekte erhalten beim Laden Steigend als Vorgabe.
 Anlaufausnahmen gelten nur bis zur ersten regulär bewerteten Steigung je Kanal.
 Ein späterer Sprung wird daher auch bei unverbrauchter Ausnahmeanzahl bewertet.
 Ausgenommene Werte lösen die Steigungsbewertung und deren zusätzliche Abbruchabweichung nicht aus.

@@ -5179,6 +5179,19 @@
           "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."
         },
         {
+          "name": "SteigungAnlaufrichtung",
+          "label": "Richtung der Anlaufausnahmen",
+          "kind": "Choice",
+          "default": "Steigend",
+          "required": false,
+          "choices": [
+            "Steigend",
+            "Fallend",
+            "Beide"
+          ],
+          "hint": null
+        },
+        {
           "name": "SteigungAnlaufSchwelle",
           "label": "Y f\u00FCr Anlaufausnahmen [Kanaleinheit/s]",
           "kind": "Number",
@@ -5748,6 +5761,19 @@
           "required": false,
           "choices": null,
           "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."
+        },
+        {
+          "name": "SteigungAnlaufrichtung",
+          "label": "Richtung der Anlaufausnahmen",
+          "kind": "Choice",
+          "default": "Steigend",
+          "required": false,
+          "choices": [
+            "Steigend",
+            "Fallend",
+            "Beide"
+          ],
+          "hint": null
         },
         {
           "name": "SteigungAnlaufSchwelle",

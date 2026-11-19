@@ -43,6 +43,12 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
         return true;
     }
 
+    private bool MatchesExceptionDirection(double value) => limits.ExceptionDirection switch
+    {
+        SlopeExceptionDirection.Falling => value < -limits.InitialExceptionAbove,
+        SlopeExceptionDirection.Both => Math.Abs(value) > limits.InitialExceptionAbove,
+        _ => value > limits.InitialExceptionAbove
+    };
     private bool BelowThreshold(double value)
         => limits.HasSlopeThreshold && value <= limits.PositiveThreshold && value >= limits.NegativeThreshold;
 
@@ -59,7 +65,7 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
             return SlopeSuppressionReason.BelowThreshold;
         var inside = touchAllowed ? value >= limits.Minimum && value <= limits.Maximum
             : value > limits.Minimum && value < limits.Maximum;
-        if (!inside && EvaluatedCount == 0 && _exceptions < limits.InitialExceptionCount && value > limits.InitialExceptionAbove)
+        if (!inside && EvaluatedCount == 0 && _exceptions < limits.InitialExceptionCount && MatchesExceptionDirection(value))
         {
             _exceptions++;
             return SlopeSuppressionReason.InitialException;
