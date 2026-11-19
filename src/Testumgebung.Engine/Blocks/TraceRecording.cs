@@ -13,7 +13,7 @@ internal sealed class TraceRecordingSettings
     private readonly Expression? _minimumPoints;
     private readonly Expression? _targetMinimum, _targetMaximum, _targetPoints;
     private readonly Expression? _safetyMinimum, _safetyMaximum;
-    private readonly bool _touchAllowed;
+    private readonly bool _touchAllowed, _targetEnabled;
     private readonly double? _stopPercent, _stopAbsolute;
     private readonly SlopeLimits? _slope;
     private readonly FormulaLimits? _formula;
@@ -40,12 +40,18 @@ internal sealed class TraceRecordingSettings
         Duration = duration == 0 ? null : duration;
         _minimumDuration = p.Number("MinDauer") ?? 0; _touchAllowed = p.Bool("Beruehren");
         (_stopPercent, _stopAbsolute) = ReadStopMargins(p);
-        _targetMinimum = p.Expr("ZielbandMin");
-        _targetMaximum = p.Expr("ZielbandMax");
-        _targetPoints = p.Expr("ZielbandPunkte");
+        (_targetEnabled, _targetMinimum, _targetMaximum, _targetPoints) = ReadTargetSettings(p);
         _safetyMinimum = p.Expr("SicherheitMin");
         _safetyMaximum = p.Expr("SicherheitMax");
     }
+    private static (bool Enabled, Expression? Minimum, Expression? Maximum, Expression? Points) ReadTargetSettings(BlockParameters p)
+    {
+        var enabled = p.Raw.ContainsKey(TraceBlocks.TargetEnabledParameter) ? p.Bool(TraceBlocks.TargetEnabledParameter)
+            : p.Optional("ZielbandMin") is not null || p.Optional("ZielbandMax") is not null;
+        return enabled ? (true, p.Expr("ZielbandMin"), p.Expr("ZielbandMax"), p.Expr("ZielbandPunkte"))
+            : (false, null, null, null);
+    }
+
     public void Begin(IStepContext ctx)
     {
         if (ctx.IsOperatorAborted) throw new InvalidOperationException("Nach Werkerabbruch keine Aufnahme beginnen.");
@@ -64,7 +70,7 @@ internal sealed class TraceRecordingSettings
     }
     private TraceTargetBand? ResolveTarget(IStepContext ctx)
     {
-        if (_targetMinimum is null && _targetMaximum is null) return null;
+        if (!_targetEnabled) return null;
         if (_targetMinimum is null || _targetMaximum is null)
             throw new BlockConfigurationException("Beide Zielbandgrenzen angeben.");
         var resolver = new ContextResolver(ctx);

@@ -12,9 +12,9 @@ if (args[0] == "export")
     var blocks = BlockCatalog.Default.All.OrderBy(b => b.Type, StringComparer.Ordinal).Select(b => new
     {
         b.Type, b.DisplayName, b.Category, b.Description,
-        Parameters = b.Parameters.Select(p => p.VisibleWhen is null && !p.Advanced
+        Parameters = b.Parameters.Select(p => p.VisibleWhen is null && !p.Advanced && p.Section.Length == 0
                 ? (object)new { p.Name, p.Label, Kind = p.Kind.ToString(), p.Default, p.Required, p.Choices, p.Hint }
-                : new { p.Name, p.Label, Kind = p.Kind.ToString(), p.Default, p.Required, p.Choices, p.Hint, p.VisibleWhen, p.Advanced })
+                : new { p.Name, p.Label, Kind = p.Kind.ToString(), p.Default, p.Required, p.Choices, p.Hint, p.VisibleWhen, p.Advanced, p.Section })
     });
     var catalog = new { Format = ProjectSerializer.FormatName, FormatVersion = ProjectSerializer.FormatVersion, Blocks = blocks };
     File.WriteAllText(args[1], JsonSerializer.Serialize(catalog, jsonOptions) + "\n");

@@ -15,6 +15,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="../Themes/VisualBlocks.xaml"/></ResourceDictionary.MergedDictionaries>
+        <controls:ParameterGroupsConverter x:Key="ParameterGroups"/>
 
         <DataTemplate x:Key="InlineEnumTemplate"><TextBlock Text="{Binding Converter={StaticResource EnumDisplay}}"/></DataTemplate>
         <DataTemplate x:Key="InlinePortTemplate">
@@ -477,6 +478,7 @@
 
         <!-- Schritt (Katalogbaustein) -->
         <DataTemplate DataType="{x:Type vm:StepPropertiesViewModel}">
+
             <StackPanel>
                 <TextBlock Style="{StaticResource SectionTitle}" FontSize="20">
                     <Run Text="Baustein: " /><Run Text="{Binding Title, Mode=OneWay}" />
@@ -500,7 +502,16 @@
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Parameter" Margin="0,14,0,6" />
                 <CheckBox Content="Erweitert" IsChecked="{Binding ShowAdvanced}" Margin="0,0,0,6"
                           Visibility="{Binding HasAdvancedParameters, Converter={StaticResource BoolVis}}" />
-                <ItemsControl ItemsSource="{Binding Parameters}">
+                <ItemsControl ItemsSource="{Binding Parameters, Converter={StaticResource ParameterGroups}}">
+                    <ItemsControl.GroupStyle><GroupStyle>
+                        <GroupStyle.ContainerStyle><Style TargetType="GroupItem">
+                            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="GroupItem">
+                                <Expander Header="{Binding Name}" IsExpanded="True" Margin="0,5">
+                                    <ItemsPresenter/>
+                                </Expander>
+                            </ControlTemplate></Setter.Value></Setter>
+                        </Style></GroupStyle.ContainerStyle>
+                    </GroupStyle></ItemsControl.GroupStyle>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,3" Visibility="{Binding IsHidden, Converter={StaticResource BoolVis}, ConverterParameter=invert}">

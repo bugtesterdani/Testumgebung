@@ -57,7 +57,8 @@ public sealed record ParameterDescriptor(
     IReadOnlyList<string>? Choices = null,
     string? Hint = null,
     ParameterVisibility? VisibleWhen = null,
-    bool Advanced = false);
+    bool Advanced = false,
+    string Section = "");
 
 /// <summary>Beschreibung eines Bausteins der Palette.</summary>
 public sealed record BlockDescriptor(
@@ -163,8 +164,8 @@ public sealed class BlockCatalog
         var label = descriptor.Type is SetRating or Evaluate ? "Bei ERROR oder FAIL zur Prüflings-Exit-Gruppe" : "Bei ERROR zur Prüflings-Exit-Gruppe";
         _blocks[descriptor.Type] = descriptor with
         {
-            Parameters = [.. descriptor.Parameters.Where(parameter => parameter.Name != ExitDutOnErrorParameter), new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
-                Hint: "Überspringt bei einem Fehler die restlichen regulären Schritte dieses Prüflings.", Advanced: true)]
+            Parameters = [.. descriptor.Parameters.Where(parameter => parameter.Name != ExitDutOnErrorParameter).Select(parameter => BlockParameterSections.Apply(descriptor.Type, parameter)), new(ExitDutOnErrorParameter, label, ParameterKind.Bool, "false",
+                Hint: "Überspringt bei einem Fehler die restlichen regulären Schritte dieses Prüflings.", Advanced: true, Section: "Ende und Exit")]
         };
     }
 
@@ -193,6 +194,9 @@ public sealed class BlockCatalog
         foreach (var parameter in block.Parameters) step.Parameters[parameter.Name] = parameter.Default;
         if (parameters is not null)
             foreach (var (key, value) in parameters) step.Parameters[key] = value;
+        if (type is TraceBlocks.Start or TraceBlocks.Record && parameters?.ContainsKey(TraceBlocks.TargetEnabledParameter) != true)
+            step.Parameters[TraceBlocks.TargetEnabledParameter] = !string.IsNullOrWhiteSpace(step.Parameters.GetValueOrDefault("ZielbandMin"))
+                || !string.IsNullOrWhiteSpace(step.Parameters.GetValueOrDefault("ZielbandMax")) ? "true" : "false";
         Rebuild(step);
         return step;
     }
