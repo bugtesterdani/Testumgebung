@@ -19,6 +19,7 @@ public sealed class CustomInputDiscardTests
         public string Description => Resource;
         public bool AcknowledgeSelection;
         public bool FailDiscard;
+        public bool ContinuousInput;
         public Task OpenAsync(CancellationToken token) { token.ThrowIfCancellationRequested(); IsOpen = true; return Task.CompletedTask; }
         public Task WriteAsync(byte[] data, TimeSpan timeout, CancellationToken token)
         {
@@ -39,6 +40,7 @@ public sealed class CustomInputDiscardTests
         public async Task<int> ReadAsync(Memory<byte> buffer, TimeSpan timeout, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
+            if (ContinuousInput) { await Task.Delay(5, token); buffer.Span[0] = 1; return 1; }
             if (Replies.Count == 0) { await Task.Delay(timeout, token); return 0; }
             var data = Replies.Dequeue(); data.CopyTo(buffer); return data.Length;
         }
@@ -46,7 +48,7 @@ public sealed class CustomInputDiscardTests
         {
             Discards++;
             if (FailDiscard) throw new InstrumentException("discard failure");
-            return InputDiscard.DrainAsync(settle, (_, ct) => { ct.ThrowIfCancellationRequested(); return Task.FromResult(Replies.Count > 0 ? Replies.Dequeue() : Array.Empty<byte>()); }, token);
+            return InputDiscard.DrainAsync(settle, async (_, ct) => { ct.ThrowIfCancellationRequested(); if (ContinuousInput) { await Task.Delay(5, ct); return new byte[] { 1 }; } return Replies.Count > 0 ? Replies.Dequeue() : Array.Empty<byte>(); }, token);
         }
         public Task ClearAsync(CancellationToken token) { Clears++; Replies.Clear(); return Task.CompletedTask; }
         public void DiscardInput() => throw new InvalidOperationException("Must read discarded bytes for the audit log.");
@@ -98,6 +100,21 @@ public sealed class CustomInputDiscardTests
         using var driver = new CustomTextInstrument(Profile(true, "OFF"), new ScpiSession(() => wire));
         await Assert.ThrowsAsync<InstrumentException>(() => driver.SafeStateAsync(default));
         Assert.Contains("OFF", wire.Commands);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Continuous_input_has_a_time_limit_and_does_not_block_safety_commands(bool serial)
+    {
+        var wire = new Wire { ContinuousInput = true };
+        using var io = serial ? (IInstrumentIo)new SerialInstrumentIo("COM_TEST", wire, "LF") : wire;
+        using var driver = new CustomTextInstrument(Profile(true, "OFF"), new ScpiSession(() => io));
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        await Assert.ThrowsAsync<InstrumentException>(() => driver.SafeStateAsync(default).WaitAsync(TimeSpan.FromSeconds(3)));
+        Assert.True(elapsed.Elapsed < TimeSpan.FromSeconds(3));
+        Assert.Contains("OFF", wire.Commands);
+        Assert.Contains(driver.Log, entry => entry.Contains("fortlaufend"));
     }
 
     [Fact]
