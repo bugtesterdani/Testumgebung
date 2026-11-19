@@ -92,7 +92,7 @@ public static class TraceBlocks
      new(UpperFormulaParameter, "Formel für Obergrenze", ParameterKind.Text,
         Hint: "t = Messzeit in Sekunden. Beispiel: 6 + 0.2 * t"),
      new("Steigungsfenster", "Punkte je Steigungsfenster", ParameterKind.Number, "5",
-        Hint: "Für getrennte und gleitende Fenster. Nur vollständige Fenster werden bewertet."),
+        Hint: "Für getrennte und gleitende Fenster. Getrennte Restfenster werden am regulären Aufnahmeende verkürzt bewertet; ein einzelner Restpunkt verwendet den vorherigen Messpunkt."),
      new("SteigungMin", "Minimale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungMax", "Maximale Steigung [Kanaleinheit/s]", ParameterKind.Number),
      new("SteigungAnlaufAnzahl", "Anlaufausnahmen: Anzahl je Kanal (0 = aus)", ParameterKind.Number, "0",

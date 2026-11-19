@@ -5845,7 +5845,7 @@
           "default": "5",
           "required": false,
           "choices": null,
-          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet.",
+          "hint": "F\u00FCr getrennte und gleitende Fenster. Getrennte Restfenster werden am regul\u00E4ren Aufnahmeende verk\u00FCrzt bewertet; ein einzelner Restpunkt verwendet den vorherigen Messpunkt.",
           "visibleWhen": {
             "parameter": "Grenzauswertung",
             "value": "",
@@ -7023,7 +7023,7 @@
           "default": "5",
           "required": false,
           "choices": null,
-          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet.",
+          "hint": "F\u00FCr getrennte und gleitende Fenster. Getrennte Restfenster werden am regul\u00E4ren Aufnahmeende verk\u00FCrzt bewertet; ein einzelner Restpunkt verwendet den vorherigen Messpunkt.",
           "visibleWhen": {
             "parameter": "Grenzauswertung",
             "value": "",

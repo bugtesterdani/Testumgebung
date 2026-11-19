@@ -98,7 +98,7 @@ public sealed class SlopeTraceTests
     }
 
     [Fact]
-    public void Disjoint_windows_ignore_trailing_points_and_require_at_least_one_full_window()
+    public void Disjoint_windows_rate_trailing_points_when_stopped()
     {
         var now = DateTimeOffset.UnixEpoch;
         var recordings = new EnvelopeRecordings();
@@ -106,7 +106,7 @@ public sealed class SlopeTraceTests
             slope: new(SlopeWindowMode.Disjoint, 3, 0, 2));
         recordings.Add("owner", "short", 0, [0], now);
         recordings.Add("owner", "short", 1, [1], now);
-        Assert.False(recordings.Stop("owner", "short").Complete);
+        Assert.True(recordings.Stop("owner", "short").Complete);
 
         recordings.Start("owner", "full", [new("U", "V", null)], now,
             slope: new(SlopeWindowMode.Disjoint, 3, 0, 2));
@@ -115,8 +115,8 @@ public sealed class SlopeTraceTests
         recordings.Add("owner", "full", 2, [2], now);
         recordings.Add("owner", "full", 3, [100], now);
         var result = recordings.Stop("owner", "full");
-        Assert.True(result.Passed);
-        Assert.Equal(1, Assert.Single(result.Data.Channels[0].Values));
+        Assert.False(result.Passed);
+        Assert.Equal(new double[] { 1, 98 }, result.Data.Channels[0].Values);
     }
 
     [Fact]

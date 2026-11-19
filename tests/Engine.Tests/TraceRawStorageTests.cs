@@ -70,7 +70,8 @@ public sealed class TraceRawStorageTests
         Assert.True(trace.Passed);
         Assert.True(Assert.Single(trace.Channels).Complete);
         Assert.Empty(trace.Channels[0].Violations);
-        Assert.Empty(trace.Data.Channels[0].Values);
+        if (mode == SlopeWindowMode.Disjoint) Assert.Equal(0, Assert.Single(trace.Data.Channels[0].Values));
+        else Assert.Empty(trace.Data.Channels[0].Values);
         Assert.Throws<InvalidOperationException>(() => recordings.Add("owner", "trace", 2, [5], Now));
         using var stream = new MemoryStream();
         ResultFile.Write(stream, Run(trace));
@@ -254,6 +255,79 @@ public sealed class TraceRawStorageTests
         var wave = replay.Channels.Single(w => w.Channel == "U");
         Assert.Null(wave.DisplayWarning);
         Assert.Equal(trace.Channels[0].ViolationCount, EnvelopeTraceMetadata.Decode(wave.Quality)!.ViolationCount);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void Partial_window_replay_warns_only_for_new_violations(bool violating, bool historical)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Disjoint, 3, -1, 1)
+            { PositiveThreshold = 0.2, NegativeThreshold = -0.2 });
+        for (var i = 0; i < 3; i++) recordings.Add("owner", "trace", i, [5], Now);
+        recordings.Add("owner", "trace", 3, [violating ? 7 : 5], Now);
+        var trace = recordings.Stop("owner", "trace");
+        var source = trace.Data.Recording!;
+        var snapshot = TraceRecordingSnapshot.Parse(source.Snapshot);
+        if (historical)
+            snapshot = snapshot with { Assessments = snapshot.Assessments.Select(a => a with
+            {
+                Details = [], Violations = [], ViolationCount = 0, MaximumDeviation = 0, PartialWindowTimes = [],
+                SuppressedSlopes = a.SuppressedSlopes.Where(s => s.Time < 3).ToArray()
+            }).ToArray() };
+        var replay = snapshot.Reconstruct(source.RawChannels);
+        var wave = replay.Channels.Single(w => w.Channel == "U");
+        Assert.Equal(historical && violating, wave.DisplayWarning is not null);
+        var metadata = EnvelopeTraceMetadata.Decode(wave.Quality)!;
+        Assert.Equal(historical ? 0 : violating ? 1 : 0, metadata.ViolationCount);
+        Assert.Single(metadata.PartialWindowTimes);
+        Assert.Equal(2, wave.Count);
+    }
+
+    [Fact]
+    public void Partial_window_abort_roundtrips_without_false_replay_warning()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, stopPercent: 10,
+            slope: new(SlopeWindowMode.Disjoint, 3, -1, 1));
+        for (var i = 0; i < 3; i++) recordings.Add("owner", "trace", i, [5], Now);
+        recordings.Add("owner", "trace", 3, [7], Now);
+        var trace = recordings.Stop("owner", "trace");
+        Assert.NotNull(trace.EarlyStop);
+        var source = trace.Data.Recording!;
+        var replay = TraceRecordingSnapshot.Parse(source.Snapshot).Reconstruct(source.RawChannels);
+        var wave = replay.Channels.Single(w => w.Channel == "U");
+        Assert.Equal(2, wave.Count);
+        Assert.Null(wave.DisplayWarning);
+        Assert.Equal(trace.EarlyStop, EnvelopeTraceMetadata.Decode(wave.Quality)!.EarlyStop);
+    }
+
+    [Fact]
+    public void Invalid_data_state_prevents_remainder_reassessment_after_roundtrip()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, minimumPoints: 5,
+            slope: new(SlopeWindowMode.Disjoint, 3, -1, 1));
+        for (var i = 0; i < 4; i++) recordings.Add("owner", "trace", i, [i == 3 ? 10 : 0], Now);
+        recordings.Invalidate("owner", "trace");
+        var trace = recordings.Stop("owner", "trace");
+        Assert.False(trace.Complete);
+        Assert.Empty(trace.Channels[0].Violations);
+        var source = trace.Data.Recording!;
+        var snapshot = TraceRecordingSnapshot.Parse(source.Snapshot);
+        Assert.True(snapshot.InvalidData);
+        var replay = snapshot.Reconstruct(source.RawChannels);
+        var wave = replay.Channels.Single(w => w.Channel == "U");
+        Assert.Null(wave.DisplayWarning);
+        Assert.Single(wave.Values);
+        var metadata = EnvelopeTraceMetadata.Decode(wave.Quality)!;
+        Assert.False(metadata.Complete);
+        Assert.Empty(metadata.Violations);
+        Assert.Empty(metadata.PartialWindowTimes);
     }
 
     [Fact]

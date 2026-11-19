@@ -177,7 +177,8 @@ public sealed partial class WaveformPlotViewModel : ObservableObject
 
     public void Clear()
     {
-        _hasTraceData = false; _suppressedSlopes = []; ReplayWarning = "";
+        _hasTraceData = false; _suppressedSlopes = []; ReplayWarning = ""; PartialWindowHint = "";
+        OnPropertiesChanged(nameof(PartialWindowHint), nameof(HasPartialWindowHint));
         SetData([], 1, null);
         OnPropertiesChanged(nameof(ShowContentFilters), nameof(HasPanes), nameof(PreferredHeight), nameof(ReplayWarning), nameof(HasReplayWarning));
     }
@@ -186,6 +187,8 @@ public sealed partial class WaveformPlotViewModel : ObservableObject
     public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false, IReadOnlyDictionary<string, double[]>? sampleTimes = null, IReadOnlyList<SuppressedSlopeRow>? suppressedSlopes = null)
     {
         ResetPanes();
+        PartialWindowHint = "";
+        OnPropertiesChanged(nameof(PartialWindowHint), nameof(HasPartialWindowHint));
         var wasFullView = _viewStart == 0 && Math.Abs(_viewEnd - Duration) < 1e-9;
         _pointTrace = pointTrace;
         _suppressedSlopes = suppressedSlopes ?? [];

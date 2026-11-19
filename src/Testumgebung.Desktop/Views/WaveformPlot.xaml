@@ -38,6 +38,8 @@
             <CheckBox Content="Abbruch-/Sicherheitsgrenzen" IsChecked="{Binding ShowSafety}" Margin="0,0,12,0"/>
             <CheckBox Content="Ausgenommene Steigungen" IsChecked="{Binding ShowSuppressed}"/>
         </WrapPanel>
+        <TextBlock DockPanel.Dock="Top" Text="{Binding PartialWindowHint}" TextWrapping="Wrap"
+                   Visibility="{Binding HasPartialWindowHint, Converter={StaticResource BoolVis}}"/>
         <TextBlock DockPanel.Dock="Top" Text="{Binding ReplayWarning}" TextWrapping="Wrap" Foreground="DarkOrange"
                    Visibility="{Binding HasReplayWarning, Converter={StaticResource BoolVis}}"/>
         <!-- Kanäle: Sichtbarkeit, Wert am Cursor, Effektivwert -->

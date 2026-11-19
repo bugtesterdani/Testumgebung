@@ -24,6 +24,7 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
     EnvelopeTraceMetadata[] Assessments)
 {
     public const int CurrentAlgorithmVersion = 1;
+    public bool InvalidData { get; init; }
 
     public static TraceRecordingSnapshot Parse(string json)
     {
@@ -43,19 +44,38 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
             Duration, Slope, LowerFormula is null ? null : new FormulaLimits(LowerFormula, UpperFormula!), null, MinimumPoints, Target, false);
         for (var index = 0; index < AssessedRawPoints; index++)
             replay.Add(raw[0].TimeOf(index), raw.Select(channel => channel.Values[index]).ToArray(), raw[0].Start);
-        replay.RestoreDisplayStop(Assessments.Select(assessment => assessment.EarlyStop).FirstOrDefault(stop => stop is { HardLimit: false }));
-        var calculated = replay.Evaluate(Stopped);
-        var changed = AlgorithmVersion != CurrentAlgorithmVersion || AssessmentChanged(calculated.Channels);
+        if (InvalidData) replay.Invalidate();
+        var (baseline, calculated, hasSavedPartial) = EvaluateReplay(replay);
+        var comparison = hasSavedPartial ? calculated : baseline;
+        var newPartialViolation = !hasSavedPartial && calculated.Violations > baseline.Violations;
+        var changed = AlgorithmVersion != CurrentAlgorithmVersion || AssessmentChanged(comparison.Channels) || newPartialViolation;
         var waves = calculated.Data.Channels.Select(wave =>
         {
             var metadata = EnvelopeTraceMetadata.Decode(wave.Quality);
             var saved = Assessments.FirstOrDefault(assessment => assessment.Channel == wave.Channel);
             return metadata is not null && saved is not null
-                ? wave with { Quality = (saved with { OriginalTimes = metadata.OriginalTimes }).Encode() } : wave;
+                ? wave with { Quality = (saved with { OriginalTimes = metadata.OriginalTimes, PartialWindowTimes = metadata.PartialWindowTimes }).Encode() } : wave;
         }).ToList();
         RestoreSavedChannels(waves, raw);
         ApplyReplayWarning(waves, changed);
         return AddMeasurements(waves, raw);
+    }
+
+    private (TraceEvaluation Baseline, TraceEvaluation Current, bool SavedPartial) EvaluateReplay(EnvelopeRecording replay)
+    {
+        var savedPartial = Assessments.Any(assessment => assessment.PartialWindowTimes.Count > 0);
+        var stop = Assessments.Select(assessment => assessment.EarlyStop).FirstOrDefault(value => value is { HardLimit: false });
+        if (!savedPartial) replay.RestoreDisplayStop(stop);
+        var baseline = replay.Evaluate(Stopped, finalizePartialWindows: false);
+        var canFinalize = !InvalidData && Assessments.All(assessment => assessment.EarlyStop is null
+            || savedPartial && assessment.EarlyStop is { HardLimit: false } early && assessment.PartialWindowTimes.Contains(early.Time));
+        var calculated = replay.Evaluate(Stopped, finalizePartialWindows: canFinalize);
+        if (savedPartial)
+        {
+            replay.RestoreDisplayStop(stop);
+            calculated = replay.Evaluate(Stopped, finalizePartialWindows: false);
+        }
+        return (baseline, calculated, savedPartial);
     }
 
     private void RestoreSavedChannels(List<Waveform> waves, IReadOnlyList<Waveform> raw)
