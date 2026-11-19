@@ -37,12 +37,13 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
     public WaveformSet Reconstruct(IReadOnlyList<Waveform> raw)
     {
         ValidateRaw(raw);
-        var definitions = Channels.Select(channel => new TraceChannelDefinition(channel.Name, channel.Unit, channel.Limits?.ToCurve(channel.Unit))).ToArray();
+        var definitions = Channels.Select(channel => new TraceChannelDefinition(channel.Name, channel.Unit, channel.Limits?.ToCurve(channel.Unit)) { AbortLimits = channel.AbortLimits?.ToCurve(channel.Unit) }).ToArray();
         // Disable stopping rules for display replay: saved violations and the saved rating remain authoritative.
         var replay = new EnvelopeRecording(definitions, raw[0].Start, MaxPoints, MaxGap, MinimumDuration, TouchAllowed, null,
-            Duration, Slope, LowerFormula is null ? null : new FormulaLimits(LowerFormula, UpperFormula!), null, MinimumPoints, null, false);
+            Duration, Slope, LowerFormula is null ? null : new FormulaLimits(LowerFormula, UpperFormula!), null, MinimumPoints, Target, false);
         for (var index = 0; index < AssessedRawPoints; index++)
             replay.Add(raw[0].TimeOf(index), raw.Select(channel => channel.Values[index]).ToArray(), raw[0].Start);
+        replay.RestoreDisplayStop(Assessments.Select(assessment => assessment.EarlyStop).FirstOrDefault(stop => stop is { HardLimit: false }));
         var calculated = replay.Evaluate(Stopped);
         var changed = AlgorithmVersion != CurrentAlgorithmVersion || AssessmentChanged(calculated.Channels);
         var waves = calculated.Data.Channels.Select(wave =>
@@ -52,6 +53,11 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
             return metadata is not null && saved is not null
                 ? wave with { Quality = (saved with { OriginalTimes = metadata.OriginalTimes }).Encode() } : wave;
         }).ToList();
+        foreach (var saved in Assessments.Where(saved => !waves.Any(wave => wave.Channel == saved.Channel)))
+        {
+            var index = Array.FindIndex(Channels, channel => channel.Name == saved.Channel);
+            if (index >= 0) waves.Add(raw[index] with { Quality = (saved with { OriginalTimes = raw[index].Times ?? [] }).Encode() });
+        }
         if (changed)
         {
             const string warning = "Neuberechnete Auswertung weicht von der gespeicherten Bewertung ab. Gespeicherte Bewertung und Grenzverletzungen bleiben maßgeblich.";
@@ -62,7 +68,8 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
     }
 
     private bool AssessmentChanged(IReadOnlyList<EnvelopeTraceMetadata> calculated)
-        => Assessments.Any(saved => calculated.FirstOrDefault(channel => channel.Channel == saved.Channel) is not { } current
+        => Assessments.Where(saved => saved.Curve != "Messwert-Sicherheitsgrenze").Any(saved => calculated.FirstOrDefault(channel => channel.Channel == saved.Channel) is not { } current
+            || saved.ViolationCount != current.ViolationCount || saved.MaximumDeviation != current.MaximumDeviation || (saved.EarlyStop is not { HardLimit: true } && saved.Complete != current.Complete)
             || JsonSerializer.Serialize(saved.Details) != JsonSerializer.Serialize(current.Details)
             || JsonSerializer.Serialize(saved.SuppressedSlopes) != JsonSerializer.Serialize(current.SuppressedSlopes));
 
@@ -80,9 +87,13 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
         for (var index = 0; index < raw.Count; index++)
         {
             var channel = Channels[index]; var source = raw[index];
-            waves.Add(source with { Channel = channel.Name + " · Messwert", Quality = null });
+            if (Slope is not null || !waves.Any(wave => wave.Channel == channel.Name))
+                waves.Add(source with { Channel = channel.Name + " · Messwert", Quality = null });
             AddConstant(waves, source, channel.Name + " · Sicherheit Untergrenze", channel.SafetyMinimum);
             AddConstant(waves, source, channel.Name + " · Sicherheit Obergrenze", channel.SafetyMaximum);
+            if (AssessedRawPoints > 0 && Assessments.FirstOrDefault(saved => saved.Channel == channel.Name)?.EarlyStop
+                is { HardLimit: true } stop && stop.Channel == channel.Name)
+                waves.Add(new(channel.Name + " · Sicherheitsabbruch", channel.Unit, 0, source.Start, [stop.Value], [stop.Time]));
             if (index == 0 && Target is { } target)
             {
                 AddConstant(waves, source, channel.Name + " · Zielband Untergrenze", target.Minimum);

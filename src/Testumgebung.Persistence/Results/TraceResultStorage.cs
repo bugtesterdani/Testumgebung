@@ -8,6 +8,8 @@ namespace Testumgebung.Persistence.Results;
 public static class TraceResultStorage
 {
     public const string Prefix = "TraceRaw:1:";
+    public static string? QualityForPart(Waveform wave, int part)
+        => part > 0 && wave.SyncGroup?.StartsWith(Prefix, StringComparison.Ordinal) == true ? null : wave.Quality;
     private sealed record StoredTrace(string Snapshot, Dictionary<string, string> Ids);
 
     public static IReadOnlyList<ResultWaveform> Collapse(IReadOnlyList<ResultWaveform> waveforms)
@@ -46,7 +48,7 @@ public static class TraceResultStorage
             catch (Exception error) when (error is JsonException or FormatException or ArgumentException or InvalidOperationException or NullReferenceException or IndexOutOfRangeException)
             {
                 problems?.Add("Aufnahme kann nicht rekonstruiert werden: " + error.Message);
-                expanded.AddRange(group.Select(wave => wave with { Data = wave.Data with { DisplayWarning = "Rohdaten vorhanden; Rekonstruktion fehlgeschlagen: " + error.Message } }));
+                expanded.AddRange(group.Select(wave => wave with { Data = wave.Data with { TimeValues = wave.Data.TimeValues ?? owner.Data.TimeValues, DisplayWarning = "Rohdaten vorhanden; Rekonstruktion fehlgeschlagen: " + error.Message } }));
             }
         }
         return expanded;

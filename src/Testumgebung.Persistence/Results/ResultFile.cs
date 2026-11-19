@@ -244,7 +244,7 @@ public static class ResultFile
         msgPackWriter.Key("unit").Str(data.Unit);
         msgPackWriter.Key("rate").Double(data.SampleRate);
         msgPackWriter.Key("start").Int(data.Start.UtcTicks);
-        msgPackWriter.Key("quality").Str(data.Quality);
+        msgPackWriter.Key("quality").Str(TraceResultStorage.QualityForPart(data, part));
         msgPackWriter.Key("sync").Str(data.SyncGroup);
         msgPackWriter.Key("part").Int(part);
         msgPackWriter.Key("parts").Int(parts);

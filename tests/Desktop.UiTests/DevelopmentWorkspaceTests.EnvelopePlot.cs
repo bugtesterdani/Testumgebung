@@ -36,6 +36,17 @@ public sealed partial class DevelopmentWorkspaceTests
             CaptureVisual(window, "messwert-grenzband.png");
             model.SetView(0.5, 1.5); window.UpdateLayout(); Assert.Single(model.ViolationMarkers);
             model.Channels[0].IsVisible = false; window.UpdateLayout(); Assert.Empty(model.ViolationMarkers);
+            var slopes = new EnvelopeRecordings();
+            slopes.Start("owner", "slope", [new("U", "V", null)], DateTimeOffset.UnixEpoch, maxGap: 2,
+                slope: new(SlopeWindowMode.Consecutive, 2, -10, 10));
+            slopes.Add("owner", "slope", 0, [1], DateTimeOffset.UnixEpoch);
+            slopes.Add("owner", "slope", 1, [3], DateTimeOffset.UnixEpoch);
+            model.SetData(slopes.Stop("owner", "slope").Data);
+            Sta.Flush(dispatcher); window.UpdateLayout();
+            Assert.Equal(2, model.Panes.Count);
+            Assert.Equal(2, Descendants(plot).OfType<WaveformPlot>().Count());
+            Assert.Contains(Descendants(plot).OfType<CheckBox>(), box => Equals(box.Content, "Messwert") && box.IsVisible);
+            CaptureVisual(window, "messwert-steigung-getrennte-einheiten.png");
         }
         finally { window.Close(); }
     }

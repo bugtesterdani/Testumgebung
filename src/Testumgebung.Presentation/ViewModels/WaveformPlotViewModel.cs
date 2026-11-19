@@ -12,8 +12,13 @@ using Testumgebung.Presentation.Mvvm;
 namespace Testumgebung.Presentation.ViewModels;
 
 /// <summary>Kanal einer Kurvenanzeige (Datenquelle des Plots).</summary>
+public enum PlotContentKind { Measurement, Slope, Limit, Safety }
 public sealed record PlotSource(string Id, string Unit, SampleBuffer Samples)
 {
+    public PlotContentKind Kind { get; init; }
+    public bool SlopeRelated { get; init; }
+    public double? FirstTime { get; init; }
+    public double? LastTime { get; init; }
     public PlotSource(string Id, string Unit, double[] Samples) : this(Id, Unit, new SampleBuffer(Samples)) { }
 }
 
@@ -75,7 +80,7 @@ public sealed record PlotSampleMarker(double X, double Y, int ColorIndex);
 /// <see cref="PlotWidth"/> × <see cref="PlotHeight"/>; die Ansicht skaliert per Viewbox.
 /// Darstellung reduziert je Pixelspalte auf Minimum/Maximum, damit Spitzen sichtbar bleiben.
 /// </summary>
-public sealed class WaveformPlotViewModel : ObservableObject
+public sealed partial class WaveformPlotViewModel : ObservableObject
 {
     public const double PlotWidth = 1000;
     public const double PlotHeight = 260;
@@ -141,10 +146,12 @@ public sealed class WaveformPlotViewModel : ObservableObject
         get => _cursor;
         set
         {
+            if (_parent is not null && !_parent._synchronizing) { _parent.CursorTime = value; return; }
             if (value is { } value2) value = Math.Clamp(value2, 0, Duration);
             if (_cursor == value) return;
             _cursor = value;
             UpdateCursor();
+            SynchronizePanes(pane => pane.CursorTime = value);
             ClearCursorCommand.RaiseCanExecuteChanged();
         }
     }
@@ -166,13 +173,19 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public string YMidText => HasData ? ((_yMax + _yMin) / 2).ToString("0.##", CultureInfo.InvariantCulture) : "";
     public string YBottomText => HasData ? _yMin.ToString("0.##", CultureInfo.InvariantCulture) : "";
 
-    private string Unit => string.Join("/", Channels.Where(channel => channel.IsVisible).Select(channel => channel.Unit).Distinct());
+    private string Unit => string.Join("/", Channels.Where(EffectiveVisible).Select(channel => channel.Unit).Distinct());
 
-    public void Clear() => SetData([], 1, null);
+    public void Clear()
+    {
+        _hasTraceData = false; _suppressedSlopes = []; ReplayWarning = "";
+        SetData([], 1, null);
+        OnPropertiesChanged(nameof(ShowContentFilters), nameof(HasPanes), nameof(PreferredHeight), nameof(ReplayWarning), nameof(HasReplayWarning));
+    }
 
     /// <summary>Neue Daten. <paramref name="keepView"/> behält Zoom und Cursor, soweit noch im Bereich.</summary>
     public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false, IReadOnlyDictionary<string, double[]>? sampleTimes = null, IReadOnlyList<SuppressedSlopeRow>? suppressedSlopes = null)
     {
+        if (!IsPane) Panes.Clear();
         var wasFullView = _viewStart == 0 && Math.Abs(_viewEnd - Duration) < 1e-9;
         _pointTrace = pointTrace;
         _suppressedSlopes = suppressedSlopes ?? [];
@@ -210,20 +223,11 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public void SetData(CurveDefinition curve, bool keepView = false)
         => SetData(curve.Channels.Select(curveChannel => new PlotSource(curveChannel.Id, curveChannel.Unit, curveChannel.Samples)).ToList(), curve.SampleRate, curve.Times, keepView);
 
-    public void SetData(WaveformSet set)
-    {
-        if (set.Channels.Count == 0) { Clear(); return; }
-        var first = set.Channels[0];
-        var metadata = set.Channels.ToDictionary(waveform => waveform.Channel, waveform => EnvelopeTraceMetadata.Decode(waveform.Quality));
-        var violations = metadata.ToDictionary(pair => pair.Key, pair => pair.Value?.Violations ?? []);
-        var samples = metadata.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value!.OriginalTimes);
-        SetData(set.Channels.Select(waveform => new PlotSource(waveform.Channel, waveform.Unit, waveform.Values)).ToList(), first.SampleRate, first.TimeValues,
-            keepView: true, violations: violations, pointTrace: samples.Count > 0, sampleTimes: samples,
-            suppressedSlopes: metadata.SelectMany(pair => (pair.Value?.SuppressedSlopes ?? []).Select(sample => new SuppressedSlopeRow(pair.Key, sample))).ToArray());
-    }
+    public void SetData(WaveformSet set) => SetTraceData(set);
 
     public void SetView(double start, double end)
     {
+        if (_parent is not null && !_parent._synchronizing) { _parent.SetView(start, end); return; }
         var durationValue = Duration;
         if (durationValue <= 0) return;
         var minSpan = Math.Max(durationValue / Math.Max(Count, 1) * 4, 1e-9);
@@ -234,6 +238,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
         _viewStart = Math.Max(0, start);
         _viewEnd = end;
         Render();
+        SynchronizePanes(pane => pane.SetView(start, end));
     }
 
     private void Zoom(double factor)
@@ -333,7 +338,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
         SampleMarkers.Clear();
         Series.Clear();
         YLabels.Clear();
-        var visible = Channels.Where(channel => channel.IsVisible).ToList();
+        var visible = Channels.Where(EffectiveVisible).ToList();
         if (HasData && visible.Count > 0)
         {
             // Wertebereich über die ganze Kurve (stabil beim Zoomen), 5 % Rand
@@ -349,38 +354,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
                 YLabels.Add(new PlotAxisLabel(Y(value), value.ToString("0.##", CultureInfo.InvariantCulture)));
             }
 
-            var i0 = IndexAt(_viewStart);
-            var i1 = Math.Min(Count - 1, IndexAt(_viewEnd) + 1);
-            var span = Math.Max(_viewEnd - _viewStart, 1e-12);
-            foreach (var channel in visible)
-            {
-                var sampleBuffer = _sources[channel.ColorIndex].Samples;
-                var points = new List<PlotPoint>();
-                double X(int index) => (TimeOf(index) - _viewStart) / span * PlotWidth;
-                if (i1 - i0 <= Columns * 2)
-                {
-                    for (var index2 = i0; index2 <= i1; index2++) points.Add(new PlotPoint(X(index2), Y(sampleBuffer[index2])));
-                }
-                else
-                {
-                    var per = (i1 - i0 + 1) / (double)Columns;
-                    for (var col = 0; col < Columns; col++)
-                    {
-                        var startIndex = i0 + (int)(col * per);
-                        var bit = Math.Min(i1, i0 + (int)((col + 1) * per) - 1);
-                        int imin = startIndex, imax = startIndex;
-                        for (var index3 = startIndex; index3 <= bit; index3++)
-                        {
-                            if (sampleBuffer[index3] < sampleBuffer[imin]) imin = index3;
-                            if (sampleBuffer[index3] > sampleBuffer[imax]) imax = index3;
-                        }
-                        var (first, second) = imin <= imax ? (imin, imax) : (imax, imin);
-                        points.Add(new PlotPoint(X(first), Y(sampleBuffer[first])));
-                        if (second != first) points.Add(new PlotPoint(X(second), Y(sampleBuffer[second])));
-                    }
-                }
-                Series.Add(new PlotSeries(channel.Id, channel.ColorIndex, points, $"{channel.Id} [{channel.Unit}]"));
-            }
+            RenderSeries(visible);
         }
         UpdateSampleMarkers();
         ShowSingleSampleMarkers();
@@ -392,11 +366,51 @@ public sealed class WaveformPlotViewModel : ObservableObject
             nameof(RangeText), nameof(ZeroY), nameof(ShowZero), nameof(YTopText), nameof(YMidText), nameof(YBottomText));
     }
 
+    private void RenderSeries(IReadOnlyList<PlotChannel> visible)
+    {
+            var i0 = IndexAt(_viewStart);
+            var i1 = Math.Min(Count - 1, IndexAt(_viewEnd) + 1);
+            var span = Math.Max(_viewEnd - _viewStart, 1e-12);
+            foreach (var channel in visible)
+            {
+                var sampleBuffer = _sources[channel.ColorIndex].Samples;
+                var source = _sources[channel.ColorIndex];
+                if (source.LastTime < _viewStart || source.FirstTime > _viewEnd) continue;
+                var first = source.FirstTime is { } from ? Math.Max(i0, IndexAt(from)) : i0;
+                var last = source.LastTime is { } to ? Math.Min(i1, IndexAt(to)) : i1;
+                var points = new List<PlotPoint>();
+                double X(int index) => (TimeOf(index) - _viewStart) / span * PlotWidth;
+                if (last - first <= Columns * 2)
+                {
+                    for (var index2 = first; index2 <= last; index2++) points.Add(new PlotPoint(X(index2), Y(sampleBuffer[index2])));
+                }
+                else
+                {
+                    var per = (last - first + 1) / (double)Columns;
+                    for (var col = 0; col < Columns; col++)
+                    {
+                        var startIndex = first + (int)(col * per);
+                        var bit = Math.Min(last, first + (int)((col + 1) * per) - 1);
+                        int imin = startIndex, imax = startIndex;
+                        for (var index3 = startIndex; index3 <= bit; index3++)
+                        {
+                            if (sampleBuffer[index3] < sampleBuffer[imin]) imin = index3;
+                            if (sampleBuffer[index3] > sampleBuffer[imax]) imax = index3;
+                        }
+                        var (lowIndex, highIndex) = imin <= imax ? (imin, imax) : (imax, imin);
+                        points.Add(new PlotPoint(X(lowIndex), Y(sampleBuffer[lowIndex])));
+                        if (highIndex != lowIndex) points.Add(new PlotPoint(X(highIndex), Y(sampleBuffer[highIndex])));
+                    }
+                }
+                Series.Add(new PlotSeries(channel.Id, channel.ColorIndex, points, $"{channel.Id} [{channel.Unit}]"));
+            }
+    }
+
     /// <summary>Mark actual sample times, never synthetic interpolation points. Bound display work per channel.</summary>
     private void UpdateSampleMarkers()
     {
         var span = Math.Max(_viewEnd - _viewStart, 1e-12);
-        foreach (var channel in Channels.Where(channel => channel.IsVisible))
+        foreach (var channel in Channels.Where(EffectiveVisible))
         {
             if (!_sampleTimes.TryGetValue(channel.Id, out var original)) continue;
             var times = original.Where(original2 => original2 >= _viewStart && original2 <= _viewEnd).ToArray();
@@ -425,25 +439,14 @@ public sealed class WaveformPlotViewModel : ObservableObject
     private void UpdateViolationMarkers()
     {
         if (_viewEnd <= _viewStart) return;
-        var times = Channels.Where(channel => channel.IsVisible).SelectMany(channel => _violations.GetValueOrDefault(channel.Id) ?? []);
+        var times = Channels.Where(EffectiveVisible).SelectMany(channel => _violations.GetValueOrDefault(channel.Id) ?? []);
         foreach (var time in times.Where(time => double.IsFinite(time) && time >= _viewStart && time <= _viewEnd).Distinct().Take(1000))
             ViolationMarkers.Add(new((time - _viewStart) / (_viewEnd - _viewStart) * PlotWidth));
     }
-    private void UpdateSuppressionMarkers()
-    {
-        if (_viewEnd <= _viewStart) return;
-        var visible = Channels.Where(channel => channel.IsVisible).Select(channel => channel.Id).ToHashSet();
-        foreach (var row in _suppressedSlopes.Where(row => visible.Contains(row.Channel) &&
-            double.IsFinite(row.Sample.Time) && double.IsFinite(row.Sample.Slope) &&
-            row.Sample.Time >= _viewStart && row.Sample.Time <= _viewEnd).Take(1000))
-            SuppressionMarkers.Add(new((row.Sample.Time - _viewStart) / (_viewEnd - _viewStart) * PlotWidth,
-                Y(row.Sample.Slope), row.Description));
-    }
-
     private void UpdateCursor()
     {
         foreach (var channel in Channels)
-            channel.CursorText = _cursor is { } time && HasData
+            channel.CursorText = _cursor is { } time && HasData && WithinSource(_sources[channel.ColorIndex], time)
                 ? string.Create(CultureInfo.InvariantCulture, $"{ValueAt(_sources[channel.ColorIndex].Samples, time):0.###} {channel.Unit}")
                 : "—";
         OnPropertiesChanged(nameof(CursorTime), nameof(HasCursor), nameof(CursorX), nameof(CursorText));

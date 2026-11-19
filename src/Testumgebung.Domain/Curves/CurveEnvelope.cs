@@ -292,6 +292,12 @@ internal sealed class EnvelopeRecording
             throw new ArgumentException($"Maximale Messlücke überschritten: {gap:G9} s gemessen, {_maxGap:G9} s zulässig.");
     }
 
+    internal void RestoreDisplayStop(EnvelopeEarlyStop? stop)
+    {
+        if (_captureSource) throw new InvalidOperationException("Nur für die Anzeige-Rekonstruktion.");
+        EarlyStop = stop;
+    }
+
     public TraceEvaluation Evaluate(bool stopped)
     {
         var evaluation = EvaluateQuality(stopped);
@@ -482,6 +488,7 @@ internal sealed class EnvelopeRecording
 
     private EnvelopeEarlyStop? FindEarlyStop(int channel, double start, double end)
     {
+        if (!_captureSource) return null;
         var abort = _abortEnvelopes[channel];
         var margin = abort is null ? _stopMargin : new StopMargin(0, false);
         if (margin is not { } stop) return null;

@@ -167,7 +167,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
                     ("run", run.RunId), ("no", no), ("part", (long)index), ("parts", (long)parts), ("id", rw.Id), ("event", rw.EventSequence), ("node", rw.NodeId),
                     ("channel", wave.Channel), ("unit", wave.Unit), ("rate", wave.SampleRate), ("start", wave.Start.UtcTicks), ("offset", (long)offset),
                     ("count", (long)count), ("total", (long)wave.Count), ("type", "f64le"), ("samples", ToBytes(wave.Values.ReadBlock(offset, count))),
-                    ("times", wave.TimeValues is { } sampleBuffer ? ToBytes(sampleBuffer.ReadBlock(offset, count)) : new TypedNull(DbType.Binary)), ("quality", wave.Quality), ("sync", wave.SyncGroup)).ConfigureAwait(false);
+                    ("times", wave.TimeValues is { } sampleBuffer ? ToBytes(sampleBuffer.ReadBlock(offset, count)) : new TypedNull(DbType.Binary)), ("quality", TraceResultStorage.QualityForPart(wave, index)), ("sync", wave.SyncGroup)).ConfigureAwait(false);
             }
         }
 
