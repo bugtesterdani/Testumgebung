@@ -78,8 +78,7 @@ public sealed class CustomDeviceProfile : System.ComponentModel.INotifyPropertyC
         if (Channels.Count == 0) errors.Add("Mindestens einen Kanal definieren.");
         if (Channels.Select(customDeviceChannel => customDeviceChannel.Name?.Trim() ?? "").Distinct(StringComparer.OrdinalIgnoreCase).Count() != Channels.Count)
             errors.Add("Kanalnamen müssen eindeutig sein.");
-        if (InputDiscard is { SettleMilliseconds: < 0 or > 5000 })
-            errors.Add("Eingangspuffer: Nachlaufzeit muss zwischen 0 und 5000 ms liegen.");
+        ValidateInputDiscard(errors);
         if (!Enum.IsDefined(Interface)) errors.Add("Ungültige Kommunikationsschnittstelle.");
         foreach (var channel in Channels) errors.AddRange(channel.Validate(SplitCommandSequences));
         if (ProbeQuery is null || SafeCommands is null) errors.Add("Befehlsfelder dürfen nicht null sein.");
@@ -87,6 +86,12 @@ public sealed class CustomDeviceProfile : System.ComponentModel.INotifyPropertyC
         CustomCommandSequence.Validate(ProbeQuery, ProbeEndings, SplitCommandSequences, false, "Prüfabfrage", errors);
         CustomCommandSequence.Validate(SafeCommands, SafeEndings, SplitCommandSequences, true, "Sicherer Zustand", errors);
         return errors;
+    }
+
+    private void ValidateInputDiscard(List<string> errors)
+    {
+        if (InputDiscard is { SettleMilliseconds: < 0 or > 5000 })
+            errors.Add("Eingangspuffer: Nachlaufzeit muss zwischen 0 und 5000 ms liegen.");
     }
 
     public IReadOnlyList<InstrumentChannel> InstrumentChannels() => Channels.Select(customDeviceChannel => new InstrumentChannel(
