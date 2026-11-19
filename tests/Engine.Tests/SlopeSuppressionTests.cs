@@ -31,7 +31,7 @@ public sealed class SlopeSuppressionTests
         var metadata = Assert.Single(end.Channels);
         var exempt = Assert.Single(metadata.SuppressedSlopes);
         Assert.Equal(50, exempt.Slope, 8);
-        Assert.Contains("Anlaufausnahme", exempt.Reason);
+        Assert.Equal("Anlaufausnahme 1 von 1", exempt.Reason);
         Assert.Equal(0.03, Assert.Single(metadata.Violations), 8);
         Assert.Equal(exempt, Assert.Single(EnvelopeTraceMetadata.Decode(end.Data.Channels[0].Quality)!.SuppressedSlopes));
     }
@@ -57,7 +57,11 @@ public sealed class SlopeSuppressionTests
             Assert.Equal(expected[index], result.Data.Channels[0].Values[index], 8);
         var details = Assert.Single(result.Channels);
         Assert.Equal(2, details.SuppressedSlopes.Count);
-        Assert.All(details.SuppressedSlopes, point => Assert.Equal(0, point.StartTime));
+        Assert.All(details.SuppressedSlopes, point =>
+        {
+            Assert.Equal(0, point.StartTime);
+            Assert.Equal("Mindeststeigung nicht erreicht", point.Reason);
+        });
         Assert.Empty(details.Violations);
     }
 
@@ -91,8 +95,8 @@ public sealed class SlopeSuppressionTests
         recordings.Add("owner", "trace", 0.01, [0.5, 2], Now);
         recordings.Add("owner", "trace", 0.02, [2.5, 4], Now);
         var result = recordings.Stop("owner", "trace");
-        Assert.Single(result.Channels[0].SuppressedSlopes);
-        Assert.Empty(result.Channels[0].Violations);
+        Assert.Empty(result.Channels[0].SuppressedSlopes);
+        Assert.Single(result.Channels[0].Violations);
         Assert.Single(result.Channels[1].SuppressedSlopes);
         Assert.Single(result.Channels[1].Violations);
     }
@@ -239,6 +243,22 @@ public sealed class SlopeSuppressionTests
         Assert.Equal(100, result.Data.Channels[0].Values.Last(), 8);
         Assert.Single(result.Channels[0].Violations);
         Assert.Equal(plateauPoints, result.Channels[0].SuppressedSlopes.Count);
+    }
+
+    [Fact]
+    public void Unused_initial_exceptions_cannot_hide_a_later_spike()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now, maxGap: 4,
+            slope: new(SlopeWindowMode.Consecutive, 2, -2, 2) { InitialExceptionCount = 3, InitialExceptionAbove = 10 });
+        recordings.Add("owner", "trace", 0, [0], Now);
+        recordings.Add("owner", "trace", 1, [1], Now);
+        recordings.Add("owner", "trace", 4, [1], Now);
+        recordings.Add("owner", "trace", 4.01, [2], Now);
+        var result = recordings.Stop("owner", "trace");
+        Assert.False(result.Passed);
+        Assert.Empty(result.Channels[0].SuppressedSlopes);
+        Assert.Equal(4.01, Assert.Single(result.Channels[0].Violations));
     }
 
     [Fact]

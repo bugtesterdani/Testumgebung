@@ -137,9 +137,10 @@ public sealed class ShellViewModel : ObservableObject
         {
             return new RelayCommand(parameter =>
             {
-                if (parameter is ShellPage page) Page = page;
+                if (parameter is "Administration") Page = AdministrationPage;
+                else if (parameter is ShellPage page) Page = page;
                 else if (parameter is string text && Enum.TryParse<ShellPage>(text, out var parsed)) Page = parsed;
-            }, parameter => Allowed(parameter switch
+            }, parameter => parameter is "Administration" ? AdministrationPage != ShellPage.Operator : Allowed(parameter switch
             {
                 ShellPage page => page,
                 string text when Enum.TryParse<ShellPage>(text, out var parsed) => parsed,
@@ -535,6 +536,10 @@ public sealed class ShellViewModel : ObservableObject
     /// <summary>Kopfzeile „Aktive Prüfsoftware“.</summary>
     public string ActiveSoftwareText => SelectedStation.IsRunning ? SelectedStation.RunningVersionText
         : HasReleases ? SelectedStation.ReleasedVersionText : $"v{Editor.Version} (Editor)";
+
+    private ShellPage AdministrationPage => new[]
+        { ShellPage.Settings, ShellPage.Notifications, ShellPage.Access, ShellPage.Python, ShellPage.System }
+        .FirstOrDefault(Allowed);
 
     private bool Allowed(ShellPage page) => page switch
     {

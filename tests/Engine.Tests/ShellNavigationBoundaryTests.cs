@@ -44,6 +44,10 @@ public sealed class ShellNavigationBoundaryTests
                 shell.Page = ShellPage.Operator; shell.NavigateCommand.Execute(page.ToString()); Assert.Equal(allowed ? page : ShellPage.Operator, shell.Page);
                 Assert.Equal(shell.IsSignedIn && shell.Page is not (ShellPage.Operator or ShellPage.Protocol) ? "ENTWICKLERANSICHT" : "WERKERANSICHT", shell.ViewTitle);
             }
+            shell.Page = ShellPage.Operator;
+            Assert.Equal(develop, shell.NavigateCommand.CanExecute("Administration"));
+            shell.NavigateCommand.Execute("Administration");
+            Assert.Equal(develop ? settings ? ShellPage.Settings : ShellPage.Python : ShellPage.Operator, shell.Page);
             Assert.True(shell.NavigateCommand.CanExecute(new object())); shell.NavigateCommand.Execute("not-a-page");
             shell.SelectStationCommand.Execute(null); shell.SelectedStation = null!; shell.SelectedStation = shell.SelectedStation;
             shell.NoteActivity(); shell.CheckInactivity();

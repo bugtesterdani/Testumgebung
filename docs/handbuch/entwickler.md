@@ -180,6 +180,8 @@ Bei der Grenzauswertung **Steigung** lassen sich im vorhandenen Aufnahmebaustein
 deren Steigung größer als **Y für Anlaufausnahmen** ist. X = 0 deaktiviert diese Ausnahme.
 **Richtung der Anlaufausnahmen** wählt Steigend (> Y), Fallend (< −Y) oder Beide (Betrag > Y).
 Bei Fallend und Beide ist Y ein nichtnegativer Betrag. Alte Projekte erhalten beim Laden Steigend als Vorgabe.
+Anlaufausnahmen gelten nur bis zur ersten regulär bewerteten Steigung je Kanal.
+Ein späterer Sprung wird daher auch bei unverbrauchter Ausnahmeanzahl bewertet.
 Ausgenommene Werte lösen die Steigungsbewertung und deren zusätzliche Abbruchabweichung nicht aus.
 
 **Positive Mindeststeigung** und **Negative Mindeststeigung** sind direkt in der Kanaleinheit pro Sekunde
@@ -203,7 +205,8 @@ Nach einem direkt bewerteten Fenster beginnt die nächste
 Bewertung wieder gemäß dem gewählten Fenstermodus.
 
 Im Prüfergebnis stehen Anzahl und Details unter **SuppressedSlopes** in den gespeicherten
-Kurvenmetadaten und der JSON-Ergebnisvariable. Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
+Kurvenmetadaten und der JSON-Ergebnisvariable. Die gespeicherten Gründe „Mindeststeigung nicht erreicht“ und „Anlaufausnahme X von Y“ bleiben lesbar.
+Jeder Eintrag enthält Zeit, Steigung, Ausgangszeit,
 Ausgangswert, Endwert und den Ausnahmegrund. Die normale Steigungsdarstellung enthält die
 berechneten Werte, ausgenommene Vergleiche erhalten keine Grenzverletzungsmarkierung.
 Eine Aufnahme ohne einen regulär auswertbaren Steigungsvergleich je Kanal ergibt ERROR.
@@ -332,6 +335,9 @@ Beide Ansichten bearbeiten denselben Projektstand.
 Die [Knotenansicht](../knotenansicht.md) ergänzt manuelle Verbindungen, Zoom,
 Verschieben und Debugwerte am bisherigen Haltepunkt vor der Ergebnisweitergabe.
 
+### Einstieg in die Verwaltung
+
+„Verwaltung“ öffnet den ersten erlaubten und verfügbaren Unterpunkt in der sichtbaren Reihenfolge: Datenbank, Meldewege, Zugang, Python, Sicherung. Dadurch führt der Einstieg bei vorhandener Datenbankkonfiguration zuerst dorthin. Das Auftragssymbol (Liste) unterscheidet sich vom Releases-Symbol.
 ### Sprache der Werkeransicht
 
 Die Auswahl „Sprache Werkeransicht“ betrifft die Werkeroberfläche. Entwicklung, Verwaltung und selbst erstellte Prüfprogramminhalte behalten ihre bisherigen Texte. Der Hinweis direkt an der Auswahl beschreibt diesen Geltungsbereich.
