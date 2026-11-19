@@ -54,6 +54,8 @@ public sealed partial class WaveformPlotViewModel
         finally { _synchronizing = false; }
     }
 
+    private void ResetPanes() { if (!IsPane) Panes.Clear(); }
+
     private void SetTraceData(WaveformSet input)
     {
         var remembered = Panes.SelectMany(pane => pane.Channels).ToDictionary(channel => channel.Id, channel => channel.IsVisible);

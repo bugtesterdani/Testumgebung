@@ -67,6 +67,47 @@ public sealed class TraceRawStorageTests
         var oldBytes = old.ToArray(); BinaryPrimitives.WriteUInt16LittleEndian(oldBytes.AsSpan(4), 1);
         Assert.Equal(new double[] { 3, 4 }, Assert.Single(ResultFile.Read(oldBytes).Run.Waveforms).Data.Samples);
     }
+    [Theory]
+    [InlineData("safety-first")]
+    [InlineData("safety-later")]
+    [InlineData("abort")]
+    [InlineData("target")]
+    [InlineData("formula")]
+    public void Frozen_replay_preserves_terminal_conditions_without_false_warning(string mode)
+    {
+        var band = new CurveDefinition { Id = "band", Name = "Band", Version = "1", Times = [0, 1, 3],
+            Channels = [new("Untergrenze", "V", [0, 0, 0]), new("Obergrenze", "V", [10, 10, 10])] };
+        var abort = new CurveDefinition { Id = "abort", Name = "Abort", Version = "1", Times = [0, 1, 3],
+            Channels = [new("Untergrenze", "V", [0, 0, 0]), new("Obergrenze", "V", [8, 8, 8])] };
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace",
+            [new("U", "V", mode == "formula" ? null : band) {
+                SafetyMaximum = mode.StartsWith("safety") ? 10 : null, AbortLimits = mode == "abort" ? abort : null }],
+            Now, maxGap: 2, duration: mode == "target" ? 3 : null,
+            formula: mode == "formula" ? new FormulaLimits("0", "10") : null,
+            target: mode == "target" ? new TraceTargetBand(4, 6, 2) : null);
+        recordings.Add("owner", "trace", 0, [mode == "safety-first" ? 12 : 5], Now);
+        if (!recordings.IsEnded("owner", "trace"))
+            recordings.Add("owner", "trace", 1, [mode == "safety-later" ? 12 : mode == "abort" ? 9 : 5], Now);
+        var trace = recordings.Stop("owner", "trace");
+        var source = trace.Data.Recording!;
+        var replay = TraceRecordingSnapshot.Parse(source.Snapshot).Reconstruct(source.RawChannels);
+        Assert.All(replay.Channels, wave => Assert.Null(wave.DisplayWarning));
+        Assert.Contains(replay.Channels, wave => wave.Channel == "U");
+        var metadata = EnvelopeTraceMetadata.Decode(replay.Channels.First(wave => wave.Channel == "U").Quality)!;
+        Assert.Equal(trace.Channels[0].Complete, metadata.Complete);
+        Assert.Equal(trace.Channels[0].EarlyStop, metadata.EarlyStop);
+    }
+    [Fact]
+    public void Corrupt_snapshot_keeps_raw_values_with_shared_times_and_a_warning()
+    {
+        var stored = TraceResultStorage.Collapse(Run(Record(true)).Waveforms).ToArray();
+        stored[0] = stored[0] with { Data = stored[0].Data with { Quality = TraceResultStorage.Prefix + "invalid" } };
+        var problems = new List<string>(); var restored = TraceResultStorage.Expand(stored, problems);
+        Assert.Single(problems);
+        Assert.All(restored, wave => { Assert.NotNull(wave.Data.DisplayWarning); Assert.Equal(new double[] { 0, 2 }, wave.Data.Times); });
+        Assert.Throws<FormatException>(() => TraceRecordingSnapshot.Parse("{}"));
+    }
     [SqliteFact]
     public async Task Database_stores_raw_channels_and_shared_axis()
     {

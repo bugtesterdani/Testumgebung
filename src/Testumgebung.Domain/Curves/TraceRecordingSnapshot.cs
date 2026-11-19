@@ -53,18 +53,27 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
             return metadata is not null && saved is not null
                 ? wave with { Quality = (saved with { OriginalTimes = metadata.OriginalTimes }).Encode() } : wave;
         }).ToList();
+        RestoreSavedChannels(waves, raw);
+        ApplyReplayWarning(waves, changed);
+        return AddMeasurements(waves, raw);
+    }
+
+    private void RestoreSavedChannels(List<Waveform> waves, IReadOnlyList<Waveform> raw)
+    {
         foreach (var saved in Assessments.Where(saved => !waves.Any(wave => wave.Channel == saved.Channel)))
         {
             var index = Array.FindIndex(Channels, channel => channel.Name == saved.Channel);
             if (index >= 0) waves.Add(raw[index] with { Quality = (saved with { OriginalTimes = raw[index].Times ?? [] }).Encode() });
         }
+    }
+
+    private static void ApplyReplayWarning(List<Waveform> waves, bool changed)
+    {
         if (changed)
         {
             const string warning = "Neuberechnete Auswertung weicht von der gespeicherten Bewertung ab. Gespeicherte Bewertung und Grenzverletzungen bleiben maßgeblich.";
             if (waves.Count > 0) waves[0] = waves[0] with { DisplayWarning = warning };
-            else if (raw.Count > 0) raw = raw.Select(wave => wave with { DisplayWarning = warning }).ToArray();
         }
-        return AddMeasurements(waves, raw);
     }
 
     private bool AssessmentChanged(IReadOnlyList<EnvelopeTraceMetadata> calculated)
@@ -99,12 +108,7 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
                 AddConstant(waves, source, channel.Name + " · Zielband Untergrenze", target.Minimum);
                 AddConstant(waves, source, channel.Name + " · Zielband Obergrenze", target.Maximum);
             }
-            if (channel.AbortLimits is { } abort && Slope is not null)
-            {
-                var curve = new CurveEnvelope(abort.ToCurve(channel.Unit), channel.Unit);
-                waves.Add(new(channel.Name + " · Abbruch Untergrenze", channel.Unit, 0, source.Start, source.Values.Select((_, i) => curve.At(source.TimeOf(i)).Lower).ToArray(), source.Times));
-                waves.Add(new(channel.Name + " · Abbruch Obergrenze", channel.Unit, 0, source.Start, source.Values.Select((_, i) => curve.At(source.TimeOf(i)).Upper).ToArray(), source.Times));
-            }
+
         }
         return new(waves);
     }
