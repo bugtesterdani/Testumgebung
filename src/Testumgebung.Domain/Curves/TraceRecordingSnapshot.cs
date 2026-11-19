@@ -101,7 +101,8 @@ public sealed record TraceRecordingSnapshot(int AlgorithmVersion, TraceReplayCha
             AddConstant(waves, source, channel.Name + " · Sicherheit Untergrenze", channel.SafetyMinimum);
             AddConstant(waves, source, channel.Name + " · Sicherheit Obergrenze", channel.SafetyMaximum);
             if (AssessedRawPoints > 0 && Assessments.FirstOrDefault(saved => saved.Channel == channel.Name)?.EarlyStop
-                is { HardLimit: true } stop && stop.Channel == channel.Name)
+                is { HardLimit: true } stop && stop.Channel == channel.Name
+                && !waves.Any(wave => wave.Channel == channel.Name + " · Sicherheitsabbruch"))
                 waves.Add(new(channel.Name + " · Sicherheitsabbruch", channel.Unit, 0, source.Start, [stop.Value], [stop.Time]));
             if (index == 0 && Target is { } target)
             {

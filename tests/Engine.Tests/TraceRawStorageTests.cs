@@ -90,6 +90,8 @@ public sealed class TraceRawStorageTests
         if (!recordings.IsEnded("owner", "trace"))
             recordings.Add("owner", "trace", 1, [mode == "safety-later" ? 12 : mode == "abort" ? 9 : 5], Now);
         var trace = recordings.Stop("owner", "trace");
+        var live = new WaveformPlotViewModel(); live.SetData(trace.Data);
+        Assert.Equal(live.Channels.Count, live.Channels.Select(channel => channel.Id).Distinct().Count());
         var source = trace.Data.Recording!;
         var replay = TraceRecordingSnapshot.Parse(source.Snapshot).Reconstruct(source.RawChannels);
         Assert.All(replay.Channels, wave => Assert.Null(wave.DisplayWarning));
