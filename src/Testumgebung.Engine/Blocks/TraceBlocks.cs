@@ -25,6 +25,22 @@ public static class TraceBlocks
 
     public const string ExitDutOnEarlyStopParameter = "BeiVorzeitigemEndeZurExitGruppe";
 
+    internal static void ConfigureStartupWindow(StepDefinition step, IReadOnlyDictionary<string, string>? supplied)
+    {
+        if (step.BlockType is not (Start or Record)) return;
+        if (supplied is null) step.Parameters["SteigungAnlaufDauer"] = "1";
+        else if (!supplied.ContainsKey("SteigungAnlaufDauer")) step.Parameters.Remove("SteigungAnlaufDauer");
+    }
+
+    public static string? LegacyStartupWarning(StepDefinition step)
+    {
+        if (step.BlockType is not (Start or Record)) return null;
+        var p = new BlockParameters(BlockCatalog.Default.Get(step.BlockType), step.Parameters);
+        if (p.Choice(EvaluationParameter) is ValueBand or FormulaBand) return null;
+        return p.Number("SteigungAnlaufAnzahl") > 0 && !p.Raw.ContainsKey("SteigungAnlaufDauer")
+            ? "Anlaufphase unbegrenzt: bestehende Konfiguration ohne Anlaufdauer. Dauer in Sekunden festlegen." : null;
+    }
+
     public static void Register(BlockCatalog catalog)
     {
         catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
@@ -83,6 +99,8 @@ public static class TraceBlocks
         Hint: "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."),
      new("SteigungAnlaufrichtung", "Richtung der Anlaufausnahmen", ParameterKind.Choice, "Steigend", Choices: ["Steigend", "Fallend", "Beide"]),
      new("SteigungAnlaufSchwelle", "Anlaufausnahmen: nur ab Steigung [Kanaleinheit/s]", ParameterKind.Number, "0"),
+     new("SteigungAnlaufDauer", "Anlaufausnahmen: nur bis [s] nach Aufnahmebeginn", ParameterKind.Number,
+        Hint: "Bei positiver Ausnahmeanzahl erforderlich. Neue Bausteine verwenden 1 s. Gemessen ab dem ersten Messpunkt; alte Konfigurationen ohne Feld bleiben unbegrenzt."),
      new("SteigungSchwellePositiv", "Kleine Steigungen sammeln bis + [Kanaleinheit/s] (0 = aus)", ParameterKind.Number, "0",
         Hint: "Kleine Änderungen zusammen auswerten. Die gesamte vergangene Messzeit wird mitgerechnet. Schnelle Sprünge werden sofort geprüft."),
      new("SteigungSchwelleNegativ", "Kleine Steigungen sammeln bis − [Kanaleinheit/s] (0 = aus)", ParameterKind.Number, "0",
@@ -113,7 +131,7 @@ public static class TraceBlocks
         {
             VisibleWhen = RecordingVisibility(parameter.Name),
             Advanced = parameter.Advanced || parameter.Name is "SteigungAnlaufAnzahl" or "SteigungAnlaufSchwelle"
-                or "SteigungAnlaufrichtung" or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ"
+                or "SteigungAnlaufrichtung" or "SteigungAnlaufDauer" or "SteigungSchwellePositiv" or "SteigungSchwelleNegativ"
         }).ToArray();
 
     private static ParameterVisibility? RecordingVisibility(string name)
@@ -126,7 +144,7 @@ public static class TraceBlocks
     {
         if (name == "Steigungsfenster")
             return new(EvaluationParameter, AllowedValues: [DisjointSlope, RollingSlope]);
-        if (name is "SteigungAnlaufSchwelle" or "SteigungAnlaufrichtung")
+        if (name is "SteigungAnlaufSchwelle" or "SteigungAnlaufrichtung" or "SteigungAnlaufDauer")
             return new(All: [new(EvaluationParameter, AllowedValues: [PairSlope, DisjointSlope, RollingSlope]),
                 new("SteigungAnlaufAnzahl", GreaterThanZero: true)]);
         if (name.StartsWith("Steigung", StringComparison.Ordinal))
@@ -228,6 +246,7 @@ public static class TraceBlocks
     internal static StepOutcome Outcome(TraceEvaluation result, bool includeData, bool exitDut = false)
     {
         var outcome = EvaluateOutcome(result, includeData, exitDut);
+        if (result.ConfigurationWarning is { } warning) outcome = outcome with { Message = outcome.Message + " " + warning };
         var suppressed = result.Channels.Sum(channel => channel.SuppressedSlopes.Count);
         return suppressed == 0 ? outcome : outcome with
         {

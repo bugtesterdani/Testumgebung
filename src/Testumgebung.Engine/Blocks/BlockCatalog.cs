@@ -193,6 +193,7 @@ public sealed class BlockCatalog
     public StepDefinition Create(string type, string id, string? name = null, IReadOnlyDictionary<string, string>? parameters = null)
     {
         var block = Get(type);
+        var suppliedParameters = parameters;
         parameters = TraceEndOptions.Migrate(type, parameters);
         var step = new StepDefinition(id, name ?? block.DisplayName, new ErrorAction("Nicht konfiguriert")) { BlockType = type };
         foreach (var parameter in block.Parameters) step.Parameters[parameter.Name] = parameter.Default;
@@ -201,6 +202,7 @@ public sealed class BlockCatalog
         if (type is TraceBlocks.Start or TraceBlocks.Record && parameters?.ContainsKey(TraceBlocks.TargetEnabledParameter) != true)
             step.Parameters[TraceBlocks.TargetEnabledParameter] = !string.IsNullOrWhiteSpace(step.Parameters.GetValueOrDefault("ZielbandMin"))
                 || !string.IsNullOrWhiteSpace(step.Parameters.GetValueOrDefault("ZielbandMax")) ? "true" : "false";
+        TraceBlocks.ConfigureStartupWindow(step, suppliedParameters);
         Rebuild(step);
         return step;
     }

@@ -29,19 +29,26 @@ public sealed class ConditionalParameterTests
         rows[TraceBlocks.LowerFormulaParameter].Value = "0";
         rows[TraceBlocks.UpperFormulaParameter].Value = "10";
         var direction = rows["SteigungAnlaufrichtung"];
+        var duration = rows["SteigungAnlaufDauer"];
+        Assert.True(duration.Descriptor.Advanced);
+        Assert.Equal(direction.Descriptor.Section, duration.Descriptor.Section);
         foreach (var mode in new[] { TraceBlocks.PairSlope, TraceBlocks.DisjointSlope, TraceBlocks.RollingSlope })
         {
             rows[TraceBlocks.EvaluationParameter].Value = mode;
             Assert.False(direction.IsHidden);
+            Assert.False(duration.IsHidden);
             rows["SteigungAnlaufAnzahl"].Value = "0";
             Assert.True(direction.IsHidden);
+            Assert.True(duration.IsHidden);
             rows["SteigungAnlaufAnzahl"].Value = "2";
             Assert.False(direction.IsHidden);
+            Assert.False(duration.IsHidden);
         }
         foreach (var mode in new[] { TraceBlocks.ValueBand, TraceBlocks.FormulaBand })
         {
             rows[TraceBlocks.EvaluationParameter].Value = mode;
             Assert.True(direction.IsHidden);
+            Assert.True(duration.IsHidden);
         }
         Assert.Equal("Steigend", direction.Value);
     }

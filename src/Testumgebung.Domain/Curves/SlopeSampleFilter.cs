@@ -34,7 +34,7 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
     public bool Observe(int first, int last, double value, IReadOnlyList<double> times,
         IReadOnlyList<double> values, int slopeIndex, bool touchAllowed)
     {
-        var reason = Reason(value, touchAllowed);
+        var reason = Reason(value, touchAllowed, times[last] - times[0]);
         _pendingStart = reason == SlopeSuppressionReason.BelowThreshold ? first : null;
         if (reason == SlopeSuppressionReason.BelowThreshold) CollectedCount++;
         if (reason != SlopeSuppressionReason.None)
@@ -63,13 +63,14 @@ internal sealed class SlopeSampleFilter(SlopeLimits limits)
         _ => ""
     };
 
-    private SlopeSuppressionReason Reason(double value, bool touchAllowed)
+    private SlopeSuppressionReason Reason(double value, bool touchAllowed, double elapsed)
     {
         if (BelowThreshold(value))
             return SlopeSuppressionReason.BelowThreshold;
         var inside = touchAllowed ? value >= limits.Minimum && value <= limits.Maximum
             : value > limits.Minimum && value < limits.Maximum;
-        if (!inside && EvaluatedCount == 0 && _exceptions < limits.InitialExceptionCount && MatchesExceptionDirection(value))
+        if (!inside && EvaluatedCount == 0 && _exceptions < limits.InitialExceptionCount && MatchesExceptionDirection(value)
+            && (limits.InitialExceptionWindow is null || elapsed <= limits.InitialExceptionWindow))
         {
             _exceptions++;
             return SlopeSuppressionReason.InitialException;

@@ -12,6 +12,66 @@ public sealed class SlopeSuppressionTests
     private static readonly DateTimeOffset Now = DateTimeOffset.UnixEpoch;
 
     [Theory]
+    [InlineData(TraceBlocks.Start)]
+    [InlineData(TraceBlocks.Record)]
+    public void New_startup_windows_are_required_but_legacy_projects_remain_executable(string type)
+    {
+        var fresh = BlockCatalog.Default.Create(type, "fresh");
+        Assert.Equal("1", fresh.Parameters["SteigungAnlaufDauer"]);
+        fresh.Parameters[TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope;
+        fresh.Parameters["SteigungMin"] = "-1";
+        fresh.Parameters["SteigungMax"] = "1";
+        fresh.Parameters["SteigungAnlaufAnzahl"] = "1";
+        fresh.Parameters["SteigungAnlaufDauer"] = "";
+        Assert.NotEmpty(BlockCatalog.Default.Rebuild(fresh));
+
+        fresh.Parameters.Remove("SteigungAnlaufDauer");
+        var project = new TestProject(Test(Group("loop").Add(fresh)));
+        var copy = new ProjectSerializer().Clone(project);
+        var legacy = Assert.IsType<StepDefinition>(copy.Definition.Find("fresh"));
+        Assert.False(legacy.Parameters.ContainsKey("SteigungAnlaufDauer"));
+        Assert.Empty(BlockCatalog.Default.Rebuild(legacy));
+        var editor = new Testumgebung.Presentation.ViewModels.EditorViewModel(copy);
+        Assert.Contains(editor.DiagnosticsFor(legacy), message => message.Contains("Anlaufphase unbegrenzt"));
+        legacy.Parameters["SteigungAnlaufDauer"] = "1";
+        Assert.Empty(editor.DiagnosticsFor(legacy));
+        legacy.Parameters["SteigungAnlaufDauer"] = "0";
+        Assert.NotEmpty(editor.DiagnosticsFor(legacy));
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("NaN")]
+    [InlineData("Infinity")]
+    [InlineData("")]
+    public async Task Invalid_startup_duration_is_rejected(string duration)
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Record, "record", parameters: new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope, ["Werte"] = "0",
+            ["SteigungMin"] = "-1", ["SteigungMax"] = "1", ["SteigungAnlaufAnzahl"] = "1",
+            ["SteigungAnlaufDauer"] = duration
+        });
+        var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { Clock = new VirtualClock() });
+        Assert.Equal(ResultRating.Error, (await run.RunAsync().Within()).Rating);
+    }
+
+    [Fact]
+    public async Task Legacy_startup_phase_is_explicitly_reported_as_unlimited()
+    {
+        var step = BlockCatalog.Default.Create(TraceBlocks.Record, "record", parameters: new Dictionary<string, string>
+        {
+            [TraceBlocks.EvaluationParameter] = TraceBlocks.PairSlope, ["Werte"] = "0",
+            ["SteigungMin"] = "-1", ["SteigungMax"] = "1", ["SteigungAnlaufAnzahl"] = "1"
+        });
+        var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { Clock = new VirtualClock() });
+        await run.RunAsync().Within();
+        Assert.Contains("Anlaufphase unbegrenzt", Assert.Single(run.Steps("record")).Message);
+    }
+
+
+    [Theory]
     [InlineData(4.01, false)]
     [InlineData(0.52, true)]
     [InlineData(1.0, true)]

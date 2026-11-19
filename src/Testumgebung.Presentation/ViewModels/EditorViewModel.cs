@@ -289,6 +289,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         var list = Catalog.Rebuild(step).ToList();
         if (list.Count == 0) list.AddRange(BusBlocks.CheckReferences(step, Project.Definition));
+        if (list.Count == 0 && TraceBlocks.LegacyStartupWarning(step) is { } warning) list.Add(warning);
         if (step.BlockType is not (BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock)) return list;
         var id = step.Parameters.GetValueOrDefault("Baustein");
         if (string.IsNullOrWhiteSpace(id)) return ["Kein Baustein aus der Bibliothek gewählt."];
