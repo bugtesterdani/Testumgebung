@@ -33,6 +33,10 @@ public sealed class ConditionalParameterTests
         {
             rows[TraceBlocks.EvaluationParameter].Value = mode;
             Assert.False(direction.IsHidden);
+            rows["SteigungAnlaufAnzahl"].Value = "0";
+            Assert.True(direction.IsHidden);
+            rows["SteigungAnlaufAnzahl"].Value = "2";
+            Assert.False(direction.IsHidden);
         }
         foreach (var mode in new[] { TraceBlocks.ValueBand, TraceBlocks.FormulaBand })
         {

@@ -5727,18 +5727,35 @@
           ],
           "hint": null,
           "visibleWhen": {
-            "parameter": "Grenzauswertung",
+            "parameter": "",
             "value": "",
-            "allowedValues": [
-              "Steigung je Nachbarpaar",
-              "Steigung in getrennten Fenstern",
-              "Steigung im gleitenden Fenster"
-            ],
+            "allowedValues": null,
             "boolean": null,
             "greaterThanZero": false,
-            "all": null
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungAnlaufSchwelle",
@@ -6528,18 +6545,35 @@
           ],
           "hint": null,
           "visibleWhen": {
-            "parameter": "Grenzauswertung",
+            "parameter": "",
             "value": "",
-            "allowedValues": [
-              "Steigung je Nachbarpaar",
-              "Steigung in getrennten Fenstern",
-              "Steigung im gleitenden Fenster"
-            ],
+            "allowedValues": null,
             "boolean": null,
             "greaterThanZero": false,
-            "all": null
+            "all": [
+              {
+                "parameter": "Grenzauswertung",
+                "value": "",
+                "allowedValues": [
+                  "Steigung je Nachbarpaar",
+                  "Steigung in getrennten Fenstern",
+                  "Steigung im gleitenden Fenster"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "SteigungAnlaufAnzahl",
+                "value": "",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": true,
+                "all": null
+              }
+            ]
           },
-          "advanced": false
+          "advanced": true
         },
         {
           "name": "SteigungAnlaufSchwelle",
