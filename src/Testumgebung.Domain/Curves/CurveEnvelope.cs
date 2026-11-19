@@ -273,7 +273,8 @@ internal sealed class EnvelopeRecording
 
     private void Validate(double time, IReadOnlyList<double> values)
     {
-        if (Ended) throw new InvalidOperationException("Aufnahme ist bereits beendet.");
+        // Display replay must consume all saved samples, even if current target rules end earlier.
+        if (_captureSource && Ended) throw new InvalidOperationException("Aufnahme ist bereits beendet.");
         if (_duration is { } duration && time > duration) throw new ArgumentException("Messzeit liegt nach der eingestellten Aufnahmedauer.");
         if (_faulted) throw new InvalidOperationException("Aufnahme ist nach einem Datenfehler ungültig; neu starten.");
         if (_times.Count >= _maxPoints) throw new InvalidOperationException("Maximale Messpunktzahl erreicht.");
@@ -381,8 +382,8 @@ internal sealed class EnvelopeRecording
 
     private TraceEvaluation EvaluateSlopes(SlopeLimits limits, bool complete)
     {
-        if (_slopeTimes.Count == 0) return new(new([]), [], false) { Finished = Ended };
-        var times = _slopeTimes.ToArray();
+        if (_slopeTimes.Count == 0 && !TargetReached) return new(new([]), [], false) { Finished = Ended };
+                var times = _slopeTimes.ToArray();
         var lower = Enumerable.Repeat(limits.Minimum, times.Length).ToArray();
         var upper = Enumerable.Repeat(limits.Maximum, times.Length).ToArray();
         var waves = new List<Waveform>();

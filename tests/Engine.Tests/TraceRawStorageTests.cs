@@ -52,6 +52,64 @@ public sealed class TraceRawStorageTests
         if (slope) Assert.Contains(restored, wave => wave.Data.Channel == "U · Messwert" && wave.Data.Count == 2);
         Assert.Equal(2, TraceResultStorage.Collapse(restored).Count);
     }
+    [Theory]
+    [InlineData(SlopeWindowMode.Disjoint)]
+    [InlineData(SlopeWindowMode.Rolling)]
+    public void Target_before_first_slope_window_has_complete_metadata_and_roundtrips(SlopeWindowMode mode)
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(mode, 5, -10, 10),
+            target: new TraceTargetBand(4, 6, 2));
+        recordings.Add("owner", "trace", 0, [5], Now);
+        var preview = recordings.Add("owner", "trace", 1, [5], Now)!;
+        Assert.True(preview.TargetReached);
+        Assert.True(preview.Finished);
+        Assert.True(preview.Complete);
+        var trace = recordings.Stop("owner", "trace");
+        Assert.True(trace.Passed);
+        Assert.True(Assert.Single(trace.Channels).Complete);
+        Assert.Empty(trace.Channels[0].Violations);
+        Assert.Empty(trace.Data.Channels[0].Values);
+        Assert.Throws<InvalidOperationException>(() => recordings.Add("owner", "trace", 2, [5], Now));
+        using var stream = new MemoryStream();
+        ResultFile.Write(stream, Run(trace));
+        var restored = ResultFile.Read(stream.ToArray());
+        Assert.Empty(restored.Problems);
+        Assert.All(restored.Run.Waveforms, wave => Assert.Null(wave.Data.DisplayWarning));
+        var assessed = restored.Run.Waveforms.Single(wave => wave.Data.Channel == "U");
+        Assert.True(EnvelopeTraceMetadata.Decode(assessed.Data.Quality)!.Complete);
+        Assert.Contains(restored.Run.Waveforms, wave => wave.Data.Channel == "U · Messwert"
+            && wave.Data.Values.SequenceEqual(new double[] { 5, 5 }));
+    }
+
+    [Fact]
+    public void Historical_replay_consumes_samples_after_new_target_rule_would_stop()
+    {
+        var recordings = new EnvelopeRecordings();
+        recordings.Start("owner", "trace", [new("U", "V", null)], Now,
+            slope: new(SlopeWindowMode.Consecutive, 2, -10, 10)
+                { PositiveThreshold = 1, NegativeThreshold = -1 });
+        recordings.Add("owner", "trace", 0, [5], Now);
+        recordings.Add("owner", "trace", 1, [5], Now);
+        recordings.Add("owner", "trace", 2, [20], Now);
+        recordings.Add("owner", "trace", 3, [5], Now);
+        recordings.Add("owner", "trace", 4, [5], Now);
+        var trace = recordings.Stop("owner", "trace");
+        Assert.False(trace.Passed);
+        var source = trace.Data.Recording!;
+        // Historical versions continued past a suppressed in-band plateau.
+        var snapshot = TraceRecordingSnapshot.Parse(source.Snapshot) with { Target = new TraceTargetBand(4, 6, 2) };
+        var replay = snapshot.Reconstruct(source.RawChannels);
+        var slope = replay.Channels.Single(wave => wave.Channel == "U");
+        Assert.Equal(4, slope.Count);
+        Assert.Equal(trace.Channels[0].Details, EnvelopeTraceMetadata.Decode(slope.Quality)!.Details);
+        Assert.Equal(2, EnvelopeTraceMetadata.Decode(slope.Quality)!.ViolationCount);
+        Assert.Contains(replay.Channels, wave => wave.Channel == "U · Messwert"
+            && wave.Values.SequenceEqual(new double[] { 5, 5, 20, 5, 5 }));
+        Assert.All(replay.Channels, wave => Assert.Null(wave.DisplayWarning));
+    }
+
     [Fact]
     public void File_version_two_roundtrips_and_version_one_legacy_arrays_remain_readable()
     {
