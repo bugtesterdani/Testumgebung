@@ -139,3 +139,51 @@ Die vorhandenen Kurven-Speicheroptionen führen Messung und Grenzen zu Ergebnisd
 ## Direkt ladbares Beispiel
 
 [Grenzband-Demo ohne Hardware](beispiele/README-grenzband-demo.md) enthält vier auswählbare Fälle einschließlich 3,999 V, vorzeitigem Ende bei 3,599 V und einer Live-Kurve aus sechs Einzelpunkten. [Projektdatei öffnen/herunterladen](beispiele/grenzband-demo.tproj.json).
+
+## Rohdatenformat und Anzeige (Ergebnisformat 2)
+
+Neue Messwertverläufe speichern nur tatsächlich erfasste Messwerte, je Kanal als f64le, und einmal die gemeinsamen relativen Messzeitpunkte. Das gilt für Grenzband-, Formel- und Steigungsauswertung. In der Ergebnisdatei und in `tu_waveform_chunks` stehen keine abgeleiteten Steigungen, interpolierten Punkte oder vervielfachten Grenzlinien mehr. Das Punktlimit bleibt maximal 100000 erfasste Punkte je Kanal; ein Sicherheitsabbruch-Messpunkt ist darin enthalten.
+
+Die Quality-Information des ersten Kanals enthält unter `TraceRaw:1:` die unveränderliche Aufnahme-Momentaufnahme: Auswerteversion, vollständige Einstellungen einschließlich Filter, Sicherheitsgrenzen, Zielband, Formeln, Grenzkurven mit Version, Hash und Stützpunkten sowie die gespeicherte Bewertung mit Verletzungen, Abbruch und ausgenommenen Steigungen. Die Momentaufnahme benötigt deshalb weder ein Release noch die aktuelle Projektdatei. Die Zeitachse liegt nur beim ersten Kanal; `sync_group` verbindet die anderen Kanäle derselben Aufnahme damit. Die Quality-Momentaufnahme liegt nur im ersten Chunk.
+
+Beim Laden werden die bisherigen Auswertekurven mit ihren bisherigen Kanalnamen und Einheiten wiederhergestellt. Maßgeblich bleibt die gespeicherte Bewertung. Bei anderer Auswerteversion oder abweichenden Verletzungen erscheint ein Hinweis; die Markierungen stammen weiterhin aus der gespeicherten Bewertung. Alte Dateien der Version 1 und alte Datenbankeinträge mit vollständig gespeicherten Kurven bleiben lesbar.
+
+Spannung und Steigung werden in getrennten Bereichen je Einheit angezeigt. So beeinflussen beispielsweise 200 V/s nicht die Skalierung eines 5-V-Verlaufs. Zeitbereich, Zoom und Cursor sind gemeinsam. Schnellschalter erlauben Messwert, Steigung, Grenzen, Abbruch-/Sicherheitsgrenzen und ausgenommene Steigungen einzeln auszublenden. Die Kurven-Checkboxen bleiben zusätzlich wirksam. Ausgenommene Steigungen erscheinen neutral mit ihren protokollierten Start-/Endwerten und ihrem Grund. Dieselbe Anzeige wird in Ergebnissen, Live- und Werkeransicht verwendet.
+
+### Speicherbedarf
+
+Beispiel: 10000 Messpunkte, ein Kanal, Steigung je Nachbarpaar. Vorher wurden 9999 Steigungen sowie jeweils 9999 untere und obere Grenzen einschließlich dreifacher Zeitachse gespeichert: 479952 Byte reine f64le-Daten. Jetzt sind es 10000 Rohwerte und 10000 Zeitpunkte: 160000 Byte, rund 67 Prozent weniger. Hinzu kommen jeweils Metadaten; die tatsächliche Dateigröße hängt von der Deflate-Kompression und den Messwerten ab. Konstante Grenzen komprimieren besonders gut, daher entspricht die Dateiersparnis nicht direkt der Einsparung der f64le-Daten. Der Regressionstest `Large_recording_reports_physical_file_sizes` misst zusätzlich beide vollständigen Dateien mit einer reproduzierbaren Sinusaufnahme: 167093 Byte vorher, 97477 Byte danach (einschließlich Snapshot und Deflate, rund 42 Prozent weniger).
+
+### Messwerte und Zeiten per SQL lesen (PostgreSQL)
+
+Die bestehende binäre f64le-Speicherung bleibt erhalten. Eine SQL-Hilfsfunktion dekodiert einen endlichen Double-Wert; Rohmesswerte werden vor dem Speichern auf Endlichkeit geprüft. Für andere Datenbankanbieter ist eine entsprechende f64le-Funktion erforderlich.
+
+```sql
+CREATE OR REPLACE FUNCTION tu_f64le(b bytea, i integer)
+RETURNS double precision LANGUAGE sql IMMUTABLE STRICT AS $$
+ WITH p AS (SELECT i*8 AS o), bits AS (
+ SELECT ((get_byte(b,o+7)&127)<<4) | (get_byte(b,o+6)>>4) AS e,
+        CASE WHEN (get_byte(b,o+7)&128)=0 THEN 1 ELSE -1 END AS s,
+        (get_byte(b,o+6)&15)::numeric*281474976710656 +
+        get_byte(b,o+5)::numeric*1099511627776 +
+        get_byte(b,o+4)::numeric*4294967296 +
+        get_byte(b,o+3)::numeric*16777216 +
+        get_byte(b,o+2)::numeric*65536 + get_byte(b,o+1)::numeric*256 + get_byte(b,o)::numeric AS m
+ FROM p)
+ SELECT (s * power(2::numeric, CASE WHEN e=0 THEN -1022 ELSE e-1023 END) *
+        (CASE WHEN e=0 THEN 0 ELSE 1 END + m/4503599627370496))::double precision
+ FROM bits;
+$$;
+
+SELECT w.run_id, w.channel, w.unit, w.sample_offset+n AS sample_index,
+       tu_f64le(a.times,n) AS seconds_from_start,
+       tu_f64le(w.samples,n) AS measured_value
+FROM tu_waveform_chunks w
+JOIN tu_waveform_chunks a ON a.run_id=w.run_id AND a.event_seq=w.event_seq
+  AND a.sync_group=w.sync_group AND a.part=w.part AND a.times IS NOT NULL
+CROSS JOIN LATERAL generate_series(0,w.sample_count-1) n
+WHERE w.run_id='GEWUENSCHTE-LAUF-ID' AND w.sync_group LIKE 'TraceRaw:1:%'
+ORDER BY w.waveform_no,w.part,n;
+```
+
+`start_utc` enthält zusätzlich den absoluten Aufnahmebeginn in UTC-Ticks (100 ns seit 0001-01-01); `seconds_from_start` ist der tatsächliche relative Messzeitpunkt. Durch den Join erhält auch jeder weitere Kanal die einmal gespeicherte Zeitachse.

@@ -44,7 +44,11 @@ public sealed record ResultEvent(
     string? AttachmentId = null);
 
 /// <summary>Kurve mit Bezug auf das erzeugende Ereignis.</summary>
-public sealed record ResultWaveform(string Id, long EventSequence, string? NodeId, Waveform Data);
+public sealed record ResultWaveform(string Id, long EventSequence, string? NodeId, Waveform Data)
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public TraceRecordingData? Recording { get; init; }
+}
 
 /// <summary>Eingebetteter Anhang (z. B. Anweisungsbild). Id = SHA-256 des Inhalts → dedupliziert.</summary>
 public sealed record ResultAttachment(string Id, string Name, string MediaType, byte[] Data);

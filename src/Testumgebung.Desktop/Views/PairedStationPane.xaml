@@ -60,7 +60,7 @@
                         Visibility="{Binding HasLiveWaveform, Converter={StaticResource BoolVis}}">
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Top" Text="{Binding LiveWaveformTitle}" Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                        <views:WaveformPlot DataContext="{Binding LiveWaveform}" ShowToolbar="False" Height="230"/>
+                        <views:WaveformPlot DataContext="{Binding LiveWaveform}" ShowToolbar="False" Height="{Binding PreferredHeight}"/>
                     </DockPanel>
                 </Border>
                 </StackPanel>

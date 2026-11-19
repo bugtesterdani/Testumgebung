@@ -148,7 +148,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
     private static async Task StoreWaveformsAsync(Writer writer, ResultRun run)
     {
         var no = 0L;
-        foreach (var rw in run.Waveforms)
+        foreach (var rw in TraceResultStorage.Collapse(run.Waveforms))
         {
             no++;
             var wave = rw.Data;
@@ -167,7 +167,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
                     ("run", run.RunId), ("no", no), ("part", (long)index), ("parts", (long)parts), ("id", rw.Id), ("event", rw.EventSequence), ("node", rw.NodeId),
                     ("channel", wave.Channel), ("unit", wave.Unit), ("rate", wave.SampleRate), ("start", wave.Start.UtcTicks), ("offset", (long)offset),
                     ("count", (long)count), ("total", (long)wave.Count), ("type", "f64le"), ("samples", ToBytes(wave.Values.ReadBlock(offset, count))),
-                    ("times", wave.TimeValues is { } sampleBuffer ? ToBytes(sampleBuffer.ReadBlock(offset, count)) : new TypedNull(DbType.Binary)), ("quality", wave.Quality), ("sync", wave.SyncGroup)).ConfigureAwait(false);
+                    ("times", wave.TimeValues is { } sampleBuffer ? ToBytes(sampleBuffer.ReadBlock(offset, count)) : new TypedNull(DbType.Binary)), ("quality", TraceResultStorage.QualityForPart(wave, index)), ("sync", wave.SyncGroup)).ConfigureAwait(false);
             }
         }
 
@@ -449,7 +449,7 @@ public sealed class SqlRunDatabase : IRunDatabase, IRunQuerySource
                 waves.Add(new ResultWaveform(Str(reader, 1) ?? "", Long(reader, 2), Str(reader, 3), wave));
             }
         }
-        return waves;
+        return TraceResultStorage.Expand(waves);
     }
 
     private async Task<double[]?> LoadTimesAsync(string runId, long waveformNo, CancellationToken cancellationToken)

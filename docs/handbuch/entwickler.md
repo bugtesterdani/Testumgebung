@@ -357,3 +357,11 @@ Große Bausteine gliedern ihre Eingaben in aufklappbare Abschnitte. Messwertaufn
 ### Nach Aufnahmeende
 
 Bei Aufnahme, Messpunkt und abschließender Auswertung ersetzt „Nach Aufnahmeende“ die drei bisherigen Exit-Schalter. Zur Auswahl stehen Weiter mit nächstem Schritt, Exit bei vorzeitigem Ende, Exit bei ERROR, Exit bei vorzeitigem Ende oder ERROR und Immer Exit (PASS / FAIL / ERROR). Die drei bisherigen Rohwerte bleiben lesbar; beim Laden werden sie auf die passende Auswahl abgebildet. „Immer“ hat Vorrang, andernfalls werden vorzeitiges Ende und ERROR kombiniert. Eine ausdrücklich gesetzte neue Auswahl steuert die Ausführung. Andere Bausteine behalten ihren allgemeinen ERROR-Schalter. Exit-Gruppen laufen weiterhin auch bei vorzeitigem Ende; reguläre Folgeschritte werden entsprechend der Auswahl übersprungen.
+
+### Rohdaten und rekonstruierte Messwertverläufe
+
+`EnvelopeRecording` liefert die bisherigen Auswertekurven für Bewertung/Statistik und hängt ein transientes `TraceRecordingData` an. `ResultRecorder` übernimmt es einmal je Ereignis. `TraceResultStorage.Collapse` reduziert erst an der Speichergrenze (TRES und SQL) auf Rohwerte, gemeinsame Achse und eingefrorene `TraceRecordingSnapshot`-Einstellungen. `Expand` rekonstruiert über dieselbe Domain-Auswertung; gespeicherte Metadaten werden anschließend wieder eingesetzt. Eine Abweichung überschreibt keine Bewertung. Auswerteänderungen, die dieselben Rohdaten anders bewerten, müssen `CurrentAlgorithmVersion` erhöhen.
+
+Format 2 verwendet vorhandene WAVE-/SQL-Felder: `SyncGroup=TraceRaw:1:<event>`, Zeitdaten nur am ersten Rohkanal, Snapshot/gespeicherte Bewertungen nur in dessen erstem Chunk. Fremde und ältere Kurven durchlaufen Collapse/Expand unverändert. Einzelheiten und eine numerische SQL-Abfrage: [Messwertverläufe](../messwertverlaeufe.md#rohdatenformat-und-anzeige-ergebnisformat-2).
+
+`WaveformPlotViewModel` bildet je Einheit einen Unterbereich mit synchronisiertem Zeitbereich/Cursor. Nur die Anzeige interpoliert auf ein gemeinsames Raster; diese Werte werden nie zurückgeschrieben. Ergebnisse und Prüfplatzansichten verwenden dieselbe WPF-Komponente und Inhaltsfilter.

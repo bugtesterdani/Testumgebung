@@ -387,7 +387,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="{DynamicResource Operator_Curves}" Margin="0,0,0,2" />
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource Caption}" Text="{Binding LiveWaveformTitle}" TextTrimming="CharacterEllipsis" Margin="0,0,0,6" />
-                    <views:WaveformPlot DataContext="{Binding LiveWaveform}" ShowToolbar="False" Height="230" />
+                    <views:WaveformPlot DataContext="{Binding LiveWaveform}" ShowToolbar="False" Height="{Binding PreferredHeight}" />
                 </DockPanel>
             </Border>
             <Border Style="{StaticResource Card}">
