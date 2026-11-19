@@ -101,6 +101,7 @@ public sealed class ResultDocumentViewModel : ObservableObject
     public ObservableCollection<ResultEventRow> Events { get; } = [];
     public ObservableCollection<WaveformGroup> WaveformGroups { get; } = [];
     public ObservableCollection<PlotSeries> Plot { get; } = [];
+    public ObservableCollection<SuppressedSlopeRow> SuppressedSlopes { get; } = [];
     public bool HasWaveforms => WaveformGroups.Count > 0;
 
     public string PlotRange { get; private set; } = "";
@@ -118,6 +119,7 @@ public sealed class ResultDocumentViewModel : ObservableObject
     private void BuildPlot()
     {
         Plot.Clear();
+        SuppressedSlopes.Clear();
         PlotRange = "";
         if (_selectedGroup is null || _selectedGroup.Waveforms.Count == 0)
         {
@@ -125,6 +127,9 @@ public sealed class ResultDocumentViewModel : ObservableObject
             return;
         }
         var waves = _selectedGroup.Waveforms.Select(waveform => waveform.Data).ToList();
+        foreach (var wave in waves)
+            foreach (var sample in EnvelopeTraceMetadata.Decode(wave.Quality)?.SuppressedSlopes ?? [])
+                SuppressedSlopes.Add(new(wave.Channel, sample));
         var min = waves.Min(waveform => waveform.Count == 0 ? 0 : waveform.Values.Min());
         var max = waves.Max(waveform => waveform.Count == 0 ? 0 : waveform.Values.Max());
         if (max - min < 1e-12) { max += 1; min -= 1; }

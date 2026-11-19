@@ -124,6 +124,18 @@
                                     </Ellipse>
                                 </DataTemplate></ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding SuppressionMarkers}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter">
+                                    <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                </Style></ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Polygon Points="5,0 10,5 5,10 0,5" Fill="#808080" Stroke="White" StrokeThickness="1" ToolTip="{Binding Description}">
+                                        <Polygon.RenderTransform><TranslateTransform X="-5" Y="-5"/></Polygon.RenderTransform>
+                                    </Polygon>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <ItemsControl ItemsSource="{Binding ViolationMarkers}" IsHitTestVisible="False">
                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Grid/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate><DataTemplate>

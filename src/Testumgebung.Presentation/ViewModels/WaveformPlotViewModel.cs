@@ -61,6 +61,12 @@ public sealed class PlotChannel : ObservableObject
 /// <summary>Beschriftung der Y-Achse (Position in Plotkoordinaten).</summary>
 public sealed record PlotAxisLabel(double Y, string Text);
 public sealed record PlotViolationMarker(double X);
+public sealed record SuppressedSlopeRow(string Channel, SuppressedSlopeSample Sample)
+{
+    public string Description => string.Create(CultureInfo.CurrentCulture,
+        $"{Channel}: t={Sample.Time:0.######} s; Steigung={Sample.Slope:0.######}; Start t={Sample.StartTime:0.######} s, Wert={Sample.StartValue:0.######}; Endwert={Sample.EndValue:0.######}; {Sample.Reason}");
+}
+public sealed record PlotSuppressionMarker(double X, double Y, string Description);
 /// <summary>An actual received measurement, excluding interpolated limit knots.</summary>
 public sealed record PlotSampleMarker(double X, double Y, int ColorIndex);
 
@@ -80,6 +86,8 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public ObservableCollection<PlotViolationMarker> ViolationMarkers { get; } = [];
     private IReadOnlyDictionary<string, double[]> _sampleTimes = new Dictionary<string, double[]>();
     public ObservableCollection<PlotSampleMarker> SampleMarkers { get; } = [];
+    private IReadOnlyList<SuppressedSlopeRow> _suppressedSlopes = [];
+    public ObservableCollection<PlotSuppressionMarker> SuppressionMarkers { get; } = [];
     private bool _pointTrace;
     private double _sampleRate = 1;
     private IReadOnlyList<double>? _times;
@@ -163,10 +171,11 @@ public sealed class WaveformPlotViewModel : ObservableObject
     public void Clear() => SetData([], 1, null);
 
     /// <summary>Neue Daten. <paramref name="keepView"/> behält Zoom und Cursor, soweit noch im Bereich.</summary>
-    public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false, IReadOnlyDictionary<string, double[]>? sampleTimes = null)
+    public void SetData(IReadOnlyList<PlotSource> sources, double sampleRate, IReadOnlyList<double>? times, bool keepView = false, IReadOnlyDictionary<string, double[]>? violations = null, bool pointTrace = false, IReadOnlyDictionary<string, double[]>? sampleTimes = null, IReadOnlyList<SuppressedSlopeRow>? suppressedSlopes = null)
     {
         var wasFullView = _viewStart == 0 && Math.Abs(_viewEnd - Duration) < 1e-9;
         _pointTrace = pointTrace;
+        _suppressedSlopes = suppressedSlopes ?? [];
         _sampleTimes = sampleTimes ?? new Dictionary<string, double[]>();
         var visible = Channels.ToDictionary(channel => channel.Id, channel => channel.IsVisible);
         _sources = sources;
@@ -181,12 +190,21 @@ public sealed class WaveformPlotViewModel : ObservableObject
             if (keepView && visible.TryGetValue(plotSource.Id, out var flag)) ch.IsVisible = flag;
             Channels.Add(ch);
         }
-        var durationValue = Duration;
-        if (!keepView || _viewEnd <= _viewStart || _viewEnd > durationValue + 1e-12 || (pointTrace && wasFullView)) { _viewStart = 0; _viewEnd = durationValue; }
-        if (!keepView || _cursor > durationValue) _cursor = null;
+        RestoreView(keepView, wasFullView);
         foreach (var relayCommand in new[] { ZoomInCommand, ZoomOutCommand, ZoomAllCommand, PanLeftCommand, PanRightCommand, ClearCursorCommand })
             relayCommand.RaiseCanExecuteChanged();
         Render();
+    }
+
+    private void RestoreView(bool keepView, bool wasFullView)
+    {
+        var duration = Duration;
+        if (!keepView || _viewEnd <= _viewStart || _viewEnd > duration + 1e-12 || (_pointTrace && wasFullView))
+        {
+            _viewStart = 0;
+            _viewEnd = duration;
+        }
+        if (!keepView || _cursor > duration) _cursor = null;
     }
 
     public void SetData(CurveDefinition curve, bool keepView = false)
@@ -200,7 +218,8 @@ public sealed class WaveformPlotViewModel : ObservableObject
         var violations = metadata.ToDictionary(pair => pair.Key, pair => pair.Value?.Violations ?? []);
         var samples = metadata.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value!.OriginalTimes);
         SetData(set.Channels.Select(waveform => new PlotSource(waveform.Channel, waveform.Unit, waveform.Values)).ToList(), first.SampleRate, first.TimeValues,
-            keepView: true, violations: violations, pointTrace: samples.Count > 0, sampleTimes: samples);
+            keepView: true, violations: violations, pointTrace: samples.Count > 0, sampleTimes: samples,
+            suppressedSlopes: metadata.SelectMany(pair => (pair.Value?.SuppressedSlopes ?? []).Select(sample => new SuppressedSlopeRow(pair.Key, sample))).ToArray());
     }
 
     public void SetView(double start, double end)
@@ -310,6 +329,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
     private void Render()
     {
         ViolationMarkers.Clear();
+        SuppressionMarkers.Clear();
         SampleMarkers.Clear();
         Series.Clear();
         YLabels.Clear();
@@ -365,6 +385,7 @@ public sealed class WaveformPlotViewModel : ObservableObject
         UpdateSampleMarkers();
         ShowSingleSampleMarkers();
         UpdateViolationMarkers();
+        UpdateSuppressionMarkers();
         UpdateRmsLabels();
         UpdateCursor();
         OnPropertiesChanged(nameof(HasData), nameof(Count), nameof(Duration), nameof(ViewStart), nameof(ViewEnd), nameof(ViewText),
@@ -408,6 +429,17 @@ public sealed class WaveformPlotViewModel : ObservableObject
         foreach (var time in times.Where(time => double.IsFinite(time) && time >= _viewStart && time <= _viewEnd).Distinct().Take(1000))
             ViolationMarkers.Add(new((time - _viewStart) / (_viewEnd - _viewStart) * PlotWidth));
     }
+    private void UpdateSuppressionMarkers()
+    {
+        if (_viewEnd <= _viewStart) return;
+        var visible = Channels.Where(channel => channel.IsVisible).Select(channel => channel.Id).ToHashSet();
+        foreach (var row in _suppressedSlopes.Where(row => visible.Contains(row.Channel) &&
+            double.IsFinite(row.Sample.Time) && double.IsFinite(row.Sample.Slope) &&
+            row.Sample.Time >= _viewStart && row.Sample.Time <= _viewEnd).Take(1000))
+            SuppressionMarkers.Add(new((row.Sample.Time - _viewStart) / (_viewEnd - _viewStart) * PlotWidth,
+                Y(row.Sample.Slope), row.Description));
+    }
+
     private void UpdateCursor()
     {
         foreach (var channel in Channels)
