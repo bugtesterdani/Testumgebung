@@ -268,8 +268,7 @@ internal sealed class EnvelopeRecording
     {
         if (_target is not { } target || EarlyStop is not null) return;
         _targetStreak = value >= target.Minimum && value <= target.Maximum ? _targetStreak + 1 : 0;
-        TargetReached = _times.Count >= _minimumPoints && _targetStreak >= target.ConsecutivePoints && time - _times[0] + TimeTolerance(_minimumDuration) >= _minimumDuration
-            && (_slope is null || _slopeFilters.All(filter => filter.EvaluatedCount > 0));
+        TargetReached = _times.Count >= _minimumPoints && _targetStreak >= target.ConsecutivePoints && time - _times[0] + TimeTolerance(_minimumDuration) >= _minimumDuration;
     }
 
     private void Validate(double time, IReadOnlyList<double> values)
@@ -512,7 +511,7 @@ internal sealed class EnvelopeRecording
         if (!stopped) return "Messdaten unvollständig: Aufnahme nicht regulär abgeschlossen.";
         if (_times.Count < _minimumPoints)
             return $"Messdaten unvollständig: {_times.Count} gültige Messpunkte vorhanden, mindestens {_minimumPoints} erforderlich.";
-        if (_slope is not null && _slopeFilters.Any(filter => filter.EvaluatedCount == 0))
+        if (_slope is not null && !TargetReached && _slopeFilters.Any(filter => filter.EvaluatedCount == 0))
             return "Messdaten unvollständig: kein auswertbares Steigungsfenster vorhanden.";
         var measuredDuration = _times[^1] - _times[0];
         if (measuredDuration + TimeTolerance(_minimumDuration) < _minimumDuration)
