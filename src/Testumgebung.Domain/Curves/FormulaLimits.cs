@@ -6,9 +6,12 @@ namespace Testumgebung.Domain.Curves;
 public sealed class FormulaLimits
 {
     private readonly Expression _lower, _upper;
+    public string LowerSource { get; }
+    public string UpperSource { get; }
 
     public FormulaLimits(string lower, string upper)
     {
+        LowerSource = lower; UpperSource = upper;
         _lower = Parse(lower, "Untergrenze");
         _upper = Parse(upper, "Obergrenze");
     }

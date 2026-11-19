@@ -33,6 +33,8 @@ public sealed record Waveform
     public SampleBuffer? TimeValues { get; init; }
     public double[]? Times { get => TimeValues?.ToArray(); init => TimeValues = value is null ? null : new SampleBuffer(value); }
     public string? Quality { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? DisplayWarning { get; init; }
     public string? SyncGroup { get; init; }
     public int Count => Values.Count;
 
@@ -54,8 +56,12 @@ public sealed record Waveform
 }
 
 /// <summary>Mehrkanal-Datensatz mit gemeinsamer Zeitbasis (z. B. L1/L2/L3).</summary>
+public sealed record TraceRecordingData(string Snapshot, IReadOnlyList<Waveform> RawChannels);
+
 public sealed record WaveformSet(IReadOnlyList<Waveform> Channels)
 {
+    [System.Text.Json.Serialization.JsonIgnore]
+    public TraceRecordingData? Recording { get; init; }
     public override string ToString()
         => Channels.Count == 0 ? "keine Kurve"
             : string.Create(CultureInfo.InvariantCulture, $"{Channels.Count} Kanal/Kanäle × {Channels[0].Count} Samples");

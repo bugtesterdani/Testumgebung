@@ -34,7 +34,7 @@ public sealed record ResultFileContent(ResultRun Run, IReadOnlyList<string> Prob
 public static class ResultFile
 {
     public const string Extension = ".tres";
-    public const ushort FormatVersion = 1;
+    public const ushort FormatVersion = 2;
     public static ReadOnlySpan<byte> Magic => "TRES"u8;
     public static ReadOnlySpan<byte> TrailerMagic => "TEND"u8;
 
@@ -86,7 +86,7 @@ public static class ResultFile
         var nodeIndex = run.Structure.Select((resultNode, index2) => (resultNode.Id, i: index2)).ToDictionary(entry => entry.Id, entry => entry.i, StringComparer.Ordinal);
         for (var index2 = 0; index2 < run.Events.Count || index2 == 0; index2 += EventsPerChunk)
             Chunk("EVNT", EncodeEvents(run.Events.Skip(index2).Take(EventsPerChunk).ToList(), nodeIndex));
-        foreach (var waveform in run.Waveforms)
+        foreach (var waveform in TraceResultStorage.Collapse(run.Waveforms))
         {
             var parts = Math.Max(1, (waveform.Data.Count + SamplesPerChunk - 1) / SamplesPerChunk);
             for (var index3 = 0; index3 < parts; index3++) Chunk("WAVE", EncodeWavePart(waveform, index3, parts));
@@ -501,7 +501,7 @@ public static class ResultFile
         // Reihenfolge wie beim Schreiben (nach Ereignis, dann Kanal-Id)
         waveforms = waveforms.OrderBy(waveform => waveform.EventSequence).ThenBy(waveform => waveform.Id, StringComparer.Ordinal).ToList();
 
-        return waveforms;
+        return TraceResultStorage.Expand(waveforms, problems);
     }
 
     private static void CheckAttachments(List<ResultEvent> events, List<ResultAttachment> attachments, List<string> problems)

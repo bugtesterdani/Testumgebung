@@ -218,6 +218,9 @@ public sealed class ResultRecorder
                 Waveform waveform => [waveform],
                 _ => null,
             };
+            var recording = (sc.Value as WaveformSet)?.Recording;
+            if (recording is not null && waves is { Count: 0 })
+                waves = recording.RawChannels.Select(wave => wave with { Channel = wave.Channel + " · Messwert" }).ToArray();
             if (waves is not null)
             {
                 ids = [];
@@ -225,7 +228,7 @@ public sealed class ResultRecorder
                 {
                     var id = $"{sc.NodeId}#{seq}/{waveform2.Channel}";
                     ids.Add(id);
-                    _waveforms.Add(new ResultWaveform(id, seq, sc.NodeId, waveform2));
+                    _waveforms.Add(new ResultWaveform(id, seq, sc.NodeId, waveform2) { Recording = ids.Count == 1 ? recording : null });
                 }
             }
             _events.Add(new ResultEvent(seq, ResultEventKind.Step, sc.NodeId, sc.Path, sc.Iteration, sc.Time, sc.Rating,

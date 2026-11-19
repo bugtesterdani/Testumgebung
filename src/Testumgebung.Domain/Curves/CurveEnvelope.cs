@@ -9,6 +9,7 @@ public sealed class CurveEnvelope
     public string Key { get; }
     public string Hash { get; }
     public IReadOnlyList<double> Times => _times;
+    internal FrozenTraceCurve Freeze() => new(Key, Hash, _times.ToArray(), _lower.ToArray(), _upper.ToArray());
     public CurveEnvelope(CurveDefinition curve, string unit)
     {
         ValidateDefinition(curve);
@@ -126,14 +127,16 @@ internal sealed class EnvelopeRecording
     private readonly StopMargin? _stopMargin;
     private readonly double? _duration;
     private readonly TraceTargetBand? _target;
+    private readonly bool _captureSource;
     private int _targetStreak;
     public bool TargetReached { get; private set; }
     public bool HasViolation { get; private set; }
     public bool Ended => EarlyStop is not null || TargetReached || (_duration is { } duration && _times.Count > 1 && _times[^1] >= duration - TimeTolerance(duration));
     public EnvelopeEarlyStop? EarlyStop { get; private set; }
     private DateTimeOffset _lastPreview;
-    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute, int minimumPoints, TraceTargetBand? target)
+    public EnvelopeRecording(IReadOnlyList<TraceChannelDefinition> channels, DateTimeOffset start, int maxPoints, double maxGap, double minimumDuration, bool touchAllowed, double? stopPercent, double? duration, SlopeLimits? slope, FormulaLimits? formula, double? stopAbsolute, int minimumPoints, TraceTargetBand? target, bool captureSource = true)
     {
+        _captureSource = captureSource;
         ValidateChannels(channels);
         ValidateAcquisition(maxPoints, maxGap, minimumDuration);
         if (minimumPoints < 2 || minimumPoints > maxPoints) throw new ArgumentOutOfRangeException(nameof(minimumPoints));
@@ -292,7 +295,28 @@ internal sealed class EnvelopeRecording
     public TraceEvaluation Evaluate(bool stopped)
     {
         var evaluation = EvaluateQuality(stopped);
-        return EarlyStop is { HardLimit: true } hardStop ? WithHardStopSample(evaluation, hardStop) : evaluation;
+        if (EarlyStop is { HardLimit: true } hardStop) evaluation = WithHardStopSample(evaluation, hardStop);
+        return _captureSource ? evaluation with { Data = evaluation.Data with { Recording = CaptureSource(evaluation, stopped) } } : evaluation;
+    }
+
+    private TraceRecordingData CaptureSource(TraceEvaluation evaluation, bool stopped)
+    {
+        var hardStop = EarlyStop is { HardLimit: true };
+        double[] times = hardStop ? [.. _times, EarlyStop!.Time] : _times.ToArray();
+        var channels = _channels.Select((channel, index) => new Waveform(channel.Name, channel.Unit, 0, _start,
+            hardStop ? [.. _values[index], _hardStopValues![index]] : _values[index].ToArray(), times)).ToArray();
+        var snapshot = new TraceRecordingSnapshot(
+            TraceRecordingSnapshot.CurrentAlgorithmVersion,
+            _channels.Select((channel, index) => new TraceReplayChannel(channel.Name, channel.Unit,
+                _envelopes.Length > index ? _envelopes[index].Freeze() : null, _abortEnvelopes[index]?.Freeze(),
+                channel.SafetyMinimum, channel.SafetyMaximum)).ToArray(),
+            _slope, _formula?.LowerSource, _formula?.UpperSource, _duration, _touchAllowed,
+            _maxPoints, _maxGap, _minimumPoints, _minimumDuration, _target,
+            _stopMargin is { Absolute: false } percent ? percent.Value : null,
+            _stopMargin is { Absolute: true } absolute ? absolute.Value : null,
+            _times.Count, stopped, evaluation.Complete,
+            evaluation.Channels.Select(metadata => metadata with { OriginalTimes = [] }).ToArray());
+        return new(System.Text.Json.JsonSerializer.Serialize(snapshot), channels);
     }
 
     private TraceEvaluation EvaluateQuality(bool stopped)
