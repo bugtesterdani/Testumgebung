@@ -16,6 +16,32 @@ public sealed class ConditionalParameterTests
         return properties.Parameters.ToDictionary(row => row.Descriptor.Name);
     }
 
+    [Theory]
+    [InlineData(TraceBlocks.Start)]
+    [InlineData(TraceBlocks.Record)]
+    public void Startup_direction_follows_evaluation_mode_after_metadata_migration(string type)
+    {
+        var rows = Select(type, out var properties);
+        properties.ShowAdvanced = true;
+        rows["SteigungAnlaufAnzahl"].Value = "2";
+        rows["SteigungMin"].Value = "-10";
+        rows["SteigungMax"].Value = "10";
+        rows[TraceBlocks.LowerFormulaParameter].Value = "0";
+        rows[TraceBlocks.UpperFormulaParameter].Value = "10";
+        var direction = rows["SteigungAnlaufrichtung"];
+        foreach (var mode in new[] { TraceBlocks.PairSlope, TraceBlocks.DisjointSlope, TraceBlocks.RollingSlope })
+        {
+            rows[TraceBlocks.EvaluationParameter].Value = mode;
+            Assert.False(direction.IsHidden);
+        }
+        foreach (var mode in new[] { TraceBlocks.ValueBand, TraceBlocks.FormulaBand })
+        {
+            rows[TraceBlocks.EvaluationParameter].Value = mode;
+            Assert.True(direction.IsHidden);
+        }
+        Assert.Equal("Steigend", direction.Value);
+    }
+
     [Fact]
     public void Uds_fields_follow_transport_and_reveal_an_invalid_hidden_can_field()
     {
@@ -42,6 +68,30 @@ public sealed class ConditionalParameterTests
         rows["AnfrageId"].Value = "0x701";
         Assert.False(properties.HasDiagnostics);
         Assert.True(rows["AnfrageId"].IsHidden);
+    }
+
+    [Theory]
+    [InlineData("Fuellbyte", 1)]
+    [InlineData("AdresseTx", 1)]
+    [InlineData("AdresseRx", 1)]
+    [InlineData("TesterAdresse", 0)]
+    [InlineData("SteuergeraetAdresse", 0)]
+    [InlineData("Nad", 0)]
+    public void Aliased_transport_diagnostics_reveal_the_specific_inactive_field(string name, int transport)
+    {
+        var rows = Select(BusBlocks.UdsRequest, out var properties);
+        properties.ShowAdvanced = true;
+        rows["Transport"].Value = BusBlocks.DiagTransports[transport];
+        var field = rows[name];
+        var original = field.Value;
+        Assert.True(field.IsHidden);
+        field.Value = "ungültig";
+        Assert.True(properties.HasDiagnostics);
+        Assert.False(field.IsHidden);
+        Assert.Contains(properties.Diagnostics, message => message.Contains(field.Label));
+        field.Value = original;
+        Assert.False(properties.HasDiagnostics);
+        Assert.True(field.IsHidden);
     }
 
     [Fact]

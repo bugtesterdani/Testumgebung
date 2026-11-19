@@ -12,8 +12,8 @@ public static class EvaluationBlocks
             "Prüft eine Bedingung (PASS/FAIL) oder setzt ein festes Ergebnis einschließlich ERROR mit Meldung.",
             [
                 new("Art", "Art", ParameterKind.Choice, "Bedingung prüfen", Choices: ["Bedingung prüfen", BlockCatalog.FixedRatingMode]),
-                new("Bedingung", "Bedingung", ParameterKind.Expression, "true", Required: true),
-                new("Bewertung", "Festes Ergebnis", ParameterKind.Choice, "PASS", Choices: BlockCatalog.Ratings),
+                new("Bedingung", "Bedingung", ParameterKind.Expression, "true", Required: true, VisibleWhen: new("Art", "Bedingung prüfen")),
+                new("Bewertung", "Festes Ergebnis", ParameterKind.Choice, "PASS", Choices: BlockCatalog.Ratings, VisibleWhen: new("Art", BlockCatalog.FixedRatingMode)),
                 new("Wert", "Angezeigter Wert", ParameterKind.Expression),
                 new("Einheit", "Einheit", ParameterKind.Text),
                 new("Meldung", "Meldung bei FAIL / festem Ergebnis", ParameterKind.Text)

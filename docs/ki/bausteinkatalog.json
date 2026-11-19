@@ -351,7 +351,16 @@
           "default": "true",
           "required": true,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Art",
+            "value": "Bedingung pr\u00FCfen",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Bewertung",
@@ -365,7 +374,16 @@
             "FAIL",
             "ERROR"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Art",
+            "value": "Festes Ergebnis",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Wert",
@@ -1163,7 +1181,11 @@
           "hint": "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern.",
           "visibleWhen": {
             "parameter": "Vorlagenformat",
-            "value": "ZPL"
+            "value": "ZPL",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -1177,7 +1199,11 @@
           "hint": "Druckfertiger JScript-Export aus cablabel. Eingebettete Grafiken werden \u00FCbernommen.",
           "visibleWhen": {
             "parameter": "Vorlagenformat",
-            "value": "cab LBL"
+            "value": "cab LBL",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -1191,7 +1217,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Druckart",
-            "value": "TCP"
+            "value": "TCP",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -1205,7 +1235,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Druckart",
-            "value": "TCP"
+            "value": "TCP",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -1219,7 +1253,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Druckart",
-            "value": "TCP"
+            "value": "TCP",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -1233,7 +1271,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Druckart",
-            "value": "Windows"
+            "value": "Windows",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -2249,7 +2291,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Beim Laden erforderlich."
+          "hint": "Beim Laden erforderlich.",
+          "visibleWhen": {
+            "parameter": "Aktion",
+            "value": "Laden",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Version",
@@ -2258,7 +2309,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)"
+          "hint": "Leer = neueste gespeicherte Version (f\u00FCr Freigaben feste Version angeben)",
+          "visibleWhen": {
+            "parameter": "Aktion",
+            "value": "Laden",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "BeiFehlerZurExitGruppe",
@@ -3782,7 +3842,28 @@
           "default": "",
           "required": true,
           "choices": null,
-          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Senden",
+                  "Auf Ausgabe warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Text",
@@ -3791,7 +3872,27 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Senden"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Zeilenende",
@@ -3804,7 +3905,27 @@
             "LF",
             "CRLF"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Senden"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Schliessen",
@@ -3813,7 +3934,27 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Senden"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Zeitlimit",
@@ -3822,7 +3963,28 @@
           "default": "30000",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Senden",
+                  "Auf Ausgabe warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Muster",
@@ -3831,7 +3993,27 @@
           "default": "",
           "required": true,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Auf Ausgabe warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Regex",
@@ -3840,7 +4022,27 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Auf Ausgabe warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Stream",
@@ -3852,7 +4054,27 @@
             "stdout",
             "stderr"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Auf Ausgabe warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "TrefferZiel",
@@ -3861,7 +4083,27 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Auf Ausgabe warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "BeiFehlerZurExitGruppe",
@@ -4014,7 +4256,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Art",
-            "value": "DLL-Main"
+            "value": "DLL-Main",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -4028,7 +4274,11 @@
           "hint": "Leer = bestehende Python-Auswahl des Pr\u00FCfprogramms.",
           "visibleWhen": {
             "parameter": "Art",
-            "value": "Python"
+            "value": "Python",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": true
         },
@@ -4297,7 +4547,29 @@
           "default": "",
           "required": true,
           "choices": null,
-          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID."
+          "hint": "Platzhalter {MeineProzesskennung}; keine fremde Betriebssystem-PID.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten",
+                  "Beenden"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "ExitcodeZiel",
@@ -4306,7 +4578,28 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "StdoutZiel",
@@ -4315,7 +4608,28 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "StderrZiel",
@@ -4324,7 +4638,28 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "FertigZiel",
@@ -4333,7 +4668,28 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "ErwarteteExitcodes",
@@ -4342,7 +4698,28 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt."
+          "hint": "Durch ; getrennte Zahlen; leer = unbewertet. {Variable} erlaubt.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Protokoll",
@@ -4351,7 +4728,28 @@
           "default": "false",
           "required": false,
           "choices": null,
-          "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt."
+          "hint": "Nur aktivieren, wenn die Ausgabe keine Geheimnisse enth\u00E4lt.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Abfragen",
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Zeitlimit",
@@ -4360,7 +4758,27 @@
           "default": "30000",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "Aktion",
+                "value": "",
+                "allowedValues": [
+                  "Warten"
+                ],
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "BeiFehlerZurExitGruppe",
@@ -4572,7 +4990,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -4586,7 +5008,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -4600,7 +5026,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": true
         },
@@ -4614,7 +5044,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": true
         },
@@ -4628,7 +5062,11 @@
           "hint": "erweiterte/gemischte Adressierung, z. B. 0x10; leer = normal",
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": true
         },
@@ -4642,7 +5080,11 @@
           "hint": "erstes Datenbyte der Antworten, z. B. 0xF1",
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": true
         },
@@ -4656,7 +5098,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "CAN (ISO-TP)"
+            "value": "CAN (ISO-TP)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": true
         },
@@ -4670,7 +5116,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "DoIP (Ethernet)"
+            "value": "DoIP (Ethernet)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -4684,7 +5134,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "DoIP (Ethernet)"
+            "value": "DoIP (Ethernet)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -4698,7 +5152,11 @@
           "hint": null,
           "visibleWhen": {
             "parameter": "Transport",
-            "value": "LIN (Transportprotokoll)"
+            "value": "LIN (Transportprotokoll)",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
           },
           "advanced": false
         },
@@ -5122,7 +5580,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich."
+          "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Wert-Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Untergrenzenformel",
@@ -5131,7 +5598,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "t = Messzeit in Sekunden. Beispiel: 4 \u002B 0.2 * t"
+          "hint": "t = Messzeit in Sekunden. Beispiel: 4 \u002B 0.2 * t",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Berechnetes Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Obergrenzenformel",
@@ -5140,7 +5616,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "t = Messzeit in Sekunden. Beispiel: 6 \u002B 0.2 * t"
+          "hint": "t = Messzeit in Sekunden. Beispiel: 6 \u002B 0.2 * t",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Berechnetes Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Steigungsfenster",
@@ -5149,7 +5634,19 @@
           "default": "5",
           "required": false,
           "choices": null,
-          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet."
+          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungMin",
@@ -5158,7 +5655,20 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungMax",
@@ -5167,7 +5677,20 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufAnzahl",
@@ -5176,7 +5699,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."
+          "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufrichtung",
@@ -5189,7 +5725,20 @@
             "Fallend",
             "Beide"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufSchwelle",
@@ -5198,7 +5747,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungSchwellePositiv",
@@ -5207,7 +5769,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."
+          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungSchwelleNegativ",
@@ -5216,7 +5791,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter."
+          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SicherheitMin",
@@ -5243,7 +5831,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gew\u00E4hlte Abweichungsregel. Eine eingetragene Kurve ersetzt die gew\u00E4hlte Abweichungsregel dieses Kanals."
+          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gew\u00E4hlte Abweichungsregel. Eine eingetragene Kurve ersetzt die gew\u00E4hlte Abweichungsregel dieses Kanals.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Wert-Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Dauer",
@@ -5345,7 +5942,16 @@
             "Prozent",
             "Absolut"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "FailAbbruch",
+            "value": "",
+            "allowedValues": null,
+            "boolean": true,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "AbweichungProzent",
@@ -5354,7 +5960,33 @@
           "default": "10",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "FailAbbruch",
+                "value": "",
+                "allowedValues": null,
+                "boolean": true,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "Abweichungsart",
+                "value": "Prozent",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "AbweichungAbsolut",
@@ -5363,7 +5995,33 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung."
+          "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "FailAbbruch",
+                "value": "",
+                "allowedValues": null,
+                "boolean": true,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "Abweichungsart",
+                "value": "Absolut",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "Quelle",
@@ -5706,7 +6364,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich."
+          "hint": "F\u00FCr die Auswertung Wert-Grenzband erforderlich.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Wert-Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Untergrenzenformel",
@@ -5715,7 +6382,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "t = Messzeit in Sekunden. Beispiel: 4 \u002B 0.2 * t"
+          "hint": "t = Messzeit in Sekunden. Beispiel: 4 \u002B 0.2 * t",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Berechnetes Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Obergrenzenformel",
@@ -5724,7 +6400,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "t = Messzeit in Sekunden. Beispiel: 6 \u002B 0.2 * t"
+          "hint": "t = Messzeit in Sekunden. Beispiel: 6 \u002B 0.2 * t",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Berechnetes Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Steigungsfenster",
@@ -5733,7 +6418,19 @@
           "default": "5",
           "required": false,
           "choices": null,
-          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet."
+          "hint": "F\u00FCr getrennte und gleitende Fenster. Nur vollst\u00E4ndige Fenster werden bewertet.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungMin",
@@ -5742,7 +6439,20 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungMax",
@@ -5751,7 +6461,20 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufAnzahl",
@@ -5760,7 +6483,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme."
+          "hint": "Je Kanal. Ausgenommene Steigungen werden protokolliert. 0 deaktiviert die Ausnahme.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufrichtung",
@@ -5773,7 +6509,20 @@
             "Fallend",
             "Beide"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungAnlaufSchwelle",
@@ -5782,7 +6531,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungSchwellePositiv",
@@ -5791,7 +6553,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten."
+          "hint": "Bewerten bei Steigung \u003E Schwelle. Bis dahin Ausgangspunkt und gesamte Zeit beibehalten.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SteigungSchwelleNegativ",
@@ -5800,7 +6575,20 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter."
+          "hint": "Bewerten bei Steigung \u003C Schwelle. Beide Mindeststeigungen 0 deaktiviert den Filter.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "",
+            "allowedValues": [
+              "Steigung je Nachbarpaar",
+              "Steigung in getrennten Fenstern",
+              "Steigung im gleitenden Fenster"
+            ],
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "SicherheitMin",
@@ -5827,7 +6615,16 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gew\u00E4hlte Abweichungsregel. Eine eingetragene Kurve ersetzt die gew\u00E4hlte Abweichungsregel dieses Kanals."
+          "hint": "Nur f\u00FCr Wert-Grenzband. Optional je Kanal. Ein leerer Eintrag verwendet die gew\u00E4hlte Abweichungsregel. Eine eingetragene Kurve ersetzt die gew\u00E4hlte Abweichungsregel dieses Kanals.",
+          "visibleWhen": {
+            "parameter": "Grenzauswertung",
+            "value": "Wert-Grenzband",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "Dauer",
@@ -5929,7 +6726,16 @@
             "Prozent",
             "Absolut"
           ],
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "FailAbbruch",
+            "value": "",
+            "allowedValues": null,
+            "boolean": true,
+            "greaterThanZero": false,
+            "all": null
+          },
+          "advanced": false
         },
         {
           "name": "AbweichungProzent",
@@ -5938,7 +6744,33 @@
           "default": "10",
           "required": false,
           "choices": null,
-          "hint": null
+          "hint": null,
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "FailAbbruch",
+                "value": "",
+                "allowedValues": null,
+                "boolean": true,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "Abweichungsart",
+                "value": "Prozent",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "AbweichungAbsolut",
@@ -5947,7 +6779,33 @@
           "default": "0",
           "required": false,
           "choices": null,
-          "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung."
+          "hint": "Zum Beispiel V bei Spannung oder V/s bei Steigung.",
+          "visibleWhen": {
+            "parameter": "",
+            "value": "",
+            "allowedValues": null,
+            "boolean": null,
+            "greaterThanZero": false,
+            "all": [
+              {
+                "parameter": "FailAbbruch",
+                "value": "",
+                "allowedValues": null,
+                "boolean": true,
+                "greaterThanZero": false,
+                "all": null
+              },
+              {
+                "parameter": "Abweichungsart",
+                "value": "Absolut",
+                "allowedValues": null,
+                "boolean": null,
+                "greaterThanZero": false,
+                "all": null
+              }
+            ]
+          },
+          "advanced": false
         },
         {
           "name": "BeiFehlerZurExitGruppe",

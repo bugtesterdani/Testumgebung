@@ -28,7 +28,25 @@ public enum ParameterKind
     Table,
 }
 
-public sealed record ParameterVisibility(string Parameter, string Value);
+public sealed record ParameterVisibility(string Parameter = "", string Value = "",
+    IReadOnlyList<string>? AllowedValues = null, bool? Boolean = null, bool GreaterThanZero = false,
+    IReadOnlyList<ParameterVisibility>? All = null)
+{
+    public bool Matches(Func<string, string> valueOf)
+    {
+        if (All is not null && !All.All(condition => condition.Matches(valueOf))) return false;
+        if (Parameter.Length == 0) return true;
+        var text = valueOf(Parameter) ?? "";
+        if (Boolean is { } expected)
+        {
+            var booleanText = text.Trim();
+            return expected == (booleanText.Equals("true", StringComparison.OrdinalIgnoreCase) || booleanText == "1" || booleanText.Equals("ja", StringComparison.OrdinalIgnoreCase));
+        }
+        if (GreaterThanZero)
+            return double.TryParse(text.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var number) && double.IsFinite(number) && number > 0;
+        return AllowedValues?.Contains(text) ?? text == Value;
+    }
+}
 
 public sealed record ParameterDescriptor(
     string Name,
@@ -59,6 +77,7 @@ public sealed class BlockParameters(BlockDescriptor descriptor, IReadOnlyDiction
 {
     /// <summary>Alle Rohwerte inkl. dynamischer Parameter (z. B. Bindungen „in.Spannung“).</summary>
     public IReadOnlyDictionary<string, string> Raw => values;
+    public string Label(string name) => Descriptor(name).Label;
 
     public string Text(string name)
     {

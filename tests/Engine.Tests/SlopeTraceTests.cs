@@ -23,6 +23,11 @@ public sealed class SlopeTraceTests
         var properties = Assert.IsType<StepPropertiesViewModel>(editor.Properties);
         var parameters = properties.Parameters.ToDictionary(row => row.Descriptor.Name);
         var mode = parameters[TraceBlocks.EvaluationParameter];
+        parameters[TraceBlocks.LowerFormulaParameter].Value = "0";
+        parameters[TraceBlocks.UpperFormulaParameter].Value = "10";
+        parameters["SteigungMin"].Value = "-10";
+        parameters["SteigungMax"].Value = "10";
+        mode.Value = TraceBlocks.FormulaBand;
 
         Assert.True(parameters["Kanaele"].IsTable);
         Assert.True(parameters["Steigungsfenster"].IsHidden);

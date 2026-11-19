@@ -22,7 +22,8 @@ public sealed class TraceCatalogTests
             }
             else
             {
-                Assert.Equal(parameter with { Choices = null }, timedParameter with { Choices = null });
+                Assert.Equal(System.Text.Json.JsonSerializer.Serialize(parameter with { Choices = null }),
+                    System.Text.Json.JsonSerializer.Serialize(timedParameter with { Choices = null }));
                 Assert.Equal(parameter.Choices, timedParameter.Choices);
             }
             timed.Remove(parameter.Name);
