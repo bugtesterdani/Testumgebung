@@ -16,7 +16,7 @@ public sealed class CabJScriptCatalogSchemaTests
             ("5", 1, 108), ("6", 1, 4)
         };
         var expected = groups.SelectMany(g => Enumerable.Range(g.First, g.Last - g.First + 1)
-            .Select(n => $"JS-{g.Prefix}.{n}" )).Where(id => id != "JS-5.83").Order().ToArray();
+            .Select(n => $"JS-{g.Prefix}.{n}")).Where(id => id != "JS-5.83").Order().ToArray();
         using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(RepositoryRoot(),
             "docs", "cab", "jscript-befehlskatalog.json")));
         var actual = document.RootElement.GetProperty("eintraege").EnumerateArray()
@@ -52,6 +52,12 @@ public sealed class CabJScriptCatalogSchemaTests
             Assert.Equal("JS-" + entry.GetProperty("abschnitt").GetString(), entry.GetProperty("id").GetString());
             var pages = entry.GetProperty("seiten");
             Assert.True(pages[0].GetInt32() <= pages[1].GetInt32());
+            if (entry.GetProperty("geprueft").GetBoolean())
+            {
+                var names = entry.GetProperty("parameter").EnumerateArray()
+                    .Select(p => p.GetProperty("name").GetString()).ToArray();
+                Assert.Equal(names.Length, names.Distinct().Count());
+            }
         }
         var statistics = document.RootElement.GetProperty("statistik");
         Assert.Equal(entries.Length, statistics.GetProperty("eintraege").GetInt32());

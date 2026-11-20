@@ -10,6 +10,19 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 ## Tatsächlich geprüfte Abschnitte
 
 - JS-1.3, Seite 8: allgemeine Syntaxregeln abgeglichen.
+- JS-2.1 bis JS-2.10, Seiten 11–20: ESC-Syntax, Generationen, Binärdaten und
+  Antwortfelder abgeglichen; fehlende Syntax von ESCc sowie Antwortstufen von
+  ESC? ergänzt. Antwortfelder sind ausdrücklich keine Eingabeparameter.
+- JS-2.11 bis JS-2.18, Seiten 21–28: Codepage-Werteliste und fehlende
+  Antwortfelder ergänzt; Gültigkeit der Codepage laut Handbuch vor dem nächsten
+  Auftrag vermerkt. Pause und Prüferantworten abgeglichen.
+- JS-2.19 bis JS-2.25, Seiten 29–37: Status- und I/O-Tabellen einschließlich
+  Fortsetzungen abgeglichen. Fehlende Werte (`G`, Online- und Interpreterwerte)
+  und Generationen ergänzt; die leere Ax-Zelle bei RFID-Fehler `r` bleibt
+  unbekannt. ESCxin-Auswahl und ESCv-Prüferwerte vervollständigt.
+- JS-1.5 und JS-1.6, Seite 9: Pfadgenerationen und Objektgrenzen anhand der
+  gerenderten Tabelle geprüft. `card` ist in allen Generationen verfügbar;
+  fehlende Ax-Grenzen bedeuten keine numerische Nullgrenze.
 - JS-1.4, Seite 8: fehlende Befehlsarten ergänzt. Das Handbuch nennt vier Arten,
   zählt aber zusätzlich Sonstiges auf.
 - JS-4.2.1, Seiten 76–80: fehlende Inhaltsverzeichnisposition ergänzt und auf
@@ -38,7 +51,7 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 231 Einträge sind fachlich ungeprüft;
+Extraktionsfehler zu korrigieren. Noch 204 Einträge sind fachlich ungeprüft;
 die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
 Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
 Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation

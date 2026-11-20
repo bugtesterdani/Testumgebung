@@ -73,7 +73,7 @@
     "[/path/]filename.ext"
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false,
+   "geprueft": true,
    "parameter": [
     {
      "name": "path",
@@ -84,7 +84,12 @@
       {
        "wert": "card",
        "beschreibung": "Standard-Speicherplatz aus dem Drucker-Setup",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "cf",
@@ -166,7 +171,8 @@
         "X4": "y"
        }
       }
-     ]
+     ],
+     "standard": "Drucker-Setup"
     },
     {
      "name": "filename.ext",
@@ -176,7 +182,7 @@
      "werte": []
     }
    ],
-   "hinweis": "Generationen der Pfadwerte aus der Tabellenspaltenlage abgeleitet; gegen PDF prüfen."
+   "hinweis": "Generationenspalten anhand der gerenderten Tabelle S. 9 geprüft. Ohne Pfad gilt der im Drucker-Setup eingestellte Speicherort."
   },
   {
    "id": "JS-1.6",
@@ -193,9 +199,9 @@
    "syntax": [],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false,
+   "geprueft": true,
    "objektgrenzen": {
-    "Hinweis": "Werte gelten für X2/X3 bzw. X4 gemäß Tabelle; Ax = N/A; gegen PDF prüfen",
+    "Hinweis": "Tabelle S. 9 visuell geprüft: X2/X3 teilen eine Spalte. Ax ist N/A (keine numerische Grenze angegeben); Rich Text ist nur für X4 aufgeführt. Fehlende Werte nicht als 0 interpretieren.",
     "I": {
      "X2": 200,
      "X3": 200,
@@ -253,7 +259,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "In binären Downloads ESC durch zwei ESC-Bytes ersetzen; FTP-Dateitransfers auf die Speicherkarte benötigen diese Umwandlung nicht."
   },
   {
    "id": "JS-2.2",
@@ -277,7 +284,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Während des Neustarts ist kein Datenempfang möglich. Erst nach der Bereitschaftsanzeige weitere Daten senden."
   },
   {
    "id": "JS-2.3",
@@ -302,14 +310,14 @@
    "parameter": [
     {
      "name": "data",
-     "schreibweise": "data",
+     "schreibweise": "<graphics data>",
      "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Binärdaten, zum Beispiel Bild oder Schrift; jedes enthaltene ESC-Byte wird als ESCESC übertragen. ESC-Befehle können während des Downloads empfangen werden.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true
   },
   {
    "id": "JS-2.4",
@@ -334,14 +342,15 @@
    "parameter": [
     {
      "name": "data",
-     "schreibweise": "data",
+     "schreibweise": "<graphics data>",
      "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Unveränderte Binärdaten bis ESCend-of-data; während dieses Downloadmodus ist die normale ESC-Auswertung deaktiviert.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Das Handbuch empfiehlt alternativ den sauber abgegrenzten ESC.-Download (JS-2.3)."
   },
   {
    "id": "JS-2.5",
@@ -363,9 +372,120 @@
    "syntax": [
     "ESC?"
    ],
-   "parameter": [],
+   "parameter": [
+    {
+     "name": "response",
+     "schreibweise": "0…9",
+     "quelle": "antwortfeld",
+     "beschreibung": "Freier Empfangspuffer in Zehn-Prozent-Stufen; keine Eingabe zur Anfrage.",
+     "bereich": "0…9",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0…9 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "1",
+       "beschreibung": "10…19 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "2",
+       "beschreibung": "20…29 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "3",
+       "beschreibung": "30…39 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "4",
+       "beschreibung": "40…49 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "5",
+       "beschreibung": "50…59 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "6",
+       "beschreibung": "60…69 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "7",
+       "beschreibung": "70…79 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "8",
+       "beschreibung": "80…89 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "9",
+       "beschreibung": "90…99 Prozent freier Empfangspuffer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
+    }
+   ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bidirektionale Kommunikation erforderlich."
   },
   {
    "id": "JS-2.6",
@@ -392,32 +512,57 @@
      "name": "X",
      "schreibweise": "X",
      "quelle": "antwortfeld",
-     "beschreibung": "abc condition",
+     "beschreibung": "Zustand der abc-Ausführung.",
      "werte": [
       {
        "wert": "I",
-       "beschreibung": "Idle",
-       "generationen": null
+       "beschreibung": "Inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "C",
-       "beschreibung": "Compiling",
-       "generationen": null
+       "beschreibung": "Wird kompiliert",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "R",
-       "beschreibung": "Running",
-       "generationen": null
+       "beschreibung": "Läuft",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "Error",
-       "generationen": null
+       "beschreibung": "Ausführungsfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "S",
-       "beschreibung": "Syntax error during compilation",
-       "generationen": null
+       "beschreibung": "Syntaxfehler beim Kompilieren",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -425,12 +570,13 @@
      "name": "NNNNN",
      "schreibweise": "NNNNN",
      "quelle": "antwortfeld",
-     "beschreibung": "Current line numbers (empty lines will not be counted!)",
+     "beschreibung": "Aktuelle Zeilennummer; Leerzeilen zählen nicht mit.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Antwort XNNNNN; bidirektionale Kommunikation erforderlich. Beide Parameter sind Antwortfelder und keine Befehlsargumente."
   },
   {
    "id": "JS-2.7",
@@ -454,7 +600,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Simuliert die gelbe Peripherietaste; Aktion abhängig von angeschlossener Peripherie und Auftrag."
   },
   {
    "id": "JS-2.8",
@@ -473,10 +620,13 @@
     "X4": "y"
    },
    "verweis": null,
-   "syntax": [],
+   "syntax": [
+    "ESCc"
+   ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "S. 18 enthält keine eigene Syntaxbox; ESCc ist die dort genannte Befehlsfolge. Bricht den laufenden Auftrag ab und setzt Anzeigefehler zurück. Vor weiteren Daten mindestens eine Sekunde warten."
   },
   {
    "id": "JS-2.9",
@@ -500,7 +650,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Abschluss des mit ESC: begonnenen Binärdownloads; im RS-485-Netz nicht verwendbar."
   },
   {
    "id": "JS-2.10",
@@ -524,7 +675,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Entspricht der Vorschubtaste und sucht den Anfang des nächsten Etiketts."
   },
   {
    "id": "JS-2.11",
@@ -548,7 +700,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Virtuelles START-Signal, äquivalent zu ESCxinSTART;. X2 benötigt einen kompatiblen angeschlossenen Applikator."
   },
   {
    "id": "JS-2.12",
@@ -570,9 +723,18 @@
    "syntax": [
     "ESCi"
    ],
-   "parameter": [],
+   "parameter": [
+    {
+     "name": "value",
+     "schreibweise": "value",
+     "quelle": "antwortfeld",
+     "beschreibung": "Zuletzt mit WINF geschriebener INF-Speicherwert in der aktuellen Codepage, mit CR abgeschlossen.",
+     "werte": []
+    }
+   ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bidirektionale Kommunikation erforderlich; siehe JS-5.105."
   },
   {
    "id": "JS-2.13",
@@ -594,9 +756,18 @@
    "syntax": [
     "ESCj"
    ],
-   "parameter": [],
+   "parameter": [
+    {
+     "name": "jobname",
+     "schreibweise": "jobname",
+     "quelle": "antwortfeld",
+     "beschreibung": "Name des zuletzt gedruckten Auftrags in der aktuellen Codepage, mit CR abgeschlossen. Ohne j-Befehl wird ein Name generiert.",
+     "werte": []
+    }
+   ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bidirektionale Kommunikation erforderlich; ergänzt den Sofortbefehl j."
   },
   {
    "id": "JS-2.14",
@@ -623,17 +794,27 @@
      "name": "X",
      "schreibweise": "X",
      "quelle": "antwortfeld",
-     "beschreibung": "Paper synchronization",
+     "beschreibung": "Synchronisationszustand des Materials.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "Paper is synchronized",
-       "generationen": null
+       "beschreibung": "Material synchronisiert",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "Paper is not synchronized",
-       "generationen": null
+       "beschreibung": "Material nicht synchronisiert",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -641,12 +822,13 @@
      "name": "NNNN",
      "schreibweise": "NNNN",
      "quelle": "antwortfeld",
-     "beschreibung": "Label distance in millimeters",
+     "beschreibung": "Etikettenabstand von Unterkante zu Unterkante in mm; 0000 bei unbekanntem Abstand.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Antwort XNNNN; bidirektionale Kommunikation erforderlich. NNNN=0000 bedeutet unbekannten Etikettenabstand."
   },
   {
    "id": "JS-2.15",
@@ -672,13 +854,395 @@
     {
      "name": "codepage",
      "schreibweise": "codepage",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Name der temporär für den nächsten Druckauftrag gewählten Zeichenkodierung.",
+     "werte": [
+      {
+       "wert": "DEC-MCS",
+       "beschreibung": "Zeichenkodierung DEC-MCS",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM437",
+       "beschreibung": "Zeichenkodierung IBM437",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM500",
+       "beschreibung": "Zeichenkodierung IBM500",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM720",
+       "beschreibung": "Zeichenkodierung IBM720",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM737",
+       "beschreibung": "Zeichenkodierung IBM737",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM775",
+       "beschreibung": "Zeichenkodierung IBM775",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM850",
+       "beschreibung": "Zeichenkodierung IBM850",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM852",
+       "beschreibung": "Zeichenkodierung IBM852",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM857",
+       "beschreibung": "Zeichenkodierung IBM857",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM862",
+       "beschreibung": "Zeichenkodierung IBM862",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM864",
+       "beschreibung": "Zeichenkodierung IBM864",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM866",
+       "beschreibung": "Zeichenkodierung IBM866",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IBM869",
+       "beschreibung": "Zeichenkodierung IBM869",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-1",
+       "beschreibung": "Zeichenkodierung ISO-8859-1",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-2",
+       "beschreibung": "Zeichenkodierung ISO-8859-2",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-3",
+       "beschreibung": "Zeichenkodierung ISO-8859-3",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-4",
+       "beschreibung": "Zeichenkodierung ISO-8859-4",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-5",
+       "beschreibung": "Zeichenkodierung ISO-8859-5",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-6",
+       "beschreibung": "Zeichenkodierung ISO-8859-6",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-7",
+       "beschreibung": "Zeichenkodierung ISO-8859-7",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-8",
+       "beschreibung": "Zeichenkodierung ISO-8859-8",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-9",
+       "beschreibung": "Zeichenkodierung ISO-8859-9",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-10",
+       "beschreibung": "Zeichenkodierung ISO-8859-10",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-13",
+       "beschreibung": "Zeichenkodierung ISO-8859-13",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-14",
+       "beschreibung": "Zeichenkodierung ISO-8859-14",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-15",
+       "beschreibung": "Zeichenkodierung ISO-8859-15",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO-8859-16",
+       "beschreibung": "Zeichenkodierung ISO-8859-16",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "KOI8-R",
+       "beschreibung": "Zeichenkodierung KOI8-R",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "macintosh",
+       "beschreibung": "Zeichenkodierung macintosh",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "UTF-8",
+       "beschreibung": "Zeichenkodierung UTF-8",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1250",
+       "beschreibung": "Zeichenkodierung windows-1250",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1251",
+       "beschreibung": "Zeichenkodierung windows-1251",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1252",
+       "beschreibung": "Zeichenkodierung windows-1252",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1253",
+       "beschreibung": "Zeichenkodierung windows-1253",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1254",
+       "beschreibung": "Zeichenkodierung windows-1254",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1255",
+       "beschreibung": "Zeichenkodierung windows-1255",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1256",
+       "beschreibung": "Zeichenkodierung windows-1256",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "windows-1257",
+       "beschreibung": "Zeichenkodierung windows-1257",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Vor den Etikettdaten senden. S. 25 beschreibt die Codepage für den nächsten Druckauftrag; nach Druckerneustart gilt wieder die Setup-Codepage. Ein Wechsel mitten in Auftragsdaten ist dort nicht zugesichert."
   },
   {
    "id": "JS-2.16",
@@ -702,7 +1266,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Beendet Pause und setzt einen vorhandenen Anzeigefehler zurück; gepufferter Auftrag wird fortgesetzt."
   },
   {
    "id": "JS-2.17",
@@ -726,7 +1291,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Aktiviert Pause; das aktuelle Etikett wird vorher vollständig gedruckt."
   },
   {
    "id": "JS-2.18",
@@ -748,9 +1314,56 @@
    "syntax": [
     "ESCr"
    ],
-   "parameter": [],
+   "parameter": [
+    {
+     "name": "status",
+     "schreibweise": "status",
+     "quelle": "antwortfeld",
+     "beschreibung": "Erstes Antwortzeichen des optionalen Barcodeprüfers.",
+     "werte": [
+      {
+       "wert": "-",
+       "beschreibung": "Kein Prüfer angeschlossen oder noch kein Ergebnis",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "?",
+       "beschreibung": "Zeitlimit erreicht, negative Prüfung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "+",
+       "beschreibung": "Positives Ergebnis mit folgenden Hexdaten",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "data",
+     "schreibweise": "data",
+     "quelle": "antwortfeld",
+     "beschreibung": "Nach + folgende Base16-Daten; bei - oder ? nicht vorhanden.",
+     "werte": []
+    }
+   ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bidirektionale Kommunikation erforderlich; Antwort endet mit CR. Daten nach dem Pluszeichen sind Base16-kodiert."
   },
   {
    "id": "JS-2.19",
@@ -777,12 +1390,27 @@
      "name": "X",
      "schreibweise": "X",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                   Printer is online",
+     "beschreibung": "Onlinezustand.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Online",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "Printer is offline",
-       "generationen": null
+       "beschreibung": "Offline",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -790,197 +1418,407 @@
      "name": "Y",
      "schreibweise": "Y",
      "quelle": "antwortfeld",
-     "beschreibung": "-                   No error",
+     "beschreibung": "Fehlerzustand; - bedeutet kein Fehler.",
      "werte": [
       {
+       "wert": "-",
+       "beschreibung": "Kein Fehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "a",
-       "beschreibung": "Applicator did not reach the upper position",
-       "generationen": null
+       "beschreibung": "Obere Applikatorposition nicht erreicht",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "b",
-       "beschreibung": "Applicator did not reach the lower position",
-       "generationen": null
+       "beschreibung": "Untere Applikatorposition nicht erreicht",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "c",
-       "beschreibung": "Vacuum plate is empty",
-       "generationen": null
+       "beschreibung": "Vakuumplatte leer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "d",
-       "beschreibung": "Label not deposit",
-       "generationen": null
+       "beschreibung": "Etikett nicht abgelegt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "e",
-       "beschreibung": "Host stop/error",
-       "generationen": null
+       "beschreibung": "Stopp/Fehler durch Host",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "f",
-       "beschreibung": "Reflective sensor blocked",
-       "generationen": null
+       "beschreibung": "Reflexsensor blockiert",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "g",
-       "beschreibung": "Tamp pad 90° error",
-       "generationen": null
+       "beschreibung": "Stempelfehler bei 90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "h",
-       "beschreibung": "Tamp pad 0° error",
-       "generationen": null
+       "beschreibung": "Stempelfehler bei 0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "i",
-       "beschreibung": "Table not in front position",
-       "generationen": null
+       "beschreibung": "Tisch nicht vorne",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "j",
-       "beschreibung": "Table not in rear position",
-       "generationen": null
+       "beschreibung": "Tisch nicht hinten",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "k",
-       "beschreibung": "Head lifted",
-       "generationen": null
+       "beschreibung": "Kopf angehoben",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "l",
-       "beschreibung": "Head down",
-       "generationen": null
+       "beschreibung": "Kopf abgesenkt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "m",
-       "beschreibung": "Scan result negative",
-       "generationen": null
+       "beschreibung": "Negatives Prüfergebnis",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "n",
-       "beschreibung": "Global network error",
-       "generationen": null
+       "beschreibung": "Netzwerkfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "o",
-       "beschreibung": "Compressed air-error",
-       "generationen": null
+       "beschreibung": "Druckluftfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "r",
-       "beschreibung": "RFID -error",
-       "generationen": null
+       "beschreibung": "RFID-Fehler",
+       "generationen": {
+        "Ax": "",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "s",
-       "beschreibung": "System fault",
-       "generationen": null
+       "beschreibung": "Systemfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "u",
-       "beschreibung": "USB error",
-       "generationen": null
+       "beschreibung": "USB-Fehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "x",
-       "beschreibung": "Stacker full, printer goes on pause",
-       "generationen": null
+       "beschreibung": "Stapler voll, Pause",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "A",
-       "beschreibung": "Applicator error",
-       "generationen": null
+       "beschreibung": "Applikatorfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "B",
-       "beschreibung": "Protocol error / invalid barcode data",
-       "generationen": null
+       "beschreibung": "Protokollfehler/ungültige Barcodedaten",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "C",
-       "beschreibung": "Memory card error",
-       "generationen": null
+       "beschreibung": "Speicherkartenfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "D",
-       "beschreibung": "Printhead or pinch roller open",
-       "generationen": null
+       "beschreibung": "Druckkopf/Andruckwalze offen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "Synchronization error (no label found)",
-       "generationen": null
+       "beschreibung": "Synchronisationsfehler, kein Etikett",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "F",
-       "beschreibung": "Out of ribbon",
-       "generationen": null
+       "beschreibung": "Farbband fehlt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "G",
+       "beschreibung": "PPP-Neuladen erforderlich",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "n"
+       }
       },
       {
        "wert": "H",
-       "beschreibung": "Heating voltage problem",
-       "generationen": null
+       "beschreibung": "Heizspannungsfehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "I",
-       "beschreibung": "Cutter jammed",
-       "generationen": null
+       "beschreibung": "Messer blockiert",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "Label material too thick (cutter)",
-       "generationen": null
+       "beschreibung": "Material zu dick für Schneiden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "O",
-       "beschreibung": "Out of memory",
-       "generationen": null
+       "beschreibung": "Speicher voll",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "P",
-       "beschreibung": "Out of paper",
-       "generationen": null
+       "beschreibung": "Papier fehlt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "R",
-       "beschreibung": "Ribbon detected in thermal direct mode",
-       "generationen": null
+       "beschreibung": "Farbband bei Thermodirektdruck erkannt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "S",
-       "beschreibung": "Ribbon saver malfunction",
-       "generationen": null
+       "beschreibung": "Farbbandsparfunktion gestört",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "U",
-       "beschreibung": "abc User Error (set via poke \"usererror\" )",
-       "generationen": null
+       "beschreibung": "abc-Benutzerfehler",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "V",
-       "beschreibung": "Input buffer overflow",
-       "generationen": null
+       "beschreibung": "Eingabepuffer übergelaufen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "W",
-       "beschreibung": "Print head overheated",
-       "generationen": null
+       "beschreibung": "Druckkopf überhitzt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "X",
-       "beschreibung": "External I/O error",
-       "generationen": null
+       "beschreibung": "Externer I/O-Fehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "Y",
-       "beschreibung": "Printhead error",
-       "generationen": null
+       "beschreibung": "Druckkopffehler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "Z",
-       "beschreibung": "Printhead damaged",
-       "generationen": null
+       "beschreibung": "Druckkopf beschädigt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -988,25 +1826,41 @@
      "name": "NNNNNN",
      "schreibweise": "NNNNNN",
      "quelle": "antwortfeld",
-     "beschreibung": "Amount of labels to print",
+     "beschreibung": "Anzahl noch zu druckender Etiketten.",
      "werte": []
     },
     {
      "name": "Z",
      "schreibweise": "Z",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                Interpreter active, print job is in process",
+     "beschreibung": "Interpreterzustand; Y ab Auftragsbeginn bis zum letzten gedruckten Etikett.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Auftrag in Verarbeitung",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "Printer is in standby mode",
-       "generationen": null
+       "beschreibung": "Bereitschaft ohne laufenden Auftrag",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Antwort XYNNNNNNZ ohne CR; bidirektionale Kommunikation erforderlich. Abfragen frühestens alle 0,5 Sekunden, je nach Betriebsbedingungen langsamer. S. 29 lässt bei Fehler r die Ax-Spalte leer; deshalb dort unbekannt statt erfundener Verfügbarkeit."
   },
   {
    "id": "JS-2.20",
@@ -1030,7 +1884,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bricht aktuellen Auftrag ab, leert den gesamten Empfangspuffer und setzt Anzeigefehler zurück. Vor weiteren Daten mindestens eine Sekunde warten."
   },
   {
    "id": "JS-2.21",
@@ -1056,13 +1911,83 @@
     {
      "name": "value",
      "schreibweise": "value",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Ergebnis oder Statusanforderung der externen Etikettenprüfung.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "Prüfung negativ",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "1",
+       "beschreibung": "Prüfung positiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "s",
+       "beschreibung": "Triggerposition abfragen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "x",
+       "beschreibung": "Aktuell geprüftes Etikett als ungültig überdrucken",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "status",
+     "schreibweise": "status",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort auf ESCvs.",
+     "werte": [
+      {
+       "wert": "Y",
+       "beschreibung": "Triggerposition erreicht",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "N",
+       "beschreibung": "Triggerposition nicht erreicht",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Mit der EXTERN-Option von B (und I) verwenden."
   },
   {
    "id": "JS-2.22",
@@ -1088,13 +2013,125 @@
     {
      "name": "signal",
      "schreibweise": "signal",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Zu simulierendes Eingangssignal.",
+     "werte": [
+      {
+       "wert": "FSTLBL",
+       "beschreibung": "Erstes Etikett bei Apply-Print",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "START",
+       "beschreibung": "Druckstart bei Print-on-demand oder Applikator",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "STOP",
+       "beschreibung": "Vorgang unterbrechen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "REPRINT",
+       "beschreibung": "Letztes Etikett wiederholen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "RSTERR",
+       "beschreibung": "Fehler zurücksetzen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "LBLREM",
+       "beschreibung": "Etikettentnahme bestätigen; nur Spendemodus",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "JOBDEL",
+       "beschreibung": "Auftrag abbrechen und aus dem Puffer löschen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "PAUSE=0",
+       "beschreibung": "Pause beenden",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "PAUSE=1",
+       "beschreibung": "Pause aktivieren",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "LBLROT=0",
+       "beschreibung": "Primäre Etikettierausrichtung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "LBLROT=1",
+       "beschreibung": "Sekundäre Etikettierausrichtung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Simuliert I/O-Eingänge auch ohne installiertes Interface; Semikolon beendet den Befehl."
   },
   {
    "id": "JS-2.23",
@@ -1121,22 +2158,37 @@
      "name": "A",
      "schreibweise": "A",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand READY.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "READY",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1144,22 +2196,37 @@
      "name": "B",
      "schreibweise": "B",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand JOBRDY.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "JOBRDY",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1167,22 +2234,37 @@
      "name": "C",
      "schreibweise": "C",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand FEEDON.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "FEEDON",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1190,22 +2272,37 @@
      "name": "D",
      "schreibweise": "D",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand ERROR.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "ERROR",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1213,22 +2310,37 @@
      "name": "E",
      "schreibweise": "E",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand RIBWARN.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "RIBWARN",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1236,22 +2348,37 @@
      "name": "F",
      "schreibweise": "F",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand PEELPOS.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "PEELPOS",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1259,22 +2386,37 @@
      "name": "G",
      "schreibweise": "G",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand HOMEPOS.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "HOMEPOS",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1282,22 +2424,37 @@
      "name": "H",
      "schreibweise": "H",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand ENDPOS.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "ENDPOS",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1305,22 +2462,37 @@
      "name": "I",
      "schreibweise": "I",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand LBLWARN.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "LBLWARN",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1328,22 +2500,37 @@
      "name": "J",
      "schreibweise": "J",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand RIBERR.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "RIBERR",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1351,22 +2538,37 @@
      "name": "K",
      "schreibweise": "K",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand MEDERR.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "MEDERR",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1374,28 +2576,44 @@
      "name": "L",
      "schreibweise": "L",
      "quelle": "antwortfeld",
-     "beschreibung": "",
+     "beschreibung": "Antwortzustand Paper synchronized.",
      "werte": [
       {
        "wert": "Y",
-       "beschreibung": "Paper synchronized",
-       "generationen": null
+       "beschreibung": "Signal aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Signal inaktiv oder nicht verfügbar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "E",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Fehler beim Signal",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Antwort ABCDEFGHIJKL mit CR. Y=aktiv, N=inaktiv/nicht verfügbar, E=Fehler. ERROR und RIBWARN sind gegenüber der Hardware nicht invertiert; Y zeigt den Zustand an. Bidirektionale Kommunikation erforderlich."
   },
   {
    "id": "JS-2.24",
@@ -1417,9 +2635,59 @@
    "syntax": [
     "ESCy"
    ],
-   "parameter": [],
+   "parameter": [
+    {
+     "name": "X",
+     "schreibweise": "X",
+     "quelle": "antwortfeld",
+     "beschreibung": "Phase des JScript-Interpreters.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "Wartet auf Etikettdefinition",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "1",
+       "beschreibung": "Auftragsstart J empfangen, Definition unvollständig",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "2",
+       "beschreibung": "Druckphase; veraltet",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "3",
+       "beschreibung": "Vollständige Definition nach A; bereit für neue Auftragsdaten, R kann Feldinhalte ersetzen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
+    }
+   ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Antwort X mit CR; bidirektionale Kommunikation erforderlich."
   },
   {
    "id": "JS-2.25",
@@ -1446,12 +2714,27 @@
      "name": "A",
      "schreibweise": "A",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Printer is paused",
+     "beschreibung": "Drucker pausiert.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1459,12 +2742,27 @@
      "name": "B",
      "schreibweise": "B",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Printer has a job",
+     "beschreibung": "Auftrag vorhanden.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1472,12 +2770,27 @@
      "name": "C",
      "schreibweise": "C",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Printer not ready for print data",
+     "beschreibung": "Nicht bereit für Druckdaten.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1485,12 +2798,27 @@
      "name": "D",
      "schreibweise": "D",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Paper is moving",
+     "beschreibung": "Material bewegt sich.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1498,12 +2826,27 @@
      "name": "E",
      "schreibweise": "E",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Ribbon warning (hardware dependent)",
+     "beschreibung": "Farbbandvorwarnung.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1511,12 +2854,27 @@
      "name": "F",
      "schreibweise": "F",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Paper end warning (hardware dependent)",
+     "beschreibung": "Materialende-Vorwarnung.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1524,12 +2882,27 @@
      "name": "G",
      "schreibweise": "G",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Label in demand position",
+     "beschreibung": "Etikett in Entnahmeposition.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1537,12 +2910,27 @@
      "name": "H",
      "schreibweise": "H",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Label on vacuum plate (hardware dependent)",
+     "beschreibung": "Etikett auf Vakuumplatte.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1550,12 +2938,27 @@
      "name": "I",
      "schreibweise": "I",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Applicator ready (hardware dependent)",
+     "beschreibung": "Applikator bereit.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1563,12 +2966,27 @@
      "name": "J",
      "schreibweise": "J",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    External pause signal active (hardware dependent)",
+     "beschreibung": "Externes Pausensignal aktiv.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1576,12 +2994,27 @@
      "name": "K",
      "schreibweise": "K",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    External print signal active (hardware dependent)",
+     "beschreibung": "Externes Drucksignal aktiv.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1589,12 +3022,27 @@
      "name": "L",
      "schreibweise": "L",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Printhead cleaning required (cleaning interval)",
+     "beschreibung": "Druckkopfreinigung fällig.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -1602,18 +3050,34 @@
      "name": "M",
      "schreibweise": "M",
      "quelle": "antwortfeld",
-     "beschreibung": "Y                    Printer cover opened (hardware dependent)",
+     "beschreibung": "Druckergehäuse offen.",
      "werte": [
       {
+       "wert": "Y",
+       "beschreibung": "Zustand aktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "N",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Zustand inaktiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Antwort ABCDEFGHIJKLM mit CR, um spätere Erweiterungen zu ermöglichen. Normalerweise N außer I (Applikator bereit). Auch über abc PEEK xstatus verfügbar. Bidirektionale Kommunikation erforderlich."
   },
   {
    "id": "JS-3.1",
@@ -17764,7 +19228,7 @@
  ],
  "statistik": {
   "eintraege": 237,
-  "parameter": 893,
-  "werte": 941
+  "parameter": 900,
+  "werte": 1030
  }
 }

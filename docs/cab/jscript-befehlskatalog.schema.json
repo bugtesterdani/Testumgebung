@@ -305,7 +305,40 @@
         "barcode_eigenschaften",
         "geprueft"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "geprueft": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameter": {
+                "items": {
+                  "properties": {
+                    "beschreibung": {
+                      "minLength": 1
+                    },
+                    "werte": {
+                      "items": {
+                        "properties": {
+                          "beschreibung": {
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }
