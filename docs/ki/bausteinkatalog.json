@@ -6903,7 +6903,7 @@
       "type": "verlauf.start",
       "displayName": "Messwertverlauf beginnen",
       "category": "Messwertverl\u00E4ufe",
-      "description": "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
+      "description": "Beginnt eine begrenzte Mehrkanalaufnahme. Eine automatisch beendete Aufnahme derselben Kennung kann neu begonnen werden; laufende Aufnahmen bleiben gesch\u00FCtzt. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
       "parameters": [
         {
           "name": "Aufnahme",

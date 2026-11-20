@@ -43,7 +43,7 @@ public static class TraceBlocks
 
     public static void Register(BlockCatalog catalog)
     {
-        catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
+        catalog.Register(new(Start, "Messwertverlauf beginnen", "Messwertverläufe", "measure", "Beginnt eine begrenzte Mehrkanalaufnahme. Eine automatisch beendete Aufnahme derselben Kennung kann neu begonnen werden; laufende Aufnahmen bleiben geschützt. Bei eingestellter Dauer muss das Grenzband den gesamten Zeitraum 0..Dauer abdecken.",
             RecordingParameters(false), parameters =>
             {
                 var settings = new TraceRecordingSettings(parameters);
