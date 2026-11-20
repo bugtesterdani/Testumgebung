@@ -217,6 +217,8 @@ berechneten Werte, ausgenommene Vergleiche erhalten keine Grenzverletzungsmarkie
 Je Kanal muss mindestens ein regulär bewertetes oder wegen Mindeststeigung gesammeltes Fenster vorliegen. Vollständig erfasste Haltephasen ergeben damit PASS. Ohne Fenster (zu wenige Punkte) oder bei ausschließlich Anlaufausnahmen ergibt sich jeweils eine eigene ERROR-Meldung. Ein erreichtes stabiles Zielband darf weiterhin vor dem ersten vollständigen Steigungsfenster erfolgreich enden.
 Harte Messwert-Sicherheitsgrenzen bleiben bei jedem Rohmesswert wirksam.
 
+**Neustart einer Aufnahme:** Nach einem automatischen Ende (zusätzliche FAIL-Abweichung, Sicherheitsgrenze, Dauer oder stabiles Ziel) darf **Messwertverlauf beginnen** dieselbe Kennung desselben Prüflings erneut verwenden. Das startet eine frische Aufnahme; bereits ausgegebene FAIL-Ergebnisse bleiben gespeichert. Bis dahin ist die alte Aufnahme weiter abschließend bewertbar. Laufende und pausierte Aufnahmen bleiben vor Überschreiben geschützt. Scheitert die Validierung des Neustarts, bleibt auch die alte Aufnahme erhalten.
+
 Bei **Messwertverlauf aufnehmen**, **Messpunkt ergänzen** und **Verlauf beenden und bewerten**
 kann **Bei Aufnahmeende immer zur Prüflings-Exit-Gruppe (PASS / FAIL / ERROR)** aktiviert werden.
 Die Option überspringt nach Abschluss der Aufnahme die regulären Folgeschritte und führt die

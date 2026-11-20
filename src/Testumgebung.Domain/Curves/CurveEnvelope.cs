@@ -571,9 +571,12 @@ public sealed class EnvelopeRecordings
     {
         lock (_gate)
         {
-            if (string.IsNullOrWhiteSpace(name) || _recordings.ContainsKey((owner, name))) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
-            if (_recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
-            _recordings.Add((owner, name), new(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute, minimumPoints, target));
+            _recordings.TryGetValue((owner, name), out var previous);
+            if (string.IsNullOrWhiteSpace(name) || previous is { Ended: false }) throw new InvalidOperationException("Aufnahmekennung fehlt oder ist bereits aktiv.");
+            if (previous is null && _recordings.Count >= 8) throw new InvalidOperationException("Maximal acht gleichzeitige Aufnahmen je Lauf.");
+            // Validate the new recording before replacing the old, still-readable final result.
+            var recording = new EnvelopeRecording(channels, now, maxPoints, maxGap, minimumDuration, touchAllowed, stopPercent, duration, slope, formula, stopAbsolute, minimumPoints, target);
+            _recordings[(owner, name)] = recording;
         }
     }
     public TraceEvaluation? Add(string owner, string name, double? time, IReadOnlyList<double> values, DateTimeOffset now)
