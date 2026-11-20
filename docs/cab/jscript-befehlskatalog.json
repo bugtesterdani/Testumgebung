@@ -5230,7 +5230,7 @@
   {
    "id": "JS-4.2.2",
    "abschnitt": "4.2.2",
-   "art": "barcode",
+   "art": "allgemein",
    "befehl": null,
    "titel": "Barcode overview list",
    "seiten": [
@@ -5241,22 +5241,26 @@
    "verweis": "Übersichtstabelle aller Barcodetypen.",
    "syntax": [],
    "parameter": [],
-   "barcode_eigenschaften": {
-    "Barcode name": "short code Ratio Type Ax X2 X3 X4"
-   },
-   "geprueft": false
+   "barcode_eigenschaften": null,
+   "geprueft": true,
+   "hinweis": "Übersicht, keine eigene Symbologie. Alte Kurzcodes sind veraltet und nicht mehr unterstützt. GS1-Databar/RSS-Bezeichnungen haben sich geändert; ursprüngliche Programmierbezeichnungen bleiben aus Kompatibilitätsgründen erhalten. Die Tabelle nennt Datamatrix/DotCode als 1D, ihre Detailabschnitte sind für die Symbolart maßgeblich."
   },
   {
    "id": "JS-4.2.3",
    "abschnitt": "4.2.3",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "2 of 5 Interleaved",
    "seiten": [
     83,
     84
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne,ratio[,fx];text[CR]"
@@ -5266,40 +5270,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "2OF5INTERLEAVED Barcode with human readable",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
+       "wert": "2OF5INTERLEAVED",
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "2of5interleaved",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -5307,51 +5367,51 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+MOD10",
-       "beschreibung": "Calculation of modulo check digit (modulo10)",
+       "beschreibung": "Modulo-10-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+MOD10GP",
-       "beschreibung": "German Parcel check digit like MOD10+1 (Result+1)",
+       "beschreibung": "German-Parcel-Prüfziffer: Modulo-10-Ergebnis plus eins.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -5360,52 +5420,52 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "ratio",
      "schreibweise": "ratio",
      "quelle": "tabelle",
-     "beschreibung": "Ratio between narrow and wide bars",
+     "beschreibung": "Verhältnis von breiten zu schmalen Elementen.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -5414,8 +5474,84 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
@@ -5424,21 +5560,28 @@
     "Length": "variable, always even",
     "Valid characters": "numeric digits: 0-9",
     "Check digits": "optional (modulo 10)",
-    "Ratio oriented": "yes"
+    "Ratio oriented": "yes",
+    "Other specifications": "Paarweise Ziffernkodierung; führende Null bei ungerader Eingabeanzahl."
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generationen aus Übersicht S. 81. Einzelne Optionen ohne eigene Generationstabelle bleiben auf Wertebene unbekannt. Gemeinsame B-Regeln einschließlich Prüferparameter und Rahmeneffekte gelten ergänzend. Daten werden paarweise kodiert. Bei ungerader Ziffernanzahl ergänzt der Drucker eine führende Null; die gerade Symbolstellenzahl ist keine Ablehnung ungerader Eingabedaten."
   },
   {
    "id": "JS-4.2.4",
    "abschnitt": "4.2.4",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Add-On 2",
    "seiten": [
     85,
     86
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],size[,height][,ne][,fx];text[CR]"
@@ -5448,45 +5591,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "ADDON2",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "addon2",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -5494,41 +5688,41 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -5537,52 +5731,103 @@
      "name": "size",
      "schreibweise": "size",
      "quelle": "tabelle",
-     "beschreibung": "Standard code size SCx (instead of height and ne)",
-     "werte": []
+     "beschreibung": "Standardgröße SCx als Alternative zur individuellen Höhe und Elementbreite; verfügbare Größe hängt von der Druckauflösung ab.",
+     "werte": [
+      {
+       "wert": "SC0",
+       "beschreibung": "Standardgröße 0; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC1",
+       "beschreibung": "Standardgröße 1; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC2",
+       "beschreibung": "Standardgröße 2; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC3",
+       "beschreibung": "Standardgröße 3; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC4",
+       "beschreibung": "Standardgröße 4; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC5",
+       "beschreibung": "Standardgröße 5; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC6",
+       "beschreibung": "Standardgröße 6; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC7",
+       "beschreibung": "Standardgröße 7; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC8",
+       "beschreibung": "Standardgröße 8; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC9",
+       "beschreibung": "Standardgröße 9; druckauflösungsabhängig",
+       "generationen": null
+      }
+     ]
     },
     {
      "name": "height",
      "schreibweise": "[,height]",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height (optional if no size is specified)",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "[,ne]",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element (optional if no size is specified)",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -5591,8 +5836,84 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
@@ -5603,19 +5924,25 @@
     "Check digits": "-",
     "Ratio oriented": "yes"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generationen aus Übersicht S. 81. Einzelne Optionen ohne eigene Generationstabelle bleiben auf Wertebene unbekannt. Gemeinsame B-Regeln einschließlich Prüferparameter und Rahmeneffekte gelten ergänzend. Die Tabelle beschreibt SCx als Alternative zu height/ne; die Syntax stellt size vor optionale Einzelmaße. Diese verkürzte Syntaxdarstellung nicht als Pflicht zur gleichzeitigen Angabe beider Varianten auslegen."
   },
   {
    "id": "JS-4.2.5",
    "abschnitt": "4.2.5",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Add-On 5",
    "seiten": [
     87,
     88
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],size[,height][,ne][,fx];text[CR]"
@@ -5625,45 +5952,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "ADDON5",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "addon5",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -5671,41 +6049,41 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -5714,52 +6092,103 @@
      "name": "size",
      "schreibweise": "size",
      "quelle": "tabelle",
-     "beschreibung": "Standard code size SCx (instead of height and ne)",
-     "werte": []
+     "beschreibung": "Standardgröße SCx als Alternative zur individuellen Höhe und Elementbreite; verfügbare Größe hängt von der Druckauflösung ab.",
+     "werte": [
+      {
+       "wert": "SC0",
+       "beschreibung": "Standardgröße 0; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC1",
+       "beschreibung": "Standardgröße 1; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC2",
+       "beschreibung": "Standardgröße 2; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC3",
+       "beschreibung": "Standardgröße 3; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC4",
+       "beschreibung": "Standardgröße 4; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC5",
+       "beschreibung": "Standardgröße 5; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC6",
+       "beschreibung": "Standardgröße 6; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC7",
+       "beschreibung": "Standardgröße 7; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC8",
+       "beschreibung": "Standardgröße 8; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC9",
+       "beschreibung": "Standardgröße 9; druckauflösungsabhängig",
+       "generationen": null
+      }
+     ]
     },
     {
      "name": "height",
      "schreibweise": "[,height]",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height (optional if no size is specified)",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "[,ne]",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element (optional if no size is specified)",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -5768,8 +6197,84 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
@@ -5780,19 +6285,25 @@
     "Check digits": "-",
     "Ratio oriented": "yes"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generationen aus Übersicht S. 81. Einzelne Optionen ohne eigene Generationstabelle bleiben auf Wertebene unbekannt. Gemeinsame B-Regeln einschließlich Prüferparameter und Rahmeneffekte gelten ergänzend. Die Tabelle beschreibt SCx als Alternative zu height/ne; die Syntax stellt size vor optionale Einzelmaße. Diese verkürzte Syntaxdarstellung nicht als Pflicht zur gleichzeitigen Angabe beider Varianten auslegen."
   },
   {
    "id": "JS-4.2.6",
    "abschnitt": "4.2.6",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Aztec",
    "seiten": [
     89,
     90
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],dotsize[,fx];text[CR]"
@@ -5802,45 +6313,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "AZTEC",
-       "beschreibung": "Barcode type",
-       "generationen": null
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "aztec",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -5848,31 +6410,31 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+ELx",
-       "beschreibung": "Error Level (5 - 95)",
+       "beschreibung": "Fehlerkorrekturlevel x von 5 bis 95.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -5881,38 +6443,38 @@
      "name": "dotsize",
      "schreibweise": "dotsize",
      "quelle": "tabelle",
-     "beschreibung": "Dot size in millimeters or inches",
+     "beschreibung": "Modulgröße in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -5921,8 +6483,92 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "EL",
+     "schreibweise": "+ELx",
+     "quelle": "tabelle",
+     "beschreibung": "Fehlerkorrekturlevel des Aztec-Symbols.",
+     "werte": [],
+     "bereich": "5…95"
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
@@ -5933,19 +6579,25 @@
     "Check digits": "-",
     "Ratio oriented": "-"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generationen aus Übersicht S. 81. Einzelne Optionen ohne eigene Generationstabelle bleiben auf Wertebene unbekannt. Gemeinsame B-Regeln einschließlich Prüferparameter und Rahmeneffekte gelten ergänzend."
   },
   {
    "id": "JS-4.2.7",
    "abschnitt": "4.2.7",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Codabar",
    "seiten": [
     91,
     92
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "n",
+    "X2": "n",
+    "X3": "n",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne,ratio[,fx];text[CR]"
@@ -5955,45 +6607,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "CODABAR",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "mit Klarschrift",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "codabar",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "ohne Klarschrift",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -6001,46 +6704,46 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+MOD16",
-       "beschreibung": "Calculation of modulo check digit (modulo16)",
+       "beschreibung": "Modulo-16-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -6049,52 +6752,52 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "ratio",
      "schreibweise": "ratio",
      "quelle": "tabelle",
-     "beschreibung": "Ratio between narrow and wide bars",
+     "beschreibung": "Verhältnis von breiten zu schmalen Elementen.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -6103,31 +6806,113 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
     "Barcode name": "Codabar",
     "Type": "1D - Linear",
     "Length": "variable",
-    "Valid characters": "numeric",
+    "Valid characters": "Ziffern 0–9, Sonderzeichen - $ : / . + und Start-/Stoppzeichen A/B/C/D.",
     "Check digits": "yes (modulo 16)",
     "Ratio oriented": "yes"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Ergänzend gelten gemeinsame B-Regeln. Kurzcharakteristik nennt Modulo 16 als Prüfziffer; die Parametertabelle führt +MOD16 als Option auf. Daraus keinen nicht genannten Aktivierungsstandard ableiten."
   },
   {
    "id": "JS-4.2.8",
    "abschnitt": "4.2.8",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Codablock F",
    "seiten": [
     93,
     94
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "n",
+    "X2": "n",
+    "X3": "n",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne,ratio[,fx];text[CR]"
@@ -6137,40 +6922,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "CODABLOCKF",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
+       "wert": "CODABLOCKF",
+       "beschreibung": "mit Klarschrift",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "codablockf",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "ohne Klarschrift",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -6178,31 +7019,31 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+MOD43",
-       "beschreibung": "Calculation of modulo check digit (modulo 43)",
+       "beschreibung": "Modulo-43-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -6211,52 +7052,52 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "ratio",
      "schreibweise": "ratio",
      "quelle": "tabelle",
-     "beschreibung": "Ratio between narrow and wide bars",
+     "beschreibung": "Verhältnis von breiten zu schmalen Elementen.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -6265,8 +7106,84 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
@@ -6275,21 +7192,28 @@
     "Length": "variable, max. 2725 characters",
     "Valid characters": "alphanumeric",
     "Check digits": "yes (modulo 43)",
-    "Ratio oriented": "no"
+    "Ratio oriented": "no",
+    "Other specifications": "2…44 Zeilen mit 4…62 Zeichen pro Zeile."
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Ergänzend gelten gemeinsame B-Regeln. Die Detailtabelle nennt Modulo 43; diese Angabe bleibt trotz der beschriebenen Verwandtschaft zu Code 128 unverändert. ratio bleibt als dokumentierter Parameter erhalten, obwohl die Kurzcharakteristik Ratio oriented=no angibt."
   },
   {
    "id": "JS-4.2.9",
    "abschnitt": "4.2.9",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Code 39",
    "seiten": [
     95,
     96
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne,ratio[,fx];text[CR]"
@@ -6299,55 +7223,116 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "CODE39",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "mit Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "code39",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "ohne Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "CODE39FULL",
-       "beschreibung": "Code 39 Extended (Full ASCII) with human readable",
-       "generationen": null
+       "beschreibung": "Full ASCII; mit Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "code39full",
-       "beschreibung": "Code 39 Extended (Full ASCII) without human readable",
-       "generationen": null
+       "beschreibung": "Full ASCII; ohne Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -6355,56 +7340,56 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+MOD36",
-       "beschreibung": "Calculation of modulo check digit (modulo 36)",
+       "beschreibung": "Modulo-36-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+MOD43",
-       "beschreibung": "Calculation of modulo check digit (modulo 43)",
+       "beschreibung": "Modulo-43-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+XHRI",
-       "beschreibung": "Extended Human Readable Interpretation",
+       "beschreibung": "Erweiterte Klarschrift: Code 39 zeigt Start-/Stoppsterne, Code 93 Start-/Stoppkästen.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -6413,52 +7398,52 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "ratio",
      "schreibweise": "ratio",
      "quelle": "tabelle",
-     "beschreibung": "Ratio between narrow and wide bars",
+     "beschreibung": "Verhältnis von breiten zu schmalen Elementen.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -6467,31 +7452,113 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
     "Barcode name": "Code 39 (Code 3 of 9)",
     "Type": "1D - Linear",
     "Length": "variable",
-    "Valid characters": "alphanumeric, uppercase A-Z, digits: 0-9,",
+    "Valid characters": "A–Z, 0–9, $ / + % . - und Leerzeichen; CODE39FULL erlaubt alle 128 ASCII-Zeichen.",
     "Check digits": "no",
     "Ratio oriented": "yes"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Ergänzend gelten gemeinsame B-Regeln. Bei normalem Code 39 werden Kleinbuchstaben großgeschrieben und ungültige Zeichen durch Leerzeichen ersetzt. Start/Stopp wird automatisch ergänzt; +XHRI zeigt die Sterne. 3:1 ist ein häufiges Verhältnis, kein ausdrücklich genannter Standardwert."
   },
   {
    "id": "JS-4.2.10",
    "abschnitt": "4.2.10",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Code 93",
    "seiten": [
     97,
     98
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne,ratio[,fx];text[CR]"
@@ -6501,45 +7568,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "CODE93",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "mit Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "code93",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "ohne Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -6547,46 +7665,46 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+XHRI",
-       "beschreibung": "Extended Human Readable Interpretation",
+       "beschreibung": "Erweiterte Klarschrift: Code 39 zeigt Start-/Stoppsterne, Code 93 Start-/Stoppkästen.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -6595,52 +7713,52 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "ratio",
      "schreibweise": "ratio",
      "quelle": "tabelle",
-     "beschreibung": "Ratio between narrow and wide bars",
+     "beschreibung": "Verhältnis von breiten zu schmalen Elementen.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -6649,31 +7767,113 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
     "Barcode name": "Code 93",
     "Type": "1D - Linear",
     "Length": "variable",
-    "Valid characters": "alphanumeric, encodes all 128 ASCII characters including",
+    "Valid characters": "Alle 128 ASCII-Zeichen einschließlich Steuerzeichen.",
     "Check digits": "yes",
     "Ratio oriented": "no"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Ergänzend gelten gemeinsame B-Regeln. Prüfziffer berechnet der Drucker automatisch. ratio bleibt als dokumentierter Parameter erhalten, obwohl Ratio oriented=no angegeben ist."
   },
   {
    "id": "JS-4.2.11",
    "abschnitt": "4.2.11",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Code 128",
    "seiten": [
     99,
     100
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne[,fx];[U:subcode]text[CR]"
@@ -6683,55 +7883,116 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "CODE128",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "mit Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "CODE 128",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "mit Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "code128",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "ohne Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "code 128",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "ohne Klarschrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -6739,51 +8000,51 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+MOD10",
-       "beschreibung": "Calculation of modulo check digit (modulo 10)",
+       "beschreibung": "Modulo-10-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+MOD43",
-       "beschreibung": "Calculation of modulo check digit (modulo 43)",
+       "beschreibung": "Modulo-43-Prüfziffer ergänzen.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -6792,76 +8053,210 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height",
+     "beschreibung": "Barcodehöhe in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
     },
     {
-     "name": "U:subcode U:CODEA",
-     "schreibweise": "[U:subcode] [U:CODEA]",
-     "quelle": "tabelle",
-     "beschreibung": "Subcode A",
-     "werte": []
-    },
-    {
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
     },
     {
-     "name": "U",
-     "schreibweise": "U",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
      "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     },
     {
      "name": "subcode",
-     "schreibweise": "subcode",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "[U:subcode]",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Zeichensatzwechsel oder Funktionszeichen im Datenfeld.",
+     "werte": [
+      {
+       "wert": "CODEA",
+       "beschreibung": "Großbuchstaben, Sonder- und Steuerzeichen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CODEB",
+       "beschreibung": "Standardzeichen mit Groß-/Kleinschreibung sowie Sonder- und Steuerzeichen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CODEC",
+       "beschreibung": "Paarweise Ziffernkodierung",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FNC1",
+       "beschreibung": "Funktionszeichen 1",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FNC2",
+       "beschreibung": "Funktionszeichen 2",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FNC3",
+       "beschreibung": "Funktionszeichen 3",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FNC4",
+       "beschreibung": "Funktionszeichen 4",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ],
+     "standard": "CODEB"
     }
    ],
    "barcode_eigenschaften": {
@@ -6872,19 +8267,25 @@
     "Check digits": "yes (modulo 103)",
     "Ratio oriented": "no"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Ergänzend gelten gemeinsame B-Regeln. Modulo-103-Prüfziffer ist inhärent; +MOD10/+MOD43 ergänzen weitere Prüfziffern. S. 99 nennt automatische Auswahl des günstigsten Subsets, S. 100 CODEB als Anfangswert; beides bleibt dokumentiert."
   },
   {
    "id": "JS-4.2.12",
    "abschnitt": "4.2.12",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Datamatrix",
    "seiten": [
     101,
     104
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],dotsize[,fx];text[CR]"
@@ -6894,45 +8295,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "DATAMATRIX",
-       "beschreibung": "Barcode type",
-       "generationen": null
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "datamatrix",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -6940,51 +8392,51 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+RECT",
-       "beschreibung": "Forces the printer to print this barcode as rectangle",
+       "beschreibung": "Rechteckiges Symbol erzwingen.",
        "generationen": null
       },
       {
        "wert": "+ROWSx",
-       "beschreibung": "Sets a fixed amount of rows of the barcode",
+       "beschreibung": "Feste Zeilenzahl x.",
        "generationen": null
       },
       {
        "wert": "+COLSx",
-       "beschreibung": "Sets a fixed amount of columns of the barcode",
+       "beschreibung": "Feste Spaltenzahl x.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+IEC614061",
-       "beschreibung": "Compliant with DIN SPEC 91406 and IEC 61406",
+       "beschreibung": "Kennzeichnung nach DIN SPEC 91406 und IEC 61406.",
        "generationen": null
       },
       {
        "wert": "+IEC614062",
-       "beschreibung": "Render a border around the barcode as defined in IEC 61406-2",
+       "beschreibung": "Rand nach IEC 61406-2.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -6993,38 +8445,38 @@
      "name": "dotsize",
      "schreibweise": "dotsize",
      "quelle": "tabelle",
-     "beschreibung": "Dot size in millimeters or inches",
+     "beschreibung": "Modulgröße in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -7033,8 +8485,345 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "ROWS",
+     "schreibweise": "+ROWSx",
+     "quelle": "tabelle",
+     "beschreibung": "Feste Symbolzeilenzahl x; Kombination mit COLS beachten.",
+     "werte": [
+      {
+       "wert": "8",
+       "beschreibung": "Tabellierte Dimension 8; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "10",
+       "beschreibung": "Tabellierte Dimension 10; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "12",
+       "beschreibung": "Tabellierte Dimension 12; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "14",
+       "beschreibung": "Tabellierte Dimension 14; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "16",
+       "beschreibung": "Tabellierte Dimension 16; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "18",
+       "beschreibung": "Tabellierte Dimension 18; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "20",
+       "beschreibung": "Tabellierte Dimension 20; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "22",
+       "beschreibung": "Tabellierte Dimension 22; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "24",
+       "beschreibung": "Tabellierte Dimension 24; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "26",
+       "beschreibung": "Tabellierte Dimension 26; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "32",
+       "beschreibung": "Tabellierte Dimension 32; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "36",
+       "beschreibung": "Tabellierte Dimension 36; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "40",
+       "beschreibung": "Tabellierte Dimension 40; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "44",
+       "beschreibung": "Tabellierte Dimension 44; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "48",
+       "beschreibung": "Tabellierte Dimension 48; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "52",
+       "beschreibung": "Tabellierte Dimension 52; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "64",
+       "beschreibung": "Tabellierte Dimension 64; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "72",
+       "beschreibung": "Tabellierte Dimension 72; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "80",
+       "beschreibung": "Tabellierte Dimension 80; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "88",
+       "beschreibung": "Tabellierte Dimension 88; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "96",
+       "beschreibung": "Tabellierte Dimension 96; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "104",
+       "beschreibung": "Tabellierte Dimension 104; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "120",
+       "beschreibung": "Tabellierte Dimension 120; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "132",
+       "beschreibung": "Tabellierte Dimension 132; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "144",
+       "beschreibung": "Tabellierte Dimension 144; nur in den dokumentierten Paarungen",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "COLS",
+     "schreibweise": "+COLSx",
+     "quelle": "tabelle",
+     "beschreibung": "Feste Symbolspaltenzahl x; Kombination mit ROWS beachten.",
+     "werte": [
+      {
+       "wert": "10",
+       "beschreibung": "Tabellierte Dimension 10; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "12",
+       "beschreibung": "Tabellierte Dimension 12; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "14",
+       "beschreibung": "Tabellierte Dimension 14; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "16",
+       "beschreibung": "Tabellierte Dimension 16; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "18",
+       "beschreibung": "Tabellierte Dimension 18; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "20",
+       "beschreibung": "Tabellierte Dimension 20; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "22",
+       "beschreibung": "Tabellierte Dimension 22; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "24",
+       "beschreibung": "Tabellierte Dimension 24; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "26",
+       "beschreibung": "Tabellierte Dimension 26; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "32",
+       "beschreibung": "Tabellierte Dimension 32; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "36",
+       "beschreibung": "Tabellierte Dimension 36; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "40",
+       "beschreibung": "Tabellierte Dimension 40; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "44",
+       "beschreibung": "Tabellierte Dimension 44; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "48",
+       "beschreibung": "Tabellierte Dimension 48; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "52",
+       "beschreibung": "Tabellierte Dimension 52; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "64",
+       "beschreibung": "Tabellierte Dimension 64; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "72",
+       "beschreibung": "Tabellierte Dimension 72; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "80",
+       "beschreibung": "Tabellierte Dimension 80; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "88",
+       "beschreibung": "Tabellierte Dimension 88; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "96",
+       "beschreibung": "Tabellierte Dimension 96; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "104",
+       "beschreibung": "Tabellierte Dimension 104; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "120",
+       "beschreibung": "Tabellierte Dimension 120; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "132",
+       "beschreibung": "Tabellierte Dimension 132; nur in den dokumentierten Paarungen",
+       "generationen": null
+      },
+      {
+       "wert": "144",
+       "beschreibung": "Tabellierte Dimension 144; nur in den dokumentierten Paarungen",
+       "generationen": null
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": {
@@ -7045,19 +8834,222 @@
     "Check digits": "-",
     "Ratio oriented": "no"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81; Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Gemeinsame B-Regeln gelten ergänzend. Kapazitätstabellen S. 102–103 vollständig erfasst. Ihre Überschrift nennt Size in mm, der Kontext ROWS/COLS und dotsize; groesse bewahrt deshalb die Tabellenangabe ohne erfundene Maßeinheit. 800 Zeichen sind eine Empfehlung, keine harte Druckergrenze. Daten können auch erweiterte Zeichen/Unicode enthalten; die Kurzbeschreibung begrenzt sie nicht auf ASCII.",
+   "kapazitaeten": [
+    {
+     "groesse": "10 x 10",
+     "numerisch": 6,
+     "alphanumerisch": 3
+    },
+    {
+     "groesse": "12 x 12",
+     "numerisch": 10,
+     "alphanumerisch": 6
+    },
+    {
+     "groesse": "14 x 14",
+     "numerisch": 16,
+     "alphanumerisch": 10
+    },
+    {
+     "groesse": "16 x 16",
+     "numerisch": 24,
+     "alphanumerisch": 16
+    },
+    {
+     "groesse": "18 x 18",
+     "numerisch": 36,
+     "alphanumerisch": 25
+    },
+    {
+     "groesse": "20 x 20",
+     "numerisch": 44,
+     "alphanumerisch": 31
+    },
+    {
+     "groesse": "22 x 22",
+     "numerisch": 60,
+     "alphanumerisch": 43
+    },
+    {
+     "groesse": "24 x 24",
+     "numerisch": 72,
+     "alphanumerisch": 52
+    },
+    {
+     "groesse": "26 x 26",
+     "numerisch": 88,
+     "alphanumerisch": 64
+    },
+    {
+     "groesse": "32 x 32",
+     "numerisch": 124,
+     "alphanumerisch": 91
+    },
+    {
+     "groesse": "36 x 36",
+     "numerisch": 172,
+     "alphanumerisch": 127
+    },
+    {
+     "groesse": "40 x 40",
+     "numerisch": 228,
+     "alphanumerisch": 169
+    },
+    {
+     "groesse": "44 x 44",
+     "numerisch": 288,
+     "alphanumerisch": 214
+    },
+    {
+     "groesse": "48 x 48",
+     "numerisch": 348,
+     "alphanumerisch": 259
+    },
+    {
+     "groesse": "52 x 52",
+     "numerisch": 408,
+     "alphanumerisch": 304
+    },
+    {
+     "groesse": "64 x 64",
+     "numerisch": 560,
+     "alphanumerisch": 418
+    },
+    {
+     "groesse": "72 x 72",
+     "numerisch": 736,
+     "alphanumerisch": 550
+    },
+    {
+     "groesse": "80 x 80",
+     "numerisch": 912,
+     "alphanumerisch": 682
+    },
+    {
+     "groesse": "88 x 88",
+     "numerisch": 1152,
+     "alphanumerisch": 862
+    },
+    {
+     "groesse": "96 x 96",
+     "numerisch": 1392,
+     "alphanumerisch": 1042
+    },
+    {
+     "groesse": "104 x 104",
+     "numerisch": 1632,
+     "alphanumerisch": 1222
+    },
+    {
+     "groesse": "120 x 120",
+     "numerisch": 2100,
+     "alphanumerisch": 1573
+    },
+    {
+     "groesse": "132 x 132",
+     "numerisch": 2608,
+     "alphanumerisch": 1954
+    },
+    {
+     "groesse": "144 x 144",
+     "numerisch": 3116,
+     "alphanumerisch": 2335
+    },
+    {
+     "groesse": "8 x 18",
+     "numerisch": 10,
+     "alphanumerisch": 6
+    },
+    {
+     "groesse": "8 x 32",
+     "numerisch": 20,
+     "alphanumerisch": 13
+    },
+    {
+     "groesse": "8 x 48",
+     "numerisch": 36,
+     "alphanumerisch": 25
+    },
+    {
+     "groesse": "8 x 64",
+     "numerisch": 48,
+     "alphanumerisch": 34
+    },
+    {
+     "groesse": "12 x 26",
+     "numerisch": 32,
+     "alphanumerisch": 22
+    },
+    {
+     "groesse": "12 x 36",
+     "numerisch": 44,
+     "alphanumerisch": 31
+    },
+    {
+     "groesse": "12 x 64",
+     "numerisch": 86,
+     "alphanumerisch": 63
+    },
+    {
+     "groesse": "16 x 36",
+     "numerisch": 64,
+     "alphanumerisch": 46
+    },
+    {
+     "groesse": "16 x 48",
+     "numerisch": 98,
+     "alphanumerisch": 72
+    },
+    {
+     "groesse": "16 x 64",
+     "numerisch": 124,
+     "alphanumerisch": 91
+    },
+    {
+     "groesse": "24 x 48",
+     "numerisch": 160,
+     "alphanumerisch": 118
+    },
+    {
+     "groesse": "24 x 64",
+     "numerisch": 216,
+     "alphanumerisch": 160
+    },
+    {
+     "groesse": "26 x 40",
+     "numerisch": 140,
+     "alphanumerisch": 103
+    },
+    {
+     "groesse": "26 x 48",
+     "numerisch": 180,
+     "alphanumerisch": 133
+    },
+    {
+     "groesse": "26 x 64",
+     "numerisch": 236,
+     "alphanumerisch": 175
+    }
+   ]
   },
   {
    "id": "JS-4.2.13",
    "abschnitt": "4.2.13",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "DBP",
    "seiten": [
     105,
     106
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],height,ne[,fx];text[CR]"
@@ -7067,45 +9059,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "DBP",
-       "beschreibung": "Barcode with human readable",
-       "generationen": null
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "dbp",
-       "beschreibung": "Barcode without human readable",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -7113,41 +9156,41 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzungslinien oberhalb und unterhalb.",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzungslinie oberhalb.",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzungslinie unterhalb.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -7156,45 +9199,46 @@
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height, min. 30 mm, as described in the specifications",
-     "werte": []
+     "beschreibung": "Barcodehöhe in der gewählten Einheit; Drucker erhöht Werte unter 30 mm auf 30 mm.",
+     "werte": [],
+     "bereich": "Druckhöhe mindestens 30 mm; kleinere Eingabe wird angehoben"
     },
     {
      "name": "ne",
      "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Narrow element",
+     "beschreibung": "Breite des schmalsten Elements in der gesetzten Maßeinheit, abhängig von der Druckauflösung.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -7203,31 +9247,113 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
      "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
     "Barcode name": "DBP - German Post Identcode",
     "Type": "1D - Linear",
     "Length": "fixed, 11 or 13 digits",
-    "Valid characters": "numeric,",
+    "Valid characters": "Ziffern; ungültige Zeichen ersetzt der Drucker durch Null, in der Klarschrift durch #.",
     "Check digits": "yes (modulo 103)",
     "Ratio oriented": "yes"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81; Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Gemeinsame B-Regeln gelten ergänzend. Kurzcharakteristik nennt Modulo 103 trotz der beschriebenen 2-of-5-Grundlage; nicht stillschweigend durch eine vermutete andere Prüfziffer ersetzen. Eingabedaten 11 oder 13 Ziffern plus vom Drucker ergänzte Prüfziffer."
   },
   {
    "id": "JS-4.2.14",
    "abschnitt": "4.2.14",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "Dotcode",
    "seiten": [
     107,
     108
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "n",
+    "X2": "n",
+    "X3": "n",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],dotsize[,fx];text[CR]"
@@ -7237,45 +9363,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach JS-4.2.1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": [
       {
        "wert": "DOTCODE",
-       "beschreibung": "Barcode type",
-       "generationen": null
+       "beschreibung": "Große Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "dotcode",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "Kleine Schreibweise der Symbologie",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -7283,41 +9460,41 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+SQUARES",
-       "beschreibung": "Forces the printer to print rectangle instead of dots",
+       "beschreibung": "Rechtecke statt runder Punkte drucken.",
        "generationen": null
       },
       {
        "wert": "+ROWSx",
-       "beschreibung": "Sets a fixed amount of rows of the barcode",
+       "beschreibung": "Feste Zeilenzahl x.",
        "generationen": null
       },
       {
        "wert": "+COLSx",
-       "beschreibung": "Sets a fixed amount of columns of the barcode",
+       "beschreibung": "Feste Spaltenzahl x.",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung der Größe n, auch 0.",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen.",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Dateninhalt prüfen.",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden.",
        "generationen": null
       }
      ]
@@ -7326,38 +9503,38 @@
      "name": "dotsize",
      "schreibweise": "dotsize",
      "quelle": "tabelle",
-     "beschreibung": "Dot size in millimeters or inches",
+     "beschreibung": "Modulgröße in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -7366,7 +9543,97 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende Barcodedaten.",
+     "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "ROWS",
+     "schreibweise": "+ROWSx",
+     "quelle": "tabelle",
+     "beschreibung": "Feste Symbolzeilenzahl x; Kombination mit COLS beachten.",
+     "werte": []
+    },
+    {
+     "name": "COLS",
+     "schreibweise": "+COLSx",
+     "quelle": "tabelle",
+     "beschreibung": "Feste Symbolspaltenzahl x; Kombination mit ROWS beachten.",
      "werte": []
     }
    ],
@@ -7374,11 +9641,12 @@
     "Barcode name": "Dotcode",
     "Type": "2D",
     "Length": "Minimum size 7x7 dots - no maximum size defined",
-    "Valid characters": "Full ASCII and extended ASCII character sets. Support",
+    "Valid characters": "ASCII und erweitertes ASCII; drei Funktionszeichen unterstützen ECI.",
     "Check digits": "-",
     "Ratio oriented": "no"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus Übersicht S. 81; Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Gemeinsame B-Regeln gelten ergänzend. Mindestsymbolgröße 7 x 7 Punkte; keine maximale Größe angegeben. Die Übersicht nennt fälschlich 1D, der Detailabschnitt ausdrücklich 2D."
   },
   {
    "id": "JS-4.2.15",
@@ -20715,7 +22983,7 @@
  ],
  "statistik": {
   "eintraege": 237,
-  "parameter": 943,
-  "werte": 1132
+  "parameter": 1066,
+  "werte": 1258
  }
 }

@@ -55,6 +55,15 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 - JS-4.2.41, Seiten 158–160 und Übersicht S. 82: QR-Modell, Fehlerkorrektur und
   alle 40 Versionen samt Modulmaßen ergänzt. Fehlende Generationstabellen für
   einzelne Optionen und widersprüchliche Kurzangaben zu Daten sind vermerkt.
+- JS-4.2.2 bis JS-4.2.6, Seiten 81–90: Übersicht als Information statt eigene
+  Symbologie erfasst; 2-of-5, Add-on 2/5 und Aztec abgeglichen. Fehlende große
+  Schreibweise von 2-of-5 ergänzt, Größen und Fehlerkorrektur vervollständigt.
+- JS-4.2.7 bis JS-4.2.11, Seiten 91–100: Codabar, Codablock F und Code
+  39/93/128 abgeglichen. Mehrzeilige Zeichenvorräte, die fehlende große
+  Codablock-Schreibweise und Code-128-Subset-/Funktionswerte ergänzt.
+- JS-4.2.12 bis JS-4.2.14, Seiten 101–108: alle DataMatrix-Kapazitätstabellen
+  samt ROWS-/COLS-Auswahl übernommen, DBP-Mindesthöhe und Dotcode-Zeichenvorrat
+  vervollständigt; fragliche Tabellenüberschriften und Prüfzifferangaben vermerkt.
 - JS-4.12, Seiten 212–217: Druckoptionen und Generationen abgeglichen,
   Syntax-Artefakte entfernt, Abreißversatz und optionale X4-Pufferzahl ergänzt;
   Reihenfolge, Hardwarevoraussetzungen und modellspezifische Angaben vermerkt.
@@ -67,7 +76,7 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 185 Einträge sind fachlich ungeprüft;
+Extraktionsfehler zu korrigieren. Noch 172 Einträge sind fachlich ungeprüft;
 die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
 Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
 Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation

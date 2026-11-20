@@ -289,6 +289,32 @@
         },
         "objektgrenzen": {
           "type": "object"
+        },
+        "kapazitaeten": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "groesse",
+              "numerisch",
+              "alphanumerisch"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "groesse": {
+                "type": "string",
+                "pattern": "^\\d+ x \\d+$"
+              },
+              "numerisch": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "alphanumerisch": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
         }
       },
       "required": [
