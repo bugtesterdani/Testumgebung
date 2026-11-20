@@ -310,6 +310,38 @@
                 "minimum": 0
               },
               "alphanumerisch": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "level": {
+                "type": "string"
+              },
+              "binaer": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "kanji": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "daten_codewoerter": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "fehlerkorrektur_codewoerter": {
                 "type": "integer",
                 "minimum": 0
               }

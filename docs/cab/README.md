@@ -64,6 +64,23 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 - JS-4.2.12 bis JS-4.2.14, Seiten 101–108: alle DataMatrix-Kapazitätstabellen
   samt ROWS-/COLS-Auswahl übernommen, DBP-Mindesthöhe und Dotcode-Zeichenvorrat
   vervollständigt; fragliche Tabellenüberschriften und Prüfzifferangaben vermerkt.
+- JS-4.2.15 bis JS-4.2.19, Seiten 109–117: EAN/JAN-Eingabelängen von den
+  Symbolstellen unterschieden, GS1-Aliasse und FIM-Werte vervollständigt und
+  SSCC-18 als Verweis ohne erfundenen eigenen Befehl abgeglichen.
+- JS-4.2.20 bis JS-4.2.26, Seiten 118–131: mehrzeilige RSS-Typnamen korrekt
+  zusammengesetzt, Composite-Parameter ergänzt sowie GTIN-Eingabe und lineare
+  Symbolstellen von den 2D-Zusatzdaten unterschieden.
+- JS-4.2.27 bis JS-4.2.30, Seiten 132–139: GS1-Matrix-/QR-Varianten und HIBC
+  abgeglichen. Modell-/Versionswerte ergänzt; fehlende GS1-rMQR-Generationen
+  sowie die in der GS1-QR-Syntax nicht vorkommenden Tabellenfelder vermerkt.
+- JS-4.2.31 bis JS-4.2.36, Seiten 140–150: ISBT-/Maxicode-Modi, ITF-Verweis,
+  Micro-PDF-Spalten und Micro-QR-Kapazitäten ergänzt. Die fehlerhafte M3-
+  Tabellenzuordnung und widersprüchliche Kurzkapazitäten ausdrücklich vermerkt.
+- JS-4.2.37 bis JS-4.2.40, Seiten 151–157: PDF417-Fehlerlevel, Plessey,
+  Postnet und PZN-Verweis abgeglichen; den Widerspruch EL0/EL1…8 dokumentiert.
+- JS-4.2.42 bis JS-4.2.45, Seiten 161–169: beide rMQR-Versionstabellen mit
+  64 Kapazitätszeilen visuell abgeglichen; UPC-Eingabelängen, Schreibweisen und
+  Nullunterdrückung ergänzt. Fragliche rMQR-Kapazität der Version 13/M vermerkt.
 - JS-4.12, Seiten 212–217: Druckoptionen und Generationen abgeglichen,
   Syntax-Artefakte entfernt, Abreißversatz und optionale X4-Pufferzahl ergänzt;
   Reihenfolge, Hardwarevoraussetzungen und modellspezifische Angaben vermerkt.
@@ -76,7 +93,7 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 172 Einträge sind fachlich ungeprüft;
+Extraktionsfehler zu korrigieren. Noch 142 Einträge sind fachlich ungeprüft;
 die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
 Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
 Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation
