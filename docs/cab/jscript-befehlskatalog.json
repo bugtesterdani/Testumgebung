@@ -4092,13 +4092,429 @@
     {
      "name": "type",
      "schreibweise": "type",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Art der Druckerabfrage.",
+     "werte": [
+      {
+       "wert": "b;name",
+       "beschreibung": "Bitmap-Schrift vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "d;name",
+       "beschreibung": "DBF-/SQLite3-Datenbank vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "e;name",
+       "beschreibung": "FMT-Mediendatei vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "f",
+       "beschreibung": "Freien Downloadspeicher in Bytes abfragen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "i;name",
+       "beschreibung": "Bild vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "l;name",
+       "beschreibung": "Etikettdatei vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "m",
+       "beschreibung": "Typ und Größe des Standardspeichers abfragen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "o",
+       "beschreibung": "Drucker-, Service- und Druckkopfstatistiken abfragen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "p",
+       "beschreibung": "Angeschlossene Peripherie abfragen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "P",
+       "beschreibung": "Peripherie mit Name, Version und Zusatzstatus abfragen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "r",
+       "beschreibung": "Farbbanddurchmesser in mm abfragen; -1 bei unbekannt",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "s;name",
+       "beschreibung": "Skalierbare Schrift vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "t",
+       "beschreibung": "Zeit/Datum als yymmddhhmmss abfragen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "v",
+       "beschreibung": "Vollständige Firmwareversion mit Patchstand abfragen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "w",
+       "beschreibung": "Etikettenrollendurchmesser in mm abfragen; -1 bei unbekannt/Materialende",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "name",
+     "schreibweise": "name",
+     "quelle": "tabelle",
+     "beschreibung": "Dateiname im aktuellen Standardspeicher für Abfragen b, d, e, i, l oder s.",
+     "werte": []
+    },
+    {
+     "name": "present",
+     "schreibweise": "present",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort auf b/d/e/i/l/s.",
+     "werte": [
+      {
+       "wert": "Y",
+       "beschreibung": "Vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "N",
+       "beschreibung": "Nicht vorhanden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "free_bytes",
+     "schreibweise": "free_bytes",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort f: freie Bytes, danach bytes free und CR.",
+     "werte": []
+    },
+    {
+     "name": "memory",
+     "schreibweise": "memory",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort m: Speichertyp und Größe in kByte; No card bei fehlender Karte.",
+     "werte": []
+    },
+    {
+     "name": "peripheral",
+     "schreibweise": "peripheral",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort p: angeschlossene Peripherie, mit CR abgeschlossen.",
+     "werte": [
+      {
+       "wert": "NONE",
+       "beschreibung": "Keine Peripherie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CUTTER",
+       "beschreibung": "Messer",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "REWINDER",
+       "beschreibung": "Aufwickler",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "DEMAND SENSOR",
+       "beschreibung": "Spendesensor",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "BLOW ON",
+       "beschreibung": "Blasapplikation",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "TRIGGER",
+       "beschreibung": "Trigger",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "peripheral_type",
+     "schreibweise": "peripheral_type",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort P: Peripherietyp wie bei p.",
+     "werte": []
+    },
+    {
+     "name": "peripheral_name",
+     "schreibweise": "peripheral_name",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort P: Peripheriename oder n/a.",
+     "werte": []
+    },
+    {
+     "name": "version_info",
+     "schreibweise": "version_info",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort P: Firmware-/Hardwareversion (HID) oder n/a.",
+     "werte": []
+    },
+    {
+     "name": "additional_settings",
+     "schreibweise": "additional_settings",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort P: optionale Zusatzwerte; bei Spendemodus Y/N für Etikett in Spendeposition.",
+     "werte": []
+    },
+    {
+     "name": "diameter_mm",
+     "schreibweise": "diameter_mm",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort r/w: Durchmesser in mm; -1 bei noch nicht gemessenem Wert, w auch bei Materialende.",
+     "werte": []
+    },
+    {
+     "name": "datetime",
+     "schreibweise": "datetime",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort t: Datum/Zeit als yymmddhhmmss mit CR.",
+     "werte": []
+    },
+    {
+     "name": "firmware",
+     "schreibweise": "firmware",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort v: vollständige Firmwareversion einschließlich Patchstand, Datum und Modell.",
+     "werte": []
+    },
+    {
+     "name": "minutes_of_operation_printer",
+     "schreibweise": "minutes_of_operation_printer",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Betriebsminuten (printer); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "num_labels_printer",
+     "schreibweise": "num_labels_printer",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Etikettenzahl (printer); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "mm_transfer_printer",
+     "schreibweise": "mm_transfer_printer",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Thermotransferstrecke in mm (printer); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "mm_thermo_printer",
+     "schreibweise": "mm_thermo_printer",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Thermodirektstrecke in mm (printer); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "power_cycles_printer",
+     "schreibweise": "power_cycles_printer",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Einschaltzyklen (printer); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "minutes_of_operation_service",
+     "schreibweise": "minutes_of_operation_service",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Betriebsminuten (service); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "num_labels_service",
+     "schreibweise": "num_labels_service",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Etikettenzahl (service); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "mm_transfer_service",
+     "schreibweise": "mm_transfer_service",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Thermotransferstrecke in mm (service); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "mm_thermo_service",
+     "schreibweise": "mm_thermo_service",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Thermodirektstrecke in mm (service); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "power_cycles_service",
+     "schreibweise": "power_cycles_service",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Einschaltzyklen (service); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "minutes_of_operation_tph",
+     "schreibweise": "minutes_of_operation_tph",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Betriebsminuten (tph); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "num_labels_tph",
+     "schreibweise": "num_labels_tph",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Etikettenzahl (tph); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "mm_transfer_tph",
+     "schreibweise": "mm_transfer_tph",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Thermotransferstrecke in mm (tph); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
+     "werte": []
+    },
+    {
+     "name": "mm_thermo_tph",
+     "schreibweise": "mm_thermo_tph",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort o: Thermodirektstrecke in mm (tph); tph-Gruppe optional für zweiten Druckkopf wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bidirektionale Kommunikation erforderlich. Antwortformate hängen von type ab; b/d/e/i/l/s benötigen ;name. o, P und v sind nur für X4 angegeben. Bei o folgt auf Drucker- und Servicewerte eine Druckkopfgruppe, optional eine zweite. Zahlen aus Beispielen sind keine Standardwerte."
   },
   {
    "id": "JS-3.12",
@@ -4122,7 +4538,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Setzt Sprache/Region, Nulldarstellung, Maßeinheit und Datumsformat auf Setup-Werte zurück und leert den Schriftcache."
   },
   {
    "id": "JS-3.13",
@@ -4146,22 +4563,57 @@
    ],
    "parameter": [
     {
-     "name": "YYMMDDhhmm",
-     "schreibweise": "YYMMDDhhmm",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "name": "YY",
+     "schreibweise": "YY",
+     "quelle": "tabelle",
+     "beschreibung": "Zweistelliges Jahr auf Basis 2000; siehe Hinweis zum Startjahr.",
+     "werte": [],
+     "bereich": "zwei Dezimalziffern"
+    },
+    {
+     "name": "MM",
+     "schreibweise": "MM",
+     "quelle": "tabelle",
+     "beschreibung": "Monat.",
+     "werte": [],
+     "bereich": "01…12"
+    },
+    {
+     "name": "DD",
+     "schreibweise": "DD",
+     "quelle": "tabelle",
+     "beschreibung": "Tag des Monats; muss zum gewählten Monat und Jahr passen.",
+     "werte": [],
+     "bereich": "01…31"
+    },
+    {
+     "name": "hh",
+     "schreibweise": "hh",
+     "quelle": "tabelle",
+     "beschreibung": "Stunde.",
+     "werte": [],
+     "bereich": "00…23"
+    },
+    {
+     "name": "mm",
+     "schreibweise": "mm",
+     "quelle": "tabelle",
+     "beschreibung": "Minute.",
+     "werte": [],
+     "bereich": "00…59"
     },
     {
      "name": "ss",
      "schreibweise": "ss",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Sekunde.",
+     "werte": [],
+     "bereich": "00…59"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Alle Komponenten sind zweistellig, ss ist optional. YY verwendet Basisjahr 2000; das Handbuch nennt 2006 als Startjahr, ohne die Behandlung früherer Jahreswerte oder ausgelassener Sekunden zu definieren. Kalendergültigkeit zusätzlich prüfen."
   },
   {
    "id": "JS-3.14",
@@ -4181,18 +4633,19 @@
    },
    "verweis": null,
    "syntax": [
-    "t param[CR]"
+    "t param[CR]",
+    "t[CR]"
    ],
    "parameter": [
     {
      "name": "param",
      "schreibweise": "param",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art des auszugebenden Selbsttests.",
      "werte": [
       {
        "wert": "0",
-       "beschreibung": "Prints status information",
+       "beschreibung": "Statusbericht",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4202,7 +4655,7 @@
       },
       {
        "wert": "1",
-       "beschreibung": "Prints the font list",
+       "beschreibung": "Schriftliste",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4212,7 +4665,7 @@
       },
       {
        "wert": "2",
-       "beschreibung": "Prints the device list",
+       "beschreibung": "Geräteliste",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4222,7 +4675,7 @@
       },
       {
        "wert": "3",
-       "beschreibung": "Prints the label profile",
+       "beschreibung": "Etikettenprofil",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4232,7 +4685,7 @@
       },
       {
        "wert": "4",
-       "beschreibung": "Print the event log",
+       "beschreibung": "Ereignisprotokoll",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4242,7 +4695,7 @@
       },
       {
        "wert": "5",
-       "beschreibung": "Prints the test grid",
+       "beschreibung": "Testgitter",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4252,29 +4705,31 @@
       },
       {
        "wert": "6",
-       "beschreibung": "Prints the wireless network status                                  -         ",
+       "beschreibung": "WLAN-Status; WLAN-USB-Antenne erforderlich",
        "generationen": {
         "Ax": "n",
-        "X2": "",
-        "X3": "",
-        "X4": ""
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
        }
       },
       {
        "wert": "7",
-       "beschreibung": "Prints RFID measurement (only on RFID printers)                     -          ",
+       "beschreibung": "RFID-Messung; nur RFID-Drucker",
        "generationen": {
         "Ax": "n",
-        "X2": "",
+        "X2": "y",
         "X3": "n",
-        "X4": ""
+        "X4": "y"
        }
       }
-     ]
+     ],
+     "standard": 0
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Ohne Zahl wird der Statusbericht gedruckt. Werte 6 und 7 sind in der Tabelle mit offenem Quadrat markiert und benötigen WLAN- bzw. RFID-Ausstattung; Generationen geben die mögliche Unterstützung an, keine Zusage vorhandener Hardware."
   },
   {
    "id": "JS-3.15",
@@ -4296,9 +4751,18 @@
    "syntax": [
     "v[CR]"
    ],
-   "parameter": [],
+   "parameter": [
+    {
+     "name": "version",
+     "schreibweise": "version",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort: Firmware major.minor, Veröffentlichungsdatum und Druckermodell.",
+     "werte": []
+    }
+   ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Bidirektionale Kommunikation erforderlich. Im Gegensatz zu q v enthält diese Abfrage keinen Firmware-Patchstand."
   },
   {
    "id": "JS-3.16",
@@ -4325,12 +4789,14 @@
      "name": "m",
      "schreibweise": "m",
      "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "beschreibung": "Vierbitmaske zur Steuerung der vier Peripherieausgänge.",
+     "werte": [],
+     "bereich": "Hex-Nibble 0…F"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Signalzuordnung: Bit 0 Druckbeginn, Bit 1 wechselt bei neuem Auftrag, Bit 2 Fehler, Bit 3 Etikett in Spendeposition. Geschützter optionaler Adapter erforderlich; tatsächliche Pinbelegung druckerabhängig. ESC!ESC! setzt alle Bits zurück."
   },
   {
    "id": "JS-3.17",
@@ -4340,7 +4806,7 @@
    "titel": "Print slashed / unslashed zero",
    "seiten": [
     70,
-    71
+    70
    ],
    "generationen": {
     "Ax": "y",
@@ -4357,23 +4823,35 @@
      "name": "param",
      "schreibweise": "param",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Darstellung der Null in unterstützten Bitmapschriften.",
      "werte": [
       {
        "wert": "0",
-       "beschreibung": "Zero - prints slashed zeros (Ø)",
-       "generationen": null
+       "beschreibung": "Durchgestrichene Null",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "O",
-       "beschreibung": "Upper case letter O - prints unslashed zeros (0)",
-       "generationen": null
+       "beschreibung": "Normale Null",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "standard": "O"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Gilt für das gesamte Etikett und nur interne Bitmapschriften (genannt sind -1, -2, -3); nicht für Vektor-/TrueType-Schriften. Das zweite Auswahlzeichen ist der Großbuchstabe O, keine Ziffer."
   },
   {
    "id": "JS-4.1",
@@ -10808,13 +11286,18 @@
    "id": "JS-4.2.41",
    "abschnitt": "4.2.41",
    "art": "barcode",
-   "befehl": null,
+   "befehl": "B",
    "titel": "QR Code",
    "seiten": [
     158,
     160
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],dotsize[,fx];text[CR]"
@@ -10824,45 +11307,96 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)",
+     "beschreibung": "Optionaler Feldname nach den gemeinsamen B-Regeln (JS-4.2.1).",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. 0, 90, 180 or 270 degrees",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "QR-Symbologie; die Schreibweise folgt der allgemeinen B-Klarschriftregel.",
      "werte": [
       {
        "wert": "QRCODE",
-       "beschreibung": "Barcode type",
-       "generationen": null
+       "beschreibung": "QR Code, große Schreibweise",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "qrcode",
-       "beschreibung": "",
-       "generationen": null
+       "beschreibung": "QR Code, kleine Schreibweise",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -10870,51 +11404,51 @@
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Parameters (optional)",
+     "beschreibung": "Optionale QR-Einstellungen; parametrierte Optionen sind zusätzlich einzeln beschrieben.",
      "werte": [
       {
        "wert": "+ELx",
-       "beschreibung": "Error Level. Valid values for x: 1-4, L, M, Q, H. Default value is 1",
+       "beschreibung": "Fehlerkorrekturlevel x",
        "generationen": null
       },
       {
        "wert": "+MODELx",
-       "beschreibung": "Valid values for x: 1 or 2. Default value is 2",
+       "beschreibung": "QR-Modell x",
        "generationen": null
       },
       {
        "wert": "+VERSIONx",
-       "beschreibung": "Available for +MODEL2",
+       "beschreibung": "Symbolversion x, nur MODEL2",
        "generationen": null
       },
       {
        "wert": "+IEC614061",
-       "beschreibung": "Compliant with DIN SPEC 91406 and IEC 61406",
+       "beschreibung": "Kennzeichnung nach DIN SPEC 91406 und IEC 61406",
        "generationen": null
       },
       {
        "wert": "+IEC614062",
-       "beschreibung": "Render a border around the barcode as defined in IEC 61406-2",
+       "beschreibung": "Rand nach IEC 61406-2",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung mit Größe n",
        "generationen": null
       },
       {
        "wert": "+GOODBADa:b:c",
-       "beschreibung": "Used to verify the barcode readability",
+       "beschreibung": "Lesbarkeit prüfen",
        "generationen": null
       },
       {
        "wert": "+VERIFYa:b:c",
-       "beschreibung": "Same function as +GOODBAD but with checking the content",
+       "beschreibung": "Lesbarkeit und Inhalt prüfen",
        "generationen": null
       },
       {
        "wert": "+EXTERNa:b:c",
-       "beschreibung": "Same as +GOODBAD but with an external testing device for verification",
+       "beschreibung": "Externes Prüfgerät verwenden",
        "generationen": null
       }
      ]
@@ -10923,38 +11457,38 @@
      "name": "dotsize",
      "schreibweise": "dotsize",
      "quelle": "tabelle",
-     "beschreibung": "Dot size in millimeters or inches",
+     "beschreibung": "Modulgröße in Millimetern oder Zoll nach gesetzter Einheit.",
      "werte": []
     },
     {
      "name": "fx",
      "schreibweise": "[,fx]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterung.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted",
+       "beschreibung": "Invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -10963,8 +11497,362 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Zu kodierende QR-Daten einschließlich unterstützter Inhaltsfelder.",
      "werte": []
+    },
+    {
+     "name": "EL",
+     "schreibweise": "+ELx",
+     "quelle": "tabelle",
+     "beschreibung": "Fehlerkorrekturlevel.",
+     "werte": [
+      {
+       "wert": "1",
+       "beschreibung": "Fehlerkorrekturlevel 1",
+       "generationen": null
+      },
+      {
+       "wert": "2",
+       "beschreibung": "Fehlerkorrekturlevel 2",
+       "generationen": null
+      },
+      {
+       "wert": "3",
+       "beschreibung": "Fehlerkorrekturlevel 3",
+       "generationen": null
+      },
+      {
+       "wert": "4",
+       "beschreibung": "Fehlerkorrekturlevel 4",
+       "generationen": null
+      },
+      {
+       "wert": "L",
+       "beschreibung": "Fehlerkorrekturlevel L",
+       "generationen": null
+      },
+      {
+       "wert": "M",
+       "beschreibung": "Fehlerkorrekturlevel M",
+       "generationen": null
+      },
+      {
+       "wert": "Q",
+       "beschreibung": "Fehlerkorrekturlevel Q",
+       "generationen": null
+      },
+      {
+       "wert": "H",
+       "beschreibung": "Fehlerkorrekturlevel H",
+       "generationen": null
+      }
+     ],
+     "standard": "1"
+    },
+    {
+     "name": "MODEL",
+     "schreibweise": "+MODELx",
+     "quelle": "tabelle",
+     "beschreibung": "QR-Modell: 1 oder 2 (QR Code 2005 / ISO 18004).",
+     "werte": [
+      {
+       "wert": "1",
+       "beschreibung": "Modell 1",
+       "generationen": null
+      },
+      {
+       "wert": "2",
+       "beschreibung": "Modell 2",
+       "generationen": null
+      }
+     ],
+     "standard": "2"
+    },
+    {
+     "name": "VERSION",
+     "schreibweise": "+VERSIONx",
+     "quelle": "tabelle",
+     "beschreibung": "Symbolversion bei MODEL2; ohne Angabe kleinstmögliche passende Version.",
+     "werte": [
+      {
+       "wert": "1",
+       "beschreibung": "21 × 21 Module",
+       "generationen": null
+      },
+      {
+       "wert": "2",
+       "beschreibung": "25 × 25 Module",
+       "generationen": null
+      },
+      {
+       "wert": "3",
+       "beschreibung": "29 × 29 Module",
+       "generationen": null
+      },
+      {
+       "wert": "4",
+       "beschreibung": "33 × 33 Module",
+       "generationen": null
+      },
+      {
+       "wert": "5",
+       "beschreibung": "37 × 37 Module",
+       "generationen": null
+      },
+      {
+       "wert": "6",
+       "beschreibung": "41 × 41 Module",
+       "generationen": null
+      },
+      {
+       "wert": "7",
+       "beschreibung": "45 × 45 Module",
+       "generationen": null
+      },
+      {
+       "wert": "8",
+       "beschreibung": "49 × 49 Module",
+       "generationen": null
+      },
+      {
+       "wert": "9",
+       "beschreibung": "53 × 53 Module",
+       "generationen": null
+      },
+      {
+       "wert": "10",
+       "beschreibung": "57 × 57 Module",
+       "generationen": null
+      },
+      {
+       "wert": "11",
+       "beschreibung": "61 × 61 Module",
+       "generationen": null
+      },
+      {
+       "wert": "12",
+       "beschreibung": "65 × 65 Module",
+       "generationen": null
+      },
+      {
+       "wert": "13",
+       "beschreibung": "69 × 69 Module",
+       "generationen": null
+      },
+      {
+       "wert": "14",
+       "beschreibung": "73 × 73 Module",
+       "generationen": null
+      },
+      {
+       "wert": "15",
+       "beschreibung": "77 × 77 Module",
+       "generationen": null
+      },
+      {
+       "wert": "16",
+       "beschreibung": "81 × 81 Module",
+       "generationen": null
+      },
+      {
+       "wert": "17",
+       "beschreibung": "85 × 85 Module",
+       "generationen": null
+      },
+      {
+       "wert": "18",
+       "beschreibung": "89 × 89 Module",
+       "generationen": null
+      },
+      {
+       "wert": "19",
+       "beschreibung": "93 × 93 Module",
+       "generationen": null
+      },
+      {
+       "wert": "20",
+       "beschreibung": "97 × 97 Module",
+       "generationen": null
+      },
+      {
+       "wert": "21",
+       "beschreibung": "101 × 101 Module",
+       "generationen": null
+      },
+      {
+       "wert": "22",
+       "beschreibung": "105 × 105 Module",
+       "generationen": null
+      },
+      {
+       "wert": "23",
+       "beschreibung": "109 × 109 Module",
+       "generationen": null
+      },
+      {
+       "wert": "24",
+       "beschreibung": "113 × 113 Module",
+       "generationen": null
+      },
+      {
+       "wert": "25",
+       "beschreibung": "117 × 117 Module",
+       "generationen": null
+      },
+      {
+       "wert": "26",
+       "beschreibung": "121 × 121 Module",
+       "generationen": null
+      },
+      {
+       "wert": "27",
+       "beschreibung": "125 × 125 Module",
+       "generationen": null
+      },
+      {
+       "wert": "28",
+       "beschreibung": "129 × 129 Module",
+       "generationen": null
+      },
+      {
+       "wert": "29",
+       "beschreibung": "133 × 133 Module",
+       "generationen": null
+      },
+      {
+       "wert": "30",
+       "beschreibung": "137 × 137 Module",
+       "generationen": null
+      },
+      {
+       "wert": "31",
+       "beschreibung": "141 × 141 Module",
+       "generationen": null
+      },
+      {
+       "wert": "32",
+       "beschreibung": "145 × 145 Module",
+       "generationen": null
+      },
+      {
+       "wert": "33",
+       "beschreibung": "149 × 149 Module",
+       "generationen": null
+      },
+      {
+       "wert": "34",
+       "beschreibung": "153 × 153 Module",
+       "generationen": null
+      },
+      {
+       "wert": "35",
+       "beschreibung": "157 × 157 Module",
+       "generationen": null
+      },
+      {
+       "wert": "36",
+       "beschreibung": "161 × 161 Module",
+       "generationen": null
+      },
+      {
+       "wert": "37",
+       "beschreibung": "165 × 165 Module",
+       "generationen": null
+      },
+      {
+       "wert": "38",
+       "beschreibung": "169 × 169 Module",
+       "generationen": null
+      },
+      {
+       "wert": "39",
+       "beschreibung": "173 × 173 Module",
+       "generationen": null
+      },
+      {
+       "wert": "40",
+       "beschreibung": "177 × 177 Module",
+       "generationen": null
+      }
+     ],
+     "bereich": "1…40, nur MODEL2",
+     "standard": "automatisch"
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung; 0 ist nach der gemeinsamen B-Beschreibung zulässig.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nach gemeinsamer B-Beschreibung nur X4.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nach gemeinsamer B-Beschreibung nur X4.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nach gemeinsamer B-Beschreibung nur X4.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
     }
    ],
    "barcode_eigenschaften": {
@@ -10975,7 +11863,8 @@
     "Check digits": "-",
     "Ratio oriented": "no"
    },
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation der Symbologie aus Übersicht S. 82. Für einzelne Optionen auf S. 158–159 fehlen eigene Generationstabellen; deren Generationen bleiben unbekannt. Die Kurzcharakteristik nennt alphanumerische Daten und 2000 Bytes, der Text erwähnt zusätzlich numerische, Byte-, Kanji- und Kana-Daten; keine strengere Zeichensperre allein aus der Kurzzeile ableiten. VERSION ist nur für MODEL2 verfügbar."
   },
   {
    "id": "JS-4.2.42",
@@ -13852,189 +14741,346 @@
    },
    "verweis": null,
    "syntax": [
-    "O [Ax=y][,B][,Cx][,D][,E][,F][,Hx][,J][,Lx][,M][,N][,P][,R][,Sx] [,T][,U][,Wy][,X][CR]"
+    "O [Ax=y][,B][,Cx][,D][,E][,F][,Hx][,J][,Lx][,M][,N][,P][,R][,Sx] [,T][,U][,Wy][,X][CR]",
+    "O [Ax=y][,B][,Cx][,D][,E][,F][,Hx][,J][,Lx][,M][,N][,P][,R][,Sx] [,Tx][,U][,Wy][,X][CR]"
    ],
    "parameter": [
     {
      "name": "Ax=y",
      "schreibweise": "Ax=y",
      "quelle": "tabelle",
-     "beschreibung": "Applicator parameters",
+     "beschreibung": "Optionale Applikatorzeiten; abhängig vom Applikatormodell und dessen Baujahr.",
      "werte": [
       {
        "wert": "A0=y",
-       "beschreibung": "Start delay supporting air. Valid values for y: 0 to 1000 ms",
-       "generationen": null
+       "beschreibung": "Stützluft-Einschaltverzögerung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "A1=y",
-       "beschreibung": "Stop delay supporting air. Valid values for y: 0 to 1000 ms",
-       "generationen": null
+       "beschreibung": "Stützluft-Ausschaltverzögerung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "A2=y",
-       "beschreibung": "Start delay print. Valid values for y: 0 to 1000 ms",
-       "generationen": null
+       "beschreibung": "Druckstartverzögerung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "A3=y",
-       "beschreibung": "Lock time. Valid values for y: 0 to 1000 ms",
-       "generationen": null
+       "beschreibung": "Sperrzeit",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "A4=y",
-       "beschreibung": "Blow time. Valid values for y: 0 to 1000 ms",
-       "generationen": null
+       "beschreibung": "Blaszeit",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "n",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "n",
+      "X4": "y"
+     },
+     "bereich": "x=0…4; y=0…1000 ms"
     },
     {
      "name": "B",
      "schreibweise": "B",
      "quelle": "tabelle",
-     "beschreibung": "Both sides contain the same content.",
-     "werte": []
+     "beschreibung": "Unterseite übernimmt Inhalt der Oberseite; nur doppelseitige XD/XD-Q-Drucker.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "n",
+      "X4": "y"
+     }
     },
     {
      "name": "Cx",
      "schreibweise": "Cx",
      "quelle": "tabelle",
-     "beschreibung": "Additional cutting time for the optional perforation cutter.",
-     "werte": []
+     "beschreibung": "Zusätzliche Schneidzeit für Perforationsmesser, beeinflusst die Schnitttiefe.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     },
+     "bereich": "x=0,0…10,0"
     },
     {
      "name": "D",
      "schreibweise": "D",
      "quelle": "tabelle",
-     "beschreibung": "Cutting or dispensing labels always with back feed",
-     "werte": []
+     "beschreibung": "Beim Schneiden/Spenden immer zurückfahren; Druck beginnt am Etikettenrand.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "E",
      "schreibweise": "E",
      "quelle": "tabelle",
-     "beschreibung": "Ignore paper end (not allowed if the printer runs in",
-     "werte": []
+     "beschreibung": "Materialende ignorieren; bei Endlosmaterial nicht zulässig.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "F",
      "schreibweise": "F",
      "quelle": "tabelle",
-     "beschreibung": "Discard the label positions, causes new synchronization",
-     "werte": []
+     "beschreibung": "Gespeicherte Etikettenpositionen verwerfen und Material neu synchronisieren.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "Hx",
      "schreibweise": "Hx",
      "quelle": "tabelle",
-     "beschreibung": "Additional offset between upper and lower print head in",
-     "werte": []
+     "beschreibung": "Zusätzlicher Transportversatz zwischen oberem und unterem Kopf in mm/Zoll; nur XC/XD/XC-Q/XD-Q.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "n",
+      "X4": "y"
+     }
     },
     {
      "name": "J",
      "schreibweise": "J",
      "quelle": "tabelle",
-     "beschreibung": "Printing labels on demand (usage of the display for",
-     "werte": []
+     "beschreibung": "Etiketten auf Anforderung manuell über das Display drucken.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "Lx",
      "schreibweise": "Lx",
      "quelle": "tabelle",
-     "beschreibung": "Length parameter used to expand or squeeze the",
-     "werte": []
+     "beschreibung": "Gesamten Ausdruck einschließlich Etikettenlänge strecken/stauchen, in Prozent.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     },
+     "bereich": "x=-5…5"
     },
     {
      "name": "M",
      "schreibweise": "M",
      "quelle": "tabelle",
-     "beschreibung": "Mirrored label printing",
-     "werte": []
+     "beschreibung": "Gesamtes Etikett spiegeln.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "N",
      "schreibweise": "N",
      "quelle": "tabelle",
-     "beschreibung": "Negative (inverted) printout of the complete label",
-     "werte": []
+     "beschreibung": "Gesamtes Etikett invertieren; vollständige Flächendeckung erfordert kleinere Etiketten als die Druckfläche.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "P",
      "schreibweise": "P",
      "quelle": "tabelle",
-     "beschreibung": "Printmode, backfeed option smart which suppresses the",
-     "werte": []
+     "beschreibung": "Temporärer Smart-Rücktransport: Rückfahren unterdrücken. Mögliche helle Stillstandslinie; D kann diese vermeiden.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "R",
      "schreibweise": "R",
      "quelle": "tabelle",
-     "beschreibung": "Rotate the label contents 180 degrees",
-     "werte": []
+     "beschreibung": "Gesamten Inhalt um 180 Grad drehen.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "S",
+     "schreibweise": "S",
+     "quelle": "tabelle",
+     "beschreibung": "Einzeletikettenpuffer; nächstes Etikett erst nach Druckabschluss des aktuellen verarbeiten.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "Sx",
      "schreibweise": "Sx",
      "quelle": "tabelle",
-     "beschreibung": "Single label buffer. The next label will be processed when",
-     "werte": []
+     "beschreibung": "Optionale Anzahl gepufferter Etiketten für S; Zahlenbereich nicht angegeben.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "Tx",
+     "schreibweise": "Tx",
+     "quelle": "tabelle",
+     "beschreibung": "Abreißmodus; x ist ein optionaler positiver oder negativer Vorschubversatz in mm/Zoll.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "U",
      "schreibweise": "U",
      "quelle": "tabelle",
-     "beschreibung": "Unique label. Suppresses the Pause / Reprint possibility",
-     "werte": []
+     "beschreibung": "Pause/Reprint zur Vermeidung doppelten Drucks unterdrücken.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "Wy",
      "schreibweise": "Wy",
      "quelle": "tabelle",
-     "beschreibung": "Waiting position after print job",
+     "beschreibung": "Warteposition nach Auftrag; nur zusammen mit P-Spendemodusbefehl. Bleibt für Folgeaufträge aktiv; mit O Wi0 zurücksetzen.",
      "werte": [
       {
        "wert": "Wn",
-       "beschreibung": "Next label start position",
-       "generationen": null
+       "beschreibung": "Startposition des nächsten Etiketts",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "Wi",
+       "beschreibung": "Ende des letzten Etiketts",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "Wix",
-       "beschreibung": "End of the last label.",
-       "generationen": null
+       "beschreibung": "Ende des letzten Etiketts mit Versatz x; im Spendemodul relativ zur Spendeposition",
+       "generationen": {
+        "Ax": "n",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
     },
     {
      "name": "X",
      "schreibweise": "X",
      "quelle": "tabelle",
-     "beschreibung": "Flip label. Print all objects from head 1 on head 2.",
-     "werte": []
-    },
-    {
-     "name": "Ax",
-     "schreibweise": "Ax",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "y",
-     "schreibweise": "y",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "T",
-     "schreibweise": "T",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "beschreibung": "Objekte von Kopf 1 auf Kopf 2 ausgeben; nur zwei konfigurierbare Köpfe bei XC Q/XD Q.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Direkt nach S anordnen. Syntaxbox S. 212 nennt T, die Tabelle S. 213 Tx mit optionalem Versatz; beide Schreibweisen sind berücksichtigt. S ist generationsübergreifend verfügbar, die optionale Pufferzahl x nur X4. D und P beschreiben verschiedene Rücktransportmodi; eine gemeinsame Priorität ist nicht definiert. Applikatorparameter können bei Baujahren nach 2024 modellspezifisch andere Bedeutungen haben. Syntax-Artefakte Ax und y sind keine zusätzlichen Parameter."
   },
   {
    "id": "JS-4.13",
@@ -19669,7 +20715,7 @@
  ],
  "statistik": {
   "eintraege": 237,
-  "parameter": 900,
-  "werte": 1054
+  "parameter": 943,
+  "werte": 1132
  }
 }

@@ -17,6 +17,9 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 - JS-3.4 bis JS-3.10, Seiten 47–54: tatsächliche Löschtypen anstelle von
   Überschriftenwerten eingetragen und die zweite Tabellenspalte der Ländercodes
   ergänzt. Pausen-, Einheiten- und Auftragskennungsregeln abgeglichen.
+- JS-3.11 bis JS-3.17, Seiten 55–70: Abfragetypen und Antwortfelder ergänzt,
+  Datumskomponenten getrennt, optionale Selbsttest-Hardware gekennzeichnet und
+  Nulldarstellung abgeglichen. Die falsche letzte Seite von JS-3.17 ist korrigiert.
 - JS-2.1 bis JS-2.10, Seiten 11–20: ESC-Syntax, Generationen, Binärdaten und
   Antwortfelder abgeglichen; fehlende Syntax von ESCc sowie Antwortstufen von
   ESC? ergänzt. Antwortfelder sind ausdrücklich keine Eingabeparameter.
@@ -49,6 +52,12 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 - JS-4.9, Seiten 199–201: mehrzeilige GOODBAD-/EXTERN-Parameter rekonstruiert,
   Feldname und Bildname sowie Prüfpositionsparameter und Autoload getrennt;
   Vergrößerung, Drehungen und Zeitlimits ergänzt.
+- JS-4.2.41, Seiten 158–160 und Übersicht S. 82: QR-Modell, Fehlerkorrektur und
+  alle 40 Versionen samt Modulmaßen ergänzt. Fehlende Generationstabellen für
+  einzelne Optionen und widersprüchliche Kurzangaben zu Daten sind vermerkt.
+- JS-4.12, Seiten 212–217: Druckoptionen und Generationen abgeglichen,
+  Syntax-Artefakte entfernt, Abreißversatz und optionale X4-Pufferzahl ergänzt;
+  Reihenfolge, Hardwarevoraussetzungen und modellspezifische Angaben vermerkt.
 
 ## Strukturprüfung
 
@@ -58,7 +67,7 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 194 Einträge sind fachlich ungeprüft;
+Extraktionsfehler zu korrigieren. Noch 185 Einträge sind fachlich ungeprüft;
 die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
 Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
 Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation
