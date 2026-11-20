@@ -3101,7 +3101,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "ASCII-Dump zeigt empfangene Daten außer ESC-Befehlen. Cancel am Drucker beendet den Modus; angezeigte Syntaxfehler betreffen die übertragenen Daten."
   },
   {
    "id": "JS-3.2",
@@ -3125,7 +3126,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Schneidet nach vollständigem Druck des Etiketts. Erfordert angeschlossenes Messer; ohne Messer meldet der Drucker einen Protokoll-/Syntaxfehler. Weitere Messerparameter: JS-4.3."
   },
   {
    "id": "JS-3.3",
@@ -3159,52 +3161,102 @@
       {
        "wert": "BMP",
        "beschreibung": "Windows bitmap (monochrom, 256 Farben, 24 bit, unkomprimiert)",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "GIF",
        "beschreibung": "GIF 87a/89a",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "IMG",
        "beschreibung": "GEM Image, monochrom",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "MAC",
        "beschreibung": "MacPaint",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "PCX",
        "beschreibung": "Paintbrush, monochrom/16/256 Farben",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "PNG",
        "beschreibung": "Portable Network Graphics",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "TIF",
-       "beschreibung": "TIFF, monochrom/Graustufen/Farbe, unkomprimiert oder PackBits",
-       "generationen": null
+       "beschreibung": "TIFF: monochrom, Graustufen/Farbe (4/8 Bit pro Pixel, RGB 8 Bit pro Pixel); nur PackBits oder unkomprimiert.",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "ASC",
        "beschreibung": "Grafik im ASCII-Format",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "TTF",
        "beschreibung": "TrueType-Schrift",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "DBF",
        "beschreibung": "dBASE-III-Datenbank",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "SQLITE3",
@@ -3229,7 +3281,12 @@
       {
        "wert": "TMP",
        "beschreibung": "Temporärdatei (Seriennummern, ASCII)",
-       "generationen": null
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "RES",
@@ -3246,23 +3303,25 @@
     {
      "name": "name",
      "schreibweise": "name",
-     "quelle": "syntax",
-     "beschreibung": "Dateiname, max. 8 Zeichen",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Name zum späteren Abruf der Datei, höchstens acht Zeichen.",
+     "werte": [],
+     "bereich": "1…8 Zeichen"
     },
     {
      "name": "SAVE",
-     "schreibweise": "SAVE",
-     "quelle": "syntax",
-     "beschreibung": "Datei aus dem RAM auf die Speicherkarte kopieren",
+     "schreibweise": "[SAVE]",
+     "quelle": "tabelle",
+     "beschreibung": "Datei aus RAM auf Speicherkarte übernehmen; für Datenbankdateien erforderlich.",
      "werte": []
     },
     {
      "name": "B",
-     "schreibweise": "B",
-     "quelle": "syntax",
-     "beschreibung": "Helligkeit der Rasterung, ±20",
-     "werte": []
+     "schreibweise": "[B:±value]",
+     "quelle": "tabelle",
+     "beschreibung": "Helligkeitskorrektur der Bildrasterung.",
+     "werte": [],
+     "bereich": "-20…20"
     },
     {
      "name": "data",
@@ -3273,7 +3332,17 @@
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "S. 42 nennt zwei Methoden, zeigt aber drei Syntaxvarianten. Die dort pauschal genannte Grenze 256 weicht für X4 von JS-1.6 ab. Die Warnung zu ESC-Sequenzen bei Methode 2 steht im Spannungsverhältnis zur auf S. 14 beschriebenen deaktivierten ESC-Auswertung; Binärdaten deshalb verlustfrei abgrenzen und keine zusätzliche ESC-Umwandlung für Methode 2 erfinden. Die ASC-Beispiele auf S. 45–46 sind keine zusätzlichen Parameterpositionen des d-Befehls.",
+   "regeln": [
+    "ASC-Daten bestehen aus Hexbytes (0–9, a–f/A–F); Leerzeichen und CR dürfen die Daten gliedern, abschließendes CR ist erforderlich.",
+    "ASC-Kopf: Breite und Höhe als je 16 Bit Big Endian. Zeilen laufen von oben nach unten, Bits von links nach rechts; auch ungenutzte Bits der letzten Bytegruppe sind zu übertragen.",
+    "ASC-Zeilenwiederholung beginnt mit 00 00 FF und dem Wiederholungsbyte.",
+    "ASC-Nullbytes werden durch eine Anzahl 00…FF dargestellt; Schwarzbytes durch 81…FF (81 bedeutet ein FF-Byte).",
+    "ASC-Direktdaten: 80, danach Anzahl 01…7F, danach die angegebenen Datenbytes.",
+    "ASC-Wiederholungsmuster: 00 nn xx; das Datenbyte xx wird nn-mal eingesetzt.",
+    "RES speichert beliebige Binärdateien, ohne deren Dateiformat intern zu interpretieren."
+   ]
   },
   {
    "id": "JS-3.4",
@@ -3300,17 +3369,97 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "The file types being removed, with following valid file extensions",
+     "beschreibung": "Zu löschender Dateityp; IMG umfasst alle Bilder, FNT alle Schriften.",
      "werte": [
       {
-       "wert": "Images",
-       "beschreibung": "",
-       "generationen": null
+       "wert": "BMP",
+       "beschreibung": "Windows-Bitmap",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
-       "wert": "Fonts",
-       "beschreibung": "",
-       "generationen": null
+       "wert": "GIF",
+       "beschreibung": "GIF-Bild",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "IMG",
+       "beschreibung": "Alle Bildformate",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "MAC",
+       "beschreibung": "MacPaint-Bild",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "PCX",
+       "beschreibung": "Paintbrush-Bild",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "PNG",
+       "beschreibung": "PNG-Bild",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "TIF",
+       "beschreibung": "TIFF-Bild",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FNT",
+       "beschreibung": "Alle Schriftformate",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "TTF",
+       "beschreibung": "TrueType-Schrift",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -3318,12 +3467,13 @@
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "The name attached to the font or graphic when it was sent to the printer.",
+     "beschreibung": "Beim Download vergebener Name ohne Beachtung der Groß-/Kleinschreibung; * löscht alle Dateien des gewählten Typs.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Löscht nur RAM-Daten, keine Speicherkartendateien. Für Speicherkarten siehe M-Befehle."
   },
   {
    "id": "JS-3.5",
@@ -3347,7 +3497,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Vorschub bis zum nächsten Etikettenanfang. Bei Endlosmaterial gilt die zuletzt gewählte Etikettenlänge; die Lichtschranke überwacht dann nur Materialende."
   },
   {
    "id": "JS-3.6",
@@ -3374,12 +3525,12 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Während des JScript-Auftrags auf dem Druckerdisplay anzuzeigender Text.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true
   },
   {
    "id": "JS-3.7",
@@ -3406,12 +3557,13 @@
      "name": "Job-ID",
      "schreibweise": "Job-ID",
      "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Auftragskennung; ohne Angabe erzeugt der Drucker einen Namen aus Quelle, Etikett und Zeit.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nach J anordnen, sonst wird die Kennung überschrieben. Abfrage über ESCj (JS-2.13)."
   },
   {
    "id": "JS-3.8",
@@ -3438,108 +3590,374 @@
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "DOS-Länderkurzcode für regionale Formatierung.",
      "werte": [
       {
        "wert": "BE",
-       "beschreibung": "Belgium / French                       PL       Poland",
-       "generationen": null
+       "beschreibung": "Belgien, Französisch",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "BF",
-       "beschreibung": "Belgium / flamic                       PT       Portugal",
-       "generationen": null
+       "beschreibung": "Belgien, Flämisch",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "BG",
-       "beschreibung": "Bulgaria                               RO       Romania",
-       "generationen": null
+       "beschreibung": "Bulgarien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "CZ",
-       "beschreibung": "Czech Republic                         RU       Russia",
-       "generationen": null
+       "beschreibung": "Tschechien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "DK",
-       "beschreibung": "Denmark                                SA       South Africa",
-       "generationen": null
+       "beschreibung": "Dänemark",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "EG",
-       "beschreibung": "Egypt                                  SE       Sweden",
-       "generationen": null
+       "beschreibung": "Ägypten",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "FR",
-       "beschreibung": "France                                 SF       Switzerland / french",
-       "generationen": null
+       "beschreibung": "Frankreich",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "GK",
-       "beschreibung": "Greece                                 SG       Switzerland / german",
-       "generationen": null
+       "beschreibung": "Griechenland",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "GR",
-       "beschreibung": "Germany                                SL       Slovenia",
-       "generationen": null
+       "beschreibung": "Deutschland",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "HR",
-       "beschreibung": "Croatia                                SP       Spain",
-       "generationen": null
+       "beschreibung": "Kroatien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "HU",
-       "beschreibung": "Hungary                                SR       Serbia",
-       "generationen": null
+       "beschreibung": "Ungarn",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "IR",
-       "beschreibung": "Iran                                   SU       Finland (Suomi)",
-       "generationen": null
+       "beschreibung": "Iran",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "IT",
-       "beschreibung": "Italy                                  TH       Thailand",
-       "generationen": null
+       "beschreibung": "Italien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "LA",
-       "beschreibung": "Latino-America                         TR       Turkey",
-       "generationen": null
+       "beschreibung": "Lateinamerika",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "LT",
-       "beschreibung": "Lithuania                              UK       United Kingdom",
-       "generationen": null
+       "beschreibung": "Litauen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "MK",
-       "beschreibung": "Macedonia                              US       USA*",
-       "generationen": null
+       "beschreibung": "Mazedonien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "MX",
-       "beschreibung": "Mexico                                 ZH       China",
-       "generationen": null
+       "beschreibung": "Mexiko",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "NL",
-       "beschreibung": "Netherlands",
-       "generationen": null
+       "beschreibung": "Niederlande",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "NO",
-       "beschreibung": "Norway",
-       "generationen": null
+       "beschreibung": "Norwegen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "PL",
+       "beschreibung": "Polen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "PT",
+       "beschreibung": "Portugal",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "RO",
+       "beschreibung": "Rumänien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "RU",
+       "beschreibung": "Russland",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SA",
+       "beschreibung": "Südafrika",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SE",
+       "beschreibung": "Schweden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SF",
+       "beschreibung": "Schweiz, Französisch",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SG",
+       "beschreibung": "Schweiz, Deutsch",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SL",
+       "beschreibung": "Slowenien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SP",
+       "beschreibung": "Spanien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SR",
+       "beschreibung": "Serbien",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SU",
+       "beschreibung": "Finnland",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "TH",
+       "beschreibung": "Thailand",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "TR",
+       "beschreibung": "Türkei",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "UK",
+       "beschreibung": "Vereinigtes Königreich",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "US",
+       "beschreibung": "USA, Maßeinheit Zoll",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ZH",
+       "beschreibung": "China",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Je Etikett höchstens einmal. Ändert regionale Darstellung, Währung und Maßeinheit, nicht die Displaysprache. US wählt Zoll; r stellt die Setup-Region wieder her."
   },
   {
    "id": "JS-3.9",
@@ -3566,23 +3984,35 @@
      "name": "unit",
      "schreibweise": "unit",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Maßeinheit der nachfolgenden Etikettdaten.",
      "werte": [
       {
        "wert": "m",
-       "beschreibung": "Metric (millimeters)",
-       "generationen": null
+       "beschreibung": "Millimeter",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "i",
-       "beschreibung": "For historical (Inches, tenths and hundredths of an inch)",
-       "generationen": null
+       "beschreibung": "Zoll einschließlich Zehntel/Hundertstel",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "standard": "mm oder Zoll nach Setup-Region"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Gilt für die folgenden Etikettdaten; innerhalb eines Etiketts darf die Einheit laut S. 53 nicht wechseln. Setup-Standard ist mm, außer bei US-Region (Zoll). Intern rechnet der Drucker in mm."
   },
   {
    "id": "JS-3.10",
@@ -3609,23 +4039,34 @@
      "name": "parameter",
      "schreibweise": "parameter",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Gewünschter Pausenzustand.",
      "werte": [
       {
        "wert": "0",
-       "beschreibung": "Pause off",
-       "generationen": null
+       "beschreibung": "Pause aus",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "1",
-       "beschreibung": "Pause on",
-       "generationen": null
+       "beschreibung": "Pause an",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Aktivieren der Pause stoppt erst nach dem laufenden Etikett."
   },
   {
    "id": "JS-3.11",
@@ -19229,6 +19670,6 @@
  "statistik": {
   "eintraege": 237,
   "parameter": 900,
-  "werte": 1030
+  "werte": 1054
  }
 }

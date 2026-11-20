@@ -10,6 +10,13 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 ## Tatsächlich geprüfte Abschnitte
 
 - JS-1.3, Seite 8: allgemeine Syntaxregeln abgeglichen.
+- JS-3.1 bis JS-3.3, Seiten 39–46: Dump, Direktschnitt und drei
+  Downloadvarianten abgeglichen; Formatgenerationen, Dateiname, Helligkeit und
+  ASC-Regeln ergänzt. Widersprüche bei Methodenanzahl, Objektgrenze und
+  ESC-Auswertung sind als Hinweise dokumentiert.
+- JS-3.4 bis JS-3.10, Seiten 47–54: tatsächliche Löschtypen anstelle von
+  Überschriftenwerten eingetragen und die zweite Tabellenspalte der Ländercodes
+  ergänzt. Pausen-, Einheiten- und Auftragskennungsregeln abgeglichen.
 - JS-2.1 bis JS-2.10, Seiten 11–20: ESC-Syntax, Generationen, Binärdaten und
   Antwortfelder abgeglichen; fehlende Syntax von ESCc sowie Antwortstufen von
   ESC? ergänzt. Antwortfelder sind ausdrücklich keine Eingabeparameter.
@@ -51,7 +58,7 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 204 Einträge sind fachlich ungeprüft;
+Extraktionsfehler zu korrigieren. Noch 194 Einträge sind fachlich ungeprüft;
 die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
 Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
 Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation
