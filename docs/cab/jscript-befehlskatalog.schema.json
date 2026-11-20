@@ -347,6 +347,12 @@
               }
             }
           }
+        },
+        "speicherarten": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/wert"
+          }
         }
       },
       "required": [

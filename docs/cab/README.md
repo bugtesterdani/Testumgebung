@@ -46,8 +46,8 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
   `start` bleibt in der Syntax und im Hinweis erhalten. Standardwerte für
   Schrittweite und Wiederholungszahl sind jeweils 1.
 - JS-4.5.4, Seiten 179–181: RFID-Parameter für X2/X4 getrennt beschrieben,
-  Werte, Generationen, Bereiche und Standardwerte ergänzt. Ax/X3 bleiben
-  ausdrücklich unbelegt. Widersprüche bei `P:pos` und beim Trennzeichen vor
+  Werte, Generationen, Bereiche und Standardwerte ergänzt. Die E-Übersicht
+  auf Seite 174 schließt Ax/X3 ausdrücklich aus. Widersprüche bei `P:pos` und beim Trennzeichen vor
   `E:power` stehen im Kataloghinweis.
 - JS-4.9, Seiten 199–201: mehrzeilige GOODBAD-/EXTERN-Parameter rekonstruiert,
   Feldname und Bildname sowie Prüfpositionsparameter und Autoload getrennt;
@@ -81,6 +81,34 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 - JS-4.2.42 bis JS-4.2.45, Seiten 161–169: beide rMQR-Versionstabellen mit
   64 Kapazitätszeilen visuell abgeglichen; UPC-Eingabelängen, Schreibweisen und
   Nullunterdrückung ergänzt. Fragliche rMQR-Kapazität der Version 13/M vermerkt.
+- JS-4.1 und JS-4.2, Seiten 72–80: Mengen-/Vorschausteuerung und allgemeine
+  Barcodeparameter abgeglichen. Zerlegte Prüfoptionen zusammengeführt,
+  besondere Barcodefunktionen und benannte Steuerzeichen ergänzt.
+- JS-4.3 bis JS-4.5, Seiten 170–174: Schnittmodi und -grenzen, globale
+  Versätze und Erweiterungsauswahl abgeglichen. RFID-Generationen durch die
+  übergeordnete E-Tabelle geklärt.
+- JS-4.5.1–3, JS-4.5.5–7 und JS-4.6, Seiten 175–178/182–186: weitere
+  Erweiterungen und Schriftaliasse abgeglichen. Kopierte/falsch benannte
+  OPC-UA-Felder, doppelte SQLite-Endung und abweichende Downloadbezeichnung
+  geklärt beziehungsweise als Handbuchwiderspruch vermerkt.
+- JS-4.7 und JS-4.7.1–3, Seiten 187–195: alle Grafik- und Fülloptionen
+  ergänzt. Unbeschriebene vierte Kreiszahl, gebrochene Beispieldrehungen und
+  die Abweichung Linienstärken/Eckenradien zum Arbeitsauftrag dokumentiert.
+- JS-4.8 und JS-4.10–4.11.7, Seiten 196–198/202–211: Druckkopf-/Farbband-
+  Optionen, Auftragsstart und alle Speicherbefehle abgeglichen; fehlende
+  Medientabelle, Ladeformate und Aufzeichnungsabschluss ergänzt.
+- JS-4.13 bis JS-4.15, Seiten 218–223: Spenden, gepufferter Feldersatz und
+  alle Etikettensensoren abgeglichen. Mehrkopfbedingungen und den Widerspruch
+  der O-Reihenfolge zwischen Vorgabe und Beispielen dokumentiert.
+- JS-4.16, Seiten 224–232: Fonts, Größenvarianten und alle Effekte
+  abgeglichen; Basislinie und vertikale Zeichenanordnung anhand der Bilder
+  geprüft. Unklare Generationen und widersprüchliches OCR-Beispiel vermerkt.
+- JS-4.17–4.18, Seiten 233–240: Rich-Text-Größen, HTML-Tags und in Beispielen
+  verwendete Attribute ergänzt; mehrzeilige Inhalte, Wrapper-/Einheitenkonflikt
+  und getrennte AND-/OR-Masken des Positionssignals dokumentiert.
+- JS-5.108 und JS-6.1–4, Seiten 358–362: User-Speichergrenze, Kommentare,
+  abc und verschlüsselte Rahmen abgeglichen. Mainboardnummer vom falschen
+  Extraktionsnamen key getrennt und unbekannte Payload-Grenze vermerkt.
 - JS-4.12, Seiten 212–217: Druckoptionen und Generationen abgeglichen,
   Syntax-Artefakte entfernt, Abreißversatz und optionale X4-Pufferzahl ergänzt;
   Reihenfolge, Hardwarevoraussetzungen und modellspezifische Angaben vermerkt.
@@ -93,7 +121,7 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 142 Einträge sind fachlich ungeprüft;
+Extraktionsfehler zu korrigieren. Noch 105 Einträge sind fachlich ungeprüft;
 die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
 Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
 Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation

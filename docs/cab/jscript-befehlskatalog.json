@@ -4871,18 +4871,19 @@
    },
    "verweis": null,
    "syntax": [
-    "A param[CR]"
+    "A param[CR]",
+    "A[CR]"
    ],
    "parameter": [
     {
      "name": "param",
      "schreibweise": "param",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Druckmenge, Steueroption oder zuvor definierte Variable; ohne Wert unbeschränkter Druck.",
      "werte": [
       {
        "wert": "[NO]",
-       "beschreibung": "Receives and processes the label, but suppresses a",
+       "beschreibung": "Etikett verarbeiten, aber nicht drucken",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4892,12 +4893,17 @@
       },
       {
        "wert": "[NOPRINT]",
-       "beschreibung": "printout (used for saving a label on memory card)",
-       "generationen": null
+       "beschreibung": "Alias für NO",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "[?]",
-       "beschreibung": "Printer prompts on its display for the quantity or is also",
+       "beschreibung": "Menge am Display abfragen/extern ersetzen",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4907,7 +4913,7 @@
       },
       {
        "wert": "[R]",
-       "beschreibung": "Repeats the label at the end (makes only sense together",
+       "beschreibung": "Mengenabfrage nach Ende wiederholen; zusammen mit ?",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4917,12 +4923,27 @@
       },
       {
        "wert": "[REPEAT]",
-       "beschreibung": "with the [?] option)",
-       "generationen": null
+       "beschreibung": "Alias für R",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "[?,R]",
+       "beschreibung": "Kombinierte wiederholte Mengenabfrage aus Beispiel",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "[$DBF]",
-       "beschreibung": "Prints each record of a DBF database.",
+       "beschreibung": "Ein Etikett je DBF-Datensatz",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4932,7 +4953,7 @@
       },
       {
        "wert": "[<VAR>]",
-       "beschreibung": "The amount of labels is a variable which has been",
+       "beschreibung": "Wert einer vorher erzeugten Etikettvariable als Menge",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -4941,8 +4962,8 @@
        }
       },
       {
-       "wert": "[x] [PREVIEW[:y]]",
-       "beschreibung": "Generates a label without printing.",
+       "wert": "[PREVIEW[:y]]",
+       "beschreibung": "Vorschau statt Druck; optionale Gesamtmenge x davor",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -4952,12 +4973,17 @@
       },
       {
        "wert": "[SAVE]",
-       "beschreibung": "The label can be viewed in the web browser as preview",
-       "generationen": null
+       "beschreibung": "Vorschau nach Freigabe als PNG auf Standardspeicher speichern",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<num>",
-       "beschreibung": "Any numeric value = number of labels to print",
+       "beschreibung": "Numerische Etikettenmenge",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -4965,11 +4991,70 @@
         "X4": "y"
        }
       }
-     ]
+     ],
+     "standard": "unbegrenzt, wenn ausgelassen"
+    },
+    {
+     "name": "num",
+     "schreibweise": "<num>",
+     "quelle": "tabelle",
+     "beschreibung": "Numerische Etikettenmenge; kein expliziter Bereich angegeben.",
+     "werte": []
+    },
+    {
+     "name": "VAR",
+     "schreibweise": "[<VAR>]",
+     "quelle": "tabelle",
+     "beschreibung": "Name einer zuvor im Etikett erzeugten Mengenvariable.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "preview_count",
+     "schreibweise": "x",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Anzahl zu erzeugender Vorschauetiketten vor PREVIEW.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "preview_index",
+     "schreibweise": "y",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Vorschauindex zusammen mit Gesamtmenge x, oder ALL für alle.",
+     "werte": [
+      {
+       "wert": "ALL",
+       "beschreibung": "Alle Vorschauetiketten",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Beendet die Definition und legt die Druckmenge fest; das Etikett bleibt im Puffer und weitere A-Befehle können es erneut drucken. Ohne Wert wird bis zum Abbruch gedruckt. PREVIEW unterdrückt Druck, SAVE schreibt nach Freigabe PNG auf den Standardspeicher mit Job-ID als Dateiname. Eckige Klammern in Steueroptionen sind echte JScript-Zeichen; das x vor PREVIEW ist laut Beispielen eine optionale Zahl ohne wörtliche Klammern."
   },
   {
    "id": "JS-4.2",
@@ -4981,7 +5066,12 @@
     76,
     80
    ],
-   "generationen": null,
+   "generationen": {
+    "Ax": "y",
+    "X2": "y",
+    "X3": "y",
+    "X4": "y"
+   },
    "verweis": null,
    "syntax": [
     "B[:name;]x,y,r,type[+options],size,{fx};text{special functions}[CR]"
@@ -4991,141 +5081,173 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Optional field name.",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, nur Buchstaben/Ziffern, Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X coordinate",
+     "beschreibung": "Horizontale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y coordinate",
+     "beschreibung": "Vertikale Position in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation.",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "Barcode type",
+     "beschreibung": "Schreibweise der Symbologie; große/kleine Variante steuert Klarschrift nach gemeinsamer B-Regel.",
      "werte": []
     },
     {
      "name": "options",
      "schreibweise": "[+options]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameters",
+     "beschreibung": "Optionale Einstellungen der Symbologie.",
      "werte": [
       {
        "wert": "+MOD10",
-       "beschreibung": "Adds a modulo 10 check digit to a barcode",
+       "beschreibung": "Modulo-10-Prüfziffer",
        "generationen": null
       },
       {
        "wert": "+MOD11",
-       "beschreibung": "Adds a modulo 11 check digit to a barcode",
+       "beschreibung": "Modulo-11-Prüfziffer",
        "generationen": null
       },
       {
        "wert": "+MOD16",
-       "beschreibung": "Adds a modulo 16 check digit to a barcode",
+       "beschreibung": "Modulo-16-Prüfziffer",
        "generationen": null
       },
       {
        "wert": "+MOD36",
-       "beschreibung": "Adds a modulo 36 check digit to a barcode",
+       "beschreibung": "Modulo-36-Prüfziffer",
        "generationen": null
       },
       {
        "wert": "+MOD43",
-       "beschreibung": "Adds a modulo 43 check digit to a barcode",
+       "beschreibung": "Modulo-43-Prüfziffer",
        "generationen": null
       },
       {
        "wert": "+WSn",
-       "beschreibung": "White Space area",
+       "beschreibung": "Ruhezonenmarkierung, n darf 0 sein",
        "generationen": null
       },
       {
        "wert": "+BARS",
-       "beschreibung": "Prints boundary lines above and below the barcode",
+       "beschreibung": "Begrenzung oben und unten",
        "generationen": null
       },
       {
        "wert": "+UPBAR",
-       "beschreibung": "Prints a boundary line above the barcode",
+       "beschreibung": "Begrenzung oben",
        "generationen": null
       },
       {
        "wert": "+DOWNBAR",
-       "beschreibung": "Prints a boundary line below the barcode",
+       "beschreibung": "Begrenzung unten",
        "generationen": null
       },
       {
        "wert": "+XHRI",
-       "beschreibung": "Extended Human Readable Interpretation",
+       "beschreibung": "Erweiterte Klarschrift, abhängig vom Barcodetyp",
        "generationen": null
       },
       {
        "wert": "+NOCHECK",
-       "beschreibung": "Suppresses the check digit calculation for variable weight barcodes",
+       "beschreibung": "Prüfziffer unterdrücken bei EAN13/UPCA mit Anfang 20…29",
        "generationen": null
       },
       {
        "wert": "+ELx",
-       "beschreibung": "Error Level",
+       "beschreibung": "Fehlerkorrekturlevel je Symbologie",
        "generationen": null
       },
       {
        "wert": "+RECT",
-       "beschreibung": "Barcode type DataMatrix can be printed as a rectangle or as a",
+       "beschreibung": "DataMatrix als Rechteck statt standardmäßigem Quadrat",
        "generationen": null
       },
       {
-       "wert": "+GOODBADa",
-       "beschreibung": "Needs a specific barcode verifier which is available as an option to",
+       "wert": "+GOODBADa[:b[:c]]",
+       "beschreibung": "Lesbarkeit prüfen",
        "generationen": null
       },
       {
-       "wert": "[:b[:c]]",
-       "beschreibung": "verify the barcode data.",
+       "wert": "+VERIFYa[:b[:c]]",
+       "beschreibung": "Lesbarkeit und Daten inklusive berechneter Prüfziffer vergleichen",
        "generationen": null
       },
       {
-       "wert": "+VERIFYa",
-       "beschreibung": "Same as +GOODBAD but also checking the content by doing a string",
-       "generationen": null
-      },
-      {
-       "wert": "[:b[:c]]",
-       "beschreibung": "comparison with the data received by the printer plus the calculated",
-       "generationen": null
-      },
-      {
-       "wert": "+EXTERNa",
-       "beschreibung": "The printing process behaves like a barcode label with the",
-       "generationen": null
-      },
-      {
-       "wert": "[:b[:c]]",
-       "beschreibung": "+GOODBAD option.",
+       "wert": "+EXTERNa[:b[:c]]",
+       "beschreibung": "Prüfung durch externes Gerät, zusammen mit ESCv",
        "generationen": null
       },
       {
        "wert": "+CCn",
-       "beschreibung": "Defines the height of a composite line, in module width.",
+       "beschreibung": "Höhe der Composite-Zeile in Modulbreiten",
        "generationen": null
       }
      ]
@@ -5134,38 +5256,89 @@
      "name": "size",
      "schreibweise": "size",
      "quelle": "tabelle",
-     "beschreibung": "Barcode height, width, ratio",
-     "werte": []
+     "beschreibung": "Symbologieabhängige Größe: Höhe/Elementbreite/Verhältnis oder SCx für EAN/JAN/UPC.",
+     "werte": [
+      {
+       "wert": "SC0",
+       "beschreibung": "Standardgröße 0; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC1",
+       "beschreibung": "Standardgröße 1; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC2",
+       "beschreibung": "Standardgröße 2; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC3",
+       "beschreibung": "Standardgröße 3; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC4",
+       "beschreibung": "Standardgröße 4; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC5",
+       "beschreibung": "Standardgröße 5; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC6",
+       "beschreibung": "Standardgröße 6; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC7",
+       "beschreibung": "Standardgröße 7; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC8",
+       "beschreibung": "Standardgröße 8; druckauflösungsabhängig",
+       "generationen": null
+      },
+      {
+       "wert": "SC9",
+       "beschreibung": "Standardgröße 9; druckauflösungsabhängig",
+       "generationen": null
+      }
+     ]
     },
     {
      "name": "fx",
      "schreibweise": "{fx}",
      "quelle": "tabelle",
-     "beschreibung": "Optional effects such as inverted barcode or inverted frames",
+     "beschreibung": "Optionale Invertierung und Rahmenerweiterungen.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "Barcode appears inverted and the human readable characters are",
+       "beschreibung": "Barcode und Klarschrift invertieren",
        "generationen": null
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts um n erweitern",
        "generationen": null
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links um n erweitern",
        "generationen": null
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben um n erweitern",
        "generationen": null
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten um n erweitern",
        "generationen": null
       }
      ]
@@ -5174,32 +5347,411 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Barcode data",
+     "beschreibung": "Symbologieabhängige Daten; GS1-AI-Klammern können als \\( und \\) kodiert werden.",
      "werte": []
     },
     {
-     "name": "special",
-     "schreibweise": "{special",
+     "name": "height",
+     "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Special functions or special non printable characters can be added.",
+     "beschreibung": "Barcodehöhe in der gewählten Maßeinheit; einschließlich Klarschrift, soweit aktiviert.",
      "werte": []
     },
     {
-     "name": "functions",
-     "schreibweise": "functions}",
+     "name": "ne",
+     "schreibweise": "ne",
      "quelle": "tabelle",
-     "beschreibung": "Depending on the barcode type",
+     "beschreibung": "Breite des schmalsten Elements in mm/Zoll; kleinstes Element ein Druckpunkt, kein halber Druckpunkt.",
+     "werte": []
+    },
+    {
+     "name": "ratio",
+     "schreibweise": "ratio",
+     "quelle": "tabelle",
+     "beschreibung": "Verhältnis breiter zu schmalen Balken, abhängig von der Symbologie.",
+     "werte": []
+    },
+    {
+     "name": "WS",
+     "schreibweise": "+WSn",
+     "quelle": "tabelle",
+     "beschreibung": "Größe der Ruhezonenmarkierung, darf 0 sein.",
+     "werte": []
+    },
+    {
+     "name": "EL",
+     "schreibweise": "+ELx",
+     "quelle": "tabelle",
+     "beschreibung": "Fehlerkorrekturlevel, gültige Werte abhängig von der Symbologie.",
+     "werte": []
+    },
+    {
+     "name": "CC",
+     "schreibweise": "+CCn",
+     "quelle": "tabelle",
+     "beschreibung": "Höhe der Composite-Zeile in Modulbreiten.",
+     "werte": [],
+     "bereich": "höchstens 99",
+     "standard": 2
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll; nur X4.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "VERIFY.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für VERIFY in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "VERIFY.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für VERIFY in mm/Zoll; nur X4.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "VERIFY.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für VERIFY in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll; nur X4.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Prüfzeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "special_functions",
+     "schreibweise": "{special functions}",
+     "quelle": "tabelle",
+     "beschreibung": "Besondere Barcodefunktionen und nicht druckbare Zeichen, abhängig vom Typ.",
      "werte": [
       {
+       "wert": "[ECE:...]",
+       "beschreibung": "Erweiterter Kanal; Schreibweise aus Tabelle S. 79, Bedeutung der Zahl dort nicht näher spezifiziert",
+       "generationen": null
+      },
+      {
+       "wert": "[APPEND:m,n,id1,id2]",
+       "beschreibung": "Verknüpfte Barcodes, erste dokumentierte Form",
+       "generationen": null
+      },
+      {
+       "wert": "[APPEND:x,id]",
+       "beschreibung": "Verknüpfte Barcodes, zweite dokumentierte Form",
+       "generationen": null
+      },
+      {
        "wert": "[U:xxxx]",
-       "beschreibung": "Insert special characters as Unicode characters",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen oder Unicode-Wert",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "U.xxxx",
+     "schreibweise": "[U:xxxx]",
+     "quelle": "tabelle",
+     "beschreibung": "Benannte Steuer-/Barcodezeichen, gültige Teilmenge abhängig vom Typ. Numerische Unicode-Formen siehe JS-5.103.",
+     "werte": [
+      {
+       "wert": "NUL",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen NUL",
+       "generationen": null
+      },
+      {
+       "wert": "SOH",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen SOH",
+       "generationen": null
+      },
+      {
+       "wert": "STX",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen STX",
+       "generationen": null
+      },
+      {
+       "wert": "ETX",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ETX",
+       "generationen": null
+      },
+      {
+       "wert": "EOT",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen EOT",
+       "generationen": null
+      },
+      {
+       "wert": "ENQ",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ENQ",
+       "generationen": null
+      },
+      {
+       "wert": "ACK",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ACK",
+       "generationen": null
+      },
+      {
+       "wert": "BEL",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen BEL",
+       "generationen": null
+      },
+      {
+       "wert": "BS",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen BS",
+       "generationen": null
+      },
+      {
+       "wert": "HT",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen HT",
+       "generationen": null
+      },
+      {
+       "wert": "LF",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen LF",
+       "generationen": null
+      },
+      {
+       "wert": "VT",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen VT",
+       "generationen": null
+      },
+      {
+       "wert": "FF",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen FF",
+       "generationen": null
+      },
+      {
+       "wert": "CR",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen CR",
+       "generationen": null
+      },
+      {
+       "wert": "SO",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen SO",
+       "generationen": null
+      },
+      {
+       "wert": "SI",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen SI",
+       "generationen": null
+      },
+      {
+       "wert": "DLE",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen DLE",
+       "generationen": null
+      },
+      {
+       "wert": "DC1",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen DC1",
+       "generationen": null
+      },
+      {
+       "wert": "DC2",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen DC2",
+       "generationen": null
+      },
+      {
+       "wert": "DC3",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen DC3",
+       "generationen": null
+      },
+      {
+       "wert": "DC4",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen DC4",
+       "generationen": null
+      },
+      {
+       "wert": "NAK",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen NAK",
+       "generationen": null
+      },
+      {
+       "wert": "SYN",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen SYN",
+       "generationen": null
+      },
+      {
+       "wert": "ETB",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ETB",
+       "generationen": null
+      },
+      {
+       "wert": "CAN",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen CAN",
+       "generationen": null
+      },
+      {
+       "wert": "EM",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen EM",
+       "generationen": null
+      },
+      {
+       "wert": "SUB",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen SUB",
+       "generationen": null
+      },
+      {
+       "wert": "ESC",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ESC",
+       "generationen": null
+      },
+      {
+       "wert": "FS",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen FS",
+       "generationen": null
+      },
+      {
+       "wert": "GS",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen GS",
+       "generationen": null
+      },
+      {
+       "wert": "RS",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen RS",
+       "generationen": null
+      },
+      {
+       "wert": "US",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen US",
+       "generationen": null
+      },
+      {
+       "wert": "DEL",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen DEL",
+       "generationen": null
+      },
+      {
+       "wert": "FNC1",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen FNC1",
+       "generationen": null
+      },
+      {
+       "wert": "FNC2",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen FNC2",
+       "generationen": null
+      },
+      {
+       "wert": "FNC3",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen FNC3",
+       "generationen": null
+      },
+      {
+       "wert": "FNC4",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen FNC4",
+       "generationen": null
+      },
+      {
+       "wert": "CODEA",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen CODEA",
+       "generationen": null
+      },
+      {
+       "wert": "CODEB",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen CODEB",
+       "generationen": null
+      },
+      {
+       "wert": "CODEC",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen CODEC",
+       "generationen": null
+      },
+      {
+       "wert": "ANSI_AI",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ANSI_AI",
+       "generationen": null
+      },
+      {
+       "wert": "ANSI_DI",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ANSI_DI",
+       "generationen": null
+      },
+      {
+       "wert": "PROG",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen PROG",
+       "generationen": null
+      },
+      {
+       "wert": "ANSI_TM",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen ANSI_TM",
+       "generationen": null
+      },
+      {
+       "wert": "2D",
+       "beschreibung": "Benanntes Steuer-/Barcodezeichen 2D",
        "generationen": null
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Allgemeine B-Struktur, konkrete Syntax/Optionen stehen bei der Symbologie. Generationsverfügbarkeit hängt vom gewählten Typ ab (JS-4.2.2). S. 76 nennt pauschal 100 Barcodes, S. 9 generationenspezifische Grenzen. Eckige Klammern ohne bekannte Inhaltsfeldfunktion bleiben Text. S. 79 druckt ECE, ohne weitere Parametertabelle; diese Schreibweise nicht stillschweigend in ECI ändern.",
+   "regeln": [
+    "Nur das letzte zur Verifikation markierte Barcodefeld eines Etiketts wird geprüft.",
+    "Wartepositionsversatz der Prüfung ist nur für X4 angegeben.",
+    "Invertierte Barcodes können nicht von jedem Leser gelesen werden.",
+    "Barcodes einschließlich Ruhezone, die nicht aufs Etikett passen, erscheinen als Rasterfläche. Fehlerverhalten hängt auch vom Drucker-Setup ab."
+   ]
   },
   {
    "id": "JS-4.2.1",
@@ -20641,11 +21193,11 @@
      "name": "param",
      "schreibweise": "param",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schnittmenge oder besonderer Schnittmodus.",
      "werte": [
       {
        "wert": "<num>",
-       "beschreibung": "Any numeric value = amount of labels after which a cut is",
+       "beschreibung": "Nach 1…9999 Etiketten schneiden",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -20655,9 +21207,9 @@
       },
       {
        "wert": "e",
-       "beschreibung": "Cutting at the job end.",
+       "beschreibung": "Einmal am Auftragsende nach A schneiden",
        "generationen": {
-        "Ax": "",
+        "Ax": "y",
         "X2": "y",
         "X3": "y",
         "X4": "y"
@@ -20665,7 +21217,7 @@
       },
       {
        "wert": "s",
-       "beschreibung": "Cut at print start (before the first label).",
+       "beschreibung": "Einmal vor dem ersten Etikett schneiden",
        "generationen": {
         "Ax": "n",
         "X2": "y",
@@ -20675,7 +21227,7 @@
       },
       {
        "wert": "p",
-       "beschreibung": "Perforate. Requires an optional perforation cutter",
+       "beschreibung": "Perforieren; Perforationsmesser erforderlich",
        "generationen": {
         "Ax": "n",
         "X2": "y",
@@ -20685,7 +21237,7 @@
       },
       {
        "wert": "sp",
-       "beschreibung": "Perforate at print start. Requires an optional perforation cutter.",
+       "beschreibung": "Vor dem ersten Etikett perforieren; Perforationsmesser erforderlich",
        "generationen": {
         "Ax": "n",
         "X2": "y",
@@ -20693,25 +21245,29 @@
         "X4": "y"
        }
       }
-     ]
+     ],
+     "bereich": "Numerische Menge 1…9999 oder einer der dokumentierten Moduswerte"
     },
     {
      "name": "disp1",
      "schreibweise": "disp1",
      "quelle": "tabelle",
-     "beschreibung": "Displacement 1 (optional)",
-     "werte": []
+     "beschreibung": "Optionaler Versatz vom Ende des definierten Etiketts in der gesetzten Einheit.",
+     "werte": [],
+     "bereich": "kleiner als Etikettenhöhe"
     },
     {
      "name": "disp2",
      "schreibweise": "disp2",
      "quelle": "tabelle",
-     "beschreibung": "Displacement 2 (optional)",
-     "werte": []
+     "beschreibung": "Optionaler Zweitschnittversatz relativ zur ersten Schnittposition; nicht für Perforation und nicht bei Startschnitt s.",
+     "werte": [],
+     "bereich": "positiv"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Optionales Messer/Perforationsmesser erforderlich. Nach S anordnen; Perforationstiefe über O. s/sp lassen sich mit einer normalen Schnittmenge kombinieren; disp2 nur bei normalen Schnitten und nicht mit s."
   },
   {
    "id": "JS-4.4",
@@ -20737,20 +21293,21 @@
     {
      "name": "x",
      "schreibweise": "x",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Horizontaler Ursprungversatz in der gesetzten Maßeinheit.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Vertikaler Ursprungversatz in der gesetzten Maßeinheit.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Kann im Etikett mehrfach vorkommen und wirkt auf jeweils nachfolgende Objektpositionen. Grenzen hängen von Druckkopfbreite und Etikettenlänge ab; kein allgemeiner Zahlenbereich angegeben."
   },
   {
    "id": "JS-4.5",
@@ -20777,11 +21334,11 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art der Erweiterung; weitere Parameter hängen von dieser Auswahl ab.",
      "werte": [
       {
        "wert": "DBF",
-       "beschreibung": "Define database file (.dbf)",
+       "beschreibung": "DBF-Datenbank für DBF-Inhaltsfelder",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -20791,7 +21348,7 @@
       },
       {
        "wert": "LOG",
-       "beschreibung": "Define file name for the .LOG file",
+       "beschreibung": "Dateiname für Protokolldatei",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -20801,7 +21358,7 @@
       },
       {
        "wert": "OPCUA",
-       "beschreibung": "Define parameters for OPC-UA connection",
+       "beschreibung": "OPC-UA-Verbindungsparameter",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -20811,7 +21368,7 @@
       },
       {
        "wert": "RFID",
-       "beschreibung": "Define parameters for RFID tags",
+       "beschreibung": "RFID-Tagparameter",
        "generationen": {
         "Ax": "n",
         "X2": "y",
@@ -20821,7 +21378,7 @@
       },
       {
        "wert": "SQL",
-       "beschreibung": "Define parameters for a Database Connector server",
+       "beschreibung": "Database-Connector-Server",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -20831,7 +21388,7 @@
       },
       {
        "wert": "SQLITE",
-       "beschreibung": "Defines the SQLite3 database file",
+       "beschreibung": "Lokale SQLite3-Datenbank ohne Server",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -20841,7 +21398,7 @@
       },
       {
        "wert": "TMP",
-       "beschreibung": "Defines the name of an external temporary file (TMP file).",
+       "beschreibung": "Externe TMP-Datei, etwa für Seriennummern",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -20855,18 +21412,18 @@
      "name": "params",
      "schreibweise": "params",
      "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Parameter der gewählten Erweiterung; siehe JS-4.5.1 bis JS-4.5.7.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true
   },
   {
    "id": "JS-4.5.1",
    "abschnitt": "4.5.1",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E DBF",
    "titel": "DBF",
    "seiten": [
     175,
@@ -20887,25 +21444,30 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
+     "beschreibung": "Dateiname auf dem Speichermedium ohne Erweiterung; Groß-/Kleinschreibung beachten.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus der E-Auswahl S. 174. 8.3-Dateinamen sind drucker-/dateisystemabhängig empfohlen, nicht als pauschale harte Acht-Zeichen-Grenze festgelegt. Datei muss im Speicher vorhanden sein; dBASE III unterstützt hier kein Unicode und eignet sich laut Handbuch vor allem für kleinere Datenbanken.",
+   "regeln": [
+    "Unterstützte DBF-Felder: Text, Zahl bis 18 Zeichen, Datum YYYYMMDD und Gleitkommazahl bis 20 Zeichen.",
+    "Memo-Felder sind nicht erlaubt."
+   ]
   },
   {
    "id": "JS-4.5.2",
    "abschnitt": "4.5.2",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E LOG",
    "titel": "LOG",
    "seiten": [
     176,
@@ -20926,86 +21488,92 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
-     "werte": []
-    },
-    {
-     "name": "C",
-     "schreibweise": "C",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Dateiname auf dem Speichermedium ohne Erweiterung; Groß-/Kleinschreibung beachten.",
      "werte": []
     },
     {
      "name": "cp",
-     "schreibweise": "cp",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "[,C:cp]",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Codepage-Name wie im Drucker-Setup; ohne Angabe wird die Codepage der Schnittstelle verwendet.",
+     "werte": [],
+     "standard": "Codepage der Schnittstelle"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus der E-Auswahl S. 174. 8.3-Dateinamen sind drucker-/dateisystemabhängig empfohlen, nicht als pauschale harte Acht-Zeichen-Grenze festgelegt. Für WLOG-Inhaltsfelder. Häufiges Schreiben auf iffs wird wegen Flash-Schreibzyklen ausdrücklich nicht empfohlen. C: ist ein Parameterschlüssel, kein zusätzliches freies Argument C."
   },
   {
    "id": "JS-4.5.3",
    "abschnitt": "4.5.3",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E OPCUA",
    "titel": "OPCUA",
    "seiten": [
     178,
     178
    ],
    "generationen": {
-    "Ax": "y",
-    "X2": "y",
-    "X3": "y",
+    "Ax": "n",
+    "X2": "n",
+    "X3": "n",
     "X4": "y"
    },
    "verweis": null,
    "syntax": [
-    "E OPCUA;opc.tcp://username:password@host:port[CR]"
+    "E OPCUA;opc.tcp://username:password@host:port[CR]",
+    "E OPCUA-0;opc.tcp://username:password@host:port[CR]"
    ],
    "parameter": [
     {
-     "name": "host",
-     "schreibweise": "host",
-     "quelle": "tabelle",
-     "beschreibung": "Address of OPC-UA server",
-     "werte": []
-    },
-    {
      "name": "username",
      "schreibweise": "username",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Benutzername entsprechend Drucker-Setup; dokumentierter Standard ist opcuser.",
+     "werte": [],
+     "standard": "opcuser"
     },
     {
      "name": "password",
      "schreibweise": "password",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Passwort entsprechend Drucker-Setup; dokumentierter Standard ist opcpass.",
+     "werte": [],
+     "standard": "opcpass"
+    },
+    {
+     "name": "host",
+     "schreibweise": "host",
+     "quelle": "tabelle",
+     "beschreibung": "Adresse des OPC-UA-Servers.",
      "werte": []
     },
     {
      "name": "port",
      "schreibweise": "port",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Port des OPC-UA-Servers; in der gedruckten Tabelle irrtümlich erneut username genannt.",
+     "werte": []
+    },
+    {
+     "name": "path",
+     "schreibweise": "[path]",
+     "quelle": "tabelle",
+     "beschreibung": "Nur in der Tabelle aufgeführt, nicht in der opc.tcp-Syntax; keine zusätzliche URI-Position daraus ableiten.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus der E-Auswahl S. 174. Tabelle enthält den unpassenden kopierten path-Eintrag und nennt den Port nochmals username. Beispiel verwendet E OPCUA-0 statt E OPCUA; nur diese dokumentierte Indexvariante ergänzt, ohne ungenannten Indexbereich zu erfinden. Der Beispielport 4840 ist nicht ausdrücklich als Standardwert genannt."
   },
   {
    "id": "JS-4.5.4",
@@ -21018,9 +21586,9 @@
     181
    ],
    "generationen": {
-    "Ax": "",
+    "Ax": "n",
     "X2": "y",
-    "X3": "",
+    "X3": "n",
     "X4": "y"
    },
    "verweis": null,
@@ -21039,9 +21607,9 @@
        "wert": "Auto",
        "beschreibung": "Automatische Erkennung",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "y",
-        "X3": "",
+        "X3": "n",
         "X4": "y"
        }
       },
@@ -21049,9 +21617,9 @@
        "wert": "ISO 15693",
        "beschreibung": "ISO-15693-Tag mit 32-Bit-Blöcken",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "y",
-        "X3": "",
+        "X3": "n",
         "X4": "n"
        }
       },
@@ -21059,17 +21627,17 @@
        "wert": "EPCGen2",
        "beschreibung": "EPC-Tag",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "n",
-        "X3": "",
+        "X3": "n",
         "X4": "y"
        }
       }
      ],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "y",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "standard": "Auto"
@@ -21081,9 +21649,9 @@
      "beschreibung": "Wiederholungsversuche bei Lese-/Schreibfehlern.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "y",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": "0…10",
@@ -21102,17 +21670,17 @@
        "wert": "Auto",
        "beschreibung": "Codepage aus dem Setup (X2)",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "y",
-        "X3": "",
+        "X3": "n",
         "X4": "n"
        }
       }
      ],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "y",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "standard": "Drucker-Setup"
@@ -21124,9 +21692,9 @@
      "beschreibung": "Lese-/Schreibposition: X2 relativ zum Druckkopf; X4 relativ zur Etikettenvorderkante, in mm.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "y",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": {
@@ -21148,9 +21716,9 @@
        "wert": "S",
        "beschreibung": "Normale Feldstärke (X2)",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "y",
-        "X3": "",
+        "X3": "n",
         "X4": "n"
        }
       },
@@ -21158,17 +21726,17 @@
        "wert": "H",
        "beschreibung": "Hohe Feldstärke (X2)",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "y",
-        "X3": "",
+        "X3": "n",
         "X4": "n"
        }
       }
      ],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "y",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": {
@@ -21183,9 +21751,9 @@
      "beschreibung": "Schreibfeldstärke in dBm.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": "-2…17",
@@ -21198,9 +21766,9 @@
      "beschreibung": "Zeit ohne HF-Leistung nach dem Schreiben vor der Prüfung, in ms.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": "10…10000",
@@ -21213,9 +21781,9 @@
      "beschreibung": "Nach dem Schreiben validieren.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "standard": false
@@ -21227,9 +21795,9 @@
      "beschreibung": "Netto-EPC-Speichergröße in Bytes ohne PC-/CRC-Wörter; für JAIF-Padding. Positive gerade Zahl oder 0 für unbekannt.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": "0 oder positive gerade Ganzzahl",
@@ -21242,9 +21810,9 @@
      "beschreibung": "RFID-Vordruck bei Vorwärtsbewegungen; bei optimiertem Rücktransport automatisch aktiv.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "standard": false
@@ -21256,9 +21824,9 @@
      "beschreibung": "Bekannte TID-Länge in Bytes; 0 bedeutet unbekannt.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": "0 oder positive Ganzzahl",
@@ -21271,9 +21839,9 @@
      "beschreibung": "HF-Leistung des RFID-Lesers dauerhaft eingeschaltet lassen.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      }
     },
@@ -21287,9 +21855,9 @@
        "wert": "A",
        "beschreibung": "Antenne am Druckkopf",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "n",
-        "X3": "",
+        "X3": "n",
         "X4": "y"
        }
       },
@@ -21297,17 +21865,17 @@
        "wert": "V",
        "beschreibung": "Antenne im Transportmodul",
        "generationen": {
-        "Ax": "",
+        "Ax": "n",
         "X2": "n",
-        "X3": "",
+        "X3": "n",
         "X4": "y"
        }
       }
      ],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "standard": "Drucker-Setup"
@@ -21319,9 +21887,9 @@
      "beschreibung": "Zugriffspasswort: genau vier Bytes, als 0x gefolgt von acht Hexziffern oder vier ISO-Latin1-Bytes.",
      "werte": [],
      "generationen": {
-      "Ax": "",
+      "Ax": "n",
       "X2": "n",
-      "X3": "",
+      "X3": "n",
       "X4": "y"
      },
      "bereich": "genau 4 Bytes"
@@ -21329,13 +21897,13 @@
    ],
    "barcode_eigenschaften": null,
    "geprueft": true,
-   "hinweis": "S. 179–181 unterscheiden nur X2 und X4; Ax und X3 sind dort nicht belegt. Erste Syntax: X2; zweite Syntax: X4. Die Syntax druckt vor E:power kein Komma, das Beispiel verwendet eines. P:pos ist eine Position, P ohne Doppelpunkt die X4-Vordruckoption. Das X4-Beispiel mit P:-10 widerspricht dem Tabellenbereich 0…80 mm; die Tabelle bleibt maßgeblich. Keine stillschweigende Ausweitung des Bereichs."
+   "hinweis": "Generation aus der E-Übersicht S. 174: nur X2 und X4, nicht Ax/X3. Erste Syntax: X2; zweite Syntax: X4. Die Syntax druckt vor E:power kein Komma, das Beispiel verwendet eines. P:pos ist eine Position, P ohne Doppelpunkt die X4-Vordruckoption. Das X4-Beispiel mit P:-10 widerspricht dem Tabellenbereich 0…80 mm; die Tabelle bleibt maßgeblich. Keine stillschweigende Ausweitung des Bereichs."
   },
   {
    "id": "JS-4.5.5",
    "abschnitt": "4.5.5",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E SQL",
    "titel": "SQL",
    "seiten": [
     182,
@@ -21356,33 +21924,34 @@
      "name": "ip",
      "schreibweise": "ip",
      "quelle": "tabelle",
-     "beschreibung": "IP address of the external database server",
+     "beschreibung": "IP-Adresse des externen Database-Connector-Servers.",
      "werte": []
     },
     {
      "name": "port",
      "schreibweise": "port",
      "quelle": "tabelle",
-     "beschreibung": "Port of the external database server",
+     "beschreibung": "Port des externen Database-Connector-Servers.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus der E-Auswahl S. 174. Netzwerkanschluss erforderlich. Der Beispielport ist kein ausdrücklich festgelegter Standardwert."
   },
   {
    "id": "JS-4.5.6",
    "abschnitt": "4.5.6",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E SQLITE",
    "titel": "SQLITE",
    "seiten": [
     183,
     184
    ],
    "generationen": {
-    "Ax": "y",
-    "X2": "y",
+    "Ax": "n",
+    "X2": "n",
     "X3": "y",
     "X4": "y"
    },
@@ -21395,39 +21964,34 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
-     "werte": []
-    },
-    {
-     "name": ".ext",
-     "schreibweise": "[.ext]",
-     "quelle": "tabelle",
-     "beschreibung": "Optional file extension",
+     "beschreibung": "Dateiname auf dem Speichermedium ohne Erweiterung; Groß-/Kleinschreibung beachten.",
      "werte": []
     },
     {
      "name": "ext",
-     "schreibweise": "ext",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "[.ext]",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Dateierweiterung; ohne Angabe wird sqlite ergänzt.",
+     "werte": [],
+     "standard": "sqlite"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus der E-Auswahl S. 174. Lokale SQLite-Datenbank unterstützt Unicode und wird mit SQL-Inhaltsfeldern abgefragt. Der Text nennt SQLITE als Downloadtyp; die tatsächliche Download-Werteliste JS-3.3 nennt SQLITE3 und db. Diesen Widerspruch nicht durch einen erfundenen zusätzlichen Downloadtyp kaschieren. SQL-Abfragen bleiben trotz Umbrüchen im Handbuch eine Zeile."
   },
   {
    "id": "JS-4.5.7",
    "abschnitt": "4.5.7",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E TMP",
    "titel": "TMP",
    "seiten": [
     185,
@@ -21448,19 +22012,20 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
+     "beschreibung": "Dateiname auf dem Speichermedium ohne Erweiterung; Groß-/Kleinschreibung beachten.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Generation aus der E-Auswahl S. 174. 8.3-Dateinamen sind drucker-/dateisystemabhängig empfohlen, nicht als pauschale harte Acht-Zeichen-Grenze festgelegt. Für RTMP/WTMP etwa zur dauerhaften Zählerfortsetzung. Häufiges Schreiben auf iffs wird wegen Flash-Schreibzyklen ausdrücklich nicht empfohlen."
   },
   {
    "id": "JS-4.6",
@@ -21480,26 +22045,28 @@
    },
    "verweis": null,
    "syntax": [
-    "F number,name[CR]"
+    "F number,name[CR]",
+    "F number;name[CR]"
    ],
    "parameter": [
     {
      "name": "number",
      "schreibweise": "number",
      "quelle": "tabelle",
-     "beschreibung": "New font number",
+     "beschreibung": "Neue Nummer als Schriftalias; kein expliziter Nummernbereich angegeben.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "Font name which will be replaced by number",
+     "beschreibung": "Durch die Nummer zu ersetzender Schriftname; vorhandene Namen können neu zugeordnet werden.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Alias gilt für das gesamte Etikett. Bei TrueType wird ohne Neuzuordnung die Nummer aus der Schriftdatei verwendet. Syntaxbox zeigt Komma, Beispiele Semikolon (beide Trenner nach JS-1.3 zulässig). Der Text nennt theoretisch 100 Schriftdateien pro Etikett, JS-1.6 dagegen 128/256 Font-Objekte; keine ungesicherte Nummerngrenze 100 daraus ableiten."
   },
   {
    "id": "JS-4.7",
@@ -21526,50 +22093,72 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional), for further usage as a variable",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, nur Buchstaben/Ziffern; Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X (horizontal) coordinate of the start position in millimeters or inches",
+     "beschreibung": "Horizontale Position in mm/Zoll; Linie: Mitte des Startpunkts, Rechteck: äußere linke obere Ecke, Kreis/Ellipse: Mittelpunkt.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y (vertical) coordinate of the start position in millimeters or inches",
+     "beschreibung": "Vertikale Position in mm/Zoll; Bezugspunkt wie bei x.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation. Graphic elements can be rotated in steps of 1 degree from",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [],
+     "bereich": "0…359; Text nennt Ein-Grad-Schritte, Beispiele auch Bruchteile"
     },
     {
      "name": "ge",
      "schreibweise": "ge",
      "quelle": "tabelle",
-     "beschreibung": "Type of graphic element which shall be printed",
+     "beschreibung": "Art des Grafikelements.",
      "werte": [
       {
        "wert": "C",
-       "beschreibung": "Circle (ellipse is also defined with the circle command)",
-       "generationen": null
+       "beschreibung": "Kreis/Ellipse",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "L",
-       "beschreibung": "Line",
-       "generationen": null
+       "beschreibung": "Linie",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "R",
-       "beschreibung": "Rectangle",
-       "generationen": null
+       "beschreibung": "Rechteck",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -21577,51 +22166,182 @@
      "name": "settings",
      "schreibweise": "settings",
      "quelle": "tabelle",
-     "beschreibung": "Specific graphic element settings, depending on the type of graphic",
+     "beschreibung": "Typspezifische Maße; siehe JS-4.7.1 bis JS-4.7.3.",
      "werte": []
     },
     {
      "name": "options",
      "schreibweise": "[,options]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Optionale Grafikeffekte aus JS-4.7; D nur bei Linien.",
      "werte": [
       {
        "wert": "[D:line,gap]",
-       "beschreibung": "Allows you to create dashed and dotted lines.",
+       "beschreibung": "Strichelung/Punktierung, nur Linien",
        "generationen": null
       },
       {
        "wert": "[F:value]",
-       "beschreibung": "Filling of the graphic object with a specified pattern or with dot density",
+       "beschreibung": "Füllmuster oder Punktdichte",
        "generationen": null
       },
       {
        "wert": "[O]",
-       "beschreibung": "Outline option",
+       "beschreibung": "Ein-Punkt-Umriss; ungefärbte Objekte werden schwarz",
        "generationen": null
       },
       {
-       "wert": "[S:%1[,%2",
-       "beschreibung": "Shading option (gradient filling)",
+       "wert": "[S:%1]",
+       "beschreibung": "Schattierung mit Anfangsdichte",
        "generationen": null
       },
       {
-       "wert": "[,direction]]",
-       "beschreibung": "%1 = Darkness value at the beginning, as a percent of black",
+       "wert": "[S:%1,%2]",
+       "beschreibung": "Schattierung mit Anfangs-/Enddichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2,direction]",
+       "beschreibung": "Schattierung mit Dichten und Winkel",
        "generationen": null
       }
      ]
+    },
+    {
+     "name": "D.line",
+     "schreibweise": "line",
+     "quelle": "tabelle",
+     "beschreibung": "Länge eines Strichsegments; nur Linien.",
+     "werte": []
+    },
+    {
+     "name": "D.gap",
+     "schreibweise": "gap",
+     "quelle": "tabelle",
+     "beschreibung": "Lücke zwischen Strichsegmenten; nur Linien.",
+     "werte": []
+    },
+    {
+     "name": "F.value",
+     "schreibweise": "value",
+     "quelle": "tabelle",
+     "beschreibung": "Punktdichte oder vordefiniertes/geladenes Füllmuster.",
+     "werte": [
+      {
+       "wert": "0%",
+       "beschreibung": "Punktdichte 0 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "6%",
+       "beschreibung": "Punktdichte 6 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "12%",
+       "beschreibung": "Punktdichte 12 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "25%",
+       "beschreibung": "Punktdichte 25 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "38%",
+       "beschreibung": "Punktdichte 38 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "50%",
+       "beschreibung": "Punktdichte 50 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "100%",
+       "beschreibung": "Punktdichte 100 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "left",
+       "beschreibung": "Füllmuster left",
+       "generationen": null
+      },
+      {
+       "wert": "right",
+       "beschreibung": "Füllmuster right",
+       "generationen": null
+      },
+      {
+       "wert": "dots",
+       "beschreibung": "Füllmuster dots",
+       "generationen": null
+      },
+      {
+       "wert": "grid",
+       "beschreibung": "Füllmuster grid",
+       "generationen": null
+      },
+      {
+       "wert": "diamond",
+       "beschreibung": "Füllmuster diamond",
+       "generationen": null
+      },
+      {
+       "wert": "user1",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user1",
+       "generationen": null
+      },
+      {
+       "wert": "user2",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user2",
+       "generationen": null
+      },
+      {
+       "wert": "user3",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user3",
+       "generationen": null
+      },
+      {
+       "wert": "user4",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user4",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "S.start",
+     "schreibweise": "%1",
+     "quelle": "tabelle",
+     "beschreibung": "Anfangsdichte des Verlaufs in Prozent Schwarz.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.end",
+     "schreibweise": "%2",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Enddichte des Verlaufs in Prozent Schwarz; kein ausdrücklicher Standardwert.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.direction",
+     "schreibweise": "direction",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Schattierungswinkel; kein ausdrücklicher Standardwert.",
+     "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Gemeinsame Grafikparameter und Optionen aus S. 187–188. Typabhängiger Bezugspunkt und Maßeinheit beachten. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. S. 187 nennt pauschal 500 Grafiken, JS-1.6 abweichende X4-Grenze. Die mehrzeilige S-Optionsdarstellung ist durch die drei in Beispielen belegten Varianten ersetzt. Verlauf bei gestrichelten Linien wird pro Segment neu gezeichnet."
   },
   {
    "id": "JS-4.7.1",
    "abschnitt": "4.7.1",
    "art": "grafik",
-   "befehl": null,
+   "befehl": "G",
    "titel": "Circle (or ellipse)",
    "seiten": [
     189,
@@ -21642,67 +22362,212 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)  Graphic field name page 187",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, nur Buchstaben/Ziffern; Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X (horizontal) coordinate of the start position in millimeters or",
+     "beschreibung": "Horizontale Position in mm/Zoll; Linie: Mitte des Startpunkts, Rechteck: äußere linke obere Ecke, Kreis/Ellipse: Mittelpunkt.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y (vertical) coordinate of the start position in millimeters or inches",
+     "beschreibung": "Vertikale Position in mm/Zoll; Bezugspunkt wie bei x.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation.",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [],
+     "bereich": "0…359; Text nennt Ein-Grad-Schritte, Beispiele auch Bruchteile"
     },
     {
      "name": "radius1",
      "schreibweise": "radius1",
      "quelle": "tabelle",
-     "beschreibung": "Horizontal radius",
+     "beschreibung": "Horizontaler Radius in mm/Zoll.",
      "werte": []
     },
     {
      "name": "radius2",
      "schreibweise": "[,radius2]",
      "quelle": "tabelle",
-     "beschreibung": "Vertical radius",
+     "beschreibung": "Optionaler vertikaler Radius in mm/Zoll.",
      "werte": []
     },
     {
      "name": "width",
      "schreibweise": "[,width]",
      "quelle": "tabelle",
-     "beschreibung": "Width of the circle line in millimeters or inches",
+     "beschreibung": "Linienstärke in mm/Zoll; bei Kreis/Ellipse ohne width gefüllte Fläche.",
      "werte": []
     },
     {
      "name": "options",
      "schreibweise": "[,options]",
      "quelle": "tabelle",
-     "beschreibung": " Graphic options page 188",
+     "beschreibung": "Optionale Grafikeffekte aus JS-4.7; D nur bei Linien.",
+     "werte": [
+      {
+       "wert": "[F:value]",
+       "beschreibung": "Füllmuster oder Punktdichte",
+       "generationen": null
+      },
+      {
+       "wert": "[O]",
+       "beschreibung": "Ein-Punkt-Umriss; ungefärbte Objekte werden schwarz",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1]",
+       "beschreibung": "Schattierung mit Anfangsdichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2]",
+       "beschreibung": "Schattierung mit Anfangs-/Enddichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2,direction]",
+       "beschreibung": "Schattierung mit Dichten und Winkel",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "F.value",
+     "schreibweise": "value",
+     "quelle": "tabelle",
+     "beschreibung": "Punktdichte oder vordefiniertes/geladenes Füllmuster.",
+     "werte": [
+      {
+       "wert": "0%",
+       "beschreibung": "Punktdichte 0 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "6%",
+       "beschreibung": "Punktdichte 6 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "12%",
+       "beschreibung": "Punktdichte 12 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "25%",
+       "beschreibung": "Punktdichte 25 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "38%",
+       "beschreibung": "Punktdichte 38 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "50%",
+       "beschreibung": "Punktdichte 50 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "100%",
+       "beschreibung": "Punktdichte 100 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "left",
+       "beschreibung": "Füllmuster left",
+       "generationen": null
+      },
+      {
+       "wert": "right",
+       "beschreibung": "Füllmuster right",
+       "generationen": null
+      },
+      {
+       "wert": "dots",
+       "beschreibung": "Füllmuster dots",
+       "generationen": null
+      },
+      {
+       "wert": "grid",
+       "beschreibung": "Füllmuster grid",
+       "generationen": null
+      },
+      {
+       "wert": "diamond",
+       "beschreibung": "Füllmuster diamond",
+       "generationen": null
+      },
+      {
+       "wert": "user1",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user1",
+       "generationen": null
+      },
+      {
+       "wert": "user2",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user2",
+       "generationen": null
+      },
+      {
+       "wert": "user3",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user3",
+       "generationen": null
+      },
+      {
+       "wert": "user4",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user4",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "S.start",
+     "schreibweise": "%1",
+     "quelle": "tabelle",
+     "beschreibung": "Anfangsdichte des Verlaufs in Prozent Schwarz.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.end",
+     "schreibweise": "%2",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Enddichte des Verlaufs in Prozent Schwarz; kein ausdrücklicher Standardwert.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.direction",
+     "schreibweise": "direction",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Schattierungswinkel; kein ausdrücklicher Standardwert.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Gemeinsame Grafikparameter und Optionen aus S. 187–188. Typabhängiger Bezugspunkt und Maßeinheit beachten. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Beispiele S. 190 enthalten teilweise vier C-Zahlenwerte, die Syntax und Parametertabelle nur drei. Bedeutung des vierten Werts ist nicht angegeben; ihn als Rohtext erhalten und diagnostizieren, statt eine Funktion zu erfinden. Ohne width gefüllter Kreis/Ellipse."
   },
   {
    "id": "JS-4.7.2",
    "abschnitt": "4.7.2",
    "art": "grafik",
-   "befehl": null,
+   "befehl": "G",
    "titel": "Line",
    "seiten": [
     191,
@@ -21723,106 +22588,302 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)  Graphic field name page 187",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, nur Buchstaben/Ziffern; Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X (horizontal) coordinate of the start position in millimeters or",
+     "beschreibung": "Horizontale Position in mm/Zoll; Linie: Mitte des Startpunkts, Rechteck: äußere linke obere Ecke, Kreis/Ellipse: Mittelpunkt.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y (vertical) coordinate of the start position in millimeters or inches",
+     "beschreibung": "Vertikale Position in mm/Zoll; Bezugspunkt wie bei x.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation.",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [],
+     "bereich": "0…359; Text nennt Ein-Grad-Schritte, Beispiele auch Bruchteile"
     },
     {
      "name": "length",
      "schreibweise": "length",
      "quelle": "tabelle",
-     "beschreibung": "Length of the line in millimeters or inches",
+     "beschreibung": "Linienlänge in mm/Zoll.",
      "werte": []
     },
     {
      "name": "width",
      "schreibweise": "width",
      "quelle": "tabelle",
-     "beschreibung": "Width of the line in millimeters or inches",
+     "beschreibung": "Linienstärke in mm/Zoll; bei Kreis/Ellipse ohne width gefüllte Fläche.",
      "werte": []
     },
     {
      "name": "start",
      "schreibweise": "[,start]",
      "quelle": "tabelle",
-     "beschreibung": "Line start type (optional)",
+     "beschreibung": "Optionaler Linienanfang.",
      "werte": [
       {
        "wert": "s",
-       "beschreibung": "Squared",
-       "generationen": null
+       "beschreibung": "Eckig",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "r",
-       "beschreibung": "Rounded",
-       "generationen": null
+       "beschreibung": "Abgerundet",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "a",
-       "beschreibung": "Arrowed",
-       "generationen": null
+       "beschreibung": "Pfeil",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "standard": "s"
     },
     {
      "name": "end",
      "schreibweise": "[,end]",
      "quelle": "tabelle",
-     "beschreibung": "Line end type (optional)",
+     "beschreibung": "Optionales Linienende.",
      "werte": [
       {
        "wert": "s",
-       "beschreibung": "Squared",
-       "generationen": null
+       "beschreibung": "Eckig",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "r",
-       "beschreibung": "Rounded",
-       "generationen": null
+       "beschreibung": "Abgerundet",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "a",
-       "beschreibung": "Arrowed",
-       "generationen": null
+       "beschreibung": "Pfeil",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "standard": "s"
     },
     {
      "name": "options",
      "schreibweise": "[,options]",
      "quelle": "tabelle",
-     "beschreibung": " Graphic options page 188",
+     "beschreibung": "Optionale Grafikeffekte aus JS-4.7; D nur bei Linien.",
+     "werte": [
+      {
+       "wert": "[D:line,gap]",
+       "beschreibung": "Strichelung/Punktierung, nur Linien",
+       "generationen": null
+      },
+      {
+       "wert": "[F:value]",
+       "beschreibung": "Füllmuster oder Punktdichte",
+       "generationen": null
+      },
+      {
+       "wert": "[O]",
+       "beschreibung": "Ein-Punkt-Umriss; ungefärbte Objekte werden schwarz",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1]",
+       "beschreibung": "Schattierung mit Anfangsdichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2]",
+       "beschreibung": "Schattierung mit Anfangs-/Enddichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2,direction]",
+       "beschreibung": "Schattierung mit Dichten und Winkel",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "D.line",
+     "schreibweise": "line",
+     "quelle": "tabelle",
+     "beschreibung": "Länge eines Strichsegments; nur Linien.",
+     "werte": []
+    },
+    {
+     "name": "D.gap",
+     "schreibweise": "gap",
+     "quelle": "tabelle",
+     "beschreibung": "Lücke zwischen Strichsegmenten; nur Linien.",
+     "werte": []
+    },
+    {
+     "name": "F.value",
+     "schreibweise": "value",
+     "quelle": "tabelle",
+     "beschreibung": "Punktdichte oder vordefiniertes/geladenes Füllmuster.",
+     "werte": [
+      {
+       "wert": "0%",
+       "beschreibung": "Punktdichte 0 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "6%",
+       "beschreibung": "Punktdichte 6 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "12%",
+       "beschreibung": "Punktdichte 12 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "25%",
+       "beschreibung": "Punktdichte 25 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "38%",
+       "beschreibung": "Punktdichte 38 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "50%",
+       "beschreibung": "Punktdichte 50 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "100%",
+       "beschreibung": "Punktdichte 100 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "left",
+       "beschreibung": "Füllmuster left",
+       "generationen": null
+      },
+      {
+       "wert": "right",
+       "beschreibung": "Füllmuster right",
+       "generationen": null
+      },
+      {
+       "wert": "dots",
+       "beschreibung": "Füllmuster dots",
+       "generationen": null
+      },
+      {
+       "wert": "grid",
+       "beschreibung": "Füllmuster grid",
+       "generationen": null
+      },
+      {
+       "wert": "diamond",
+       "beschreibung": "Füllmuster diamond",
+       "generationen": null
+      },
+      {
+       "wert": "user1",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user1",
+       "generationen": null
+      },
+      {
+       "wert": "user2",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user2",
+       "generationen": null
+      },
+      {
+       "wert": "user3",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user3",
+       "generationen": null
+      },
+      {
+       "wert": "user4",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user4",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "S.start",
+     "schreibweise": "%1",
+     "quelle": "tabelle",
+     "beschreibung": "Anfangsdichte des Verlaufs in Prozent Schwarz.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.end",
+     "schreibweise": "%2",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Enddichte des Verlaufs in Prozent Schwarz; kein ausdrücklicher Standardwert.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.direction",
+     "schreibweise": "direction",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Schattierungswinkel; kein ausdrücklicher Standardwert.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Gemeinsame Grafikparameter und Optionen aus S. 187–188. Typabhängiger Bezugspunkt und Maßeinheit beachten. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Beispiele enthalten 22,5/67,5 Grad entgegen dem Text mit Ein-Grad-Schritten. Bruchteile nicht stillschweigend runden oder verwerfen. Verlauf wiederholt sich bei jedem Strichsegment."
   },
   {
    "id": "JS-4.7.3",
    "abschnitt": "4.7.3",
    "art": "grafik",
-   "befehl": null,
+   "befehl": "G",
    "titel": "Rectangle",
    "seiten": [
     194,
@@ -21843,68 +22904,213 @@
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional)  Graphic field name page 187",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, nur Buchstaben/Ziffern; Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X (horizontal) coordinate of the start position in millimeters or",
+     "beschreibung": "Horizontale Position in mm/Zoll; Linie: Mitte des Startpunkts, Rechteck: äußere linke obere Ecke, Kreis/Ellipse: Mittelpunkt.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y (vertical) coordinate of the start position in millimeters or inches",
+     "beschreibung": "Vertikale Position in mm/Zoll; Bezugspunkt wie bei x.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation.",
-     "werte": []
+     "beschreibung": "Drehung in Grad.",
+     "werte": [],
+     "bereich": "0…359; Text nennt Ein-Grad-Schritte, Beispiele auch Bruchteile"
     },
     {
      "name": "width",
      "schreibweise": "width",
      "quelle": "tabelle",
-     "beschreibung": "Width (horizontal) of the rectangle in millimeters or inches",
+     "beschreibung": "Rechteckbreite in mm/Zoll.",
      "werte": []
     },
     {
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Height (vertical) of the rectangle in millimeters or inches",
+     "beschreibung": "Rechteckhöhe in mm/Zoll.",
      "werte": []
     },
     {
      "name": "ht",
      "schreibweise": "[,ht]",
      "quelle": "tabelle",
-     "beschreibung": "Horizontal line thickness in millimeters or inches",
+     "beschreibung": "Optionale horizontale Linienstärke in mm/Zoll; kein im Handbuch benannter Eckenradius.",
      "werte": []
     },
     {
      "name": "vt",
      "schreibweise": "[,vt]",
      "quelle": "tabelle",
-     "beschreibung": "Vertical line thickness in millimeters or inches",
+     "beschreibung": "Optionale vertikale Linienstärke in mm/Zoll; kein im Handbuch benannter Eckenradius.",
      "werte": []
     },
     {
      "name": "options",
      "schreibweise": "[,options]",
      "quelle": "tabelle",
-     "beschreibung": " Graphic options page 188",
+     "beschreibung": "Optionale Grafikeffekte aus JS-4.7; D nur bei Linien.",
+     "werte": [
+      {
+       "wert": "[F:value]",
+       "beschreibung": "Füllmuster oder Punktdichte",
+       "generationen": null
+      },
+      {
+       "wert": "[O]",
+       "beschreibung": "Ein-Punkt-Umriss; ungefärbte Objekte werden schwarz",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1]",
+       "beschreibung": "Schattierung mit Anfangsdichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2]",
+       "beschreibung": "Schattierung mit Anfangs-/Enddichte",
+       "generationen": null
+      },
+      {
+       "wert": "[S:%1,%2,direction]",
+       "beschreibung": "Schattierung mit Dichten und Winkel",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "F.value",
+     "schreibweise": "value",
+     "quelle": "tabelle",
+     "beschreibung": "Punktdichte oder vordefiniertes/geladenes Füllmuster.",
+     "werte": [
+      {
+       "wert": "0%",
+       "beschreibung": "Punktdichte 0 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "6%",
+       "beschreibung": "Punktdichte 6 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "12%",
+       "beschreibung": "Punktdichte 12 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "25%",
+       "beschreibung": "Punktdichte 25 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "38%",
+       "beschreibung": "Punktdichte 38 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "50%",
+       "beschreibung": "Punktdichte 50 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "100%",
+       "beschreibung": "Punktdichte 100 Prozent",
+       "generationen": null
+      },
+      {
+       "wert": "left",
+       "beschreibung": "Füllmuster left",
+       "generationen": null
+      },
+      {
+       "wert": "right",
+       "beschreibung": "Füllmuster right",
+       "generationen": null
+      },
+      {
+       "wert": "dots",
+       "beschreibung": "Füllmuster dots",
+       "generationen": null
+      },
+      {
+       "wert": "grid",
+       "beschreibung": "Füllmuster grid",
+       "generationen": null
+      },
+      {
+       "wert": "diamond",
+       "beschreibung": "Füllmuster diamond",
+       "generationen": null
+      },
+      {
+       "wert": "user1",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user1",
+       "generationen": null
+      },
+      {
+       "wert": "user2",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user2",
+       "generationen": null
+      },
+      {
+       "wert": "user3",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user3",
+       "generationen": null
+      },
+      {
+       "wert": "user4",
+       "beschreibung": "Geladenes 32×32-Punkt-Bild user4",
+       "generationen": null
+      }
+     ]
+    },
+    {
+     "name": "S.start",
+     "schreibweise": "%1",
+     "quelle": "tabelle",
+     "beschreibung": "Anfangsdichte des Verlaufs in Prozent Schwarz.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.end",
+     "schreibweise": "%2",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Enddichte des Verlaufs in Prozent Schwarz; kein ausdrücklicher Standardwert.",
+     "werte": [],
+     "bereich": "0…100 Prozent"
+    },
+    {
+     "name": "S.direction",
+     "schreibweise": "direction",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Schattierungswinkel; kein ausdrücklicher Standardwert.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Gemeinsame Grafikparameter und Optionen aus S. 187–188. Typabhängiger Bezugspunkt und Maßeinheit beachten. Einzeloptionen ohne eigene Generationstabelle bleiben unbekannt. Ohne ht/vt wird das Rechteck gefüllt. Der Arbeitsauftrag nennt Eckenradien, das Handbuch nennt ht/vt ausdrücklich horizontale/vertikale Linienstärke; keine unbelegte Eckenradius-Syntax hinzufügen."
   },
   {
    "id": "JS-4.8",
@@ -21931,68 +23137,133 @@
      "name": "speed",
      "schreibweise": "speed",
      "quelle": "tabelle",
-     "beschreibung": "Print speed in millimeters per seconds or inches",
+     "beschreibung": "Druckgeschwindigkeit in mm/s oder Zoll/s; modellabhängige Stufen.",
      "werte": []
     },
     {
      "name": "h",
      "schreibweise": "h",
      "quelle": "tabelle",
-     "beschreibung": "Heat setting.",
-     "werte": []
+     "beschreibung": "Erste Heizkorrektur.",
+     "werte": [],
+     "bereich": "-20…20"
+    },
+    {
+     "name": "h2",
+     "schreibweise": "[:h]",
+     "quelle": "tabelle",
+     "beschreibung": "Heizkorrektur des unteren/weiteren Druckkopfs laut Tabelle.",
+     "werte": [],
+     "bereich": "-20…20",
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "P",
+     "schreibweise": "P[x]",
+     "quelle": "tabelle",
+     "beschreibung": "Papiersparfunktion einschalten; optionaler Zusatzversatz in mm/Zoll.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "name": "P.x",
+     "schreibweise": "x",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Zusatzversatz für die Papiersparfunktion.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
     },
     {
      "name": "t",
      "schreibweise": "t",
      "quelle": "tabelle",
-     "beschreibung": "Ribbon mode",
+     "beschreibung": "Druckmethode und gegebenenfalls Farbbandwickelrichtung.",
      "werte": [
       {
        "wert": "T",
-       "beschreibung": "Transfer thermal (with ribbon)",
+       "beschreibung": "Thermotransfer mit Farbband",
        "generationen": null
       },
       {
        "wert": "D",
-       "beschreibung": "Direct thermal (without ribbon)",
+       "beschreibung": "Thermodirekt ohne Farbband",
        "generationen": null
       },
       {
        "wert": "TI",
-       "beschreibung": "Transfer thermal mode with ribbon control inkside IN",
+       "beschreibung": "Thermotransfer, Tinteninnenseite IN",
        "generationen": null
       },
       {
        "wert": "TO",
-       "beschreibung": "Transfer thermal mode with ribbon control inkside OUT",
-       "generationen": null
-      },
-      {
-       "wert": "I",
-       "beschreibung": "Ribbon control inkside IN",
-       "generationen": null
-      },
-      {
-       "wert": "O",
-       "beschreibung": "Ribbon control inkside OUT",
+       "beschreibung": "Thermotransfer, Tinteninnenseite OUT",
        "generationen": null
       }
      ]
     },
     {
+     "name": "t2",
+     "schreibweise": "[:t]",
+     "quelle": "tabelle",
+     "beschreibung": "Wickelrichtung am unteren/weiteren Kopf laut Tabelle.",
+     "werte": [
+      {
+       "wert": "I",
+       "beschreibung": "Tinteninnenseite IN",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "O",
+       "beschreibung": "Tinteninnenseite OUT",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Ribbon saver setting",
+     "beschreibung": "Farbbandsparfunktion; entsprechende Hardware erforderlich.",
      "werte": [
       {
        "wert": "R0",
-       "beschreibung": "Ribbon saver off",
+       "beschreibung": "Farbbandsparen aus",
        "generationen": null
       },
       {
        "wert": "R1",
-       "beschreibung": "Ribbon saver on",
+       "beschreibung": "Farbbandsparen an",
        "generationen": null
       }
      ]
@@ -22001,44 +23272,49 @@
      "name": "s",
      "schreibweise": "s",
      "quelle": "tabelle",
-     "beschreibung": "First (lower) printhead management.",
+     "beschreibung": "Verwaltung des ersten/unteren Kopfs laut Tabelle; ohne Angabe Druckermenü-Einstellung.",
      "werte": [
       {
        "wert": "S0",
-       "beschreibung": "Enables lower printhead (default)",
-       "generationen": null
+       "beschreibung": "Unteren/ersten Kopf aktivieren; als Standard in Tabelle bezeichnet",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "S1",
-       "beschreibung": "Disables lower printhead",
-       "generationen": null
+       "beschreibung": "Unteren/ersten Kopf deaktivieren",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     },
+     "standard": "Drucker-Setup"
     },
     {
      "name": "Bb",
      "schreibweise": "Bb",
      "quelle": "tabelle",
-     "beschreibung": "Back feed speed in millimeters per second or inches.",
-     "werte": []
-    },
-    {
-     "name": "P",
-     "schreibweise": "P",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "x",
-     "schreibweise": "x",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "beschreibung": "Rücktransportgeschwindigkeit in mm/s oder Zoll/s.",
+     "werte": [],
+     "standard": "100 mm/s"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Geschwindigkeiten in der gewählten Einheit pro Sekunde; verfügbare Stufen hängen vom Druckermodell ab. Nicht passende Geschwindigkeit wird angepasst, oberhalb des Maximums begrenzt. TI/TO sind für EOS2/5 und MACH 4S nicht verfügbar. Unterkopfparameter und S0/S1 nur für X4 mit zwei konfigurierbaren Köpfen. Quelle benennt ersten/unteren Kopf nicht überall konsistent; Zuordnung nicht allein aus Begriffen umdeuten."
   },
   {
    "id": "JS-4.9",
@@ -22256,12 +23532,19 @@
      "name": "comment",
      "schreibweise": "[comment]",
      "quelle": "tabelle",
-     "beschreibung": "Optional text which may describe the label.",
-     "werte": []
+     "beschreibung": "Optionaler beschreibender Text, bei älteren Druckern als langer Anzeigename verwendet.",
+     "werte": [],
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "n",
+      "X4": "n"
+     }
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Startet eine neue Etikettdefinition. Kommentarfunktion ab X3 veraltet, weil lange Dateinamen unterstützt werden; alten Kommentartext trotzdem erhalten, nicht als beschädigte Zeile verwerfen."
   },
   {
    "id": "JS-4.11",
@@ -22288,11 +23571,11 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art des Speicherzugriffs.",
      "werte": [
       {
        "wert": "c",
-       "beschreibung": "Memory card content request",
+       "beschreibung": "Verzeichnis abfragen",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22302,7 +23585,7 @@
       },
       {
        "wert": "d",
-       "beschreibung": "Memory card delete files",
+       "beschreibung": "Datei löschen",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22312,7 +23595,7 @@
       },
       {
        "wert": "f",
-       "beschreibung": "Format memory card",
+       "beschreibung": "Speicher formatieren",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22322,7 +23605,7 @@
       },
       {
        "wert": "l",
-       "beschreibung": "Load file from memory card",
+       "beschreibung": "Datei laden",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22332,7 +23615,7 @@
       },
       {
        "wert": "r",
-       "beschreibung": "Return to the beginning of the file, allows simple loops",
+       "beschreibung": "Zum Dateianfang zurückspringen",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22342,7 +23625,7 @@
       },
       {
        "wert": "s",
-       "beschreibung": "Save file on card",
+       "beschreibung": "Daten speichern",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22352,7 +23635,7 @@
       },
       {
        "wert": "u",
-       "beschreibung": "Upload data from memory to the attached computer",
+       "beschreibung": "Daten an Rechner übertragen",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -22364,20 +23647,83 @@
     },
     {
      "name": "params",
-     "schreibweise": "params",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "schreibweise": "[params]",
+     "quelle": "tabelle",
+     "beschreibung": "Unterbefehlsspezifische Parameter, siehe JS-4.11.1 bis JS-4.11.7.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "speicherarten": [
+    {
+     "wert": "CF card",
+     "beschreibung": "CompactFlash, veraltet",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "n",
+      "X4": "n"
+     }
+    },
+    {
+     "wert": "IFFS",
+     "beschreibung": "Interner Flashspeicher",
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "PCMCIA card",
+     "beschreibung": "PCMCIA, veraltet",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "n",
+      "X4": "n"
+     }
+    },
+    {
+     "wert": "SD card",
+     "beschreibung": "SDHC/SDXC, höchstens 512 GB",
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "USB Stick",
+     "beschreibung": "USB-Massenspeicher, bis 2 TB; theoretische Dateigrenze 4 GB",
+     "generationen": {
+      "Ax": "n",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "WebDAV",
+     "beschreibung": "Netzwerkspeicher",
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
+    }
+   ],
+   "hinweis": "Speichermedien und Pfadnamen sind verschiedene Tabellen: etwa physische PCMCIA-Unterstützung auf Ax ist keine Freigabe des Pfadwerts pccard auf Ax. Nur FAT16/FAT32 werden als externe Dateisysteme genannt. Groß-/Kleinschreibung hängt vom Dateisystem ab; X3-Linux unterscheidet, externes FAT nicht. Keine allgemeinen Zahlenwerte aus Beispielverzeichnissen als harte Grenzen übernehmen."
   },
   {
    "id": "JS-4.11.1",
    "abschnitt": "4.11.1",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M c",
    "titel": "c (content request)",
    "seiten": [
     205,
@@ -22398,18 +23744,25 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
+     "werte": []
+    },
+    {
+     "name": "response",
+     "schreibweise": "response",
+     "quelle": "antwortfeld",
+     "beschreibung": "Antwort: Verzeichnisinhalt mit Dateiinformationen und freiem Speicher, nur als Beispiel gezeigt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true
   },
   {
    "id": "JS-4.11.2",
    "abschnitt": "4.11.2",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M d",
    "titel": "d (delete file)",
    "seiten": [
     206,
@@ -22430,31 +23783,31 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art der Speicherdatei.",
      "werte": [
       {
        "wert": "FMT",
-       "beschreibung": "Label format",
+       "beschreibung": "Etikettformat",
        "generationen": null
       },
       {
        "wert": "FNT",
-       "beschreibung": "Font",
+       "beschreibung": "Schrift",
        "generationen": null
       },
       {
        "wert": "IMG",
-       "beschreibung": "Image",
+       "beschreibung": "Alle Bildtypen mit dem angegebenen Namen",
        "generationen": null
       },
       {
        "wert": "LBL",
-       "beschreibung": "Label file",
+       "beschreibung": "Etikettdatei",
        "generationen": null
       },
       {
        "wert": "TMP",
-       "beschreibung": "Temporary file",
+       "beschreibung": "Temporärdatei",
        "generationen": null
       }
      ]
@@ -22463,25 +23816,26 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
+     "beschreibung": "Dateiname ohne Erweiterung.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "IMG löscht alle Grafikdateien des angegebenen Namens unabhängig von der konkreten Bildendung. Kein hier nicht dokumentierter allgemeiner Wildcardumfang angenommen."
   },
   {
    "id": "JS-4.11.3",
    "abschnitt": "4.11.3",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M f",
    "titel": "f (format card)",
    "seiten": [
     207,
@@ -22502,18 +23856,19 @@
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "Name for the memory card",
+     "beschreibung": "Name des zu formatierenden Speichermediums.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Formatiert das Medium und legt fonts, labels, images und misc an. Erzeugt ein neues Dateisystem, nicht nur einen Dateinamen."
   },
   {
    "id": "JS-4.11.4",
    "abschnitt": "4.11.4",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M l",
    "titel": "l (load file)",
    "seiten": [
     208,
@@ -22534,31 +23889,66 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art der Speicherdatei.",
      "werte": [
       {
        "wert": "FMT",
-       "beschreibung": "Label format",
+       "beschreibung": "Etikettformat",
        "generationen": null
       },
       {
        "wert": "FNT",
-       "beschreibung": "Font",
+       "beschreibung": "Schrift",
        "generationen": null
       },
       {
        "wert": "IMG",
-       "beschreibung": "Image",
+       "beschreibung": "Bildsuche in dokumentierter Reihenfolge",
        "generationen": null
       },
       {
        "wert": "LBL",
-       "beschreibung": "Label file",
+       "beschreibung": "Etikettdatei",
        "generationen": null
       },
       {
        "wert": "TTF",
-       "beschreibung": "Font file",
+       "beschreibung": "TrueType-Datei",
+       "generationen": null
+      },
+      {
+       "wert": "TIF",
+       "beschreibung": "Konkreter Bildtyp TIF",
+       "generationen": null
+      },
+      {
+       "wert": "PCX",
+       "beschreibung": "Konkreter Bildtyp PCX",
+       "generationen": null
+      },
+      {
+       "wert": "GIF",
+       "beschreibung": "Konkreter Bildtyp GIF",
+       "generationen": null
+      },
+      {
+       "wert": "BMP",
+       "beschreibung": "Konkreter Bildtyp BMP",
+       "generationen": null
+      },
+      {
+       "wert": "MAC",
+       "beschreibung": "Konkreter Bildtyp MAC",
+       "generationen": null
+      },
+      {
+       "wert": "PNG",
+       "beschreibung": "Konkreter Bildtyp PNG",
+       "generationen": null
+      },
+      {
+       "wert": "ASC",
+       "beschreibung": "Konkreter Bildtyp ASC",
        "generationen": null
       }
      ]
@@ -22567,25 +23957,26 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
+     "beschreibung": "Dateiname ohne Erweiterung.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Einleitender Formatierungstext ist offenbar aus Mf kopiert; Überschrift, Syntax und Beispiele beschreiben Laden. IMG-Suchreihenfolge: IMG, TIF, PCX, GIF, BMP, MAC, PNG, ASC. Konkreter Dateityp kann statt IMG angegeben werden."
   },
   {
    "id": "JS-4.11.5",
    "abschnitt": "4.11.5",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M r",
    "titel": "r (repeat last file content)",
    "seiten": [
     209,
@@ -22603,13 +23994,14 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Springt bei aus Speicher geladener Datei zum Anfang zurück und ermöglicht einfache Wiederholungen; Datei muss auf Karte oder iffs gespeichert sein."
   },
   {
    "id": "JS-4.11.6",
    "abschnitt": "4.11.6",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M s",
    "titel": "s (store data)",
    "seiten": [
     210,
@@ -22623,33 +24015,34 @@
    },
    "verweis": null,
    "syntax": [
-    "M s type;[path]name[CR]"
+    "M s type;[path]name[CR]",
+    "M s type[CR]"
    ],
    "parameter": [
     {
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art der Speicherdatei.",
      "werte": [
       {
        "wert": "FMT",
-       "beschreibung": "Label format",
+       "beschreibung": "Etikettformat",
        "generationen": null
       },
       {
        "wert": "FNT",
-       "beschreibung": "Font",
+       "beschreibung": "Schrift",
        "generationen": null
       },
       {
        "wert": "IMG",
-       "beschreibung": "Image",
+       "beschreibung": "Bild",
        "generationen": null
       },
       {
        "wert": "LBL",
-       "beschreibung": "Label file",
+       "beschreibung": "Etikettdatei",
        "generationen": null
       }
      ]
@@ -22658,25 +24051,26 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
+     "beschreibung": "Dateiname ohne Erweiterung.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Erster Ms-Befehl benennt den zu speichernden Datenstrom, Ms LBL ohne Dateiname beendet die Aufzeichnung im Beispiel. Ms nicht in per FTP/PC direkt auf Karte abgelegten Daten verwenden: erneutes Aufrufen könnte sich rekursiv selbst speichern."
   },
   {
    "id": "JS-4.11.7",
    "abschnitt": "4.11.7",
    "art": "speicherkarte",
-   "befehl": null,
+   "befehl": "M u",
    "titel": "u (upload data)",
    "seiten": [
     211,
@@ -22697,26 +24091,26 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Art der Speicherdatei.",
      "werte": [
       {
        "wert": "FMT",
-       "beschreibung": "Label format",
+       "beschreibung": "Etikettformat",
        "generationen": null
       },
       {
        "wert": "FNT",
-       "beschreibung": "Font",
+       "beschreibung": "Schrift",
        "generationen": null
       },
       {
        "wert": "IMG",
-       "beschreibung": "Image",
+       "beschreibung": "Bild",
        "generationen": null
       },
       {
        "wert": "LBL",
-       "beschreibung": "Label file",
+       "beschreibung": "Etikettdatei",
        "generationen": null
       }
      ]
@@ -22725,19 +24119,27 @@
      "name": "path",
      "schreibweise": "[path]",
      "quelle": "tabelle",
-     "beschreibung": "Optional parameter to select the pathname where the files are located",
+     "beschreibung": "Optionaler Speicherpfad nach JS-1.5.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "File name of the file on memory card, without extension",
+     "beschreibung": "Dateiname ohne Erweiterung.",
+     "werte": []
+    },
+    {
+     "name": "response",
+     "schreibweise": "response",
+     "quelle": "antwortfeld",
+     "beschreibung": "Dateiinhalt als rohe Binärdaten an den angeschlossenen Rechner.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Übertragung kann Binärdaten enthalten; keine Textkonvertierung oder Zeilenenden-Normalisierung annehmen."
   },
   {
    "id": "JS-4.12",
@@ -23096,7 +24498,7 @@
    ],
    "barcode_eigenschaften": null,
    "geprueft": true,
-   "hinweis": "Direkt nach S anordnen. Syntaxbox S. 212 nennt T, die Tabelle S. 213 Tx mit optionalem Versatz; beide Schreibweisen sind berücksichtigt. S ist generationsübergreifend verfügbar, die optionale Pufferzahl x nur X4. D und P beschreiben verschiedene Rücktransportmodi; eine gemeinsame Priorität ist nicht definiert. Applikatorparameter können bei Baujahren nach 2024 modellspezifisch andere Bedeutungen haben. Syntax-Artefakte Ax und y sind keine zusätzlichen Parameter."
+   "hinweis": "Direkt nach S anordnen. Syntaxbox S. 212 nennt T, die Tabelle S. 213 Tx mit optionalem Versatz; beide Schreibweisen sind berücksichtigt. S ist generationsübergreifend verfügbar, die optionale Pufferzahl x nur X4. D und P beschreiben verschiedene Rücktransportmodi; eine gemeinsame Priorität ist nicht definiert. Applikatorparameter können bei Baujahren nach 2024 modellspezifisch andere Bedeutungen haben. Syntax-Artefakte Ax und y sind keine zusätzlichen Parameter. Beispiele, etwa S. 223, zeigen O auch vor S entgegen der Forderung direkt nach S auf S. 212. Diesen Reihenfolgekonflikt als Diagnosehinweis behandeln, nicht durch stillschweigende Umordnung von Quelldaten lösen."
   },
   {
    "id": "JS-4.13",
@@ -23123,12 +24525,13 @@
      "name": "disp",
      "schreibweise": "[disp]",
      "quelle": "tabelle",
-     "beschreibung": "Optional displacement in millimeters or inches",
+     "beschreibung": "Optionaler positiver oder negativer Spendepositionsversatz in mm/Zoll.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Spendesensor erforderlich. Nach S anordnen; nächstes Etikett erst nach Entnahme des aktuellen. Kein ausdrücklicher numerischer Standardversatz angegeben."
   },
   {
    "id": "JS-4.14",
@@ -23155,19 +24558,20 @@
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "Name of the field",
+     "beschreibung": "Name eines bereits definierten Felds, dessen Inhalt ersetzt wird.",
      "werte": []
     },
     {
      "name": "value",
      "schreibweise": "value",
      "quelle": "tabelle",
-     "beschreibung": "New value of the field, which will replace the data of the former label",
+     "beschreibung": "Neuer Feldinhalt, ersetzt den bisherigen Wert.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Kann nach A für ein weiterhin gepuffertes beziehungsweise aus Speicher geladenes Etikett verwendet werden. Danach ist erneutes A ohne neuen J-Beginn dokumentiert; solche Folgen nicht pauschal als fehlerhaft verwerfen."
   },
   {
    "id": "JS-4.15",
@@ -23194,11 +24598,11 @@
      "name": "ptype",
      "schreibweise": "[ptype;]",
      "quelle": "tabelle",
-     "beschreibung": "Photocell type. Optional parameter.",
+     "beschreibung": "Optionaler Etikettensensortyp; Angabe wird empfohlen.",
      "werte": [
       {
        "wert": "e",
-       "beschreibung": "Endless (continuous) label material without die cuts.",
+       "beschreibung": "Endlosmaterial, keine Lückenerkennung; Höhe über Motorbewegung",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23208,7 +24612,7 @@
       },
       {
        "wert": "l0",
-       "beschreibung": "Reflective top.",
+       "beschreibung": "Reflexmarke oben oder optionaler Farbsensor nach Setup; kleines L und Ziffer 0",
        "generationen": {
         "Ax": "n",
         "X2": "y",
@@ -23218,7 +24622,7 @@
       },
       {
        "wert": "l1",
-       "beschreibung": "Die cut labels.",
+       "beschreibung": "Gestanzte Etiketten mit Lücke; kleines L und Ziffer 1",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23228,9 +24632,9 @@
       },
       {
        "wert": "l2",
-       "beschreibung": "Reflective bottom.",
+       "beschreibung": "Reflexmarke unten; kleines L und Ziffer 2",
        "generationen": {
-        "Ax": "",
+        "Ax": "y",
         "X2": "y",
         "X3": "y",
         "X4": "y"
@@ -23238,7 +24642,7 @@
       },
       {
        "wert": "c",
-       "beschreibung": "Cyan (only available if a color sensor is installed)",
+       "beschreibung": "Cyan-Farbsensor, optionale Hardware",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23248,7 +24652,7 @@
       },
       {
        "wert": "m",
-       "beschreibung": "Magenta (only available if a color sensor is installed)",
+       "beschreibung": "Magenta-Farbsensor, optionale Hardware",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23258,7 +24662,7 @@
       },
       {
        "wert": "y",
-       "beschreibung": "Yellow (only available if a color sensor is installed)",
+       "beschreibung": "Gelb-Farbsensor, optionale Hardware",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23268,7 +24672,7 @@
       },
       {
        "wert": "k",
-       "beschreibung": "Gray scale (only available if a color sensor is installed)",
+       "beschreibung": "Graustufen-Farbsensor, optionale Hardware",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23278,7 +24682,7 @@
       },
       {
        "wert": "x0",
-       "beschreibung": "External label sensor with positive edge",
+       "beschreibung": "Externer Sensor, positive Flanke",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23288,7 +24692,7 @@
       },
       {
        "wert": "x1",
-       "beschreibung": "External label sensor with negative edge",
+       "beschreibung": "Externer Sensor, negative Flanke",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23302,61 +24706,69 @@
      "name": "xo",
      "schreibweise": "xo",
      "quelle": "tabelle",
-     "beschreibung": "Horizontal displacement, shifts the starting point (zero",
+     "beschreibung": "Horizontaler Nullpunktversatz aller Objekte in mm/Zoll.",
      "werte": []
     },
     {
      "name": "yo",
      "schreibweise": "yo",
      "quelle": "tabelle",
-     "beschreibung": "Vertical displacement, shifts the starting point (zero point)",
+     "beschreibung": "Vertikaler Nullpunktversatz in mm/Zoll; wirkungslos bei Endlosmaterial mit Messer.",
      "werte": []
     },
     {
      "name": "ho",
      "schreibweise": "ho",
      "quelle": "tabelle",
-     "beschreibung": "Height of the label in transportation direction",
+     "beschreibung": "Etikettenhöhe in Transportrichtung in mm/Zoll.",
      "werte": []
     },
     {
      "name": "dy",
      "schreibweise": "dy",
      "quelle": "tabelle",
-     "beschreibung": "Height of the label plus height of the gap.",
+     "beschreibung": "Etikettenhöhe plus Lücke; Abstand vom Anfang eines Etiketts zum nächsten in mm/Zoll.",
      "werte": []
     },
     {
      "name": "wd",
      "schreibweise": "wd",
      "quelle": "tabelle",
-     "beschreibung": "Label width measured from the right margin to the left",
+     "beschreibung": "Etikettenbreite in mm/Zoll; bei zwei Köpfen kombinierte Breite beider Abschnitte.",
      "werte": []
     },
     {
      "name": "dx",
      "schreibweise": "[,dx]",
      "quelle": "tabelle",
-     "beschreibung": "Defines the distance from the margin of the first label to the",
+     "beschreibung": "Optionaler horizontaler Abstand der entsprechenden Ränder benachbarter Etiketten; nicht bei zwei Köpfen.",
      "werte": []
     },
     {
      "name": "col",
      "schreibweise": "[,col]",
      "quelle": "tabelle",
-     "beschreibung": "Number of labels horizontally. Default value is 1",
-     "werte": []
+     "beschreibung": "Optionale Zahl nebeneinanderliegender Etiketten; nicht bei zwei Köpfen.",
+     "werte": [],
+     "standard": 1
     },
     {
      "name": "name",
      "schreibweise": "[;name]",
      "quelle": "tabelle",
-     "beschreibung": "Text (optional) which is shown in the printer's display.",
+     "beschreibung": "Optionaler Displaytext, etwa zur Kennzeichnung des benötigten Materials.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Maßwerte in mm/Zoll nach m oder Ländereinstellung; col ist eine Stückzahl. Maximalmaße hängen vom Druckkopf und Druckerspeicher ab. xo/yo/ho enthalten den Buchstaben o, die Sensorwerte x0/x1 Ziffern. Keine festen maximalen Etikettenmaße aus Beispielen ableiten.",
+   "regeln": [
+    "dx und col sind bei Druckern mit zwei Köpfen nicht verwendbar.",
+    "Zwei Köpfe werden als zwei Abschnitte einer gemeinsamen Gesamtbreite behandelt; die maximale Gesamtbreite ist die Summe beider Druckbreiten.",
+    "Bei Endlosmaterial und Messer beeinflusst yo die Position nicht; Schnittversatz ist separat zu berücksichtigen.",
+    "Farbsensorwahl erfordert optionale Hardware; der geeignete Sensor hängt vom vorbedruckten Material ab."
+   ]
   },
   {
    "id": "JS-4.16",
@@ -23376,46 +24788,54 @@
    },
    "verweis": null,
    "syntax": [
-    "T[:name;]x,y,r,font,size[,effects];text[CR]"
+    "T[:name;]x,y,r,font,size[,effects];text[CR]",
+    "T[:name;]x,y,r,font,xn,yn[,effects];text[CR]"
    ],
    "parameter": [
     {
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional), for further usage as a variable.",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, nur Buchstaben/Ziffern; Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Horizontal start position. Distance from the left starting",
+     "beschreibung": "Horizontaler Textanfang in mm/Zoll; Bezugspunkt an der linken Grundlinie (Bild S. 226).",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Vertical start position. Distance from the top margin",
+     "beschreibung": "Vertikale Grundlinienposition in mm/Zoll, nicht die obere linke Ecke des sichtbaren Schriftbilds.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Text field rotation.",
-     "werte": []
+     "beschreibung": "Drehung; Vektor/TrueType im Vollkreis in 1°-Schritten, Bitmap nur 0/90/180/270°.",
+     "werte": [],
+     "bereich": "schrifttypabhängig"
     },
     {
      "name": "font",
      "schreibweise": "font",
      "quelle": "tabelle",
-     "beschreibung": "Specifies a font type, set by a number which might be an",
+     "beschreibung": "Interne Schrift oder zugeordnete/geladene TrueType-Schriftnummer. Werteliste ist keine Sperre weiterer über F definierter Aliasse.",
      "werte": [
       {
        "wert": "-1",
-       "beschreibung": "Bitmap font _DEF1, default size: 12x12 dots",
+       "beschreibung": "Bitmap _DEF1; Grundgröße 12×12 Punkte",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23425,7 +24845,7 @@
       },
       {
        "wert": "-2",
-       "beschreibung": "Bitmap font _DEF2, default size: 16x16 dots",
+       "beschreibung": "Bitmap _DEF2; Grundgröße 16×16 Punkte",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23435,7 +24855,7 @@
       },
       {
        "wert": "-3",
-       "beschreibung": "Bitmap font _DEF3, default size: 16x32 dots",
+       "beschreibung": "Bitmap _DEF3; Grundgröße 16×32 Punkte",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23445,7 +24865,7 @@
       },
       {
        "wert": "-4",
-       "beschreibung": "Bitmap font OCR-A Size I",
+       "beschreibung": "Bitmap OCR-A Size I",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23455,7 +24875,7 @@
       },
       {
        "wert": "-5",
-       "beschreibung": "Bitmap font OCR-B",
+       "beschreibung": "Bitmap OCR-B",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23465,7 +24885,7 @@
       },
       {
        "wert": "3",
-       "beschreibung": "Vector font Swiss 721™ (BX000003)",
+       "beschreibung": "Vektor Swiss 721 (BX000003)",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23475,7 +24895,7 @@
       },
       {
        "wert": "5",
-       "beschreibung": "Vector font Swiss 721 Bold™ (BX000005)",
+       "beschreibung": "Vektor Swiss 721 Bold (BX000005)",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23485,7 +24905,7 @@
       },
       {
        "wert": "7",
-       "beschreibung": "Vector font CG Triumvirate Condensed Bold™ (CGTRIUM)",
+       "beschreibung": "Vektor CG Triumvirate Condensed Bold (CGTRIUM)",
        "generationen": {
         "Ax": "n",
         "X2": "n",
@@ -23495,7 +24915,7 @@
       },
       {
        "wert": "596",
-       "beschreibung": "Vector font Monospace 821™ (BX000596)",
+       "beschreibung": "Vektor Monospace 821 (BX000596)",
        "generationen": {
         "Ax": "",
         "X2": "y",
@@ -23505,7 +24925,7 @@
       },
       {
        "wert": "1000",
-       "beschreibung": "Vector font AR Heiti Medium (GEHEI21M)                      -      ",
+       "beschreibung": "AR Heiti Medium (GEHEI21M), vereinfachtes Chinesisch; X2 mit offenem Quadrat",
        "generationen": {
         "Ax": "n",
         "X2": "",
@@ -23515,7 +24935,7 @@
       },
       {
        "wert": "1001",
-       "beschreibung": "Vector font HanWangHeiLight                                 -      ",
+       "beschreibung": "HanWangHeiLight, traditionelles Chinesisch; X2 mit offenem Quadrat",
        "generationen": {
         "Ax": "n",
         "X2": "",
@@ -23525,7 +24945,7 @@
       },
       {
        "wert": "1010",
-       "beschreibung": "Vector font Garuda (Thai font)                              -      ",
+       "beschreibung": "Garuda, Thai; X2 mit offenem Quadrat",
        "generationen": {
         "Ax": "n",
         "X2": "",
@@ -23539,18 +24959,18 @@
      "name": "size",
      "schreibweise": "size",
      "quelle": "tabelle",
-     "beschreibung": "Sets the character size",
+     "beschreibung": "Vektor/TrueType: Größe in mm/Zoll oder ptx. Bitmap: xn,yn als horizontale/vertikale Vergrößerungsfaktoren.",
      "werte": []
     },
     {
      "name": "effects",
      "schreibweise": "[,effects]",
      "quelle": "tabelle",
-     "beschreibung": "Effects (optional)",
+     "beschreibung": "Kombinierbare, kommagetrennte Schrifteffekte; Bedingungen je Schriftart beachten.",
      "werte": [
       {
        "wert": "b",
-       "beschreibung": "Bold",
+       "beschreibung": "Fett",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23560,7 +24980,7 @@
       },
       {
        "wert": "s",
-       "beschreibung": "Slanted",
+       "beschreibung": "Schräg",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23570,7 +24990,7 @@
       },
       {
        "wert": "i",
-       "beschreibung": "Italic",
+       "beschreibung": "Kursiv",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23580,7 +25000,7 @@
       },
       {
        "wert": "n",
-       "beschreibung": "Negative (inverted)",
+       "beschreibung": "Invertiert",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23590,7 +25010,7 @@
       },
       {
        "wert": "u",
-       "beschreibung": "Underlined",
+       "beschreibung": "Unterstrichen",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23600,7 +25020,7 @@
       },
       {
        "wert": "l",
-       "beschreibung": "Light",
+       "beschreibung": "Leicht",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23610,7 +25030,7 @@
       },
       {
        "wert": "z",
-       "beschreibung": "Slanted left",
+       "beschreibung": "Nach links geneigt",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23630,7 +25050,7 @@
       },
       {
        "wert": "v",
-       "beschreibung": "Vertical alignment",
+       "beschreibung": "Zeichen vertikal untereinander, siehe Bild S. 230; keine bloße Zeilendrehung",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23640,7 +25060,7 @@
       },
       {
        "wert": "qn",
-       "beschreibung": "Squeeze characters",
+       "beschreibung": "Zeichen stauchen/dehnen, Bezug 100",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23650,7 +25070,7 @@
       },
       {
        "wert": "hn",
-       "beschreibung": "Width of upper case H, n in millimeters or in inches",
+       "beschreibung": "Breite eines großen H in mm/Zoll",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23660,7 +25080,7 @@
       },
       {
        "wert": "mn",
-       "beschreibung": "Horizontal text spacing, n in millimeters or in inches",
+       "beschreibung": "Horizontaler Zeichenabstand in mm/Zoll",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23670,7 +25090,7 @@
       },
       {
        "wert": "frn",
-       "beschreibung": "Right frame",
+       "beschreibung": "Rahmen rechts; nur Vektor/TrueType",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23680,7 +25100,7 @@
       },
       {
        "wert": "fln",
-       "beschreibung": "Left frame",
+       "beschreibung": "Rahmen links; nur Vektor/TrueType",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23690,7 +25110,7 @@
       },
       {
        "wert": "fun",
-       "beschreibung": "Upper frame",
+       "beschreibung": "Rahmen oben; nur Vektor/TrueType",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23700,7 +25120,7 @@
       },
       {
        "wert": "fdn",
-       "beschreibung": "Down (lower) frame",
+       "beschreibung": "Rahmen unten; nur Vektor/TrueType",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23710,7 +25130,7 @@
       },
       {
        "wert": "o",
-       "beschreibung": "Outlined (not available for OCR fonts)",
+       "beschreibung": "Umriss; nur Bitmap, laut Tabelle nicht OCR",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23720,7 +25140,7 @@
       },
       {
        "wert": "g",
-       "beschreibung": "Gray (not available for OCR fonts)",
+       "beschreibung": "Grau; nur Bitmap, laut Tabelle nicht OCR",
        "generationen": {
         "Ax": "y",
         "X2": "y",
@@ -23734,12 +25154,93 @@
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Data string in a selected code page.",
+     "beschreibung": "Daten in der aktiven Codepage, einschließlich Inhaltsfeldern und besonderen Funktionen.",
+     "werte": []
+    },
+    {
+     "name": "size.x",
+     "schreibweise": "xn",
+     "quelle": "tabelle",
+     "beschreibung": "Horizontaler Bitmap-Vergrößerungsfaktor.",
+     "werte": [],
+     "bereich": "1…10"
+    },
+    {
+     "name": "size.y",
+     "schreibweise": "yn",
+     "quelle": "tabelle",
+     "beschreibung": "Vertikaler Bitmap-Vergrößerungsfaktor.",
+     "werte": [],
+     "bereich": "1…10"
+    },
+    {
+     "name": "size.pt",
+     "schreibweise": "ptx",
+     "quelle": "tabelle",
+     "beschreibung": "Vektor-/TrueType-Größe in typografischen Punkten als Alternative zu mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "effects.q",
+     "schreibweise": "qn",
+     "quelle": "tabelle",
+     "beschreibung": "Zeichenstauchung/-dehnung mit Bezugswert 100.",
+     "werte": [],
+     "bereich": "10…1000",
+     "standard": 100
+    },
+    {
+     "name": "effects.h",
+     "schreibweise": "hn",
+     "quelle": "tabelle",
+     "beschreibung": "Breite eines großen H in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "effects.m",
+     "schreibweise": "mn",
+     "quelle": "tabelle",
+     "beschreibung": "Horizontaler Zeichenabstand in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "effects.fr",
+     "schreibweise": "frn",
+     "quelle": "tabelle",
+     "beschreibung": "Rahmenausdehnung rechts; nur interne Vektor- oder geladene TrueType-Schriften.",
+     "werte": []
+    },
+    {
+     "name": "effects.fl",
+     "schreibweise": "fln",
+     "quelle": "tabelle",
+     "beschreibung": "Rahmenausdehnung links; nur interne Vektor- oder geladene TrueType-Schriften.",
+     "werte": []
+    },
+    {
+     "name": "effects.fu",
+     "schreibweise": "fun",
+     "quelle": "tabelle",
+     "beschreibung": "Rahmenausdehnung oben; nur interne Vektor- oder geladene TrueType-Schriften.",
+     "werte": []
+    },
+    {
+     "name": "effects.fd",
+     "schreibweise": "fdn",
+     "quelle": "tabelle",
+     "beschreibung": "Rahmenausdehnung unten; nur interne Vektor- oder geladene TrueType-Schriften.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Font-/Effekttabellen S. 224–225 und Basislinienbild S. 226 visuell geprüft. Pauschale Grenze 500 Textfelder auf S. 224 widerspricht der X4-Tabelle JS-1.6. Bei Font 596 ist Ax leer statt ausdrücklich n; bleibt unbekannt. X2-Felder der Fonts 1000/1001/1010 zeigen offene Quadrate ohne hier erklärte Legende; bleiben unbekannt, keine pauschale Verfügbarkeit erfinden. Tabelle verbietet o/g bei OCR, Beispiel S. 228 verwendet o mit Font -5; Widerspruch dokumentiert, nicht stillschweigend übergehen.",
+   "regeln": [
+    "Bitmapschriften nur in vier rechtwinkligen Orientierungen; Vektor-/TrueType-Schriften in Ein-Grad-Schritten.",
+    "Rahmeneffekte fr/fl/fu/fd nur bei Vektor/TrueType.",
+    "o/g nur bei Bitmap und nach Tabelle nicht OCR; das widersprechende OCR-Beispiel ist gesondert vermerkt.",
+    "Vertikaler Effekt v ordnet Zeichen untereinander an; r kann die ganze Anordnung drehen."
+   ]
   },
   {
    "id": "JS-4.17",
@@ -23759,91 +25260,128 @@
    },
    "verweis": null,
    "syntax": [
-    "W[:name;]x,y,r,width,height,font,size[,line-spacing];text[CR]"
+    "W[:name;]x,y,r,width,height,font,size[,line-spacing];text[CR]",
+    "W[:name;]x,y,r,width,height,font,size[,line-spacing];<HTML>text</HTML>[CR]"
    ],
    "parameter": [
     {
      "name": "name",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional), for further usage as a variable",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: beginnt mit Buchstabe, nur Buchstaben/Ziffern, Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": "1…32 Zeichen"
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Horizontal start position.",
+     "beschreibung": "Horizontale Position der linken oberen Ecke in mm/Zoll.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Vertical start position.",
+     "beschreibung": "Vertikale Position der linken oberen Ecke in mm/Zoll.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Text field rotation.",
+     "beschreibung": "Drehung von Vektor-/TrueType-Schrift im Vollkreis in Ein-Grad-Schritten; Bitmap nicht unterstützt.",
      "werte": []
     },
     {
      "name": "width",
      "schreibweise": "width",
      "quelle": "tabelle",
-     "beschreibung": "Width of the rich text field",
+     "beschreibung": "Breite des Rich-Text-Rechtecks in gewählter Maßeinheit.",
      "werte": []
     },
     {
      "name": "height",
      "schreibweise": "height",
      "quelle": "tabelle",
-     "beschreibung": "Height of the rich text field",
+     "beschreibung": "Höhe des Rich-Text-Rechtecks in gewählter Maßeinheit.",
      "werte": []
     },
     {
      "name": "font",
      "schreibweise": "font",
      "quelle": "tabelle",
-     "beschreibung": "Specifies a font type, same as for T command",
+     "beschreibung": "Interne Vektorschrift oder geladene TrueType-Schriftnummer; keine Bitmap.",
      "werte": [
       {
        "wert": "3",
-       "beschreibung": "Vector font Swiss 721™ (BX000003)",
-       "generationen": null
+       "beschreibung": "Vektor Swiss 721 (BX000003)",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "5",
-       "beschreibung": "Vector font Swiss 721 Bold™ (BX000005)",
-       "generationen": null
+       "beschreibung": "Vektor Swiss 721 Bold (BX000005)",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "7",
-       "beschreibung": "Vector font CG Triumvirate Condensed Bold™ (CGTRIUM)",
-       "generationen": null
+       "beschreibung": "Vektor CG Triumvirate Condensed Bold (CGTRIUM)",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "596",
-       "beschreibung": "Vector font Monospace 821™ (BX000596)",
-       "generationen": null
+       "beschreibung": "Vektor Monospace 821 (BX000596)",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "1000",
-       "beschreibung": "Vector font AR Heiti Medium (GEHEI21M)",
-       "generationen": null
+       "beschreibung": "AR Heiti Medium (GEHEI21M), vereinfachtes Chinesisch; X2 mit offenem Quadrat",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "1001",
-       "beschreibung": "Vector font HanWangHeiLight",
-       "generationen": null
+       "beschreibung": "HanWangHeiLight, traditionelles Chinesisch; X2 mit offenem Quadrat",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "1010",
-       "beschreibung": "Vector font Garuda (Thai font)",
-       "generationen": null
+       "beschreibung": "Garuda, Thai; X2 mit offenem Quadrat",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -23851,127 +25389,668 @@
      "name": "size",
      "schreibweise": "size",
      "quelle": "tabelle",
-     "beschreibung": "Sets the character size",
+     "beschreibung": "Schriftgröße in mm/Zoll oder ptx.",
      "werte": []
     },
     {
      "name": "line-spacing",
-     "schreibweise": "line-spacing",
+     "schreibweise": "[,line-spacing]",
      "quelle": "tabelle",
-     "beschreibung": "Line spacing (optional).",
-     "werte": []
+     "beschreibung": "Optionaler Zeilenabstand; S. 234 nennt mm, siehe Einheitenhinweis.",
+     "werte": [],
+     "standard": "Standardeinstellung, numerischer Wert nicht angegeben"
     },
     {
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Data string. (HTML-Markup-Tags als Werte)",
+     "beschreibung": "Rich Text mit Inhaltsfeldern; gezeigte HTML-Tags und Beispielattribute sind keine geschlossene Textwertemenge.",
      "werte": [
       {
+       "wert": "<HTML>",
+       "beschreibung": "HTML-Wrapper",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</HTML>",
+       "beschreibung": "Ende HTML-Wrapper",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
        "wert": "<b>",
-       "beschreibung": "</b>              Bold",
-       "generationen": null
+       "beschreibung": "Fett",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</b>",
+       "beschreibung": "Ende Fett",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<i>",
-       "beschreibung": "</i>              Italic",
-       "generationen": null
+       "beschreibung": "Kursiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</i>",
+       "beschreibung": "Ende Kursiv",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<u>",
-       "beschreibung": "</u>              Underlined",
-       "generationen": null
+       "beschreibung": "Unterstrichen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</u>",
+       "beschreibung": "Ende Unterstrichen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<s>",
-       "beschreibung": "</s>              Striked out",
-       "generationen": null
+       "beschreibung": "Durchgestrichen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</s>",
+       "beschreibung": "Ende Durchgestrichen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<sup>",
-       "beschreibung": "</sup>            Superscript",
-       "generationen": null
+       "beschreibung": "Hochgestellt",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</sup>",
+       "beschreibung": "Ende Hochgestellt",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<sub>",
-       "beschreibung": "</sub>            Subscript",
-       "generationen": null
+       "beschreibung": "Tiefgestellt",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</sub>",
+       "beschreibung": "Ende Tiefgestellt",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<big>",
-       "beschreibung": "</big>            Enlarged",
-       "generationen": null
+       "beschreibung": "Größer",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</big>",
+       "beschreibung": "Ende Größer",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<small>",
-       "beschreibung": "</small>          Reduced",
-       "generationen": null
+       "beschreibung": "Kleiner",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</small>",
+       "beschreibung": "Ende Kleiner",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<h1>",
-       "beschreibung": "</h1>             Level 1 heading",
-       "generationen": null
+       "beschreibung": "Überschrift Ebene 1",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</h1>",
+       "beschreibung": "Ende Überschrift Ebene 1",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<h2>",
-       "beschreibung": "</h2>             Level 2 heading",
-       "generationen": null
+       "beschreibung": "Überschrift Ebene 2",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</h2>",
+       "beschreibung": "Ende Überschrift Ebene 2",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<h3>",
-       "beschreibung": "</h3>             Level 3 heading",
-       "generationen": null
+       "beschreibung": "Überschrift Ebene 3",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</h3>",
+       "beschreibung": "Ende Überschrift Ebene 3",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<h4>",
-       "beschreibung": "</h4>             Level 4 heading",
-       "generationen": null
+       "beschreibung": "Überschrift Ebene 4",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</h4>",
+       "beschreibung": "Ende Überschrift Ebene 4",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<h5>",
-       "beschreibung": "</h5>             Level 5 heading",
-       "generationen": null
+       "beschreibung": "Überschrift Ebene 5",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
-       "wert": "<!-- ...",
-       "beschreibung": "-->               Comments (will not be printed)",
-       "generationen": null
+       "wert": "</h5>",
+       "beschreibung": "Ende Überschrift Ebene 5",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<!-- ... -->",
+       "beschreibung": "Nicht gedruckter Kommentar",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<p align=left>",
-       "beschreibung": "Left aligned paragraph",
-       "generationen": null
+       "beschreibung": "Absatzausrichtung left",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<p align=center>",
-       "beschreibung": "</p>              Centered paragraph",
-       "generationen": null
+       "beschreibung": "Absatzausrichtung center",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<p align=right>",
-       "beschreibung": "Right aligned paragraph",
-       "generationen": null
+       "beschreibung": "Absatzausrichtung right",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<p align=justify>",
-       "beschreibung": "Full justified paragraph",
-       "generationen": null
+       "beschreibung": "Absatzausrichtung justify",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</p>",
+       "beschreibung": "Absatzende",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<br>",
-       "beschreibung": "New line",
-       "generationen": null
+       "beschreibung": "Zeilenumbruch",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "<hr>",
-       "beschreibung": "Draws a horizontal line",
-       "generationen": null
+       "beschreibung": "Horizontale Linie",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<table>",
+       "beschreibung": "Im Handbuchbeispiel: Tabelle",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</table>",
+       "beschreibung": "Ende Tabelle",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<tr>",
+       "beschreibung": "Im Handbuchbeispiel: Tabellenzeile",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</tr>",
+       "beschreibung": "Ende Tabellenzeile",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<td>",
+       "beschreibung": "Im Handbuchbeispiel: Tabellenzelle",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</td>",
+       "beschreibung": "Ende Tabellenzelle",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<span>",
+       "beschreibung": "Im Handbuchbeispiel: Formatierter Textbereich",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</span>",
+       "beschreibung": "Ende Formatierter Textbereich",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<font>",
+       "beschreibung": "Im Handbuchbeispiel: Schriftformatierung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</font>",
+       "beschreibung": "Ende Schriftformatierung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "<div>",
+       "beschreibung": "Im Handbuchbeispiel: Textabschnitt",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "</div>",
+       "beschreibung": "Ende Textabschnitt",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "size.pt",
+     "schreibweise": "ptx",
+     "quelle": "tabelle",
+     "beschreibung": "Schriftgröße in typografischen Punkten.",
+     "werte": []
+    },
+    {
+     "name": "html.attributes",
+     "schreibweise": "attributes",
+     "quelle": "tabelle",
+     "beschreibung": "In Beispielen gezeigte Attribute; Werte sind kontextabhängige HTML-Daten.",
+     "werte": [
+      {
+       "wert": "align",
+       "beschreibung": "Ausrichtung left/center/right/justify",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "valign",
+       "beschreibung": "Vertikale Ausrichtung; Beispiele top/center/middle/bottom",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "border",
+       "beschreibung": "Tabellenrahmen",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "cellpadding",
+       "beschreibung": "Zellinnenabstand",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "cellspacing",
+       "beschreibung": "Zellzwischenraum",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "width",
+       "beschreibung": "Tabellen-/Zellenbreite",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "style",
+       "beschreibung": "CSS-Formatierung",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "color",
+       "beschreibung": "Schriftfarbe",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      }
+     ]
+    },
+    {
+     "name": "html.style",
+     "schreibweise": "style",
+     "quelle": "tabelle",
+     "beschreibung": "In Beispielen gezeigte CSS-Eigenschaften, kein Anspruch auf vollständigen Qt4-CSS-Katalog.",
+     "werte": [
+      {
+       "wert": "border-style",
+       "beschreibung": "Beispielwert dotted",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "border-color",
+       "beschreibung": "Beispielwert #000",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "background-color",
+       "beschreibung": "Beispielwert #000",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "font-size",
+       "beschreibung": "Beispiele large, xx-large oder Punktgröße",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "text-transform",
+       "beschreibung": "Beispiele uppercase und lowercase",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Textrechteck bezieht sich auf obere linke Ecke, nicht T-Basislinie. Bitmap ist ausdrücklich nicht unterstützt, trotz kopiertem Bitmap-Rotationstext. S. 234 nennt Zeilenabstand in mm, der allgemeine m-Befehl alle Maßwerte in gewählter Einheit: Zollinterpretation ist nicht eindeutig, keine stille Umrechnung. Beschreibung fordert HTML-Wrapper, Beispiel S. 237 zeigt auch ein Fragment ohne Wrapper. Mehrzeilige HTML-Beispiele sind erhalten; R-Ersatztext muss dagegen einzeilig sein. Das Handbuch verweist auf Qt4-HTML4-Teilmenge; Listen hier sind gezeigte Tags/Attribute, keine pauschale Ablehnung jedes weiteren Qt-Tags.",
+   "regeln": [
+    "Zeilen werden innerhalb des Rechtecks umgebrochen; ohne Sprachkenntnis nur an Leerzeichen oder expliziter weicher Trennstelle.",
+    "Weiches Trennzeichen: [U:173], [U:$AD], &shy; oder &#173; laut Beschreibung.",
+    "Für R muss der vollständige Ersatztext auf einer Zeile stehen.",
+    "Sehr kleiner Zeilenabstand lässt Zeilen überlappen; kein Mindestwert wird genannt."
+   ]
   },
   {
    "id": "JS-4.18",
@@ -23998,19 +26077,37 @@
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Printing coordinate when a signal should be set.",
+     "beschreibung": "Position ab Druckbeginn in mm/Zoll, an der das Signal geschaltet wird.",
      "werte": []
     },
     {
      "name": "ao",
      "schreibweise": "[;ao]",
      "quelle": "tabelle",
-     "beschreibung": "Hex nibbles to set or to reset the signal.",
-     "werte": []
+     "beschreibung": "Optionale zwei Hexziffern: erste AND-, zweite OR-Maske. Ohne Operand Eintrag dieser Position aus interner Liste entfernen.",
+     "werte": [],
+     "bereich": "zwei Hex-Nibbles"
+    },
+    {
+     "name": "a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "AND-Maske, erste Hexziffer.",
+     "werte": [],
+     "bereich": "0…F"
+    },
+    {
+     "name": "o",
+     "schreibweise": "o",
+     "quelle": "tabelle",
+     "beschreibung": "OR-Maske, zweite Hexziffer.",
+     "werte": [],
+     "bereich": "0…F"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nach S anordnen. Erfordert entsprechenden optionalen Peripherieanschluss; nicht jeder Drucker besitzt ihn. Neuer J-Auftrag leert die Positionsliste. Weggelassenes ao ist Entfernen des Listeneintrags, nicht der Zahlenwert 00."
   },
   {
    "id": "JS-5.1",
@@ -28598,7 +30695,11 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Schreibt den aktuellen Wert in benutzerbezogenen, batteriegepufferten RAM-Speicher; keine expliziten Syntaxargumente. Höchstens 32 Zeichen, nur eine Benutzerdatei gleichzeitig. Gegenstück RUSER (JS-5.94); nicht wie einen lokalen Datei-/Flash-Schreibzugriff behandeln.",
+   "regeln": [
+    "Impliziter zu schreibender Feldwert höchstens 32 Zeichen."
+   ]
   },
   {
    "id": "JS-6.1",
@@ -28618,19 +30719,20 @@
    },
    "verweis": null,
    "syntax": [
-    "; This is a comment line[CR]"
+    ";comment[CR]"
    ],
    "parameter": [
     {
      "name": "comment",
      "schreibweise": "comment",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Kommentartext auf einer eigenen mit Semikolon beginnenden Zeile.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Kann zwischen Befehlen an beliebiger Stelle als eigene Zeile stehen und wird vom Drucker ignoriert. Ein Semikolon innerhalb einer Befehlszeile ist dadurch nicht automatisch ein Kommentarstart."
   },
   {
    "id": "JS-6.2",
@@ -28655,14 +30757,15 @@
    "parameter": [
     {
      "name": "abc_code",
-     "schreibweise": "abc_code",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "schreibweise": "any abc code",
+     "quelle": "tabelle",
+     "beschreibung": "Mehrzeiliger abc-Quelltext zwischen ABC-Tags; eigenständige YABASIC-verwandte Druckersprache.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "JScript muss den Block abgrenzen und unverändert erhalten, aber nicht den abc-Code als JScript-Befehle interpretieren. Die eigentliche abc-Sprache ist in einem separaten Herstellerhandbuch beschrieben."
   },
   {
    "id": "JS-6.3",
@@ -28686,15 +30789,17 @@
    ],
    "parameter": [
     {
-     "name": "key",
-     "schreibweise": "key",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "name": "board_number",
+     "schreibweise": "nnnnnnnnnnnn",
+     "quelle": "tabelle",
+     "beschreibung": "Eindeutige Mainboard-Seriennummer, kein frei gewählter kryptografischer Schlüssel.",
+     "werte": [],
+     "bereich": "12 Stellen gemäß Syntaxplatzhalter"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X2. Kennzeichnet eine vom Hersteller/Händler verschlüsselte Datei für eine bestimmte Platine. Kein Abschlussmarker und keine Nutzdatenlänge werden angegeben; verschlüsselte Folgedaten opak erhalten, nicht als normale JScript-Zeilen umdeuten. Keine eigene Verschlüsselungsfunktion aus dieser Markierung ableiten."
   },
   {
    "id": "JS-6.4",
@@ -28719,19 +30824,20 @@
    "parameter": [
     {
      "name": "job",
-     "schreibweise": "job",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "schreibweise": "any JScript job",
+     "quelle": "tabelle",
+     "beschreibung": "Bereits verschlüsselter Auftragsinhalt zwischen ENCRYPTED-JOB-Tags; opak erhalten.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X2; Verschlüsselung benötigt Hersteller-/Händlerunterstützung. Editor erkennt und erhält den Rahmen, entschlüsselt oder verändert den opaken Inhalt nicht."
   }
  ],
  "statistik": {
   "eintraege": 237,
-  "parameter": 1366,
-  "werte": 1566
+  "parameter": 1423,
+  "werte": 1756
  }
 }
