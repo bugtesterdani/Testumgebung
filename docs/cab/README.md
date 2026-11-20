@@ -2,14 +2,47 @@
 
 Grundlage: cab JScript Programming Manual 07/2026, Firmware 5.48.
 
-Der beigefügte Katalog ist zunächst die unveränderte, ungeprüfte Extraktion.
-`geprueft: false` bleibt bis zur tatsächlichen Prüfung der jeweiligen
-Handbuchseiten erhalten. Diese Zwischenfassung begründet keine vollständige
-Unterstützung im Etiketteneditor.
+Der Katalog wird schrittweise gegen das Handbuch geprüft. `geprueft: false`
+bleibt bis zur tatsächlichen Prüfung der jeweiligen Handbuchseiten erhalten.
+Diese Zwischenfassung begründet keine vollständige Unterstützung im
+Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
+
+## Tatsächlich geprüfte Abschnitte
+
+- JS-1.3, Seite 8: allgemeine Syntaxregeln abgeglichen.
+- JS-1.4, Seite 8: fehlende Befehlsarten ergänzt. Das Handbuch nennt vier Arten,
+  zählt aber zusätzlich Sonstiges auf.
+- JS-4.2.1, Seiten 76–80: fehlende Inhaltsverzeichnisposition ergänzt und auf
+  die vorhandene gemeinsame B-Definition JS-4.2 verwiesen. Die pauschale
+  Barcodegrenze auf Seite 76 widerspricht der Tabelle auf Seite 9; der Hinweis
+  dokumentiert diese Abweichung. Zusammen mit JS-1.4 enthält der Katalog jetzt
+  237 Abschnitte statt der 235 Abschnitte der Extraktion. Ein lokaler Abgleich
+  der Abschnittsnummern mit dem Inhaltsverzeichnis ergab keine weitere Lücke.
+- JS-5.97, Seiten 344–346: Seriennummer. Die Syntax nennt `start`, die Tabelle
+  nennt `x`. Der Parameter heißt nach Tabelle `x`; die Originalschreibweise
+  `start` bleibt in der Syntax und im Hinweis erhalten. Standardwerte für
+  Schrittweite und Wiederholungszahl sind jeweils 1.
+- JS-4.5.4, Seiten 179–181: RFID-Parameter für X2/X4 getrennt beschrieben,
+  Werte, Generationen, Bereiche und Standardwerte ergänzt. Ax/X3 bleiben
+  ausdrücklich unbelegt. Widersprüche bei `P:pos` und beim Trennzeichen vor
+  `E:power` stehen im Kataloghinweis.
+- JS-4.9, Seiten 199–201: mehrzeilige GOODBAD-/EXTERN-Parameter rekonstruiert,
+  Feldname und Bildname sowie Prüfpositionsparameter und Autoload getrennt;
+  Vergrößerung, Drehungen und Zeitlimits ergänzt.
+
+## Strukturprüfung
+
+`build/test-cab-catalog-schema.ps1` prüft das JSON-Schema und negative Fälle
+(fehlende ID, ungültige Generation, Parameterquelle und Handbuchseite).
+`CabJScriptCatalogSchemaTests` führt diese Prüfung in der Testsuite aus und
+prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
 Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren und Schema sowie automatisierte Prüfungen zu
-ergänzen. Der lokale Handbuch-PDF bleibt außerhalb des Repositorys.
+Extraktionsfehler zu korrigieren. Noch 231 Einträge sind fachlich ungeprüft;
+die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
+Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
+Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation
+einschließlich des generierten Bausteinkatalogs abgeglichen sein.
 
 Die folgenden AP beginnen erst nach erfolgreichem Build, Tests, CI, Review und
 Merge von AP 0. Issue: #253; Release: R9, Milestone 18.

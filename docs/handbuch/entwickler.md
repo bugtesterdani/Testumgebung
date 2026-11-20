@@ -59,6 +59,11 @@ GS1 DataMatrix, GS1 QR, horizontalen Linien und eingebetteten unkomprimierten mo
 Die Matrix-Modulgröße darf bis zu zehn Punkte betragen. Etikettenbreite und -höhe sind ganzzahlige Millimeter.
 Bei weiteren Befehlen, Schriftarten, Drehungen oder Bildformaten nennt die Anwendung den nicht unterstützten Inhalt.
 Die unveränderte Druckdatei lässt sich weiterhin einbetten und drucken. [cab-JScript-Programmierhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
+
+Der strukturierte [JScript-Katalog](../cab/README.md) wird derzeit anhand der
+Handbuchausgabe 07/2026 geprüft. Die Schema- und Konsistenztests prüfen die
+Datenstruktur; sie weisen noch keine vollständige Befehlsunterstützung nach.
+Der jeweilige fachliche Prüfstand steht im Katalog unter `geprueft`.
 Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
 DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der Druckbaustein setzt die erforderlichen Trennzeichen für GS1 ein. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
 

@@ -1,0 +1,311 @@
+{
+  "type": "object",
+  "properties": {
+    "quelle": {
+      "type": "object",
+      "properties": {
+        "titel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ausgabe": {
+          "const": "07/2026"
+        },
+        "firmware": {
+          "const": "5.48"
+        },
+        "seiten": {
+          "const": 382
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "titel",
+        "ausgabe",
+        "firmware",
+        "seiten",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "hinweis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eintraege": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/eintrag"
+      },
+      "minItems": 1
+    },
+    "statistik": {
+      "type": "object",
+      "required": [
+        "eintraege",
+        "parameter",
+        "werte"
+      ],
+      "properties": {
+        "eintraege": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parameter": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "werte": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "quelle",
+    "hinweis",
+    "eintraege",
+    "statistik"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cab-JScript-Befehlskatalog",
+  "description": "Strukturprüfung. Fachprüfung und Vollständigkeit werden separat nachgewiesen.",
+  "definitions": {
+    "generationen": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "Ax": {
+          "enum": [
+            "y",
+            "n",
+            ""
+          ]
+        },
+        "X2": {
+          "enum": [
+            "y",
+            "n",
+            ""
+          ]
+        },
+        "X3": {
+          "enum": [
+            "y",
+            "n",
+            ""
+          ]
+        },
+        "X4": {
+          "enum": [
+            "y",
+            "n",
+            ""
+          ]
+        }
+      },
+      "required": [
+        "Ax",
+        "X2",
+        "X3",
+        "X4"
+      ],
+      "additionalProperties": false
+    },
+    "wert": {
+      "type": "object",
+      "properties": {
+        "wert": {
+          "type": "string",
+          "minLength": 1
+        },
+        "beschreibung": {
+          "type": "string"
+        },
+        "generationen": {
+          "$ref": "#/definitions/generationen"
+        }
+      },
+      "required": [
+        "wert",
+        "beschreibung",
+        "generationen"
+      ],
+      "additionalProperties": false
+    },
+    "parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schreibweise": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quelle": {
+          "enum": [
+            "tabelle",
+            "syntax",
+            "antwortfeld"
+          ]
+        },
+        "beschreibung": {
+          "type": "string"
+        },
+        "werte": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/wert"
+          }
+        },
+        "bereich": {
+          "type": [
+            "string",
+            "object",
+            "null"
+          ]
+        },
+        "standard": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null",
+            "object"
+          ]
+        },
+        "generationen": {
+          "$ref": "#/definitions/generationen"
+        }
+      },
+      "required": [
+        "name",
+        "schreibweise",
+        "quelle",
+        "beschreibung",
+        "werte"
+      ],
+      "additionalProperties": false
+    },
+    "eintrag": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^JS-[1-6]\\.\\d+(\\.\\d+)?$"
+        },
+        "abschnitt": {
+          "type": "string",
+          "pattern": "^[1-6]\\.\\d+(\\.\\d+)?$"
+        },
+        "art": {
+          "enum": [
+            "allgemein",
+            "esc",
+            "sofortbefehl",
+            "etikettbefehl",
+            "barcode",
+            "erweiterung",
+            "grafik",
+            "speicherkarte",
+            "inhaltsfeld",
+            "sonstiges"
+          ]
+        },
+        "befehl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "titel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seiten": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 382
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "generationen": {
+          "$ref": "#/definitions/generationen"
+        },
+        "verweis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "syntax": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "parameter": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/parameter"
+          }
+        },
+        "barcode_eigenschaften": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "geprueft": {
+          "type": "boolean"
+        },
+        "regeln": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "hinweis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objektgrenzen": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "abschnitt",
+        "art",
+        "befehl",
+        "titel",
+        "seiten",
+        "generationen",
+        "verweis",
+        "syntax",
+        "parameter",
+        "barcode_eigenschaften",
+        "geprueft"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

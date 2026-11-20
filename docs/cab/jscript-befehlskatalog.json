@@ -23,7 +23,7 @@
    "syntax": [],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false,
+   "geprueft": true,
    "regeln": [
     "Zeilenende CR, LF oder CR/LF",
     "ESC-Befehle werden sofort beim Empfang des benötigten Zeichens ausgeführt",
@@ -31,6 +31,31 @@
     "Numerische Parameter akzeptieren führende Nullen",
     "Parametertrenner Semikolon oder Komma"
    ]
+  },
+  {
+   "id": "JS-1.4",
+   "abschnitt": "1.4",
+   "art": "allgemein",
+   "befehl": null,
+   "titel": "Command types",
+   "seiten": [
+    8,
+    8
+   ],
+   "generationen": null,
+   "verweis": null,
+   "syntax": [],
+   "parameter": [],
+   "barcode_eigenschaften": null,
+   "geprueft": true,
+   "regeln": [
+    "ESC-Befehle werden sofort ausgeführt, auch während eines Druckauftrags.",
+    "Kleinbuchstaben bezeichnen Einstellungen und Sofortbefehle.",
+    "Großbuchstaben beschreiben das Etikett: Auftragsstart, Größe, Objekte, Druckmenge.",
+    "Inhaltsfelder stehen innerhalb von Etikettbefehlen in eckigen Klammern.",
+    "Sonstige Befehle bilden eine eigene Gruppe."
+   ],
+   "hinweis": "Das Handbuch spricht von vier Befehlsarten, zählt aber zusätzlich Sonstiges auf. Abschnitt fehlte in der gelieferten Extraktion; daher zunächst 236 statt 235 Katalogeinträge."
   },
   {
    "id": "JS-1.5",
@@ -2792,6 +2817,32 @@
    ],
    "barcode_eigenschaften": null,
    "geprueft": false
+  },
+  {
+   "id": "JS-4.2.1",
+   "abschnitt": "4.2.1",
+   "art": "allgemein",
+   "befehl": null,
+   "titel": "General information",
+   "seiten": [
+    76,
+    80
+   ],
+   "generationen": null,
+   "verweis": "Allgemeine Barcode-Syntax und Parameter: JS-4.2 (S. 76–80).",
+   "syntax": [],
+   "parameter": [],
+   "barcode_eigenschaften": null,
+   "geprueft": true,
+   "hinweis": "Der Abschnitt fehlte als eigene Inhaltsverzeichnisposition. Die B-Definition wird unter JS-4.2 geführt; dieser Eintrag verweist darauf, statt eine zweite B-Definition einzuführen. Die pauschale Grenze 100 auf S. 76 widerspricht der generationenspezifischen Tabelle S. 9; Objektgrenzen sind nach JS-1.6 zu behandeln.",
+   "regeln": [
+    "Barcodes unterstützen 0, 90, 180 und 270 Grad.",
+    "Feldnamen: eindeutig, Groß-/Kleinschreibung beachten, nur Buchstaben und Ziffern, Buchstabe am Anfang; Ax/X2 höchstens 10, X3/X4 höchstens 32 Zeichen.",
+    "Großschreibung des Barcodetyps aktiviert Klarschrift, Kleinschreibung unterdrückt sie.",
+    "Optionen, Größen und besondere Inhaltsfelder hängen vom Barcodetyp ab; gemeinsame Parameter siehe JS-4.2.",
+    "Bei mehreren Prüfoptionen gilt nur der letzte Barcode als zu prüfendes Feld; Warteposition nur X4.",
+    "Ein nicht passender Barcode einschließlich Ruhezone wird als Rasterfläche dargestellt; die Fehlerbehandlung hängt auch vom Drucker-Setup ab."
+   ]
   },
   {
    "id": "JS-4.2.2",
@@ -10150,16 +10201,16 @@
    "id": "JS-4.5.4",
    "abschnitt": "4.5.4",
    "art": "erweiterung",
-   "befehl": null,
+   "befehl": "E RFID",
    "titel": "RFID",
    "seiten": [
     179,
     181
    ],
    "generationen": {
-    "Ax": "y",
+    "Ax": "",
     "X2": "y",
-    "X3": "y",
+    "X3": "",
     "X4": "y"
    },
    "verweis": null,
@@ -10169,169 +10220,306 @@
    ],
    "parameter": [
     {
-     "name": "T",
-     "schreibweise": "T",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
      "name": "tagtype",
-     "schreibweise": "tagtype",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "R",
-     "schreibweise": "R",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "T:tagtype",
+     "quelle": "tabelle",
+     "beschreibung": "RFID-Tagtyp; Auto ermittelt den Typ selbst.",
+     "werte": [
+      {
+       "wert": "Auto",
+       "beschreibung": "Automatische Erkennung",
+       "generationen": {
+        "Ax": "",
+        "X2": "y",
+        "X3": "",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ISO 15693",
+       "beschreibung": "ISO-15693-Tag mit 32-Bit-Blöcken",
+       "generationen": {
+        "Ax": "",
+        "X2": "y",
+        "X3": "",
+        "X4": "n"
+       }
+      },
+      {
+       "wert": "EPCGen2",
+       "beschreibung": "EPC-Tag",
+       "generationen": {
+        "Ax": "",
+        "X2": "n",
+        "X3": "",
+        "X4": "y"
+       }
+      }
+     ],
+     "generationen": {
+      "Ax": "",
+      "X2": "y",
+      "X3": "",
+      "X4": "y"
+     },
+     "standard": "Auto"
     },
     {
      "name": "retries",
-     "schreibweise": "retries",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "C",
-     "schreibweise": "C",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "R:retries",
+     "quelle": "tabelle",
+     "beschreibung": "Wiederholungsversuche bei Lese-/Schreibfehlern.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "y",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": "0…10",
+     "standard": {
+      "X2": 0,
+      "X4": 3
+     }
     },
     {
      "name": "cp",
-     "schreibweise": "cp",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "P",
-     "schreibweise": "P",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "C:cp",
+     "quelle": "tabelle",
+     "beschreibung": "Codepage für die Datenumwandlung; Name wie im Drucker-Setup. Ohne Angabe gilt die Setup-Codepage.",
+     "werte": [
+      {
+       "wert": "Auto",
+       "beschreibung": "Codepage aus dem Setup (X2)",
+       "generationen": {
+        "Ax": "",
+        "X2": "y",
+        "X3": "",
+        "X4": "n"
+       }
+      }
+     ],
+     "generationen": {
+      "Ax": "",
+      "X2": "y",
+      "X3": "",
+      "X4": "y"
+     },
+     "standard": "Drucker-Setup"
     },
     {
      "name": "pos",
-     "schreibweise": "pos",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "P:pos",
+     "quelle": "tabelle",
+     "beschreibung": "Lese-/Schreibposition: X2 relativ zum Druckkopf; X4 relativ zur Etikettenvorderkante, in mm.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "y",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": {
+      "X2": "-10…20",
+      "X4": "0…80"
+     },
+     "standard": {
+      "X2": 0,
+      "X4": "Drucker-Setup"
+     }
     },
     {
      "name": "power",
-     "schreibweise": "power",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "W",
-     "schreibweise": "W",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "E:power",
+     "quelle": "tabelle",
+     "beschreibung": "X2: Feldstärke als Auswahl; X4: Lesefeldstärke in dBm.",
+     "werte": [
+      {
+       "wert": "S",
+       "beschreibung": "Normale Feldstärke (X2)",
+       "generationen": {
+        "Ax": "",
+        "X2": "y",
+        "X3": "",
+        "X4": "n"
+       }
+      },
+      {
+       "wert": "H",
+       "beschreibung": "Hohe Feldstärke (X2)",
+       "generationen": {
+        "Ax": "",
+        "X2": "y",
+        "X3": "",
+        "X4": "n"
+       }
+      }
+     ],
+     "generationen": {
+      "Ax": "",
+      "X2": "y",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": {
+      "X4": "-2…17 dBm"
+     },
+     "standard": "Drucker-Setup"
     },
     {
      "name": "wpower",
-     "schreibweise": "wpower",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "U",
-     "schreibweise": "U",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "W:wpower",
+     "quelle": "tabelle",
+     "beschreibung": "Schreibfeldstärke in dBm.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": "-2…17",
+     "standard": "Drucker-Setup"
     },
     {
      "name": "unpower",
-     "schreibweise": "unpower",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "U:unpower",
+     "quelle": "tabelle",
+     "beschreibung": "Zeit ohne HF-Leistung nach dem Schreiben vor der Prüfung, in ms.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": "10…10000",
+     "standard": 50
     },
     {
      "name": "V",
      "schreibweise": "V",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "L",
-     "schreibweise": "L",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "Nach dem Schreiben validieren.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "standard": false
     },
     {
      "name": "length",
-     "schreibweise": "length",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "L:length",
+     "quelle": "tabelle",
+     "beschreibung": "Netto-EPC-Speichergröße in Bytes ohne PC-/CRC-Wörter; für JAIF-Padding. Positive gerade Zahl oder 0 für unbekannt.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": "0 oder positive gerade Ganzzahl",
+     "standard": 0
     },
     {
-     "name": "X",
-     "schreibweise": "X",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "name": "P",
+     "schreibweise": "P",
+     "quelle": "tabelle",
+     "beschreibung": "RFID-Vordruck bei Vorwärtsbewegungen; bei optimiertem Rücktransport automatisch aktiv.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "standard": false
     },
     {
      "name": "tidlength",
-     "schreibweise": "tidlength",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "X:tidlength",
+     "quelle": "tabelle",
+     "beschreibung": "Bekannte TID-Länge in Bytes; 0 bedeutet unbekannt.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": "0 oder positive Ganzzahl",
+     "standard": 0
     },
     {
      "name": "N",
      "schreibweise": "N",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "A",
-     "schreibweise": "A",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "quelle": "tabelle",
+     "beschreibung": "HF-Leistung des RFID-Lesers dauerhaft eingeschaltet lassen.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     }
     },
     {
      "name": "antenna",
-     "schreibweise": "antenna",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "S",
-     "schreibweise": "S",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "A:antenna",
+     "quelle": "tabelle",
+     "beschreibung": "Antenne für das Etikett auswählen.",
+     "werte": [
+      {
+       "wert": "A",
+       "beschreibung": "Antenne am Druckkopf",
+       "generationen": {
+        "Ax": "",
+        "X2": "n",
+        "X3": "",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "V",
+       "beschreibung": "Antenne im Transportmodul",
+       "generationen": {
+        "Ax": "",
+        "X2": "n",
+        "X3": "",
+        "X4": "y"
+       }
+      }
+     ],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "standard": "Drucker-Setup"
     },
     {
      "name": "accesspwd",
-     "schreibweise": "accesspwd",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "schreibweise": "S:accesspwd",
+     "quelle": "tabelle",
+     "beschreibung": "Zugriffspasswort: genau vier Bytes, als 0x gefolgt von acht Hexziffern oder vier ISO-Latin1-Bytes.",
+     "werte": [],
+     "generationen": {
+      "Ax": "",
+      "X2": "n",
+      "X3": "",
+      "X4": "y"
+     },
+     "bereich": "genau 4 Bytes"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "S. 179–181 unterscheiden nur X2 und X4; Ax und X3 sind dort nicht belegt. Erste Syntax: X2; zweite Syntax: X4. Die Syntax druckt vor E:power kein Komma, das Beispiel verwendet eines. P:pos ist eine Position, P ohne Doppelpunkt die X4-Vordruckoption. Das X4-Beispiel mit P:-10 widerspricht dem Tabellenbereich 0…80 mm; die Tabelle bleibt maßgeblich. Keine stillschweigende Ausweitung des Bereichs."
   },
   {
    "id": "JS-4.5.5",
@@ -11060,89 +11248,178 @@
    },
    "verweis": null,
    "syntax": [
-    "I[:name;]x,y,r[,mx][,my][,GOODBAD[a[:b[:c]]]][,EXTERN[a[:b[:c]]]] [,a];name[CR]"
+    "I[:name;]x,y,r[,mx][,my][,GOODBAD[a[:b[:c]]]][,EXTERN[a[:b[:c]]]][,a];name[CR]"
    ],
    "parameter": [
     {
-     "name": "name",
+     "name": "fieldname",
      "schreibweise": "[:name;]",
      "quelle": "tabelle",
-     "beschreibung": "Field name (optional), for further usage as a variable",
-     "werte": []
+     "beschreibung": "Optionaler eindeutiger Feldname: Buchstabe am Anfang, danach Buchstaben/Ziffern; Groß-/Kleinschreibung beachten.",
+     "werte": [],
+     "bereich": {
+      "Ax": "1…10 Zeichen",
+      "X2": "1…10 Zeichen",
+      "X3": "1…32 Zeichen",
+      "X4": "1…32 Zeichen"
+     }
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "X (horizontal) coordinate of the start position of an image in millimeters",
+     "beschreibung": "Horizontaler Abstand vom linken Etikettenrand zur linken oberen Bildecke, in der gesetzten Einheit mm/Zoll.",
      "werte": []
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Y (vertical) coordinate of the start position of an image in millimeters or",
+     "beschreibung": "Vertikaler Abstand vom oberen Etikettenrand zur linken oberen Bildecke, in der gesetzten Einheit mm/Zoll.",
      "werte": []
     },
     {
      "name": "r",
      "schreibweise": "r",
      "quelle": "tabelle",
-     "beschreibung": "Rotation (in degrees)",
-     "werte": []
+     "beschreibung": "Bilddrehung in Grad.",
+     "werte": [
+      {
+       "wert": "0",
+       "beschreibung": "0 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "90",
+       "beschreibung": "90 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "180",
+       "beschreibung": "180 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "270",
+       "beschreibung": "270 Grad",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     },
     {
      "name": "mx",
      "schreibweise": "[,mx]",
      "quelle": "tabelle",
-     "beschreibung": "Horizontal magnification factor (optional), enlarges the image horizon",
-     "werte": []
+     "beschreibung": "Optionaler horizontaler Vergrößerungsfaktor; bei Autoload anzugeben.",
+     "werte": [],
+     "bereich": "1…10"
     },
     {
      "name": "my",
      "schreibweise": "[,my]",
      "quelle": "tabelle",
-     "beschreibung": "Vertical magnification factor (optional), enlarges the image vertically",
-     "werte": []
+     "beschreibung": "Optionaler vertikaler Vergrößerungsfaktor; bei Autoload anzugeben.",
+     "werte": [],
+     "bereich": "1…10"
     },
     {
      "name": "GOODBAD",
-     "schreibweise": "[,GOODBAD",
+     "schreibweise": "[,GOODBAD[a[:b[:c]]]]",
      "quelle": "tabelle",
-     "beschreibung": "Controls the readability of barcodes which have been transmitted as",
-     "werte": []
-    },
-    {
-     "name": "a",
-     "schreibweise": "a",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "b",
-     "schreibweise": "b",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
-    },
-    {
-     "name": "c",
-     "schreibweise": "c",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Prüft die Lesbarkeit eines als Grafik übertragenen Barcodes; nur das letzte dafür markierte Objekt eines Etiketts wird geprüft.",
      "werte": []
     },
     {
      "name": "EXTERN",
-     "schreibweise": "EXTERN",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "schreibweise": "[,EXTERN[a[:b[:c]]]]",
+     "quelle": "tabelle",
+     "beschreibung": "Prüfung wie GOODBAD durch ein externes Prüfgerät statt Barcodeprüfer; Rückmeldung mit ESCv (JS-2.21).",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Triggerpositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für GOODBAD in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "GOODBAD.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Zeitlimit für GOODBAD in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "EXTERN.a",
+     "schreibweise": "a",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Triggerpositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.b",
+     "schreibweise": "b",
+     "quelle": "tabelle",
+     "beschreibung": "Optionaler Wartepositionsversatz für EXTERN in mm/Zoll.",
+     "werte": []
+    },
+    {
+     "name": "EXTERN.c",
+     "schreibweise": "c",
+     "quelle": "tabelle",
+     "beschreibung": "Optionales Zeitlimit für EXTERN in ms.",
+     "werte": [],
+     "bereich": "0…6000",
+     "standard": 2000
+    },
+    {
+     "name": "a",
+     "schreibweise": "[,a]",
+     "quelle": "tabelle",
+     "beschreibung": "Autoload: Bild aus Speicherkarte laden; fehlt es, bleibt das Feld leer. mx und my müssen angegeben sein.",
+     "werte": []
+    },
+    {
+     "name": "name",
+     "schreibweise": "name",
+     "quelle": "tabelle",
+     "beschreibung": "Name des zuvor geladenen Bildes; auf Ax/X2 sind Inhaltsfelder als Bildname nicht erlaubt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Der Bezeichner name bezeichnet in der Syntax zwei verschiedene Positionen: optionaler Feldname vor den Koordinaten und Bildname hinter dem Semikolon. Der Katalog trennt sie als fieldname und name. Das a in GOODBAD/EXTERN ist ein Positionswert; das separate ,a ist die Autoload-Option. Die pauschale Bildgrenze 200 auf S. 199 widerspricht für X4 der Tabelle S. 9; siehe JS-1.6."
   },
   {
    "id": "JS-4.10",
@@ -16984,26 +17261,29 @@
      "name": "inc",
      "schreibweise": "inc",
      "quelle": "tabelle",
-     "beschreibung": "Increment value. Presets the number which is added to the start number",
-     "werte": []
+     "beschreibung": "Schrittweite, die nach der eingestellten Wiederholungszahl zum Zähler addiert wird.",
+     "werte": [],
+     "standard": 1
     },
     {
      "name": "freq",
      "schreibweise": "freq",
      "quelle": "tabelle",
-     "beschreibung": "Frequency. Defines the number of identical values on the labels before the",
-     "werte": []
+     "beschreibung": "Anzahl gleicher Etikettenwerte vor dem nächsten Zählschritt.",
+     "werte": [],
+     "standard": 1
     },
     {
-     "name": "start",
+     "name": "x",
      "schreibweise": "start",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Anfangswert der Seriennummer; in der Syntax als start bezeichnet.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Handbuch S. 344: Die Syntax nennt start, die Parametertabelle x. Der Definitionsname x folgt der Tabelle; start bleibt als dokumentierte Syntaxschreibweise erhalten. Keine zusätzliche Parameterposition."
   },
   {
    "id": "JS-5.98",
@@ -17483,8 +17763,8 @@
   }
  ],
  "statistik": {
-  "eintraege": 235,
-  "parameter": 897,
-  "werte": 929
+  "eintraege": 237,
+  "parameter": 893,
+  "werte": 941
  }
 }
