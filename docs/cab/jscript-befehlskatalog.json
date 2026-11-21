@@ -6,7 +6,7 @@
   "seiten": 382,
   "url": "https://www.cab.de/media/pushfile.cfm?file=3047"
  },
- "hinweis": "Maschinell aus dem Handbuch extrahiert (Abschnitte, Syntax, Parameter, Wertelisten, Generationen Ax/X2/X3/X4). Jeder Eintrag ist vor der Umsetzung gegen die angegebenen PDF-Seiten zu prüfen und danach auf geprueft=true zu setzen. Beschreibungen sind gekürzt; maßgeblich ist das Handbuch. Abschnitt 5.83 existiert im Handbuch nicht (Nummerierung springt von 5.82 auf 5.84). Antwortfelder von ESC-Befehlen sind als quelle=\"antwortfeld\" gekennzeichnet, aus der Syntax abgeleitete Parameter als quelle=\"syntax\".",
+ "hinweis": "Strukturierte Zusammenfassung des Handbuchs; alle 237 Einträge wurden gegen die angegebenen PDF-Seiten geprüft. Fehlende Inhaltsverzeichnispositionen 1.4 und 4.2.1 sind ergänzt; Abschnitt 5.83 existiert nicht. Beschreibungen sind zusammengefasst, maßgeblich bleibt das Handbuch. Widersprüche und unklare Regeln sind als Hinweise dokumentiert. Antwortfelder sind als quelle=antwortfeld von Eingabeparametern getrennt. Der geprüfte Katalog bedeutet noch keine vollständige Unterstützung im Etiketteneditor.",
  "eintraege": [
   {
    "id": "JS-1.3",
