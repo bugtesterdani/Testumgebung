@@ -6,6 +6,34 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabLabelImportTests
 {
     [Fact]
+    public void Fragmented_inch_setup_does_not_offer_a_false_millimetre_insertion_point()
+    {
+        var layout = CabLabelImport.Read("m \u001ba i\rJ\rA 1\r"u8.ToArray());
+        layout.Elements.Add(new() { Value = "new" });
+        Assert.Throws<InvalidDataException>(() => CabLabelLayout.Render(layout));
+    }
+
+    [Theory]
+    [InlineData("m \u001ba i\rJ\rS e;0,0,1,1,1\rT 0,0,0,5,3;inch\rA 1\r")]
+    [InlineData("J\rS e;0,0,40,40,60\rT 0,0,0,5,3;prefix\u001ba suffix\rA 1\r")]
+    public void Canvas_does_not_project_fragmented_commands_or_misread_fragmented_inch_units(string source)
+    {
+        var bytes = Encoding.UTF8.GetBytes(source);
+        var imported = CabLabelImport.Read(bytes);
+        Assert.Empty(imported.Elements);
+        Assert.Equal(bytes, CabLabelLayout.Render(imported));
+    }
+
+    [Fact]
+    public void Canvas_first_job_ignores_a_letter_j_inside_a_comment_after_an_escape()
+    {
+        var bytes = Encoding.UTF8.GetBytes("; comment\u001baJ\rJ\rS e;0,0,40,40,60\rT 0,0,0,5,3;actual job\rA 1\r");
+        var imported = CabLabelImport.Read(bytes);
+        Assert.Equal("actual job", Assert.Single(imported.Elements).Value);
+        Assert.Equal(bytes, CabLabelLayout.Render(imported));
+    }
+
+    [Fact]
     public void Generation_choices_round_trip_in_project_without_changing_print_bytes()
     {
         var layout = CabLabelImport.Read("J\rA 1\rJ\rA 2\r"u8.ToArray());

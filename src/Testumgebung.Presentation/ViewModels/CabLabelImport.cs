@@ -18,10 +18,16 @@ public static class CabLabelImport
         layout.CabSource = state;
         var images = new Dictionary<string, LabelElement>(StringComparer.Ordinal);
         var nodes = Commands(document.Root).ToArray();
-        var firstJob = document.Root.Children.FirstOrDefault(n => n.Kind == CabNodeKind.Job);
-        state.InsertOffset = firstJob?.Children.LastOrDefault(n => n.Command == "A")?.Range.Offset ?? data.Length;
+        var commands = CabValidator.Validate(document).Commands;
+        var firstJobStart = commands.FirstOrDefault(c => c.Syntax.Command == "J")?.Syntax.Range.Offset;
+        var firstJob = document.Root.Children.FirstOrDefault(n => n.Kind == CabNodeKind.Job && n.Range.Offset == firstJobStart);
+        var projectable = commands.Where(c => c.Syntax.Unit == CabUnit.Millimetres).Select(c => c.Syntax.Range).ToHashSet();
+        state.InsertOffset = firstJob?.Children.LastOrDefault(n => n.Command == "A" && projectable.Contains(n.Range))?.Range.Offset ?? data.Length;
         for (var index = 0; index < nodes.Length; index++)
+        {
+            if (nodes[index].Kind == CabNodeKind.LabelCommand && !projectable.Contains(nodes[index].Range)) continue;
             Project(nodes[index], index + 1 < nodes.Length ? nodes[index + 1] : null, firstJob, document, layout, state, images);
+        }
         state.WidthMm = layout.WidthMm; state.HeightMm = layout.HeightMm; state.GapMm = layout.GapMm;
         return layout;
     }

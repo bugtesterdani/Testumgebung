@@ -43,6 +43,12 @@ den Vorspann und jeden Etikettenauftrag sowie die statischen Diagnosen.
 Fehlende Einstellungen bestehender Projekte bedeuten X4. Der ZPL-Designer
 erhält diese Auswahl nicht.
 
+Die bisherige Zeichenfläche projiziert nur physische Befehle, deren vollständiger
+Quellbereich und Millimetereinheit durch die logische Bindung bestätigt sind.
+Durch ESC unterbrochene Felder bleiben vollständig in der Quelle; sie erscheinen
+bis zur erweiterten Grafikbearbeitung nicht als abgeschnittene Einzelobjekte.
+Ein `J` innerhalb eines Kommentars beginnt für die Projektion keinen Auftrag.
+
 ## Prüfnachweise und Grenzen
 
 Der versionierte Parameterkorpus umfasst 1.175 gültige Beispiele und zusätzliche
