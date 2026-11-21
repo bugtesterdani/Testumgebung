@@ -17,3 +17,11 @@ Zusätzliche Tests prüfen die Erkennung jedes Tabellenwerts, konkrete
 Befehlsbindungen, Generationen, Schriftkombinationen und Barcodegrenzen.
 Ein gültiger isolierter Parameter beweist nicht die Gültigkeit einer beliebigen
 Befehlskombination; dafür dienen die separaten semantischen Tests.
+# Inhaltsfeldkorpus (AP 3)
+
+`content-fields.json` enthält eigene synthetische Daten für alle 107 Einträge
+des Kapitels 5. Der Test weist zusätzlich jeden der 241 Parameter über die
+tatsächliche Argumentbindung nach. Erwartete Offlinewerte, Grenzen, regionale
+Kalender, Hardwareplatzhalter und Quellbereiche stehen in den separaten
+`CabContent*Tests`. Das Herstellerhandbuch und seine Beispiele werden nicht
+als Testdateien übernommen.

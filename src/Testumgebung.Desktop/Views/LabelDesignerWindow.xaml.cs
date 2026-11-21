@@ -31,6 +31,7 @@ public partial class LabelDesignerWindow : Window
         ((FrameworkElement)CabSetupCodePage.Parent).Visibility = VisibleIf(cab);
         CabSetupCodePage.Text = layout.CabSource?.SetupCodePage ?? "UTF-8";
         CabValidationWindow.Attach((Panel)CabSetupCodePage.Parent, this, layout, cab);
+        CabContentPreviewWindow.Attach((Panel)CabSetupCodePage.Parent, this, layout, cab);
         Gs1Identifiers.ItemsSource = Gs1LabelData.Identifiers;
         Gs1Identifiers.SelectedIndex = 1;
 

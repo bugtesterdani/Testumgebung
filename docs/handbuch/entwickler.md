@@ -74,6 +74,12 @@ Befehle oder Werte und Positionen außerhalb der Etikettenmaße erscheinen als
 Warnungen. Die Prüfung sendet keine Befehle an einen Drucker.
 [Definitionen und Validierung](../cab/validierung.md)
 
+**Inhaltsfeld-Vorschau …** zeigt die 107 Inhaltsfelder mit hervorgehobener Quelle,
+Offlinewert und Handbuchhinweisen. Beispielzeit und regionale Regeln werden im
+Projekt gespeichert. Druckerabhängige Werte bleiben gekennzeichnete Platzhalter.
+Bei widersprüchlichen Handbuchangaben nennt die Vorschau ihre Annahme.
+[Inhaltsfelder und Vorschau](../cab/inhaltsfelder.md)
+
 Der strukturierte [JScript-Katalog](../cab/README.md) enthält 237 anhand der
 Handbuchausgabe 07/2026 geprüfte Einträge, einschließlich dokumentierter
 Widersprüche und unklarer Angaben. Schema- und Konsistenztests sichern die
