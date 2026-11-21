@@ -8,7 +8,7 @@ if (-not (Test-Json -Json $json -SchemaFile $schemaPath)) {
 }
 
 # Negative cases ensure that the schema rejects malformed catalog metadata.
-foreach ($mutation in 'missing-id', 'invalid-generation', 'invalid-source', 'invalid-page', 'reviewed-empty-description') {
+foreach ($mutation in 'missing-id', 'invalid-generation', 'invalid-source', 'invalid-page', 'reviewed-empty-description', 'unchecked-entry') {
     $catalog = $json | ConvertFrom-Json -AsHashtable
     switch ($mutation) {
         'missing-id' { $catalog.eintraege[0].Remove('id') }
@@ -18,6 +18,7 @@ foreach ($mutation in 'missing-id', 'invalid-generation', 'invalid-source', 'inv
             $entry.parameter[0].quelle = 'unknown'
         }
         'invalid-page' { $catalog.eintraege[0].seiten[0] = 383 }
+        'unchecked-entry' { $catalog.eintraege[0].geprueft = $false }
         'reviewed-empty-description' {
             $entry = $catalog.eintraege | Where-Object { $_.geprueft -and $_.parameter.Count -gt 0 } | Select-Object -First 1
             $entry.parameter[0].beschreibung = ''

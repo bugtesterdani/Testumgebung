@@ -274,7 +274,7 @@
           }
         },
         "geprueft": {
-          "type": "boolean"
+          "const": true
         },
         "regeln": {
           "type": "array",
@@ -353,6 +353,25 @@
           "items": {
             "$ref": "#/definitions/wert"
           }
+        },
+        "ausgabe_bereich": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ausgabe_werte": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/wert"
+          }
+        },
+        "standard": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "null"
+          ]
         }
       },
       "required": [

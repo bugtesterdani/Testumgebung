@@ -2,9 +2,10 @@
 
 Grundlage: cab JScript Programming Manual 07/2026, Firmware 5.48.
 
-Der Katalog wird schrittweise gegen das Handbuch geprüft. `geprueft: false`
-bleibt bis zur tatsächlichen Prüfung der jeweiligen Handbuchseiten erhalten.
-Diese Zwischenfassung begründet keine vollständige Unterstützung im
+Alle 237 Einträge wurden gegen die jeweiligen Handbuchseiten geprüft.
+Die im Ausgangskatalog fehlenden Abschnitte JS-1.4 und JS-4.2.1 sind ergänzt;
+JS-5.83 existiert im Handbuch nicht. Das Schema verlangt `geprueft: true`.
+Die Katalogprüfung begründet keine vollständige Befehlsunterstützung im
 Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 
 ## Tatsächlich geprüfte Abschnitte
@@ -109,6 +110,32 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 - JS-5.108 und JS-6.1–4, Seiten 358–362: User-Speichergrenze, Kommentare,
   abc und verschlüsselte Rahmen abgeglichen. Mainboardnummer vom falschen
   Extraktionsnamen key getrennt und unbekannte Payload-Grenze vermerkt.
+- JS-5.1 bis JS-5.10, Seiten 241–253: Zeit-/Datumsversätze und Referenznamen
+  abgeglichen. Ausgabebereiche von Eingabeversätzen getrennt, feste 30-Tage-
+  Monate und unklare Prosa-Aliasse ausdrücklich dokumentiert.
+- JS-5.11 bis JS-5.33, Seiten 254–276: Datum, Wochen, Namen und erste
+  Jalali-Felder abgeglichen; ISO-Datumsformat anhand der Abbildung geprüft.
+  Ausgabewerte sind von Eingaben getrennt. Die Monatsberechnung im Beispielbild
+  widerspricht der pauschalen 30-Tage-Regel; beide Belege sind vermerkt.
+- JS-5.34 bis JS-5.45, Seiten 277–288: weitere Kalenderfelder, Rechen-
+  Operanden und variadische Werte abgeglichen; zwei Nachkommastellen als
+  Ausgabestandard erfasst. Kopierter Divisionstext und AND/Gleichheit-Konflikt
+  sind ausdrücklich gekennzeichnet.
+- JS-5.46 bis JS-5.57, Seiten 289–300: Vergleiche, Prüfalphabete, Preis-
+  und Rundungsparameter sowie erste RFID-Felder abgeglichen. Zusammengesetzte
+  Preiszeichen statt falscher Kommaargumente und kopierte Beschreibungen korrigiert.
+- JS-5.58 bis JS-5.66, Seiten 301–312: RFID-Zugriffe, vollständige Sperrwerte
+  und interaktive Masken abgeglichen. WTAG-Tippfehler, ausgelassene Dialog-
+  Positionen und mehrstellige Masken aus den Beispielen erfasst.
+- JS-5.67 bis JS-5.77, Seiten 313–324: abc-/Basisumwandlung, alle Binärbreiten,
+  Bitfeldlisten und Füllzeichen abgeglichen. Benutzeralphabet, Titelartefakt und
+  doppelte Syntaxkommas korrigiert; rechte Bitauffüllung visuell bestätigt.
+- JS-5.78 bis JS-5.108, Seiten 325–358 (ohne 5.83): Formatierung, Referenzen,
+  Teilstrings, OPC-UA, Datenbankzugriffe, Speicher und Zeichenoperationen
+  abgeglichen. HEX-Bytekonvertierung, GS-Trenner, Unicode-Steuerzeichen und
+  Druckzeitverarbeitung erfasst. Bedingte Unsichtbarkeit widerspricht dem
+  Beispiel; der Konflikt bleibt ausdrücklich dokumentiert. E OPCUA anhand der
+  späteren Verbindungsbeispiele ergänzt, kopierte Nichtparameter entfernt.
 - JS-4.12, Seiten 212–217: Druckoptionen und Generationen abgeglichen,
   Syntax-Artefakte entfernt, Abreißversatz und optionale X4-Pufferzahl ergänzt;
   Reihenfolge, Hardwarevoraussetzungen und modellspezifische Angaben vermerkt.
@@ -116,16 +143,20 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 ## Strukturprüfung
 
 `build/test-cab-catalog-schema.ps1` prüft das JSON-Schema und negative Fälle
-(fehlende ID, ungültige Generation, Parameterquelle und Handbuchseite).
+(fehlende ID, ungültige Generation, Parameterquelle und Handbuchseite,
+leere Parameterbeschreibung und ungeprüfter Eintrag).
 `CabJScriptCatalogSchemaTests` führt diese Prüfung in der Testsuite aus und
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
 
-Vor Abschluss von AP 0 sind alle Einträge fachlich zu prüfen, die bekannten
-Extraktionsfehler zu korrigieren. Noch 105 Einträge sind fachlich ungeprüft;
-die vollständige fachliche Prüfung steht weiterhin aus. Das lokale
-Handbuch-PDF und daraus extrahierte Inhalte bleiben außerhalb der versionierten
-Dateien. Vor Abschluss müssen alle Einträge geprüft und die Dokumentation
-einschließlich des generierten Bausteinkatalogs abgeglichen sein.
+Die fachliche Prüfung aller Einträge ist abgeschlossen; bekannte
+Extraktionsfehler sind korrigiert. Nicht eindeutig belegte Regeln und
+Widersprüche sind als Hinweise gekennzeichnet. Das lokale Handbuch-PDF und
+daraus extrahierte Inhalte bleiben außerhalb der versionierten Dateien.
+Der generierte Bausteinkatalog beschreibt die tatsächlich vorhandenen
+Anwendungsbausteine; AP 0 ergänzt noch keine neue Editorfunktion.
+
+`statistik.werte` zählt die Parameter-Wertelisten. Getrennte Ausgabe-,
+Kapazitäts- und Medientabellen werden darin nicht als Eingabewerte mitgezählt.
 
 Die folgenden AP beginnen erst nach erfolgreichem Build, Tests, CI, Review und
 Merge von AP 0. Issue: #253; Release: R9, Milestone 18.

@@ -14692,20 +14692,6 @@
       }
      ],
      "standard": "2"
-    },
-    {
-     "name": "height",
-     "schreibweise": "height",
-     "quelle": "tabelle",
-     "beschreibung": "In der Tabelle S. 134 erwähnt, aber in der QR-Syntax ohne eigene Position. Keine zusätzliche Position ohne Klärung ausgeben.",
-     "werte": []
-    },
-    {
-     "name": "ne",
-     "schreibweise": "ne",
-     "quelle": "tabelle",
-     "beschreibung": "In der Tabelle S. 134 erwähnt, aber in der QR-Syntax ohne eigene Position. Maßgeblicher Größenparameter ist dort dotsize.",
-     "werte": []
     }
    ],
    "barcode_eigenschaften": {
@@ -16158,13 +16144,6 @@
        "generationen": null
       }
      ]
-    },
-    {
-     "name": "dotsize",
-     "schreibweise": "dotsize",
-     "quelle": "tabelle",
-     "beschreibung": "Nur in Tabelle S. 143 erwähnt, nicht in der Syntax. Keine zusätzliche Positionsangabe ohne Klärung ausgeben.",
-     "werte": []
     }
    ],
    "barcode_eigenschaften": {
@@ -21529,10 +21508,16 @@
    },
    "verweis": null,
    "syntax": [
-    "E OPCUA;opc.tcp://username:password@host:port[CR]",
-    "E OPCUA-0;opc.tcp://username:password@host:port[CR]"
+    "E OPCUA{-x};opc.tcp://{username:password@}host:port[CR]"
    ],
    "parameter": [
+    {
+     "name": "x",
+     "schreibweise": "{-x}",
+     "quelle": "tabelle",
+     "beschreibung": "Optionale Verbindungskennung; Beispiele in 5.90/5.91 belegen mehrere Kennungen.",
+     "werte": []
+    },
     {
      "name": "username",
      "schreibweise": "username",
@@ -21562,18 +21547,11 @@
      "quelle": "tabelle",
      "beschreibung": "Port des OPC-UA-Servers; in der gedruckten Tabelle irrtümlich erneut username genannt.",
      "werte": []
-    },
-    {
-     "name": "path",
-     "schreibweise": "[path]",
-     "quelle": "tabelle",
-     "beschreibung": "Nur in der Tabelle aufgeführt, nicht in der opc.tcp-Syntax; keine zusätzliche URI-Position daraus ableiten.",
-     "werte": []
     }
    ],
    "barcode_eigenschaften": null,
    "geprueft": true,
-   "hinweis": "Generation aus der E-Auswahl S. 174. Tabelle enthält den unpassenden kopierten path-Eintrag und nennt den Port nochmals username. Beispiel verwendet E OPCUA-0 statt E OPCUA; nur diese dokumentierte Indexvariante ergänzt, ohne ungenannten Indexbereich zu erfinden. Der Beispielport 4840 ist nicht ausdrücklich als Standardwert genannt."
+   "hinweis": "Generation aus E-Auswahl S. 174. Kopierter path-Tabelleneintrag ist keine URI-Position; Port war irrtümlich erneut username genannt. Abschnitte 5.90/5.91 ergänzen mehrere Verbindungen und anonyme URI ohne Zugangsdaten. Setup-Standardwerte opcuser/opcpass bedeuten nicht, dass ausgelassene URI-Zugangsdaten ergänzt werden dürfen. Beispielport 4840 ist kein ausdrücklich genannter Standard."
   },
   {
    "id": "JS-4.5.4",
@@ -26134,26 +26112,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Stunde 1…12 ohne führende Null; mit XM kombinieren, wenn am/pm benötigt wird. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden. Beispieltext S. 243 spricht von 32 Minuten, die Syntax verwendet 30; Syntaxwerte nicht stillschweigend umschreiben.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.2",
@@ -26180,26 +26164,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Stunde 0…23 ohne führende Null. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.3",
@@ -26226,26 +26216,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Stunde 01…12 zweistellig mit führender Null. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.4",
@@ -26272,26 +26268,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Stunde 00…23 zweistellig mit führender Null. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.5",
@@ -26318,26 +26320,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "ISO-Uhrzeit als sechs Ziffern ohne Trennzeichen. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.6",
@@ -26364,26 +26372,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Minute 00…59 zweistellig. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.7",
@@ -26410,26 +26424,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Sekunde 00…59 zweistellig. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.8",
@@ -26456,26 +26476,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Uhrzeit im Format der gewählten Länder-/Regionseinstellung. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.9",
@@ -26502,26 +26528,32 @@
      "name": "HH",
      "schreibweise": "HH",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional hours as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Stunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional minutes as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Minuten; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "SS",
      "schreibweise": "SS",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional seconds as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Sekunden; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "am/pm-Kennzeichnung zur 12-Stunden-Uhrzeit. Parameter sind optionale Zeitversätze, keine Beschränkung auf den Ausgabebereich. Zuvor definierte Variablen können als Versatzwerte verwendet werden. Ohne Parameter aktuelle Druckeruhrzeit. Die Prosa verweist teils auf HH/MM/SS, definiert dafür hier aber keine eigenständigen Syntaxabschnitte; keine ungeprüften Aliasse erfinden.",
+   "regeln": [
+    "Inhaltsfelder stehen in eckigen Klammern; geschweifte Klammern in der Handbuchsyntax kennzeichnen optionale Parameter, keine wörtlichen Eingabeklammern.",
+    "Werte können verknüpft werden, ein Inhaltsfeld darf nicht in ein anderes eingesetzt werden.",
+    "Eckige Klammern ohne bekannten Inhaltsfeldbefehl bleiben normaler Text."
+   ]
   },
   {
    "id": "JS-5.10",
@@ -26548,26 +26580,31 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten (je 30 Tage nach S. 241); numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder Name einer zuvor definierten Variable. Kein ausdrücklicher Zahlenbereich angegeben.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Aktuelles Datum im Format der gewählten Länder-/Regionseinstellung. Optionale Versätze DD/MM/YY, auch als vorher definierte Variablen. Kapitelintro S. 241 schreibt für Monatsberechnungen stets 30 Tage vor; nicht ungeprüft kalendarisches AddMonths verwenden. Reihenfolge der Offsets und exakte Schaltjahresbehandlung sind hier nicht gesondert definiert. Die Abbildung S. 257 passt jedoch zu echten Kalendermonaten statt fester 30-Tage-Addition; Quellenwiderspruch für die Vorschau ausdrücklich berücksichtigen.",
+   "regeln": [
+    "Ohne Versatz aktuelles Datum.",
+    "Optionen nicht ineinander verschachteln; Referenznamen für bereits definierte Werte sind erlaubt."
+   ]
   },
   {
    "id": "JS-5.11",
@@ -26594,26 +26631,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Tag 1…31 ohne führende Null. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Tag 1…31 ohne führende Null."
   },
   {
    "id": "JS-5.12",
@@ -26640,26 +26679,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Tag 01…31 zweistellig. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Tag 01…31 zweistellig."
   },
   {
    "id": "JS-5.13",
@@ -26686,26 +26727,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Tag des Jahres 001…366 dreistellig. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Tag des Jahres 001…366 dreistellig."
   },
   {
    "id": "JS-5.14",
@@ -26732,26 +26775,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "ISO-Datum YYYYMMDD ohne Trennzeichen; anhand Abbildung S. 257 geprüft. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "ISO-Datum YYYYMMDD ohne Trennzeichen; anhand Abbildung S. 257 geprüft."
   },
   {
    "id": "JS-5.15",
@@ -26778,26 +26823,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "ISO-Ordnungsdatum YYYYDDD, vierstelliger Jahrgang und dreistelliger Jahrestag. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "ISO-Ordnungsdatum YYYYDDD, vierstelliger Jahrgang und dreistelliger Jahrestag."
   },
   {
    "id": "JS-5.16",
@@ -26824,26 +26871,100 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Wochentag 0…6; Sonntag=0, Samstag=6. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Wochentag 0…6; Sonntag=0, Samstag=6.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Sonntag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Montag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "2",
+     "beschreibung": "Dienstag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "3",
+     "beschreibung": "Mittwoch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "4",
+     "beschreibung": "Donnerstag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "5",
+     "beschreibung": "Freitag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "6",
+     "beschreibung": "Samstag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.17",
@@ -26870,26 +26991,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Vollständiger Wochentagsname nach Druckerregion/l-Befehl. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Groß-/Kleinschreibung des reservierten Feldnamens ist bedeutungstragend; etwa month ist ein Name, MONTH eine Zahl.",
+   "ausgabe_bereich": "Vollständiger Wochentagsname nach Druckerregion/l-Befehl."
   },
   {
    "id": "JS-5.18",
@@ -26916,26 +27039,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Erste zwei Zeichen des regionalen Wochentagsnamens. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Groß-/Kleinschreibung des reservierten Feldnamens ist bedeutungstragend; etwa month ist ein Name, MONTH eine Zahl.",
+   "ausgabe_bereich": "Erste zwei Zeichen des regionalen Wochentagsnamens."
   },
   {
    "id": "JS-5.19",
@@ -26962,26 +27087,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Erste drei Zeichen des regionalen Wochentagsnamens. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Groß-/Kleinschreibung des reservierten Feldnamens ist bedeutungstragend; etwa month ist ein Name, MONTH eine Zahl.",
+   "ausgabe_bereich": "Erste drei Zeichen des regionalen Wochentagsnamens."
   },
   {
    "id": "JS-5.20",
@@ -27008,26 +27135,100 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "ISO-Wochentag 1…7; Montag=1, Sonntag=7. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "ISO-Wochentag 1…7; Montag=1, Sonntag=7.",
+   "ausgabe_werte": [
+    {
+     "wert": "1",
+     "beschreibung": "Montag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "2",
+     "beschreibung": "Dienstag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "3",
+     "beschreibung": "Mittwoch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "4",
+     "beschreibung": "Donnerstag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "5",
+     "beschreibung": "Freitag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "6",
+     "beschreibung": "Samstag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "7",
+     "beschreibung": "Sonntag",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.21",
@@ -27054,26 +27255,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Wochennummer 1…53 ohne führende Null. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Die genaue Regel für die erste Jahreswoche ist hier nicht angegeben; nicht ohne Kennzeichnung mit einer beliebigen Kultur-/ISO-Wochenregel gleichsetzen.",
+   "ausgabe_bereich": "Wochennummer 1…53 ohne führende Null."
   },
   {
    "id": "JS-5.22",
@@ -27100,26 +27303,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Wochennummer 01…53 zweistellig. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Die genaue Regel für die erste Jahreswoche ist hier nicht angegeben; nicht ohne Kennzeichnung mit einer beliebigen Kultur-/ISO-Wochenregel gleichsetzen.",
+   "ausgabe_bereich": "Wochennummer 01…53 zweistellig."
   },
   {
    "id": "JS-5.23",
@@ -27146,12 +27351,14 @@
      "name": "WW",
      "schreibweise": "WW",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional weeks as numerical value",
+     "beschreibung": "Erforderlicher Wochenversatz als Zahl oder vorher definierter Referenzname; kein ausdrücklicher Grenzbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Wochennummer mit zusätzlichem Wochenversatz, ohne führende Null. WW ist ein erforderlicher numerischer Wochenversatz oder vorher definierter Variablenname, kein Tag-/Monats-/Jahrestupel. Die genaue Regel für die erste Jahreswoche ist hier nicht angegeben; nicht ohne Kennzeichnung mit einer beliebigen Kultur-/ISO-Wochenregel gleichsetzen.",
+   "ausgabe_bereich": "Wochennummer mit zusätzlichem Wochenversatz, ohne führende Null."
   },
   {
    "id": "JS-5.24",
@@ -27178,26 +27385,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Erste drei Zeichen des regionalen Monatsnamens. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Groß-/Kleinschreibung des reservierten Feldnamens ist bedeutungstragend; etwa month ist ein Name, MONTH eine Zahl.",
+   "ausgabe_bereich": "Erste drei Zeichen des regionalen Monatsnamens."
   },
   {
    "id": "JS-5.25",
@@ -27224,26 +27433,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Vollständiger regionaler Monatsname. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Groß-/Kleinschreibung des reservierten Feldnamens ist bedeutungstragend; etwa month ist ein Name, MONTH eine Zahl.",
+   "ausgabe_bereich": "Vollständiger regionaler Monatsname."
   },
   {
    "id": "JS-5.26",
@@ -27270,26 +27481,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Monatszahl 1…12 ohne führende Null; heading 2 digits widerspricht dieser ausdrücklich beschriebenen Ausgabe. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Groß-/Kleinschreibung des reservierten Feldnamens ist bedeutungstragend; etwa month ist ein Name, MONTH eine Zahl.",
+   "ausgabe_bereich": "Monatszahl 1…12 ohne führende Null; heading 2 digits widerspricht dieser ausdrücklich beschriebenen Ausgabe."
   },
   {
    "id": "JS-5.27",
@@ -27316,26 +27529,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Monatszahl 01…12 zweistellig. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Monatszahl 01…12 zweistellig."
   },
   {
    "id": "JS-5.28",
@@ -27362,26 +27577,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Zweistelliges gregorianisches Jahr; dokumentierter Kalenderbereich 1970…2038, Ausgabe 70…99 beziehungsweise 00…38. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Zweistelliges gregorianisches Jahr; dokumentierter Kalenderbereich 1970…2038, Ausgabe 70…99 beziehungsweise 00…38."
   },
   {
    "id": "JS-5.29",
@@ -27408,26 +27625,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Vierstelliges gregorianisches Jahr 1970…2038 nach Handbuch. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken.",
+   "ausgabe_bereich": "Vierstelliges gregorianisches Jahr 1970…2038 nach Handbuch."
   },
   {
    "id": "JS-5.30",
@@ -27454,26 +27673,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Vierstelliger Jalali-Jahrgang, Ziffernstil durch S-Inhaltsfeld beeinflussbar. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Für arabische/Farsi-Ausgabe muss laut Kapitelintro eine passende Sprache/Zeichenkonfiguration gewählt sein. Der Kalender ist Jalali, kein bloßer Jahresoffset auf Gregorianisch.",
+   "ausgabe_bereich": "Vierstelliger Jalali-Jahrgang, Ziffernstil durch S-Inhaltsfeld beeinflussbar."
   },
   {
    "id": "JS-5.31",
@@ -27500,26 +27721,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Jalali-Tag, Ziffernstil durch S-Inhaltsfeld beeinflussbar. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Für arabische/Farsi-Ausgabe muss laut Kapitelintro eine passende Sprache/Zeichenkonfiguration gewählt sein. Der Kalender ist Jalali, kein bloßer Jahresoffset auf Gregorianisch.",
+   "ausgabe_bereich": "Jalali-Tag, Ziffernstil durch S-Inhaltsfeld beeinflussbar."
   },
   {
    "id": "JS-5.32",
@@ -27546,26 +27769,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Zweistelliger Jalali-Tag laut Überschrift; Prosa spricht von ersten zwei Zeichen. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Für arabische/Farsi-Ausgabe muss laut Kapitelintro eine passende Sprache/Zeichenkonfiguration gewählt sein. Der Kalender ist Jalali, kein bloßer Jahresoffset auf Gregorianisch.",
+   "ausgabe_bereich": "Zweistelliger Jalali-Tag laut Überschrift; Prosa spricht von ersten zwei Zeichen."
   },
   {
    "id": "JS-5.33",
@@ -27592,26 +27817,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerischer Wert oder vorher definierter Referenzname, kein expliziter Zahlenbereich.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Jalali-Monatszahl, Ziffernstil durch S-Inhaltsfeld beeinflussbar. Optionale Tages-/Monats-/Jahresversätze, auch durch vorher definierte Referenznamen. Monate laut Intro S. 241 stets 30 Tage; Abbildung S. 257 entspricht dagegen kalenderbasierten Monatsverschiebungen. Reihenfolge/Schaltjahre sind nicht eindeutig spezifiziert; Konflikt nicht stillschweigend verdecken. Für arabische/Farsi-Ausgabe muss laut Kapitelintro eine passende Sprache/Zeichenkonfiguration gewählt sein. Der Kalender ist Jalali, kein bloßer Jahresoffset auf Gregorianisch.",
+   "ausgabe_bereich": "Jalali-Monatszahl, Ziffernstil durch S-Inhaltsfeld beeinflussbar."
   },
   {
    "id": "JS-5.34",
@@ -27638,26 +27865,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "ausgabe_bereich": "Zweistelliger Jalali-Monat laut Überschrift; Prosa nennt erste zwei Zeichen.",
+   "hinweis": "Zweistelliger Jalali-Monat laut Überschrift; Prosa nennt erste zwei Zeichen. Monatsversätze: 30-Tage-Aussage S. 241 steht im Konflikt mit dem Kalenderbeispiel S. 257; keine unmarkierte Annahme. Kalender ist ausdrücklich Jalali, nicht schlicht gregorianisch formatierter Text. Zahlenstil kann über S beeinflusst werden; passende arabische/Farsi-Konfiguration beachten."
   },
   {
    "id": "JS-5.35",
@@ -27684,26 +27913,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "ausgabe_bereich": "Tag des Jalali-Jahres.",
+   "hinweis": "Tag des Jalali-Jahres. Monatsversätze: 30-Tage-Aussage S. 241 steht im Konflikt mit dem Kalenderbeispiel S. 257; keine unmarkierte Annahme. Kalender ist ausdrücklich Jalali, nicht schlicht gregorianisch formatierter Text. Zahlenstil kann über S beeinflusst werden; passende arabische/Farsi-Konfiguration beachten."
   },
   {
    "id": "JS-5.36",
@@ -27730,26 +27961,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "ausgabe_bereich": "Vollständiger Jalali-Monatsname nach Sprache/l-Befehl; Feldname jmonth ist kleingeschrieben.",
+   "hinweis": "Vollständiger Jalali-Monatsname nach Sprache/l-Befehl; Feldname jmonth ist kleingeschrieben. Monatsversätze: 30-Tage-Aussage S. 241 steht im Konflikt mit dem Kalenderbeispiel S. 257; keine unmarkierte Annahme. Kalender ist ausdrücklich Jalali, nicht schlicht gregorianisch formatierter Text. Zahlenstil kann über S beeinflusst werden; passende arabische/Farsi-Konfiguration beachten."
   },
   {
    "id": "JS-5.37",
@@ -27776,26 +28009,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "ausgabe_bereich": "Jalali-Wochentag; konkrete numerische Tageszuordnung ist hier nicht angegeben.",
+   "hinweis": "Jalali-Wochentag; konkrete numerische Tageszuordnung ist hier nicht angegeben. Monatsversätze: 30-Tage-Aussage S. 241 steht im Konflikt mit dem Kalenderbeispiel S. 257; keine unmarkierte Annahme. Kalender ist ausdrücklich Jalali, nicht schlicht gregorianisch formatierter Text. Zahlenstil kann über S beeinflusst werden; passende arabische/Farsi-Konfiguration beachten."
   },
   {
    "id": "JS-5.38",
@@ -27822,26 +28057,28 @@
      "name": "DD",
      "schreibweise": "DD",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional days as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Tagen; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "MM",
      "schreibweise": "MM",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional months as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Monaten; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     },
     {
      "name": "YY",
      "schreibweise": "YY",
      "quelle": "tabelle",
-     "beschreibung": "Adds the amount of additional years as numerical value",
+     "beschreibung": "Optionaler zusätzlicher Versatz in Jahren; numerisch oder zuvor definierter Variablenname.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "ausgabe_bereich": "Vierstelliger Suriyakati-/Buddhistischer Jahrgang des thailändischen Sonnenkalenders.",
+   "hinweis": "Vierstelliger Suriyakati-/Buddhistischer Jahrgang des thailändischen Sonnenkalenders. Monatsversätze: 30-Tage-Aussage S. 241 steht im Konflikt mit dem Kalenderbeispiel S. 257; keine unmarkierte Annahme. Kalender ist ausdrücklich Suriyakati, nicht schlicht gregorianisch formatierter Text."
   },
   {
    "id": "JS-5.39",
@@ -27868,26 +28105,31 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "...",
      "schreibweise": "...",
      "quelle": "tabelle",
-     "beschreibung": "Operand 3 ...",
+     "beschreibung": "Weitere numerische Operanden oder Feldnamen ab Operand 3; optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Addition. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Ausgabe standardmäßig zwei Nachkommastellen; Rundungsmodus und negative Sonderfälle nicht ausdrücklich festgelegt.",
+   "standard": {
+    "nachkommastellen": 2,
+    "rundung": "n"
+   }
   },
   {
    "id": "JS-5.40",
@@ -27914,26 +28156,31 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "...",
      "schreibweise": "...",
      "quelle": "tabelle",
-     "beschreibung": "Operand 3 ...",
+     "beschreibung": "Weitere numerische Operanden oder Feldnamen ab Operand 3; optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Subtraktion. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Ausgabe standardmäßig zwei Nachkommastellen; Rundungsmodus und negative Sonderfälle nicht ausdrücklich festgelegt.",
+   "standard": {
+    "nachkommastellen": 2,
+    "rundung": "n"
+   }
   },
   {
    "id": "JS-5.41",
@@ -27960,26 +28207,31 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "...",
      "schreibweise": "...",
      "quelle": "tabelle",
-     "beschreibung": "Operand 3 ...",
+     "beschreibung": "Weitere numerische Operanden oder Feldnamen ab Operand 3; optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Multiplikation. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Ausgabe standardmäßig zwei Nachkommastellen; Rundungsmodus und negative Sonderfälle nicht ausdrücklich festgelegt.",
+   "standard": {
+    "nachkommastellen": 2,
+    "rundung": "n"
+   }
   },
   {
    "id": "JS-5.42",
@@ -28006,26 +28258,31 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "...",
      "schreibweise": "...",
      "quelle": "tabelle",
-     "beschreibung": "Operand 3 ...",
+     "beschreibung": "Weitere numerische Operanden oder Feldnamen ab Operand 3; optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Division. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Ausgabe standardmäßig zwei Nachkommastellen; Rundungsmodus und negative Sonderfälle nicht ausdrücklich festgelegt. Einleitung ist aus Multiplikation kopiert; Überschrift, Schrägstrichsyntax und Beispiel beschreiben Division. Division durch null und Verhalten bei mehr als zwei Operanden werden nicht anhand eigener Beispiele spezifiziert.",
+   "standard": {
+    "nachkommastellen": 2,
+    "rundung": "n"
+   }
   },
   {
    "id": "JS-5.43",
@@ -28052,26 +28309,31 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "...",
      "schreibweise": "...",
      "quelle": "tabelle",
-     "beschreibung": "Operand 3 ...",
+     "beschreibung": "Weitere numerische Operanden oder Feldnamen ab Operand 3; optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Rest/Modulo. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Ausgabe standardmäßig zwei Nachkommastellen; Rundungsmodus und negative Sonderfälle nicht ausdrücklich festgelegt. Text beschreibt Rest zweier Operanden, Syntax erlaubt weitere; genaue Verkettung/negative Restwerte werden nicht eigens beschrieben.",
+   "standard": {
+    "nachkommastellen": 2,
+    "rundung": "n"
+   }
   },
   {
    "id": "JS-5.44",
@@ -28098,19 +28360,42 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Logisches OR. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Ergebnis 1, wenn mindestens ein Operand ungleich 0 ist, sonst 0.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Falsch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Wahr",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.45",
@@ -28137,19 +28422,42 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Erster numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Zweiter numerischer Operand oder Name eines zuvor definierten Feldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Logisches AND. Feldwerte dürfen als Operanden dienen und über I unsichtbar sein. Beispiele verwenden Dezimalkomma in referenzierten Textwerten; das Komma im Funktionsaufruf trennt dagegen Operanden. Überschrift sagt logisches AND, Prosa behauptet dagegen Gleichheit beider Werte; das Beispiel 1/1 entscheidet den Widerspruch nicht. Keine stillschweigende Gleichsetzung von AND und Gleichheit; abweichende Vorschausemantik ausdrücklich kennzeichnen.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Falsch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Wahr",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.46",
@@ -28176,19 +28484,42 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Numerischer Wert oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Numerischer Wert oder Name eines zuvor definierten Feldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Kleiner als: Ergebnis 1 bei wahr, sonst 0. Zwei Operanden, keine variadische Liste.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Falsch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Wahr",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.47",
@@ -28215,19 +28546,42 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Numerischer Wert oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Numerischer Wert oder Name eines zuvor definierten Feldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Größer als: Ergebnis 1 bei wahr, sonst 0. Zwei Operanden, keine variadische Liste.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Falsch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Wahr",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.48",
@@ -28254,19 +28608,42 @@
      "name": "op1",
      "schreibweise": "op1",
      "quelle": "tabelle",
-     "beschreibung": "Operand 1",
+     "beschreibung": "Numerischer Wert oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "op2",
      "schreibweise": "op2",
      "quelle": "tabelle",
-     "beschreibung": "Operand 2",
+     "beschreibung": "Numerischer Wert oder Name eines zuvor definierten Feldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Numerisch gleich: Ergebnis 1 bei wahr, sonst 0. Zwei Operanden, keine variadische Liste.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Falsch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Wahr",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.49",
@@ -28293,19 +28670,42 @@
      "name": "text1",
      "schreibweise": "text1",
      "quelle": "tabelle",
-     "beschreibung": "Text string 1",
+     "beschreibung": "Textwert oder Name eines zuvor definierten Feldes.",
      "werte": []
     },
     {
      "name": "text2",
      "schreibweise": "text2",
      "quelle": "tabelle",
-     "beschreibung": "Text string 2",
+     "beschreibung": "Textwert oder Name eines zuvor definierten Feldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Textlich gleich: Ergebnis 1 bei wahr, sonst 0. Zwei Operanden, keine variadische Liste. Notiz nennt kopierte Namen op1/op2; die eigentlichen Syntaxparameter heißen text1/text2. Regeln zu Groß-/Kleinschreibung und sprachabhängiger Textnormalisierung sind nicht gesondert angegeben; nicht ungeprüft numerischen Vergleich verwenden.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Falsch",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Wahr",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.50",
@@ -28332,12 +28732,116 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Value which is used to calculate the check digit",
-     "werte": []
+     "beschreibung": "Zeichenfolge zur Prüfzifferberechnung oder Name eines vorher definierten Feldes.",
+     "werte": [],
+     "bereich": "0123456789"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Berechnet und gibt das einzelne Prüfzeichen aus, nicht erneut den gesamten Eingabetext. Führende Nullen und bei MOD43 erlaubte Leerzeichen nicht entfernen. Gewichtung 3/1 nach Handbuch; Richtung der Gewichtung wird im Text nicht gesondert erläutert.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Prüfzeichen 0",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Prüfzeichen 1",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "2",
+     "beschreibung": "Prüfzeichen 2",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "3",
+     "beschreibung": "Prüfzeichen 3",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "4",
+     "beschreibung": "Prüfzeichen 4",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "5",
+     "beschreibung": "Prüfzeichen 5",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "6",
+     "beschreibung": "Prüfzeichen 6",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "7",
+     "beschreibung": "Prüfzeichen 7",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "8",
+     "beschreibung": "Prüfzeichen 8",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "9",
+     "beschreibung": "Prüfzeichen 9",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.51",
@@ -28364,12 +28868,376 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Value which is used to calculate the check digit",
-     "werte": []
+     "beschreibung": "Zeichenfolge zur Prüfzifferberechnung oder Name eines vorher definierten Feldes.",
+     "werte": [],
+     "bereich": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Berechnet und gibt das einzelne Prüfzeichen aus, nicht erneut den gesamten Eingabetext. Führende Nullen und bei MOD43 erlaubte Leerzeichen nicht entfernen. Code-39-Verfahren mit dem ausdrücklich angegebenen Alphabet, nicht pauschal nur Ziffern trotz kopierter Prosa numerical barcodes.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Prüfzeichen 0",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Prüfzeichen 1",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "2",
+     "beschreibung": "Prüfzeichen 2",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "3",
+     "beschreibung": "Prüfzeichen 3",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "4",
+     "beschreibung": "Prüfzeichen 4",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "5",
+     "beschreibung": "Prüfzeichen 5",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "6",
+     "beschreibung": "Prüfzeichen 6",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "7",
+     "beschreibung": "Prüfzeichen 7",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "8",
+     "beschreibung": "Prüfzeichen 8",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "9",
+     "beschreibung": "Prüfzeichen 9",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "A",
+     "beschreibung": "Prüfzeichen A",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "B",
+     "beschreibung": "Prüfzeichen B",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "C",
+     "beschreibung": "Prüfzeichen C",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "D",
+     "beschreibung": "Prüfzeichen D",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "E",
+     "beschreibung": "Prüfzeichen E",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "F",
+     "beschreibung": "Prüfzeichen F",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "G",
+     "beschreibung": "Prüfzeichen G",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "H",
+     "beschreibung": "Prüfzeichen H",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "I",
+     "beschreibung": "Prüfzeichen I",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "J",
+     "beschreibung": "Prüfzeichen J",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "K",
+     "beschreibung": "Prüfzeichen K",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "L",
+     "beschreibung": "Prüfzeichen L",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "M",
+     "beschreibung": "Prüfzeichen M",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "N",
+     "beschreibung": "Prüfzeichen N",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "O",
+     "beschreibung": "Prüfzeichen O",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "P",
+     "beschreibung": "Prüfzeichen P",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "Q",
+     "beschreibung": "Prüfzeichen Q",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "R",
+     "beschreibung": "Prüfzeichen R",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "S",
+     "beschreibung": "Prüfzeichen S",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "T",
+     "beschreibung": "Prüfzeichen T",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "U",
+     "beschreibung": "Prüfzeichen U",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "V",
+     "beschreibung": "Prüfzeichen V",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "W",
+     "beschreibung": "Prüfzeichen W",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "X",
+     "beschreibung": "Prüfzeichen X",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "Y",
+     "beschreibung": "Prüfzeichen Y",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "Z",
+     "beschreibung": "Prüfzeichen Z",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.52",
@@ -28396,12 +29264,446 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Value which is used to calculate the check digit",
-     "werte": []
+     "beschreibung": "Zeichenfolge zur Prüfzifferberechnung oder Name eines vorher definierten Feldes.",
+     "werte": [],
+     "bereich": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Berechnet und gibt das einzelne Prüfzeichen aus, nicht erneut den gesamten Eingabetext. Führende Nullen und bei MOD43 erlaubte Leerzeichen nicht entfernen. Code-39-Verfahren mit dem ausdrücklich angegebenen Alphabet, nicht pauschal nur Ziffern trotz kopierter Prosa numerical barcodes.",
+   "ausgabe_werte": [
+    {
+     "wert": "0",
+     "beschreibung": "Prüfzeichen 0",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "1",
+     "beschreibung": "Prüfzeichen 1",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "2",
+     "beschreibung": "Prüfzeichen 2",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "3",
+     "beschreibung": "Prüfzeichen 3",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "4",
+     "beschreibung": "Prüfzeichen 4",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "5",
+     "beschreibung": "Prüfzeichen 5",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "6",
+     "beschreibung": "Prüfzeichen 6",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "7",
+     "beschreibung": "Prüfzeichen 7",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "8",
+     "beschreibung": "Prüfzeichen 8",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "9",
+     "beschreibung": "Prüfzeichen 9",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "A",
+     "beschreibung": "Prüfzeichen A",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "B",
+     "beschreibung": "Prüfzeichen B",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "C",
+     "beschreibung": "Prüfzeichen C",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "D",
+     "beschreibung": "Prüfzeichen D",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "E",
+     "beschreibung": "Prüfzeichen E",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "F",
+     "beschreibung": "Prüfzeichen F",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "G",
+     "beschreibung": "Prüfzeichen G",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "H",
+     "beschreibung": "Prüfzeichen H",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "I",
+     "beschreibung": "Prüfzeichen I",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "J",
+     "beschreibung": "Prüfzeichen J",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "K",
+     "beschreibung": "Prüfzeichen K",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "L",
+     "beschreibung": "Prüfzeichen L",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "M",
+     "beschreibung": "Prüfzeichen M",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "N",
+     "beschreibung": "Prüfzeichen N",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "O",
+     "beschreibung": "Prüfzeichen O",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "P",
+     "beschreibung": "Prüfzeichen P",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "Q",
+     "beschreibung": "Prüfzeichen Q",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "R",
+     "beschreibung": "Prüfzeichen R",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "S",
+     "beschreibung": "Prüfzeichen S",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "T",
+     "beschreibung": "Prüfzeichen T",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "U",
+     "beschreibung": "Prüfzeichen U",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "V",
+     "beschreibung": "Prüfzeichen V",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "W",
+     "beschreibung": "Prüfzeichen W",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "X",
+     "beschreibung": "Prüfzeichen X",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "Y",
+     "beschreibung": "Prüfzeichen Y",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "Z",
+     "beschreibung": "Prüfzeichen Z",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "-",
+     "beschreibung": "Prüfzeichen -",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": ".",
+     "beschreibung": "Prüfzeichen .",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": " ",
+     "beschreibung": "Prüfzeichen Leerzeichen",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "$",
+     "beschreibung": "Prüfzeichen $",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "/",
+     "beschreibung": "Prüfzeichen /",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "+",
+     "beschreibung": "Prüfzeichen +",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    },
+    {
+     "wert": "%",
+     "beschreibung": "Prüfzeichen %",
+     "generationen": {
+      "Ax": "y",
+      "X2": "y",
+      "X3": "y",
+      "X4": "y"
+     }
+    }
+   ]
   },
   {
    "id": "JS-5.53",
@@ -28428,40 +29730,37 @@
      "name": "value",
      "schreibweise": "value",
      "quelle": "tabelle",
-     "beschreibung": "Value which is used to calculate the check digit",
+     "beschreibung": "Zu formatierender Zahlenwert oder vorher definierter Feldname; keine Prüfzifferberechnung.",
      "werte": []
     },
     {
      "name": "t",
      "schreibweise": "t",
      "quelle": "tabelle",
-     "beschreibung": "Thousands separator",
-     "werte": []
+     "beschreibung": "Tausendertrennzeichen.",
+     "werte": [],
+     "bereich": "ein Zeichen"
     },
     {
      "name": "d",
      "schreibweise": "d",
      "quelle": "tabelle",
-     "beschreibung": "Decimal point character",
-     "werte": []
+     "beschreibung": "Dezimaltrennzeichen.",
+     "werte": [],
+     "bereich": "ein Zeichen"
     },
     {
      "name": "o",
-     "schreibweise": "o",
+     "schreibweise": "{o}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Addendum character",
-     "werte": []
-    },
-    {
-     "name": "td",
-     "schreibweise": "td",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
+     "beschreibung": "Optionales Zusatzzeichen.",
+     "werte": [],
+     "bereich": "optional ein Zeichen"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "td{o} sind aufeinanderfolgende Einzelzeichen, keine drei gewöhnlich kommagetrennten Argumente. Ein Komma kann selbst d sein. Abbildung S. 296 bestätigt Gruppierung und Zusatzstrich bei ganzzahligem Preis; Verhalten bei Bruchteilen/anderen Zusatzzeichen nicht näher erklärt. Die value-Beschreibung der Tabelle ist aus Prüfziffertext kopiert."
   },
   {
    "id": "JS-5.54",
@@ -28488,33 +29787,55 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Gewünschte Rundungsmethode für die Feldausgabe.",
      "werte": [
       {
        "wert": "n",
-       "beschreibung": "No rounding (default)",
-       "generationen": null
+       "beschreibung": "Nicht runden, Standard",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "u",
-       "beschreibung": "Rounding up",
-       "generationen": null
+       "beschreibung": "Aufrunden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "d",
-       "beschreibung": "Rounding down",
-       "generationen": null
+       "beschreibung": "Abrunden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "m",
-       "beschreibung": "Round mathematically",
-       "generationen": null
+       "beschreibung": "Mathematisch runden",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
-     ]
+     ],
+     "standard": "n"
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Standardausgabe zwei Nachkommastellen, Anzahl über D änderbar. Abbildung S. 297 bestätigt u/d/m anhand positiver Werte. Verhalten bei negativen Werten und exakten Halbwerten nicht separat erklärt; No rounding nicht unmarkiert mit einer beliebigen Standard-Formatrundung gleichsetzen."
   },
   {
    "id": "JS-5.55",
@@ -28541,12 +29862,13 @@
      "name": "urn-notation",
      "schreibweise": "urn-notation",
      "quelle": "tabelle",
-     "beschreibung": "GS1/JAIF urn-notation",
+     "beschreibung": "GS1-/JAIF-URN oder Name eines zuvor definierten Feldes mit dieser URN.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Erzeugt binären EPC-Inhalt einschließlich PC-Wort. Für Vorschau als RFID-bezogenen Platzhalter behandeln; keine Tagoperation lokal ausführen."
   },
   {
    "id": "JS-5.56",
@@ -28573,19 +29895,21 @@
      "name": "start",
      "schreibweise": "start",
      "quelle": "tabelle",
-     "beschreibung": "Start address (byte)",
-     "werte": []
+     "beschreibung": "Erste Byteadresse des zu sperrenden Tagbereichs; erste Adresse ist 0.",
+     "werte": [],
+     "bereich": "nichtnegative Byteadresse"
     },
     {
      "name": "len",
      "schreibweise": "len",
      "quelle": "tabelle",
-     "beschreibung": "Length (byte)",
+     "beschreibung": "Länge in Bytes; tatsächliche Sperrgranularität hängt von Tag-Blöcken ab.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X2. Je nach Tag lassen sich nur ganze Blöcke sperren; eine Adresse innerhalb eines Blocks kann den ganzen Block betreffen. Kein universeller Blockumfang angegeben. Vorschau führt keine physische Sperrung aus."
   },
   {
    "id": "JS-5.57",
@@ -28609,7 +29933,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Liest EPC vom realen Tag und gibt ihn als URN zurück. Ohne Drucker/Tag nur gekennzeichneter Vorschauplatzhalter."
   },
   {
    "id": "JS-5.58",
@@ -28633,7 +29958,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Binärer EPC einschließlich PC und CRC, mit Markierung 0xF200. Quelle nennt dies Prefix byte, obwohl die Schreibweise mehr als ein Byte umfasst; genaue Darstellung nicht aus dem Wort allein ableiten."
   },
   {
    "id": "JS-5.59",
@@ -28660,19 +29986,21 @@
      "name": "start",
      "schreibweise": "start",
      "quelle": "tabelle",
-     "beschreibung": "Start address (byte)",
-     "werte": []
+     "beschreibung": "Erste Byteadresse im USER-Speicher; erste Adresse ist 0.",
+     "werte": [],
+     "bereich": "nichtnegative Byteadresse"
     },
     {
      "name": "len",
      "schreibweise": "len",
      "quelle": "tabelle",
-     "beschreibung": "Length (byte)",
+     "beschreibung": "Zu lesende Länge in Bytes; Tag-/Speichergröße abhängig von der Hardware.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Textausgabe verwendet die Codepage aus E RFID."
   },
   {
    "id": "JS-5.60",
@@ -28699,19 +30027,21 @@
      "name": "start",
      "schreibweise": "start",
      "quelle": "tabelle",
-     "beschreibung": "Start address (in bytes)",
-     "werte": []
+     "beschreibung": "Erste Byteadresse im USER-Speicher; erste Adresse ist 0.",
+     "werte": [],
+     "bereich": "nichtnegative Byteadresse"
     },
     {
      "name": "len",
      "schreibweise": "len",
      "quelle": "tabelle",
-     "beschreibung": "Length (in bytes)",
+     "beschreibung": "Zu lesende Länge in Bytes; Tag-/Speichergröße abhängig von der Hardware.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen.Binärdaten ohne Zeichenkonvertierung, mit Markierung 0xF200 laut Quelle."
   },
   {
    "id": "JS-5.61",
@@ -28735,7 +30065,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Tag-ID als Hexdarstellung; Codepagebezug laut E RFID. Keine Startadresse als zusätzliches Syntaxargument vorhanden."
   },
   {
    "id": "JS-5.62",
@@ -28760,14 +30091,39 @@
    "parameter": [
     {
      "name": "locklevel",
-     "schreibweise": "locklevel",
+     "schreibweise": "[:locklevel]",
      "quelle": "tabelle",
-     "beschreibung": "Optional lock level",
-     "werte": []
+     "beschreibung": "Optionaler Sperrstatus; kein ausdrücklicher Standard genannt.",
+     "werte": [
+      {
+       "wert": "1",
+       "beschreibung": "Im offenen oder gesicherten Zustand les-/schreibbar",
+       "generationen": null
+      },
+      {
+       "wert": "2",
+       "beschreibung": "Dauerhaft offen/gesichert les-/schreibbar, niemals sperrbar",
+       "generationen": null
+      },
+      {
+       "wert": "3",
+       "beschreibung": "Nur gesichert les-/schreibbar",
+       "generationen": null
+      },
+      {
+       "wert": "4",
+       "beschreibung": "Dauerhaft aus keinem Zustand les-/schreibbar",
+       "generationen": null
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Passwortwert kommt aus dem Feldinhalt, ist kein weiterer expliziter WACP-Parameter. Vier-Byte-Regel gilt ausdrücklich für RFID-Passwörter.",
+   "regeln": [
+    "Zu schreibender impliziter Passwortwert muss nach allgemeiner RFID-Passwortregel S. 305 genau vier Bytes haben."
+   ]
   },
   {
    "id": "JS-5.63",
@@ -28787,54 +30143,59 @@
    },
    "verweis": null,
    "syntax": [
-    "[WEPC[:start,][len][,locklevel]]"
+    "[WEPC[:start,][len][,locklevel]]",
+    "[WEPC]",
+    "[WEPC:start,len,locklevel]"
    ],
    "parameter": [
     {
      "name": "start",
      "schreibweise": "start",
      "quelle": "tabelle",
-     "beschreibung": "Start offset (in bytes). Must be divisible by 2. Furthermore, the address 0",
-     "werte": []
+     "beschreibung": "Startversatz/-adresse in Bytes; durch 2 teilbar. 0=CRC, 2=PC, 4=EPC laut Tabelle.",
+     "werte": [],
+     "bereich": "nichtnegative, korrekt ausgerichtete Byteadresse"
     },
     {
      "name": "len",
      "schreibweise": "len",
      "quelle": "tabelle",
-     "beschreibung": "Length (in bytes). Must be divisible by 2.",
-     "werte": []
+     "beschreibung": "Optionale Länge in Bytes; durch 2 teilbar.",
+     "werte": [],
+     "bereich": "Byteanzahl; Ausrichtung hardwareabhängig"
     },
     {
      "name": "locklevel",
      "schreibweise": "locklevel",
      "quelle": "tabelle",
-     "beschreibung": "Optional lock level",
+     "beschreibung": "Optionaler Sperrstatus; kein ausdrücklicher Standard genannt.",
      "werte": [
       {
        "wert": "1",
-       "beschreibung": "Memory bank is writable from either open or secured states",
+       "beschreibung": "Im offenen oder gesicherten Zustand schreibbar",
        "generationen": null
       },
       {
        "wert": "2",
-       "beschreibung": "Memory bank is permanently writable from either the open or secured states",
+       "beschreibung": "Dauerhaft offen/gesichert schreibbar, niemals sperrbar",
        "generationen": null
       },
       {
        "wert": "3",
-       "beschreibung": "Memory bank is writable from secured state but not from open state",
+       "beschreibung": "Nur gesichert schreibbar",
        "generationen": null
       },
       {
        "wert": "4",
-       "beschreibung": "Memory bank is permanently not writable from any state",
+       "beschreibung": "Dauerhaft aus keinem Zustand schreibbar",
        "generationen": null
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Inhalt enthält PC-Wort; CRC berechnet das Tag. Bei nichtbinären Daten Codepagekonvertierung nach E RFID. PC-Längenautomatismus bei erstem PC-Byte 0; zweites Byte steuert Toggle-Bit. Optionalklammerung der Kurzsyntax ist unklar, Beispiele belegen WEPC ohne Argumente und drei explizite Argumente. Start-/Längenwert nicht als ungenannten Standard automatisch einsetzen."
   },
   {
    "id": "JS-5.64",
@@ -28859,14 +30220,39 @@
    "parameter": [
     {
      "name": "locklevel",
-     "schreibweise": "locklevel",
+     "schreibweise": "[:locklevel]",
      "quelle": "tabelle",
-     "beschreibung": "Optional lock level",
-     "werte": []
+     "beschreibung": "Optionaler Sperrstatus; kein ausdrücklicher Standard genannt.",
+     "werte": [
+      {
+       "wert": "1",
+       "beschreibung": "Im offenen oder gesicherten Zustand les-/schreibbar",
+       "generationen": null
+      },
+      {
+       "wert": "2",
+       "beschreibung": "Dauerhaft offen/gesichert les-/schreibbar, niemals sperrbar",
+       "generationen": null
+      },
+      {
+       "wert": "3",
+       "beschreibung": "Nur gesichert les-/schreibbar",
+       "generationen": null
+      },
+      {
+       "wert": "4",
+       "beschreibung": "Dauerhaft aus keinem Zustand les-/schreibbar",
+       "generationen": null
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Codepage nach E RFID; bei UTF-8 werden Nicht-US-ASCII-Zeichen laut Quelle als Leerzeichen übertragen. Passwort ist impliziter Feldinhalt, kein zusätzlicher WKLP-Parameter.",
+   "regeln": [
+    "Zu schreibender impliziter Passwortwert muss nach allgemeiner RFID-Passwortregel S. 305 genau vier Bytes haben."
+   ]
   },
   {
    "id": "JS-5.65",
@@ -28886,61 +30272,57 @@
    },
    "verweis": null,
    "syntax": [
-    "[WTAG:start[,len][,locklevell]]"
+    "[WTAG:start[,len][,locklevel]]"
    ],
    "parameter": [
     {
      "name": "start",
      "schreibweise": "start",
      "quelle": "tabelle",
-     "beschreibung": "Start address (in bytes)",
-     "werte": []
+     "beschreibung": "Startversatz/-adresse in Bytes; durch Tag-Blockgröße teilbar.",
+     "werte": [],
+     "bereich": "nichtnegative, korrekt ausgerichtete Byteadresse"
     },
     {
      "name": "len",
      "schreibweise": "len",
      "quelle": "tabelle",
-     "beschreibung": "Optional length (in bytes)",
-     "werte": []
+     "beschreibung": "Optionale Länge in Bytes; ohne Angabe gesamter Feldinhalt, bei zu kurzem Feld mit Nullbytes auffüllen.",
+     "werte": [],
+     "bereich": "Byteanzahl; Ausrichtung hardwareabhängig"
     },
     {
      "name": "locklevel",
      "schreibweise": "locklevel",
      "quelle": "tabelle",
-     "beschreibung": "Optional lock level",
+     "beschreibung": "Optionaler Sperrstatus; kein ausdrücklicher Standard genannt.",
      "werte": [
       {
        "wert": "1",
-       "beschreibung": "Memory bank is writable from either open or secured states",
+       "beschreibung": "Im offenen oder gesicherten Zustand schreibbar",
        "generationen": null
       },
       {
        "wert": "2",
-       "beschreibung": "Memory bank is permanently writable from either the open or secured states",
+       "beschreibung": "Dauerhaft offen/gesichert schreibbar, niemals sperrbar",
        "generationen": null
       },
       {
        "wert": "3",
-       "beschreibung": "Memory bank is writable from secured state but not from open state",
+       "beschreibung": "Nur gesichert schreibbar",
        "generationen": null
       },
       {
        "wert": "4",
-       "beschreibung": "Memory bank is permanently not writable from any state",
+       "beschreibung": "Dauerhaft aus keinem Zustand schreibbar",
        "generationen": null
       }
      ]
-    },
-    {
-     "name": "locklevell",
-     "schreibweise": "locklevell",
-     "quelle": "syntax",
-     "beschreibung": "",
-     "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "RFID-Funktion, Vorschau nur als gekennzeichneter Platzhalter; keine physische Lese-/Schreiboperation ausführen. Druckfehler locklevell in der Syntax korrigiert; Tabelle nennt locklevel. Leere len-Position vor locklevel ist durch Beispiel belegt. Blockweises Schreiben erfordert ausgerichteten Start; Blockgröße ist tagabhängig. Nur nichtbinäre Daten werden nach E-RFID-Codepage konvertiert."
   },
   {
    "id": "JS-5.66",
@@ -28960,6 +30342,9 @@
    },
    "verweis": null,
    "syntax": [
+    "[?:x,y,z{,D}{,Lx}{,Mx}{,R}{,J}]",
+    "[?:x]",
+    "[?:x,y]",
     "[?:x,y,z{,D}{,Lx}{,Mx}{,R}{,J}]"
    ],
    "parameter": [
@@ -28967,86 +30352,138 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text line which appears on the printer's display (16 characters max.)",
-     "werte": []
+     "beschreibung": "Auf dem Display gezeigter Abfragetext.",
+     "werte": [],
+     "bereich": "höchstens 16 Zeichen"
     },
     {
      "name": "y",
      "schreibweise": "y",
      "quelle": "tabelle",
-     "beschreibung": "Optional default value which is displayed on the printer's display for the first",
+     "beschreibung": "Optionale erste Vorgabe; danach erscheint die vorige Eingabe, sofern nicht gelöscht.",
      "werte": []
     },
     {
      "name": "z",
      "schreibweise": "z",
      "quelle": "tabelle",
-     "beschreibung": "Defines how often the input has to be entered",
+     "beschreibung": "Intervall, nach wie vielen Etiketten erneut eingegeben wird; keine genaue Standardzahl angegeben.",
      "werte": []
     },
     {
      "name": "D",
      "schreibweise": "D",
      "quelle": "tabelle",
-     "beschreibung": "Optional",
+     "beschreibung": "Optionale Löschung der vorigen Eingabe.",
      "werte": []
     },
     {
      "name": "Lx",
      "schreibweise": "Lx",
      "quelle": "tabelle",
-     "beschreibung": "Optional",
-     "werte": []
+     "beschreibung": "Optionale maximale Eingabelänge.",
+     "werte": [],
+     "bereich": "x=1…200"
     },
     {
      "name": "Mx",
      "schreibweise": "Mx",
      "quelle": "tabelle",
-     "beschreibung": "Optional",
+     "beschreibung": "Optionale positionsweise Eingabemaske; jedes Zeichen x beschreibt eine Stelle. Optionales ! am Anfang unterdrückt Leerzeichen.",
      "werte": [
       {
        "wert": "0",
-       "beschreibung": "Numeric, decimal separators and sign",
-       "generationen": null
+       "beschreibung": "Ziffern, Dezimaltrenner und Vorzeichen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "1",
-       "beschreibung": "Numeric values",
-       "generationen": null
+       "beschreibung": "Nur Ziffern",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "2",
-       "beschreibung": "Lower case letters",
-       "generationen": null
+       "beschreibung": "Kleinbuchstaben",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "3",
-       "beschreibung": "Alphanumeric lower case characters",
-       "generationen": null
+       "beschreibung": "Alphanumerisch, Kleinbuchstaben",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "4",
-       "beschreibung": "Upper case letters",
-       "generationen": null
+       "beschreibung": "Großbuchstaben",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "5",
-       "beschreibung": "Alphanumeric upper case characters",
-       "generationen": null
+       "beschreibung": "Alphanumerisch, Großbuchstaben",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "6",
-       "beschreibung": "Upper and lower case characters",
-       "generationen": null
+       "beschreibung": "Groß- und Kleinbuchstaben",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "7",
-       "beschreibung": "Alphanumeric upper and lower case characters",
-       "generationen": null
+       "beschreibung": "Alphanumerisch, Groß-/Kleinschreibung",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "8",
-       "beschreibung": "All characters",
+       "beschreibung": "Alle Zeichen",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "!",
+       "beschreibung": "Vorangestellter Maskenmodifikator: ohne Leerzeichen",
        "generationen": null
       }
      ]
@@ -29055,19 +30492,20 @@
      "name": "R",
      "schreibweise": "R",
      "quelle": "tabelle",
-     "beschreibung": "Optional",
+     "beschreibung": "Abfrage wiederholen, wenn Datenbankdatensatz nicht gefunden wurde.",
      "werte": []
     },
     {
      "name": "J",
      "schreibweise": "J",
      "quelle": "tabelle",
-     "beschreibung": "Optional",
+     "beschreibung": "Bei erneuter Mengenabfrage wiederholen, zusammen mit A [?,R].",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Interaktive Druckerabfrage, lokal nur markierter Platzhalter. Trotz formaler x,y,z-Syntax belegen Beispiele fehlende y/z und leere Zwischenpositionen. z steuert das Abfrageintervall in Etiketten, nicht die Zahl direkt aufeinanderfolgender Eingabedialoge. Masken sind positionsweise Zeichenfolgen, keine einzelne Auswahlziffer. M! unterdrückt Leerzeichen laut Beispiel."
   },
   {
    "id": "JS-5.67",
@@ -29094,19 +30532,20 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Parameter which is transmitted by abc",
+     "beschreibung": "Von abc übergebener Parameter/Wert.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Die einzelne Preisformat-Zeile ist erkennbar kopiert; Überschrift und Parameter beschreiben abc-Wertübernahme. Ohne Drucker/abc-Laufzeit nur gekennzeichneter Platzhalter."
   },
   {
    "id": "JS-5.68",
    "abschnitt": "5.68",
    "art": "inhaltsfeld",
    "befehl": "[B2B:...]",
-   "titel": "......... Base to base conversion................................................................................ 314",
+   "titel": "Base to base conversion",
    "seiten": [
     314,
     315
@@ -29126,37 +30565,67 @@
      "name": "source",
      "schreibweise": "source",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Quellzahlensystem.",
      "werte": [
       {
        "wert": "B",
-       "beschreibung": "Binary (Base 2)",
-       "generationen": null
+       "beschreibung": "Binär, Basis 2",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "O",
-       "beschreibung": "Octal (Base 8)",
-       "generationen": null
+       "beschreibung": "Oktal, Basis 8",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "D",
-       "beschreibung": "Decimal (Base 10)",
-       "generationen": null
+       "beschreibung": "Dezimal, Basis 10",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "H",
-       "beschreibung": "Hexadecimal (Base 16)",
-       "generationen": null
+       "beschreibung": "Hexadezimal, Basis 16",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "A",
-       "beschreibung": "Alphanumeric (Base 36)",
-       "generationen": null
+       "beschreibung": "Alphanumerisch, Basis 36",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "U",
-       "beschreibung": "Customized (character subset)",
-       "generationen": null
+       "beschreibung": "Benutzerdefiniertes Zeichenalphabet",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -29164,37 +30633,67 @@
      "name": "target",
      "schreibweise": "target",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Zielzahlensystem.",
      "werte": [
       {
        "wert": "B",
-       "beschreibung": "Binary (Base 2)",
-       "generationen": null
+       "beschreibung": "Binär, Basis 2",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "O",
-       "beschreibung": "Octal (Base 8)",
-       "generationen": null
+       "beschreibung": "Oktal, Basis 8",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "D",
-       "beschreibung": "Decimal (Base 10)",
-       "generationen": null
+       "beschreibung": "Dezimal, Basis 10",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "H",
-       "beschreibung": "Hexadecimal (Base 16)",
-       "generationen": null
+       "beschreibung": "Hexadezimal, Basis 16",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "A",
-       "beschreibung": "Alphanumeric (Base 36)",
-       "generationen": null
+       "beschreibung": "Alphanumerisch, Basis 36",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       },
       {
        "wert": "U",
-       "beschreibung": "Customized (character subset)",
-       "generationen": null
+       "beschreibung": "Benutzerdefiniertes Zeichenalphabet",
+       "generationen": {
+        "Ax": "n",
+        "X2": "n",
+        "X3": "n",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -29202,12 +30701,27 @@
      "name": "fieldname",
      "schreibweise": "fieldname",
      "quelle": "tabelle",
-     "beschreibung": "Name of the field which contains the source data",
+     "beschreibung": "Name eines separaten Feldes mit den Quelldaten; nicht die Daten selbst.",
+     "werte": []
+    },
+    {
+     "name": "source.characters",
+     "schreibweise": "U:characters",
+     "quelle": "tabelle",
+     "beschreibung": "Benutzerdefiniertes Alphabet bei Quellbasis U, im Beispiel mit Doppelpunkt angehängt.",
+     "werte": []
+    },
+    {
+     "name": "target.characters",
+     "schreibweise": "U:characters",
+     "quelle": "tabelle",
+     "beschreibung": "Benutzerdefinierte Zielbasis U ist aufgeführt; Alphabetform analog Quelle, aber kein eigenes Ziel-U-Beispiel.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Daten müssen in eigenem Feld stehen; direkte Daten als fieldname können laut Handbuch abhängig vom Inhalt fehlschlagen. U:Alphabet ist Teil eines Basisparameters und keine neue äußere Funktion. Vorzeichen-, Überlauf- und Alphabetlängenregeln sind nicht gesondert erklärt. Verschmutzten aus dem Inhaltsverzeichnis übernommenen Titel bereinigt."
   },
   {
    "id": "JS-5.69",
@@ -29227,26 +30741,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN:value1,{,value2...}]"
+    "[BIN:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 8 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "8-Bit-Ausgabe. Einzelwerte sind Bytes. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.70",
@@ -29266,26 +30781,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN16B:value1,{,value2...}]"
+    "[BIN16B:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 16 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "16-Bit-Ausgabe in Big Endian. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.71",
@@ -29305,26 +30821,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN16L:value1,{,value2...}]"
+    "[BIN16L:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 16 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "16-Bit-Ausgabe in Little Endian. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.72",
@@ -29344,26 +30861,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN32B:value1,{,value2...}]"
+    "[BIN32B:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 32 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "32-Bit-Ausgabe in Big Endian. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.73",
@@ -29383,26 +30901,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN32L:value1,{,value2...}]"
+    "[BIN32L:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 32 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "32-Bit-Ausgabe in Little Endian. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.74",
@@ -29422,26 +30941,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN64B:value1,{,value2...}]"
+    "[BIN64B:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 64 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "64-Bit-Ausgabe in Big Endian. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.75",
@@ -29461,26 +30981,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[BIN64L:value1,{,value2...}]"
+    "[BIN64L:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster in 64 Bit umzuwandelnder Eingabewert; Beispiele belegen Dezimalwerte und $-Hexwerte.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Eingabewerte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "64-Bit-Ausgabe in Little Endian. Wiederholte Werte werden einmal durch Komma getrennt; redundantes Komma vor der Optionalklammer der gedruckten Syntax normalisiert. Regeln für negative Werte/Überlauf sind nicht ausdrücklich beschrieben; keine stille Abschneidung im Editor."
   },
   {
    "id": "JS-5.76",
@@ -29500,40 +31021,48 @@
    },
    "verweis": null,
    "syntax": [
-    "[BITFIELD:bits1,{,bitsx...}:val1{,valx}]"
+    "[BITFIELD:bits1{,bitsx...}:val1{,valx...}]"
    ],
    "parameter": [
     {
      "name": "bits1",
      "schreibweise": "bits1",
      "quelle": "tabelle",
-     "beschreibung": "Input data, 1-32",
-     "werte": []
+     "beschreibung": "Erste Bitbreite.",
+     "werte": [],
+     "bereich": "1…32"
     },
     {
      "name": "bitsx",
-     "schreibweise": "bitsx",
+     "schreibweise": "{,bitsx...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data 1-32",
-     "werte": []
+     "beschreibung": "Weitere Bitbreiten, optional wiederholt.",
+     "werte": [],
+     "bereich": "1…32 je Wert"
     },
     {
      "name": "val1",
      "schreibweise": "val1",
      "quelle": "tabelle",
-     "beschreibung": "Value",
+     "beschreibung": "Erster zu kodierender Wert.",
      "werte": []
     },
     {
      "name": "valx",
-     "schreibweise": "valx",
+     "schreibweise": "{,valx...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, value",
+     "beschreibung": "Weitere Werte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Zahl der Bitbreiten muss Zahl der Werte entsprechen. Big-Endian-Bitfolge wird auf ganze Bytes aufgefüllt. Abbildung S. 323 bestätigt Auffüllung am rechten Ende (niederwertige Restbits), nicht links. Vorzeichen/Überlauf werden nicht beschrieben. Doppelpunkt trennt die Breiten- von der Werteliste; nicht als gewöhnliche flache Kommaliste zerlegen.",
+   "regeln": [
+    "Jede einzelne Bitbreite 1…32.",
+    "Breiten- und Wertelisten haben gleiche Elementzahl.",
+    "Gesamtbits werden byteweise Big Endian angeordnet, letzte Restbits rechts aufgefüllt."
+   ]
   },
   {
    "id": "JS-5.77",
@@ -29553,26 +31082,29 @@
    },
    "verweis": null,
    "syntax": [
-    "[C:fill,{,base}]"
+    "[C:fill{,base}]"
    ],
    "parameter": [
     {
      "name": "fill",
      "schreibweise": "fill",
      "quelle": "tabelle",
-     "beschreibung": "Fill characters",
+     "beschreibung": "Zeichen zur Ersetzung führender Nullen; auch Leerzeichen ist ein tatsächlicher Parameterinhalt.",
      "werte": []
     },
     {
      "name": "base",
-     "schreibweise": "base",
+     "schreibweise": "{,base}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, counting system",
-     "werte": []
+     "beschreibung": "Optionales Zählsystem für serialisierte Werte.",
+     "werte": [],
+     "bereich": "2…36",
+     "standard": 10
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Betrifft führende Nullen und die Zählbasis, unter anderem bei SER/Datums-/Zeitwerten. Leerzeichen nicht pauschal trimmen. Ein Komma vor der optionalen base-Angabe genügt; gedrucktes redundantes Syntaxkomma korrigiert. Verhalten mehrzeichiger Füllangaben ist nicht anhand eigener Beispiele erklärt."
   },
   {
    "id": "JS-5.78",
@@ -29599,19 +31131,21 @@
      "name": "m",
      "schreibweise": "m",
      "quelle": "tabelle",
-     "beschreibung": "Amount of digits",
+     "beschreibung": "Anzahl der Ziffern; Handbuch grenzt Gesamt- und Vorkommastellen nicht eindeutig ab.",
      "werte": []
     },
     {
      "name": "n",
      "schreibweise": "n",
      "quelle": "tabelle",
-     "beschreibung": "Digits after the comma. Default value is 2",
-     "werte": []
+     "beschreibung": "Ziffern nach dem Dezimaltrennzeichen.",
+     "werte": [],
+     "standard": 2
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Formatierung berechneter Felder. Abbildung S. 325 zeigt bei m=4,n=2 vier Gesamtziffern; das Beispiel allein legt Verhalten bei Überbreite oder führenden Nullen nicht fest."
   },
   {
    "id": "JS-5.79",
@@ -29638,26 +31172,27 @@
      "name": "key",
      "schreibweise": "key",
      "quelle": "tabelle",
-     "beschreibung": "Search value of the database",
+     "beschreibung": "Suchschlüssel der zuvor ausgewählten DBF-Datei.",
      "werte": []
     },
     {
      "name": "keyvalue",
      "schreibweise": "keyvalue",
      "quelle": "tabelle",
-     "beschreibung": "Alphanumeric value in the actual record",
+     "beschreibung": "Gesuchter alphanumerischer Schlüsselwert.",
      "werte": []
     },
     {
      "name": "entryfield",
      "schreibweise": "entryfield",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "quelle": "tabelle",
+     "beschreibung": "Aus der gefundenen Zeile zu lesendes Feld.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Benötigt E DBF. Tabellentexte unterscheiden Schlüsselspalte und Suchwert unpräzise; Positionen beibehalten. Keine lokale Datenbankabfrage ohne explizite Datenquelle; Vorschau als Platzhalter."
   },
   {
    "id": "JS-5.80",
@@ -29677,26 +31212,27 @@
    },
    "verweis": null,
    "syntax": [
-    "[HEX:value1,{,value2...}]"
+    "[HEX:value1{,value2...}]"
    ],
    "parameter": [
     {
      "name": "value1",
      "schreibweise": "value1",
      "quelle": "tabelle",
-     "beschreibung": "Input data,",
+     "beschreibung": "Erster Text-, Referenz- oder Binärwert.",
      "werte": []
     },
     {
      "name": "value2",
-     "schreibweise": "value2",
+     "schreibweise": "{,value2...}",
      "quelle": "tabelle",
-     "beschreibung": "Optional, input data",
+     "beschreibung": "Weitere Werte, optional wiederholt.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Normaler Text wird anhand des niederwertigen Bytes jedes Unicode-Zeichens hexadezimal ausgegeben, nicht als UTF-8-Bytefolge. Binärdaten werden byteweise umgewandelt. Verhalten von Unicode-Surrogatpaaren ist nicht spezifiziert. Redundantes Syntaxkomma normalisiert."
   },
   {
    "id": "JS-5.81",
@@ -29721,14 +31257,15 @@
    "parameter": [
     {
      "name": "condition",
-     "schreibweise": "condition",
+     "schreibweise": "{:condition}",
      "quelle": "tabelle",
-     "beschreibung": "Field will print if condition is not 0",
+     "beschreibung": "Optionale Bedingung; vorangestelltes ! invertiert sie.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Ohne Bedingung unsichtbares Feld; weiterhin für Berechnungen nutzbar. Widerspruch: Tabelle sagt Druck bei Bedingung ungleich 0; Beispiel und Erläuterung S. 328 blenden bei wahrer Vergleichsbedingung aus. Keine dieser gegensätzlichen bedingten Regeln als eindeutig belegt behandeln."
   },
   {
    "id": "JS-5.82",
@@ -29755,22 +31292,37 @@
      "name": "m",
      "schreibweise": "m",
      "quelle": "tabelle",
-     "beschreibung": "Position for the alignment",
+     "beschreibung": "Ausrichtung innerhalb der angegebenen Länge.",
      "werte": [
       {
        "wert": "l",
-       "beschreibung": "Left alignment",
-       "generationen": null
+       "beschreibung": "Linksbündig",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "c",
-       "beschreibung": "Center",
-       "generationen": null
+       "beschreibung": "Zentriert",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "r",
-       "beschreibung": "Right alignment",
-       "generationen": null
+       "beschreibung": "Rechtsbündig",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     },
@@ -29778,19 +31330,13 @@
      "name": "l",
      "schreibweise": "l",
      "quelle": "tabelle",
-     "beschreibung": "Length of the specified area where the text string will be aligned",
-     "werte": []
-    },
-    {
-     "name": "ml",
-     "schreibweise": "ml",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Ausdehnung in der gewählten Einheit mm oder inch.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "m und l stehen unmittelbar zusammen, ohne zusätzliches Komma. Extraktionsartefakt ml ist kein dritter Parameter."
   },
   {
    "id": "JS-5.84",
@@ -29814,7 +31360,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "ID aus j beziehungsweise ESCj. Druckerabhängiger Wert; Vorschau mit gekennzeichnetem Platzhalter."
   },
   {
    "id": "JS-5.85",
@@ -29841,12 +31388,13 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text string or variable name",
+     "beschreibung": "Text oder Name eines Textfeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Ermittelt Textlänge. Das Handbuch definiert keine genaue Zähleinheit für Unicode-Surrogatpaare oder kombinierende Zeichen; nicht stillschweigend als Byteanzahl auslegen."
   },
   {
    "id": "JS-5.86",
@@ -29873,12 +31421,13 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text string or variable name",
+     "beschreibung": "Text oder Name eines Textfeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Konvertiert Text in Kleinschreibung. Sprach-/gebietsspezifische Fallregeln sind nicht ausdrücklich festgelegt."
   },
   {
    "id": "JS-5.87",
@@ -29905,12 +31454,13 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text string or variable name",
+     "beschreibung": "Text oder Name eines Textfeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Entfernt Leerzeichen und Tabulatoren am Anfang. Nicht pauschal sämtliche Unicode-Leerraumzeichen oder Zeilenumbrüche entfernen."
   },
   {
    "id": "JS-5.88",
@@ -29937,12 +31487,13 @@
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "Previously defined field name",
+     "beschreibung": "Name eines zuvor definierten Text- oder Barcodefeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Feldnamen sind eindeutig, unterscheiden Groß-/Kleinschreibung und beginnen mit einem Buchstaben, danach alphanumerisch. Unbekannte Klammerinhalte bleiben nach Einleitung wörtlicher Text; keine automatische Umdeutung aller unbekannten Inhalte in fehlerhafte Referenzen."
   },
   {
    "id": "JS-5.89",
@@ -29969,26 +31520,27 @@
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "Previously defined field name",
+     "beschreibung": "Name des Quellfeldes.",
      "werte": []
     },
     {
      "name": "m",
      "schreibweise": "m",
      "quelle": "tabelle",
-     "beschreibung": "Position of the first character to be copied",
+     "beschreibung": "Erste auszuwählende Zeichenposition, ab 1.",
      "werte": []
     },
     {
      "name": "n",
-     "schreibweise": "n",
+     "schreibweise": "{,n}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Amount of characters to copy",
+     "beschreibung": "Optionale Zahl auszuwählender Zeichen.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Beispiel bestätigt 1-basierte Positionen. m/n dürfen zuvor berechnete Variablen sein. Verhalten außerhalb der Textlänge und genaue Unicode-Zähleinheit sind nicht festgelegt; ausgelassenes n nicht mit einem erfundenen numerischen Standard belegen."
   },
   {
    "id": "JS-5.90",
@@ -30012,29 +31564,23 @@
    ],
    "parameter": [
     {
-     "name": "-x",
-     "schreibweise": "-x",
+     "name": "x",
+     "schreibweise": "{-x}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. ID number of the connection",
+     "beschreibung": "Optionale Verbindungskennung der E-OPCUA-Verbindung.",
      "werte": []
     },
     {
      "name": "request",
      "schreibweise": "request",
      "quelle": "tabelle",
-     "beschreibung": "Any OPC-UA browsepath or node ID",
-     "werte": []
-    },
-    {
-     "name": "x",
-     "schreibweise": "x",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Vollständiger Browse-Pfad, Node-ID oder Funktionsaufruf.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Anfrage enthält selbst Kommas, Doppelpunkte und Semikolons; als zusammenhängenden Inhalt erhalten. Keine Netzwerkoperation in der lokalen Vorschau. Liest Werte der ausgewählten OPC-UA-Verbindung."
   },
   {
    "id": "JS-5.91",
@@ -30058,29 +31604,23 @@
    ],
    "parameter": [
     {
-     "name": "-x",
-     "schreibweise": "-x",
+     "name": "x",
+     "schreibweise": "{-x}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. ID number of the connection",
+     "beschreibung": "Optionale Verbindungskennung der E-OPCUA-Verbindung.",
      "werte": []
     },
     {
      "name": "request",
      "schreibweise": "request",
      "quelle": "tabelle",
-     "beschreibung": "Any OPC-UA browsepath or node ID",
-     "werte": []
-    },
-    {
-     "name": "x",
-     "schreibweise": "x",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Vollständiger Browse-Pfad, Node-ID oder Funktionsaufruf.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Anfrage enthält selbst Kommas, Doppelpunkte und Semikolons; als zusammenhängenden Inhalt erhalten. Keine Netzwerkoperation in der lokalen Vorschau. Wird erst beim Drucken verarbeitet und kann Werte schreiben beziehungsweise Funktionen aufrufen."
   },
   {
    "id": "JS-5.92",
@@ -30105,14 +31645,16 @@
    "parameter": [
     {
      "name": "x",
-     "schreibweise": "x",
+     "schreibweise": "{:x}",
      "quelle": "tabelle",
-     "beschreibung": "Optional.",
-     "werte": []
+     "beschreibung": "Optionale Anzahl der Wiederholungen des gelesenen Wertes.",
+     "werte": [],
+     "standard": 1
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Liest aus über E TMP ausgewählten temporären Datei. Druckerabhängiger Inhalt bleibt Vorschauplatzhalter. Datei liegt im MISC-Verzeichnis der Speicherkarte."
   },
   {
    "id": "JS-5.93",
@@ -30139,12 +31681,13 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text string or variable name",
+     "beschreibung": "Text oder Name eines Textfeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Entfernt Leerzeichen und Tabulatoren am Ende. Nicht pauschal sämtliche Unicode-Leerraumzeichen oder Zeilenumbrüche entfernen."
   },
   {
    "id": "JS-5.94",
@@ -30169,14 +31712,16 @@
    "parameter": [
     {
      "name": "x",
-     "schreibweise": "x",
+     "schreibweise": "{:x}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Defines how many time the value will repeated. Default = 1",
-     "werte": []
+     "beschreibung": "Optionale Anzahl der Wiederholungen des gelesenen Wertes.",
+     "werte": [],
+     "standard": 1
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Liest aus Benutzerspeicher. Druckerabhängiger Inhalt bleibt Vorschauplatzhalter. RUSER beschreibt maximal 32 Bytes, WUSER maximal 32 Zeichen; Einheitenwiderspruch nicht stillschweigend vereinheitlichen."
   },
   {
    "id": "JS-5.95",
@@ -30203,28 +31748,44 @@
      "name": "type",
      "schreibweise": "type",
      "quelle": "tabelle",
-     "beschreibung": "",
+     "beschreibung": "Schriftstil für Ziffern.",
      "werte": [
       {
        "wert": "ARABIC",
-       "beschreibung": "Arabic style",
-       "generationen": null
+       "beschreibung": "Arabische Zifferndarstellung",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "LATIN",
-       "beschreibung": "Latin style",
-       "generationen": null
+       "beschreibung": "Lateinische Zifferndarstellung",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       },
       {
        "wert": "THAI",
-       "beschreibung": "Thai style",
-       "generationen": null
+       "beschreibung": "Thailändische Zifferndarstellung",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
       }
      ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Wirkt nicht auf Barcodes. ARABIC benötigt Schrift -3 oder geeignete arabische TrueType-Schrift."
   },
   {
    "id": "JS-5.96",
@@ -30244,61 +31805,62 @@
    },
    "verweis": null,
    "syntax": [
-    "[SELECT{:text,name,idx,x{,D}{,R}{,J}]"
+    "[SELECT:text,name,idx,x{,D}{,R}{,J}]"
    ],
    "parameter": [
     {
      "name": "text",
      "schreibweise": "text",
      "quelle": "tabelle",
-     "beschreibung": "Text line which appears on the printers display (32 characters max)",
+     "beschreibung": "Anzeigeaufforderung, maximal 32 Zeichen.",
      "werte": []
     },
     {
      "name": "name",
      "schreibweise": "name",
      "quelle": "tabelle",
-     "beschreibung": "Field name of text object containing the select list.",
+     "beschreibung": "Textfeld mit durch ASCII-GS getrennten Auswahlwerten.",
      "werte": []
     },
     {
      "name": "idx",
      "schreibweise": "idx",
      "quelle": "tabelle",
-     "beschreibung": "Index of default selection. First item has index 1.",
+     "beschreibung": "Vorauswahlindex, erster Eintrag hat Index 1.",
      "werte": []
     },
     {
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Defines how often the input has to be entered",
+     "beschreibung": "Wie häufig die Auswahl angefordert wird.",
      "werte": []
     },
     {
      "name": "D",
-     "schreibweise": "D",
+     "schreibweise": "{,D}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Deletes the previous input",
+     "beschreibung": "Vorherige Eingabe löschen.",
      "werte": []
     },
     {
      "name": "R",
-     "schreibweise": "R",
+     "schreibweise": "{,R}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Repeats the input prompt if a record could not be found in a database",
+     "beschreibung": "Auswahl bei nicht gefundenem Datenbanksatz wiederholen.",
      "werte": []
     },
     {
      "name": "J",
-     "schreibweise": "J",
+     "schreibweise": "{,J}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Repeats the prompt when the printer asks for the input of the",
+     "beschreibung": "Bei erneuter Etikettenmengenabfrage wiederholen; zusammen mit A [?,R].",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X3/X4. Interaktive Auswahl liefert einen Index für beispielsweise SPLIT. Nicht ohne Benutzereingabe lokal ausführen. Offene zusätzliche Optionalklammer vor dem Doppelpunkt ist ein Druckfehler; Beispiele belegen die vollständige Argumentfolge."
   },
   {
    "id": "JS-5.97",
@@ -30374,26 +31936,20 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Field name or content",
+     "beschreibung": "Inhalt oder Feldname.",
      "werte": []
     },
     {
      "name": "charset",
-     "schreibweise": "charset",
+     "schreibweise": "{,C:charset}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Charset.",
-     "werte": []
-    },
-    {
-     "name": "C",
-     "schreibweise": "C",
-     "quelle": "syntax",
-     "beschreibung": "",
+     "beschreibung": "Optionaler Zeichensatz vor dem Hashen.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Nur X4. Erst in den angegebenen Zeichensatz oder den Schnittstellenzeichensatz konvertieren, dann SHA-256 bilden und hexadezimal darstellen. Nicht ungefragt UTF-8 als Druckerstandard annehmen."
   },
   {
    "id": "JS-5.99",
@@ -30420,26 +31976,33 @@
      "name": "data",
      "schreibweise": "data",
      "quelle": "tabelle",
-     "beschreibung": "Data string",
+     "beschreibung": "Daten oder Feldname mit zu zerlegender Zeichenfolge.",
      "werte": []
     },
     {
      "name": "idx",
      "schreibweise": "idx",
      "quelle": "tabelle",
-     "beschreibung": "Index of default selection. First item has index 1",
+     "beschreibung": "Index des gewünschten Teils, erster Teil hat Index 1.",
      "werte": []
     },
     {
      "name": "delim",
-     "schreibweise": "delim",
+     "schreibweise": "{,delim}",
      "quelle": "tabelle",
-     "beschreibung": "Optional. Custom delimiter value or field name",
-     "werte": []
+     "beschreibung": "Optionaler Trenner als Zeichenwert oder Feldname.",
+     "werte": [],
+     "generationen": {
+      "Ax": "n",
+      "X2": "n",
+      "X3": "n",
+      "X4": "y"
+     }
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Standardtrenner ist ASCII-GS. Eigener Trenner nur auf X4; Beispiele zeigen einen literalen Trenner und eine Feldreferenz. Verhalten bei leerem oder mehrzeichigem Trenner nicht gesondert festgelegt."
   },
   {
    "id": "JS-5.100",
@@ -30466,12 +32029,13 @@
      "name": "query",
      "schreibweise": "query",
      "quelle": "tabelle",
-     "beschreibung": "Any SQL query",
+     "beschreibung": "Vollständige SQL-Anfrage, maximal 128 Zeichen.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Benötigt E SQL und Database Connector. Drucker kürzt längere Anfragen laut Handbuch; Editor soll Überlänge diagnostizieren und den Quelltext erhalten. Anfrage kann Kommas und Feldinterpolation in geschweiften Klammern enthalten. Keine Datenbankoperation in der Vorschau."
   },
   {
    "id": "JS-5.101",
@@ -30498,12 +32062,13 @@
      "name": "query",
      "schreibweise": "query",
      "quelle": "tabelle",
-     "beschreibung": "Any SQL query",
+     "beschreibung": "Vollständige SQL-Anfrage, maximal 128 Zeichen.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Benötigt E SQL und Database Connector. Drucker kürzt längere Anfragen laut Handbuch; Editor soll Überlänge diagnostizieren und den Quelltext erhalten. Anfrage kann Kommas und Feldinterpolation in geschweiften Klammern enthalten. Keine Datenbankoperation in der Vorschau. Verarbeitung erst beim Drucken, unter anderem für schreibende Protokollierung."
   },
   {
    "id": "JS-5.102",
@@ -30530,12 +32095,13 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text string or variable name",
+     "beschreibung": "Text oder Name eines Textfeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Entfernt Leerzeichen und Tabulatoren am Anfang und am Ende. Nicht pauschal sämtliche Unicode-Leerraumzeichen oder Zeilenumbrüche entfernen."
   },
   {
    "id": "JS-5.103",
@@ -30562,12 +32128,374 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Hexadecimal value, indicated by a dollar sign ($) or ASCII control code name,",
-     "werte": []
+     "beschreibung": "Unicode-Hexwert mit führendem $ oder dokumentierter Steuerzeichenname.",
+     "werte": [
+      {
+       "wert": "NUL",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen NUL",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SOH",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen SOH",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "STX",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen STX",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ETX",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen ETX",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "EOT",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen EOT",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ENQ",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen ENQ",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ACK",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen ACK",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "BEL",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen BEL",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "BS",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen BS",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "HT",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen HT",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "LF",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen LF",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "VT",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen VT",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FF",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen FF",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CR",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen CR",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SO",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen SO",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SI",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen SI",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "DLE",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen DLE",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "DC1",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen DC1",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "DC2",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen DC2",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "DC3",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen DC3",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "DC4",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen DC4",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "NAK",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen NAK",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SYN",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen SYN",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ETB",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen ETB",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CAN",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen CAN",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "EM",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen EM",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "SU",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen SU",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "ESC",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen ESC",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FS",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen FS",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "GS",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen GS",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "RS",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen RS",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "US",
+       "beschreibung": "Benanntes ASCII-Steuerzeichen US",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "FNC1",
+       "beschreibung": "Code-128-Steuercode FNC1",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CODEA",
+       "beschreibung": "Code-128-Steuercode CODEA",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CODEB",
+       "beschreibung": "Code-128-Steuercode CODEB",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      },
+      {
+       "wert": "CODEC",
+       "beschreibung": "Code-128-Steuercode CODEC",
+       "generationen": {
+        "Ax": "y",
+        "X2": "y",
+        "X3": "y",
+        "X4": "y"
+       }
+      }
+     ]
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Verfügbare Glyphen hängen von der Schrift ab. CODE128-Steuercodes sind semantische Barcodezeichen, keine beliebigen druckbaren Unicode-Glyphen. Handbuch schreibt SU statt des üblichen SUB; SU wörtlich erfasst, SUB nicht als belegten Alias ausgeben."
   },
   {
    "id": "JS-5.104",
@@ -30594,12 +32522,13 @@
      "name": "x",
      "schreibweise": "x",
      "quelle": "tabelle",
-     "beschreibung": "Text string or variable name",
+     "beschreibung": "Text oder Name eines Textfeldes.",
      "werte": []
     }
    ],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Konvertiert Text in Großschreibung. Sprach-/gebietsspezifische Fallregeln sind nicht ausdrücklich festgelegt."
   },
   {
    "id": "JS-5.105",
@@ -30623,7 +32552,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Markiert Feldinhalt für den Informationspuffer, abrufbar über ESCi. Übernahme erst nach vollständig verarbeitetem Etikett, im Spendemodus einschließlich Entnahme. Unsichtbare Felder sind möglich; keine lokale Druckerausführung."
   },
   {
    "id": "JS-5.106",
@@ -30647,7 +32577,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Schreibt Feldinhalt in die über E LOG gewählte Protokolldatei auf der Speicherkarte; maximal 128 Zeichen, nicht mit IFFS verwendbar. Schreibvorgänge nicht durch Ausschalten unterbrechen. Keine Dateischreiboperation in der Vorschau. Datumsformat hängt von der gewählten Sprache ab."
   },
   {
    "id": "JS-5.107",
@@ -30671,7 +32602,8 @@
    ],
    "parameter": [],
    "barcode_eigenschaften": null,
-   "geprueft": false
+   "geprueft": true,
+   "hinweis": "Schreibt Feldinhalt in die über E TMP gewählte temporäre Datei auf der Speicherkarte; maximal 128 Zeichen, nicht mit IFFS verwendbar. Schreibvorgänge nicht durch Ausschalten unterbrechen. Keine Dateischreiboperation in der Vorschau."
   },
   {
    "id": "JS-5.108",
@@ -30837,7 +32769,7 @@
  ],
  "statistik": {
   "eintraege": 237,
-  "parameter": 1423,
-  "werte": 1756
+  "parameter": 1416,
+  "werte": 1801
  }
 }
