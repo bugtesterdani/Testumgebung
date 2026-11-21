@@ -16,6 +16,7 @@ public sealed partial class DevelopmentWorkspaceTests
 {
     private static void VerifyCabGenerationChoices()
     {
+        VerifyCabContentPreview();
         var layout = CabLabelImport.Read("J\rA 1\rJ\rA 1\r"u8.ToArray());
         var bytes = CabLabelLayout.Render(layout);
         var window = new CabValidationWindow(layout);
@@ -30,6 +31,41 @@ public sealed partial class DevelopmentWorkspaceTests
             Assert.Single(Descendants(window).OfType<ListBox>());
         }
         finally { window.Close(); }
+    }
+
+    private static void VerifyCabContentPreview()
+    {
+        VerifyContentHighlightCatalog();
+        var layout = CabLabelImport.Read("J\rT 0,0,0,3,3;[ISODATE] [DAY]\rA 1\r"u8.ToArray());
+        var before = CabLabelLayout.Render(layout);
+        var window = new CabContentPreviewWindow(layout);
+        try
+        {
+            window.Show();
+            var inputs = Descendants(window).OfType<TextBox>().ToArray();
+            inputs[0].Text = "2024-02-29 00:00:00";
+            window.Refresh();
+            Assert.Contains(Descendants(window).OfType<TextBlock>(), t => t.Text == "Vorschau: 20240229 29");
+            var source = Assert.Single(Descendants(window).OfType<RichTextBox>());
+            var runs = source.Document.Blocks.OfType<System.Windows.Documents.Paragraph>().Single().Inlines.OfType<System.Windows.Documents.Run>();
+            Assert.Equal(2, runs.Count(r => r.FontWeight == FontWeights.Bold));
+            Assert.Equal(new DateTime(2024, 2, 29), layout.CabSettings!.Preview!.ExampleTime);
+            Assert.Equal(before, CabLabelLayout.Render(layout));
+        }
+        finally { window.Close(); }
+    }
+
+    private static void VerifyContentHighlightCatalog()
+    {
+        foreach (var entry in Testumgebung.Domain.Labels.CabJScript.CabContentParser.Definitions)
+        {
+            var field = new Testumgebung.Domain.Labels.CabJScript.CabContentField(entry, "X", null, 0, 3, false);
+            var control = CabContentPreviewWindow.Source(new("[X]", [field], []));
+            var run = control.Document.Blocks.OfType<System.Windows.Documents.Paragraph>().Single().Inlines
+                .OfType<System.Windows.Documents.Run>().Single(r => r.FontWeight == FontWeights.Bold);
+            Assert.Equal("[X]", run.Text);
+            Assert.Contains(entry.Id, Assert.IsType<string>(run.ToolTip));
+        }
     }
 
     private static void VerifyLabelDesigner(Dispatcher dispatcher)
