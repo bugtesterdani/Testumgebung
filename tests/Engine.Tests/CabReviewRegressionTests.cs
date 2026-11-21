@@ -6,6 +6,27 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabReviewRegressionTests
 {
     [Theory]
+    [InlineData("QRCODE+MODEL1+VERSION2", "[DATE]", "qr-model")]
+    [InlineData("DATAMATRIX+ROWS8+COLS10", "[DATE]", "matrix-size")]
+    [InlineData("QRCODE+MODEL1+VERSION2", "{Sample}", "qr-model")]
+    public void Dynamic_content_does_not_skip_content_independent_barcode_rules(string type, string content, string code)
+    {
+        var result = CabValidator.Validate(CabParser.Parse(Encoding.UTF8.GetBytes("J\rB 0,0,0," + type + ",0.3;" + content + "\rA 1\r")));
+        Assert.Contains(result.Diagnostics, d => d.Code == code && d.Severity == CabDiagnosticSeverity.Error);
+        Assert.Contains(result.Diagnostics, d => d.Code == "barcode-dynamic");
+        Assert.DoesNotContain(result.Diagnostics, d => d.Code is "barcode-characters" or "barcode-length" or "matrix-capacity");
+    }
+
+    [Theory]
+    [InlineData("QRCODE+MODEL2+VERSION2")]
+    [InlineData("DATAMATRIX+ROWS8+COLS18")]
+    public void Valid_static_barcode_options_remain_valid_with_dynamic_content(string type)
+    {
+        var result = CabValidator.Validate(CabParser.Parse(Encoding.UTF8.GetBytes("J\rB 0,0,0," + type + ",0.3;[DATE]\rA 1\r")));
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+    }
+
+    [Theory]
     [InlineData("SC1", "size", "SC1")]
     [InlineData("SC1,n", "size", "SC1")]
     [InlineData("SC1,16,0.35", "size", "SC1")]

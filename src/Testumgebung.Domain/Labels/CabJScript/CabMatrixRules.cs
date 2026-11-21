@@ -7,7 +7,7 @@ internal static class CabMatrixRules
 {
     private const string QrAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
-    internal static void Validate(CabBoundCommand command, string text, int byteLength, CabDiagnosticCollector diagnostics)
+    internal static void Validate(CabBoundCommand command, string? text, int byteLength, CabDiagnosticCollector diagnostics)
     {
         var sourceId = command.Definition.Catalog.Id switch
         {
@@ -24,7 +24,7 @@ internal static class CabMatrixRules
             diagnostics.Add("matrix-size", CabDiagnosticSeverity.Error, "Die gewählte Matrixgröße ist nicht in der Kapazitätstabelle enthalten.", entry, command.Syntax);
             return;
         }
-        CheckCapacity(command, entry, rows, text, byteLength, diagnostics);
+        if (text is not null) CheckCapacity(command, entry, rows, text, byteLength, diagnostics);
     }
 
     private static bool Matches(CabBoundCommand command, string id, JsonElement row)

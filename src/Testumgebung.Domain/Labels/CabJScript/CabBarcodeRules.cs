@@ -30,10 +30,13 @@ internal static class CabBarcodeRules
     {
         var entry = command.Definition.Catalog;
         if (entry.Kind != "barcode") return;
+        Combinations(command, diagnostics);
         var text = command.Parameter("text");
-        if (text?.Value is not { } value) return;
+        if (text?.Value is not { } value)
+        { CabMatrixRules.Validate(command, null, 0, diagnostics); return; }
         if (Dynamic(value, names))
         {
+            CabMatrixRules.Validate(command, null, 0, diagnostics);
             diagnostics.Add("barcode-dynamic", CabDiagnosticSeverity.Information,
                 "Dynamischer Barcodeinhalt benötigt die Inhaltsfeld-/Beispielwertauswertung.", entry, text.Syntax!);
             return;
@@ -44,7 +47,6 @@ internal static class CabBarcodeRules
         CheckCharacters(section, Composite.Contains(section) ? linear : value, type, entry, text.Syntax!, diagnostics);
         CheckLength(section, Composite.Contains(section) ? linear : value, entry, text.Syntax!, diagnostics);
         DataBar(section, linear, entry, text.Syntax!, diagnostics);
-        Combinations(command, diagnostics);
         Capacity(command, value, diagnostics);
     }
 

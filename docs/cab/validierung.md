@@ -55,6 +55,9 @@ Schriftgröße; eine individuelle Barcodehöhe mit Elementbreite benötigt keine
 zusätzliche SC-Standardgröße. Bereits zuvor im selben Auftrag deklarierte
 Feldnamen im Barcodeinhalt werden bis zur Inhaltsfeldauswertung als dynamisch
 gekennzeichnet. Unbekannte Klammertexte bleiben wörtliche Daten.
+Modell-/Versionskombinationen und Matrixgrößen werden auch bei dynamischem
+Barcodeinhalt geprüft. Nur die von den ausgewerteten Daten abhängigen Zeichen-,
+Längen-, Prüfziffern- und Kapazitätsprüfungen werden aufgeschoben.
 
 ## Prüfnachweise und Grenzen
 
