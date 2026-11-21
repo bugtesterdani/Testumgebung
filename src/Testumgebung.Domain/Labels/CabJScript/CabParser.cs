@@ -113,6 +113,7 @@ public static class CabParser
 
         private bool ReadBlock()
         {
+            if (_position > 0 && data[_position - 1] is not (10 or 13)) return false;
             foreach (var pair in new[] { ("<BASE64>", "</BASE64>"), ("<ABC>", "</ABC>"), ("<ENCRYPTED JOB>", "</ENCRYPTED JOB>") })
             {
                 if (!Matches(_position, pair.Item1)) continue;
@@ -135,9 +136,7 @@ public static class CabParser
         private void ReadLine()
         {
             var start = _position;
-            while (_position < data.Length && data[_position] is not (10 or 13 or 0x1b)
-                && !Matches(_position, "<BASE64>") && !Matches(_position, "<ABC>")
-                && !Matches(_position, "<ENCRYPTED JOB>") && !Matches(_position, "<ENCRYPTED LABEL:")) _position++;
+            while (_position < data.Length && data[_position] is not (10 or 13 or 0x1b)) _position++;
             var end = _position;
             var first = start;
             while (first < end && data[first] is 32 or 9) first++;
@@ -150,8 +149,8 @@ public static class CabParser
                 if (html >= first && html < end)
                 {
                     var close = Find(html + 6, "</HTML>");
-                    if (close >= 0) end = _position = close + 7;
-                    else Diagnose("HTML-Abschluss fehlt.", html, end - html);
+                    if (close >= 0 && !data.AsSpan(first, close + 7 - first).Contains((byte)0x1b)) end = _position = close + 7;
+                    else if (close < 0) Diagnose("HTML-Abschluss fehlt.", html, end - html);
                 }
             }
             var children = kind is CabNodeKind.ImmediateCommand or CabNodeKind.LabelCommand

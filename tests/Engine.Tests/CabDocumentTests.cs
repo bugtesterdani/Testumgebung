@@ -83,6 +83,16 @@ public sealed class CabDocumentTests
     }
 
     [Fact]
+    public void Block_names_in_comments_and_text_are_not_opaque_blocks_and_html_does_not_hide_escape_commands()
+    {
+        var document = Parse("; literal <ABC>\nT 0,0,0,5,3;<ENCRYPTED JOB>\nW 0;<HTML>x\u001ba y</HTML>\nA 1\n");
+        Assert.DoesNotContain(document.Root.Children, n => n.Kind is CabNodeKind.Block or CabNodeKind.BinaryBlock);
+        Assert.Contains(document.Root.Children, n => n.Kind == CabNodeKind.Comment && document.Decode(n) == "; literal <ABC>");
+        Assert.Contains(document.Root.Children, n => n.Kind == CabNodeKind.EscapeCommand && n.Command == "\u001ba");
+        Assert.Equal("\n", Parse("W 0;<HTML>\nx\ny\n</HTML>\r").LineEnding);
+    }
+
+    [Fact]
     public void Encoding_and_units_are_tracked_at_each_position()
     {
         var prefix = Encoding.ASCII.GetBytes("m i\rJ\rT 0,0,0,5,3;");

@@ -56,7 +56,7 @@ internal static class CabImportedWriter
             var insertion = new CabSyntaxNode(CabNodeKind.Parameter, new(source.InsertOffset, 0), "", page, CabUnit.Millimetres, []);
             changes.Add(document.Replace(insertion, prefix + added));
         }
-        if (downloads.Length > 0) changes.Add(new(new(0, 0), downloads.ToArray()));
+        if (downloads.Length > 0) changes.Add(new(new(0, 0), DownloadEndings(downloads.ToArray(), document.LineEnding)));
         var output = document.Write(changes);
         textOffset = TextOffset(output, source.SetupCodePage);
         return output;
@@ -79,10 +79,11 @@ internal static class CabImportedWriter
     private static void ChangeElement(LabelLayout layout, LabelElement item, LabelElement original,
         CabSyntaxNode node, CabDocument document, List<CabTextChange> changes, Stream downloads)
     {
-        var imageChanged = item.ImageWidth != original.ImageWidth || item.ImageHeight != original.ImageHeight
-            || !item.Bitmap.AsSpan().SequenceEqual(original.Bitmap);
-        if (item.Kind == original.Kind && item.X == original.X && item.Y == original.Y && item.Size == original.Size
-            && item.Length == original.Length && item.Value == original.Value && !imageChanged) return;
+        var imageChanged = !((item.ImageWidth, item.ImageHeight).Equals((original.ImageWidth, original.ImageHeight))
+            && item.Bitmap.AsSpan().SequenceEqual(original.Bitmap));
+        var unchanged = (item.Kind, item.X, item.Y, item.Size, item.Length, item.Value)
+            .Equals((original.Kind, original.X, original.Y, original.Size, original.Length, original.Value));
+        if (unchanged && !imageChanged) return;
         using var unusedDownload = new MemoryStream();
         var rendered = CabLabelLayout.Field(layout, item,
             item.Kind == LabelElementKind.Image && !imageChanged && original.Kind == item.Kind ? unusedDownload : downloads);
@@ -90,15 +91,20 @@ internal static class CabImportedWriter
         var replacement = canonical.Root.Children[0];
         if (item.Kind != original.Kind)
         { changes.Add(document.Replace(node, rendered)); return; }
+        foreach (var index in ChangedParameterIndexes(item, original, node.Children.Count, imageChanged))
+            changes.Add(document.Replace(node.Children[index], canonical.Decode(replacement.Children[index])!));
+    }
+
+    private static IEnumerable<int> ChangedParameterIndexes(LabelElement item, LabelElement original, int count, bool imageChanged)
+    {
         var indexes = new HashSet<int>();
         if (item.X != original.X) indexes.Add(0);
         if (item.Y != original.Y) indexes.Add(1);
-        if (item.Size != original.Size) indexes.Add(4);
+        if (item.Size != original.Size && item.Kind != LabelElementKind.Image) indexes.Add(4);
         if (item.Length != original.Length && item.Kind == LabelElementKind.Line) indexes.Add(3);
-        if (item.Value != original.Value && item.Kind is not (LabelElementKind.Line or LabelElementKind.Image)) indexes.Add(node.Children.Count - 1);
-        if (item.Kind == LabelElementKind.Image && imageChanged) indexes.Add(node.Children.Count - 1);
-        foreach (var index in indexes)
-            changes.Add(document.Replace(node.Children[index], canonical.Decode(replacement.Children[index])!));
+        if (item.Value != original.Value && item.Kind is not (LabelElementKind.Line or LabelElementKind.Image)) indexes.Add(count - 1);
+        if (item.Kind == LabelElementKind.Image && imageChanged) indexes.Add(count - 1);
+        return indexes;
     }
 
     // The legacy print substitution accepts a single UTF-8 tail. Do not expose opaque
@@ -117,4 +123,11 @@ internal static class CabImportedWriter
     }
 
     private static string Invariant(decimal number) => number.ToString(CultureInfo.InvariantCulture);
+
+    private static byte[] DownloadEndings(byte[] bytes, string ending)
+    {
+        var document = CabParser.Parse(bytes);
+        return document.Write(document.Root.Children.Where(n => n.Kind == CabNodeKind.RawLine
+            && document.Decode(n) is "\r" or "\n" or "\r\n").Select(n => document.Replace(n, ending)));
+    }
 }

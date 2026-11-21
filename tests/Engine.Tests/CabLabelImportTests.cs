@@ -63,6 +63,44 @@ public sealed class CabLabelImportTests
         Assert.Throws<InvalidDataException>(() => CabLabelLayout.Render(imported));
     }
 
+    [Fact]
+    public void All_projected_object_edits_are_reopened_and_new_download_framing_uses_file_ending()
+    {
+        var original = new LabelLayout();
+        foreach (var kind in Enum.GetValues<LabelElementKind>())
+            original.Elements.Add(new() { Kind = kind, X = 10, Y = 15, Size = 3, Length = 30,
+                Value = kind is LabelElementKind.Gs1DataMatrix or LabelElementKind.Gs1Qr ? "(21)123" : "123",
+                ImageWidth = 8, ImageHeight = 1, Bitmap = [0x1b] });
+        var imported = CabLabelImport.Read(CabLabelLayout.Render(original));
+        foreach (var item in imported.Elements)
+        {
+            item.X += 3; item.Y += 4; item.Size += 1; item.Length += 5;
+            if (item.Kind == LabelElementKind.Text) item.Value = "[DATE]";
+            if (item.Kind == LabelElementKind.Image) { item.ImageWidth = 9; item.Bitmap = [0x80, 0]; }
+        }
+        var reopened = CabLabelImport.Read(CabLabelLayout.Render(imported));
+        Assert.Equal(imported.Elements.Count, reopened.Elements.Count);
+        for (var i = 0; i < reopened.Elements.Count; i++)
+        {
+            Assert.Equal(imported.Elements[i].X, reopened.Elements[i].X);
+            Assert.Equal(imported.Elements[i].Y, reopened.Elements[i].Y);
+        }
+        Assert.Equal("[DATE]", reopened.Elements[0].Value);
+        Assert.Equal(new byte[] { 0x80, 0 }, reopened.Elements.Single(e => e.Kind == LabelElementKind.Image).Bitmap);
+        var lf = CabLabelImport.Read(Encoding.UTF8.GetBytes("J\nS e;0,0,40,40,60\nA 1\n"));
+        lf.Elements.Add(new() { Kind = LabelElementKind.Image, ImageWidth = 8, ImageHeight = 1, Bitmap = [0x0d] });
+        var bytes = CabLabelLayout.Render(lf);
+        Assert.StartsWith("d BMP;", Encoding.Latin1.GetString(bytes));
+        Assert.DoesNotContain((byte)'\r', bytes.TakeWhile(b => b != 0x1b));
+        Assert.Equal(bytes, CabLabelLayout.Render(CabLabelImport.Read(bytes)));
+        var changedKind = CabLabelImport.Read(CabLabelLayout.Render(new LabelLayout { Elements = [new()] }));
+        changedKind.Elements[0].Kind = LabelElementKind.Line;
+        Assert.Equal(LabelElementKind.Line, Assert.Single(CabLabelImport.Read(CabLabelLayout.Render(changedKind)).Elements).Kind);
+        var raw = CabLabelImport.Read("raw"u8.ToArray());
+        raw.Elements.Add(new());
+        Assert.Throws<InvalidDataException>(() => CabLabelLayout.Render(raw));
+    }
+
     [Theory]
     [InlineData(203)]
     [InlineData(254)]
