@@ -21,41 +21,48 @@ public static class CabLabelImport
         var firstJob = document.Root.Children.FirstOrDefault(n => n.Kind == CabNodeKind.Job);
         state.InsertOffset = firstJob?.Children.LastOrDefault(n => n.Command == "A")?.Range.Offset ?? data.Length;
         for (var index = 0; index < nodes.Length; index++)
-        {
-            var node = nodes[index];
-            var command = document.Decode(node)?.TrimStart();
-            if (command is null) continue;
-            try
-            {
-                if (command.StartsWith("d BMP;", StringComparison.Ordinal) && index + 1 < nodes.Length
-                    && nodes[index + 1].Kind == CabNodeKind.BinaryBlock)
-                {
-                    var image = ReadBitmap(Unescape(document.Bytes(nodes[index + 1].Range)));
-                    images[command[6..]] = image;
-                }
-                if (firstJob is null || node.Range.Offset < firstJob.Range.Offset || node.Range.End > firstJob.Range.End
-                    || node.Kind != CabNodeKind.LabelCommand || node.Unit != CabUnit.Millimetres) continue;
-                if (command.StartsWith("S ", StringComparison.Ordinal))
-                {
-                    ReadSize(command, layout);
-                    state.SizeOffset = node.Range.Offset;
-                }
-                else if (node.Command is "T" or "B" or "G" or "I")
-                {
-                    var item = ReadElement(command, layout, images);
-                    item.CabSourceOffset = node.Range.Offset;
-                    layout.Elements.Add(item);
-                    state.Elements.Add(new() { Offset = node.Range.Offset,
-                        Original = JsonSerializer.Deserialize<LabelElement>(JsonSerializer.Serialize(item))! });
-                }
-            }
-            catch (Exception error) when (error is InvalidDataException or FormatException or OverflowException)
-            {
-                // A projection failure never removes or rewrites the original command.
-            }
-        }
+            Project(nodes[index], index + 1 < nodes.Length ? nodes[index + 1] : null, firstJob, document, layout, state, images);
         state.WidthMm = layout.WidthMm; state.HeightMm = layout.HeightMm; state.GapMm = layout.GapMm;
         return layout;
+    }
+
+    private static bool IsVisibleJobNode(CabSyntaxNode node, CabSyntaxNode? job)
+        => job is not null && node.Range.Offset >= job.Range.Offset && node.Range.End <= job.Range.End
+            && node.Kind == CabNodeKind.LabelCommand && node.Unit == CabUnit.Millimetres;
+
+    private static void ReadDownload(string command, CabSyntaxNode? next, CabDocument document, Dictionary<string, LabelElement> images)
+    {
+        if (command.StartsWith("d BMP;", StringComparison.Ordinal) && next?.Kind == CabNodeKind.BinaryBlock)
+            images[command[6..]] = ReadBitmap(Unescape(document.Bytes(next.Range)));
+    }
+
+    private static void Project(CabSyntaxNode node, CabSyntaxNode? next, CabSyntaxNode? job, CabDocument document,
+        LabelLayout layout, CabImportedSource state, Dictionary<string, LabelElement> images)
+    {
+        var command = document.Decode(node)?.TrimStart();
+        if (command is null) return;
+        try
+        {
+            ReadDownload(command, next, document, images);
+            if (!IsVisibleJobNode(node, job)) return;
+            if (command.StartsWith("S ", StringComparison.Ordinal))
+            {
+                ReadSize(command, layout);
+                state.SizeOffset = node.Range.Offset;
+            }
+            else if (node.Command is "T" or "B" or "G" or "I")
+            {
+                var item = ReadElement(command, layout, images);
+                item.CabSourceOffset = node.Range.Offset;
+                layout.Elements.Add(item);
+                state.Elements.Add(new() { Offset = node.Range.Offset,
+                    Original = JsonSerializer.Deserialize<LabelElement>(JsonSerializer.Serialize(item))! });
+            }
+        }
+        catch (Exception error) when (error is InvalidDataException or FormatException or OverflowException)
+        {
+            // A projection failure never removes or rewrites the original command.
+        }
     }
 
     internal static IEnumerable<CabSyntaxNode> Commands(CabSyntaxNode parent)

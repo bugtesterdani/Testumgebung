@@ -7,18 +7,30 @@ internal static class CabParameterReader
         var result = new List<CabSyntaxNode>();
         var command = (char)data[first];
         var start = first + 1;
-        if (start < end && data[start] == ':' && "TBW".Contains(command))
-        {
-            var separator = Array.IndexOf(data, (byte)';', start, end - start);
-            if (separator < 0) return result.AsReadOnly();
-            result.Add(Parameter(start + 1, separator - start - 1, "name", data, page, unit));
-            start = separator + 1;
-        }
+        if (!ReadName(data, command, ref start, end, page, unit, result)) return result.AsReadOnly();
         while (start < end && data[start] is 32 or 9) start++;
         if (start == end) return result.AsReadOnly();
         var contentSeparator = "TBWR".Contains(command)
             ? Array.IndexOf(data, (byte)';', start, end - start) : -1;
         var headerEnd = contentSeparator < 0 ? end : contentSeparator;
+        ReadHeader(data, start, headerEnd, page, unit, result);
+        if (contentSeparator >= 0)
+            result.Add(Parameter(contentSeparator + 1, end - contentSeparator - 1, "data", data, page, unit));
+        return result.AsReadOnly();
+    }
+
+    private static bool ReadName(byte[] data, char command, ref int start, int end, string page, CabUnit unit, List<CabSyntaxNode> result)
+    {
+        if (start >= end || data[start] != ':' || !"TBW".Contains(command)) return true;
+        var separator = Array.IndexOf(data, (byte)';', start, end - start);
+        if (separator < 0) return false;
+        result.Add(Parameter(start + 1, separator - start - 1, "name", data, page, unit));
+        start = separator + 1;
+        return true;
+    }
+
+    private static void ReadHeader(byte[] data, int start, int headerEnd, string page, CabUnit unit, List<CabSyntaxNode> result)
+    {
         var depth = 0;
         var field = start;
         var index = 0;
@@ -33,9 +45,6 @@ internal static class CabParameterReader
             }
         }
         result.Add(Parameter(field, headerEnd - field, index.ToString(System.Globalization.CultureInfo.InvariantCulture), data, page, unit));
-        if (contentSeparator >= 0)
-            result.Add(Parameter(contentSeparator + 1, end - contentSeparator - 1, "data", data, page, unit));
-        return result.AsReadOnly();
     }
 
     private static CabSyntaxNode Parameter(int start, int length, string name, byte[] data, string page, CabUnit unit)

@@ -28,7 +28,7 @@ public partial class LabelDesignerWindow : Window
         GapFields.Visibility = VisibleIf(cab);
         OpenCabButton.Visibility = VisibleIf(cab);
         SaveCabButton.Visibility = VisibleIf(cab);
-        CabEncodingFields.Visibility = VisibleIf(cab);
+        ((FrameworkElement)CabSetupCodePage.Parent).Visibility = VisibleIf(cab);
         CabSetupCodePage.Text = layout.CabSource?.SetupCodePage ?? "UTF-8";
         Gs1Identifiers.ItemsSource = Gs1LabelData.Identifiers;
         Gs1Identifiers.SelectedIndex = 1;

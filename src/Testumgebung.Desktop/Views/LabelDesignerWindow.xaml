@@ -29,7 +29,7 @@
                 <Button x:Name="OpenCabButton" Content="LBL öffnen …" Click="OnOpenCab" Margin="6,0,0,0" />
                 <Button x:Name="SaveCabButton" Content="LBL speichern …" Click="OnSaveCab" Margin="6,0,0,0" />
             </WrapPanel>
-            <StackPanel x:Name="CabEncodingFields" Orientation="Horizontal" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                 <TextBlock Text="Drucker-Codepage für LBL-Import" VerticalAlignment="Center" Margin="0,0,8,0" />
                 <TextBox x:Name="CabSetupCodePage" Text="UTF-8" Width="150"
                          AutomationProperties.Name="Drucker-Codepage für LBL-Import"

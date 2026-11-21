@@ -62,16 +62,22 @@ public static class CabParser
             if (Matches(start, "\u001b:")) { ReadBinary(false); return; }
             var token = EscapeToken(start);
             _position += token.Length;
-            if (token is "\u001bo" or "\u001bxin") ReadThroughSemicolon();
-            else if (token == "\u001bv" && _position < data.Length && data[_position] is not (10 or 13 or 0x1b)) _position++;
-            var parameters = _position > start + token.Length
-                ? new[] { Node(CabNodeKind.Parameter, start + token.Length, _position - start - token.Length - (data[_position - 1] == ';' ? 1 : 0), "value") }
-                : [];
+            var parameters = ReadEscapeParameters(token, start);
             _nodes.Add(Node(CabNodeKind.EscapeCommand, start, _position - start, token, parameters));
             if (token == "\u001bo" && data[_position - 1] == ';')
                 _codePage = Encoding.ASCII.GetString(data, start + 2, _position - start - 3);
             if (token == "\u001b" || token.Length == 2 && !"?abcfgijloprstvyz\u001b".Contains(token[1]))
                 Diagnose("Unbekannter oder unvollständiger ESC-Befehl bleibt erhalten.", start, _position - start);
+        }
+
+        private IReadOnlyList<CabSyntaxNode> ReadEscapeParameters(string token, int start)
+        {
+            if (token is "\u001bo" or "\u001bxin") ReadThroughSemicolon();
+            else if (token == "\u001bv" && _position < data.Length && data[_position] is not (10 or 13 or 0x1b)) _position++;
+            var parameters = _position > start + token.Length
+                ? new[] { Node(CabNodeKind.Parameter, start + token.Length, _position - start - token.Length - (data[_position - 1] == ';' ? 1 : 0), "value") }
+                : [];
+            return parameters;
         }
 
         private string EscapeToken(int at)
@@ -142,17 +148,24 @@ public static class CabParser
             while (first < end && data[first] is 32 or 9) first++;
             var command = first < end ? ((char)data[first]).ToString() : "";
             var kind = Kind(command);
-            // A tag-delimited HTML field can contain physical line endings.
-            if (command == "W")
-            {
-                var html = Find(first, "<HTML>");
-                if (html >= first && html < end)
-                {
-                    var close = Find(html + 6, "</HTML>");
-                    if (close >= 0 && !data.AsSpan(first, close + 7 - first).Contains((byte)0x1b)) end = _position = close + 7;
-                    else if (close < 0) Diagnose("HTML-Abschluss fehlt.", html, end - html);
-                }
-            }
+            if (command == "W") end = ExtendHtml(first, end);
+            AddTextNode(start, first, end, command, kind);
+            if (command == "m") UpdateUnit(first, end);
+            ReadEnding();
+        }
+
+        private int ExtendHtml(int first, int end)
+        {
+            var html = Find(first, "<HTML>");
+            if (html < first || html >= end) return end;
+            var close = Find(html + 6, "</HTML>");
+            if (close < 0) { Diagnose("HTML-Abschluss fehlt.", html, end - html); return end; }
+            if (!data.AsSpan(first, close + 7 - first).Contains((byte)0x1b)) return _position = close + 7;
+            return end;
+        }
+
+        private void AddTextNode(int start, int first, int end, string command, CabNodeKind kind)
+        {
             var children = kind is CabNodeKind.ImmediateCommand or CabNodeKind.LabelCommand
                 ? CabParameterReader.Read(data, first, end, _codePage, _unit) : [];
             var node = Node(kind, start, end - start, command, children);
@@ -162,8 +175,6 @@ public static class CabParser
                 _nodes.Add(node);
                 if (Decode(node) is null) Diagnose("Bytes sind mit der aktiven Codepage nicht dekodierbar.", start, end - start);
             }
-            if (command == "m") UpdateUnit(first, end);
-            ReadEnding();
         }
 
         private static CabNodeKind Kind(string command)
