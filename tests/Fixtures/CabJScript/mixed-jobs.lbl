@@ -1,0 +1,16 @@
+; Synthetic fixture, not a manual example.
+m m
+J
+S l1;0,0,27,29,46
+T:Part;2,3,17,3,4;{Part}[DATE],;
+O R
+B 4,15,0,EAN13,8;123456789012
+A 3
+m i
+J
+S e;0,0,1,1,2
+W 0,0,0,1,1,3,0.1;<HTML>
+<p>Part [Part]</p>
+</HTML>
+A 1
+unrecognized tail

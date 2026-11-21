@@ -79,7 +79,6 @@ public sealed class CabLabelLayoutTests
 
     [Theory]
     [InlineData(LabelElementKind.Text, "Text\rA 99")]
-    [InlineData(LabelElementKind.Text, "[DATE]")]
     [InlineData(LabelElementKind.Code128, "Ä")]
     [InlineData(LabelElementKind.Code128, "")]
     public void Invalid_cab_fields_are_rejected_before_a_job_is_created(LabelElementKind kind, string text)

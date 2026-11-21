@@ -1,104 +1,86 @@
 using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
+using Testumgebung.Domain.Labels.CabJScript;
 
 namespace Testumgebung.Presentation.ViewModels;
 
-/// <summary>Imports the JScript subset represented by the label designer without silently dropping commands.</summary>
+/// <summary>Loads every byte into the lossless document and projects representable objects for the existing canvas.</summary>
 public static class CabLabelImport
 {
-    public static LabelLayout Read(byte[] data, int dpi = 203)
-    {
-        try { return ReadJob(data, dpi); }
-        catch (Exception error) when (error is FormatException or OverflowException or DecoderFallbackException)
-        { throw new InvalidDataException("Ungültige cab-LBL-Druckvorlage. " + error.Message, error); }
-    }
-
-    private static LabelLayout ReadJob(byte[] data, int dpi)
+    public static LabelLayout Read(byte[] data, int dpi = 203, string setupCodePage = "UTF-8")
     {
         if (dpi is < 50 or > 1200) throw new InvalidDataException("Druckauflösung muss zwischen 50 und 1200 dpi liegen.");
+        var document = CabParser.Parse(data, new(setupCodePage));
         var layout = new LabelLayout { Dpi = dpi };
+        var state = new CabImportedSource { Data = document.Write(), SetupCodePage = setupCodePage, Dpi = dpi };
+        layout.CabSource = state;
         var images = new Dictionary<string, LabelElement>(StringComparer.Ordinal);
-        var offset = 0;
-        var state = new JobState();
-        while (offset < data.Length)
-        {
-            var command = ReadLine(data, ref offset);
-            if (command.Length == 0) continue;
-            if (command.StartsWith("d BMP;", StringComparison.Ordinal))
-            {
-                if (state.Started) throw Unsupported(command);
-                ReadImage(command[6..], ReadBinary(data, ref offset), images);
-                continue;
-            }
-            state.ReadCommand(command, layout, images);
-        }
-        if (!state.Ended) throw new InvalidDataException("Vollständiger cab-JScript-Druckauftrag mit J, S und A 1 erforderlich.");
-        _ = CabLabelLayout.Render(layout);
+        var nodes = Commands(document.Root).ToArray();
+        var firstJob = document.Root.Children.FirstOrDefault(n => n.Kind == CabNodeKind.Job);
+        state.InsertOffset = firstJob?.Children.LastOrDefault(n => n.Command == "A")?.Range.Offset ?? data.Length;
+        for (var index = 0; index < nodes.Length; index++)
+            Project(nodes[index], index + 1 < nodes.Length ? nodes[index + 1] : null, firstJob, document, layout, state, images);
+        state.WidthMm = layout.WidthMm; state.HeightMm = layout.HeightMm; state.GapMm = layout.GapMm;
         return layout;
     }
 
-    private static void ReadImage(string name, byte[] bytes, Dictionary<string, LabelElement> images)
+    private static bool IsVisibleJobNode(CabSyntaxNode node, CabSyntaxNode? job)
+        => job is not null && node.Range.Offset >= job.Range.Offset && node.Range.End <= job.Range.End
+            && node.Kind == CabNodeKind.LabelCommand && node.Unit == CabUnit.Millimetres;
+
+    private static void ReadDownload(string command, CabSyntaxNode? next, CabDocument document, Dictionary<string, LabelElement> images)
     {
-        var image = ReadBitmap(bytes);
-        if (images.TryGetValue(name, out var existing))
-        {
-            if (image.ImageWidth != existing.ImageWidth || image.ImageHeight != existing.ImageHeight
-                || !image.Bitmap.AsSpan().SequenceEqual(existing.Bitmap))
-                throw new InvalidDataException("Bildname ist mit unterschiedlichen Bilddaten mehrfach vergeben.");
-            return;
-        }
-        images.Add(name, image);
+        if (command.StartsWith("d BMP;", StringComparison.Ordinal) && next?.Kind == CabNodeKind.BinaryBlock)
+            images[command[6..]] = ReadBitmap(Unescape(document.Bytes(next.Range)));
     }
 
-    private sealed class JobState
+    private static void Project(CabSyntaxNode node, CabSyntaxNode? next, CabSyntaxNode? job, CabDocument document,
+        LabelLayout layout, CabImportedSource state, Dictionary<string, LabelElement> images)
     {
-        public bool Started { get; private set; }
-        public bool Ended { get; private set; }
-        private bool _sized;
-
-        public void ReadCommand(string command, LabelLayout layout, Dictionary<string, LabelElement> images)
+        var command = document.Decode(node)?.TrimStart();
+        if (command is null) return;
+        try
         {
-            if (command is "\u001BoUTF-8;" or "m m") return;
-            if (command == "J" && !Started) { Started = true; return; }
-            if (!Started || Ended) throw Unsupported(command);
-            if (command.StartsWith("S ", StringComparison.Ordinal) && !_sized && layout.Elements.Count == 0)
+            ReadDownload(command, next, document, images);
+            if (!IsVisibleJobNode(node, job)) return;
+            if (command.StartsWith("S ", StringComparison.Ordinal))
             {
                 ReadSize(command, layout);
-                _sized = true;
-                return;
+                state.SizeOffset = node.Range.Offset;
             }
-            if (!_sized) throw Unsupported(command);
-            if (command == "A 1") { Ended = true; return; }
-            layout.Elements.Add(ReadElement(command, layout, images));
+            else if (node.Command is "T" or "B" or "G" or "I")
+            {
+                var item = ReadElement(command, layout, images);
+                item.CabSourceOffset = node.Range.Offset;
+                layout.Elements.Add(item);
+                state.Elements.Add(new() { Offset = node.Range.Offset,
+                    Original = JsonSerializer.Deserialize<LabelElement>(JsonSerializer.Serialize(item))! });
+            }
         }
-    }
-
-    private static string ReadLine(byte[] data, ref int offset)
-    {
-        var start = offset;
-        while (offset < data.Length && data[offset] is not (10 or 13)) offset++;
-        var line = new UTF8Encoding(false, true).GetString(data, start, offset - start);
-        while (offset < data.Length && data[offset] is 10 or 13) offset++;
-        return line.TrimStart();
-    }
-
-    private static byte[] ReadBinary(byte[] data, ref int offset)
-    {
-        if (offset + 1 >= data.Length || data[offset++] != 0x1b || data[offset++] != (byte)'.')
-            throw new InvalidDataException("Binärer BMP-Beginn fehlt.");
-        using var output = new MemoryStream();
-        while (offset < data.Length)
+        catch (Exception error) when (error is InvalidDataException or FormatException or OverflowException)
         {
-            var value = data[offset++];
-            if (value != 0x1b) { output.WriteByte(value); continue; }
-            if (offset >= data.Length) break;
-            var next = data[offset++];
-            if (next == (byte)'.') return output.ToArray();
-            if (next != 0x1b) throw new InvalidDataException("Ungültige Escape-Sequenz im BMP-Bild.");
-            output.WriteByte(value);
+            // A projection failure never removes or rewrites the original command.
         }
-        throw new InvalidDataException("Binäres BMP-Bild ist unvollständig.");
+    }
+
+    internal static IEnumerable<CabSyntaxNode> Commands(CabSyntaxNode parent)
+        => parent.Children.SelectMany(n => n.Kind == CabNodeKind.Job ? Commands(n) : new[] { n })
+            .Where(n => n.Command.Length > 0);
+
+    private static byte[] Unescape(byte[] bytes)
+    {
+        if (bytes.Length < 4 || bytes[0] != 0x1b || bytes[1] != '.' || bytes[^2] != 0x1b || bytes[^1] != '.')
+            throw new InvalidDataException("Keine vollständig darstellbaren BMP-Daten.");
+        using var output = new MemoryStream();
+        for (var i = 2; i < bytes.Length - 2; i++)
+        {
+            output.WriteByte(bytes[i]);
+            if (bytes[i] == 0x1b && (++i >= bytes.Length - 2 || bytes[i] != 0x1b))
+                throw new InvalidDataException("Binärblock enthält eingebettete ESC-Befehle.");
+        }
+        return output.ToArray();
     }
 
     private static LabelElement ReadBitmap(byte[] bytes)

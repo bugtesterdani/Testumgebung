@@ -28,6 +28,8 @@ public partial class LabelDesignerWindow : Window
         GapFields.Visibility = VisibleIf(cab);
         OpenCabButton.Visibility = VisibleIf(cab);
         SaveCabButton.Visibility = VisibleIf(cab);
+        ((FrameworkElement)CabSetupCodePage.Parent).Visibility = VisibleIf(cab);
+        CabSetupCodePage.Text = layout.CabSource?.SetupCodePage ?? "UTF-8";
         Gs1Identifiers.ItemsSource = Gs1LabelData.Identifiers;
         Gs1Identifiers.SelectedIndex = 1;
 
@@ -122,15 +124,16 @@ public partial class LabelDesignerWindow : Window
 
     internal void ImportCab(byte[] bytes)
     {
-        var imported = CabLabelImport.Read(bytes, _layout.Dpi);
+        var imported = CabLabelImport.Read(bytes, _layout.Dpi, CabSetupCodePage.Text);
         _layout.WidthMm = imported.WidthMm;
         _layout.HeightMm = imported.HeightMm;
         _layout.GapMm = imported.GapMm;
         _layout.Elements = imported.Elements;
+        _layout.CabSource = imported.CabSource;
         DataContext = null;
         DataContext = _layout;
         ReloadElements();
-        Status.Text = "LBL geladen. Texte, Platzhalter und Elemente können bearbeitet werden.";
+        Status.Text = "LBL vollständig geladen. Darstellbare Elemente können bearbeitet werden; weitere Inhalte bleiben in der Datei erhalten.";
     }
 
     private void ReloadElements(LabelElement? selection = null)

@@ -85,14 +85,17 @@ public sealed partial class DevelopmentWorkspaceTests
                     dialog.OpenCabFile(invalidFile);
                     var status = Assert.IsType<TextBlock>(dialog.FindName("Status"));
                     Assert.NotEmpty(status.Text);
+                    dialog.SaveCabFile(invalidFile);
+                    Assert.Equal(new byte[] { 0, 1, 2 }, File.ReadAllBytes(invalidFile));
+                    dialog.ImportCab(CabLabelLayout.Render(existing));
                     Assert.Equal("Vorhandene LBL", Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>())).Value);
                     var retained = existing.Elements[0];
                     var active = Assert.IsType<LabelElement>(Assert.Single(importedList.Items.Cast<object>()));
-                    active.Value = "[DATE]";
+                    active.Value = "Text\rA 99";
                     var exportPath = Path.Combine(folder, "invalid-export.lbl");
                     File.WriteAllText(exportPath, "original");
                     dialog.SaveCabFile(exportPath);
-                    Assert.Contains("eckigen Klammern", status.Text);
+                    Assert.Contains("Steuerzeichen", status.Text);
                     Assert.Equal("original", File.ReadAllText(exportPath));
                     active.Value = retained.Value;
                     dialog.SaveCabFile(exportPath);
@@ -147,7 +150,7 @@ public sealed partial class DevelopmentWorkspaceTests
 
             var imported = new byte[] { 0, 0x1B, 0xFF };
             properties.ImportCabPrintData(imported);
-            Assert.Throws<InvalidDataException>(() => LabelDesignerWindow.ReadLayout(cab, true));
+            Assert.Equal(imported, CabLabelLayout.Render(LabelDesignerWindow.ReadLayout(cab, true)));
             Assert.Equal(imported, Convert.FromBase64String(cab.Value));
         }
         finally { owner.Close(); }
