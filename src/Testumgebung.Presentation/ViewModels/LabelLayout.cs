@@ -47,6 +47,8 @@ public sealed class LabelElement
 public sealed class LabelLayout
 {
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Testumgebung.Domain.Labels.CabJScript.CabDocumentSettings? CabSettings { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public CabImportedSource? CabSource { get; set; }
     public const string Parameter = "ZplLayout";
     public const int MaximumDots = 4096;

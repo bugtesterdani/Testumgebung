@@ -29,7 +29,7 @@ public static class CabValidator
         var rule = parameter.Rule;
         var source = parameter.Syntax ?? command.Syntax;
         var availability = rule.Parameter.Availability(generation, rule.Entry.Availability(generation));
-        Unavailable(availability, rule.Parameter.Name, rule.Entry, source, diagnostics);
+        if (parameter.IsPresent) Unavailable(availability, rule.Parameter.Name, rule.Entry, source, diagnostics);
         if (parameter.IsPresent && rule.DataType == CabDataType.Binary && rule.Pattern is null) return;
         if (parameter.IsPresent && parameter.Value is null)
         {

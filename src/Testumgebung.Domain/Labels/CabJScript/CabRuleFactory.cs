@@ -100,7 +100,7 @@ internal static class CabRuleFactory
         if (e.Id == "JS-3.16") return Rule(e, p, CabDataType.Text) with { Pattern = "^[0-9A-Fa-f]$" };
         if (e.Id == "JS-4.18") return Signal(e, p);
         if (e.Id == "JS-4.5.3" && p.Name == "x") return Rule(e, p, CabDataType.Integer, CabParameterUnit.Count);
-        if (p.Name == "r") return Rotation(e, p);
+        if (p.Name == "r" && e.Id != "JS-4.8") return Rotation(e, p);
         if (p.Name.EndsWith(".c", StringComparison.Ordinal)) return Rule(e, p, CabDataType.Integer, CabParameterUnit.Milliseconds);
         if (p.Name == "SAVE") return Rule(e, p, CabDataType.Text) with { Literal = "SAVE" };
         if (NumericTypes.TryGetValue(p.Name, out var numeric)) return Rule(e, p, numeric.Type, numeric.Unit) with

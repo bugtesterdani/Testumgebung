@@ -67,7 +67,13 @@ internal static class CabStorageGrammar
         if (text.StartsWith('/'))
         {
             var slash = text.IndexOf('/', 1);
-            if (slash >= 0) { builder.Add("path", slice.Subrange(range, 1, slash - 1)); start = slash + 1; }
+            if (slash >= 0)
+            {
+                var path = slice.Subrange(range, 1, slash - 1);
+                if (builder.Has("path")) builder.Add("path", path);
+                else builder.AddPath(path);
+                start = slash + 1;
+            }
         }
         var length = text.Length - start;
         if (builder.Has("ext"))
@@ -82,14 +88,34 @@ internal static class CabStorageGrammar
     private static void Rfid(CabBindingBuilder builder, CabSourceRange range)
     {
         var slice = builder.Slice;
-        foreach (var field in slice.Split(range, ','))
+        foreach (var field in RfidParts(slice, range))
         {
             var text = slice.Protocol(field);
             var colon = text.IndexOf(':');
             if (colon >= 0 && RfidFields.TryGetValue(text[..colon], out var name))
-                builder.Add(name, slice.Subrange(field, colon + 1, text.Length - colon - 1));
+            {
+                var value = slice.Subrange(field, colon + 1, text.Length - colon - 1);
+                if (name == "accesspwd" && !slice.Protocol(value).StartsWith("0x", StringComparison.Ordinal))
+                    builder.AddEncoded(name, value, "ISO-8859-1");
+                else builder.Add(name, value);
+            }
             else if (text is "V" or "P" or "N") builder.Add(text, field);
             else builder.Issue("rfid-option", "Unbekannte RFID-Option bleibt erhalten.", field);
+        }
+    }
+
+    private static IEnumerable<CabSourceRange> RfidParts(CabCommandSlice slice, CabSourceRange range)
+    {
+        foreach (var field in slice.Split(range, ','))
+        {
+            var text = slice.Protocol(field);
+            var power = text.IndexOf("E:", StringComparison.Ordinal);
+            if (power > 0 && !text.StartsWith("S:", StringComparison.Ordinal))
+            {
+                yield return slice.Subrange(field, 0, power);
+                yield return slice.Subrange(field, power, text.Length - power);
+            }
+            else yield return field;
         }
     }
 

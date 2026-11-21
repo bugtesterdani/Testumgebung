@@ -133,7 +133,7 @@ internal static class CabCommandGrammar
         var text = slice.Protocol(data);
         var flag = text.IndexOf('[', StringComparison.Ordinal);
         var nameLength = flag < 0 ? text.Length : text[..flag].TrimEnd().Length;
-        builder.Add("name", slice.Subrange(data, 0, nameLength));
+        CabStorageGrammar.FileName(builder, slice.Subrange(data, 0, nameLength));
         var save = Regex.Match(text, @"\[(?<save>SAVE)\]", RegexOptions.CultureInvariant);
         if (save.Success) builder.Add("SAVE", slice.Subrange(data, save.Groups["save"].Index, 4));
         var brightness = Regex.Match(text, @"\[B:(?<value>[^\]]*)\]", RegexOptions.CultureInvariant);

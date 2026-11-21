@@ -87,6 +87,20 @@ internal sealed class CabBindingBuilder(CabCommandDefinition definition, CabComm
         if (rule is not null) _parameters.Add(new(rule, slice.Syntax(range), slice.Decode(range)) { Parts = slice.Parts(range) });
     }
 
+    internal void AddPath(CabSourceRange range)
+    {
+        var rule = CabDefinitions.ParameterRule("JS-1.5", "path");
+        _parameters.Add(new(rule, slice.Syntax(range), slice.Decode(range)) { Parts = slice.Parts(range) });
+    }
+
+    internal void AddEncoded(string name, CabSourceRange range, string codePage)
+    {
+        var rule = definition.Parameters.FirstOrDefault(p => p.Parameter.Name == name);
+        if (rule is null) return;
+        var parts = slice.Parts(range).Select(p => p with { CodePage = codePage }).ToArray();
+        _parameters.Add(new(rule, slice.Syntax(range) with { CodePage = codePage }, CabSegmentedText.Decode(slice.Document, parts)) { Parts = parts });
+    }
+
     internal void AddAt(string name, IReadOnlyList<CabSourceRange> fields, int index)
     {
         if (index < fields.Count) Add(name, fields[index]);

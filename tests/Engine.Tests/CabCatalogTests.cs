@@ -5,6 +5,23 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class CabCatalogTests
 {
+    public static IEnumerable<object[]> DeclaredValues()
+    {
+        foreach (var entry in CabCatalog.Default.Entries.Where(e => e.Kind != "inhaltsfeld"))
+        foreach (var parameter in entry.Parameters)
+        foreach (var value in parameter.Values)
+            yield return [entry.Id, parameter.Name, value.Value];
+    }
+
+    [Theory]
+    [MemberData(nameof(DeclaredValues))]
+    public void Every_declared_table_value_is_recognized_by_its_own_parameter(string id, string name, string value)
+    {
+        var rule = CabDefinitions.ParameterRule(id, name);
+        Assert.True(rule.RecognizesDeclaredValue(value));
+        Assert.False(rule.RecognizesDeclaredValue("not-a-catalog-value:" + value));
+    }
+
     [Fact]
     public void Every_non_content_parameter_has_an_explicit_typed_rule()
     {

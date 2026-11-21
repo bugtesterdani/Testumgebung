@@ -14,6 +14,24 @@ namespace Testumgebung.Desktop.UiTests;
 
 public sealed partial class DevelopmentWorkspaceTests
 {
+    private static void VerifyCabGenerationChoices()
+    {
+        var layout = CabLabelImport.Read("J\rA 1\rJ\rA 1\r"u8.ToArray());
+        var bytes = CabLabelLayout.Render(layout);
+        var window = new CabValidationWindow(layout);
+        try
+        {
+            window.Show();
+            var choices = Descendants(window).OfType<ComboBox>().ToArray();
+            Assert.Equal(3, choices.Length);
+            choices[2].SelectedItem = Testumgebung.Domain.Labels.CabJScript.CabPrinterGeneration.X2;
+            Assert.Equal(Testumgebung.Domain.Labels.CabJScript.CabPrinterGeneration.X2, layout.CabSettings!.GenerationForJob(1));
+            Assert.Equal(bytes, CabLabelLayout.Render(layout));
+            Assert.Single(Descendants(window).OfType<ListBox>());
+        }
+        finally { window.Close(); }
+    }
+
     private static void VerifyLabelDesigner(Dispatcher dispatcher)
     {
         var folder = Path.Combine(Path.GetTempPath(), "label-designer-" + Guid.NewGuid().ToString("N"));
@@ -76,6 +94,7 @@ public sealed partial class DevelopmentWorkspaceTests
                 try
                 {
                     Assert.Equal("cab-Etikett gestalten", dialog.Title);
+                    VerifyCabGenerationChoices();
                     var existing = new LabelLayout { Elements = [new() { Value = "Vorhandene LBL" }] };
                     dialog.ImportCab(CabLabelLayout.Render(existing));
                     var importedList = Descendants(dialog).OfType<ListBox>().Single();

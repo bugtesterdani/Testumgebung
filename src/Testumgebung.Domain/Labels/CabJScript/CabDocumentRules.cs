@@ -67,7 +67,7 @@ internal static class CabDocumentRules
         if (timers?.Value is { } timer)
         {
             var equals = timer.IndexOf('=');
-            if (equals >= 0 && decimal.TryParse(timer.AsSpan(equals + 1), CultureInfo.InvariantCulture, out var time) && time > 1000)
+            if (equals >= 0 && (!decimal.TryParse(timer.AsSpan(equals + 1), CultureInfo.InvariantCulture, out var time) || time > 1000))
                 diagnostics.Add("applicator-time", CabDiagnosticSeverity.Error, "Applikatorzeit darf 1000 ms nicht überschreiten.", timers.Rule.Entry, timers.Syntax!);
         }
     }

@@ -6,6 +6,23 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabLabelImportTests
 {
     [Fact]
+    public void Generation_choices_round_trip_in_project_without_changing_print_bytes()
+    {
+        var layout = CabLabelImport.Read("J\rA 1\rJ\rA 2\r"u8.ToArray());
+        var bytes = CabLabelLayout.Render(layout);
+        layout.CabSettings = new()
+        {
+            DefaultGeneration = Testumgebung.Domain.Labels.CabJScript.CabPrinterGeneration.X3,
+            JobGenerations = new() { [1] = Testumgebung.Domain.Labels.CabJScript.CabPrinterGeneration.Ax },
+        };
+        var restored = LabelLayout.Load(layout.Save());
+        Assert.Equal(layout.CabSettings.DefaultGeneration, restored.CabSettings!.GenerationForJob(0));
+        Assert.Equal(layout.CabSettings.JobGenerations[1], restored.CabSettings.GenerationForJob(1));
+        Assert.Equal(bytes, CabLabelLayout.Render(restored));
+        Assert.Null(new LabelLayout().CabSettings);
+    }
+
+    [Fact]
     public void Editing_a_projected_field_preserves_unknown_commands_formatting_and_other_jobs()
     {
         var source = "; keep\r\nJ\rS l1;0,0,40,43,60\rO R\r  T 01.000,2,0,5,3;old,;[DATE]\n"

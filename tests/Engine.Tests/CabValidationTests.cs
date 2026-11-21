@@ -5,6 +5,67 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class CabValidationTests
 {
+    [Fact]
+    public void Rfid_accepts_both_printed_power_separators_and_four_raw_password_bytes()
+    {
+        var bytes = "J\rE RFID;T:Auto,P:5E:10,S:"u8.ToArray()
+            .Concat(new byte[] { 0xe4, 0xf6, 0xfc, 0xff }).Concat("\rA 1\r"u8.ToArray()).ToArray();
+        var result = CabValidator.Validate(CabParser.Parse(bytes));
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+        var command = Assert.Single(result.Commands, c => c.Definition.Catalog.Id == "JS-4.5.4");
+        Assert.Equal("10", command.Parameter("power")!.Value);
+        Assert.Equal("äöüÿ", command.Parameter("accesspwd")!.Value);
+        Assert.Equal("5", command.Parameter("pos")!.Value);
+    }
+
+    [Theory]
+    [InlineData("usbmem", false)]
+    [InlineData("missing", true)]
+    public void Download_names_exclude_the_storage_medium_from_the_eight_character_limit(string medium, bool invalidPath)
+    {
+        var result = Validate("d BMP;/" + medium + "/logo\r\u001b.\0\u001b.\rJ\rA 1\r");
+        var download = Assert.Single(result.Commands, c => c.Syntax.Command == "d");
+        Assert.Equal("logo", download.Parameter("name")!.Value);
+        Assert.Equal(medium, download.Parameter("path")!.Value);
+        Assert.Equal(invalidPath, result.Diagnostics.Any(d => d.Code == "path"));
+        Assert.DoesNotContain(result.Diagnostics, d => d.Code == "parameter-value" && d.CatalogId == "JS-3.3");
+    }
+
+    [Fact]
+    public void Parameter_edits_use_each_original_codepage_and_fail_before_writing_unrepresentable_text()
+    {
+        var bytes = "J\rT 0,0,0,3,3;a\u001bowindows-1252;"u8.ToArray()
+            .Concat(new byte[] { 0xe4 }).Concat("\rA 1\r"u8.ToArray()).ToArray();
+        var document = CabParser.Parse(bytes);
+        var parameter = Assert.Single(CabValidator.Validate(document).Commands, c => c.Syntax.Command == "T").Parameter("text")!;
+        Assert.Equal("aä", parameter.Value);
+        var edited = document.Write(CabParameterEditor.Replace(document, parameter, "bö"));
+        Assert.Contains((byte)0xf6, edited);
+        Assert.Equal("bö", Assert.Single(CabValidator.Validate(CabParser.Parse(edited)).Commands, c => c.Syntax.Command == "T").Parameter("text")!.Value);
+        Assert.Throws<EncoderFallbackException>(() => CabParameterEditor.Replace(document, parameter, "b漢"));
+        Assert.Throws<ArgumentException>(() => CabParameterEditor.Replace(document, parameter with { Syntax = null }, "x"));
+        Assert.Throws<ArgumentException>(() => CabParameterEditor.Replace(document, parameter with { Rule = parameter.Rule with { DataType = CabDataType.Binary } }, "x"));
+        Assert.Equal(bytes, document.Write());
+    }
+
+    [Theory]
+    [InlineData("ä", "ö")]
+    [InlineData("ä", "longer text")]
+    [InlineData("ä", "")]
+    public void Parameter_edits_preserve_controls_even_inside_utf8_characters(string original, string replacement)
+    {
+        var encoded = Encoding.UTF8.GetBytes(original);
+        var bytes = "J\rT 0,0,0,3,3;"u8.ToArray().Concat(encoded.Take(1))
+            .Concat(new byte[] { 27, (byte)'?' }).Concat(encoded.Skip(1)).Concat("\rA 1\r"u8.ToArray()).ToArray();
+        var document = CabParser.Parse(bytes);
+        var command = Assert.Single(CabValidator.Validate(document).Commands, c => c.Syntax.Command == "T");
+        var edited = document.Write(CabParameterEditor.Replace(document, command.Parameter("text")!, replacement));
+        var result = CabValidator.Validate(CabParser.Parse(edited));
+        Assert.Equal(replacement, Assert.Single(result.Commands, c => c.Syntax.Command == "T").Parameter("text")!.Value);
+        Assert.Single(result.Commands, c => c.Syntax.Kind == CabNodeKind.EscapeCommand);
+        Assert.Equal(bytes, document.Write());
+    }
+
     [Theory]
     [InlineData("m m\rJ\rS l1;0,0,40,43,60\rT:Part;1,2,0,5,3;hello\rR Part;new\rA 2\r")]
     [InlineData("J\nS e;0,0,40,40,60\nG:Line;2,3,22.5;L:20,0.4,s,a,[D:2,1],[S:0,100,90]\nA 1\n")]
