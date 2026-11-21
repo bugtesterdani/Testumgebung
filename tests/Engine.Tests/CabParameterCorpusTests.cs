@@ -23,6 +23,12 @@ public sealed class CabParameterCorpusTests
             var rule = CabDefinitions.ParameterRule(id, name);
             var error = rule.Validate(value);
             if (error is not null) errors.Add(id + "/" + name + " = " + value + ": " + error);
+            if (name == "options" && value.StartsWith("+EL", StringComparison.Ordinal))
+            {
+                var level = value[3..].Split('+')[0];
+                var levelError = CabDefinitions.ParameterRule(id, "EL").Validate(level);
+                if (levelError is not null) errors.Add(id + "/options: Fehlerkorrekturwert im Beispiel ist ungültig: " + levelError);
+            }
             if ((rule.Parameter.Values.Count > 0 || rule.Parameter.Metadata.TryGetProperty("bereich", out _))
                 && !row.TryGetProperty("invalid", out _))
                 errors.Add(id + "/" + name + ": ungültiges Bereichs-/Auswahlbeispiel fehlt.");

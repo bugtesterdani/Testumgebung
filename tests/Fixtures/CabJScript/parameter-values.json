@@ -3469,7 +3469,7 @@
   {
     "id": "JS-4.2.28",
     "parameter": "options",
-    "valid": "+EL5",
+    "valid": "+EL1",
     "invalid": "__invalid__"
   },
   {
@@ -3589,7 +3589,7 @@
   {
     "id": "JS-4.2.29",
     "parameter": "options",
-    "valid": "+EL5",
+    "valid": "+ELM",
     "invalid": "__invalid__"
   },
   {
@@ -4144,7 +4144,7 @@
   {
     "id": "JS-4.2.35",
     "parameter": "options",
-    "valid": "+EL5",
+    "valid": "+EL1",
     "invalid": "__invalid__"
   },
   {
@@ -4697,7 +4697,7 @@
   {
     "id": "JS-4.2.41",
     "parameter": "options",
-    "valid": "+EL5",
+    "valid": "+EL1",
     "invalid": "__invalid__"
   },
   {
@@ -4817,7 +4817,7 @@
   {
     "id": "JS-4.2.42",
     "parameter": "options",
-    "valid": "+EL5",
+    "valid": "+ELM",
     "invalid": "__invalid__"
   },
   {
