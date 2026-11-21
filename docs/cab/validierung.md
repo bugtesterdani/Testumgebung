@@ -48,6 +48,8 @@ Quellbereich und Millimetereinheit durch die logische Bindung bestätigt sind.
 Durch ESC unterbrochene Felder bleiben vollständig in der Quelle; sie erscheinen
 bis zur erweiterten Grafikbearbeitung nicht als abgeschnittene Einzelobjekte.
 Ein `J` innerhalb eines Kommentars beginnt für die Projektion keinen Auftrag.
+Für `C` wird die dokumentierte Grenze des ersten Schnittversatzes gegen die
+Etikettenhöhe aus `S` geprüft, auch bei unterschiedlichen aktiven Maßeinheiten.
 
 ## Prüfnachweise und Grenzen
 

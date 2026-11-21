@@ -14,6 +14,7 @@ internal static class CabDocumentRules
             if (job.Key >= 0) ObjectLimits(downloads.Concat(job), settings.GenerationForJob(job.Key), diagnostics);
             else if (!hasJobs) ObjectLimits(job, settings.DefaultGeneration, diagnostics);
             CabPositionRules.Validate(job.ToArray(), diagnostics);
+            CabCutRules.Validate(job.ToArray(), diagnostics);
         }
         foreach (var command in commands)
         {

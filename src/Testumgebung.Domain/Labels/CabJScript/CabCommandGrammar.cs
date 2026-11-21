@@ -15,7 +15,7 @@ internal static class CabCommandGrammar
             case "C": Csv(builder, ["param", "disp1", "disp2"]); break;
             case "D": Csv(builder, ["x", "y"]); break;
             case "R": Pair(builder, "name", "value"); break;
-            case "F": Pair(builder, "number", "name"); break;
+            case "F": FontAlias(builder); break;
             case "X": Signal(builder); break;
             case "d": Download(builder, next); break;
             case "s": Date(builder); break;
@@ -33,6 +33,7 @@ internal static class CabCommandGrammar
         else if (new[] { "T", "B", "W", "I", "G" }.Contains(node.Command, StringComparer.Ordinal)) CabFieldGrammar.Bind(builder);
         else if (node.Command is "E" or "M") CabStorageGrammar.Bind(builder);
         else if (node.Command is "H" or "O") CabOptionGrammar.Bind(builder);
+        else if (node.Command == "e") Pair(builder, "type", "name");
         else return false;
         return true;
     }
@@ -47,7 +48,11 @@ internal static class CabCommandGrammar
     private static void Simple(CabBindingBuilder builder)
     {
         var parameters = builder.Definition.Parameters.Where(p => !p.Parameter.IsAnswer).ToArray();
-        if (parameters.Length == 1) builder.Add(parameters[0].Parameter.Name, builder.Slice.Body);
+        if (parameters.Length == 1)
+        {
+            if (!parameters[0].Required && builder.Slice.Protocol(builder.Slice.Body).Trim().Length == 0) return;
+            builder.Add(parameters[0].Parameter.Name, builder.Slice.Body);
+        }
         else if (builder.Slice.Protocol(builder.Slice.Body).Trim().Length > 0)
             builder.Issue("unexpected-argument", "Dieser Befehl hat keine Eingabeparameter.", builder.Slice.Body);
     }
@@ -65,6 +70,12 @@ internal static class CabCommandGrammar
         var split = CabCommandResolver.HeaderData(builder.Slice);
         builder.Add(headerName, split.Header);
         if (split.Data is { } data) builder.Add(dataName, data);
+    }
+
+    private static void FontAlias(CabBindingBuilder builder)
+    {
+        if (CabCommandResolver.HeaderData(builder.Slice).Data is not null) Pair(builder, "number", "name");
+        else Csv(builder, ["number", "name"]);
     }
 
     private static void Date(CabBindingBuilder builder)
