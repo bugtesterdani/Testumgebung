@@ -17,7 +17,8 @@ public sealed class CabDefinitions
     public static CabParameterRule ParameterRule(string id, string name)
     {
         var entry = CabCatalog.Default[id];
-        return CabRuleFactory.Create(entry, entry.Parameters.Single(p => p.Name == name));
+        var parameter = entry.Parameters.Single(p => p.Name == name);
+        return entry.Kind == "inhaltsfeld" ? CabContentRuleFactory.Create(entry, parameter) : CabRuleFactory.Create(entry, parameter);
     }
 
     private CabDefinitions(CabCatalog catalog)

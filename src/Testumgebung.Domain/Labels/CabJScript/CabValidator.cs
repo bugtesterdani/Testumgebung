@@ -11,6 +11,7 @@ public static class CabValidator
         foreach (var command in commands) CheckCommand(command, settings, dynamicContents.Contains(command.Syntax.Range), diagnostics);
         ParseDiagnostics(document, commands, diagnostics);
         CabDocumentRules.Validate(commands, settings, dynamicContents, diagnostics);
+        CabContentValidation.Validate(document, commands, settings, diagnostics);
         return new(commands, diagnostics.Items);
     }
 

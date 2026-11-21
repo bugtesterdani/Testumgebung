@@ -1,0 +1,430 @@
+[
+  {
+    "id": "JS-5.1",
+    "source": "[H12:1,2,3]"
+  },
+  {
+    "id": "JS-5.2",
+    "source": "[H24:1,2,3]"
+  },
+  {
+    "id": "JS-5.3",
+    "source": "[H012:1,2,3]"
+  },
+  {
+    "id": "JS-5.4",
+    "source": "[H024:1,2,3]"
+  },
+  {
+    "id": "JS-5.5",
+    "source": "[ISOTIME:1,2,3]"
+  },
+  {
+    "id": "JS-5.6",
+    "source": "[MIN:1,2,3]"
+  },
+  {
+    "id": "JS-5.7",
+    "source": "[SEC:1,2,3]"
+  },
+  {
+    "id": "JS-5.8",
+    "source": "[TIME:1,2,3]"
+  },
+  {
+    "id": "JS-5.9",
+    "source": "[XM:1,2,3]"
+  },
+  {
+    "id": "JS-5.10",
+    "source": "[DATE:1,2,3]"
+  },
+  {
+    "id": "JS-5.11",
+    "source": "[DAY:1,2,3]"
+  },
+  {
+    "id": "JS-5.12",
+    "source": "[DAY02:1,2,3]"
+  },
+  {
+    "id": "JS-5.13",
+    "source": "[DOFY:1,2,3]"
+  },
+  {
+    "id": "JS-5.14",
+    "source": "[ISODATE:1,2,3]"
+  },
+  {
+    "id": "JS-5.15",
+    "source": "[ISOORDINAL:1,2,3]"
+  },
+  {
+    "id": "JS-5.16",
+    "source": "[WDAY:1,2,3]"
+  },
+  {
+    "id": "JS-5.17",
+    "source": "[wday:1,2,3]"
+  },
+  {
+    "id": "JS-5.18",
+    "source": "[wday2:1,2,3]"
+  },
+  {
+    "id": "JS-5.19",
+    "source": "[wday3:1,2,3]"
+  },
+  {
+    "id": "JS-5.20",
+    "source": "[ISOWDAY:1,2,3]"
+  },
+  {
+    "id": "JS-5.21",
+    "source": "[WEEK:1,2,3]"
+  },
+  {
+    "id": "JS-5.22",
+    "source": "[WEEK02:1,2,3]"
+  },
+  {
+    "id": "JS-5.23",
+    "source": "[OWEEK:0]"
+  },
+  {
+    "id": "JS-5.24",
+    "source": "[mon:1,2,3]"
+  },
+  {
+    "id": "JS-5.25",
+    "source": "[month:1,2,3]"
+  },
+  {
+    "id": "JS-5.26",
+    "source": "[MONTH:1,2,3]"
+  },
+  {
+    "id": "JS-5.27",
+    "source": "[MONTH02:1,2,3]"
+  },
+  {
+    "id": "JS-5.28",
+    "source": "[YY:1,2,3]"
+  },
+  {
+    "id": "JS-5.29",
+    "source": "[YYYY:1,2,3]"
+  },
+  {
+    "id": "JS-5.30",
+    "source": "[JYEAR:1,2,3]"
+  },
+  {
+    "id": "JS-5.31",
+    "source": "[JDAY:1,2,3]"
+  },
+  {
+    "id": "JS-5.32",
+    "source": "[JDAY02:1,2,3]"
+  },
+  {
+    "id": "JS-5.33",
+    "source": "[JMONTH:1,2,3]"
+  },
+  {
+    "id": "JS-5.34",
+    "source": "[JMONTH02:1,2,3]"
+  },
+  {
+    "id": "JS-5.35",
+    "source": "[JDOFY:1,2,3]"
+  },
+  {
+    "id": "JS-5.36",
+    "source": "[jmonth:1,2,3]"
+  },
+  {
+    "id": "JS-5.37",
+    "source": "[JWDAY:1,2,3]"
+  },
+  {
+    "id": "JS-5.38",
+    "source": "[SYEAR:1,2,3]"
+  },
+  {
+    "id": "JS-5.39",
+    "source": "[+:1,2,3]"
+  },
+  {
+    "id": "JS-5.40",
+    "source": "[-:4,2,1]"
+  },
+  {
+    "id": "JS-5.41",
+    "source": "[*:2,3,4]"
+  },
+  {
+    "id": "JS-5.42",
+    "source": "[/:12,2,3]"
+  },
+  {
+    "id": "JS-5.43",
+    "source": "[%:17,5,2]"
+  },
+  {
+    "id": "JS-5.44",
+    "source": "[|:0,1]"
+  },
+  {
+    "id": "JS-5.45",
+    "source": "[&:1,2]"
+  },
+  {
+    "id": "JS-5.46",
+    "source": "[<:1,2]"
+  },
+  {
+    "id": "JS-5.47",
+    "source": "[>:2,1]"
+  },
+  {
+    "id": "JS-5.48",
+    "source": "[=:1,1]"
+  },
+  {
+    "id": "JS-5.49",
+    "source": "[==:a,a]"
+  },
+  {
+    "id": "JS-5.50",
+    "source": "[MOD10:12345]"
+  },
+  {
+    "id": "JS-5.51",
+    "source": "[MOD36:AZ]"
+  },
+  {
+    "id": "JS-5.52",
+    "source": "[MOD43:AZ]"
+  },
+  {
+    "id": "JS-5.53",
+    "source": "[P:1200,.,-]"
+  },
+  {
+    "id": "JS-5.54",
+    "source": "[R:n]"
+  },
+  {
+    "id": "JS-5.55",
+    "source": "[EPC:urn:epc:id:sgtin:0614141.112345.400]"
+  },
+  {
+    "id": "JS-5.56",
+    "source": "[LTAG:0,4]"
+  },
+  {
+    "id": "JS-5.57",
+    "source": "[REPC]"
+  },
+  {
+    "id": "JS-5.58",
+    "source": "[REPCBIN]"
+  },
+  {
+    "id": "JS-5.59",
+    "source": "[RTAG:0,4]"
+  },
+  {
+    "id": "JS-5.60",
+    "source": "[RTAGBIN:0,4]"
+  },
+  {
+    "id": "JS-5.61",
+    "source": "[TAGID]"
+  },
+  {
+    "id": "JS-5.62",
+    "source": "[WACP:1]"
+  },
+  {
+    "id": "JS-5.63",
+    "source": "[WEPC:4,2,1]"
+  },
+  {
+    "id": "JS-5.64",
+    "source": "[WKLP:1]"
+  },
+  {
+    "id": "JS-5.65",
+    "source": "[WTAG:0,4,1]"
+  },
+  {
+    "id": "JS-5.66",
+    "source": "[?:Pick,seed,1,D,L20,M!117,R,J]"
+  },
+  {
+    "id": "JS-5.67",
+    "source": "[ABC:Example]"
+  },
+  {
+    "id": "JS-5.68",
+    "source": "[B2B:U:0123456789ABCDEF,U:01,HexData]"
+  },
+  {
+    "id": "JS-5.69",
+    "source": "[BIN:1,$FF]"
+  },
+  {
+    "id": "JS-5.70",
+    "source": "[BIN16B:1,$FF]"
+  },
+  {
+    "id": "JS-5.71",
+    "source": "[BIN16L:1,$FF]"
+  },
+  {
+    "id": "JS-5.72",
+    "source": "[BIN32B:1,$FF]"
+  },
+  {
+    "id": "JS-5.73",
+    "source": "[BIN32L:1,$FF]"
+  },
+  {
+    "id": "JS-5.74",
+    "source": "[BIN64B:1,$FF]"
+  },
+  {
+    "id": "JS-5.75",
+    "source": "[BIN64L:1,$FF]"
+  },
+  {
+    "id": "JS-5.76",
+    "source": "[BITFIELD:3,2:5,3]"
+  },
+  {
+    "id": "JS-5.77",
+    "source": "[C:0,10]"
+  },
+  {
+    "id": "JS-5.78",
+    "source": "[D:4,2]"
+  },
+  {
+    "id": "JS-5.79",
+    "source": "[DBF:KEY,VALUE,ENTRY]"
+  },
+  {
+    "id": "JS-5.80",
+    "source": "[HEX:Data,Data]"
+  },
+  {
+    "id": "JS-5.81",
+    "source": "[I:Num]"
+  },
+  {
+    "id": "JS-5.82",
+    "source": "[J:r40]"
+  },
+  {
+    "id": "JS-5.84",
+    "source": "[JOBID]"
+  },
+  {
+    "id": "JS-5.85",
+    "source": "[LEN:Data]"
+  },
+  {
+    "id": "JS-5.86",
+    "source": "[LOWER:Data]"
+  },
+  {
+    "id": "JS-5.87",
+    "source": "[LTRIM:Data]"
+  },
+  {
+    "id": "JS-5.88",
+    "source": "[Data]"
+  },
+  {
+    "id": "JS-5.89",
+    "source": "[Data,2,3]"
+  },
+  {
+    "id": "JS-5.90",
+    "source": "[OPCUA-1:ns=2;s=Example,Node]"
+  },
+  {
+    "id": "JS-5.91",
+    "source": "[OPCUALOG-1:ns=2;s=Example,Node]"
+  },
+  {
+    "id": "JS-5.92",
+    "source": "[RTMP:1]"
+  },
+  {
+    "id": "JS-5.93",
+    "source": "[RTRIM:Data]"
+  },
+  {
+    "id": "JS-5.94",
+    "source": "[RUSER:1]"
+  },
+  {
+    "id": "JS-5.95",
+    "source": "[S:LATIN]"
+  },
+  {
+    "id": "JS-5.96",
+    "source": "[SELECT:Pick,List,1,1,D,R,J]"
+  },
+  {
+    "id": "JS-5.97",
+    "source": "[SER:0001,1,2]"
+  },
+  {
+    "id": "JS-5.98",
+    "source": "[SHA256:Data,C:UTF-8]"
+  },
+  {
+    "id": "JS-5.99",
+    "source": "[SPLIT:List,1,|]"
+  },
+  {
+    "id": "JS-5.100",
+    "source": "[SQL:SELECT col FROM demo WHERE id={Num}]"
+  },
+  {
+    "id": "JS-5.101",
+    "source": "[SQLLOG:INSERT INTO demo VALUES ({Num})]"
+  },
+  {
+    "id": "JS-5.102",
+    "source": "[TRIM:Data]"
+  },
+  {
+    "id": "JS-5.103",
+    "source": "[U:$20AC]"
+  },
+  {
+    "id": "JS-5.104",
+    "source": "[UPPER:Data]"
+  },
+  {
+    "id": "JS-5.105",
+    "source": "[WINF]"
+  },
+  {
+    "id": "JS-5.106",
+    "source": "[WLOG]"
+  },
+  {
+    "id": "JS-5.107",
+    "source": "[WTMP]"
+  },
+  {
+    "id": "JS-5.108",
+    "source": "[WUSER]"
+  }
+]

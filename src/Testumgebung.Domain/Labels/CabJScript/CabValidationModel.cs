@@ -13,6 +13,7 @@ public sealed record CabDiagnostic(string Code, CabDiagnosticSeverity Severity, 
 /// <summary>Saved editor choices; a choice never inserts or executes a printer command.</summary>
 public sealed class CabDocumentSettings
 {
+    public CabPreviewSettings? Preview { get; set; }
     [JsonConverter(typeof(JsonStringEnumConverter<CabPrinterGeneration>))]
     public CabPrinterGeneration DefaultGeneration { get; set; } = CabPrinterGeneration.X4;
     public Dictionary<int, CabPrinterGeneration> JobGenerations { get; set; } = [];

@@ -4,8 +4,7 @@ Issue #259, Release R9, Meilenstein 18. Grundlage sind das verlustfreie Dokument
 aus AP 1, die Befehlsbindung aus AP 2 und die 107 geprüften Einträge des
 Kapitels 5. Abschnitt 5.83 ist im Handbuch nicht vorhanden.
 
-Dieser erste Commit legt den Vertrag fest. Die Implementierung und ihre
-Prüfnachweise folgen im Entwurfs-PR, bevor AP 8 begonnen wird.
+Die Implementierung wird in PR #260 geprüft, bevor AP 8 begonnen wird.
 
 ## Quelle und Grammatik
 
@@ -43,6 +42,39 @@ in eingesetzten Variablenwerten bleibt im Druckbaustein bestehen. Vorschauwerte
 werden nicht als neue JScript-Quelle in die Druckdatei zurückgeschrieben.
 
 ## Nachweise
+
+`CabContentParser` erkennt alle 107 Definitionen case-sensitiv. Der versionierte
+Korpus `tests/Fixtures/CabJScript/content-fields.json` bindet jeden der 241
+Katalogparameter, einschließlich gepackter Formate, Optionslisten, Bitlisten,
+OPC-UA-Kennungen und des abweichend benannten SER-Startparameters. Bytebereiche
+werden aus tatsächlich dekodierten Zeichen ermittelt: Ein Shift-JIS-Folgebyte
+mit Wert `0x5B` ist keine öffnende Inhaltsfeldklammer. ESC-Zwischenräume gehören
+nicht zu den Hervorhebungsbereichen.
+
+Im cab-Editor öffnet „Inhaltsfeld-Vorschau …“ die hervorgehobenen Quelldatenfelder,
+ihre Offlinewerte und Hinweise mit Handbuchverweis. Beispielzeit, Setup-Kultur,
+Monats-Offsets, Wochenregel und Sichtbarkeitsregel werden als Projektmetadaten
+gespeichert. `l` berücksichtigt die DOS-Ländercodes (insbesondere GR=Deutschland,
+GK=Griechenland, SA=Südafrika). LA wird für die Vorschau als es-MX und SR als
+sr-Latn-RS dargestellt; diese regionalen Varianten sind Vorschaukonventionen.
+Jalali-Monatsnamen werden persisch dargestellt. JWDAY zählt in der Vorschau
+Samstag=0. Quellen und Druckdateien werden dadurch nicht geändert.
+
+Die Vorschau meldet nicht eindeutig festgelegte Regeln: Monate wahlweise als
+30 Tage oder Kalendermonate; Offsets in Reihenfolge Tag, Monat, Jahr; Wochen
+nach gewählter Regel; logisches AND gemäß Überschrift; ordinale Zeichenfolge-
+vergleiche; Unicode-Skalarwerte für Länge/Teilstrings; Gebietskultur für Groß- /
+Kleinschreibung. R:u/d bedeutet gegen ±∞, R:m halbe Werte von null weg;
+R:n schneidet für die Anzeige Nachkommastellen ohne Rundung ab. D:m zählt
+Gesamtziffern; Überbreite bleibt erhalten. Unspezifizierte Binärüberläufe,
+negative Binärwerte, ungültige Unicode-Skalare und Teilbereiche außerhalb der
+Daten liefern Diagnosen statt stiller Abschneidung. J bewahrt Ausrichtung und
+physische Länge als Vorschau-Metadaten; es erzeugt keine erfundenen Leerzeichen.
+SELECT zeigt den ausdrücklich bereitgestellten Beispielindex oder die
+dokumentierte Vorauswahl und kennzeichnet dies als Offline-Beispielauswahl.
+S ändert die Zifferndarstellung, nicht die intern referenzierten Datenwerte.
+Binärwerte behalten ihre Bytefolge unabhängig von der lesbaren Hexdarstellung.
+Die lokalen Darstellungsgrenzen sind keine behaupteten Druckergrenzen.
 
 Der Korpus muss alle 107 Einträge und deren Parameter erfassen. Für jedes
 offline berechenbare Feld sind ein erwarteter Vorschauwert und mindestens ein
