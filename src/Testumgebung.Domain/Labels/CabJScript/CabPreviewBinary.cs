@@ -81,7 +81,7 @@ internal sealed partial class CabPreviewContext
     private string ConvertBase(IReadOnlyList<string> args)
     {
         if (!fields.TryGetValue(args[2], out var value)) throw new FormatException("B2B benötigt ein zuvor definiertes Datenfeld.");
-        RequireResolved(value);
+        RequireText(value);
         var source = Alphabet(args[0]); var target = Alphabet(args[1]);
         if (value.Text.Length > 4096) throw new FormatException("Basisumwandlung überschreitet die lokale Vorschaugrenze.");
         var number = BigInteger.Zero;
@@ -127,7 +127,7 @@ internal sealed partial class CabPreviewContext
         if (argument is "FNC1" or "CODEA" or "CODEB" or "CODEC")
         {
             Note(field, "Semantisches Code-128-Steuerzeichen; keine Unicode-Glyphe.", "preview-barcode-control");
-            return new("⟦" + argument + "⟧");
+            return new("⟦" + argument + "⟧", Placeholder: true);
         }
         throw new FormatException("Unbekannter Unicode-Steuerzeichenname.");
     }
@@ -144,5 +144,11 @@ internal sealed partial class CabPreviewContext
     private static void RequireResolved(CabPreviewValue value)
     {
         if (value.Placeholder) throw new InvalidOperationException("Abhängiger Druckerwert ist nur ein Platzhalter.");
+    }
+
+    private static void RequireText(CabPreviewValue value)
+    {
+        RequireResolved(value);
+        if (value.Bytes is not null) throw new FormatException("Binärdaten sind kein Text. Die Vorschau wertet ihren lesbaren Anzeigemarker nicht als Eingabedaten aus.");
     }
 }

@@ -12,7 +12,7 @@ internal sealed partial class CabPreviewContext
         if (id == 96) return Selection(field, args);
         if (id == 97) return Serial(field, args);
         if (id == 99) return Split(args);
-        var value = Resolve(args[0]); RequireResolved(value);
+        var value = Resolve(args[0]); RequireText(value);
         var text = value.Text;
         switch (id)
         {
@@ -47,7 +47,7 @@ internal sealed partial class CabPreviewContext
 
     private CabPreviewValue Split(IReadOnlyList<string> args)
     {
-        var value = Resolve(args[0]); RequireResolved(value);
+        var value = Resolve(args[0]); RequireText(value);
         var separator = args.Count == 3 ? Resolve(args[2]).Text : "\u001d";
         if (separator.EnumerateRunes().Count() != 1) throw new FormatException("Vorschau benötigt einen einzelnen Trenner; Mehrzeichenverhalten ist nicht spezifiziert.");
         var index = Integer(args[1]);
@@ -59,7 +59,7 @@ internal sealed partial class CabPreviewContext
     private CabPreviewValue Selection(CabContentField field, IReadOnlyList<string> args)
     {
         if (!fields.TryGetValue(args[1], out var list)) throw new FormatException("SELECT benötigt ein zuvor definiertes Listenfeld.");
-        RequireResolved(list);
+        RequireText(list);
         var choice = settings.SelectionExamples.GetValueOrDefault(args[1], args[2]);
         var index = Integer(choice);
         if (index < 1 || index > list.Text.Split('\u001d').Length) throw new FormatException("SELECT-Beispielindex liegt außerhalb der Liste.");

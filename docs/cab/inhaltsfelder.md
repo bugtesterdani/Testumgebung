@@ -76,6 +76,12 @@ S ändert die Zifferndarstellung, nicht die intern referenzierten Datenwerte.
 `C` ersetzt führende Nullen auch im ersten SER-Wert und in rein numerischen
 Datums-/Zeitwerten; bei ausschließlich Nullen bleibt die letzte Null erhalten.
 Mit Leerzeichen gefüllte Zahlenfelder bleiben für Folgerechnungen lesbar.
+Bei negativen Zahlen bleibt das Vorzeichen vor der Nullauffüllung; bei
+Leerzeichen stehen diese vor dem Vorzeichen. P beachtet die gewählte R-Rundung.
+Nicht belegte Textoperationen auf Binärdaten liefern einen Vorschauhinweis,
+statt den lesbaren Binärmarker als Daten auszuwerten. HEX und SHA256 verwenden
+weiterhin die tatsächlichen Bytes. Code-128-Steuerzeichen aus U bleiben
+semantisch gekennzeichnet und werden nicht als Unicode-Anzeigemarker gehasht.
 Binärwerte behalten ihre Bytefolge unabhängig von der lesbaren Hexdarstellung.
 Die lokalen Darstellungsgrenzen sind keine behaupteten Druckergrenzen.
 

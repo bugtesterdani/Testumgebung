@@ -51,19 +51,31 @@ internal sealed partial class CabPreviewContext
 
     private string Format(decimal value)
     {
-        var scale = Pow10(_digits);
+        var rounded = Quantize(value, _digits);
+        return PadNumber(rounded.ToString("F" + _digits, Culture));
+    }
+
+    private decimal Quantize(decimal value, int digits)
+    {
+        var scale = Pow10(digits);
         var scaled = value * scale;
-        var rounded = _rounding switch
+        return (_rounding switch
         {
             "u" => decimal.Ceiling(scaled), "d" => decimal.Floor(scaled),
             "m" => decimal.Round(scaled, 0, MidpointRounding.AwayFromZero), _ => decimal.Truncate(scaled)
-        } / scale;
-        var result = rounded.ToString("F" + _digits, Culture);
+        }) / scale;
+    }
+
+    private string PadNumber(string result)
+    {
+        var sign = Culture.NumberFormat.NegativeSign;
+        var prefix = result.StartsWith(sign, StringComparison.Ordinal) ? sign : "";
+        var magnitude = result[prefix.Length..];
         var integerWidth = System.Math.Max(0, _width - _digits);
-        var separator = result.IndexOf(Culture.NumberFormat.NumberDecimalSeparator, StringComparison.Ordinal);
-        var actual = separator < 0 ? result.Length : separator;
-        if (actual < integerWidth) result = new string(_fill, integerWidth - actual) + result;
-        return result;
+        var separator = magnitude.IndexOf(Culture.NumberFormat.NumberDecimalSeparator, StringComparison.Ordinal);
+        var actual = separator < 0 ? magnitude.Length : separator;
+        var padding = actual < integerWidth ? new string(_fill, integerWidth - actual) : "";
+        return _fill == ' ' ? padding + prefix + magnitude : prefix + padding + magnitude;
     }
 
     private static decimal Pow10(int digits)

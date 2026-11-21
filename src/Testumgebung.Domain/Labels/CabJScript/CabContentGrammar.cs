@@ -40,13 +40,19 @@ public static class CabContentGrammar
         foreach (var argument in CabContentArguments.Bind(field))
         {
             var rule = CabDefinitions.ParameterRule(field.Definition.Id, argument.Parameter.Name);
-            if (argument.Value.Length == 0) continue;
+            if (argument.Value.Length == 0 && MayOmit(Number(field), argument.Parameter.Name)) continue;
             if (names?.Contains(argument.Value) == true && (rule.DataType is CabDataType.Number or CabDataType.Integer
                 || Number(field) is >= 50 and <= 52)) continue;
             var error = rule.Validate(argument.Value);
             if (error is not null) errors.Add(argument.Parameter.Name + ": " + error);
         }
     }
+
+    private static bool MayOmit(int id, string name) => (id, name) switch
+    {
+        (63, "start" or "len") => true, (65, "len") => true,
+        (66, "x" or "y" or "z") => true, (97, "inc" or "freq") => true, _ => false
+    };
 
     internal static int Number(CabContentField field) => int.Parse(field.Definition.Section.AsSpan(2), CultureInfo.InvariantCulture);
 

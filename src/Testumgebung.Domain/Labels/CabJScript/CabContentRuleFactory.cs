@@ -40,6 +40,7 @@ internal static class CabContentRuleFactory
         };
         if (MaximumLengths.TryGetValue(key, out var maximum))
             rule = rule with { MinimumLength = maximum == 1 ? 1 : null, MaximumLength = maximum };
+        if (key == (98, "charset")) rule = rule with { MinimumLength = 1 };
         return rule;
     }
 

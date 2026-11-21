@@ -11,7 +11,7 @@ internal sealed partial class CabPreviewContext
         if (id == 53) return Price(field, args);
         if (id == 49)
         {
-            RequireResolved(Resolve(args[0])); RequireResolved(Resolve(args[1]));
+            RequireText(Resolve(args[0])); RequireText(Resolve(args[1]));
             Note(field, "Vorschau vergleicht Zeichenfolgen ordinal und mit Groß-/Kleinschreibung.");
             return Resolve(args[0]).Text == Resolve(args[1]).Text ? "1" : "0";
         }
@@ -47,7 +47,7 @@ internal sealed partial class CabPreviewContext
 
     private string Price(CabContentField field, IReadOnlyList<string> args)
     {
-        var value = Number(args[0]);
+        var value = Quantize(Number(args[0]), 2);
         var format = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
         format.NumberGroupSeparator = args[1][..1]; format.NumberDecimalSeparator = args[1].Substring(1, 1);
         var result = value.ToString("N2", format);
