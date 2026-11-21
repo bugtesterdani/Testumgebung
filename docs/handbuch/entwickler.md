@@ -46,25 +46,31 @@ Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über
 
 Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
 
-Eine bereits eingebettete unterstützte LBL wird beim Öffnen des Designers in bearbeitbare Elemente eingelesen.
+Eine bereits eingebettete LBL wird beim Öffnen des Designers vollständig als Originaldatei eingelesen.
 Im Designer kann über **LBL öffnen …** außerdem eine vorhandene Druckdatei ausgewählt werden.
 **LBL speichern …** exportiert das bearbeitete Etikett als eigenständige Druckdatei.
 **Vorlage übernehmen** speichert es im Projekt. Abbrechen lässt die eingebettete Druckdatei unverändert.
 Die Druckauflösung vor dem Dateiimport auf den Zielwert einstellen. Bei einer erstmals aus dem Projekt
 eingelesenen LBL verwendet der Designer 203 dpi als Ausgangswert.
 
-Der Import unterstützt einen einzelnen cab-JScript-Druckauftrag in Millimetern mit UTF-8-Text,
-Textfeldern mit Schrift 5 ohne Drehung, Code 128 mit zwei Punkten Modulbreite, QR, DataMatrix,
+Der Import erhält mehrere Aufträge, ESC-Befehle, Binärdownloads, unbekannte oder fehlerhafte Inhalte
+und die ursprünglichen Zeilenenden. Vor **LBL öffnen …** kann die Drucker-Codepage eingestellt werden
+(Standard UTF-8); sie gilt bis zu einem `ESCo`-Befehl. Nicht dekodierbare Bytes bleiben unverändert.
+Die Zeichenfläche zeigt zunächst darstellbare Objekte des ersten Millimeterauftrags:
+Textfelder mit Schrift 5 ohne Drehung, Code 128 mit zwei Punkten Modulbreite, QR, DataMatrix,
 GS1 DataMatrix, GS1 QR, horizontalen Linien und eingebetteten unkomprimierten monochromen Windows-BMP-Bildern.
 Die Matrix-Modulgröße darf bis zu zehn Punkte betragen. Etikettenbreite und -höhe sind ganzzahlige Millimeter.
-Bei weiteren Befehlen, Schriftarten, Drehungen oder Bildformaten nennt die Anwendung den nicht unterstützten Inhalt.
-Die unveränderte Druckdatei lässt sich weiterhin einbetten und drucken. [cab-JScript-Programmierhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
+Weitere Befehle, Schriftarten, Drehungen und Bildformate bleiben in der Datei erhalten, auch wenn
+sie auf der Zeichenfläche noch nicht dargestellt werden. Änderungen ersetzen gezielt die bearbeiteten
+Werte; unverändertes Öffnen und Speichern ergibt dieselben Bytes. Die vollständigen Eigenschaften,
+Quelltextansicht und grafischen Darstellungen folgen in weiteren Arbeitspaketen.
+[Parser und aktueller Umfang](../cab/parser.md) · [cab-JScript-Programmierhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
 
 Der strukturierte [JScript-Katalog](../cab/README.md) enthält 237 anhand der
 Handbuchausgabe 07/2026 geprüfte Einträge, einschließlich dokumentierter
 Widersprüche und unklarer Angaben. Schema- und Konsistenztests sichern die
 Datenstruktur ab; die vollständige Befehlsunterstützung im Editor folgt in
-weiteren Arbeitspaketen. Der oben beschriebene Importumfang gilt weiterhin.
+weiteren Arbeitspaketen. Der oben beschriebene Umfang der Zeichenfläche gilt weiterhin.
 Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
 DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der Druckbaustein setzt die erforderlichen Trennzeichen für GS1 ein. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
 
@@ -73,8 +79,9 @@ In Text- und Barcodefeldern kannst du Platzhalter wie `{Kennung}` einsetzen. Unt
 gibst du je Zeile einen Wert im Format `Kennung=SN-123` ein. Der Designer setzt diese Werte in die Vorschau ein und lässt
 den übrigen Text stehen. Beim Drucken werden die tatsächlichen Prüfvariablen verwendet. Externe LBL-Druckdateien werden weiterhin bytegenau gesendet.
 
-Extern importierte LBL-Dateien bleiben als Druckdateien im Projekt. Der Designer kann eigene Layouts wieder öffnen.
-Bei einem externen Import startet er mit einer leeren Vorlage. Erst eine bestätigte Übernahme ersetzt den Import.
+Extern importierte LBL-Dateien bleiben mit ihren Originalbytes im Projekt. Abbrechen verändert die
+eingebettete Datei nicht. Bei anderen Codepages, Zeilenenden, Inhaltsfeldern oder späteren Binärblöcken
+bleibt der bisherige UTF-8-Druckplatzhaltermechanismus deaktiviert; die Datei wird bytegenau gesendet.
 [Programmierhandbuch cab JScript](https://www.cab.de/media/pushfile.cfm?file=3047)
 
 ## Werkeransicht gestalten

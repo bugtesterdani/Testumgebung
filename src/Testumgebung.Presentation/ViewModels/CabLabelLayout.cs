@@ -17,6 +17,13 @@ public static class CabLabelLayout
         if (layout.WidthMm <= 0 || layout.HeightMm <= 0 || layout.Dpi <= 0 || layout.GapMm < 0)
             throw new InvalidDataException("Breite, Höhe und Auflösung müssen positiv sein. Der Etikettenabstand darf nicht negativ sein.");
 
+        if (layout.CabSource is not null)
+        {
+            try { return CabImportedWriter.Render(layout, out textOffset); }
+            catch (Exception error) when (error is EncoderFallbackException or ArgumentException or NotSupportedException)
+            { throw new InvalidDataException("Änderung kann mit der aktiven Codepage nicht verlustfrei geschrieben werden. " + error.Message, error); }
+        }
+
         using var output = new MemoryStream();
         Write(output, "\u001BoUTF-8;\rm m\r");
         var sensor = layout.GapMm == 0 ? "e" : "l1";
@@ -25,11 +32,13 @@ public static class CabLabelLayout
             fields.Append(Field(layout, element ?? throw new InvalidDataException("Leeres Etikettenelement."), output)).Append('\r');
 
         textOffset = checked((int)output.Length);
+        if (fields.ToString().Contains('[', StringComparison.Ordinal))
+            textOffset += Encoding.UTF8.GetByteCount(fields.ToString()) + Encoding.UTF8.GetByteCount("A 1\r");
         Write(output, fields.Append("A 1\r").ToString());
         return output.ToArray();
     }
 
-    private static string Field(LabelLayout layout, LabelElement item, Stream output)
+    internal static string Field(LabelLayout layout, LabelElement item, Stream output)
     {
         var x = Mm(Math.Clamp(item.X, 0, layout.WidthDots - 1), layout.Dpi);
         var y = Mm(Math.Clamp(item.Y, 0, layout.HeightDots - 1), layout.Dpi);
@@ -56,8 +65,8 @@ public static class CabLabelLayout
 
     private static string Literal(string? value)
     {
-        if (value is null || value.Any(c => char.IsControl(c) || c is '[' or ']'))
-            throw new InvalidDataException("cab-Etikettentext darf keine Steuerzeichen oder eckigen Klammern enthalten.");
+        if (value is null || value.Any(char.IsControl))
+            throw new InvalidDataException("cab-Etikettentext darf keine Steuerzeichen enthalten.");
         return value;
     }
 

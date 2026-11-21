@@ -9,6 +9,8 @@ public enum LabelElementKind { Text, Code128, Qr, Line, Image, DataMatrix, Gs1Da
 
 public sealed class LabelElement
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? CabSourceOffset { get; set; }
     public LabelElementKind Kind { get; set; }
     public int X { get; set; }
     public int Y { get; set; }
@@ -44,6 +46,8 @@ public sealed class LabelElement
 
 public sealed class LabelLayout
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public CabImportedSource? CabSource { get; set; }
     public const string Parameter = "ZplLayout";
     public const int MaximumDots = 4096;
     public int WidthMm { get; set; } = 60;
