@@ -7,7 +7,9 @@ anonymisierte Projekte. Sicherheitslücken bitte nach `SECURITY.md` melden.
 Für Änderungen: Branch anlegen, relevante Tests ausführen und Pull Request mit
 kurzer Beschreibung und Prüfungsergebnis erstellen. Buildinformationen stehen
 im README und unter `docs/`. Windows und das in `global.json` festgelegte SDK
-werden für die WPF-Oberfläche benötigt.
+werden für die WPF-Oberfläche benötigt. Die vollständige Testsuite benötigt
+zusätzlich PowerShell 7 (`pwsh` im Suchpfad); Einrichtung siehe
+[Bauen und testen](README.md#bauen-und-testen).
 
 Reiche nur Code und Material ein, für das du die nötigen Rechte hast. Beiträge
 zum eigenen Projektcode sollen unter dessen MIT-Lizenz nutzbar sein.

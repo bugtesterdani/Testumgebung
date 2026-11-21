@@ -147,6 +147,8 @@ Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
 leere Parameterbeschreibung und ungeprüfter Eintrag).
 `CabJScriptCatalogSchemaTests` führt diese Prüfung in der Testsuite aus und
 prüft zusätzlich eindeutige IDs, Seitenintervalle und berechnete Statistik.
+Die Schemaprüfung benötigt PowerShell 7 (`pwsh`); die Einrichtung ist im
+[README](../../README.md#bauen-und-testen) beschrieben und in der CI geprüft.
 
 Die fachliche Prüfung aller Einträge ist abgeschlossen; bekannte
 Extraktionsfehler sind korrigiert. Nicht eindeutig belegte Regeln und

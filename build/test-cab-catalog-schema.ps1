@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $catalogPath = Join-Path $root 'docs/cab/jscript-befehlskatalog.json'
