@@ -1,8 +1,7 @@
 # Definitionen und Validierung – AP 2
 
 Issue #257, Release R9. Basis: geprüfter Katalog aus AP 0 und verlustfreies
-Dokument aus AP 1. Die Implementierung entsteht im Entwurfs-PR #258;
-dieses Dokument unterscheidet vorhandene Funktionen von offenen Nachweisen.
+Dokument aus AP 1. Implementierung und Prüfnachweise gehören zu PR #258.
 
 Der versionierte Katalog wird unverändert als Ressource in die Domain-
 Bibliothek eingebettet. Jede Definition behält ihre Katalog-ID, Seiten,
@@ -44,7 +43,7 @@ den Vorspann und jeden Etikettenauftrag sowie die statischen Diagnosen.
 Fehlende Einstellungen bestehender Projekte bedeuten X4. Der ZPL-Designer
 erhält diese Auswahl nicht.
 
-## Noch offene Nachweise im Entwurfs-PR
+## Prüfnachweise und Grenzen
 
 Der versionierte Parameterkorpus umfasst 1.175 gültige Beispiele und zusätzliche
 ungültige Auswahl-, Bereichs- und Formatwerte. Jeder Tabellenwert besitzt einen
@@ -57,7 +56,7 @@ Versionen darf die Fehlerkorrektur reduziert werden. Widersprüchliche Zeilen
 ergeben keine erfundene harte kleinere Grenze. Gemischte Kodiermodi erhalten
 eine konservative obere Grenze; nicht-ASCII-QR-Inhalte werden nicht allein
 anhand der Byte-Tabelle abgewiesen, weil Kanji-/Mischkodierung möglich ist.
-Die abschließende Qualitätsprüfung ist noch nicht abgeschlossen. AP 2 ist
-deshalb noch nicht zur Überprüfung freigegeben. Die statische Prüfung ersetzt
-keinen Test an der konkreten Druckerhardware; dynamische Inhaltsfelder werden
-in AP 3 ausgewertet.
+Die verbindlichen Qualitätsgrenzen werden mit `build/coverage.ps1 -EnforceTargets`
+geprüft; die konkreten Laufnachweise stehen im Pull Request. Die statische
+Prüfung ersetzt keinen Test an der konkreten Druckerhardware. Dynamische
+Inhaltsfelder werden in AP 3 ausgewertet.
