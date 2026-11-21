@@ -20,10 +20,14 @@ public sealed class CabParameterCorpusTests
             var name = row.GetProperty("parameter").GetString()!;
             var value = row.GetProperty("valid").GetString()!;
             actual.Add(id + "/" + name);
-            var error = CabDefinitions.ParameterRule(id, name).Validate(value);
+            var rule = CabDefinitions.ParameterRule(id, name);
+            var error = rule.Validate(value);
             if (error is not null) errors.Add(id + "/" + name + " = " + value + ": " + error);
+            if ((rule.Parameter.Values.Count > 0 || rule.Parameter.Metadata.TryGetProperty("bereich", out _))
+                && !row.TryGetProperty("invalid", out _))
+                errors.Add(id + "/" + name + ": ungültiges Bereichs-/Auswahlbeispiel fehlt.");
             if (row.TryGetProperty("invalid", out var invalid)
-                && CabDefinitions.ParameterRule(id, name).Validate(invalid.GetString()) is null)
+                && rule.Validate(invalid.GetString()) is null)
                 errors.Add(id + "/" + name + ": unzulässiger Beispielwert wurde akzeptiert: " + invalid.GetString());
         }
         Assert.Equal(expected, actual.Order());

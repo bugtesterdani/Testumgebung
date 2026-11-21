@@ -8,7 +8,8 @@ Handbuchbeispiele. Die Binärbereiche gehören zur Verlustfreiheitsprüfung.
 jeden betroffenen Katalogeintrag geprüft. Bei Auswahl- und Bereichsregeln
 stehen zusätzliche ungültige Werte im Korpus. Die HTML-Tags im Parameter
 `JS-4.17/text` sind Beispiele innerhalb frei formulierbaren HTML-Inhalts,
-keine geschlossene Auswahl für den gesamten Text.
+keine geschlossene Auswahl für den gesamten Text. Hier prüft der ungültige
+Fall den fehlenden Pflichtwert statt ein beliebiges nicht aufgelistetes Wort.
 
 Der Korpustest gleicht seine Schlüssel vollständig mit den Definitionen ab.
 Ein fehlender, zusätzlicher oder doppelter Parameter lässt ihn scheitern.

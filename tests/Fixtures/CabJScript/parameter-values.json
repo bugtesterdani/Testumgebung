@@ -6298,7 +6298,8 @@
   {
     "id": "JS-4.17",
     "parameter": "text",
-    "valid": "<HTML>"
+    "valid": "<HTML>",
+    "invalid": null
   },
   {
     "id": "JS-4.17",
