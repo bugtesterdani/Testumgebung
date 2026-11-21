@@ -15,12 +15,12 @@ internal static class CabDocumentRules
             else if (!hasJobs) ObjectLimits(job, settings.DefaultGeneration, diagnostics);
             CabPositionRules.Validate(job.ToArray(), diagnostics);
             CabCutRules.Validate(job.ToArray(), diagnostics);
+            CabBarcodeRules.ValidateJob(job, diagnostics);
         }
         foreach (var command in commands)
         {
             CabFontRules.Validate(command, diagnostics);
             CabPathRules.Validate(command, settings.GenerationForJob(command.JobIndex), diagnostics);
-            CabBarcodeRules.Validate(command, diagnostics);
             Combinations(command, diagnostics);
         }
     }
@@ -41,7 +41,7 @@ internal static class CabDocumentRules
         }
     }
 
-    private static CabBoundParameter? Declaration(CabBoundCommand command)
+    internal static CabBoundParameter? Declaration(CabBoundCommand command)
         => command.Syntax.Command switch
         { "T" or "B" or "G" or "W" => command.Parameter("name"), "I" => command.Parameter("fieldname"), _ => null };
 

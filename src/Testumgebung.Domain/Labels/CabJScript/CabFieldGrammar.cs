@@ -51,8 +51,8 @@ internal static class CabFieldGrammar
 
     private static void Size(CabBindingBuilder builder, IReadOnlyList<CabSourceRange> fields, int index)
     {
+        if (index >= fields.Count) { builder.Require("size"); return; }
         builder.AddAt("size", fields, index);
-        if (index >= fields.Count) return;
         var text = builder.Slice.Protocol(fields[index]);
         if (text.StartsWith("pt", StringComparison.Ordinal)) builder.Add("size.pt", builder.Slice.Subrange(fields[index], 2, text.Length - 2));
     }
@@ -82,8 +82,11 @@ internal static class CabFieldGrammar
         if (fields.Count > 3) BarcodeType(builder, fields[3]);
         var dimensions = new List<string>();
         if (builder.Has("dotsize")) dimensions.Add("dotsize");
+        else if (StandardSize(builder, fields))
+            StandardDimensions(builder, fields, dimensions);
         else if (builder.Has("height"))
         {
+            builder.AllowMissing("size");
             dimensions.Add("height");
             if (builder.Has("ne")) dimensions.Add("ne");
             if (builder.Has("ratio")) dimensions.Add("ratio");
@@ -93,6 +96,20 @@ internal static class CabFieldGrammar
         var extra = 4 + dimensions.Count;
         if (fields.Count > extra)
             builder.Add("fx", new(fields[extra].Offset, fields[^1].End - fields[extra].Offset));
+    }
+
+    private static bool StandardSize(CabBindingBuilder builder, IReadOnlyList<CabSourceRange> fields)
+        => builder.Has("size") && fields.Count > 4 && builder.Slice.Protocol(fields[4]).Trim().StartsWith("SC", StringComparison.Ordinal);
+
+    private static bool NumericField(CabBindingBuilder builder, IReadOnlyList<CabSourceRange> fields, int index)
+        => index < fields.Count && decimal.TryParse(builder.Slice.Protocol(fields[index]), CultureInfo.InvariantCulture, out _);
+
+    private static void StandardDimensions(CabBindingBuilder builder, IReadOnlyList<CabSourceRange> fields, List<string> dimensions)
+    {
+        dimensions.Add("size");
+        if (!builder.Has("height") || !NumericField(builder, fields, 5)) return;
+        dimensions.Add("height");
+        if (builder.Has("ne") && NumericField(builder, fields, 6)) dimensions.Add("ne");
     }
 
     private static void BarcodeType(CabBindingBuilder builder, CabSourceRange range)

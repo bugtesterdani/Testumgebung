@@ -16,13 +16,23 @@ internal static class CabBarcodeRules
     private static readonly IReadOnlyDictionary<int, int[]> Lengths = new Dictionary<int, int[]>
     { [4] = [2], [5] = [5], [13] = [11, 13], [15] = [7], [16] = [12], [18] = [1], [22] = [14], [23] = [14], [24] = [14], [25] = [14], [26] = [14], [32] = [13], [40] = [7], [43] = [11], [44] = [7] };
 
-    internal static void Validate(CabBoundCommand command, CabDiagnosticCollector diagnostics)
+    internal static void ValidateJob(IEnumerable<CabBoundCommand> commands, CabDiagnosticCollector diagnostics)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var command in commands)
+        {
+            Validate(command, names, diagnostics);
+            if (CabDocumentRules.Declaration(command)?.Value is { Length: > 0 } name) names.Add(name);
+        }
+    }
+
+    private static void Validate(CabBoundCommand command, IReadOnlySet<string> names, CabDiagnosticCollector diagnostics)
     {
         var entry = command.Definition.Catalog;
         if (entry.Kind != "barcode") return;
         var text = command.Parameter("text");
         if (text?.Value is not { } value) return;
-        if (Dynamic(value))
+        if (Dynamic(value, names))
         {
             diagnostics.Add("barcode-dynamic", CabDiagnosticSeverity.Information,
                 "Dynamischer Barcodeinhalt benötigt die Inhaltsfeld-/Beispielwertauswertung.", entry, text.Syntax!);
@@ -46,12 +56,13 @@ internal static class CabBarcodeRules
             Error("barcode-limited", "GS1 DataBar Limited benötigt führende 0 oder 1.", entry, source, diagnostics);
     }
 
-    private static bool Dynamic(string value)
+    private static bool Dynamic(string value, IReadOnlySet<string> names)
     {
         if (Regex.IsMatch(value.Replace("{{", "", StringComparison.Ordinal).Replace("}}", "", StringComparison.Ordinal), @"\{[^{}]+\}", RegexOptions.CultureInvariant)) return true;
         foreach (Match field in Regex.Matches(value, @"\[(?<body>[^\]]+)\]", RegexOptions.CultureInvariant))
         {
             var body = field.Groups["body"].Value;
+            if (names.Contains(body.Split(',')[0])) return true;
             if (KnownContent(body)) return true;
         }
         return false;

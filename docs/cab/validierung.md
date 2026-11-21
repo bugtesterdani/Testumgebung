@@ -50,6 +50,11 @@ bis zur erweiterten Grafikbearbeitung nicht als abgeschnittene Einzelobjekte.
 Ein `J` innerhalb eines Kommentars beginnt für die Projektion keinen Auftrag.
 Für `C` wird die dokumentierte Grenze des ersten Schnittversatzes gegen die
 Etikettenhöhe aus `S` geprüft, auch bei unterschiedlichen aktiven Maßeinheiten.
+Pflichtfelder berücksichtigen die ausgewählte Syntax: Vektortext benötigt seine
+Schriftgröße; eine individuelle Barcodehöhe mit Elementbreite benötigt keine
+zusätzliche SC-Standardgröße. Bereits zuvor im selben Auftrag deklarierte
+Feldnamen im Barcodeinhalt werden bis zur Inhaltsfeldauswertung als dynamisch
+gekennzeichnet. Unbekannte Klammertexte bleiben wörtliche Daten.
 
 ## Prüfnachweise und Grenzen
 

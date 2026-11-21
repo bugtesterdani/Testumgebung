@@ -76,9 +76,11 @@ internal sealed class CabBindingBuilder(CabCommandDefinition definition, CabComm
 {
     private readonly List<CabBoundParameter> _parameters = [];
     private readonly List<CabBindingIssue> _issues = [];
+    private readonly HashSet<string> _allowedMissing = [];
     internal CabCommandDefinition Definition => definition;
     internal CabCommandSlice Slice => slice;
     internal bool Has(string name) => definition.Parameters.Any(p => p.Parameter.Name == name);
+    internal void AllowMissing(string name) => _allowedMissing.Add(name);
     internal void Issue(string code, string message, CabSourceRange range) => _issues.Add(new(code, message, slice.Syntax(range)));
 
     internal void Add(string name, CabSourceRange range)
@@ -106,6 +108,13 @@ internal sealed class CabBindingBuilder(CabCommandDefinition definition, CabComm
         if (index < fields.Count) Add(name, fields[index]);
     }
 
+    internal void Require(string name)
+    {
+        if (_parameters.Any(p => p.Rule.Parameter.Name == name)) return;
+        var rule = definition.Parameters.First(p => p.Parameter.Name == name);
+        _parameters.Add(new(rule with { Required = true }, null, null));
+    }
+
     internal void AddBinary(string name, CabSourceRange range, string codePage)
     {
         var rule = definition.Parameters.FirstOrDefault(p => p.Parameter.Name == name);
@@ -117,7 +126,7 @@ internal sealed class CabBindingBuilder(CabCommandDefinition definition, CabComm
     internal CabBoundCommand Build(bool requireInputs = true)
     {
         if (requireInputs)
-        foreach (var rule in definition.Parameters.Where(p => p.Required && !p.Parameter.IsAnswer))
+        foreach (var rule in definition.Parameters.Where(p => p.Required && !p.Parameter.IsAnswer && !_allowedMissing.Contains(p.Parameter.Name)))
             if (_parameters.All(p => p.Rule.Parameter.Name != rule.Parameter.Name)) _parameters.Add(new(rule, null, null));
         return new(definition, slice.Node, jobIndex, _parameters.AsReadOnly(), baseId, _issues.AsReadOnly());
     }
