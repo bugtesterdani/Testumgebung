@@ -58,6 +58,11 @@ gekennzeichnet. Unbekannte Klammertexte bleiben wörtliche Daten.
 Modell-/Versionskombinationen und Matrixgrößen werden auch bei dynamischem
 Barcodeinhalt geprüft. Nur die von den ausgewerteten Daten abhängigen Zeichen-,
 Längen-, Prüfziffern- und Kapazitätsprüfungen werden aufgeschoben.
+Die gemeinsame Erkennung dynamischer Inhalte gilt auch für geschlossene
+Inhaltsauswahlen wie FIM (A/B/C/D). Wörtliche Werte behalten diese Prüfung.
+Druck- und Druckkopfoptionen akzeptieren Leerzeichen/Tabulatoren an ihren
+Trennern; die gebundenen Bereiche enthalten nur den jeweiligen Wert, sodass
+eine gezielte Änderung die umgebenden Abstände erhält.
 
 ## Prüfnachweise und Grenzen
 

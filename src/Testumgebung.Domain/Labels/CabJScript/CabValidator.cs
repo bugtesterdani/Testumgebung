@@ -7,24 +7,25 @@ public static class CabValidator
         settings ??= new();
         var diagnostics = new CabDiagnosticCollector(document);
         var commands = CabSemanticBinder.Bind(document, diagnostics);
-        foreach (var command in commands) CheckCommand(command, settings, diagnostics);
+        var dynamicContents = CabBarcodeRules.DynamicContents(commands);
+        foreach (var command in commands) CheckCommand(command, settings, dynamicContents.Contains(command.Syntax.Range), diagnostics);
         ParseDiagnostics(document, commands, diagnostics);
-        CabDocumentRules.Validate(commands, settings, diagnostics);
+        CabDocumentRules.Validate(commands, settings, dynamicContents, diagnostics);
         return new(commands, diagnostics.Items);
     }
 
-    private static void CheckCommand(CabBoundCommand command, CabDocumentSettings settings, CabDiagnosticCollector diagnostics)
+    private static void CheckCommand(CabBoundCommand command, CabDocumentSettings settings, bool dynamicContent, CabDiagnosticCollector diagnostics)
     {
         var generation = settings.GenerationForJob(command.JobIndex);
         var entry = command.Definition.Catalog;
         Unavailable(entry.Availability(generation), entry.Title, entry, command.Syntax, diagnostics);
-        foreach (var parameter in command.Parameters) CheckParameter(parameter, command, generation, diagnostics);
+        foreach (var parameter in command.Parameters) CheckParameter(parameter, command, generation, dynamicContent, diagnostics);
         foreach (var issue in command.Issues)
             diagnostics.Add(issue.Code, CabDiagnosticSeverity.Error, issue.Message, entry, issue.Syntax);
     }
 
     private static void CheckParameter(CabBoundParameter parameter, CabBoundCommand command,
-        CabPrinterGeneration generation, CabDiagnosticCollector diagnostics)
+        CabPrinterGeneration generation, bool dynamicContent, CabDiagnosticCollector diagnostics)
     {
         var rule = parameter.Rule;
         var source = parameter.Syntax ?? command.Syntax;
@@ -36,6 +37,7 @@ public static class CabValidator
             diagnostics.Add("parameter-encoding", CabDiagnosticSeverity.Warning, "Parameterbytes sind nicht vollständig dekodierbar und bleiben erhalten.", rule.Entry, source);
             return;
         }
+        if (dynamicContent && rule.Parameter.Name == "text") return;
         var error = rule.Validate(parameter.Value, generation);
         if (error is not null) diagnostics.Add("parameter-value", CabDiagnosticSeverity.Error, rule.Parameter.Name + ": " + error, rule.Entry, source);
         foreach (var value in CabSelectedValues.Find(rule, parameter.Value))

@@ -6,6 +6,53 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabReviewRegressionTests
 {
     [Theory]
+    [InlineData("[Pattern]")]
+    [InlineData("[DATE]")]
+    [InlineData("{Pattern}")]
+    public void Dynamic_fim_content_defers_both_the_choice_and_character_checks(string content)
+    {
+        var source = "J\rT:Pattern;0,0,0,3,3;A\rB 0,0,0,FIM,10,0.3,2;" + content + "\rA 1\r";
+        var result = CabValidator.Validate(CabParser.Parse(Encoding.UTF8.GetBytes(source)));
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+        Assert.Contains(result.Diagnostics, d => d.Code == "barcode-dynamic");
+    }
+
+    [Theory]
+    [InlineData("A", false)]
+    [InlineData("D", false)]
+    [InlineData("E", true)]
+    [InlineData("[Unknown]", true)]
+    public void Literal_fim_content_still_uses_its_closed_choice(string content, bool error)
+        => Assert.Equal(error, CabValidator.Validate(CabParser.Parse(Encoding.UTF8.GetBytes("J\rB 0,0,0,FIM,10,0.3,2;" + content + "\rA 1\r"))).HasErrors);
+
+    [Fact]
+    public void Print_option_padding_is_not_part_of_the_bound_flag_or_its_edit()
+    {
+        const string source = "J\rO M,\t R \t\rA 1\r";
+        var document = CabParser.Parse(Encoding.UTF8.GetBytes(source));
+        var result = CabValidator.Validate(document);
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+        var options = Assert.Single(result.Commands, c => c.Syntax.Command == "O");
+        Assert.Equal("M", options.Parameter("M")!.Value);
+        var rotate = options.Parameter("R")!;
+        Assert.Equal("R", document.Decode(rotate.Syntax!));
+        var edited = document.Write(CabParameterEditor.Replace(document, rotate, "U"));
+        Assert.Equal(source.Replace(" R ", " U ", StringComparison.Ordinal), Encoding.UTF8.GetString(edited));
+        Assert.False(CabValidator.Validate(CabParser.Parse(edited)).HasErrors);
+        Assert.Equal(source, Encoding.UTF8.GetString(document.Write()));
+    }
+
+    [Fact]
+    public void Head_option_and_pair_padding_is_accepted_without_rewriting()
+    {
+        const string source = "J\rH 100, 0 : 1 , P2 , T : I , R0 , S1 , B50\rA 1\r";
+        var document = CabParser.Parse(Encoding.UTF8.GetBytes(source));
+        var result = CabValidator.Validate(document);
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+        Assert.Equal(source, Encoding.UTF8.GetString(document.Write()));
+    }
+
+    [Theory]
     [InlineData("QRCODE+MODEL1+VERSION2", "[DATE]", "qr-model")]
     [InlineData("DATAMATRIX+ROWS8+COLS10", "[DATE]", "matrix-size")]
     [InlineData("QRCODE+MODEL1+VERSION2", "{Sample}", "qr-model")]

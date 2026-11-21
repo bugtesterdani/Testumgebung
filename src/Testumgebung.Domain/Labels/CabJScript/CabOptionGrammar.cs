@@ -4,7 +4,7 @@ internal static class CabOptionGrammar
 {
     internal static void Bind(CabBindingBuilder builder)
     {
-        var fields = builder.Slice.Split(builder.Slice.Body, ',');
+        var fields = builder.Slice.Split(builder.Slice.Body, ',').Select(builder.Slice.Trim).ToArray();
         if (builder.Slice.Node.Command == "O")
         {
             foreach (var field in fields.Where(f => builder.Slice.Protocol(f).Length > 0)) PrintOption(builder, field);
@@ -43,9 +43,9 @@ internal static class CabOptionGrammar
 
     private static void Pair(CabBindingBuilder builder, CabSourceRange range, string first, string second)
     {
-        var fields = builder.Slice.Split(range, ':');
+        var fields = builder.Slice.Split(range, ':').Select(builder.Slice.Trim).ToArray();
         builder.AddAt(first, fields, 0); builder.AddAt(second, fields, 1);
-        if (fields.Count > 2) builder.Issue("head-pair", "Kopfoption hat zusätzliche Werte.", fields[2]);
+        if (fields.Length > 2) builder.Issue("head-pair", "Kopfoption hat zusätzliche Werte.", fields[2]);
     }
 
     private static void PrintOption(CabBindingBuilder builder, CabSourceRange field)

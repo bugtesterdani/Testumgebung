@@ -4,7 +4,8 @@ namespace Testumgebung.Domain.Labels.CabJScript;
 
 internal static class CabDocumentRules
 {
-    internal static void Validate(IReadOnlyList<CabBoundCommand> commands, CabDocumentSettings settings, CabDiagnosticCollector diagnostics)
+    internal static void Validate(IReadOnlyList<CabBoundCommand> commands, CabDocumentSettings settings,
+        IReadOnlySet<CabSourceRange> dynamicContents, CabDiagnosticCollector diagnostics)
     {
         var downloads = commands.Where(c => c.JobIndex < 0 && c.Syntax.Command == "d").ToArray();
         var hasJobs = commands.Any(c => c.JobIndex >= 0);
@@ -15,12 +16,12 @@ internal static class CabDocumentRules
             else if (!hasJobs) ObjectLimits(job, settings.DefaultGeneration, diagnostics);
             CabPositionRules.Validate(job.ToArray(), diagnostics);
             CabCutRules.Validate(job.ToArray(), diagnostics);
-            CabBarcodeRules.ValidateJob(job, diagnostics);
         }
         foreach (var command in commands)
         {
             CabFontRules.Validate(command, diagnostics);
             CabPathRules.Validate(command, settings.GenerationForJob(command.JobIndex), diagnostics);
+            CabBarcodeRules.Validate(command, dynamicContents.Contains(command.Syntax.Range), diagnostics);
             Combinations(command, diagnostics);
         }
     }

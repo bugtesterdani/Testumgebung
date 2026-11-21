@@ -16,17 +16,25 @@ internal static class CabBarcodeRules
     private static readonly IReadOnlyDictionary<int, int[]> Lengths = new Dictionary<int, int[]>
     { [4] = [2], [5] = [5], [13] = [11, 13], [15] = [7], [16] = [12], [18] = [1], [22] = [14], [23] = [14], [24] = [14], [25] = [14], [26] = [14], [32] = [13], [40] = [7], [43] = [11], [44] = [7] };
 
-    internal static void ValidateJob(IEnumerable<CabBoundCommand> commands, CabDiagnosticCollector diagnostics)
+    internal static IReadOnlySet<CabSourceRange> DynamicContents(IEnumerable<CabBoundCommand> commands)
+    {
+        var result = new HashSet<CabSourceRange>();
+        foreach (var job in commands.GroupBy(c => c.JobIndex)) FindDynamic(job, result);
+        return result;
+    }
+
+    private static void FindDynamic(IEnumerable<CabBoundCommand> commands, HashSet<CabSourceRange> result)
     {
         var names = new HashSet<string>(StringComparer.Ordinal);
         foreach (var command in commands)
         {
-            Validate(command, names, diagnostics);
+            if (command.Definition.Catalog.Kind == "barcode" && command.Parameter("text")?.Value is { } text && Dynamic(text, names))
+                result.Add(command.Syntax.Range);
             if (CabDocumentRules.Declaration(command)?.Value is { Length: > 0 } name) names.Add(name);
         }
     }
 
-    private static void Validate(CabBoundCommand command, IReadOnlySet<string> names, CabDiagnosticCollector diagnostics)
+    internal static void Validate(CabBoundCommand command, bool dynamicContent, CabDiagnosticCollector diagnostics)
     {
         var entry = command.Definition.Catalog;
         if (entry.Kind != "barcode") return;
@@ -34,7 +42,7 @@ internal static class CabBarcodeRules
         var text = command.Parameter("text");
         if (text?.Value is not { } value)
         { CabMatrixRules.Validate(command, null, 0, diagnostics); return; }
-        if (Dynamic(value, names))
+        if (dynamicContent)
         {
             CabMatrixRules.Validate(command, null, 0, diagnostics);
             diagnostics.Add("barcode-dynamic", CabDiagnosticSeverity.Information,

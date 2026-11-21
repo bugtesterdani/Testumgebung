@@ -41,6 +41,14 @@ internal sealed class CabCommandSlice
     internal string Protocol(CabSourceRange range) => _mapped.Protocol(range);
     internal IReadOnlyList<CabBoundPart> Parts(CabSourceRange range) => _mapped.Parts(range);
     internal CabSourceRange Subrange(CabSourceRange range, int start, int length) => Range(_mapped.VirtualOffset(range.Offset) + start, length);
+    internal CabSourceRange Trim(CabSourceRange range)
+    {
+        var text = Protocol(range);
+        var start = 0; var end = text.Length;
+        while (start < end && text[start] is ' ' or '\t') start++;
+        while (end > start && text[end - 1] is ' ' or '\t') end--;
+        return Subrange(range, start, end - start);
+    }
     internal CabSourceRange TailAfter(CabSourceRange range, int separatorLength)
     {
         var start = _mapped.VirtualOffset(range.Offset) + Protocol(range).Length + separatorLength;
