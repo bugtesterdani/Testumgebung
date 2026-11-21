@@ -62,10 +62,14 @@ internal static class CabBarcodeRules
         foreach (var entry in CabCatalog.Default.Entries.Where(e => e.Kind == "inhaltsfeld" && e.Id is not ("JS-5.88" or "JS-5.89")))
         {
             var name = entry.Command?.TrimStart('[').Split(':', '.', ']', '{', ',')[0];
-            if (!string.IsNullOrEmpty(name) && body.StartsWith(name, StringComparison.Ordinal)) return true;
+            if (!string.IsNullOrEmpty(name) && MatchesContentName(body, name)) return true;
         }
         return false;
     }
+
+    private static bool MatchesContentName(string body, string name)
+        => body == name || body.StartsWith(name + ":", StringComparison.Ordinal)
+            || body.StartsWith(name + ".", StringComparison.Ordinal) || body.StartsWith(name + ",", StringComparison.Ordinal);
 
     private static void CheckCharacters(int section, string value, string type, CabCatalogEntry entry, CabSyntaxNode source, CabDiagnosticCollector diagnostics)
     {
@@ -117,8 +121,8 @@ internal static class CabBarcodeRules
         var entry = command.Definition.Catalog;
         var maximum = entry.Id switch
         {
-            "JS-4.2.12" or "JS-4.2.27" => value.All(char.IsAsciiDigit) ? 3116 : 2335,
-            "JS-4.2.34" => value.All(char.IsAsciiDigit) ? 366 : 250,
+            "JS-4.2.12" or "JS-4.2.27" => value.Any(char.IsAsciiDigit) ? 3116 : 2335,
+            "JS-4.2.34" => value.Any(char.IsAsciiDigit) ? 366 : 250,
             "JS-4.2.28" or "JS-4.2.37" or "JS-4.2.41" => 2000,
             _ => int.MaxValue
         };
@@ -126,6 +130,7 @@ internal static class CabBarcodeRules
         try { length = CabEncoding.Get(command.Syntax.CodePage).GetByteCount(value); }
         catch (ArgumentException) { return; }
         if (length > maximum) Error("barcode-capacity", "Barcode überschreitet die dokumentierte Datenkapazität.", entry, command.Parameter("text")!.Syntax!, diagnostics);
+        CabMatrixRules.Validate(command, value, length, diagnostics);
     }
 
     private static void Error(string code, string message, CabCatalogEntry entry, CabSyntaxNode source, CabDiagnosticCollector diagnostics)

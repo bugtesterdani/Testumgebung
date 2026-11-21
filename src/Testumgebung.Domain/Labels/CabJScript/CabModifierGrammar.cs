@@ -8,7 +8,7 @@ internal static class CabModifierGrammar
     {
         builder.Add("options", range);
         var text = builder.Slice.Protocol(range);
-        foreach (Match match in Regex.Matches(text, @"\+(?<name>VERSION|MODEL|MODE|ROWS|COLS|MOD|WS|EL|CC)(?<value>[0-9]+)", RegexOptions.CultureInvariant))
+        foreach (Match match in Regex.Matches(text, @"\+(?<name>VERSION|MODEL|MODE|ROWS|COLS|MOD|WS|EL|CC)(?<value>[0-9]+|[LMQH])", RegexOptions.CultureInvariant))
         {
             var value = match.Groups["value"];
             builder.Add(match.Groups["name"].Value, builder.Slice.Subrange(range, value.Index, value.Length));

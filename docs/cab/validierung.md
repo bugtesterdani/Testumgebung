@@ -36,7 +36,7 @@ ursprünglichen Bytebereiche und liefert Diagnosen ohne Änderung der Quelle.
 ESC-Steuerbefehle unterbrechen dabei weder logische Parameter noch mehrbyteige
 Zeichen derselben Codepage. `CabParameterEditor.Replace` erstellt Änderungen
 für die zugehörigen Textbereiche und erhält dazwischenliegende Steuerbefehle;
-Binärparameter sind über diese Textschnittstelle nicht bearbeitbar.
+Opaque Binärblöcke sind über diese Textschnittstelle nicht bearbeitbar.
 
 Im cab-Designer öffnet „Generation und Prüfung …“ die Generationsauswahl für
 den Vorspann und jeden Etikettenauftrag sowie die statischen Diagnosen.
@@ -51,6 +51,12 @@ ungültige Auswahl-, Bereichs- und Formatwerte. Jeder Tabellenwert besitzt einen
 separaten Erkennungstest. Semantische Tests prüfen unter anderem alle numerisch
 dokumentierten Objektfamilien, vorgelagerte Downloads mit der Generation des
 jeweiligen Auftrags, Barcode-Zeichenvorräte und globale Kapazitätsgrenzen.
+Für DataMatrix und rMQR werden zusätzlich die dokumentierten Größen- und
+Kapazitätszeilen geprüft. Micro QR VERSION1 wächst automatisch; bei festen
+Versionen darf die Fehlerkorrektur reduziert werden. Widersprüchliche Zeilen
+ergeben keine erfundene harte kleinere Grenze. Gemischte Kodiermodi erhalten
+eine konservative obere Grenze; nicht-ASCII-QR-Inhalte werden nicht allein
+anhand der Byte-Tabelle abgewiesen, weil Kanji-/Mischkodierung möglich ist.
 Die abschließende Qualitätsprüfung ist noch nicht abgeschlossen. AP 2 ist
 deshalb noch nicht zur Überprüfung freigegeben. Die statische Prüfung ersetzt
 keinen Test an der konkreten Druckerhardware; dynamische Inhaltsfelder werden

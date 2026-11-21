@@ -12,7 +12,7 @@ internal static class CabChoiceLexicon
     {
         ["frn"] = "fr" + Number, ["fln"] = "fl" + Number, ["fun"] = "fu" + Number, ["fdn"] = "fd" + Number,
         ["qn"] = "q" + Number, ["hn"] = "h" + Number, ["mn"] = "m" + Number,
-        ["+WSn"] = @"\+WS[0-9]+", ["+ELx"] = @"\+EL[0-9]+", ["+CCn"] = @"\+CC[0-9]+",
+        ["+WSn"] = @"\+WS[0-9]+", ["+ELx"] = @"\+EL(?:[0-9]+|[LMQH])", ["+CCn"] = @"\+CC[0-9]+",
         ["+ROWSx"] = @"\+ROWS[0-9]+", ["+COLSx"] = @"\+COLS[0-9]+", ["+MODELx"] = @"\+MODEL[0-9]+",
         ["+MODEx"] = @"\+MODE[0-9]+", ["+VERSIONx"] = @"\+VERSION[0-9]+", ["+MODxx"] = @"\+MOD[0-9]+",
         ["[D:line,gap]"] = @"\[D:" + Number + "," + Number + @"\]",
