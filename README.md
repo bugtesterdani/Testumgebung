@@ -34,7 +34,18 @@ Das Skript `Report-Coverage.cmd` erstellt einen datierten HTML-Bericht zur Testa
 
 ## Bauen und testen
 
-Voraussetzung: .NET 10 SDK.
+Voraussetzungen: Windows, das in `global.json` festgelegte .NET 10 SDK und
+PowerShell 7 (`pwsh` im Suchpfad) für die JSON-Schematests. Windows PowerShell
+5.1 genügt dafür nicht. PowerShell 7 lässt sich mit Windows Package Manager
+einrichten; anschließend ein neues Terminal öffnen:
+
+```powershell
+winget install --id Microsoft.PowerShell --exact --source winget
+pwsh -NoProfile -Command '$PSVersionTable.PSVersion'
+```
+
+Die GitHub-CI verwendet das vorinstallierte PowerShell 7 des Windows-Runners
+und prüft diese Voraussetzung sowie das Katalogschema ausdrücklich.
 
 ```powershell
 dotnet build Testumgebung.sln

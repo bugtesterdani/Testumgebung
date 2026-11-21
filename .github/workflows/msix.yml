@@ -72,6 +72,13 @@ jobs:
         run: |
           python build/github-release.py plan --base "$env:REQUESTED_VERSION" --tag "$env:RELEASE_TAG" --fallback "$env:FALLBACK_VERSION"
           if ($LASTEXITCODE) { throw 'Version konnte nicht bestimmt werden.' }
+      - name: PowerShell-7-Testvoraussetzung und Katalogschema prüfen
+        # PowerShell 7 is provisioned by the windows-latest runner image.
+        shell: pwsh
+        run: |
+          #Requires -Version 7.0
+          $PSVersionTable.PSVersion
+          ./build/test-cab-catalog-schema.ps1
       - name: Release-Automation prüfen
         shell: pwsh
         run: |
