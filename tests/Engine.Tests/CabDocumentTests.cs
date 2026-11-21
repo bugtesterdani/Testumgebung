@@ -111,6 +111,29 @@ public sealed class CabDocumentTests
     }
 
     [Fact]
+    public void Control_parameters_inside_escaped_downloads_are_recognized_but_raw_downloads_disable_them()
+    {
+        foreach (var escaped in new[] { true, false })
+        {
+            var source = (escaped ? "\u001b." : "\u001b:") + "\u001bowindows-1252;"
+                + (escaped ? "\u001b." : "\u001bend-of-data") + "\rT 0,0,0,5,3;";
+            var bytes = Encoding.ASCII.GetBytes(source).Concat(new byte[] { 0xe4 }).ToArray();
+            var document = CabParser.Parse(bytes);
+            var block = document.Root.Children[0];
+            var text = document.Root.Children[^1];
+            Assert.Equal(escaped ? "windows-1252" : "UTF-8", text.CodePage);
+            Assert.Equal(escaped ? "T 0,0,0,5,3;ä" : null, document.Decode(text));
+            if (escaped)
+            {
+                var control = Assert.Single(block.Children);
+                Assert.Equal("windows-1252", document.Decode(Assert.Single(control.Children)));
+            }
+            else Assert.Empty(block.Children);
+            Assert.Equal(bytes, document.Write());
+        }
+    }
+
+    [Fact]
     public void Invalid_encodings_and_frames_produce_diagnostics_without_losing_data()
     {
         foreach (var text in new[] { "\u001b", "\u001boUTF-8\r", "\u001b.a", "\u001b:a", "<ABC>x", "<BASE64>x", "<ENCRYPTED JOB>x", "m ?\r", "?raw\r", "W 0;<HTML>x\r" })

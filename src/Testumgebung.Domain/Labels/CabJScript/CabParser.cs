@@ -60,14 +60,21 @@ public static class CabParser
             var start = _position;
             if (Matches(start, "\u001b.")) { ReadBinary(true); return; }
             if (Matches(start, "\u001b:")) { ReadBinary(false); return; }
+            _nodes.Add(ReadControlEscape());
+        }
+
+        private CabSyntaxNode ReadControlEscape()
+        {
+            var start = _position;
             var token = EscapeToken(start);
             _position += token.Length;
             var parameters = ReadEscapeParameters(token, start);
-            _nodes.Add(Node(CabNodeKind.EscapeCommand, start, _position - start, token, parameters));
+            var node = Node(CabNodeKind.EscapeCommand, start, _position - start, token, parameters);
             if (token == "\u001bo" && data[_position - 1] == ';')
                 _codePage = Encoding.ASCII.GetString(data, start + 2, _position - start - 3);
             if (token == "\u001b" || token.Length == 2 && !"?abcfgijloprstvyz\u001b".Contains(token[1]))
                 Diagnose("Unbekannter oder unvollständiger ESC-Befehl bleibt erhalten.", start, _position - start);
+            return node;
         }
 
         private IReadOnlyList<CabSyntaxNode> ReadEscapeParameters(string token, int start)
@@ -97,6 +104,7 @@ public static class CabParser
         private void ReadBinary(bool escaped)
         {
             var start = _position;
+            var pageAtStart = _codePage;
             _position += 2;
             var children = new List<CabSyntaxNode>();
             var closed = false;
@@ -107,14 +115,13 @@ public static class CabParser
                 if (Matches(_position, close)) { _position += close.Length; closed = true; break; }
                 if (escaped && data[_position] == 0x1b)
                 {
-                    var token = EscapeToken(_position);
-                    children.Add(Node(CabNodeKind.EscapeCommand, _position, token.Length, token));
-                    _position += token.Length;
+                    children.Add(ReadControlEscape());
                 }
                 else _position++;
             }
             if (!closed) Diagnose("Binärblock ist nicht abgeschlossen; Restbytes bleiben erhalten.", start, _position - start);
-            _nodes.Add(Node(CabNodeKind.BinaryBlock, start, _position - start, escaped ? "ESC." : "ESC:", children.AsReadOnly()));
+            _nodes.Add(Node(CabNodeKind.BinaryBlock, start, _position - start, escaped ? "ESC." : "ESC:", children.AsReadOnly())
+                with { CodePage = pageAtStart });
         }
 
         private bool ReadBlock()
