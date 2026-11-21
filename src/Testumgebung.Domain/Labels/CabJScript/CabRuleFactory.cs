@@ -32,11 +32,12 @@ internal static class CabRuleFactory
 
     private static CabParameterRule Classify(CabCatalogEntry e, CabCatalogParameter p)
     {
-        if (p.IsAnswer) return Rule(e, p, p.Values.Count > 0 ? CabDataType.Choice : CabDataType.Text);
+        if (p.IsAnswer) return Answer(e, p);
         if (IsFieldName(e, p)) return Rule(e, p, CabDataType.Name) with { MinimumLength = 1 };
         if (p.Name == "data" || p.Name == "job") return Rule(e, p, CabDataType.Binary);
         if (p.Name == "board_number") return Rule(e, p, CabDataType.Text) with { Pattern = "^[0-9]{12}$" };
-        if (p.Name is "path" or "filename.ext") return Rule(e, p, CabDataType.Path);
+        if (p.Name is "path" or "filename.ext") return Rule(e, p, CabDataType.Path) with
+        { ChoiceMode = e.Id == "JS-1.5" && p.Name == "path" ? CabChoiceMode.Single : CabChoiceMode.None };
         var special = Special(e, p);
         if (special is not null) return special;
         return Common(e, p);
@@ -48,6 +49,27 @@ internal static class CabRuleFactory
         if (p.Name == "name") return Rule(e, p, p.Values.Count > 0 ? CabDataType.Choice : CabDataType.Path) with { MinimumLength = 1 };
         if (p.Name is "host" or "ip") return Rule(e, p, CabDataType.Text) with { MinimumLength = 1 };
         if (p.Name == "port") return Rule(e, p, CabDataType.Integer) with { NumericRange = new(1, 65535) };
+        return CommonValue(e, p);
+    }
+
+    private static CabParameterRule Answer(CabCatalogEntry e, CabCatalogParameter p)
+    {
+        if (p.Values.Count > 0) return Rule(e, p, CabDataType.Choice);
+        if (p.Name.Length > 0 && p.Name.All(c => c == 'N'))
+            return Rule(e, p, CabDataType.Integer, p.Name.Length == 4 ? CabParameterUnit.Millimetres : CabParameterUnit.Count)
+                with { Pattern = "^[0-9]{" + p.Name.Length + "}$" };
+        if (p.Name == "datetime") return Rule(e, p, CabDataType.Text) with { Pattern = "^[0-9]{12}$" };
+        if (p.Name == "diameter_mm") return Rule(e, p, CabDataType.Number, CabParameterUnit.Millimetres) with { NumericRange = new(-1) };
+        if (p.Name.StartsWith("mm_", StringComparison.Ordinal)) return Rule(e, p, CabDataType.Number, CabParameterUnit.Millimetres) with { NumericRange = new(0) };
+        if (p.Name == "free_bytes" || p.Name.StartsWith("minutes_of_operation_", StringComparison.Ordinal)
+            || p.Name.StartsWith("num_labels_", StringComparison.Ordinal) || p.Name.StartsWith("power_cycles_", StringComparison.Ordinal))
+            return Rule(e, p, CabDataType.Integer, p.Name == "free_bytes" ? CabParameterUnit.Bytes : CabParameterUnit.Count) with { NumericRange = new(0) };
+        if (e.Id == "JS-4.11.7") return Rule(e, p, CabDataType.Binary);
+        return Rule(e, p, CabDataType.Text);
+    }
+
+    private static CabParameterRule CommonValue(CabCatalogEntry e, CabCatalogParameter p)
+    {
         if (p.Values.Count > 0 && !IsOpenValueList(e, p)) return Rule(e, p, CabDataType.Choice);
         if (Lengths.Contains(p.Name) || IsVerifierPosition(p.Name)) return Rule(e, p, CabDataType.Number, CabParameterUnit.CurrentLength)
             with { AllowKnownValues = true, NumericPrefix = p.Name == "size" && e.Id is "JS-4.16" or "JS-4.17" ? "pt" : null };
@@ -62,7 +84,7 @@ internal static class CabRuleFactory
 
     private static bool IsOpenValueList(CabCatalogEntry e, CabCatalogParameter p)
         => p.Name is "font" or "size" or "options" or "fx" or "special_functions" or "F.value"
-            || e.Id == "JS-4.17" && p.Name is "text" or "html.attributes" or "html.style";
+            || e.Id == "JS-4.17" && p.Name == "text";
 
     private static bool IsVerifierPosition(string name)
         => name.EndsWith(".a", StringComparison.Ordinal) || name.EndsWith(".b", StringComparison.Ordinal);
@@ -70,6 +92,7 @@ internal static class CabRuleFactory
     private static CabParameterRule? Special(CabCatalogEntry e, CabCatalogParameter p)
     {
         if (p.Name == "effects" || p.Name == "fx") return Rule(e, p, CabDataType.Choice) with { ChoiceMode = CabChoiceMode.CommaList };
+        if (p.Name == "special_functions") return Rule(e, p, CabDataType.Choice) with { ChoiceMode = CabChoiceMode.GraphicList };
         if (p.Name == "options") return Rule(e, p, CabDataType.Choice) with
         { ChoiceMode = e.Kind == "grafik" || e.Id == "JS-4.7" ? CabChoiceMode.GraphicList : CabChoiceMode.PlusList };
         if (p.Name == "F.value") return Rule(e, p, CabDataType.Path) with
@@ -83,6 +106,11 @@ internal static class CabRuleFactory
         { Pattern = @"^(?:[0-9]+)?\s*(?:\[(?:NO|NOPRINT|\?|R|REPEAT|\?,(?:R|REPEAT)|\$DBF|PREVIEW(?::(?:[0-9]+|ALL))?|\p{L}[\p{L}\p{Nd}]*)\])?(?:\[SAVE\])?$" };
         if (e.Id == "JS-4.3" && p.Name == "param") return Rule(e, p, CabDataType.Integer) with { AllowKnownValues = true };
         if (e.Id == "JS-4.2" && p.Name == "type") return BarcodeType(e, p);
+        return SpecialField(e, p);
+    }
+
+    private static CabParameterRule? SpecialField(CabCatalogEntry e, CabCatalogParameter p)
+    {
         if (p.Name == "preview_index") return Rule(e, p, CabDataType.Integer) with { AllowKnownValues = true };
         if (e.Id == "JS-4.8" && p.Name == "P") return Rule(e, p, CabDataType.Text) with { Pattern = @"^P(?:[+-]?[0-9]+(?:\.[0-9]+)?)?$" };
         if (e.Id == "JS-4.9" && p.Name == "a") return Rule(e, p, CabDataType.Text) with { Literal = "a" };
@@ -145,7 +173,8 @@ internal static class CabRuleFactory
         return p.Name switch
         {
             "retries" or "unpower" or "tidlength" => Rule(e, p, CabDataType.Integer),
-            "cp" => Rule(e, p, CabDataType.Text),
+            "cp" => Rule(e, p, CabDataType.Choice) with
+            { AdditionalValues = CabCatalog.Default["JS-2.15"].Parameters.Single().Values.Select(v => v.Value).Append("<num>").ToArray() },
             _ => throw new InvalidOperationException("Unbekannter RFID-Parameter: " + p.Name)
         };
     }

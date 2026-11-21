@@ -7,14 +7,9 @@ internal static class CabCommandGrammar
     internal static void Bind(CabBindingBuilder builder, CabSyntaxNode? next)
     {
         var slice = builder.Slice;
-        if (slice.Node.Kind == CabNodeKind.EscapeCommand) { Escape(builder); return; }
-        if (slice.Node.Kind == CabNodeKind.BinaryBlock) { Payload(builder, slice.Node, "data"); return; }
-        if (slice.Node.Kind == CabNodeKind.Block) { Block(builder); return; }
+        if (BindFamily(builder)) return;
         switch (slice.Node.Command)
         {
-            case "T": case "B": case "W": case "I": case "G": CabFieldGrammar.Bind(builder); break;
-            case "E": case "M": CabStorageGrammar.Bind(builder); break;
-            case "H": case "O": CabOptionGrammar.Bind(builder); break;
             case "S": LabelSize(builder); break;
             case "A": Amount(builder); break;
             case "C": Csv(builder, ["param", "disp1", "disp2"]); break;
@@ -27,6 +22,19 @@ internal static class CabCommandGrammar
             case "q": Query(builder); break;
             default: Simple(builder); break;
         }
+    }
+
+    private static bool BindFamily(CabBindingBuilder builder)
+    {
+        var node = builder.Slice.Node;
+        if (node.Kind == CabNodeKind.EscapeCommand) Escape(builder);
+        else if (node.Kind == CabNodeKind.BinaryBlock) Payload(builder, node, "data");
+        else if (node.Kind == CabNodeKind.Block) Block(builder);
+        else if (new[] { "T", "B", "W", "I", "G" }.Contains(node.Command, StringComparer.Ordinal)) CabFieldGrammar.Bind(builder);
+        else if (node.Command is "E" or "M") CabStorageGrammar.Bind(builder);
+        else if (node.Command is "H" or "O") CabOptionGrammar.Bind(builder);
+        else return false;
+        return true;
     }
 
     internal static void Csv(CabBindingBuilder builder, string[] names, CabSourceRange? range = null)

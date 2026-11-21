@@ -5,6 +5,20 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabParameterRuleTests
 {
     [Theory]
+    [InlineData("[O][F:25%]", true)]
+    [InlineData("[O],[F:25%]", true)]
+    [InlineData("[O", false)]
+    [InlineData("]", false)]
+    [InlineData("", false)]
+    [InlineData("[O],", false)]
+    [InlineData(",[O]", false)]
+    [InlineData("[O],,[O]", false)]
+    [InlineData("[O]text", false)]
+    [InlineData("[F:[nested]]", false)]
+    public void Graphic_option_lists_require_balanced_brackets_and_nonempty_entries(string value, bool valid)
+        => Assert.Equal(valid, CabDefinitions.ParameterRule("JS-4.7.1", "options").Validate(value) is null);
+
+    [Theory]
     [InlineData("JS-4.4", "x", "-2.5", "2,5")]
     [InlineData("JS-4.9", "r", "90.0", "45")]
     [InlineData("JS-4.7.1", "r", "22.5", "360")]

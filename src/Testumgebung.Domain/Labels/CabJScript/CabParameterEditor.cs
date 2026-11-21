@@ -8,7 +8,7 @@ public static class CabParameterEditor
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(parameter);
         ArgumentNullException.ThrowIfNull(text);
-        if (!parameter.IsPresent || parameter.Parts.Count == 0 || parameter.Rule.DataType == CabDataType.Binary)
+        if (!parameter.IsPresent || parameter.Parts.Count == 0 || Opaque(parameter.Rule))
             throw new ArgumentException("Der Parameter besitzt keinen bearbeitbaren Quellbereich.", nameof(parameter));
         var groups = CabSegmentedText.Groups(parameter.Parts);
         var changes = new List<CabTextChange>();
@@ -27,6 +27,8 @@ public static class CabParameterEditor
         }
         return changes.AsReadOnly();
     }
+
+    private static bool Opaque(CabParameterRule rule) => rule.DataType == CabDataType.Binary && rule.Pattern is null;
 
     private static void AddParts(List<CabTextChange> changes, IReadOnlyList<CabBoundPart> parts, byte[] bytes)
     {

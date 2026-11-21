@@ -62,6 +62,11 @@ public sealed record CabParameterRule(CabCatalogEntry Entry, CabCatalogParameter
         if (ChoiceMode != CabChoiceMode.None && !CabChoiceLexicon.Matches(this, value, ChoiceMode)) return "Unbekannter Auswahlwert.";
         if (type == CabDataType.Choice && ChoiceMode == CabChoiceMode.None && !CabChoiceLexicon.Matches(this, value, CabChoiceMode.Single)) return "Unbekannter Auswahlwert.";
         if (type is not (CabDataType.Number or CabDataType.Integer)) return null;
+        return ValidateNumber(value, generation, type);
+    }
+
+    private string? ValidateNumber(string value, CabPrinterGeneration generation, CabDataType type)
+    {
         value = value.Trim();
         if (AllowBarePrefix && value == NumericPrefix) return null;
         if (NumericPrefix is not null && value.StartsWith(NumericPrefix, StringComparison.Ordinal)) value = value[NumericPrefix.Length..];

@@ -16,7 +16,11 @@ internal static class CabChoiceLexicon
         ["+ROWSx"] = @"\+ROWS[0-9]+", ["+COLSx"] = @"\+COLS[0-9]+", ["+MODELx"] = @"\+MODEL[0-9]+",
         ["+MODEx"] = @"\+MODE[0-9]+", ["+VERSIONx"] = @"\+VERSION[0-9]+", ["+MODxx"] = @"\+MOD[0-9]+",
         ["[D:line,gap]"] = @"\[D:" + Number + "," + Number + @"\]",
-        ["[F:value]"] = @"\[F:.+\]",
+        ["[F:value]"] = @"\[F:[^\[\]]+\]",
+        ["[ECE:...]"] = @"\[ECE:[^\[\]]+\]",
+        ["[APPEND:m,n,id1,id2]"] = @"\[APPEND:[0-9]+,[0-9]+,[^,\[\]]+,[^,\[\]]+\]",
+        ["[APPEND:x,id]"] = @"\[APPEND:[0-9]+,[^,\[\]]+\]",
+        ["[U:xxxx]"] = @"\[U:[^\[\]]+\]",
         ["[S:%1]"] = @"\[S:" + Number + @"\]",
         ["[S:%1,%2]"] = @"\[S:" + Number + "," + Number + @"\]",
         ["[S:%1,%2,direction]"] = @"\[S:" + Number + "," + Number + "," + Number + @"\]"
@@ -78,17 +82,22 @@ internal static class CabChoiceLexicon
         var tokens = new List<string>();
         var start = 0;
         var depth = 0;
+        var needsToken = true;
         for (var i = 0; i < input.Length; i++)
         {
             if (input[i] == '[') depth++;
             else if (input[i] == ']')
             {
                 if (--depth < 0) return [];
-                if (depth == 0) { tokens.Add(input[start..(i + 1)]); start = i + 1; }
+                if (depth == 0) { tokens.Add(input[start..(i + 1)]); start = i + 1; needsToken = false; }
             }
-            else if (depth == 0 && input[i] == ',') start = i + 1;
+            else if (depth == 0 && input[i] == ',')
+            {
+                if (needsToken) return [];
+                start = i + 1; needsToken = true;
+            }
             else if (depth == 0) return [];
         }
-        return depth == 0 && start == input.Length ? tokens.ToArray() : [];
+        return depth == 0 && start == input.Length && !needsToken ? tokens.ToArray() : [];
     }
 }

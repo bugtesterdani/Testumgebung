@@ -6,10 +6,13 @@ internal static class CabDocumentRules
 {
     internal static void Validate(IReadOnlyList<CabBoundCommand> commands, CabDocumentSettings settings, CabDiagnosticCollector diagnostics)
     {
+        var downloads = commands.Where(c => c.JobIndex < 0 && c.Syntax.Command == "d").ToArray();
+        var hasJobs = commands.Any(c => c.JobIndex >= 0);
         foreach (var job in commands.GroupBy(c => c.JobIndex))
         {
             Names(job, diagnostics);
-            ObjectLimits(job, settings.GenerationForJob(job.Key), diagnostics);
+            if (job.Key >= 0) ObjectLimits(downloads.Concat(job), settings.GenerationForJob(job.Key), diagnostics);
+            else if (!hasJobs) ObjectLimits(job, settings.DefaultGeneration, diagnostics);
             CabPositionRules.Validate(job.ToArray(), diagnostics);
         }
         foreach (var command in commands)
@@ -26,8 +29,7 @@ internal static class CabDocumentRules
         var names = new HashSet<string>(StringComparer.Ordinal);
         foreach (var command in commands)
         {
-            var declaration = command.Syntax.Command switch
-            { "T" or "B" or "G" or "W" => command.Parameter("name"), "I" => command.Parameter("fieldname"), _ => null };
+            var declaration = Declaration(command);
             if (declaration?.Value is { Length: > 0 } name && !names.Add(name))
                 diagnostics.Add("duplicate-name", CabDiagnosticSeverity.Error, "Feldname ist bereits definiert: " + name,
                     declaration.Rule.Entry, declaration.Syntax!);
@@ -37,6 +39,10 @@ internal static class CabDocumentRules
                     reference.Rule.Entry, reference.Syntax!);
         }
     }
+
+    private static CabBoundParameter? Declaration(CabBoundCommand command)
+        => command.Syntax.Command switch
+        { "T" or "B" or "G" or "W" => command.Parameter("name"), "I" => command.Parameter("fieldname"), _ => null };
 
     private static void ObjectLimits(IEnumerable<CabBoundCommand> commands, CabPrinterGeneration generation, CabDiagnosticCollector diagnostics)
     {
@@ -63,6 +69,11 @@ internal static class CabDocumentRules
         if (command.Syntax.Command == "C" && command.Parameter("disp2") is not null
             && command.Parameter("param")?.Value is "s" or "p" or "sp")
             diagnostics.Add("cut-offset", CabDiagnosticSeverity.Error, "Zweiter Schnittversatz ist mit diesem Schnittmodus nicht zulässig.", command.Definition.Catalog, command.Syntax);
+        ApplicatorTime(command, diagnostics);
+    }
+
+    private static void ApplicatorTime(CabBoundCommand command, CabDiagnosticCollector diagnostics)
+    {
         var timers = command.Parameter("Ax=y");
         if (timers?.Value is { } timer)
         {

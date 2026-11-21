@@ -1,0 +1,6364 @@
+[
+  {
+    "id": "JS-1.5",
+    "parameter": "path",
+    "valid": "card",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-1.5",
+    "parameter": "filename.ext",
+    "valid": "sample.lbl"
+  },
+  {
+    "id": "JS-2.3",
+    "parameter": "data",
+    "valid": "00"
+  },
+  {
+    "id": "JS-2.4",
+    "parameter": "data",
+    "valid": "00"
+  },
+  {
+    "id": "JS-2.5",
+    "parameter": "response",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.6",
+    "parameter": "X",
+    "valid": "I",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.6",
+    "parameter": "NNNNN",
+    "valid": "00000",
+    "invalid": "1"
+  },
+  {
+    "id": "JS-2.12",
+    "parameter": "value",
+    "valid": "1"
+  },
+  {
+    "id": "JS-2.13",
+    "parameter": "jobname",
+    "valid": "1"
+  },
+  {
+    "id": "JS-2.14",
+    "parameter": "X",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.14",
+    "parameter": "NNNN",
+    "valid": "0000",
+    "invalid": "1"
+  },
+  {
+    "id": "JS-2.15",
+    "parameter": "codepage",
+    "valid": "DEC-MCS",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.18",
+    "parameter": "status",
+    "valid": "-",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.18",
+    "parameter": "data",
+    "valid": "00"
+  },
+  {
+    "id": "JS-2.19",
+    "parameter": "X",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.19",
+    "parameter": "Y",
+    "valid": "-",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.19",
+    "parameter": "NNNNNN",
+    "valid": "000000",
+    "invalid": "1"
+  },
+  {
+    "id": "JS-2.19",
+    "parameter": "Z",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.21",
+    "parameter": "value",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.21",
+    "parameter": "status",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.22",
+    "parameter": "signal",
+    "valid": "FSTLBL",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "A",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "B",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "C",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "D",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "E",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "F",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "G",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "H",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "I",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "J",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "K",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.23",
+    "parameter": "L",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.24",
+    "parameter": "X",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "A",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "B",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "C",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "D",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "E",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "F",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "G",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "H",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "I",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "J",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "K",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "L",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-2.25",
+    "parameter": "M",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.3",
+    "parameter": "type",
+    "valid": "BMP",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.3",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-3.3",
+    "parameter": "SAVE",
+    "valid": "SAVE"
+  },
+  {
+    "id": "JS-3.3",
+    "parameter": "B",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.3",
+    "parameter": "data",
+    "valid": "00"
+  },
+  {
+    "id": "JS-3.4",
+    "parameter": "type",
+    "valid": "BMP",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.4",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-3.6",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-3.7",
+    "parameter": "Job-ID",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.8",
+    "parameter": "name",
+    "valid": "BE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.9",
+    "parameter": "unit",
+    "valid": "m",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.10",
+    "parameter": "parameter",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "type",
+    "valid": "b",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "present",
+    "valid": "Y",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "free_bytes",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "memory",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "peripheral",
+    "valid": "NONE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "peripheral_type",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "peripheral_name",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "version_info",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "additional_settings",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "diameter_mm",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "datetime",
+    "valid": "261121123000",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "firmware",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "minutes_of_operation_printer",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "num_labels_printer",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "mm_transfer_printer",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "mm_thermo_printer",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "power_cycles_printer",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "minutes_of_operation_service",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "num_labels_service",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "mm_transfer_service",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "mm_thermo_service",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "power_cycles_service",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "minutes_of_operation_tph",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "num_labels_tph",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "mm_transfer_tph",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.11",
+    "parameter": "mm_thermo_tph",
+    "valid": "1",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-3.13",
+    "parameter": "YY",
+    "valid": "26",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.13",
+    "parameter": "MM",
+    "valid": "01",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.13",
+    "parameter": "DD",
+    "valid": "01",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.13",
+    "parameter": "hh",
+    "valid": "00",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.13",
+    "parameter": "mm",
+    "valid": "00",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.13",
+    "parameter": "ss",
+    "valid": "00",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.14",
+    "parameter": "param",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.15",
+    "parameter": "version",
+    "valid": "1"
+  },
+  {
+    "id": "JS-3.16",
+    "parameter": "m",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-3.17",
+    "parameter": "param",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.1",
+    "parameter": "param",
+    "valid": "[NO]",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.1",
+    "parameter": "num",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.1",
+    "parameter": "VAR",
+    "valid": "Field1"
+  },
+  {
+    "id": "JS-4.1",
+    "parameter": "preview_count",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.1",
+    "parameter": "preview_index",
+    "valid": "ALL",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "type",
+    "valid": "CODE128"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "options",
+    "valid": "+MOD10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "EL",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "special_functions",
+    "valid": "[U:FNC1]",
+    "invalid": "[UNKNOWN]"
+  },
+  {
+    "id": "JS-4.2",
+    "parameter": "U.xxxx",
+    "valid": "NUL",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "type",
+    "valid": "2OF5INTERLEAVED",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "options",
+    "valid": "+MOD10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.3",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "type",
+    "valid": "ADDON2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.4",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "type",
+    "valid": "ADDON5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.5",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "type",
+    "valid": "AZTEC",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "EL",
+    "valid": "5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.6",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "type",
+    "valid": "CODABAR",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "options",
+    "valid": "+MOD16",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.7",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "type",
+    "valid": "CODABLOCKF",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "options",
+    "valid": "+MOD43",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.8",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "type",
+    "valid": "CODE39",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "options",
+    "valid": "+MOD36",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.9",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "type",
+    "valid": "CODE93",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.10",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "type",
+    "valid": "CODE128",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "options",
+    "valid": "+MOD10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.11",
+    "parameter": "subcode",
+    "valid": "CODEA",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "type",
+    "valid": "DATAMATRIX",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "options",
+    "valid": "+RECT",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "ROWS",
+    "valid": "8",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.12",
+    "parameter": "COLS",
+    "valid": "10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "type",
+    "valid": "DBP",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "height",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.13",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "type",
+    "valid": "DOTCODE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "options",
+    "valid": "+SQUARES",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "ROWS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.14",
+    "parameter": "COLS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "type",
+    "valid": "EAN8",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.15",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "type",
+    "valid": "EAN13",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "options",
+    "valid": "+XHRI",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.16",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "type",
+    "valid": "FIM",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "text",
+    "valid": "A",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.18",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "type",
+    "valid": "EAN128",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.19",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "type",
+    "valid": "RSSEXPANDED",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.20",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "type",
+    "valid": "RSSEXPANDED+STACKED4",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.21",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "type",
+    "valid": "RSSLIMITED",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.22",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "type",
+    "valid": "RSS14",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.23",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "type",
+    "valid": "RSS14+STACKED",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.24",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "type",
+    "valid": "RSS14+STACKEDOMNI",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.25",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "type",
+    "valid": "RSS14+TRUNCATED",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "options",
+    "valid": "+CC2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "CC",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "composite",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.26",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "type",
+    "valid": "GS1-DATAMATRIX",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "options",
+    "valid": "+RECT",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.27",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "type",
+    "valid": "GS1QRCODE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "options",
+    "valid": "+EL5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "EL",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "VERSION",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.28",
+    "parameter": "MODEL",
+    "valid": "2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "type",
+    "valid": "GS1RMQR",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "options",
+    "valid": "+EL5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "EL",
+    "valid": "M",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.29",
+    "parameter": "VERSION",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "type",
+    "valid": "HIBC",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.30",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "type",
+    "valid": "ISBT128",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "options",
+    "valid": "+MOD43",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.31",
+    "parameter": "MOD",
+    "valid": "43",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "type",
+    "valid": "MAXICODE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "options",
+    "valid": "+MODE2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.33",
+    "parameter": "MODE",
+    "valid": "2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "type",
+    "valid": "MICROPDF",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "options",
+    "valid": "+COLS10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.34",
+    "parameter": "COLS",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "type",
+    "valid": "MICROQR",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "options",
+    "valid": "+EL5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "EL",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.35",
+    "parameter": "VERSION",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "type",
+    "valid": "MSI",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "options",
+    "valid": "+MOD10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.36",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "type",
+    "valid": "PDF417",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "options",
+    "valid": "+EL5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.37",
+    "parameter": "EL",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "type",
+    "valid": "PLESSEY",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "ratio",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.38",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "type",
+    "valid": "POSTNET",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.39",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "type",
+    "valid": "QRCODE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "options",
+    "valid": "+EL5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "EL",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "MODEL",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "VERSION",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.41",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "type",
+    "valid": "RMQR",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "options",
+    "valid": "+EL5",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "dotsize",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "EL",
+    "valid": "M",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.42",
+    "parameter": "VERSION",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "type",
+    "valid": "UPCA",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "options",
+    "valid": "+XHRI",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.43",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "type",
+    "valid": "UPCE",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "options",
+    "valid": "+XHRI",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.44",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "type",
+    "valid": "UPCE0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "options",
+    "valid": "+WS1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "size",
+    "valid": "SC0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "ne",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "fx",
+    "valid": "n",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "WS",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "VERIFY.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "VERIFY.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "VERIFY.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.2.45",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.3",
+    "parameter": "param",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.3",
+    "parameter": "disp1",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.3",
+    "parameter": "disp2",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.4",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.4",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5",
+    "parameter": "type",
+    "valid": "DBF",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5",
+    "parameter": "params",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.1",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.1",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.5.2",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.2",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.5.2",
+    "parameter": "cp",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.3",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.3",
+    "parameter": "username",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.3",
+    "parameter": "password",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.3",
+    "parameter": "host",
+    "valid": "localhost"
+  },
+  {
+    "id": "JS-4.5.3",
+    "parameter": "port",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "tagtype",
+    "valid": "Auto",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "retries",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "cp",
+    "valid": "Auto",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "pos",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "power",
+    "valid": "10",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "wpower",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "unpower",
+    "valid": "50",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "V",
+    "valid": "V"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "length",
+    "valid": "2",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "P",
+    "valid": "P"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "tidlength",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "N",
+    "valid": "N",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "antenna",
+    "valid": "A",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.4",
+    "parameter": "accesspwd",
+    "valid": "0x1234abcd",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.5.5",
+    "parameter": "ip",
+    "valid": "127.0.0.1"
+  },
+  {
+    "id": "JS-4.5.5",
+    "parameter": "port",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.6",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.6",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.5.6",
+    "parameter": "ext",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.7",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.5.7",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.6",
+    "parameter": "number",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.6",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "r",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "ge",
+    "valid": "C",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "settings",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "options",
+    "valid": "[D:1,1]",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "D.line",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "D.gap",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "F.value",
+    "valid": "0%",
+    "invalid": "13%"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "S.start",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "S.end",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7",
+    "parameter": "S.direction",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "r",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "radius1",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "radius2",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "width",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "options",
+    "valid": "[F:25%]",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "F.value",
+    "valid": "0%",
+    "invalid": "13%"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "S.start",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "S.end",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.1",
+    "parameter": "S.direction",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "r",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "length",
+    "valid": "2"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "width",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "start",
+    "valid": "s",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "end",
+    "valid": "s",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "options",
+    "valid": "[D:1,1]",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "D.line",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "D.gap",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "F.value",
+    "valid": "0%",
+    "invalid": "13%"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "S.start",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "S.end",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.2",
+    "parameter": "S.direction",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "r",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "width",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "ht",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "vt",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "options",
+    "valid": "[F:25%]",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "F.value",
+    "valid": "0%",
+    "invalid": "13%"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "S.start",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "S.end",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.7.3",
+    "parameter": "S.direction",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "speed",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "h",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "h2",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "P",
+    "valid": "P"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "P.x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "t",
+    "valid": "T",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "t2",
+    "valid": "I",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "r",
+    "valid": "R0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "s",
+    "valid": "S0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.8",
+    "parameter": "Bb",
+    "valid": "B100"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "fieldname",
+    "valid": "Field1",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "r",
+    "valid": "0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "mx",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "my",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "GOODBAD",
+    "valid": "GOODBAD1:2:3"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "EXTERN",
+    "valid": "EXTERN1:2:3"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "GOODBAD.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "GOODBAD.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "GOODBAD.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "EXTERN.a",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "EXTERN.b",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "EXTERN.c",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "a",
+    "valid": "a"
+  },
+  {
+    "id": "JS-4.9",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.10",
+    "parameter": "comment",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11",
+    "parameter": "type",
+    "valid": "c",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.11",
+    "parameter": "params",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.1",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.1",
+    "parameter": "response",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.2",
+    "parameter": "type",
+    "valid": "FMT",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.11.2",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.2",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.11.3",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.11.4",
+    "parameter": "type",
+    "valid": "FMT",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.11.4",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.4",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.11.6",
+    "parameter": "type",
+    "valid": "FMT",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.11.6",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.6",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.11.7",
+    "parameter": "type",
+    "valid": "FMT",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.11.7",
+    "parameter": "path",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.11.7",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.11.7",
+    "parameter": "response",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Ax=y",
+    "valid": "A0=1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "B",
+    "valid": "B"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Cx",
+    "valid": "C1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "D",
+    "valid": "D"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "E",
+    "valid": "E"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "F",
+    "valid": "F"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Hx",
+    "valid": "H1"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "J",
+    "valid": "J"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Lx",
+    "valid": "L1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "M",
+    "valid": "M"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "N",
+    "valid": "N",
+    "invalid": "bad"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "P",
+    "valid": "P"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "R",
+    "valid": "R"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "S",
+    "valid": "S"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Sx",
+    "valid": "S1"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Tx",
+    "valid": "T1"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "U",
+    "valid": "U"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "Wy",
+    "valid": "Wn",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.12",
+    "parameter": "X",
+    "valid": "X"
+  },
+  {
+    "id": "JS-4.13",
+    "parameter": "disp",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.14",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.14",
+    "parameter": "value",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "ptype",
+    "valid": "e",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "xo",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "yo",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "ho",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "dy",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "wd",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "dx",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "col",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.15",
+    "parameter": "name",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "r",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "font",
+    "valid": "-1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "size",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects",
+    "valid": "b",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "text",
+    "valid": "Sample"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "size.x",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "size.y",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "size.pt",
+    "valid": "pt12"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.q",
+    "valid": "100",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.h",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.m",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.fr",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.fl",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.fu",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.16",
+    "parameter": "effects.fd",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "name",
+    "valid": "Sample",
+    "invalid": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "x",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "r",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "width",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "height",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "font",
+    "valid": "3",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "size",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "line-spacing",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "text",
+    "valid": "<HTML>"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "size.pt",
+    "valid": "pt12"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "html.attributes",
+    "valid": "align",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.17",
+    "parameter": "html.style",
+    "valid": "border-style",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.18",
+    "parameter": "y",
+    "valid": "1"
+  },
+  {
+    "id": "JS-4.18",
+    "parameter": "ao",
+    "valid": "a0",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.18",
+    "parameter": "a",
+    "valid": "a",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-4.18",
+    "parameter": "o",
+    "valid": "1",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-6.1",
+    "parameter": "comment",
+    "valid": "1"
+  },
+  {
+    "id": "JS-6.2",
+    "parameter": "abc_code",
+    "valid": "1"
+  },
+  {
+    "id": "JS-6.3",
+    "parameter": "board_number",
+    "valid": "123456789012",
+    "invalid": "__invalid__"
+  },
+  {
+    "id": "JS-6.4",
+    "parameter": "job",
+    "valid": "00"
+  }
+]

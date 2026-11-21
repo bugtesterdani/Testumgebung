@@ -46,7 +46,12 @@ erhält diese Auswahl nicht.
 
 ## Noch offene Nachweise im Entwurfs-PR
 
-Der vollständige positive und negative Testkorpus je Parameter und Tabellenwert,
-weitere Barcode-Kapazitätskombinationen sowie die abschließende Qualitätsprüfung
-sind noch nicht abgeschlossen. Die vorhandenen Definitionen allein belegen
-diese Abdeckung nicht. AP 2 ist deshalb noch nicht zur Überprüfung freigegeben.
+Der versionierte Parameterkorpus umfasst 1.175 gültige Beispiele und zusätzliche
+ungültige Auswahl-, Bereichs- und Formatwerte. Jeder Tabellenwert besitzt einen
+separaten Erkennungstest. Semantische Tests prüfen unter anderem alle numerisch
+dokumentierten Objektfamilien, vorgelagerte Downloads mit der Generation des
+jeweiligen Auftrags, Barcode-Zeichenvorräte und globale Kapazitätsgrenzen.
+Die abschließende Qualitätsprüfung ist noch nicht abgeschlossen. AP 2 ist
+deshalb noch nicht zur Überprüfung freigegeben. Die statische Prüfung ersetzt
+keinen Test an der konkreten Druckerhardware; dynamische Inhaltsfelder werden
+in AP 3 ausgewertet.

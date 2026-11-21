@@ -66,6 +66,14 @@ Werte; unverändertes Öffnen und Speichern ergibt dieselben Bytes. Die vollstä
 Quelltextansicht und grafischen Darstellungen folgen in weiteren Arbeitspaketen.
 [Parser und aktueller Umfang](../cab/parser.md) · [cab-JScript-Programmierhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
 
+Über **Generation und Prüfung …** lässt sich die Druckergeneration (Ax, X2, X3,
+X4; Vorgabe X4) für jeden Etikettenauftrag auswählen. Die Auswahl bleibt im
+Prüfprojekt gespeichert und verändert die Druckbytes nicht. Die statischen
+Diagnosen nennen Zeile, Spalte, Katalog-ID und Handbuchseite. Nicht verfügbare
+Befehle oder Werte und Positionen außerhalb der Etikettenmaße erscheinen als
+Warnungen. Die Prüfung sendet keine Befehle an einen Drucker.
+[Definitionen und Validierung](../cab/validierung.md)
+
 Der strukturierte [JScript-Katalog](../cab/README.md) enthält 237 anhand der
 Handbuchausgabe 07/2026 geprüfte Einträge, einschließlich dokumentierter
 Widersprüche und unklarer Angaben. Schema- und Konsistenztests sichern die

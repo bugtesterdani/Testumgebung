@@ -51,7 +51,10 @@ internal sealed class CabValidationWindow : Window
             AddChoice("Standard / Vorspann", settings.DefaultGeneration, value => settings.DefaultGeneration = value);
             var result = CabValidator.Validate(ReadDocument(), settings);
             foreach (var index in result.Commands.Select(c => c.JobIndex).Where(i => i >= 0).Distinct())
+            {
+                settings.JobGenerations.TryAdd(index, settings.DefaultGeneration);
                 AddChoice("Etikettenauftrag " + (index + 1), settings.GenerationForJob(index), value => settings.JobGenerations[index] = value);
+            }
             Refresh();
         }
         catch (InvalidDataException error) { _status.Text = error.Message; }
