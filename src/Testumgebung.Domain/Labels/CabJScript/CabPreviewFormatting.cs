@@ -73,6 +73,15 @@ internal sealed partial class CabPreviewContext
         return result;
     }
 
+    private string FillLeadingZeros(string text)
+    {
+        if (_fill == '0') return text;
+        var count = 0;
+        // Keep the final zero for a value consisting entirely of zeroes.
+        while (count < text.Length - 1 && text[count] == '0') count++;
+        return new string(_fill, count) + text[count..];
+    }
+
     internal string Digits(string text)
     {
         if (barcode || _style == "LATIN") return text;

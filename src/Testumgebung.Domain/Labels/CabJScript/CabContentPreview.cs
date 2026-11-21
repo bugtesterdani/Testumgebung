@@ -114,7 +114,7 @@ internal sealed partial class CabPreviewContext(CabPreviewSettings settings,
         var value = Resolve(text);
         if (value.Placeholder) throw new InvalidOperationException("Abhängiger Druckerwert ist nur ein Platzhalter.");
         var culture = fields.ContainsKey(text) ? Culture : CultureInfo.InvariantCulture;
-        return decimal.Parse(value.Text, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, culture);
+        return decimal.Parse(value.Text.Trim(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, culture);
     }
 
     private int Integer(string text)

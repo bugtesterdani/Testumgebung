@@ -73,6 +73,9 @@ physische Länge als Vorschau-Metadaten; es erzeugt keine erfundenen Leerzeichen
 SELECT zeigt den ausdrücklich bereitgestellten Beispielindex oder die
 dokumentierte Vorauswahl und kennzeichnet dies als Offline-Beispielauswahl.
 S ändert die Zifferndarstellung, nicht die intern referenzierten Datenwerte.
+`C` ersetzt führende Nullen auch im ersten SER-Wert und in rein numerischen
+Datums-/Zeitwerten; bei ausschließlich Nullen bleibt die letzte Null erhalten.
+Mit Leerzeichen gefüllte Zahlenfelder bleiben für Folgerechnungen lesbar.
 Binärwerte behalten ihre Bytefolge unabhängig von der lesbaren Hexdarstellung.
 Die lokalen Darstellungsgrenzen sind keine behaupteten Druckergrenzen.
 

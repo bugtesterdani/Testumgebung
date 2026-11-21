@@ -6,6 +6,12 @@ internal sealed partial class CabPreviewContext
 {
     private string Date(CabContentField field, int id, IReadOnlyList<string> args)
     {
+        var value = DateCore(field, id, args);
+        return value.All(char.IsAsciiDigit) ? FillLeadingZeros(value) : value;
+    }
+
+    private string DateCore(CabContentField field, int id, IReadOnlyList<string> args)
+    {
         var date = settings.ExampleTime;
         if (id <= 9)
         {

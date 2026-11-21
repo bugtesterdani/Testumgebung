@@ -33,6 +33,17 @@ public sealed class CabContentBoundaryTests
     [InlineData("[U:$10FFFF]", "\U0010FFFF")]
     [InlineData("[U:GS]", "\u001d")]
     [InlineData("[SER:0]", "0")]
+    [InlineData("[SER:0007][C: ]", "   7")]
+    [InlineData("[C:*][SER:0007]", "***7")]
+    [InlineData("[SER:0000][C: ]", "   0")]
+    [InlineData("[SER:0007][C:0]", "0007")]
+    [InlineData("[SER:00F][C: ,16]", "  F")]
+    [InlineData("[DAY02][C: ]", " 1")]
+    [InlineData("[MONTH02][C:*]", "*1")]
+    [InlineData("[H024][C: ]", " 0")]
+    [InlineData("[MIN][C: ]", " 0")]
+    [InlineData("[SEC][C:*]", "*0")]
+    [InlineData("[+:Padded,1]", "8,00")]
     [InlineData("[DAY02][S:ARABIC]", "٠١")]
     [InlineData("[DAY02][S:LATIN]", "01")]
     [InlineData("[SHA256:Empty]", "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")]
@@ -44,7 +55,7 @@ public sealed class CabContentBoundaryTests
     [InlineData("[SPLIT:List,1]", "")]
     public void Offline_boundary_values_are_explicit(string source, string expected)
     {
-        var fields = new Dictionary<string, CabPreviewValue> { ["Empty"] = new(""), ["Data"] = new("A😀"), ["Zero"] = new("0"), ["List"] = new("\u001dB") };
+        var fields = new Dictionary<string, CabPreviewValue> { ["Empty"] = new(""), ["Data"] = new("A😀"), ["Zero"] = new("0"), ["List"] = new("\u001dB"), ["Padded"] = new("   7") };
         var result = CabContentPreview.Evaluate(source, new() { ExampleTime = new(2024, 1, 1) }, fields);
         Assert.Equal(expected, result.Text);
         Assert.False(result.Value.Placeholder, string.Join(";", result.Issues.Select(i => i.Message)));

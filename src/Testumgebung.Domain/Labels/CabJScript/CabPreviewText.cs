@@ -75,6 +75,6 @@ internal sealed partial class CabPreviewContext
         Note(field, "Vorschau zeigt nur den ersten Serienwert; kein Zähler wird verändert.", "preview-serial");
         const string alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         if (value.Text.Any(c => alphabet.IndexOf(c) < 0 || alphabet.IndexOf(c) >= _base)) throw new FormatException("Serienstart passt nicht zur Zählbasis.");
-        return new(value.Text);
+        return new(FillLeadingZeros(value.Text));
     }
 }
