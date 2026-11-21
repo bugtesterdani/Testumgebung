@@ -5,6 +5,45 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class CabReviewRegressionTests
 {
+    public static IEnumerable<object[]> BuiltinAmounts()
+    {
+        foreach (var generation in Enum.GetValues<CabPrinterGeneration>())
+        foreach (var option in new[] { "NO", "NOPRINT", "R", "REPEAT" })
+            yield return [generation, option];
+    }
+
+    [Theory]
+    [MemberData(nameof(BuiltinAmounts))]
+    public void Builtin_amount_options_do_not_inherit_variable_generation_restrictions(CabPrinterGeneration generation, string option)
+    {
+        var source = "J\rA [" + option + "] \t\r";
+        var document = CabParser.Parse(Encoding.UTF8.GetBytes(source));
+        var result = CabValidator.Validate(document, new() { DefaultGeneration = generation });
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+        Assert.DoesNotContain(result.Diagnostics, d => d.Code == "generation");
+        Assert.Null(Assert.Single(result.Commands, c => c.Syntax.Command == "A").Parameter("VAR"));
+        Assert.Equal(source, Encoding.UTF8.GetString(document.Write()));
+    }
+
+    [Theory]
+    [InlineData(CabPrinterGeneration.Ax)]
+    [InlineData(CabPrinterGeneration.X2)]
+    [InlineData(CabPrinterGeneration.X3)]
+    public void Actual_amount_field_variables_still_warn_outside_x4(CabPrinterGeneration generation)
+    {
+        var result = CabValidator.Validate(CabParser.Parse("J\rT:Counter;0,0,0,3,3;1\rA [Counter]\r"u8), new() { DefaultGeneration = generation });
+        Assert.Contains(result.Diagnostics, d => d.Code == "generation" && d.Message.Contains("[<VAR>]", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Bare_preview_is_a_builtin_even_when_it_requires_a_newer_generation()
+    {
+        var result = CabValidator.Validate(CabParser.Parse("J\rA 1 [PREVIEW]\r"u8), new() { DefaultGeneration = CabPrinterGeneration.X2 });
+        Assert.Contains(result.Diagnostics, d => d.Code == "generation");
+        Assert.DoesNotContain(result.Diagnostics, d => d.Message.Contains("[<VAR>]", StringComparison.Ordinal));
+        Assert.Null(Assert.Single(result.Commands, c => c.Syntax.Command == "A").Parameter("VAR"));
+    }
+
     [Theory]
     [InlineData("[Pattern]")]
     [InlineData("[DATE]")]

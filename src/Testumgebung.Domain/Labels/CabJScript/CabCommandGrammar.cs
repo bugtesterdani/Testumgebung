@@ -110,20 +110,21 @@ internal static class CabCommandGrammar
     private static void Amount(CabBindingBuilder builder)
     {
         var slice = builder.Slice;
-        builder.Add("param", slice.Body);
-        var body = slice.Protocol(slice.Body);
+        var bodyRange = slice.Trim(slice.Body);
+        builder.Add("param", bodyRange);
+        var body = slice.Protocol(bodyRange);
         var count = Regex.Match(body, @"^[0-9]+", RegexOptions.CultureInvariant);
         var preview = Regex.Match(body, @"\[PREVIEW(?::(?<index>[0-9]+|ALL))?\]", RegexOptions.CultureInvariant);
         if (count.Success)
         {
-            builder.Add("num", slice.Subrange(slice.Body, count.Index, count.Length));
-            if (preview.Success) builder.Add("preview_count", slice.Subrange(slice.Body, count.Index, count.Length));
+            builder.Add("num", slice.Subrange(bodyRange, count.Index, count.Length));
+            if (preview.Success) builder.Add("preview_count", slice.Subrange(bodyRange, count.Index, count.Length));
         }
         if (preview.Groups["index"].Success)
-        { var index = preview.Groups["index"]; builder.Add("preview_index", slice.Subrange(slice.Body, index.Index, index.Length)); }
+        { var index = preview.Groups["index"]; builder.Add("preview_index", slice.Subrange(bodyRange, index.Index, index.Length)); }
         var variable = Regex.Match(body, @"\[(?<name>\p{L}[\p{L}\p{Nd}]*)\]", RegexOptions.CultureInvariant);
-        if (variable.Success && !new[] { "NO", "NOPRINT", "R", "REPEAT", "SAVE", "PREVIEW" }.Contains(variable.Groups["name"].Value, StringComparer.Ordinal))
-        { var name = variable.Groups["name"]; builder.Add("VAR", slice.Subrange(slice.Body, name.Index, name.Length)); }
+        if (variable.Success && !CabAmountOptions.IsBuiltin(variable.Groups["name"].Value))
+        { var name = variable.Groups["name"]; builder.Add("VAR", slice.Subrange(bodyRange, name.Index, name.Length)); }
     }
 
     private static void Signal(CabBindingBuilder builder)

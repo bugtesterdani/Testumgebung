@@ -75,9 +75,15 @@ internal static class CabSelectedValues
         foreach (var value in rule.Parameter.Values)
         {
             var single = rule with { Parameter = rule.Parameter with { Values = [value] }, AdditionalValues = [] };
-            if (CabChoiceLexicon.Matches(single, input, CabChoiceMode.Single) || Tokens(input).Any(t => CabChoiceLexicon.Matches(single, t, CabChoiceMode.Single)))
+            if (Matches(single, value, input) || Tokens(input).Any(t => Matches(single, value, t)))
                 yield return value;
         }
+    }
+
+    private static bool Matches(CabParameterRule rule, CabCatalogValue value, string token)
+    {
+        if (rule.Entry.Id == "JS-4.1" && value.Value == "[<VAR>]" && CabAmountOptions.IsBuiltinToken(token)) return false;
+        return CabChoiceLexicon.Matches(rule, token, CabChoiceMode.Single);
     }
 
     private static IEnumerable<string> Tokens(string input)

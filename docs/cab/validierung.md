@@ -63,6 +63,9 @@ Inhaltsauswahlen wie FIM (A/B/C/D). Wörtliche Werte behalten diese Prüfung.
 Druck- und Druckkopfoptionen akzeptieren Leerzeichen/Tabulatoren an ihren
 Trennern; die gebundenen Bereiche enthalten nur den jeweiligen Wert, sodass
 eine gezielte Änderung die umgebenden Abstände erhält.
+Vordefinierte Mengenoptionen wie `[NO]` und `[REPEAT]` werden weder bei der
+Bindung noch bei Generationswarnungen zusätzlich als Feldvariable eingeordnet.
+Die X4-Beschränkung echter variabler Mengen bleibt erhalten.
 
 ## Prüfnachweise und Grenzen
 
