@@ -47,7 +47,7 @@ internal static class CabCommandResolver
         if (fields.Count < 4) return null;
         var type = slice.Protocol(fields[3]).Trim();
         foreach (var candidate in BarcodeTypes)
-            if (type == candidate.Type || type.StartsWith(candidate.Type + "+", StringComparison.Ordinal)) return candidate.Id;
+            if (CabBarcodeNames.PrefixLength(type, candidate.Type) >= 0) return candidate.Id;
         return null;
     }
 

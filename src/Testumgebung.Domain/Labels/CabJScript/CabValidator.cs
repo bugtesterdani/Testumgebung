@@ -22,7 +22,7 @@ public static class CabValidator
         Unavailable(entry.Availability(generation), entry.Title, entry, command.Syntax, diagnostics);
         foreach (var parameter in command.Parameters) CheckParameter(parameter, command, generation, dynamicContent, diagnostics);
         foreach (var issue in command.Issues)
-            diagnostics.Add(issue.Code, CabDiagnosticSeverity.Error, issue.Message, entry, issue.Syntax);
+            diagnostics.Add(issue.Code, issue.Code == "graphic-ambiguous" ? CabDiagnosticSeverity.Warning : CabDiagnosticSeverity.Error, issue.Message, entry, issue.Syntax);
     }
 
     private static void CheckParameter(CabBoundParameter parameter, CabBoundCommand command,

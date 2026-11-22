@@ -56,7 +56,7 @@ public static class CabContentValidation
             foreach (var range in ranges)
                 CabValidator.Unavailable(field.Definition.Availability(generation), field.Name, field.Definition,
                     content.Parameter.Syntax! with { Range = range }, diagnostics);
-            foreach (var error in CabContentGrammar.Errors(field, content.PreviousNames))
+            foreach (var error in CabContentGrammar.Errors(field, content.PreviousNames, content.Command.Definition.Catalog.Kind == "barcode"))
                 Add(content, field.Offset, field.Length, "content-parameter", error, field.Definition, CabDiagnosticSeverity.Error, diagnostics);
             if (field.Definition.Id == "JS-5.99" && CabContentGrammar.Arguments(field).Count == 3 && generation != CabPrinterGeneration.X4)
                 Add(content, field.Offset, field.Length, "generation", "Eigener SPLIT-Trenner ist nur auf X4 verfügbar.", field.Definition, CabDiagnosticSeverity.Warning, diagnostics);

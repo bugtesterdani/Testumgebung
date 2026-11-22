@@ -1,0 +1,6 @@
+# Optional local extraction only; no application or CI runtime dependency.
+pdfminer.six==20251230
+charset-normalizer==3.5.2
+cryptography==50.0.2
+cffi==2.1.1
+pycparser==3.12

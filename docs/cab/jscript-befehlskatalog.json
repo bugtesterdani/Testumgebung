@@ -5513,7 +5513,7 @@
      "name": "U.xxxx",
      "schreibweise": "[U:xxxx]",
      "quelle": "tabelle",
-     "beschreibung": "Benannte Steuer-/Barcodezeichen, gültige Teilmenge abhängig vom Typ. Numerische Unicode-Formen siehe JS-5.103.",
+     "beschreibung": "Benannte Steuer-/Barcodezeichen, gültige Teilmenge abhängig vom Typ. Numerische Unicode-Formen siehe JS-5.103; zusätzlich sind dezimale Barcode-Steuercodes 13 und 10 durch das Beispiel S. 152 belegt. Diese Dezimalform wird nur im Barcodekontext zugelassen.",
      "werte": [
       {
        "wert": "NUL",

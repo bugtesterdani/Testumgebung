@@ -39,3 +39,21 @@ und nicht als erfolgreich getestete gültige Beispiele ausgegeben.
 Vor Merge: vollständiger Build, vollständige Tests, erfolgreiche GitHub-CI,
 Ready for Review, Hinweise bearbeiten, Threads resolved und normaler
 Merge-Commit ohne Squash/Rebase. Erst danach beginnt AP 4.
+
+## Implementierter Nachweis
+
+Das explizite Attributinventar umfasst 237 Eintragsfälle und 1.801 Wertfälle.
+Vollständige Befehlsdateien und isolierte Wertproben werden getrennt geprüft;
+die Wertproben behaupten keine beliebigen gültigen Kombinationen aller Optionen.
+43 zusätzliche Barcodefälle müssen Fehler melden. Die vorhandenen Parameter-
+und Inhaltsfeldkorpora weisen zusammen die 1.416 Parameter nach.
+
+Der lokale Handbuchlauf extrahiert alle 287 Anker und schreibt alle Quellen
+bytegleich zurück. 262 Beispiele haben keine Fehlerdiagnosen. 25 gedruckte
+Beispiele widersprechen einzelnen geprüften Regeln und ergeben genau 39
+erwartete Diagnosen. Diese zählen nicht als gültige Beispiele. Der Test bindet
+sie an Seitenstelle, Quellhash, Begründung und vollständige Diagnosen; neue und
+verschwundene Befunde sind Fehler. Diese Abweichung vom pauschalen Wunsch nach
+fehlerfreien Herstellerbeispielen ist ausdrücklich offengelegt. Der lokale
+Ergebnisbericht bleibt unter `artifacts/cab/manual/validation.json` ignoriert.
+Die Einrichtungsanleitung und Grenzen stehen im README des eigenen Testkorpus.

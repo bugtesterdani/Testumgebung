@@ -100,7 +100,7 @@ internal sealed partial class CabPreviewContext(CabPreviewSettings settings,
     internal decimal? AlignmentLength { get; private set; }
     private int _digits = 2;
     private int _width;
-    private char _fill = '0';
+    private string _fill = "0";
     private int _base = 10;
     private string _rounding = "n";
     private string _style = "LATIN";
@@ -111,6 +111,7 @@ internal sealed partial class CabPreviewContext(CabPreviewSettings settings,
     internal CabPreviewValue Resolve(string text) => fields.TryGetValue(text, out var value) ? value : new(text);
     internal decimal Number(string text)
     {
+        text = text.Trim();
         var value = Resolve(text);
         if (value.Placeholder) throw new InvalidOperationException("Abhängiger Druckerwert ist nur ein Platzhalter.");
         var culture = fields.ContainsKey(text) ? Culture : CultureInfo.InvariantCulture;
@@ -129,7 +130,7 @@ internal sealed partial class CabPreviewContext(CabPreviewSettings settings,
 
     internal CabPreviewValue Evaluate(CabContentField field)
     {
-        var errors = CabContentGrammar.Errors(field, Names);
+        var errors = CabContentGrammar.Errors(field, Names, barcode);
         if (field.Nested || errors.Count > 0 || _invalidModifiers.Contains(field.Offset))
         {
             foreach (var error in errors) Note(field, error, "content-parameter");

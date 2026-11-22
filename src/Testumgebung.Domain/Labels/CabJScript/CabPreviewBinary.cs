@@ -116,11 +116,8 @@ internal sealed partial class CabPreviewContext
 
     private CabPreviewValue Unicode(CabContentField field, string argument)
     {
-        if (argument.StartsWith('$'))
-        {
-            var scalar = int.Parse(argument.AsSpan(1), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture);
-            return new(char.ConvertFromUtf32(scalar));
-        }
+        if (CabUnicodeScalar.TryParse(argument, barcode, out var scalar)) return new(char.ConvertFromUtf32(scalar));
+        if (barcode && !argument.StartsWith('$')) return BarcodeControl(field, argument);
         string[] controls = ["NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT", "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SU", "ESC", "FS", "GS", "RS", "US"];
         var index = Array.IndexOf(controls, argument);
         if (index >= 0) return new(((char)index).ToString());
@@ -132,8 +129,19 @@ internal sealed partial class CabPreviewContext
         throw new FormatException("Unbekannter Unicode-Steuerzeichenname.");
     }
 
+    private CabPreviewValue BarcodeControl(CabContentField field, string name)
+    {
+        string[] ascii = ["NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT", "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US"];
+        var index = Array.IndexOf(ascii, name);
+        if (index >= 0) return new(((char)index).ToString());
+        if (name == "DEL") return new("\u007f");
+        Note(field, "Semantisches Barcode-Steuerzeichen, kein gewöhnlicher Unicode-Text.", "preview-barcode-control");
+        return new("⟦" + name + "⟧", Placeholder: true);
+    }
+
     private static BigInteger Unsigned(string text)
     {
+        text = text.Trim(' ', '\t');
         var number = text.StartsWith('$') ? BigInteger.Parse("0" + text[1..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture)
             : BigInteger.Parse(text, NumberStyles.None, CultureInfo.InvariantCulture);
         if (number < 0) throw new FormatException("Negative Binärwerte sind nicht spezifiziert.");

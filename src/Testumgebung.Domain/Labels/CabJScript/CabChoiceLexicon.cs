@@ -45,9 +45,12 @@ internal static class CabChoiceLexicon
             var pattern = Template(value);
             if (pattern is not null)
             {
-                if (Regex.IsMatch(input, "^(?:" + pattern + ")$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))) return true;
+                var options = RegexOptions.CultureInvariant | (rule.IgnoreCaseChoices ? RegexOptions.IgnoreCase : RegexOptions.None);
+                if (Regex.IsMatch(input, "^(?:" + pattern + ")$", options, TimeSpan.FromSeconds(1))) return true;
             }
             else if (value == input || rule.NumericChoices && SameNumber(value, input)) return true;
+            else if (rule.NormalizeBarcodeType && CabBarcodeNames.Equal(value, input)) return true;
+            else if (rule.IgnoreCaseChoices && value.Equals(input, StringComparison.OrdinalIgnoreCase)) return true;
         }
         return false;
     }

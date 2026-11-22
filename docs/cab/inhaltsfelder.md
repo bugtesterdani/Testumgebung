@@ -85,6 +85,15 @@ semantisch gekennzeichnet und werden nicht als Unicode-Anzeigemarker gehasht.
 Binärwerte behalten ihre Bytefolge unabhängig von der lesbaren Hexdarstellung.
 Die lokalen Darstellungsgrenzen sind keine behaupteten Druckergrenzen.
 
+Der AP-8-Handbuchvergleich ergänzt die explizit dokumentierten Varianten:
+`[C:]` entfernt führende Nullen ohne Ersatzzeichen (Null bleibt als `0` sichtbar),
+die Schriftstile `arabic` und `thai` sind unabhängig von Großschreibung, und
+ein zuvor definiertes Feld `SER` kann mit `[SER]` referenziert werden.
+`[SER:1]` bleibt die Seriennummerfunktion. Leerzeichen/Tabulatoren um numerische
+BIN-Werte sind keine Binärdaten; literale Textargumente behalten ihre Leerzeichen.
+Dezimale U-Werte und zusätzliche Steuerzeichen gelten nur im Barcodekontext;
+Text-U verwendet weiter die eigene Namenstabelle und `$`-Hexwerte.
+
 Der Korpus muss alle 107 Einträge und deren Parameter erfassen. Für jedes
 offline berechenbare Feld sind ein erwarteter Vorschauwert und mindestens ein
 Grenzfall erforderlich. Zusätzliche Prüfungen betreffen Verkettung, unzulässige

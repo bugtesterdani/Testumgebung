@@ -33,6 +33,9 @@ public sealed record CabParameterRule(CabCatalogEntry Entry, CabCatalogParameter
     public IReadOnlyList<string> AdditionalValues { get; init; } = [];
     public CabChoiceMode ChoiceMode { get; init; }
     public bool NumericChoices { get; init; }
+    public bool NormalizeBarcodeType { get; init; }
+    public bool IgnoreCaseChoices { get; init; }
+    public bool AllowNumericUnicode { get; init; }
     public bool AllowBarePrefix { get; init; }
     public IReadOnlyDictionary<CabPrinterGeneration, CabDataType> GenerationDataTypes { get; init; }
         = new Dictionary<CabPrinterGeneration, CabDataType>();
@@ -49,13 +52,14 @@ public sealed record CabParameterRule(CabCatalogEntry Entry, CabCatalogParameter
         if (MinimumLength is int min && value.Length < min) return "Wert ist zu kurz.";
         var maximum = GenerationMaximumLengths.GetValueOrDefault(generation, MaximumLength ?? int.MaxValue);
         if (value.Length > maximum) return "Wert ist zu lang.";
-        if (Pattern is not null && !Regex.IsMatch(value, Pattern, RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)))
+        if (Pattern is not null && !Regex.IsMatch(value, Pattern, RegexOptions.CultureInvariant | (IgnoreCaseChoices ? RegexOptions.IgnoreCase : RegexOptions.None), TimeSpan.FromSeconds(1)))
             return "Wert entspricht nicht dem dokumentierten Zeichenformat.";
         return ValidateType(value, generation);
     }
 
     private string? ValidateType(string value, CabPrinterGeneration generation)
     {
+        if (AllowNumericUnicode && CabUnicodeScalar.TryParse(value, true, out _)) return null;
         var type = GenerationDataTypes.GetValueOrDefault(generation, DataType);
         if (type == CabDataType.Name && !Regex.IsMatch(value, @"^\p{L}[\p{L}\p{Nd}]*$", RegexOptions.CultureInvariant))
             return "Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.";

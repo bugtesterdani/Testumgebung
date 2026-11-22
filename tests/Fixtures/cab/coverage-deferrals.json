@@ -1,0 +1,2630 @@
+{
+  "version": 1,
+  "deferrals": [
+    {
+      "id": "JS-1.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-1.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-1.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-1.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.8",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.9",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.10",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.11",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.12",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.13",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.14",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.15",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.16",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.17",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.18",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.19",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.20",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.21",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.22",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.23",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.24",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-2.25",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.8",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.9",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.10",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.11",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.12",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.13",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.14",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.15",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.16",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-3.17",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.8",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.9",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.10",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.11",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.12",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.13",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.14",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.15",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.16",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.17",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.18",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.19",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.20",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.21",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.22",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.23",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.24",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.25",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.26",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.27",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.28",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.29",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.30",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.31",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.32",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.33",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.34",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.35",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.36",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.37",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.38",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.39",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.40",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.41",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.42",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.43",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.44",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.2.45",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.5.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.7.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.7.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.7.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.8",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.9",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.10",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.11.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.12",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.13",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.14",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.15",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.16",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.17",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-4.18",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.5",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.6",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.7",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.8",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.9",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.10",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.11",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.12",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.13",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.14",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.15",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.16",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.17",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.18",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.19",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.20",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.21",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.22",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.23",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.24",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.25",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.26",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.27",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.28",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.29",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.30",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.31",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.32",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.33",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.34",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.35",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.36",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.37",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.38",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.39",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.40",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.41",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.42",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.43",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.44",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.45",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.46",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.47",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.48",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.49",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.50",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.51",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.52",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.53",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.54",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.55",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.56",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.57",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.58",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.59",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.60",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.61",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.62",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.63",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.64",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.65",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.66",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.67",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.68",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.69",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.70",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.71",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.72",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.73",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.74",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.75",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.76",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.77",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.78",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.79",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.80",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.81",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.82",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.84",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.85",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.86",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.87",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.88",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.89",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.90",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.91",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.92",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.93",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.94",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.95",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.96",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.97",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.98",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.99",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.100",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.101",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.102",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.103",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.104",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.105",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.106",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.107",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-5.108",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-6.1",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-6.2",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-6.3",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-6.4",
+      "stage": "source",
+      "ap": 4
+    },
+    {
+      "id": "JS-1.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-1.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-1.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-1.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.8",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.9",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.10",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.11",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.12",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.13",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.14",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.15",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.16",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.17",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.18",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.19",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.20",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.21",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.22",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.23",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.24",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-2.25",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.8",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.9",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.10",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.11",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.12",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.13",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.14",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.15",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.16",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-3.17",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.8",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.9",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.10",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.11",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.12",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.13",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.14",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.15",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.16",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.17",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.18",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.19",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.20",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.21",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.22",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.23",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.24",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.25",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.26",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.27",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.28",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.29",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.30",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.31",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.32",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.33",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.34",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.35",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.36",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.37",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.38",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.39",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.40",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.41",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.42",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.43",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.44",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.45",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.5.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.7.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.7.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.7.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.8",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.9",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.10",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.11.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.12",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.13",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.14",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.15",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.16",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.17",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.18",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.5",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.6",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.7",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.8",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.9",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.10",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.11",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.12",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.13",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.14",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.15",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.16",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.17",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.18",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.19",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.20",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.21",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.22",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.23",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.24",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.25",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.26",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.27",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.28",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.29",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.30",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.31",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.32",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.33",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.34",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.35",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.36",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.37",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.38",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.39",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.40",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.41",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.42",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.43",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.44",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.45",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.46",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.47",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.48",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.49",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.50",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.51",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.52",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.53",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.54",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.55",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.56",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.57",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.58",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.59",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.60",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.61",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.62",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.63",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.64",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.65",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.66",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.67",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.68",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.69",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.70",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.71",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.72",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.73",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.74",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.75",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.76",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.77",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.78",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.79",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.80",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.81",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.82",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.84",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.85",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.86",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.87",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.88",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.89",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.90",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.91",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.92",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.93",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.94",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.95",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.96",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.97",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.98",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.99",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.100",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.101",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.102",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.103",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.104",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.105",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.106",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.107",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-5.108",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-6.1",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-6.2",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-6.3",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-6.4",
+      "stage": "properties",
+      "ap": 5
+    },
+    {
+      "id": "JS-4.2.3",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.4",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.5",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.6",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.7",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.8",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.9",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.10",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.11",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.12",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.13",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.14",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.15",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.16",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.17",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.18",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.19",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.20",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.21",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.22",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.23",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.24",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.25",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.26",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.27",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.28",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.29",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.30",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.31",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.32",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.33",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.34",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.35",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.36",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.37",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.38",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.39",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.40",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.41",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.42",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.43",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.44",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.2.45",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.7",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.7.1",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.7.2",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.7.3",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.9",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.16",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "JS-4.17",
+      "stage": "graphics",
+      "ap": 6
+    },
+    {
+      "id": "project",
+      "stage": "integration",
+      "ap": 7
+    }
+  ]
+}
