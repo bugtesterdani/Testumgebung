@@ -27,3 +27,33 @@ entfernt. Die Rückstellungen für AP 5–7 bleiben sichtbar.
 Vor Merge: vollständiger Build, vollständige Tests, unveränderte Qualitätsziele,
 erfolgreiche finale GitHub-CI, Ready for Review und erledigte Review-Threads.
 Normaler Merge-Commit ohne Squash/Rebase; erst danach AP 5.
+
+## Bedienung und Grenzen
+
+„Quelltext …“ öffnet die Ansicht im cab-Designer. Die Suche findet Befehle,
+Parameter in Katalogreihenfolge und Tabellenwerte. Auswahl und Doppelklick
+fügen an der markierten Textstelle ein. Strg+Leertaste führt zur Suche.
+Syntaxvorlagen und schematische Werte bleiben erkennbar; sie behaupten noch
+keinen vollständig gültigen Befehl. Antwortfelder sind beschrieben, werden
+aber nicht als Eingabe eingefügt. Die Verfügbarkeit wird für die gespeicherte
+Standardgeneration angezeigt. Handbuchseiten stehen in Hilfetext und Tooltips.
+
+ESC wird als `␛` angezeigt und beim Bearbeiten wieder als ESC-Byte geschrieben.
+Unveränderte Zeilen behalten ihre ursprünglichen CR-/LF-Enden. Neue Zeilen
+verwenden das dokumentierte Zeilenende der Datei. Strenge Codepage-Kodierung
+verhindert Ersatzzeichen. Nicht dekodierbare Fragmente bleiben ebenso wie
+Binär- und verschlüsselte Blöcke geschützt; ihre Zusammenfassung nennt den
+Grund beziehungsweise Typ, Namen und Bytezahl. BASIC-Blöcke bleiben Text.
+
+Diagnosen stehen an der betreffenden Zeile und mit Seitenverweis in der Liste;
+Doppelklick markiert den betroffenen Bereich. Eine Textänderung aktualisiert
+das bestehende Layout und die Eigenschaften. Unveränderte Modellobjekte und
+ihre Canvas-Darstellungen werden wiederverwendet, auch bei verschobenen
+Bytepositionen oder gelöschten Nachbarbefehlen. Darstellungsumfang und die
+ausführliche Eigenschaftenansicht werden in AP 5 und AP 6 erweitert.
+
+Alle 237 Korpusdateien werden zusätzlich im Quelltextmodell geöffnet und
+bytegleich geschrieben. Vervollständigung wird für alle 237 Einträge, 1.416
+Parameter und 1.801 Werte unter allen vier Generationen nachgewiesen. Die
+237 Source-Rückstellungen aus AP 8 entfallen; 288 konkrete Rückstellungen
+für AP 5–7 bleiben bestehen.

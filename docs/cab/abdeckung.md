@@ -6,18 +6,18 @@ Der normale Testlauf prüft denselben Bericht auf Aktualität und führt die Nac
 237 Einträge, 1.416 Parameter und 1.801 Tabellenwerte. Der geprüfte Katalog enthält
 zwei nachgetragene Abschnitte gegenüber der ursprünglich genannten Zahl 235.
 
-| Art | Gesamt | Erkannt | Validiert | Eigenschaften-Editor | Grafisch vollständig | Vorschau | Registrierte Fälle |
-| --- | ---: | ---: | ---: | ---: | ---: | --- | ---: |
-| allgemein | 6 | 6 | 6 | 0 | — | — | 15 |
-| barcode | 43 | 43 | 43 | 0 | 0 / 43 | — | 1139 |
-| erweiterung | 7 | 7 | 7 | 0 | — | — | 15 |
-| esc | 25 | 25 | 25 | 0 | — | — | 210 |
-| etikettbefehl | 18 | 18 | 18 | 0 | 0 / 4 | — | 289 |
-| grafik | 3 | 3 | 3 | 0 | 0 / 3 | — | 73 |
-| inhaltsfeld | 107 | 107 | 107 | 0 | — | 107 / 107 | 191 |
-| sofortbefehl | 17 | 17 | 17 | 0 | — | — | 113 |
-| sonstiges | 4 | 4 | 4 | 0 | — | — | 4 |
-| speicherkarte | 7 | 7 | 7 | 0 | — | — | 32 |
+| Art | Gesamt | Erkannt | Validiert | Quelltext | Eigenschaften-Editor | Grafisch vollständig | Vorschau | Registrierte Fälle |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: |
+| allgemein | 6 | 6 | 6 | 6 | 0 | — | — | 21 |
+| barcode | 43 | 43 | 43 | 43 | 0 | 0 / 43 | — | 1182 |
+| erweiterung | 7 | 7 | 7 | 7 | 0 | — | — | 22 |
+| esc | 25 | 25 | 25 | 25 | 0 | — | — | 235 |
+| etikettbefehl | 18 | 18 | 18 | 18 | 0 | 0 / 4 | — | 307 |
+| grafik | 3 | 3 | 3 | 3 | 0 | 0 / 3 | — | 76 |
+| inhaltsfeld | 107 | 107 | 107 | 107 | 0 | — | 107 / 107 | 298 |
+| sofortbefehl | 17 | 17 | 17 | 17 | 0 | — | — | 130 |
+| sonstiges | 4 | 4 | 4 | 4 | 0 | — | — | 8 |
+| speicherkarte | 7 | 7 | 7 | 7 | 0 | — | — | 39 |
 
 ## Bedeutung und Grenzen
 
@@ -38,14 +38,21 @@ Vorschau: 82 offline auswertbare Definitionen und 25 explizite druckerabhängige
 Platzhalter; zusätzlich gelten die Grenz- und Erwartungswerttests aus AP 3. Ein
 Platzhalter behauptet keinen gelesenen Hardwarewert.
 
+## Quelltextansicht (AP 4)
+
+Alle 237 Korpusdateien öffnen und speichern bytegleich in der Quelltextansicht.
+Alle 237 Einträge, 1.416 Parameter und 1.801 Werte sind für alle vier Generationen
+in der Katalogvervollständigung erreichbar. Gezielte Text-, Codepage-, Binärschutz-
+und Oberflächentests prüfen Bearbeitung, Navigation und unveränderte Objekte.
+Die 237 Source-Ausnahmen wurden entfernt.
+
 ## Ausnahmen der frühen Einführung
 
-Die empfohlene Reihenfolge führt AP 8 vor AP 4–7 ein. Deshalb sind Source-Editor
-(237, AP 4), Eigenschaften-Editor (237, AP 5), vollständige Grafiknachweise
+Die empfohlene Reihenfolge führt AP 8 vor AP 4–7 ein. Deshalb sind Eigenschaften-Editor (237, AP 5), vollständige Grafiknachweise
 (50, AP 6) und abschließende Projekt-/Release-/ZPL-Integration (1, AP 7) noch
 ausdrücklich zurückgestellt. Bestehende Teilansichten zählen nicht als vollständiger
 Nachweis einer Spalte. Die Pflichtspalte Eigenschaften-Editor steht tatsächlich auf
-0, nicht auf behaupteten 100 %. Der Build erlaubt ausschließlich die 525 konkret
+0, nicht auf behaupteten 100 %. Der Build erlaubt ausschließlich die 288 konkret
 aufgelisteten Ausnahmen in `tests/Fixtures/cab/coverage-deferrals.json`; keine
 Wildcards, Duplikate oder unbekannten IDs. Die späteren APs müssen ihren tatsächlichen
 Nachweis ergänzen und ihre Ausnahmen entfernen. Am Ende muss die Liste leer sein.

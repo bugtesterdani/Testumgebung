@@ -8,7 +8,9 @@ Wertproben prüfen einzelne Regeln; vollständige Befehlsfälle prüfen zusätzl
 den Kontext. Die zwei `retained-*`-Dateien bewahren die bisherigen Grenzfälle.
 
 `coverage-deferrals.json` ist keine Generatorausgabe. Die frühen Ausnahmen sind
-einzeln den nachfolgenden AP 4–7 zugeordnet und müssen dort abgebaut werden.
+einzeln den nachfolgenden APs zugeordnet und müssen dort abgebaut werden.
+AP 4 hat seine 237 Source-Ausnahmen durch vollständige Katalogvervollständigung,
+Quelltext-Korpus- und Bearbeitungsnachweise ersetzt; 288 Ausnahmen für AP 5–7 bleiben.
 `build/update-cab-coverage.ps1` führt die Nachweise aus und aktualisiert den Bericht.
 
 ## Optionales Herstellerhandbuch

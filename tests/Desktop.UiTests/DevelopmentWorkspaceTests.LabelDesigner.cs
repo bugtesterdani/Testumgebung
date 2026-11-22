@@ -16,6 +16,7 @@ public sealed partial class DevelopmentWorkspaceTests
 {
     private static void VerifyCabGenerationChoices()
     {
+        VerifyCabSourceEditor();
         VerifyCabContentPreview();
         var layout = CabLabelImport.Read("J\rA 1\rJ\rA 1\r"u8.ToArray());
         var bytes = CabLabelLayout.Render(layout);
