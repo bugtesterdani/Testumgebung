@@ -19,10 +19,15 @@ public static class CabSourceReconcile
     private static LabelElement Reuse(LabelElement next, Dictionary<int, LabelElement> old, Dictionary<int, int> offsets)
     {
         var previous = offsets.Where(p => p.Value == next.CabSourceOffset).Select(p => old.GetValueOrDefault(p.Key)).FirstOrDefault();
-        if (previous is null) return next;
+        if (previous is null || !SameProjection(previous, next)) return next;
         previous.CabSourceOffset = next.CabSourceOffset;
         return previous;
     }
+
+    private static bool SameProjection(LabelElement first, LabelElement second)
+        => (first.Kind, first.X, first.Y, first.Size, first.Length, first.Value, first.ImageWidth, first.ImageHeight)
+            .Equals((second.Kind, second.X, second.Y, second.Size, second.Length, second.Value, second.ImageWidth, second.ImageHeight))
+            && first.Bitmap.AsSpan().SequenceEqual(second.Bitmap);
 
     private static Dictionary<int, int> UnchangedCommands(CabSourceEditor before, CabSourceEditor after)
     {

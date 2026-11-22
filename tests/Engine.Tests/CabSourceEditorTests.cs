@@ -6,6 +6,41 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class CabSourceEditorTests
 {
+    [Theory]
+    [InlineData(8, 1)]
+    [InlineData(9, 1)]
+    [InlineData(8, 2)]
+    public void Renaming_a_download_refreshes_dependent_images_without_rewriting_their_commands(int width, int height)
+    {
+        var bitmap = Enumerable.Repeat((byte)0x80, LabelLayout.BytesPerRow(width) * height).ToArray();
+        var original = new LabelLayout { Elements =
+        [
+            new() { Kind = LabelElementKind.Image, ImageWidth = 8, ImageHeight = 1, Bitmap = [0] },
+            new() { Kind = LabelElementKind.Image, X = 20, ImageWidth = width, ImageHeight = height, Bitmap = bitmap },
+            new() { Kind = LabelElementKind.Text, Value = "unaffected" },
+        ] };
+        var generated = CabParser.Parse(CabLabelLayout.Render(original));
+        var secondImage = CabValidator.Validate(generated).Commands.Where(c => c.Syntax.Command == "I").Last();
+        var bytes = generated.Write([new(secondImage.Syntax.Range, [])]);
+        var layout = CabLabelImport.Read(bytes); var oldImage = Assert.Single(layout.Elements, e => e.Kind == LabelElementKind.Image);
+        var text = Assert.Single(layout.Elements, e => e.Kind == LabelElementKind.Text);
+        var before = new CabSourceEditor(bytes);
+        var downloads = before.Validation.Commands.Where(c => c.Syntax.Command == "d").ToArray();
+        Assert.Equal(2, downloads.Length);
+        var firstName = downloads[0].Parameter("name")!.Value!; var secondName = downloads[1].Parameter("name")!.Value!;
+        var index = Enumerable.Range(0, before.Sections.Count).Single(i => before.Sections[i].Editable?.Text.Contains("d BMP;" + secondName, StringComparison.Ordinal) == true);
+        var after = before.Edit(index, before.Sections[index].Editable!.Text.Replace(secondName, firstName, StringComparison.Ordinal));
+        CabSourceReconcile.Apply(layout, before, after);
+        var image = Assert.Single(layout.Elements, e => e.Kind == LabelElementKind.Image);
+        Assert.NotSame(oldImage, image); Assert.Equal(bitmap, image.Bitmap);
+        Assert.Equal(width, image.ImageWidth); Assert.Equal(height, image.ImageHeight);
+        Assert.Same(text, Assert.Single(layout.Elements, e => e.Kind == LabelElementKind.Text));
+        Assert.Equal(after.Document.Write(), CabLabelLayout.Render(layout));
+        var firstCommand = Assert.Single(before.Validation.Commands, c => c.Syntax.Command == "I");
+        var nextCommand = Assert.Single(after.Validation.Commands, c => c.Syntax.Command == "I");
+        Assert.Equal(before.Document.Bytes(firstCommand.Syntax.Range), after.Document.Bytes(nextCommand.Syntax.Range));
+    }
+
     [Fact]
     public void Unicode_separators_literal_escape_symbols_and_adjacent_controls_remain_distinct()
     {
