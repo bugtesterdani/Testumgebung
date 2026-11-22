@@ -190,6 +190,6 @@ internal sealed partial class CabSourceWindow : Window
     {
         if (_completion.SelectedItem is not CabCompletionItem item || _active is null) return;
         _active.Selection.Text = item.Insertion;
-        _active.Focus();
+        _active?.Focus();
     }
 }

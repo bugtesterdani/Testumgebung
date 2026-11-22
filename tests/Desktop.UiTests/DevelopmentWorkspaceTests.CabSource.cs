@@ -46,8 +46,14 @@ public sealed partial class DevelopmentWorkspaceTests
 
     private static void VerifySourceHistoryAcrossProtection(CabSourceWindow source)
     {
-        var bytes = source.Editor.Document.Write(); var text = source.Editor.Sections[0].Editable!.Text;
-        source.ApplyText(0, "␛e." + text);
+        var bytes = source.Editor.Document.Write();
+        var search = Assert.Single(Descendants(source).OfType<TextBox>()); search.Text = "JS-2.3";
+        var completion = Descendants(source).OfType<ListBox>().Single(l => l.Items.OfType<Testumgebung.Domain.Labels.CabJScript.CabCompletionItem>().Any());
+        completion.SelectedItem = completion.Items.OfType<Testumgebung.Domain.Labels.CabJScript.CabCompletionItem>()
+            .Single(i => i.CatalogId == "JS-2.3" && i.Kind == Testumgebung.Domain.Labels.CabJScript.CabCompletionKind.Command);
+        var editor = Assert.Single(Descendants(source).OfType<RichTextBox>());
+        var start = editor.Document.Blocks.FirstBlock.ContentStart; editor.Selection.Select(start, start); editor.Focus();
+        Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Auswahl einfügen")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Assert.Contains(source.Editor.Sections, s => s.IsProtected);
         var undo = Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Rückgängig"));
         Assert.True(undo.IsEnabled); undo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
