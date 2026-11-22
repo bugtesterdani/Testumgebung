@@ -13,11 +13,17 @@ internal static class CabBarcodeNames
         var offset = 0;
         foreach (var expected in declared.Where(c => c is not (' ' or '\t')))
         {
-            while (offset < text.Length && text[offset] is ' ' or '\t') offset++;
+            offset = SkipWhitespace(text, offset);
             if (offset >= text.Length || char.ToUpperInvariant(text[offset]) != char.ToUpperInvariant(expected)) return -1;
             offset++;
         }
-        while (offset < text.Length && text[offset] is ' ' or '\t') offset++;
+        offset = SkipWhitespace(text, offset);
         return offset == text.Length || text[offset] == '+' ? offset : -1;
+    }
+
+    private static int SkipWhitespace(string text, int offset)
+    {
+        while (offset < text.Length && text[offset] is ' ' or '\t') offset++;
+        return offset;
     }
 }
