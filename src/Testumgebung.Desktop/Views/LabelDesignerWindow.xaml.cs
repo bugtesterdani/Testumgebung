@@ -32,6 +32,7 @@ public partial class LabelDesignerWindow : Window
         CabSetupCodePage.Text = layout.CabSource?.SetupCodePage ?? "UTF-8";
         CabValidationWindow.Attach((Panel)CabSetupCodePage.Parent, this, layout, cab);
         CabContentPreviewWindow.Attach((Panel)CabSetupCodePage.Parent, this, layout, cab);
+        CabSourceWindow.Attach((Panel)CabSetupCodePage.Parent, this, layout, cab);
         Gs1Identifiers.ItemsSource = Gs1LabelData.Identifiers;
         Gs1Identifiers.SelectedIndex = 1;
 
@@ -224,6 +225,7 @@ public partial class LabelDesignerWindow : Window
 
     private void UpdateSheet()
     {
+        if (_refreshingSource) return;
         Sheet.Width = _layout.WidthDots;
         Sheet.Height = _layout.HeightDots;
         Sheet.Children.Clear();
@@ -234,6 +236,7 @@ public partial class LabelDesignerWindow : Window
     {
         var visual = new Border
         {
+            Tag = element,
             Child = Preview(element),
             Background = Brushes.Transparent,
             BorderBrush = Brushes.DodgerBlue,
