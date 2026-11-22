@@ -125,7 +125,7 @@ internal sealed partial class CabSourceWindow : Window
     private void ShowDiagnostics()
     {
         _diagnostics.ItemsSource = _editor.Validation.Diagnostics.Select(d => new DiagnosticRow(d));
-        _status.Text = $"{_editor.Validation.Diagnostics.Count} Diagnosen · ESC wird als ␛ dargestellt. Änderungen sind sofort in der Grafik verfügbar. Geschützte Blöcke bleiben unverändert.";
+        _status.Text = $"{_editor.Validation.Diagnostics.Count} Diagnosen · ␛e = ESC, ␛u = wörtliches ␛. Änderungen sind sofort in der Grafik verfügbar. Geschützte Blöcke bleiben unverändert.";
     }
 
     private void Changed(int index, RichTextBox box)
@@ -139,7 +139,7 @@ internal sealed partial class CabSourceWindow : Window
             ApplyText(index, text);
             RestoreCaret(index, caret);
         }
-        catch (Exception error) when (error is ArgumentException or InvalidDataException or System.Text.EncoderFallbackException)
+        catch (Exception error) when (error is ArgumentException or InvalidDataException or FormatException or System.Text.EncoderFallbackException)
         { _status.Text = error.Message; }
     }
 

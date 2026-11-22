@@ -26,7 +26,7 @@ public static class CabSourceCatalog
         var inherited = entry.Availability(generation);
         var tooltip = Tooltip(entry);
         var insertion = Insertion(entry);
-        if (entry.Kind == "esc") insertion = insertion.Replace("ESC", "␛", StringComparison.Ordinal);
+        if (entry.Kind == "esc") insertion = insertion.Replace("ESC", "␛e", StringComparison.Ordinal);
         yield return new(entry.Id, CabCompletionKind.Command, null, entry.Command ?? entry.Title,
             entry.Title, insertion, inherited, tooltip);
         foreach (var parameter in entry.Parameters)

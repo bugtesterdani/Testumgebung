@@ -22,7 +22,7 @@ public sealed class CabSourceText
             var count = char.IsSurrogatePair(decoded, i) ? 2 : 1;
             if (decoded[i] == '\r' && i + 1 < decoded.Length && decoded[i + 1] == '\n') count = 2;
             var token = decoded.Substring(i, count);
-            var display = token is "\r" or "\r\n" ? "\n" : token.Replace('\u001b', '␛');
+            var display = CabSourceDisplay.Token(token);
             var length = encoding.GetByteCount(token);
             text.Append(display);
             for (var j = 1; j <= display.Length; j++) offsets.Add(j == display.Length ? position + length : position);
@@ -35,19 +35,21 @@ public sealed class CabSourceText
     public int CharacterOffset(int byteOffset)
     {
         var index = Array.FindLastIndex(_offsets, p => p <= byteOffset);
-        return Math.Max(0, index);
+        return Array.IndexOf(_offsets, _offsets[Math.Max(0, index)]);
     }
 
     public CabTextChange Change(string edited, string lineEnding)
     {
-        edited = edited.ReplaceLineEndings("\n");
+        edited = CabSourceDisplay.NormalizeLines(edited);
         var first = 0;
         while (first < Text.Length && first < edited.Length && Text[first] == edited[first]) first++;
-        if (first > 0 && first < Text.Length && char.IsLowSurrogate(Text[first])) first--;
+        if (InsideCharacter(first)) first--;
         var oldEnd = Text.Length; var newEnd = edited.Length;
         while (oldEnd > first && newEnd > first && Text[oldEnd - 1] == edited[newEnd - 1]) { oldEnd--; newEnd--; }
-        if (oldEnd < Text.Length && char.IsLowSurrogate(Text[oldEnd])) { oldEnd++; newEnd++; }
-        var replacement = edited[first..newEnd].Replace("\n", lineEnding, StringComparison.Ordinal).Replace('␛', '\u001b');
+        if (InsideCharacter(oldEnd)) { oldEnd++; newEnd++; }
+        var replacement = CabSourceDisplay.Source(edited[first..newEnd], lineEnding);
         return new(new(ByteOffset(first), ByteOffset(oldEnd) - ByteOffset(first)), CabEncoding.Get(CodePage).GetBytes(replacement));
     }
+
+    private bool InsideCharacter(int index) => index > 0 && index < Text.Length && _offsets[index] == _offsets[index - 1];
 }

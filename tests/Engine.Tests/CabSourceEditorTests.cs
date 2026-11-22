@@ -7,6 +7,40 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabSourceEditorTests
 {
     [Fact]
+    public void Unicode_separators_literal_escape_symbols_and_adjacent_controls_remain_distinct()
+    {
+        const string source = "J\rT 0,0,0,5,3;α␛β\u2028γ\u2029δ\x1b\x1bZ\rA 1\r";
+        var bytes = Encoding.UTF8.GetBytes(source); var editor = new CabSourceEditor(bytes);
+        var display = Assert.Single(editor.Sections).Editable!.Text;
+        Assert.Contains("␛u", display); Assert.Contains("␛e␛e", display);
+        Assert.Equal(bytes, editor.Edit(0, display).Document.Write());
+        var after = editor.Edit(0, display.Replace("α", "changed", StringComparison.Ordinal).Replace("Z", "last", StringComparison.Ordinal));
+        Assert.Equal(Encoding.UTF8.GetBytes(source.Replace("α", "changed", StringComparison.Ordinal).Replace("Z", "last", StringComparison.Ordinal)), after.Document.Write());
+    }
+
+    [Fact]
+    public void Byte_navigation_points_to_the_start_of_surrogates_and_display_escapes()
+    {
+        const string source = "J\rT 0,0,0,5,3;😀␛[DAY]\rA 1\r";
+        var editor = new CabSourceEditor(Encoding.UTF8.GetBytes(source)); var text = Assert.Single(editor.Sections).Editable!;
+        var start = Encoding.UTF8.GetByteCount(source[..source.IndexOf("😀", StringComparison.Ordinal)]);
+        var character = text.Text.IndexOf("😀", StringComparison.Ordinal);
+        Assert.Equal(character, text.CharacterOffset(start)); Assert.Equal(character, text.CharacterOffset(start + 1));
+        Assert.Equal(start, text.ByteOffset(character + 1));
+        Assert.Equal(character + 2, text.CharacterOffset(start + 4));
+    }
+
+    [Theory]
+    [InlineData("␛")]
+    [InlineData("␛x")]
+    public void Incomplete_or_unknown_escape_notation_does_not_change_the_source(string notation)
+    {
+        var editor = new CabSourceEditor("T 0,0,0,5,3;text\r"u8.ToArray()); var bytes = editor.Document.Write();
+        Assert.Throws<FormatException>(() => editor.Edit(0, editor.Sections[0].Editable!.Text + notation));
+        Assert.Equal(bytes, editor.Document.Write());
+    }
+
+    [Fact]
     public void Content_completion_inserts_recognized_functions_instead_of_catalog_ellipsis()
     {
         var items = CabSourceCatalog.Complete(CabPrinterGeneration.X4);

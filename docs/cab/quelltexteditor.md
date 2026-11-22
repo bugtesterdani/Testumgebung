@@ -38,7 +38,10 @@ keinen vollständig gültigen Befehl. Antwortfelder sind beschrieben, werden
 aber nicht als Eingabe eingefügt. Die Verfügbarkeit wird für die gespeicherte
 Standardgeneration angezeigt. Handbuchseiten stehen in Hilfetext und Tooltips.
 
-ESC wird als `␛` angezeigt und beim Bearbeiten wieder als ESC-Byte geschrieben.
+ESC wird eindeutig als `␛e` angezeigt, das wörtliche Zeichen `␛` als `␛u`.
+Auch benachbarte ESC-Bytes und das tatsächlich gedruckte Symbol bleiben dadurch
+unterscheidbar. Beim Bearbeiten wird die Darstellung in die Originalzeichen
+zurückübersetzt. Unicode-Zeilen-/Absatztrenner in Druckdaten bleiben wörtlich.
 Unveränderte Zeilen behalten ihre ursprünglichen CR-/LF-Enden. Neue Zeilen
 verwenden das dokumentierte Zeilenende der Datei. Strenge Codepage-Kodierung
 verhindert Ersatzzeichen. Nicht dekodierbare Fragmente bleiben ebenso wie
