@@ -56,11 +56,16 @@ public sealed partial class DevelopmentWorkspaceTests
         Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Auswahl einfügen")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Assert.Contains(source.Editor.Sections, s => s.IsProtected);
         var undo = Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Rückgängig"));
-        Assert.True(undo.IsEnabled); undo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.True(undo.IsEnabled); Assert.False(source.HandleKey(Key.Z, ModifierKeys.None));
+        undo.Focus(); Assert.True(source.HandleKey(Key.Z, ModifierKeys.Control));
         Assert.Equal(bytes, source.Editor.Document.Write());
         var redo = Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Wiederholen"));
-        Assert.True(redo.IsEnabled); redo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.True(redo.IsEnabled); redo.Focus(); Assert.True(source.HandleKey(Key.Y, ModifierKeys.Control));
         Assert.Contains(source.Editor.Sections, s => s.IsProtected);
+        undo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Equal(bytes, source.Editor.Document.Write());
+        redo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Contains(source.Editor.Sections, s => s.IsProtected);
+        Assert.True(source.HandleKey(Key.Space, ModifierKeys.Control)); Assert.True(search.IsKeyboardFocusWithin);
+        Assert.False(source.HandleKey(Key.Z, ModifierKeys.Control)); Assert.False(source.HandleKey(Key.A, ModifierKeys.Control));
     }
 
     private static void VerifySourceInitialization()

@@ -178,12 +178,15 @@ internal sealed partial class CabSourceWindow : Window
     internal CabSourceEditor Editor => _editor;
 
     private void OnKey(object sender, KeyEventArgs e)
+        => e.Handled = HandleKey(e.Key, Keyboard.Modifiers);
+
+    internal bool HandleKey(Key key, ModifierKeys modifiers)
     {
-        if (Keyboard.Modifiers != ModifierKeys.Control) return;
-        if (!_search.IsKeyboardFocusWithin && e.Key is Key.Z or Key.Y)
-        { TravelHistory(e.Key == Key.Y); e.Handled = true; return; }
-        if (e.Key != Key.Space) return;
-        _search.Focus(); _search.SelectAll(); e.Handled = true;
+        if (modifiers != ModifierKeys.Control) return false;
+        if (!_search.IsKeyboardFocusWithin && key is Key.Z or Key.Y)
+        { TravelHistory(key == Key.Y); return true; }
+        if (key != Key.Space) return false;
+        _search.Focus(); _search.SelectAll(); return true;
     }
 
     private void InsertCompletion()
