@@ -7,3 +7,4 @@
 /licenses/** -text -whitespace
 # Protocol fixtures deliberately contain CR, LF, ESC and binary payloads.
 /tests/Fixtures/cab/*.lbl -text -whitespace
+/tests/Fixtures/CabJScript/*.lbl -text -whitespace
