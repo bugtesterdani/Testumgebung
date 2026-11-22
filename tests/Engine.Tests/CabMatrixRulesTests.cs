@@ -38,6 +38,34 @@ public sealed class CabMatrixRulesTests
         => CabValidator.Validate(CabParser.Parse(Encoding.UTF8.GetBytes("J\rB 0,0,0," + type + ",0.3;" + text + "\rA 1\r")));
 
     [Theory]
+    [InlineData("RMQR", "m", 7)]
+    [InlineData("RMQR", "h", 3)]
+    [InlineData("GS1RMQR", "m", 7)]
+    [InlineData("GS1RMQR", "h", 3)]
+    public void Lowercase_error_levels_keep_capacity_boundaries_and_original_bytes(string type, string level, int maximum)
+    {
+        var prefix = type + "+VERSION0+EL" + level;
+        var bytes = Encoding.UTF8.GetBytes("J\rB 0,0,0," + prefix + ",.3;" + new string('A', maximum) + "\rA 1\r");
+        var document = CabParser.Parse(bytes);
+        var result = CabValidator.Validate(document);
+        Assert.False(result.HasErrors, string.Join(";", result.Diagnostics.Select(d => d.Message)));
+        Assert.Equal(level, Assert.Single(result.Commands, c => c.Syntax.Command == "B").Parameter("EL")!.Value);
+        Assert.Equal(bytes, document.Write());
+        Assert.Contains(Validate(prefix, new string('A', maximum + 1)).Diagnostics,
+            d => d.Code == "matrix-capacity" && d.Severity == CabDiagnosticSeverity.Error);
+    }
+
+    [Theory]
+    [InlineData("RMQR")]
+    [InlineData("GS1RMQR")]
+    public void Lowercase_m_preserves_the_version_13_capacity_ambiguity(string type)
+    {
+        var result = Validate(type + "+VERSION13+ELm", new string('1', 34));
+        Assert.False(result.HasErrors);
+        Assert.Contains(result.Diagnostics, d => d.Code == "matrix-capacity" && d.Severity == CabDiagnosticSeverity.Warning);
+    }
+
+    [Theory]
     [InlineData("RMQR+ELM+VERSION0", "M")]
     [InlineData("RMQR+ELH+VERSION0", "H")]
     [InlineData("MICROQR+ELL+VERSION2", "L")]

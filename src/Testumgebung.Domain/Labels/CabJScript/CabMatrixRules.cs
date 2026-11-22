@@ -40,7 +40,7 @@ internal static class CabMatrixRules
         if (id == "JS-4.2.35") return version is null or 1 || version == row.GetProperty("version").GetInt32();
         if (version is not null && version != row.GetProperty("version").GetInt32()) return false;
         var level = command.Parameter("EL")?.Value;
-        return level is null || level == row.GetProperty("level").GetString();
+        return level is null || string.Equals(level, row.GetProperty("level").GetString(), StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool Dimension(CabBoundCommand command, string name, int actual)
@@ -58,7 +58,7 @@ internal static class CabMatrixRules
         var length = entry.Id == "JS-4.2.12" ? byteLength : text.Length;
         if (length <= maximum) return;
         var uncertain = entry.Id == "JS-4.2.42" && CabDocumentRules.Number(command, "VERSION") == 13
-            && command.Parameter("EL")?.Value == "M";
+            && string.Equals(command.Parameter("EL")?.Value, "M", StringComparison.OrdinalIgnoreCase);
         diagnostics.Add("matrix-capacity", uncertain ? CabDiagnosticSeverity.Warning : CabDiagnosticSeverity.Error,
             uncertain ? "Die Kapazitätszeile für Version 13/M ist widersprüchlich; eine sichere Grenze ist nicht ableitbar."
                 : "Der Inhalt überschreitet die dokumentierte Kapazität der gewählten Matrixgröße.", entry, command.Parameter("text")!.Syntax!);

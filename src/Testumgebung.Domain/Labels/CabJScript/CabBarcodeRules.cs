@@ -38,6 +38,7 @@ internal static class CabBarcodeRules
     {
         var entry = command.Definition.Catalog;
         if (entry.Kind != "barcode") return;
+        Spelling(command, diagnostics);
         Combinations(command, diagnostics);
         var text = command.Parameter("text");
         if (text?.Value is not { } value)
@@ -52,19 +53,25 @@ internal static class CabBarcodeRules
         var section = int.Parse(entry.Section.Split('.')[^1], System.Globalization.CultureInfo.InvariantCulture);
         var type = command.Parameter("type")?.Value ?? "";
         var linear = value.Split('|')[0];
+        if (section is >= 22 and <= 26)
+        {
+            CabDataBarRules.Validate(section, linear, command, text.Syntax!, diagnostics);
+            return;
+        }
         CheckCharacters(section, Composite.Contains(section) ? linear : value, type, entry, text.Syntax!, diagnostics);
         CheckLength(section, Composite.Contains(section) ? linear : value, entry, text.Syntax!, diagnostics);
-        DataBar(section, linear, entry, text.Syntax!, diagnostics);
         Capacity(command, value, diagnostics);
     }
 
-    private static void DataBar(int section, string linear, CabCatalogEntry entry, CabSyntaxNode source, CabDiagnosticCollector diagnostics)
+    private static void Spelling(CabBoundCommand command, CabDiagnosticCollector diagnostics)
     {
-        if (section is >= 22 and <= 26 && Regex.IsMatch(linear, "^[0-9]{14}$", RegexOptions.CultureInvariant) && !CheckDigit(linear))
-            Error("barcode-checksum", "GTIN-Prüfziffer stimmt nicht.", entry, source, diagnostics);
-        if (section == 22 && linear.Length > 0 && linear[0] is not ('0' or '1'))
-            Error("barcode-limited", "GS1 DataBar Limited benötigt führende 0 oder 1.", entry, source, diagnostics);
+        var type = command.Parameter("type");
+        if (type?.Value is not { } value || !value.Any(char.IsUpper) || !value.Any(char.IsLower)) return;
+        diagnostics.Add("barcode-lettercase", CabDiagnosticSeverity.Warning,
+            "Gemischte Groß-/Kleinschreibung des Barcodetyps: Typ erkannt; Klarschriftverhalten ist hierfür nicht eindeutig beschrieben.",
+            command.Definition.Catalog, type.Syntax!);
     }
+
 
     private static bool Dynamic(string value, IReadOnlySet<string> names)
     {
@@ -111,8 +118,11 @@ internal static class CabBarcodeRules
             Error("barcode-length", "UPC-E0 benötigt führende Null und sieben bis zwölf Eingabeziffern.", entry, source, diagnostics);
         if (section is 20 or 21)
         {
-            var maximum = value.All(char.IsAsciiDigit) ? 74 : 41;
-            if (value.Length > maximum) Error("barcode-length", "GS1 DataBar Expanded überschreitet die dokumentierte Kapazität.", entry, source, diagnostics);
+            // Parentheses delimit human-readable application identifiers; they are
+            // not encoded payload characters. Other characters remain significant.
+            var payload = Regex.Replace(value, @"\(([0-9]{2,4})\)", "$1", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+            var maximum = payload.All(char.IsAsciiDigit) ? 74 : 41;
+            if (payload.Length > maximum) Error("barcode-length", "GS1 DataBar Expanded überschreitet die dokumentierte Kapazität.", entry, source, diagnostics);
         }
         if (section == 8 && value.Length > 2725) Error("barcode-length", "Codablock F überschreitet 2725 Zeichen.", entry, source, diagnostics);
     }

@@ -5,3 +5,6 @@
 /THIRD-PARTY-NOTICES.md text eol=lf
 /LICENSE-STATUS.md text eol=lf
 /licenses/** -text -whitespace
+# Protocol fixtures deliberately contain CR, LF, ESC and binary payloads.
+/tests/Fixtures/cab/*.lbl -text -whitespace
+/tests/Fixtures/CabJScript/*.lbl -text -whitespace

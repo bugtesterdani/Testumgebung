@@ -120,9 +120,10 @@ internal static class CabFieldGrammar
         var leading = raw.Length - raw.TrimStart().Length;
         var type = builder.Definition.Parameter("type");
         var candidates = type.Parameter.Values.Select(v => v.Value).Concat(type.AdditionalValues).OrderByDescending(v => v.Length);
-        var selected = candidates.FirstOrDefault(v => text == v || text.StartsWith(v + "+", StringComparison.Ordinal));
-        var length = selected?.Length ?? (text.IndexOf('+') is var plus && plus >= 0 ? plus : text.Length);
-        builder.Add("type", slice.Subrange(range, leading, length));
+        var selected = candidates.FirstOrDefault(v => CabBarcodeNames.PrefixLength(text, v) >= 0);
+        var length = selected is not null ? CabBarcodeNames.PrefixLength(text, selected) : (text.IndexOf('+') is var plus && plus >= 0 ? plus : text.Length);
+        var tokenLength = text[..length].TrimEnd(' ', '\t').Length;
+        builder.Add("type", slice.Subrange(range, leading, tokenLength));
         if (text.Length > length)
             CabModifierGrammar.Barcode(builder, slice.Subrange(range, leading + length, text.Length - length));
     }
@@ -151,9 +152,12 @@ internal static class CabFieldGrammar
         builder.Add("ge", slice.Subrange(range, 0, colon));
         var values = slice.Subrange(range, colon + 1, text.Length - colon - 1);
         builder.Add("settings", values);
-        var fields = slice.Split(values, ',');
-        var option = fields.ToList().FindIndex(f => slice.Protocol(f).StartsWith("[", StringComparison.Ordinal));
-        var count = option < 0 ? fields.Count : option;
+        var option = slice.Protocol(values).IndexOf('[');
+        var numeric = option < 0 ? values : slice.Trim(slice.Subrange(values, 0, option));
+        if (option >= 0 && slice.Protocol(numeric).EndsWith(','))
+            numeric = slice.Trim(slice.Subrange(numeric, 0, slice.Protocol(numeric).Length - 1));
+        var fields = slice.Split(numeric, ',');
+        var count = fields.Count;
         var names = builder.Definition.Catalog.Id switch
         {
             "JS-4.7.1" => new[] { "radius1", "radius2", "width" },
@@ -162,8 +166,18 @@ internal static class CabFieldGrammar
             _ => []
         };
         for (var i = 0; i < Math.Min(count, names.Length); i++) builder.Add(names[i], fields[i]);
-        if (count > names.Length) builder.Issue("graphic-extra", "Grafikparameter ist im Handbuch nicht eindeutig beschrieben.", fields[names.Length]);
-        if (option >= 0) CabModifierGrammar.Graphic(builder, new(fields[option].Offset, range.End - fields[option].Offset));
+        GraphicExtra(builder, fields, names.Length);
+        if (option >= 0) CabModifierGrammar.Graphic(builder, slice.Subrange(values, option, slice.Protocol(values).Length - option));
+    }
+
+    private static void GraphicExtra(CabBindingBuilder builder, IReadOnlyList<CabSourceRange> fields, int expected)
+    {
+        if (fields.Count <= expected) return;
+        var ambiguous = builder.Definition.Catalog.Id == "JS-4.7.1" && fields.Count == 4
+            && decimal.TryParse(builder.Slice.Protocol(fields[3]), CultureInfo.InvariantCulture, out _);
+        builder.Issue(ambiguous ? "graphic-ambiguous" : "graphic-extra",
+            ambiguous ? "Vierter Kreiswert steht im Handbuchbeispiel, seine Bedeutung ist nicht beschrieben; Wert bleibt unverändert."
+                : "Zusätzlicher Grafikparameter ist für diese Syntax nicht dokumentiert.", fields[expected]);
     }
 
     private static void BarcodeControls(CabBindingBuilder builder, CabSourceRange content)

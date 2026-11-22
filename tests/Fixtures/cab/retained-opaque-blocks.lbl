@@ -1,0 +1,15 @@
+; Synthetic opaque data, no executable printer program.
+d BIN;fixture
+<BASE64>
+AAECAwQF
+</BASE64>
+<ABC>
+not a JScript command
+J
+A 999
+</ABC>
+<ENCRYPTED JOB>
+opaque synthetic payload
+</ENCRYPTED JOB>
+<ENCRYPTED LABEL: 000000000000>
+unframed opaque rest

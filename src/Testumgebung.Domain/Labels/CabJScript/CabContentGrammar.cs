@@ -16,7 +16,7 @@ public static class CabContentGrammar
         return field.Argument.Split(',');
     }
 
-    public static IReadOnlyList<string> Errors(CabContentField field, IReadOnlySet<string>? previousNames = null)
+    public static IReadOnlyList<string> Errors(CabContentField field, IReadOnlySet<string>? previousNames = null, bool barcode = false)
     {
         var errors = new List<string>();
         var args = Arguments(field);
@@ -24,11 +24,11 @@ public static class CabContentGrammar
         var (minimum, maximum) = Arity(id);
         if (args.Count < minimum || args.Count > maximum)
             errors.Add($"Erwartete Parameterzahl: {minimum}…{(maximum == int.MaxValue ? "beliebig" : maximum)}.");
-        if (args.Any(a => a.Length == 0) && id is not (63 or 65 or 66 or 97))
+        if (args.Any(a => a.Length == 0) && id is not (63 or 65 or 66 or 77 or 97))
             errors.Add("Leerer Parameter ist hier nicht dokumentiert.");
         SpecialChecks(id, args, errors);
         BoundChecks(field, previousNames, errors);
-        CabContentValueRules.Check(id, args, previousNames, errors);
+        CabContentValueRules.Check(id, args, previousNames, errors, barcode);
         if (field.Name.Contains('-', StringComparison.Ordinal) && id is 90 or 91
             && !int.TryParse(field.Name[(field.Name.IndexOf('-') + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out _))
             errors.Add("Ungültige OPC-UA-Verbindungskennung.");
@@ -41,7 +41,8 @@ public static class CabContentGrammar
         {
             var rule = CabDefinitions.ParameterRule(field.Definition.Id, argument.Parameter.Name);
             if (argument.Value.Length == 0 && MayOmit(Number(field), argument.Parameter.Name)) continue;
-            if (names?.Contains(argument.Value) == true && (rule.DataType is CabDataType.Number or CabDataType.Integer
+            var reference = rule.DataType is CabDataType.Number or CabDataType.Integer ? argument.Value.Trim() : argument.Value;
+            if (names?.Contains(reference) == true && (rule.DataType is CabDataType.Number or CabDataType.Integer
                 || Number(field) is >= 50 and <= 52)) continue;
             var error = rule.Validate(argument.Value);
             if (error is not null) errors.Add(argument.Parameter.Name + ": " + error);
@@ -55,6 +56,7 @@ public static class CabContentGrammar
     };
 
     internal static int Number(CabContentField field) => int.Parse(field.Definition.Section.AsSpan(2), CultureInfo.InvariantCulture);
+    internal static bool AcceptsBare(CabCatalogEntry entry) => Arity(int.Parse(entry.Section.AsSpan(2), CultureInfo.InvariantCulture)).Minimum == 0;
 
     private static readonly IReadOnlyDictionary<int, (int Minimum, int Maximum)> Arities = BuildArities();
 

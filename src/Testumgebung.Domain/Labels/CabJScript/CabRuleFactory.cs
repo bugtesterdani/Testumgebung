@@ -23,8 +23,19 @@ internal static class CabRuleFactory
     internal static CabParameterRule Create(CabCatalogEntry entry, CabCatalogParameter parameter)
     {
         var rule = Classify(entry, parameter) with
-        { Required = entry.Id == "JS-3.13" ? parameter.Name != "ss" : Required(entry, parameter) };
+        { Required = entry.Id == "JS-3.13" ? parameter.Name != "ss" : Required(entry, parameter),
+            NormalizeBarcodeType = entry.Kind == "barcode" && parameter.Name == "type",
+            AllowNumericUnicode = entry.Id == "JS-4.2" && parameter.Name == "U.xxxx",
+            IgnoreCaseChoices = IgnoreCase(entry, parameter) };
         return CabRuleBounds.Apply(rule);
+    }
+
+    private static bool IgnoreCase(CabCatalogEntry entry, CabCatalogParameter parameter)
+    {
+        if (parameter.Name is "cp" or "codepage") return true;
+        if (entry.Id == "JS-4.15" && parameter.Name == "ptype") return true;
+        if (entry.Kind == "speicherkarte" && parameter.Name == "type") return true;
+        return (entry.Kind == "barcode" || entry.Id == "JS-4.2") && parameter.Name is "options" or "EL";
     }
 
     private static CabParameterRule Rule(CabCatalogEntry e, CabCatalogParameter p, CabDataType type, CabParameterUnit unit = CabParameterUnit.None)

@@ -686,3 +686,12 @@ Der Qualitätslauf verwendet einen per SHA-256 gepinnten Windows-Testclient. Er 
 ## Optionale LabJack-/RedLab-Laufzeiten
 
 Die neue DIO-/AIO-Anbindung verteilt keine Herstellerdateien. Lizenzvorprüfung und notwendige Hinweise: [LabJack und RedLab/MCC](docs/licensing/labjack-redlab.md), [Hinweis im Lizenzpaket](licenses/third-party/labjack-redlab/README.md). Versionen sind extern, nicht festgelegt und nicht mitgeliefert.
+# Optionales lokales cab-PDF-Prüfwerkzeug
+
+AP 8 ergänzt ausschließlich für den ausdrücklich aktivierten lokalen Handbuchtest
+die in `build/requirements-cab-manual.txt` fest gebundenen Pakete pdfminer.six
+20251230, charset-normalizer 3.5.2, cryptography 50.0.2, cffi 2.1.1 und pycparser
+3.12. Die Originaltexte und ihr SHA-256-Inventar liegen unter
+`licenses/optional-cab-manual/`. Sie werden nicht automatisch installiert und
+sind keine Laufzeitabhängigkeit der Anwendung. Der Test prüft Pins und Lizenzdateien.
+Hersteller-PDF und daraus extrahierte Beispiele bleiben lokale, ignorierte Daten.

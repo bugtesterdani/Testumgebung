@@ -22,7 +22,7 @@ internal static class CabContentRuleFactory
         [(97,"freq")]=new(0,MinimumExclusive:true), [(82,"l")]=new(0)
     };
     private static readonly IReadOnlyDictionary<(int, string), int> MaximumLengths = new Dictionary<(int, string), int>
-    { [(53,"t")]=1, [(53,"d")]=1, [(53,"o")]=1, [(77,"fill")]=1, [(66,"x")]=16, [(96,"text")]=32, [(100,"query")]=128, [(101,"query")]=128 };
+    { [(53,"t")]=1, [(53,"d")]=1, [(53,"o")]=1, [(66,"x")]=16, [(96,"text")]=32, [(100,"query")]=128, [(101,"query")]=128 };
     private static readonly HashSet<(int, string)> LiteralParameters =
     [ (66,"D"), (66,"R"), (66,"J"), (96,"D"), (96,"R"), (96,"J") ];
     private static readonly IReadOnlyDictionary<(int, string), string> Patterns = new Dictionary<(int, string), string>
@@ -35,6 +35,7 @@ internal static class CabContentRuleFactory
         var rule = new CabParameterRule(entry, parameter, Type(id, parameter.Name))
         {
             NumericRange = Ranges.GetValueOrDefault(key), Pattern = Patterns.GetValueOrDefault(key),
+            IgnoreCaseChoices = id == 95,
             Literal = LiteralParameters.Contains(key) ? parameter.Name : null,
             EvenInteger = key is (63, "start") or (63, "len")
         };

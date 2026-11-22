@@ -61,7 +61,14 @@ public static class CabContentParser
         var lookup = name;
         if (name.StartsWith("OPCUA-", StringComparison.Ordinal)) lookup = "OPCUA";
         if (name.StartsWith("OPCUALOG-", StringComparison.Ordinal)) lookup = "OPCUALOG";
-        if (Functions.TryGetValue(lookup, out var function)) return (function, name, argument);
+        if (Functions.TryGetValue(lookup, out var function))
+        {
+            // A bare SER, for example, can name a previous field; the actual SER
+            // function requires a colon and arguments (manual example p. 345).
+            if (colon < 0 && names?.Contains(name) == true && !CabContentGrammar.AcceptsBare(function))
+                return (CabCatalog.Default["JS-5.88"], name, null);
+            return (function, name, argument);
+        }
         var comma = body.IndexOf(',');
         var reference = comma < 0 ? body : body[..comma];
         if (names?.Contains(reference) == true)

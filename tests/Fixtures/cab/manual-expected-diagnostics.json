@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "manual": "07/2026, Firmware 5.48, 382 Seiten",
+  "cases": [
+    {
+      "page": 46,
+      "ordinal": 1,
+      "sourceSha256": "38478B45FD7E8F4CCE10657A77D9ED5ECCADF2AC10107758F54B07563A421F40",
+      "reason": "Feldname enthält ein Leerzeichen; die Namensregel erlaubt nur Buchstaben und Ziffern.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.9",
+          "Message": "fieldname: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 9,
+          "Column": 3
+        }
+      ]
+    },
+    {
+      "page": 74,
+      "ordinal": 2,
+      "sourceSha256": "93FB8F051161CA64148727993264E3728AFFE6B7A3B46E600577C90886E11EFA",
+      "reason": "Feldname enthält Unterstrich; zusätzlich überschreitet der Prompt die dokumentierten 16 Zeichen.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 6,
+          "Column": 3
+        },
+        {
+          "Code": "content-parameter",
+          "CatalogId": "JS-5.66",
+          "Message": "x: Wert ist zu lang.",
+          "Line": 6,
+          "Column": 30
+        }
+      ]
+    },
+    {
+      "page": 96,
+      "ordinal": 1,
+      "sourceSha256": "50A18A7927DDAFEB247CD0BD1258F907372E9A07AE8414E490B2598BEC4CA2AD",
+      "reason": "CODE39 ohne FULL-Option enthält Kleinbuchstaben außerhalb des dokumentierten Zeichenvorrats.",
+      "diagnostics": [
+        {
+          "Code": "barcode-characters",
+          "CatalogId": "JS-4.2.9",
+          "Message": "Barcodeinhalt enthält nicht zulässige Zeichen.",
+          "Line": 7,
+          "Column": 26
+        },
+        {
+          "Code": "barcode-characters",
+          "CatalogId": "JS-4.2.9",
+          "Message": "Barcodeinhalt enthält nicht zulässige Zeichen.",
+          "Line": 8,
+          "Column": 30
+        }
+      ]
+    },
+    {
+      "page": 106,
+      "ordinal": 1,
+      "sourceSha256": "257690E8C927C8F89702F165CA28D8C5699FEAF47FA7EF9C2717B025BA5B8C13",
+      "reason": "DP-Leitcode enthält Punktzeichen und überschreitet die dokumentierte Eingabelänge 11/13.",
+      "diagnostics": [
+        {
+          "Code": "barcode-characters",
+          "CatalogId": "JS-4.2.13",
+          "Message": "Barcodeinhalt enthält nicht zulässige Zeichen.",
+          "Line": 5,
+          "Column": 22
+        },
+        {
+          "Code": "barcode-length",
+          "CatalogId": "JS-4.2.13",
+          "Message": "Eingabelänge passt nicht zur Symbologie (11/13).",
+          "Line": 5,
+          "Column": 22
+        }
+      ]
+    },
+    {
+      "page": 123,
+      "ordinal": 1,
+      "sourceSha256": "5CBC9D8DCEBD91AFC5BF996E658756D64CD00A3B50CEAF0DCEC4030005795980",
+      "reason": "Nach führender Nullergänzung stimmt die GTIN-Prüfziffer nicht; die Zahlenfolge wird unverändert erhalten.",
+      "diagnostics": [
+        {
+          "Code": "barcode-checksum",
+          "CatalogId": "JS-4.2.22",
+          "Message": "GTIN-Prüfziffer stimmt nicht.",
+          "Line": 5,
+          "Column": 27
+        }
+      ]
+    },
+    {
+      "page": 125,
+      "ordinal": 1,
+      "sourceSha256": "83A9E4489C06BB6A02E4374188E484A9AB5D65BEC27C8535DB643F9B3EA0EC75",
+      "reason": "Die kurze GTIN ergibt nach dokumentierter Nullergänzung keine gültige Prüfziffer.",
+      "diagnostics": [
+        {
+          "Code": "barcode-checksum",
+          "CatalogId": "JS-4.2.23",
+          "Message": "GTIN-Prüfziffer stimmt nicht.",
+          "Line": 5,
+          "Column": 22
+        }
+      ]
+    },
+    {
+      "page": 127,
+      "ordinal": 1,
+      "sourceSha256": "15D2F053C0F4A2114315B510490B9B4F3A3566654276C348610F088D08A8B22A",
+      "reason": "Die gedruckte GTIN hat keine passende Prüfziffer.",
+      "diagnostics": [
+        {
+          "Code": "barcode-checksum",
+          "CatalogId": "JS-4.2.24",
+          "Message": "GTIN-Prüfziffer stimmt nicht.",
+          "Line": 5,
+          "Column": 31
+        }
+      ]
+    },
+    {
+      "page": 129,
+      "ordinal": 1,
+      "sourceSha256": "5F0A84D244CA9B4E566BB2CCC8A17E18F29BBE2DDC64E79ED347BCE76BCCD33F",
+      "reason": "Die gedruckte GTIN hat keine passende Prüfziffer.",
+      "diagnostics": [
+        {
+          "Code": "barcode-checksum",
+          "CatalogId": "JS-4.2.25",
+          "Message": "GTIN-Prüfziffer stimmt nicht.",
+          "Line": 5,
+          "Column": 36
+        }
+      ]
+    },
+    {
+      "page": 131,
+      "ordinal": 1,
+      "sourceSha256": "53D5FD7E79BB9B890FE578A6EB7AAE55B4D814A8F76C3357146DD906104E4DA0",
+      "reason": "Die gedruckte GTIN hat keine passende Prüfziffer.",
+      "diagnostics": [
+        {
+          "Code": "barcode-checksum",
+          "CatalogId": "JS-4.2.26",
+          "Message": "GTIN-Prüfziffer stimmt nicht.",
+          "Line": 5,
+          "Column": 33
+        }
+      ]
+    },
+    {
+      "page": 181,
+      "ordinal": 1,
+      "sourceSha256": "A25AE2DF380B5D1435F146E020D32CB892539B6F071EC8961726345FDBBC4BCC",
+      "reason": "RFID P:-10 liegt außerhalb des X4-Bereichs; ältere Generationen unterstützen andere verwendete Optionen nicht.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "pos: Wert liegt außerhalb des dokumentierten Bereichs.",
+          "Line": 1,
+          "Column": 21
+        }
+      ]
+    },
+    {
+      "page": 238,
+      "ordinal": 1,
+      "sourceSha256": "D04EE4D7965D9A2BBB513939D8CD7781242A6A157755ED0E92F3F8BE1A83F7A2",
+      "reason": "Mehrere Namen enthalten Unterstriche, obwohl die Namensdefinition nur Buchstaben/Ziffern zulässt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 4,
+          "Column": 3
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.17",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 5,
+          "Column": 3
+        },
+        {
+          "Code": "content-parameter",
+          "CatalogId": "JS-5.88",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 6,
+          "Column": 10
+        }
+      ]
+    },
+    {
+      "page": 286,
+      "ordinal": 2,
+      "sourceSha256": "B65BDA4A5D1891536716B05027B757FE3B8A43972AE159A6EC7A4D2B7AAF94ED",
+      "reason": "Zwei Textzeilen lassen den erforderlichen Rotationswert leer.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "r: Invariante Dezimalzahl erwartet.",
+          "Line": 5,
+          "Column": 16
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "r: Invariante Dezimalzahl erwartet.",
+          "Line": 6,
+          "Column": 14
+        }
+      ]
+    },
+    {
+      "page": 293,
+      "ordinal": 1,
+      "sourceSha256": "823B8066CED369402AC4C4815D003AF7123E0D5885208FC690D9A97A6AEF7013",
+      "reason": "Die historische Kurzbezeichnung 2OF5 gehört nicht zu den geprüften Barcode-Typen.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.2",
+          "Message": "type: Unbekannter Auswahlwert.",
+          "Line": 5,
+          "Column": 11
+        }
+      ]
+    },
+    {
+      "page": 294,
+      "ordinal": 1,
+      "sourceSha256": "B8625476121C70A02C75CC623FB28ABBAD414EA6FC08F95C4396E2870F949336",
+      "reason": "CODE39-Beispiel lässt den erforderlichen ratio-Parameter weg; kein Standardwert belegt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.2.9",
+          "Message": "ratio: Pflichtparameter fehlt.",
+          "Line": 5,
+          "Column": 1
+        }
+      ]
+    },
+    {
+      "page": 295,
+      "ordinal": 1,
+      "sourceSha256": "98F16D377707F901656E547B304A395AEF1B79708F1C64E8718721B3C0FABD0B",
+      "reason": "CODE39-Beispiel lässt den erforderlichen ratio-Parameter weg; kein Standardwert belegt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.2.9",
+          "Message": "ratio: Pflichtparameter fehlt.",
+          "Line": 5,
+          "Column": 1
+        }
+      ]
+    },
+    {
+      "page": 298,
+      "ordinal": 1,
+      "sourceSha256": "88062ACC8DC2D588429F094B48A8B0F6C2A140998C062E8CB84A9FB85F383B15",
+      "reason": "Drei Feldnamen enthalten Unterstriche entgegen der dokumentierten Namensregel.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 5,
+          "Column": 3
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 6,
+          "Column": 3
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 7,
+          "Column": 3
+        }
+      ]
+    },
+    {
+      "page": 300,
+      "ordinal": 1,
+      "sourceSha256": "A441D581384F92B1A0B75CD4DE5FF3A977D86E727C195AD410896C531F971CC0",
+      "reason": "RFID P:-10 außerhalb X4-Bereich und erforderlicher tagtype fehlt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "pos: Wert liegt außerhalb des dokumentierten Bereichs.",
+          "Line": 3,
+          "Column": 14
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "tagtype: Pflichtparameter fehlt.",
+          "Line": 3,
+          "Column": 1
+        }
+      ]
+    },
+    {
+      "page": 301,
+      "ordinal": 1,
+      "sourceSha256": "1D5534AAC03BBBC33A72C4CC3A3DDC4214FD2D302DA66CB60DB51133E6A6F73B",
+      "reason": "RFID P:-10 außerhalb X4-Bereich, erforderlicher tagtype fehlt und Feldname enthält Unterstrich.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "pos: Wert liegt außerhalb des dokumentierten Bereichs.",
+          "Line": 3,
+          "Column": 14
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "tagtype: Pflichtparameter fehlt.",
+          "Line": 3,
+          "Column": 1
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 5,
+          "Column": 3
+        }
+      ]
+    },
+    {
+      "page": 305,
+      "ordinal": 1,
+      "sourceSha256": "F88E55922EFDC6BA1EA3CCC80DF3CFA9FF48052B4B8DA1EABC7CA8909DE3508B",
+      "reason": "RFID P:-10 außerhalb X4-Bereich und erforderlicher tagtype fehlt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "pos: Wert liegt außerhalb des dokumentierten Bereichs.",
+          "Line": 3,
+          "Column": 14
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "tagtype: Pflichtparameter fehlt.",
+          "Line": 3,
+          "Column": 1
+        }
+      ]
+    },
+    {
+      "page": 306,
+      "ordinal": 1,
+      "sourceSha256": "3B7631162D31A8ACDE2879F560F4AE810295B6D2D2F6475AF174535C00F25EF1",
+      "reason": "RFID P:-10 außerhalb X4-Bereich und erforderlicher tagtype fehlt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "pos: Wert liegt außerhalb des dokumentierten Bereichs.",
+          "Line": 3,
+          "Column": 14
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "tagtype: Pflichtparameter fehlt.",
+          "Line": 3,
+          "Column": 1
+        }
+      ]
+    },
+    {
+      "page": 307,
+      "ordinal": 1,
+      "sourceSha256": "0CFDA7AAC3F3D28FEC8E44096BFBC7D19D7C6BB30D16C3BA1BA8B4599AE5FBFF",
+      "reason": "RFID P:-10 außerhalb X4-Bereich und erforderlicher tagtype fehlt.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "pos: Wert liegt außerhalb des dokumentierten Bereichs.",
+          "Line": 3,
+          "Column": 14
+        },
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.5.4",
+          "Message": "tagtype: Pflichtparameter fehlt.",
+          "Line": 3,
+          "Column": 1
+        }
+      ]
+    },
+    {
+      "page": 328,
+      "ordinal": 1,
+      "sourceSha256": "3B7455470BE708E8CAF4EE92968C05ABE6EEC06CC6A0E703B603283A49EB4ABA",
+      "reason": "Prompt überschreitet die dokumentierte Höchstlänge von 16 Zeichen.",
+      "diagnostics": [
+        {
+          "Code": "content-parameter",
+          "CatalogId": "JS-5.66",
+          "Message": "x: Wert ist zu lang.",
+          "Line": 3,
+          "Column": 23
+        }
+      ]
+    },
+    {
+      "page": 338,
+      "ordinal": 1,
+      "sourceSha256": "9578F5A59A8B71D17ABACFE3193BEE65E085C5024E5CB89B0207F4652BA70457",
+      "reason": "Feldname enthält einen Unterstrich entgegen der dokumentierten Namensregel.",
+      "diagnostics": [
+        {
+          "Code": "parameter-value",
+          "CatalogId": "JS-4.16",
+          "Message": "name: Name muss mit einem Buchstaben beginnen und darf nur Buchstaben/Ziffern enthalten.",
+          "Line": 8,
+          "Column": 3
+        }
+      ]
+    },
+    {
+      "page": 344,
+      "ordinal": 1,
+      "sourceSha256": "DA4B05A847E78634A957F06F307DB0F9FCA5811AC9FF835213413CAEB2746F0C",
+      "reason": "Prompt überschreitet die dokumentierte Höchstlänge von 16 Zeichen.",
+      "diagnostics": [
+        {
+          "Code": "content-parameter",
+          "CatalogId": "JS-5.66",
+          "Message": "x: Wert ist zu lang.",
+          "Line": 4,
+          "Column": 19
+        }
+      ]
+    },
+    {
+      "page": 376,
+      "ordinal": 1,
+      "sourceSha256": "6538F208650048BB187E71997116FE251A9A81C61C270CCD70789CB032D57CE5",
+      "reason": "Prompt überschreitet die dokumentierte Höchstlänge von 16 Zeichen.",
+      "diagnostics": [
+        {
+          "Code": "content-parameter",
+          "CatalogId": "JS-5.66",
+          "Message": "x: Wert ist zu lang.",
+          "Line": 4,
+          "Column": 21
+        }
+      ]
+    }
+  ]
+}

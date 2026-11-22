@@ -7,7 +7,7 @@ internal static class CabContentValueRules
 {
     private static readonly IReadOnlyDictionary<int, int> BinaryWidths = new Dictionary<int, int>
     { [69]=8, [70]=16, [71]=16, [72]=32, [73]=32, [74]=64, [75]=64 };
-    internal static void Check(int id, IReadOnlyList<string> args, IReadOnlySet<string>? names, List<string> errors)
+    internal static void Check(int id, IReadOnlyList<string> args, IReadOnlySet<string>? names, List<string> errors, bool barcode)
     {
         if (BinaryWidths.TryGetValue(id, out var bits))
         {
@@ -16,12 +16,13 @@ internal static class CabContentValueRules
         if (id == 68)
             foreach (var arg in args.Take(2)) CheckAlphabet(arg, errors);
         if (id == 76 && args.Count == 2) CheckBits(args, names, errors);
-        if (id == 103 && args.Count > 0) CheckUnicode(args[0], errors);
+        if (id == 103 && args.Count > 0) CheckUnicode(args[0], errors, barcode);
         if (id == 66) CheckPrompt(args, errors);
     }
 
     private static void CheckUnsigned(string value, int bits, List<string> errors)
     {
+        value = value.Trim(' ', '\t');
         var hex = value.StartsWith('$');
         var success = BigInteger.TryParse(hex ? "0" + value[1..] : value,
             hex ? NumberStyles.AllowHexSpecifier : NumberStyles.None, CultureInfo.InvariantCulture, out var number);
@@ -48,11 +49,11 @@ internal static class CabContentValueRules
         }
     }
 
-    private static void CheckUnicode(string value, List<string> errors)
+    private static void CheckUnicode(string value, List<string> errors, bool barcode)
     {
-        if (CabCatalog.Default["JS-5.103"].Parameters[0].Values.Any(v => v.Value == value)) return;
-        if (!value.StartsWith('$') || !int.TryParse(value.AsSpan(1), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var scalar)
-            || !System.Text.Rune.IsValid(scalar)) errors.Add("Unicode erwartet einen gültigen $Hex-Skalarwert oder dokumentierten Steuerzeichennamen.");
+        var parameter = barcode ? CabCatalog.Default["JS-4.2"].Parameters.Single(p => p.Name == "U.xxxx") : CabCatalog.Default["JS-5.103"].Parameters[0];
+        if (parameter.Values.Any(v => v.Value == value)) return;
+        if (!CabUnicodeScalar.TryParse(value, barcode, out _)) errors.Add("Unicode erwartet einen gültigen Skalarwert oder dokumentierten Steuerzeichennamen.");
     }
 
     private static void CheckPrompt(IReadOnlyList<string> args, List<string> errors)

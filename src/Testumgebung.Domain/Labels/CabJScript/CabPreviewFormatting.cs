@@ -9,7 +9,7 @@ internal sealed partial class CabPreviewContext
     {
         foreach (var field in fields)
         {
-            if (field.Nested || CabContentGrammar.Errors(field, Names).Count > 0) continue;
+            if (field.Nested || CabContentGrammar.Errors(field, Names, barcode).Count > 0) continue;
             try { ConfigureOne(field); }
             catch (Exception error) when (error is FormatException or OverflowException or ArgumentException or InvalidOperationException)
             { _invalidModifiers.Add(field.Offset); Note(field, error.Message, "preview-value"); }
@@ -23,8 +23,8 @@ internal sealed partial class CabPreviewContext
         {
             case 54: _rounding = args[0]; Note(field, "Vorschau: u/d verwenden Auf-/Abrunden gegen ±∞; m rundet halbe Werte von null weg."); break;
             case 77:
-                if (args[0].Length != 1) throw new FormatException("Vorschau benötigt genau ein Füllzeichen; Mehrzeichenverhalten ist nicht spezifiziert.");
-                _fill = args[0][0];
+                if (args[0].Length > 1) throw new FormatException("Vorschau unterstützt leeres oder einzelnes Füllzeichen; Mehrzeichenverhalten ist nicht spezifiziert.");
+                _fill = args[0];
                 if (args.Count > 1) _base = Integer(args[1]);
                 break;
             case 78:
@@ -35,7 +35,7 @@ internal sealed partial class CabPreviewContext
             case 81: Visibility(field, args); break;
             case 82:
                 Alignment = args[0][..1]; AlignmentLength = decimal.Parse(args[0].AsSpan(1), CultureInfo.InvariantCulture); break;
-            case 95: _style = args[0]; break;
+            case 95: _style = args[0].ToUpperInvariant(); break;
         }
     }
 
@@ -74,8 +74,8 @@ internal sealed partial class CabPreviewContext
         var integerWidth = System.Math.Max(0, _width - _digits);
         var separator = magnitude.IndexOf(Culture.NumberFormat.NumberDecimalSeparator, StringComparison.Ordinal);
         var actual = separator < 0 ? magnitude.Length : separator;
-        var padding = actual < integerWidth ? new string(_fill, integerWidth - actual) : "";
-        return _fill == ' ' ? padding + prefix + magnitude : prefix + padding + magnitude;
+        var padding = actual < integerWidth ? Padding(integerWidth - actual) : "";
+        return _fill == " " ? padding + prefix + magnitude : prefix + padding + magnitude;
     }
 
     private static decimal Pow10(int digits)
@@ -87,12 +87,14 @@ internal sealed partial class CabPreviewContext
 
     private string FillLeadingZeros(string text)
     {
-        if (_fill == '0') return text;
+        if (_fill == "0") return text;
         var count = 0;
         // Keep the final zero for a value consisting entirely of zeroes.
         while (count < text.Length - 1 && text[count] == '0') count++;
-        return new string(_fill, count) + text[count..];
+        return Padding(count) + text[count..];
     }
+
+    private string Padding(int count) => _fill.Length == 0 ? "" : new string(_fill[0], count);
 
     internal string Digits(string text)
     {
