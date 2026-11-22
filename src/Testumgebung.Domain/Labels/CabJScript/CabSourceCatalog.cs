@@ -25,7 +25,7 @@ public static class CabSourceCatalog
     {
         var inherited = entry.Availability(generation);
         var tooltip = Tooltip(entry);
-        var insertion = entry.Command ?? "";
+        var insertion = Insertion(entry);
         if (entry.Kind == "esc") insertion = insertion.Replace("ESC", "␛", StringComparison.Ordinal);
         yield return new(entry.Id, CabCompletionKind.Command, null, entry.Command ?? entry.Title,
             entry.Title, insertion, inherited, tooltip);
@@ -41,6 +41,15 @@ public static class CabSourceCatalog
                     value.Description, parameter.IsAnswer ? "" : value.Value,
                     value.Availability(generation, available), help + "\n" + value.Value + ": " + value.Description);
         }
+    }
+
+    private static string Insertion(CabCatalogEntry entry)
+    {
+        if (entry.Kind != "inhaltsfeld") return entry.Command ?? "";
+        if (entry.Id is "JS-5.88" or "JS-5.89") return entry.Syntax[0];
+        var syntax = entry.Syntax[0]; var end = syntax.IndexOfAny([':', '{', ']', '['], 1);
+        var name = syntax[1..end];
+        return "[" + name + (CabContentGrammar.AcceptsBare(entry) ? "" : ":") + "]";
     }
 }
 

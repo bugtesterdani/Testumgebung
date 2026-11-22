@@ -7,6 +7,19 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabSourceEditorTests
 {
     [Fact]
+    public void Content_completion_inserts_recognized_functions_instead_of_catalog_ellipsis()
+    {
+        var items = CabSourceCatalog.Complete(CabPrinterGeneration.X4);
+        foreach (var entry in CabContentParser.Definitions)
+        {
+            var item = Assert.Single(items, i => i.CatalogId == entry.Id && i.Kind == CabCompletionKind.Command);
+            var syntax = CabContentParser.Parse(item.Insertion, new HashSet<string>(StringComparer.Ordinal) { "name" });
+            Assert.Equal(entry.Id, Assert.Single(syntax.Fields).Definition.Id);
+        }
+        Assert.Equal("[H12]", Assert.Single(items, i => i.CatalogId == "JS-5.1" && i.Kind == CabCompletionKind.Command).Insertion);
+    }
+
+    [Fact]
     public void Mixed_codepage_source_edits_use_the_original_strict_encoding()
     {
         var bytes = "\x1boISO-8859-1;J\rT 0,0,0,5,3;"u8.ToArray().Concat(new byte[] { 0xe4, 13 }).Concat("A 1\r"u8.ToArray()).ToArray();
