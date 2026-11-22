@@ -8,6 +8,8 @@ public partial class LabelDesignerWindow
 {
     private bool _refreshingSource;
 
+    internal void ReportCabSourceError(string message) => Status.Text = message;
+
     internal void RefreshCabSource()
     {
         var selected = Elements.SelectedItem as LabelElement;

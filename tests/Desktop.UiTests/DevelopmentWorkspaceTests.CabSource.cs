@@ -13,6 +13,7 @@ public sealed partial class DevelopmentWorkspaceTests
 {
     private static void VerifyCabSourceEditor()
     {
+        VerifySourceInitialization();
         var path = Path.Combine(Path.GetTempPath(), "cab-source-" + Guid.NewGuid().ToString("N") + ".lbl");
         const string text = "J\rT 0,0,0,5,3;one\rT 0,10,0,5,3;two\rA 1\r";
         File.WriteAllBytes(path, Encoding.UTF8.GetBytes(text));
@@ -24,7 +25,8 @@ public sealed partial class DevelopmentWorkspaceTests
             var unchanged = layout.Elements[1];
             var canvas = Descendants(designer).OfType<Canvas>().Single(c => c.Name == "Sheet");
             var unchangedVisual = canvas.Children[1];
-            source = new CabSourceWindow(layout, designer.RefreshCabSource) { Owner = designer }; source.Show();
+            source = Assert.IsType<CabSourceWindow>(CabSourceWindow.TryCreate(layout, designer.RefreshCabSource, designer.ReportCabSourceError));
+            source.Owner = designer; source.Show();
             var editor = Assert.Single(Descendants(source).OfType<RichTextBox>());
             var run = editor.Document.Blocks.OfType<Paragraph>().SelectMany(p => p.Inlines.OfType<Run>()).Single(r => r.Text.Contains("one", StringComparison.Ordinal));
             var start = run.ContentStart.GetPositionAtOffset(run.Text.IndexOf("one", StringComparison.Ordinal))!;
@@ -39,6 +41,25 @@ public sealed partial class DevelopmentWorkspaceTests
                 item => item.ToString()!.Contains("JS-5.1", StringComparison.Ordinal));
         }
         finally { source?.Close(); designer.Close(); File.Delete(path); }
+    }
+
+    private static void VerifySourceInitialization()
+    {
+        var layout = new LabelLayout(); layout.Elements.Add(new() { Kind = LabelElementKind.Text, Value = "legacy" });
+        var designer = new LabelDesignerWindow(layout, true); CabSourceWindow? source = null;
+        try
+        {
+            designer.Show();
+            source = Assert.IsType<CabSourceWindow>(CabSourceWindow.TryCreate(layout, designer.RefreshCabSource, designer.ReportCabSourceError));
+            var canvas = Descendants(designer).OfType<Canvas>().Single(c => c.Name == "Sheet");
+            Assert.Same(Assert.Single(layout.Elements), Assert.IsType<Border>(canvas.Children[0]).Tag);
+            var original = CabLabelLayout.Render(layout); layout.Dpi++;
+            string? message = null;
+            Assert.Null(CabSourceWindow.TryCreate(layout, designer.RefreshCabSource, error => message = error));
+            Assert.Contains("Druckauflösung", message); layout.Dpi--;
+            Assert.Equal(original, CabLabelLayout.Render(layout));
+        }
+        finally { source?.Close(); designer.Close(); }
     }
 
     private static void VerifySourceDiagnosisNavigation(CabSourceWindow source)

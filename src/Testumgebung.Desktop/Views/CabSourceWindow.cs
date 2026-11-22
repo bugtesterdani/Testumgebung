@@ -28,8 +28,19 @@ internal sealed partial class CabSourceWindow : Window
     {
         if (!cab) return;
         var button = new Button { Content = "Quelltext …", Margin = new(12, 0, 0, 0) };
-        button.Click += (_, _) => new CabSourceWindow(layout, owner.RefreshCabSource) { Owner = owner }.ShowDialog();
+        button.Click += (_, _) =>
+        {
+            var window = TryCreate(layout, owner.RefreshCabSource, owner.ReportCabSourceError);
+            if (window is null) return;
+            window.Owner = owner; window.ShowDialog();
+        };
         panel.Children.Add(button);
+    }
+
+    internal static CabSourceWindow? TryCreate(LabelLayout layout, Action refresh, Action<string> report)
+    {
+        try { return new(layout, refresh); }
+        catch (InvalidDataException error) { report(error.Message); return null; }
     }
 
     internal CabSourceWindow(LabelLayout layout, Action? refresh = null)
@@ -40,6 +51,7 @@ internal sealed partial class CabSourceWindow : Window
         if (layout.CabSource is { } source)
             CabSourceReconcile.Apply(layout, new(source.Data, source.SetupCodePage, layout.CabSettings), _editor);
         else CabSourceReconcile.Apply(layout, _editor, _editor);
+        _refresh();
         Title = "cab-Quelltext"; Width = 1150; Height = 760; MinWidth = 800; MinHeight = 480;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Content = CreateContent();
@@ -59,8 +71,8 @@ internal sealed partial class CabSourceWindow : Window
         bottom.Children.Add(close); DockPanel.SetDock(bottom, Dock.Bottom); root.Children.Add(bottom);
         var side = new DockPanel { Width = 360, Margin = new(12, 0, 0, 0) };
         var top = new StackPanel();
-        top.Children.Add(new TextBlock { Text = "Katalogvervollständigung · Strg+Leertaste" });
-        top.Children.Add(_search); top.Children.Add(new ScrollViewer { Content = _help, MaxHeight = 200, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        top.Children.Add(new TextBlock { Text = "Katalogvervollständigung · " + _editor.Settings.DefaultGeneration + " · Strg+Leertaste" });
+        top.Children.Add(_search); top.Children.Add(new ScrollViewer { Content = _help, MaxHeight = 120, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         var insert = new Button { Content = "Auswahl einfügen", Margin = new(0, 6, 0, 6) };
         insert.Click += (_, _) => InsertCompletion(); top.Children.Add(insert);
         DockPanel.SetDock(top, Dock.Top); side.Children.Add(top); side.Children.Add(_completion);
@@ -102,6 +114,7 @@ internal sealed partial class CabSourceWindow : Window
         DockPanel.SetDock(marker, Dock.Left); row.Children.Add(marker);
         var box = new RichTextBox { FontFamily = new("Consolas"), FontSize = 14, AcceptsTab = true,
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, BorderThickness = new(0), Padding = new(3) };
+        System.Windows.Automation.AutomationProperties.SetName(box, "JScript-Quelltext, Abschnitt " + (index + 1));
         box.Document = new FlowDocument(new Paragraph(new Run(section.Editable!.Text)) { Margin = new(0), LineHeight = 18 }) { PagePadding = new(0) };
         box.GotKeyboardFocus += (_, _) => _active = box;
         box.TextChanged += (_, _) => Changed(index, box);
