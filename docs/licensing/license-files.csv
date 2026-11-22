@@ -860,3 +860,6 @@ licenses/third-party/svn-tests/1.15.0/NOTICE.md,1172,aef4664dccc8bdcbdcc2f169e16
 licenses/third-party/svn-tests/1.15.0/OpenSSL License.txt,10175,7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a
 licenses/third-party/svn-tests/1.15.0/SQLite License Information.txt,678,25fb17f684b783a8004cf935e0c225dc1c9c2b6abcb2fe93fbe72e8351c5af64
 licenses/third-party/svn-tests/1.15.0/zlib License.txt,1002,e32ff4e00d9d94930537635291da39e7e612703334bf6fde8c7f1686fe8a45a2
+licenses/third-party/nuget/ZXing.Net/0.16.11/SPDX-Apache-2.0.txt,10280,074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff
+licenses/third-party/nuget/ZXing.Net/0.16.11/COPYING,11357,c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+licenses/third-party/nuget/ZXing.Net/0.16.11/PACKAGE-NOTICE.txt,348,b128d993c001c1aa35e9fad3b1ae3224cd79c8f8a461c71609f541f78ff614bd

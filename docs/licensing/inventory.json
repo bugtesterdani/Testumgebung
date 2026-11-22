@@ -208,7 +208,9 @@
         "src/Testumgebung.Notifications/Testumgebung.Notifications.csproj",
         "src/Testumgebung.Identity/Testumgebung.Identity.csproj"
       ],
-      "direct_packages": [],
+      "direct_packages": [
+        "ZXing.Net/0.16.11"
+      ],
       "assets_available": true,
       "purpose": "Ansichtsmodelle, Editor und Werkersteuerung",
       "version": "1.2.1.0 in audited MSIX",
@@ -5616,6 +5618,63 @@
       ],
       "license_effective": "MIT plus Microsoft .NET Library / Windows SDK terms; see per-file attribution",
       "code_references": []
+    },
+    "ZXing.Net/0.16.11": {
+      "name": "ZXing.Net",
+      "version": "0.16.11",
+      "projects": [
+        "src/Testumgebung.Desktop/Testumgebung.Desktop.csproj",
+        "src/Testumgebung.Presentation/Testumgebung.Presentation.csproj",
+        "tests/Desktop.UiTests/Desktop.UiTests.csproj",
+        "tests/Engine.Tests/Engine.Tests.csproj"
+      ],
+      "direct_in": [
+        "src/Testumgebung.Presentation/Testumgebung.Presentation.csproj"
+      ],
+      "targets": [
+        "net10.0",
+        "net10.0-windows",
+        "net10.0-windows/win-x64",
+        "net10.0/win-x64"
+      ],
+      "package_sha512": "OZfAVu88hl87BffQ+rlWCj/vLvAhhCK4QnFaoveeF/MY8SjHNSYBQ3qyUEWlPKNgBQGh1syXhCDg10vUnCsqkg==",
+      "assets_files": [
+        "src/Testumgebung.Desktop/obj/project.assets.json",
+        "src/Testumgebung.Presentation/obj/project.assets.json",
+        "tests/Desktop.UiTests/obj/project.assets.json",
+        "tests/Engine.Tests/obj/project.assets.json"
+      ],
+      "metadata": {
+        "id": "ZXing.Net",
+        "version": "0.16.11",
+        "authors": "Michael Jahn",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://licenses.nuget.org/Apache-2.0",
+        "projectUrl": "https://github.com/micjahn/ZXing.Net/",
+        "license_type": "expression",
+        "repository": {},
+        "evidence": "nuget-cache/zxing.net/0.16.11/zxing.net.nuspec",
+        "license_files": [
+          {
+            "path": "licenses/third-party/nuget/ZXing.Net/0.16.11/SPDX-Apache-2.0.txt",
+            "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+          },
+          {
+            "path": "licenses/third-party/nuget/ZXing.Net/0.16.11/COPYING",
+            "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+          },
+          {
+            "path": "licenses/third-party/nuget/ZXing.Net/0.16.11/PACKAGE-NOTICE.txt",
+            "sha256": "b128d993c001c1aa35e9fad3b1ae3224cd79c8f8a461c71609f541f78ff614bd"
+          }
+        ]
+      },
+      "license_effective": "Apache-2.0",
+      "code_references": [
+        "src/Testumgebung.Presentation/ViewModels/CabBarcodePreview.cs"
+      ],
+      "bundled_manifests": [],
+      "review_context": "AP 6 source dependency; historical audited bundle unchanged"
     }
   },
   "dependency_edges": [
@@ -54868,10 +54927,19 @@
   ],
   "summary": {
     "projects": 22,
-    "nuget_package_versions": 94,
+    "nuget_package_versions": 95,
     "bundled_nuget_versions": 68,
     "binary_files": 2687,
     "toolchain_archives": 26,
     "pip_vendors": 18
-  }
+  },
+  "additional_reviews": [
+    {
+      "component": "ZXing.Net/0.16.11",
+      "date": "2026-11-22",
+      "license": "Apache-2.0",
+      "upstream_license": "https://raw.githubusercontent.com/micjahn/ZXing.Net/v0.16.11.0/COPYING",
+      "scope": "Current source and resolved NuGet dependency; not a re-audit of historical bundled binaries"
+    }
+  ]
 }

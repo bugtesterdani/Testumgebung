@@ -695,3 +695,11 @@ die in `build/requirements-cab-manual.txt` fest gebundenen Pakete pdfminer.six
 `licenses/optional-cab-manual/`. Sie werden nicht automatisch installiert und
 sind keine Laufzeitabhängigkeit der Anwendung. Der Test prüft Pins und Lizenzdateien.
 Hersteller-PDF und daraus extrahierte Beispiele bleiben lokale, ignorierte Daten.
+
+## Barcodevorschau – ZXing.Net 0.16.11
+
+Die cab-Grafikvorschau verwendet die unveränderte NuGet-Bibliothek ZXing.Net
+0.16.11 von Michael Jahn und den ursprünglichen ZXing-Autoren unter Apache-2.0.
+[Original-Lizenz](licenses/third-party/nuget/ZXing.Net/0.16.11/COPYING),
+[Herkunftshinweis](licenses/third-party/nuget/ZXing.Net/0.16.11/PACKAGE-NOTICE.txt)
+und [versionsbezogener Prüfvermerk](docs/licensing/cab-barcodes.md).

@@ -1,0 +1,6 @@
+ZXing.Net 0.16.11
+Authors: Michael Jahn; upstream ZXing authors.
+Apache-2.0. Original source headers include Copyright 2008 ZXing authors.
+Unmodified NuGet assembly; no upstream source changes.
+Source tag: https://github.com/micjahn/ZXing.Net/tree/v0.16.11.0
+Original license: https://raw.githubusercontent.com/micjahn/ZXing.Net/v0.16.11.0/COPYING
