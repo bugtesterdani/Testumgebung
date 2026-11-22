@@ -36,6 +36,10 @@ Etikettenbefehlen und `A` am Auftragsende. Ein geladenes LBL liefert ebenfalls
 einen Auftragskontext. Bereits unvollständige Dateien bleiben bearbeitbar; eine
 Operation darf keine zusätzlichen Reihenfolgefehler einführen. Fehlende
 Zeilenabschlüsse beim Verschieben werden als notwendige Befehlsgrenzen ergänzt.
+Hinter einem offenen Binär-, ABC- oder verschlüsselten Block ist keine äußere
+Einfügeposition belegt. Dort werden Anhängen und Verschieben abgelehnt; vor dem
+Block bleibt das Einfügen möglich. Ein explizit geschlossener Block darf von
+einem neuen Auftrag gefolgt werden.
 
 ## Dateien
 
@@ -63,6 +67,8 @@ Text/Daten und System. Parameter werden über ihre tatsächlichen Quellbereiche
 bearbeitet. Die Offline-Vorschau aus AP 3 verwendet die gewählte Beispielzeit
 und eigene Beispieldaten; Hinweise auf Hardwareabhängigkeit bleiben sichtbar.
 Bekannte vorherige Feldnamen des Auftrags sind als Referenzen zulässig.
+Für Prüfsummen MOD10, MOD36 und MOD43 gelten dabei dieselben Referenzregeln wie
+für die Inhaltsfeldgrammatik; solche Verweise bleiben direkt bearbeitbar.
 Der Dialog fügt an der ausgewählten Textposition ein; anschließend übernimmt der
 Parameterknopf den geänderten Inhalt. Bereits vorhandene Inhaltsfelder besitzen
 auch direkt im Eigenschaftenformular ihre eigenen Parameterzeilen.

@@ -74,8 +74,8 @@ public static class CabPropertyBindings
     {
         var rule = property.Definition.Rule;
         if (value.Length == 0 && property.Field is { } field && CabContentGrammar.MayOmit(CabContentGrammar.Number(field), rule.Parameter.Name)) return null;
-        var reference = property.Content?.PreviousNames.Contains(value.Trim()) == true;
-        if (reference && rule.DataType is CabDataType.Number or CabDataType.Integer) return null;
+        if (property.Content is { } content && property.Field is { } syntax
+            && CabContentGrammar.AllowsNamedReference(CabContentGrammar.Number(syntax), rule, value, content.PreviousNames)) return null;
         return rule.Validate(value, property.Definition.Generation);
     }
 }

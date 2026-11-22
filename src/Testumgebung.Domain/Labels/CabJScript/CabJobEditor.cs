@@ -59,6 +59,7 @@ public static class CabJobEditor
         Standalone(item); if (target is not null) Standalone(target);
         var offset = target?.Range.Offset ?? editor.Document.Length;
         if (offset >= item.Range.Offset && offset <= item.Range.End) return editor;
+        RequireInsertionBoundary(editor, offset);
         return Changed(editor, [new(item.Range, []), new(new(offset, 0), InsertionBytes(editor, editor.Document.Bytes(item.Range), offset))]);
     }
 
@@ -66,7 +67,28 @@ public static class CabJobEditor
     {
         if (target is not null) Standalone(target);
         var at = target?.Range.Offset ?? editor.Document.Length;
+        RequireInsertionBoundary(editor, at);
         return Changed(editor, [new(new(at, 0), InsertionBytes(editor, bytes, at))]);
+    }
+
+    private static void RequireInsertionBoundary(CabSourceEditor editor, int at)
+    {
+        foreach (var node in CabSourceEditor.Physical(editor.Document.Root).Where(n => n.Kind is CabNodeKind.BinaryBlock or CabNodeKind.Block))
+            if (at > node.Range.Offset && (at < node.Range.End || at == node.Range.End && !HasClosingBoundary(editor.Document, node)))
+                throw new InvalidOperationException("Hier liegt ein geschützter Block ohne äußere Einfügegrenze. Vor dem Block einfügen; seine Nutzdaten bleiben unverändert.");
+    }
+
+    private static bool HasClosingBoundary(CabDocument document, CabSyntaxNode node)
+    {
+        var ending = node.Command switch
+        {
+            "ESC." => "\u001b.", "ESC:" => "\u001bend-of-data", "<BASE64>" => "</BASE64>",
+            "<ABC>" => "</ABC>", "<ENCRYPTED JOB>" => "</ENCRYPTED JOB>", _ => null,
+        };
+        if (ending is null) return false;
+        var openingLength = node.Command is "ESC." or "ESC:" ? 2 : node.Command.Length;
+        var suffix = System.Text.Encoding.ASCII.GetBytes(ending);
+        return node.Range.Length >= openingLength + suffix.Length && document.Bytes(node.Range).AsSpan().EndsWith(suffix);
     }
 
     private static byte[] InsertionBytes(CabSourceEditor editor, byte[] bytes, int at)

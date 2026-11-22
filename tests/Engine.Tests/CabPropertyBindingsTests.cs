@@ -5,6 +5,27 @@ namespace Testumgebung.Engine.Tests;
 
 public sealed class CabPropertyBindingsTests
 {
+    [Theory]
+    [InlineData("JS-5.50", "MOD10")]
+    [InlineData("JS-5.51", "MOD36")]
+    [InlineData("JS-5.52", "MOD43")]
+    public void Checksum_reference_edits_share_the_content_grammars_named_field_rules(string id, string function)
+    {
+        var source = "J\rT:Data;0,0,0,5,3;12345\rT:Other;0,5,0,5,3;23456\rT 0,10,0,5,3;[" + function + ":Data]\rA 1\r";
+        var bytes = Encoding.UTF8.GetBytes(source);
+        var editor = new CabSourceEditor(bytes);
+        Assert.False(editor.Validation.HasErrors);
+        var content = CabContentValidation.Bind(editor.Document, editor.Validation.Commands).Last();
+        var property = Assert.Single(CabPropertyBindings.ForContent(editor, content, content.Syntax.Fields.Single()));
+        Assert.Equal(bytes, CabPropertyBindings.Replace(editor, property, "Data").Document.Write());
+        var next = CabPropertyBindings.Replace(editor, property, "Other");
+        Assert.Equal(Encoding.UTF8.GetBytes(source.Replace(":" + "Data]", ":Other]", StringComparison.Ordinal)), next.Document.Write());
+        Assert.False(next.Validation.HasErrors);
+        Assert.Throws<ArgumentException>(() => CabPropertyBindings.Replace(editor, property, " Data "));
+        var form = new CabContentForm(id, CabPrinterGeneration.X4, new HashSet<string>(["Other"], StringComparer.Ordinal));
+        Assert.Equal("[" + function + ":Other]", form.Change(Assert.Single(form.Properties), "Other").Text);
+    }
+
     [Fact]
     public void Repairing_an_empty_first_substring_argument_preserves_its_field_name_and_following_argument()
     {

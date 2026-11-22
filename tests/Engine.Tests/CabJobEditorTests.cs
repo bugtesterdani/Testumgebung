@@ -5,6 +5,45 @@ namespace Testumgebung.Engine.Tests;
 public sealed class CabJobEditorTests
 {
     [Theory]
+    [InlineData("<ENCRYPTED LABEL: 123456789012>\ropaque")]
+    [InlineData("\u001b.unclosed")]
+    [InlineData("\u001b.")]
+    [InlineData("\u001b:unclosed")]
+    [InlineData("<BASE64>YWJj")]
+    [InlineData("<ABC>\ropaque")]
+    [InlineData("<ENCRYPTED JOB>\ropaque")]
+    public void Append_and_move_to_eof_cannot_insert_into_open_protected_payloads(string block)
+    {
+        var editor = new CabSourceEditor(System.Text.Encoding.UTF8.GetBytes("J\r;move\r" + block));
+        var bytes = editor.Document.Write();
+        Assert.Throws<InvalidOperationException>(() => CabJobEditor.Insert(editor, "J\rA 1\r"u8.ToArray()));
+        var rows = CabJobEditor.Items(editor);
+        var comment = Assert.Single(rows, r => r.Syntax.Kind == CabNodeKind.Comment);
+        Assert.Throws<InvalidOperationException>(() => CabJobEditor.MoveBefore(editor, comment, null));
+        var protectedRow = Assert.Single(rows, r => !r.IsEmbedded && r.Syntax.Kind is CabNodeKind.BinaryBlock or CabNodeKind.Block);
+        Assert.Same(editor, CabJobEditor.MoveBefore(editor, protectedRow, null));
+        var before = CabJobEditor.Insert(editor, ";outside\r"u8.ToArray(), protectedRow);
+        Assert.True(before.Document.Write().AsSpan().EndsWith(System.Text.Encoding.UTF8.GetBytes(block)));
+        Assert.Equal(bytes, editor.Document.Write());
+    }
+
+    [Theory]
+    [InlineData("\u001b.\u001b.")]
+    [InlineData("\u001b:\u001bend-of-data")]
+    [InlineData("<BASE64></BASE64>")]
+    [InlineData("<ABC></ABC>")]
+    [InlineData("<ENCRYPTED JOB></ENCRYPTED JOB>")]
+    public void A_new_job_can_follow_a_block_with_an_explicit_closing_boundary(string block)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(block);
+        var next = CabJobEditor.Insert(new CabSourceEditor(bytes), "J\rA 1\r"u8.ToArray());
+        Assert.True(next.Document.Write().AsSpan().StartsWith(bytes));
+        Assert.Single(next.Validation.Commands, c => c.Syntax.Command == "J");
+        Assert.Single(next.Validation.Commands, c => c.Syntax.Command == "A");
+        Assert.Empty(CabJobEditor.OrderIssues(next));
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(1)]
     public void Moving_a_line_without_final_newline_keeps_commands_separate(int index)

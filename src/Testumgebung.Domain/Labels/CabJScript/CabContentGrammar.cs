@@ -41,12 +41,17 @@ public static class CabContentGrammar
         {
             var rule = CabDefinitions.ParameterRule(field.Definition.Id, argument.Parameter.Name);
             if (argument.Value.Length == 0 && MayOmit(Number(field), argument.Parameter.Name)) continue;
-            var reference = rule.DataType is CabDataType.Number or CabDataType.Integer ? argument.Value.Trim() : argument.Value;
-            if (names?.Contains(reference) == true && (rule.DataType is CabDataType.Number or CabDataType.Integer
-                || Number(field) is >= 50 and <= 52)) continue;
+            if (AllowsNamedReference(Number(field), rule, argument.Value, names)) continue;
             var error = rule.Validate(argument.Value);
             if (error is not null) errors.Add(argument.Parameter.Name + ": " + error);
         }
+    }
+
+    internal static bool AllowsNamedReference(int id, CabParameterRule rule, string value, IReadOnlySet<string>? names)
+    {
+        var numeric = rule.DataType is CabDataType.Number or CabDataType.Integer;
+        var reference = numeric ? value.Trim() : value;
+        return names?.Contains(reference) == true && (numeric || id is >= 50 and <= 52);
     }
 
     internal static bool MayOmit(int id, string name) => (id, name) switch
