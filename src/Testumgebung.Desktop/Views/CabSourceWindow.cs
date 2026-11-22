@@ -19,8 +19,11 @@ internal sealed partial class CabSourceWindow : Window
     private readonly TextBox _search = new() { Margin = new(0, 4, 0, 6) };
     private readonly TextBlock _help = new() { TextWrapping = TextWrapping.Wrap, MaxWidth = 360 };
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
+    private readonly Button _undo = new() { Content = "Rückgängig", ToolTip = "Strg+Z" };
+    private readonly Button _redo = new() { Content = "Wiederholen", ToolTip = "Strg+Y", Margin = new(6, 0, 0, 0) };
     private readonly Dictionary<int, RichTextBox> _editors = [];
     private CabSourceEditor _editor;
+    private readonly CabSourceHistory _history;
     private RichTextBox? _active;
     private bool _updating;
 
@@ -48,6 +51,7 @@ internal sealed partial class CabSourceWindow : Window
         _layout = layout; _refresh = refresh ?? (() => { });
         var bytes = CabLabelLayout.Render(layout);
         _editor = new(bytes, layout.CabSource?.SetupCodePage ?? "UTF-8", layout.CabSettings);
+        _history = new(_editor);
         if (layout.CabSource is { } source)
             CabSourceReconcile.Apply(layout, new(source.Data, source.SetupCodePage, layout.CabSettings), _editor);
         else CabSourceReconcile.Apply(layout, _editor, _editor);
@@ -60,6 +64,8 @@ internal sealed partial class CabSourceWindow : Window
         _completion.MouseDoubleClick += (_, _) => InsertCompletion();
         _diagnostics.MouseDoubleClick += (_, _) => Navigate();
         PreviewKeyDown += OnKey;
+        _undo.Click += (_, _) => TravelHistory(false);
+        _redo.Click += (_, _) => TravelHistory(true);
         Complete(); ShowSource();
     }
 
@@ -71,6 +77,8 @@ internal sealed partial class CabSourceWindow : Window
         bottom.Children.Add(close); DockPanel.SetDock(bottom, Dock.Bottom); root.Children.Add(bottom);
         var side = new DockPanel { Width = 360, Margin = new(12, 0, 0, 0) };
         var top = new StackPanel();
+        var history = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 0, 0, 6) };
+        history.Children.Add(_undo); history.Children.Add(_redo); top.Children.Add(history);
         top.Children.Add(new TextBlock { Text = "Katalogvervollständigung · " + _editor.Settings.DefaultGeneration + " · Strg+Leertaste" });
         top.Children.Add(_search); top.Children.Add(new ScrollViewer { Content = _help, MaxHeight = 120, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         var insert = new Button { Content = "Auswahl einfügen", Margin = new(0, 6, 0, 6) };
@@ -95,6 +103,7 @@ internal sealed partial class CabSourceWindow : Window
             _source.Children.Clear(); _editors.Clear();
             for (var index = 0; index < _editor.Sections.Count; index++) AddSection(index);
             _active = _editors.Values.FirstOrDefault();
+            _undo.IsEnabled = _history.CanUndo; _redo.IsEnabled = _history.CanRedo;
             ShowDiagnostics();
         }
         finally { _updating = false; }
@@ -153,15 +162,27 @@ internal sealed partial class CabSourceWindow : Window
     internal void ApplyText(int index, string text)
     {
         var next = _editor.Edit(index, text);
+        if (!_history.Record(next)) return;
         CabSourceReconcile.Apply(_layout, _editor, next); _editor = next;
         _refresh(); ShowSource();
+    }
+
+    private void TravelHistory(bool redo)
+    {
+        var next = redo ? _history.Redo() : _history.Undo();
+        if (ReferenceEquals(next, _editor)) return;
+        CabSourceReconcile.Apply(_layout, _editor, next); _editor = next;
+        _refresh(); ShowSource(); RestoreCaret(0, 0);
     }
 
     internal CabSourceEditor Editor => _editor;
 
     private void OnKey(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Space || Keyboard.Modifiers != ModifierKeys.Control) return;
+        if (Keyboard.Modifiers != ModifierKeys.Control) return;
+        if (!_search.IsKeyboardFocusWithin && e.Key is Key.Z or Key.Y)
+        { TravelHistory(e.Key == Key.Y); e.Handled = true; return; }
+        if (e.Key != Key.Space) return;
         _search.Focus(); _search.SelectAll(); e.Handled = true;
     }
 

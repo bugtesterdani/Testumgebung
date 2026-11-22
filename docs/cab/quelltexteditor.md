@@ -38,6 +38,11 @@ keinen vollständig gültigen Befehl. Antwortfelder sind beschrieben, werden
 aber nicht als Eingabe eingefügt. Die Verfügbarkeit wird für die gespeicherte
 Standardgeneration angezeigt. Handbuchseiten stehen in Hilfetext und Tooltips.
 
+Rückgängig (Strg+Z) und Wiederholen (Strg+Y) arbeiten auf bis zu 100
+Quelltextänderungen. Sie bleiben auch verfügbar, wenn ein neu eingegebener
+Blockmarker den Abschnitt geschützt darstellt. Gespeichert werden nur die
+geänderten Bytes; unveränderte Binärressourcen werden nicht je Schritt kopiert.
+
 ESC wird eindeutig als `␛e` angezeigt, das wörtliche Zeichen `␛` als `␛u`.
 Auch benachbarte ESC-Bytes und das tatsächlich gedruckte Symbol bleiben dadurch
 unterscheidbar. Beim Bearbeiten wird die Darstellung in die Originalzeichen

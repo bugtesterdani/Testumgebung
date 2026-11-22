@@ -39,8 +39,22 @@ public sealed partial class DevelopmentWorkspaceTests
             var search = Assert.Single(Descendants(source).OfType<TextBox>()); search.Text = "JS-5.1";
             Assert.Contains(Descendants(source).OfType<ListBox>().SelectMany(l => l.Items.Cast<object>()),
                 item => item.ToString()!.Contains("JS-5.1", StringComparison.Ordinal));
+            VerifySourceHistoryAcrossProtection(source);
         }
         finally { source?.Close(); designer.Close(); File.Delete(path); }
+    }
+
+    private static void VerifySourceHistoryAcrossProtection(CabSourceWindow source)
+    {
+        var bytes = source.Editor.Document.Write(); var text = source.Editor.Sections[0].Editable!.Text;
+        source.ApplyText(0, "␛e." + text);
+        Assert.Contains(source.Editor.Sections, s => s.IsProtected);
+        var undo = Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Rückgängig"));
+        Assert.True(undo.IsEnabled); undo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.Equal(bytes, source.Editor.Document.Write());
+        var redo = Descendants(source).OfType<Button>().Single(b => Equals(b.Content, "Wiederholen"));
+        Assert.True(redo.IsEnabled); redo.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.Contains(source.Editor.Sections, s => s.IsProtected);
     }
 
     private static void VerifySourceInitialization()
