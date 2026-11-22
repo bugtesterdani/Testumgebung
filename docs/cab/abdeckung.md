@@ -9,11 +9,11 @@ zwei nachgetragene Abschnitte gegenüber der ursprünglich genannten Zahl 235.
 | Art | Gesamt | Erkannt | Validiert | Quelltext | Eigenschaften-Editor | Grafisch vollständig | Vorschau | Registrierte Fälle |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: |
 | allgemein | 6 | 6 | 6 | 6 | 6 | — | — | 21 |
-| barcode | 43 | 43 | 43 | 43 | 43 | 0 / 43 | — | 1182 |
+| barcode | 43 | 43 | 43 | 43 | 43 | 43 / 43 | — | 1182 |
 | erweiterung | 7 | 7 | 7 | 7 | 7 | — | — | 22 |
 | esc | 25 | 25 | 25 | 25 | 25 | — | — | 235 |
-| etikettbefehl | 18 | 18 | 18 | 18 | 18 | 0 / 4 | — | 307 |
-| grafik | 3 | 3 | 3 | 3 | 3 | 0 / 3 | — | 76 |
+| etikettbefehl | 18 | 18 | 18 | 18 | 18 | 4 / 4 | — | 307 |
+| grafik | 3 | 3 | 3 | 3 | 3 | 3 / 3 | — | 76 |
 | inhaltsfeld | 107 | 107 | 107 | 107 | 107 | — | 107 / 107 | 298 |
 | sofortbefehl | 17 | 17 | 17 | 17 | 17 | — | — | 130 |
 | sonstiges | 4 | 4 | 4 | 4 | 4 | — | — | 8 |
@@ -61,14 +61,25 @@ Die Spalte bedeutet vollständige Erschließung der Definitionen, keine Schreibb
 von Druckerantworten oder beliebiger widersprüchlicher Optionskombinationen.
 Die 237 Properties-Ausnahmen wurden entfernt.
 
-## Ausnahmen der frühen Einführung
+## Grafik (AP 6)
 
-Vollständige Grafiknachweise (50, AP 6) und abschließende Projekt-/Release-/ZPL-
-Integration (1, AP 7) sind noch ausdrücklich zurückgestellt. Bestehende Teilansichten
-zählen nicht als vollständiger Nachweis einer Spalte. Der Build erlaubt ausschließlich
-die 51 konkret aufgelisteten Ausnahmen in `tests/Fixtures/cab/coverage-deferrals.json`;
-keine Wildcards, Duplikate oder unbekannten IDs. Die späteren APs müssen ihren
-tatsächlichen Nachweis ergänzen und ihre Ausnahmen entfernen. Am Ende muss die Liste leer sein.
+Alle 50 grafischen Definitionen einschließlich der 43 Barcodeprofile besitzen
+ausführbare Nachweise für Einfügen, Verschieben, Drehen, Entfernen und bytegenaue
+Erhaltung der Nachbarbereiche. Separate Erwartungswerte prüfen Grundlinie,
+Kreiszentrum, Einheiten und Drehung. WPF-Tests rendern alle Vorlagen und prüfen
+Bedienung, Bildformate, Schrift-/HTML-Effekte und Füllmuster. Echte unterstützte
+Barcodes stammen aus ZXing.Net 0.16.11; nicht erzeugte Symbologien/Optionen bleiben
+beschriftete Flächen berechneter Näherungsgröße. Code128 und QR werden rückgelesen.
+Schriften und Klarschriftmetriken sind erklärte Windows-Näherungen. Die Spalte
+behauptet keine druckergleiche Pixelwiedergabe oder Hardwareauswertung.
+Die 50 Grafik-Ausnahmen sind entfernt.
+
+## Verbleibende Integration
+
+Nur die abschließende Projekt-/Release-/ZPL-Integration (1, AP 7) ist noch
+zurückgestellt. Der Build erlaubt ausschließlich diese konkrete Ausnahme in
+`tests/Fixtures/cab/coverage-deferrals.json`; keine Wildcards oder Duplikate.
+AP 7 muss seinen tatsächlichen Nachweis ergänzen und die letzte Ausnahme entfernen.
 
 ## Korpus und lokales Handbuch
 

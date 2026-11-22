@@ -254,6 +254,12 @@ Manche EXEs sind Alias-Launcher ohne eigene Versionsressource. Bei GNU-Utilities
 Historische lokale Bundles 1.0.0.0 bis 1.0.12.0 wurden hinsichtlich ihrer vorhandenen Versionen erfasst, aber nicht alle erneut bis zur letzten Datei inventarisiert. Die genaue Dateiliste gilt für den oben genannten inventarisierten MSIX-Stand. Frühere Veröffentlichungen erhalten fehlende Lizenztexte nicht rückwirkend.
 
 
+## Ergänzung cab-Barcodevorschau, 22.11.2026
+
+ZXing.Net 0.16.11 ist als unveränderte NuGet-Laufzeitabhängigkeit ergänzt,
+exakt gebunden und unter Apache-2.0 mit Originallizenz inventarisiert.
+Details und Abgrenzung zum historischen MSIX: [Barcode-Lizenzbericht](cab-barcodes.md).
+
 ## SVN-Integrationstestclient 1.15.0
 
 Der Qualitätslauf verwendet einen per SHA-256 gepinnten Windows-Testclient. Er wird nicht mit dem MSIX oder als Werkzeug-Download weitergegeben. Die Originalhinweise für Subversion und sämtliche enthaltenen Bibliotheken stehen unter [Herkunft und Lizenzen](../../licenses/third-party/svn-tests/1.15.0/NOTICE.md).

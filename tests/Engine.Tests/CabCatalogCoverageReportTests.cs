@@ -15,7 +15,7 @@ public sealed class CabCatalogCoverageReportTests
         // Generate only after actually running the evidence, not from catalog counts alone.
         RunEvidence();
         var deferrals = ReadDeferrals();
-        var expected = GraphicEntries.Select(e => "graphics/6/" + e.Id).Append("integration/7/project").Order().ToArray();
+        string[] expected = ["integration/7/project"];
         Assert.Equal(expected, deferrals.Order());
         Assert.Equal(deferrals.Length, deferrals.Distinct().Count());
         var report = BuildReport();
@@ -28,6 +28,12 @@ public sealed class CabCatalogCoverageReportTests
     private static void RunEvidence()
     {
         RunPropertyEvidence();
+        var graphics = new CabGraphicTests();
+        graphics.Graphic_catalog_contains_all_50_definitions_and_43_barcode_profiles();
+        foreach (var row in CabGraphicTests.Entries())
+            graphics.Every_graphic_template_has_finite_transformed_bounds_and_byte_preserving_gestures((string)row[0]);
+        foreach (var row in CabGraphicTests.BarcodeEntries())
+            graphics.Every_barcode_profile_produces_real_modules_or_an_explicit_empty_fallback((string)row[0]);
         var source = new CabSourceEditorTests();
         foreach (var generation in Enum.GetValues<CabPrinterGeneration>())
             source.Every_entry_parameter_and_value_is_reachable_with_manual_help(generation);
@@ -81,14 +87,15 @@ public sealed class CabCatalogCoverageReportTests
             var ids = group.Select(e => e.Id).ToHashSet();
             var graphic = GraphicEntries.Count(e => ids.Contains(e.Id));
             var count = cases.Count(c => ids.Contains(c.Id)) + group.Count(e => e.Kind == "barcode") + group.Count();
-            text.Append($"| {group.Key} | {group.Count()} | {group.Count()} | {group.Count()} | {group.Count()} | {group.Count()} | {(graphic == 0 ? "—" : "0 / " + graphic)} | {(group.Key == "inhaltsfeld" ? "107 / 107" : "—")} | {count} |\n");
+            text.Append($"| {group.Key} | {group.Count()} | {group.Count()} | {group.Count()} | {group.Count()} | {group.Count()} | {(graphic == 0 ? "—" : graphic + " / " + graphic)} | {(group.Key == "inhaltsfeld" ? "107 / 107" : "—")} | {count} |\n");
         }
         text.Append("\n## Bedeutung und Grenzen\n\nErkannt und validiert: je Eintrag eine ausführbare Protokolldatei mit unverändertem\nSchreiben und geprüfter Befehls-/Inhaltsfeldbindung. Allgemeine Regeln und drei\nBarcode-Anwendungsprofile werden ausdrücklich über ihren Kontext bzw. Referenzbefehl\nnachgewiesen; sie sind keine erfundenen zusätzlichen Druckerbefehle.\n\n");
         text.Append("Jeder Tabellenwert hat zusätzlich einen expliziten `CatalogCase` mit konkretem\nParameterwert. Dieser wird als isolierter Parameter aus einem Protokollträger\ngelesen, gegen seine eigene Definition geprüft und unverändert geschrieben. Das\nersetzt keine beliebige Kombination von Optionen in einem vollständigen Befehl.\nSchematische Tabellenwörter werden durch konkrete Werte instanziiert; Antwortfelder\nbleiben als solche gekennzeichnet. Alle Parameter besitzen außerdem die gültigen\nKorpuswerte aus AP 2 bzw. die tatsächlichen Inhaltsfeldbindungen aus AP 3.\n\n");
         text.Append("Vorschau: 82 offline auswertbare Definitionen und 25 explizite druckerabhängige\nPlatzhalter; zusätzlich gelten die Grenz- und Erwartungswerttests aus AP 3. Ein\nPlatzhalter behauptet keinen gelesenen Hardwarewert.\n\n");
         text.Append("## Quelltextansicht (AP 4)\n\nAlle 237 Korpusdateien öffnen und speichern bytegleich in der Quelltextansicht.\nAlle 237 Einträge, 1.416 Parameter und 1.801 Werte sind für alle vier Generationen\nin der Katalogvervollständigung erreichbar. Gezielte Text-, Codepage-, Binärschutz-\nund Oberflächentests prüfen Bearbeitung, Navigation und unveränderte Objekte.\nDie 237 Source-Ausnahmen wurden entfernt.\n\n");
         text.Append("## Eigenschaften und Aufträge (AP 5)\n\nAlle 237 Definitionen und ihre 1.416 Parameterschemata sind erreichbar, mit Typ,\nEinheit, Generation, Beschreibung und Wahlwerten. Alle Protokollvorlagen prüfen\ndie tatsächlichen Parameterbindungen über vier Generationen und unverändertes\nSchreiben vorhandener gültiger Eingaben. Alle 107 Inhaltsfeldformulare besitzen\nechte Argumentbindungen und Offline-Vorschau. Änderungen, optionale Ergänzungen,\nAuftragsreihenfolge, Dateiaustausch und echte WPF-Bedienung haben zusätzliche Tests.\nAntwortfelder bleiben lesbare Druckerausgaben; allgemeine Kontextregeln erzeugen\nkeine zusätzlichen Befehle. Variantenparameter setzen die passende Schrift,\nBarcodeart oder übergeordnete Option voraus. Ressourcen werden als Dateien ersetzt.\nDie Spalte bedeutet vollständige Erschließung der Definitionen, keine Schreibbarkeit\nvon Druckerantworten oder beliebiger widersprüchlicher Optionskombinationen.\nDie 237 Properties-Ausnahmen wurden entfernt.\n\n");
-        text.Append("## Ausnahmen der frühen Einführung\n\nVollständige Grafiknachweise (50, AP 6) und abschließende Projekt-/Release-/ZPL-\nIntegration (1, AP 7) sind noch ausdrücklich zurückgestellt. Bestehende Teilansichten\nzählen nicht als vollständiger Nachweis einer Spalte. Der Build erlaubt ausschließlich\ndie 51 konkret aufgelisteten Ausnahmen in `tests/Fixtures/cab/coverage-deferrals.json`;\nkeine Wildcards, Duplikate oder unbekannten IDs. Die späteren APs müssen ihren\ntatsächlichen Nachweis ergänzen und ihre Ausnahmen entfernen. Am Ende muss die Liste leer sein.\n\n");
+        text.Append("## Grafik (AP 6)\n\nAlle 50 grafischen Definitionen einschließlich der 43 Barcodeprofile besitzen\nausführbare Nachweise für Einfügen, Verschieben, Drehen, Entfernen und bytegenaue\nErhaltung der Nachbarbereiche. Separate Erwartungswerte prüfen Grundlinie,\nKreiszentrum, Einheiten und Drehung. WPF-Tests rendern alle Vorlagen und prüfen\nBedienung, Bildformate, Schrift-/HTML-Effekte und Füllmuster. Echte unterstützte\nBarcodes stammen aus ZXing.Net 0.16.11; nicht erzeugte Symbologien/Optionen bleiben\nbeschriftete Flächen berechneter Näherungsgröße. Code128 und QR werden rückgelesen.\nSchriften und Klarschriftmetriken sind erklärte Windows-Näherungen. Die Spalte\nbehauptet keine druckergleiche Pixelwiedergabe oder Hardwareauswertung.\nDie 50 Grafik-Ausnahmen sind entfernt.\n\n");
+        text.Append("## Verbleibende Integration\n\nNur die abschließende Projekt-/Release-/ZPL-Integration (1, AP 7) ist noch\nzurückgestellt. Der Build erlaubt ausschließlich diese konkrete Ausnahme in\n`tests/Fixtures/cab/coverage-deferrals.json`; keine Wildcards oder Duplikate.\nAP 7 muss seinen tatsächlichen Nachweis ergänzen und die letzte Ausnahme entfernen.\n\n");
         text.Append("## Korpus und lokales Handbuch\n\n`tests/Fixtures/cab/` enthält eigene Dateien je Eintrag, eine ungültige Datei\nje Barcodeprofil sowie Protokollgrenzen und die beiden bestehenden verlustfreien\nFixtures. Es werden keine zusätzlichen Herstellerexporte erfunden. Hersteller-PDF\nund daraus lokal extrahierte Beispiele werden nicht eingecheckt. Der optionale\nHandbuchtest und sein lokales Ergebnis werden getrennt vom synthetischen Nachweis\ndokumentiert. Ein übersprungener Handbuchtest ist kein erfolgreicher Handbuchlauf.\n");
         return text.ToString();
     }

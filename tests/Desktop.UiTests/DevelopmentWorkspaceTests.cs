@@ -21,6 +21,7 @@ public sealed partial class DevelopmentWorkspaceTests
             var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown, LicenseTermsConsent = () => true };
             app.InitializeComponent();
             VerifyCabProperties();
+            VerifyCabGraphics();
             VerifyLabelDesigner(dispatcher);
             VerifyReleaseSelectionAndWorkflow(dispatcher);
             VerifyLiveOutputPanel(dispatcher);

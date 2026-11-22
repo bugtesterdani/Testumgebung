@@ -50,6 +50,8 @@ internal sealed partial class CabPropertiesWindow : Window
 
     internal CabSourceEditor Editor => _editor;
     internal CabJobItem? Selected => _jobs.SelectedItem as CabJobItem;
+    internal void SelectSourceOffset(int offset)
+        => _jobs.SelectedItem = _jobs.Items.Cast<CabJobItem>().FirstOrDefault(i => i.Range.Offset == offset);
 
     private UIElement CreateContent()
     {

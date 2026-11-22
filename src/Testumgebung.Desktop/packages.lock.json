@@ -617,6 +617,11 @@
         "resolved": "10.0.12",
         "contentHash": "Y3f2aLAgynO44Q9xYHR35NC1KuSTcZwo49xjHuq0gQWyOWw8fvipIdoc+1e8FS+9neYZuQ1K4iwl5frNJXekgw=="
       },
+      "ZXing.Net": {
+        "type": "Transitive",
+        "resolved": "0.16.11",
+        "contentHash": "OZfAVu88hl87BffQ+rlWCj/vLvAhhCK4QnFaoveeF/MY8SjHNSYBQ3qyUEWlPKNgBQGh1syXhCDg10vUnCsqkg=="
+      },
       "testumgebung.contracts": {
         "type": "Project"
       },
@@ -680,7 +685,8 @@
           "Testumgebung.Identity": "[1.0.0, )",
           "Testumgebung.Notifications": "[1.0.0, )",
           "Testumgebung.Persistence": "[1.0.0, )",
-          "Testumgebung.Workers": "[1.0.0, )"
+          "Testumgebung.Workers": "[1.0.0, )",
+          "ZXing.Net": "[0.16.11, )"
         }
       },
       "testumgebung.workers": {

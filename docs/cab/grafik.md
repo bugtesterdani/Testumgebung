@@ -1,8 +1,8 @@
 # Grafische JScript-Bearbeitung und Vorschau – AP 6
 
 Issue #267, Release R9, Meilenstein 18. AP 5 (#266) ist mit normalem Merge
-abgeschlossen. Dieser erste Dokumentationscommit legt den Vertrag für den
-Entwurfs-PR fest; Implementierung und Tests folgen erst danach.
+abgeschlossen. Der erste Dokumentationscommit und Entwurfs-PR wurden vor der
+Implementierung angelegt.
 
 Die grafische Ansicht muss alle 50 grafischen Definitionen einschließlich aller
 43 Barcodeprofile erschließen. Grundlage bleiben die verlustfreien Quelldaten
@@ -18,8 +18,11 @@ Begrenzungsrahmen der Vorschau eingehen.
 T umfasst alle katalogisierten Schriften als ausdrücklich erklärte Bitmap-/
 Vektorschrift-Näherung, darstellbare Effekte, Rahmen und inverse Darstellung.
 W umfasst Breite, Höhe, Zeilenabstand und die katalogisierten HTML-Auszeichnungen.
-G umfasst Kreis/Ellipse, Linien mit Endformen und abgerundete Rechtecke sowie
-Strich-, Füllungs-, Umriss- und Schattenoptionen. I verwendet die tatsächlichen
+G umfasst Kreis/Ellipse, Linien mit Endformen und Rechtecke sowie
+Strich-, Füllungs-, Umriss- und Schattierungsoptionen. Die im Auftrag als
+Eckenradien bezeichneten Werte ht/vt sind laut Hersteller horizontale bzw.
+vertikale Strichstärken; die Ansicht erfindet dafür keine Radiusparameter.
+S ist ein Dichteverlauf und kein versetzter Schlagschatten. I verwendet die tatsächlichen
 Downloadressourcen und die Faktoren mx/my.
 
 Barcodevorschauen müssen maßstäblich sein. Eine lizenzrechtlich geklärte
@@ -41,3 +44,28 @@ Begrenzungsrahmen sichern Positionen und Drehungen ab. Erst dann werden die
 Vor Merge: vollständiger Build und vollständige Tests, unveränderte
 Qualitätsgrenzen, erfolgreiche exakte GitHub-CI, Ready for Review und erledigte
 Review-Threads. Normaler Merge ohne Squash/Rebase; erst danach AP 7.
+
+## Bedienung und Grenzen
+
+Im cab-Designer öffnet „Vollständige cab-Grafik …“ die Ansicht. Die Auftragsauswahl
+trennt mehrere J-Aufträge; Einfügen verwendet die eigene Katalogvorlage vor dem
+A-Abschluss. Auswahl, Ziehen, Positions-/Drehungsfelder, Größenfelder und Löschen
+ändern gebundene Parameter. Rückgängig/Wiederholen gilt für Quelltextänderungen.
+Für Bilder wird die Datei als Download eingebettet und über I referenziert.
+Die bestehende Eigenschaftenansicht erschließt zusätzliche Optionen und S/D/O.
+Die numerischen Eingaben verwenden die Einheit des gewählten Befehls und einen
+Dezimalpunkt. Einfügen in Zoll-Aufträge rechnet die Vorlagenlängen um; SC-Werte
+bleiben Standardgrößen. Feste Barcodegrößen und Matrix-Proportionen werden nicht
+durch erfundene Parameter umgangen; die Ansicht meldet die Beschränkung.
+
+Beispielwerte ändern nur die private Vorschau, nicht die Quelldatei. Vorhandene
+objektbezogene Beispiele haben Vorrang; globale Beispiele und ältere Kennungs-
+Vorschauwerte bleiben nutzbar. Inhaltsfelder werden danach durch die Offline-
+Auswertung aus AP 3 ausgewertet. Fehlende Hardwarewerte bleiben gekennzeichnet.
+
+Benutzermuster user1–user4 benötigen einen vorherigen 32×32-Download. Fehlende
+Muster werden ausdrücklich als graue Ersatzfüllung gemeldet. Ohne expliziten dx
+verwendet eine mehrspaltige Vorschau die Etikettenbreite als erklärte Näherung.
+Barcodes mit nicht implementierter Optionsvariante erhalten eine beschriftete
+Ersatzfläche. Inverse Darstellung und Rahmen beziehen die Klarschrift ein;
+die Klarschrift verwendet eine erklärte 3-mm-Windows-Näherung.
