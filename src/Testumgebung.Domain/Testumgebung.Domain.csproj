@@ -5,5 +5,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Testumgebung.Contracts\Testumgebung.Contracts.csproj" />
     <EmbeddedResource Include="..\..\docs\cab\jscript-befehlskatalog.json" LogicalName="Testumgebung.CabJScript.Catalog.json" />
+    <EmbeddedResource Include="..\..\docs\cab\jscript-vorlagen.json" LogicalName="Testumgebung.CabJScript.Templates.json" />
   </ItemGroup>
 </Project>

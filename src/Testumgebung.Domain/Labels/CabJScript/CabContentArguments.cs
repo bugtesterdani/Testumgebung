@@ -1,6 +1,11 @@
 namespace Testumgebung.Domain.Labels.CabJScript;
 
-public sealed record CabContentArgument(CabCatalogParameter Parameter, string Value);
+public sealed record CabContentArgument(CabCatalogParameter Parameter, string Value)
+{
+    /// <summary>UTF-16 position in the decoded content parameter, not a byte offset.</summary>
+    public int Offset { get; init; } = -1;
+    public int Length => Value.Length;
+}
 
 public static class CabContentArguments
 {
@@ -26,8 +31,43 @@ public static class CabContentArguments
     {
         internal CabContentField Field => contentField;
         private readonly IReadOnlyList<string> _args = CabContentGrammar.Arguments(contentField);
+        private int _cursor;
+        private bool _argumentLocated;
         internal List<CabContentArgument> Values { get; } = [];
-        internal void Add(string name, string value) => Values.Add(new(contentField.Definition.Parameters.Single(p => p.Name == name), value));
+        internal void Add(string name, string value)
+        {
+            var relative = Locate(name, value);
+            Values.Add(new(contentField.Definition.Parameters.Single(p => p.Name == name), value)
+                { Offset = relative < 0 ? -1 : contentField.Offset + relative });
+        }
+
+        private int Locate(string name, string value)
+        {
+            var id = CabContentGrammar.Number(contentField);
+            if (id is 88 or 89 && name == "name") return 1;
+            if (id is 90 or 91 && name == "x") return 1 + contentField.Name.IndexOf('-') + 1;
+            if (name is "source.characters" or "target.characters")
+            {
+                var parent = Values.First(v => v.Parameter.Name == name.Split('.')[0]);
+                return parent.Offset - contentField.Offset + 2;
+            }
+            var found = FindArgument(value);
+            if (found < 0) return -1;
+            _cursor = found + value.Length;
+            return 1 + contentField.Name.Length + 1 + found;
+        }
+
+        private int FindArgument(string value)
+        {
+            var argument = contentField.Argument ?? "";
+            var start = Math.Min(_cursor, argument.Length);
+            // An empty positional argument starts after its separator, not at
+            // the end of the preceding value. Consecutive empty slots each advance.
+            if (value.Length == 0 && _argumentLocated && start < argument.Length && argument[start] == ',') start++;
+            var found = argument.IndexOf(value, start, StringComparison.Ordinal);
+            if (found >= 0) _argumentLocated = true;
+            return found;
+        }
         internal void At(string name, int position) { if (position < _args.Count) Add(name, _args[position]); }
 
         internal void Ordinary()

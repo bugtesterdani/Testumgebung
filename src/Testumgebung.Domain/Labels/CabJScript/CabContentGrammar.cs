@@ -49,7 +49,7 @@ public static class CabContentGrammar
         }
     }
 
-    private static bool MayOmit(int id, string name) => (id, name) switch
+    internal static bool MayOmit(int id, string name) => (id, name) switch
     {
         (63, "start" or "len") => true, (65, "len") => true,
         (66, "x" or "y" or "z") => true, (97, "inc" or "freq") => true, _ => false
