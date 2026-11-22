@@ -89,7 +89,7 @@ internal sealed partial class CabGraphicWindow : Window
         Button(side, "Position und Drehung übernehmen", ApplyPosition); Button(side, "Größe übernehmen", ApplySize);
         side.Children.Add(new TextBlock { Text = "Beispielwerte für Platzhalter", Margin = new(0, 12, 0, 0) }); side.Children.Add(_examples);
         Button(side, "Beispiele anzeigen", () => { _layout.CabGraphicExampleValues = _examples.Text; Draw(); });
-        side.Children.Add(new TextBlock { Text = "Maße in der Einheit des gewählten Befehls; Schriften sind Näherungen. Barcode-Ersatzflächen sind beschriftet.", TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 8) });
+        side.Children.Add(new TextBlock { Text = "Maße in der Einheit des gewählten Befehls. Schriften, Klarschrift und druckauflösungsabhängige SC-Standardgrößen sind Näherungen. Barcode-Ersatzflächen sind beschriftet.", TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 8) });
         side.Children.Add(_notes);
         var sidebar = new ScrollViewer { Content = side, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Width = 350 };
         DockPanel.SetDock(sidebar, Dock.Right); root.Children.Add(sidebar);

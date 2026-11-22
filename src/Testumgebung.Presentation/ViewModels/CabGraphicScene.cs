@@ -16,6 +16,7 @@ public sealed record CabGraphicItem(CabBoundCommand Command, CabGraphicKind Kind
     public double StrokeX { get; init; }
     public double StrokeY { get; init; }
     public int Column { get; init; }
+    public bool Hidden { get; init; }
     public override string ToString() => Command.Definition.Catalog.Title + " · " + (Command.Parameter("name")?.Value ?? Command.Syntax.Range.Offset.ToString(System.Globalization.CultureInfo.InvariantCulture));
 }
 

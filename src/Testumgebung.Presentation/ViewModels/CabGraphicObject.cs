@@ -8,12 +8,13 @@ internal static class CabGraphicObject
     {
         var text = content?.Text ?? CabGraphicValues.Text(command, "text");
         var notes = content?.Notes.ToList() ?? [];
-        return command.Syntax.Command switch
+        var item = command.Syntax.Command switch
         {
             "T" => Text(command, dpi, text, notes), "W" => RichText(command, dpi, text, notes),
             "B" => Barcode(command, dpi, content ?? new(text, new(text), notes)),
             "I" => Image(editor, command, notes), _ => Shape(editor, command, dpi, notes),
         };
+        return item with { Hidden = content?.Hidden == true };
     }
 
     private static CabGraphicItem Text(CabBoundCommand command, int dpi, string text, List<string> notes)

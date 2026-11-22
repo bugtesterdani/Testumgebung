@@ -25,6 +25,7 @@ public static class CabBarcodePreview
         var fallback = Estimate(command, content.Text);
         if (content.Value.Placeholder) return fallback with { Note = "Beschriftete Vorschaufläche: Beispielwert oder Hardwarewert fehlt." };
         if (!Formats.TryGetValue(command.Definition.Catalog.Id, out var format)) return fallback;
+        if (!SupportedRatio(command)) return fallback with { Note = "Beschriftete Vorschaufläche: das verlangte Balkenverhältnis wird vom Encoder nicht erzeugt. Größe ist eine berechnete Näherung." };
         if (!SupportedOptions(command)) return fallback with { Note = "Beschriftete Vorschaufläche: diese Options-/Untercodevariante wird nicht erzeugt. Größe ist eine berechnete Näherung." };
         try
         {
@@ -41,6 +42,19 @@ public static class CabBarcodePreview
         }
         catch (Exception error) when (error is ArgumentException or InvalidOperationException or System.FormatException or WriterException)
         { return fallback with { Note = "Beschriftete Vorschaufläche: " + error.Message + " Größe ist eine berechnete Näherung." }; }
+    }
+
+    private static bool SupportedRatio(CabBoundCommand command)
+    {
+        if (!CabGraphicValues.Present(command, "ratio")) return true;
+        var ratio = CabGraphicValues.Number(command, "ratio");
+        return command.Definition.Catalog.Id switch
+        {
+            "JS-4.2.9" => ratio == 2, // Pinned Code39Writer.toIntArray uses fixed widths 1 and 2.
+            "JS-4.2.3" => ratio == 3, // Pinned ITFWriter has W = 3 and N = 1.
+            "JS-4.2.37" => ratio == Math.Truncate(ratio) && ratio is >= 1 and <= 4,
+            _ => false,
+        };
     }
 
     private static bool SupportedOptions(CabBoundCommand command)
@@ -117,7 +131,8 @@ public static class CabBarcodePreview
             if (size % 2 != 0) size++;
             return (Math.Max(size, (int)CabGraphicValues.Number(command, "COLS")), Math.Max(size, (int)CabGraphicValues.Number(command, "ROWS")));
         }
-        return (Math.Max(20, count * 11 + 35), 1);
+        var ratio = CabGraphicValues.Number(command, "ratio", 2);
+        return (Math.Max(20, (int)Math.Ceiling((count * 11 + 35) * Math.Max(1, ratio) / 2)), 1);
     }
 
     public static double ModuleWidth(CabBoundCommand command, int dpi)

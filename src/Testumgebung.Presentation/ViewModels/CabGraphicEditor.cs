@@ -83,11 +83,17 @@ public static class CabGraphicEditor
         {
             CabGraphicKind.Circle => [("radius1", width / factor / 2), ("radius2", height / factor / 2)],
             CabGraphicKind.Rectangle or CabGraphicKind.RichText => [("width", width / factor), ("height", height / factor)],
-            CabGraphicKind.Line => [("length", width / factor), ("width", height / factor)],
+            CabGraphicKind.Line => LineSize(width, height, factor),
             CabGraphicKind.Image => ImageSize(item, width, height),
             CabGraphicKind.Text => TextSize(item, width, height),
             _ => BarcodeSize(item, width, height),
         };
+
+    private static (string, double)[] LineSize(double width, double height, double factor)
+    {
+        if (width < height) throw new ArgumentException("Die Begrenzungsbreite darf nicht kleiner als die Strichstärke sein.");
+        return [("length", (width - height) / factor), ("width", height / factor)];
+    }
 
     private static (string, double)[] ImageSize(CabGraphicItem item, double width, double height)
     {

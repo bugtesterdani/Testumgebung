@@ -3,7 +3,7 @@ using Testumgebung.Domain.Labels.CabJScript;
 
 namespace Testumgebung.Presentation.ViewModels;
 
-public sealed record CabGraphicContentValue(string Text, CabPreviewValue Value, IReadOnlyList<string> Notes);
+public sealed record CabGraphicContentValue(string Text, CabPreviewValue Value, IReadOnlyList<string> Notes, bool Hidden = false);
 
 /// <summary>Expands examples in a private document; the source document never receives preview substitutions.</summary>
 public static class CabGraphicContent
@@ -26,9 +26,26 @@ public static class CabGraphicContent
             throw new InvalidDataException("Ein Beispielwert verändert Befehls- oder HTML-Grenzen. Bitte reine Inhaltswerte verwenden.");
         var offsets = commands.Select((c, index) => (c.Syntax.Range.Offset, Original: editor.Validation.Commands[index].Syntax.Range.Offset)).ToDictionary(p => p.Offset, p => p.Original);
         var previews = CabDocumentPreview.Evaluate(document, editor.Settings.Preview ?? new(), editor.Settings);
-        return previews.Where(p => offsets.ContainsKey(p.Content.Command.Syntax.Range.Offset)).GroupBy(p => offsets[p.Content.Command.Syntax.Range.Offset])
-            .ToDictionary(g => g.Key, g => Value(g.Last(), unresolved.Contains(g.Key)));
+        return MapFields(commands, previews, offsets, unresolved);
     }
+
+    private static IReadOnlyDictionary<int, CabGraphicContentValue> MapFields(IReadOnlyList<CabBoundCommand> commands,
+        IReadOnlyList<CabPreviewField> previews, IReadOnlyDictionary<int, int> offsets, IReadOnlySet<int> unresolved)
+    {
+        var result = new Dictionary<int, CabGraphicContentValue>();
+        foreach (var preview in previews)
+        {
+            var command = preview.Content.Command;
+            var target = command.Syntax.Command == "R" ? ReplacementTarget(commands, command, preview.Name) : command;
+            if (target is null || !offsets.TryGetValue(target.Syntax.Range.Offset, out var original)) continue;
+            result[original] = Value(preview, unresolved.Contains(offsets[command.Syntax.Range.Offset]));
+        }
+        return result;
+    }
+
+    private static CabBoundCommand? ReplacementTarget(IReadOnlyList<CabBoundCommand> commands, CabBoundCommand replacement, string? name)
+        => commands.LastOrDefault(c => c.JobIndex == replacement.JobIndex && c.Syntax.Range.Offset < replacement.Syntax.Range.Offset
+            && c.Syntax.Command is "T" or "W" or "B" && c.Parameter("name")?.Value == name);
 
     private static string Signature(CabBoundCommand command) => command.Syntax.Command + "/" + command.Definition.Catalog.Id;
     private static bool Editable(CabBoundContent content) => content.Parameter.Rule.DataType != CabDataType.Binary || content.Parameter.Rule.Pattern is not null;
@@ -38,7 +55,7 @@ public static class CabGraphicContent
         var notes = field.Preview.Issues.Select(i => i.Message).ToList();
         if (missing) notes.Add("Für mindestens einen Platzhalter fehlt ein Beispielwert.");
         if (field.Preview.Hidden) notes.Add("Das Inhaltsfeld ist im gewählten Beispielszenario unsichtbar.");
-        return new(field.Preview.Hidden ? "" : field.Preview.Text, value, notes);
+        return new(field.Preview.Hidden ? "" : field.Preview.Text, value, notes, field.Preview.Hidden);
     }
 
     public static string Expand(string text, string examples, out bool missing)

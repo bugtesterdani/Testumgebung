@@ -139,7 +139,7 @@ public sealed class CabGraphicTests
     [InlineData("G 10,20,0;C:5,3", 120, 80, "radius1", 6, "radius2", 4)]
     [InlineData("G 10,20,0;R:5,3,1,1", 120, 80, "width", 12, "height", 8)]
     [InlineData("W 1,2,0,10,6,3,3;abc", 120, 80, "width", 12, "height", 8)]
-    [InlineData("G 10,20,0;L:5,1", 120, 20, "length", 12, "width", 2)]
+    [InlineData("G 10,20,0;L:5,1", 120, 20, "length", 10, "width", 2)]
     public void Resizing_edits_only_the_documented_size_parameters(string line, double width, double height, string first, double x, string second, double y)
     {
         var editor = new CabSourceEditor(Encoding.UTF8.GetBytes("J\r" + line + "\rA 1\r"));
@@ -261,6 +261,101 @@ public sealed class CabGraphicTests
         Assert.False(resized.Validation.HasErrors);
         Assert.Contains("x4,y6", Encoding.UTF8.GetString(resized.Document.Write()));
         AssertNeighbours(editor, resized, item.Command.Syntax.Range);
+    }
+
+    [Fact]
+    public void Replacement_updates_its_original_named_graphic_without_crossing_jobs()
+    {
+        var bytes = "J\rT:Data;1,8,0,5,3;old\rR Data;middle\rR Data;new-{Kennung}\rA 1\rJ\rT:Data;1,8,0,5,3;other\rR Data;second\rA 1\r"u8.ToArray();
+        var editor = new CabSourceEditor(bytes);
+        Assert.False(editor.Validation.HasErrors);
+        var layout = new LabelLayout { CabGraphicExampleValues = "Kennung=EXAMPLE" };
+        Assert.Equal("new-EXAMPLE", Assert.Single(CabGraphicFactory.Build(editor, layout, 0).Items).Text);
+        Assert.Equal("second", Assert.Single(CabGraphicFactory.Build(editor, layout, 1).Items).Text);
+        Assert.Equal(bytes, editor.Document.Write());
+    }
+
+    [Theory]
+    [InlineData("T 1,8,0,5,3,n,fr1;[I]")]
+    [InlineData("W 1,2,0,10,6,3,3;[I]")]
+    [InlineData("B 1,2,0,CODE128,10,.3,n,fr1;[I]")]
+    public void Invisible_content_is_carried_as_hidden_graphic_state(string line)
+    {
+        var editor = new CabSourceEditor(Encoding.UTF8.GetBytes("J\r" + line + "\rA 1\r"));
+        Assert.False(editor.Validation.HasErrors);
+        var item = Assert.Single(CabGraphicFactory.Build(editor, new LabelLayout(), 0).Items);
+        Assert.True(item.Hidden); Assert.Empty(item.Text);
+        Assert.Contains(item.Notes, n => n.Contains("unsichtbar", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Applying_displayed_line_dimensions_is_idempotent_including_stroke_width()
+    {
+        var bytes = "J\rG 10,20,0;L:5,1\rA 1\r"u8.ToArray();
+        var editor = new CabSourceEditor(bytes);
+        var layout = new LabelLayout { Dpi = 254 };
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var item = Assert.Single(CabGraphicFactory.Build(editor, layout, 0).Items);
+            editor = CabGraphicEditor.Resize(editor, item, item.ContentBounds.Width, item.ContentBounds.Height, 254);
+            Assert.Equal(bytes, editor.Document.Write());
+        }
+    }
+
+    [Theory]
+    [InlineData("JS-4.2.9", "3")]
+    [InlineData("JS-4.2.3", "2.8")]
+    public void Unsupported_linear_ratios_are_labelled_fallbacks_with_distinct_estimated_widths(string id, string otherRatio)
+    {
+        var editor = new CabSourceEditor(CabPropertyTemplates.Get(id).Bytes);
+        var command = editor.Validation.Commands.First(c => c.Syntax.Command == "B");
+        var property = CabPropertyBindings.ForCommand(editor, command).Single(p => p.Definition.Name == "ratio");
+        var a = CabPropertyBindings.Replace(editor, property, "2.5");
+        var b = CabPropertyBindings.Replace(editor, property, otherRatio);
+        var first = CabGraphicFactory.Build(a, new LabelLayout(), 0).Items.First(i => i.Kind == CabGraphicKind.Barcode);
+        var second = CabGraphicFactory.Build(b, new LabelLayout(), 0).Items.First(i => i.Kind == CabGraphicKind.Barcode);
+        Assert.False(first.Barcode!.IsEncoded); Assert.False(second.Barcode!.IsEncoded);
+        Assert.Contains("Balkenverhältnis", first.Barcode.Note);
+        Assert.True(second.ContentBounds.Width > first.ContentBounds.Width);
+    }
+
+    [Theory]
+    [InlineData("CODE39", "2", "ABC123")]
+    [InlineData("2OF5INTERLEAVED", "3", "123456")]
+    public void Pinned_encoder_native_ratios_remain_genuine_symbols(string type, string ratio, string data)
+    {
+        var editor = new CabSourceEditor(Encoding.UTF8.GetBytes($"J\rB 1,2,0,{type},10,.3,{ratio};{data}\rA 1\r"));
+        Assert.False(editor.Validation.HasErrors);
+        var item = Assert.Single(CabGraphicFactory.Build(editor, new LabelLayout(), 0).Items);
+        Assert.True(item.Barcode!.IsEncoded, item.Barcode.Note);
+    }
+
+    [Fact]
+    public void Column_copies_use_the_declared_pitch_without_duplicating_source_commands()
+    {
+        var bytes = "J\rS e;0,0,40,43,30,35,2\rG 5,10,0;C:2\rA 1\r"u8.ToArray();
+        var editor = new CabSourceEditor(bytes);
+        Assert.False(editor.Validation.HasErrors);
+        var scene = CabGraphicFactory.Build(editor, new LabelLayout { Dpi = 254 }, 0);
+        Assert.Equal(2, scene.Columns); Assert.Equal(650, scene.Width, 6);
+        Assert.Equal(2, scene.Items.Count);
+        Assert.Equal(350, scene.Items[1].Bounds.X - scene.Items[0].Bounds.X, 6);
+        Assert.Equal(scene.Items[0].Command.Syntax.Range, scene.Items[1].Command.Syntax.Range);
+        Assert.Equal(bytes, editor.Document.Write());
+    }
+
+    [Theory]
+    [InlineData("QRCODE+ELH+VERSION2", true, 25)]
+    [InlineData("DATAMATRIX+ROWS16+COLS16", true, 16)]
+    [InlineData("QRCODE+WS2", false, 0)]
+    public void Encoder_options_are_applied_or_explicitly_rejected(string type, bool encoded, int columns)
+    {
+        var editor = new CabSourceEditor(Encoding.UTF8.GetBytes($"J\rB 1,2,0,{type},.5;ABC123\rA 1\r"));
+        Assert.False(editor.Validation.HasErrors, string.Join("; ", editor.Validation.Diagnostics.Select(d => d.Message)));
+        var item = Assert.Single(CabGraphicFactory.Build(editor, new LabelLayout(), 0).Items);
+        Assert.Equal(encoded, item.Barcode!.IsEncoded);
+        if (encoded) Assert.Equal(columns, item.Barcode.Columns);
+        else Assert.Contains("Options-/Untercodevariante", item.Barcode.Note);
     }
 
     [Fact]

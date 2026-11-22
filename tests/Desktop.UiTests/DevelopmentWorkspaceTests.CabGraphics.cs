@@ -53,6 +53,7 @@ public sealed partial class DevelopmentWorkspaceTests
         finally { window.Close(); }
         VerifyEveryGraphicVisual();
         VerifyGraphicEffects();
+        VerifyInvisibleGraphicPixels();
     }
 
     private static void VerifyGraphicImages(CabGraphicWindow window)
@@ -105,6 +106,23 @@ public sealed partial class DevelopmentWorkspaceTests
         visual.Measure(new Size(2000, 2000)); visual.Arrange(new Rect(0, 0, visual.Width, visual.Height));
         var bitmap = new RenderTargetBitmap(Math.Max(1, (int)Math.Ceiling(visual.Width)), Math.Max(1, (int)Math.Ceiling(visual.Height)), 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(visual); Assert.True(bitmap.PixelWidth > 0);
+    }
+
+    private static void VerifyInvisibleGraphicPixels()
+    {
+        foreach (var line in new[] { "T 1,8,0,5,3,n,fr1;[I]", "B 1,2,0,CODE128,10,.3,n,fr1;[I]" })
+        {
+            var editor = new CabSourceEditor(Encoding.UTF8.GetBytes("J\r" + line + "\rA 1\r"));
+            var item = Assert.Single(CabGraphicFactory.Build(editor, new LabelLayout(), 0).Items);
+            Assert.True(item.Hidden);
+            var visual = new CabGraphicVisual(item, 203);
+            visual.Measure(new Size(2000, 2000)); visual.Arrange(new Rect(0, 0, visual.Width, visual.Height));
+            var bitmap = new RenderTargetBitmap((int)Math.Ceiling(visual.Width), (int)Math.Ceiling(visual.Height), 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(visual);
+            var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4];
+            bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0);
+            Assert.All(pixels, value => Assert.Equal((byte)0, value));
+        }
     }
 
     private static void GraphicButton(Window window, string label)

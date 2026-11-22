@@ -23,6 +23,7 @@ internal sealed partial class CabGraphicVisual : FrameworkElement
     protected override void OnRender(DrawingContext context)
     {
         base.OnRender(context);
+        if (Item.Hidden) return;
         var bounds = Item.LocalBounds;
         context.PushTransform(new TranslateTransform(-bounds.X, -bounds.Y));
         if (Inverse()) context.DrawRectangle(Brushes.Black, null, Rect(bounds));

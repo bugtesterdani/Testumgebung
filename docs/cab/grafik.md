@@ -57,6 +57,8 @@ Die numerischen Eingaben verwenden die Einheit des gewählten Befehls und einen
 Dezimalpunkt. Einfügen in Zoll-Aufträge rechnet die Vorlagenlängen um; SC-Werte
 bleiben Standardgrößen. Feste Barcodegrößen und Matrix-Proportionen werden nicht
 durch erfundene Parameter umgangen; die Ansicht meldet die Beschränkung.
+Die druckauflösungsabhängigen SC-Standardmaße werden ausdrücklich angenähert;
+eine druckergleiche Rasterung und Klarschriftmetrik wird nicht behauptet.
 
 Beispielwerte ändern nur die private Vorschau, nicht die Quelldatei. Vorhandene
 objektbezogene Beispiele haben Vorrang; globale Beispiele und ältere Kennungs-
@@ -69,3 +71,18 @@ verwendet eine mehrspaltige Vorschau die Etikettenbreite als erklärte Näherung
 Barcodes mit nicht implementierter Optionsvariante erhalten eine beschriftete
 Ersatzfläche. Inverse Darstellung und Rahmen beziehen die Klarschrift ein;
 die Klarschrift verwendet eine erklärte 3-mm-Windows-Näherung.
+
+Ersetzungen durch R werden dem benannten ursprünglichen Grafikfeld desselben
+Auftrags zugeordnet. Unsichtbare Inhalte unterdrücken die vollständige gedruckte
+Grafik einschließlich inverser Fläche, Klarschrift und Rahmen; im Editor bleiben
+sie zur Bearbeitung auswählbar. Die Größenübernahme einer Linie zieht die
+Strichstärke von ihrer Begrenzungsbreite ab und ist bei unveränderten Maßen stabil.
+
+Die gepinnten Encoder besitzen feste Balkenverhältnisse:
+[Code39Writer](https://github.com/micjahn/ZXing.Net/blob/v0.16.11.0/Source/lib/oned/Code39Writer.cs)
+verwendet 2:1,
+[ITFWriter](https://github.com/micjahn/ZXing.Net/blob/v0.16.11.0/Source/lib/oned/ITFWriter.cs)
+verwendet 3:1. Andere verlangte lineare Verhältnisse werden nicht als echter Code
+behauptet. Ihre beschrifteten Ersatzflächen berücksichtigen das Verhältnis in
+der ausdrücklich angenäherten Breite. PDF417 verwendet nur die vom Encoder
+unterstützten ganzzahligen Zeilenverhältnisse von 1 bis 4.
