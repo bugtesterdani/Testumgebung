@@ -1,12 +1,16 @@
-# cab-JScript-Katalog – Prüfstand AP 0
+# cab-JScript-Katalog und vollständiger Editorumfang
 
 Grundlage: cab JScript Programming Manual 07/2026, Firmware 5.48.
 
 Alle 237 Einträge wurden gegen die jeweiligen Handbuchseiten geprüft.
 Die im Ausgangskatalog fehlenden Abschnitte JS-1.4 und JS-4.2.1 sind ergänzt;
 JS-5.83 existiert im Handbuch nicht. Das Schema verlangt `geprueft: true`.
-Die Katalogprüfung begründet keine vollständige Befehlsunterstützung im
-Etiketteneditor. Eine bestandene Strukturprüfung ersetzt keine Fachprüfung.
+Der Editor erschließt diesen Katalog vollständig über Quelltext, Eigenschaften,
+Inhaltsfelder und die grafischen Definitionen. Der [generierte Abdeckungsbericht](abdeckung.md)
+führt dafür ausführbare Nachweise aus; die Rückstellungsliste ist leer.
+Eine bestandene Strukturprüfung allein ersetzt weiterhin keine Fachprüfung.
+Hardwarewerte und nicht erzeugte Barcodevarianten sowie Schrift-/SC-Maße werden
+in der Offline-Vorschau ausdrücklich als Beispiele oder Näherungen gekennzeichnet.
 
 ## Tatsächlich geprüfte Abschnitte
 
@@ -155,10 +159,12 @@ Extraktionsfehler sind korrigiert. Nicht eindeutig belegte Regeln und
 Widersprüche sind als Hinweise gekennzeichnet. Das lokale Handbuch-PDF und
 daraus extrahierte Inhalte bleiben außerhalb der versionierten Dateien.
 Der generierte Bausteinkatalog beschreibt die tatsächlich vorhandenen
-Anwendungsbausteine; AP 0 ergänzt noch keine neue Editorfunktion.
+Anwendungsbausteine und wird ausschließlich aus deren echten Definitionen exportiert.
 
 `statistik.werte` zählt die Parameter-Wertelisten. Getrennte Ausgabe-,
 Kapazitäts- und Medientabellen werden darin nicht als Eingabewerte mitgezählt.
 
-Die folgenden AP beginnen erst nach erfolgreichem Build, Tests, CI, Review und
-Merge von AP 0. Issue: #253; Release: R9, Milestone 18.
+Die Arbeitspakete folgen der Reihenfolge AP 0, 1, 2, 3, 8, 4, 5, 6, 7 mit
+jeweils eigenem Issue und PR in Release R9, Meilenstein 18. Details zur
+[Datei-/Druckintegration](integration.md), [Grafik](grafik.md) und
+[Bedienung](../handbuch/entwickler.md#cab-drucker-mit-lbl-datei).

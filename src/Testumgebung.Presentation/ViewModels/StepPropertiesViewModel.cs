@@ -187,11 +187,10 @@ public sealed class StepPropertiesViewModel : PropertiesViewModel
 
     public void SaveCabLabelLayout(LabelLayout layout)
     {
-        var data = CabLabelLayout.Render(layout, out var textOffset);
-        if (textOffset < data.Length)
-            Step.Parameters[LabelPrintingBlocks.CabTextOffsetParameter] = textOffset.ToString(CultureInfo.InvariantCulture);
-        else Step.Parameters.Remove(LabelPrintingBlocks.CabTextOffsetParameter);
-        Step.Parameters[CabLabelLayout.Parameter] = layout.Save();
+        var snapshot = CabEditingSource.Capture(layout);
+        var data = snapshot.CabSource!.Data;
+        Step.Parameters.Remove(LabelPrintingBlocks.CabTextOffsetParameter);
+        Step.Parameters[CabLabelLayout.Parameter] = snapshot.Save();
         SetCabPrintData(data);
     }
 

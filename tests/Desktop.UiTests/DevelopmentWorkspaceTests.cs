@@ -22,6 +22,7 @@ public sealed partial class DevelopmentWorkspaceTests
             app.InitializeComponent();
             VerifyCabProperties();
             VerifyCabGraphics();
+            VerifyCabFileIntegration(dispatcher);
             VerifyLabelDesigner(dispatcher);
             VerifyReleaseSelectionAndWorkflow(dispatcher);
             VerifyLiveOutputPanel(dispatcher);

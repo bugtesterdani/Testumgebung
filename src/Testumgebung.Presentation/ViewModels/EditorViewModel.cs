@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;
 using Testumgebung.Domain.Expressions;
+using Testumgebung.Domain.Labels.CabJScript;
 using Testumgebung.Engine;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Persistence;
@@ -288,6 +289,7 @@ public sealed partial class EditorViewModel : ObservableObject
     public IReadOnlyList<string> DiagnosticsFor(StepDefinition step)
     {
         var list = Catalog.Rebuild(step).ToList();
+        list.AddRange(CabProjectDiagnostics.ForStep(step).Select(i => i.ToString()));
         if (list.Count == 0) list.AddRange(BusBlocks.CheckReferences(step, Project.Definition));
         if (list.Count == 0 && TraceBlocks.LegacyStartupWarning(step) is { } warning) list.Add(warning);
         if (step.BlockType is not (BlockCatalog.LibraryBlock or BlockCatalog.GroupBlock)) return list;

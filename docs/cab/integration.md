@@ -2,8 +2,8 @@
 
 Issue #269, Release R9, Meilenstein 18. AP 6 (#268) wurde mit normalem
 Merge-Commit d3b67a8f0c36f624bcd9ee55fe84a7e1615ffaa1 abgeschlossen.
-Dieser erste Dokumentationscommit legt den Integrationsvertrag fest.
-Implementierung und Tests folgen nach Eröffnung des Entwurfs-PR.
+Der erste Dokumentationscommit legte diesen Integrationsvertrag fest.
+Implementierung und Tests begannen erst nach Eröffnung des Entwurfs-PR.
 
 ## Quelldatei und Druck
 
@@ -44,6 +44,30 @@ Das Entwicklerhandbuch beschreibt den vollständigen Katalogstand nach Ausgabe
 07/2026, die Generationsauswahl, alle drei Ansichten und Inhaltsfelder neben
 Platzhaltern. Hardwareabhängige Werte, Schrift-/SC-Näherungen und nicht erzeugte
 Barcodevarianten bleiben ausdrücklich als Grenzen der Offline-Vorschau benannt.
+
+## Gespeicherter Vertrag
+
+CabLblDaten enthält weiterhin die Base64-kodierte Originaldatei. CabLblLayout
+enthält Quelle, Codepage, Generationen und Vorschau-/Designer-Einstellungen.
+Beim Drucken ist die eingebettete Datei maßgeblich; Beispielwerte werden niemals
+an Stelle echter Ablaufwerte verwendet. Das ältere CabLblTextOffset bleibt beim
+Laden als Metadatum lesbar, wird zur Auswahl von Textbereichen nicht mehr benutzt
+und bei neuem Übernehmen entfernt.
+
+Ersetzungen betreffen einzelne Platzhalterspannen innerhalb gebundener Parameter.
+Dadurch bleiben auch Codepage-Steuerungen mitten in einer Zeile und alle übrigen
+Literalbytes an ihrer ursprünglichen Stelle. In Rich Text werden eingesetzte
+Werte als HTML-Text kodiert. Eingesetzte Steuerzeichen und eckige Klammern werden
+zurückgewiesen; vorhandene JScript-Inhaltsfelder der Vorlage bleiben erhalten.
+Opake Nutzdaten werden weder als Inhaltsfelder geprüft noch interpoliert.
+Nicht dekodierbarer Text mit möglichen Platzhaltern sperrt Druck und Freigabe,
+damit kein Ablaufwert unbemerkt fehlt. Ohne Platzhalter bleiben solche
+Literalbytes unverändert; die Codepage-Warnung bleibt sichtbar.
+
+CLI-Projektprüfung, Formatprüfwerkzeug und Freigabeprüfung verwenden dieselben
+JScript-Diagnosen. Fehler sperren auch die Freigabe eines früher bereits geprüften
+Entwurfs. Bereits freigegebene Pakete bleiben unverändert ladbar; diese Prüfung
+schreibt weder Paket noch Projekt um. Warnungen behalten ihre Schwere.
 
 Vor Merge gelten vollständiger Build und Tests, unveränderte Qualitätsgrenzen,
 erfolgreiche exakte GitHub-CI, Ready for Review und erledigte Review-Threads.

@@ -92,8 +92,8 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         Require(actor, UserRights.Develop, "Einen Entwurf anlegen");
         version = version.Trim();
         if (version.Length == 0) throw new ReleaseRuleException("Version angeben.");
-        var issues = project.Definition.Validate();
-        if (issues.Count > 0) throw new ReleaseRuleException("Ablauf ist nicht gültig: " + string.Join("; ", issues));
+        var issues = project.Definition.Validate().Concat(CabReleaseErrors(project.Definition)).ToArray();
+        if (issues.Length > 0) throw new ReleaseRuleException("Ablauf ist nicht gültig: " + string.Join("; ", issues));
         var existing = await Store.ListAsync(ct).ConfigureAwait(false);
         if (existing.Any(release => release.ProjectName == project.Definition.Name && release.Version == version))
             throw new ReleaseRuleException($"Version {version} existiert bereits – Pakete sind unveränderlich, bitte neue Version vergeben.");
@@ -125,6 +125,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         checks.Add(new ReviewCheck("Paketintegrität", opened.IsIntact, opened.IsIntact ? $"Alle {opened.Manifest.Entries.Count} Hashes stimmen." : string.Join("; ", opened.Problems)));
         var issues = opened.Project.Definition.Validate();
         checks.Add(new ReviewCheck("Ablauf gültig", issues.Count == 0, issues.Count == 0 ? "Keine Befunde." : string.Join("; ", issues)));
+        AddCabReview(checks, opened.Project.Definition);
         if (RequireRuntimeSnapshot || opened.Environment is not null)
         {
             var differences = await VerifyEnvironmentAsync(info, ct).ConfigureAwait(false);
@@ -158,6 +159,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         if (info.State != ReleaseState.Review) throw new ReleaseRuleException($"Nur geprüfte Pakete können freigegeben werden (Zustand: {info.StateText}).");
         var opened = await OpenAsync(info, ct).ConfigureAwait(false);
         if (!opened.IsIntact) throw new ReleaseRuleException("Paket ist nicht unversehrt: " + string.Join("; ", opened.Problems));
+        RequireValidCabLabels(opened.Project.Definition);
         await VerifyRemoteReleaseAsync(info, opened, ct).ConfigureAwait(false);
         if (RequireRuntimeSnapshot || opened.Environment is not null)
         {

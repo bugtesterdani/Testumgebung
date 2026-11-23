@@ -31,7 +31,8 @@ public static class CabContentValidation
         return result.AsReadOnly();
     }
 
-    private static bool IsContent(CabBoundParameter parameter) => parameter.IsPresent && parameter.Parts.Count > 0
+    internal static bool IsContent(CabBoundParameter parameter) => parameter.IsPresent && parameter.Parts.Count > 0
+        && (parameter.Rule.DataType != CabDataType.Binary || parameter.Rule.Pattern is not null)
         && (parameter.Rule.Parameter.Name is "text" or "data"
             || parameter.Rule.Entry.Id == "JS-4.14" && parameter.Rule.Parameter.Name == "value");
 
