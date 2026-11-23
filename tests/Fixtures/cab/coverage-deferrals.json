@@ -1,10 +1,4 @@
 {
   "version": 1,
-  "deferrals": [
-    {
-      "id": "project",
-      "stage": "integration",
-      "ap": 7
-    }
-  ]
+  "deferrals": []
 }

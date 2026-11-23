@@ -1,6 +1,7 @@
 using System.Text;
 using Testumgebung.Contracts;
 using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Labels.CabJScript;
 
 namespace Testumgebung.Engine.Blocks;
 
@@ -23,7 +24,7 @@ public static class LabelPrintingBlocks
                 new("ZplVorlage", "ZPL-Vorlage", ParameterKind.Text, "^XA\n^CI28\n^FO30,30^FD{Kennung}^FS\n^XZ", Required: true,
                     Hint: "Variablen als {Kennung} einsetzen; {{ und }} ergeben geschweifte Klammern.", VisibleWhen: new(FormatParameter, Zpl)),
                 new(CabDataParameter, "cab-LBL-Druckdatei", ParameterKind.Text, Required: true,
-                    Hint: "Druckfertiger JScript-Export aus cablabel. Eingebettete Grafiken werden übernommen.", VisibleWhen: new(FormatParameter, Cab)),
+                    Hint: "Verlustfreie JScript-Druckdatei. Platzhalter wie {Kennung} werden nur in Text-/Datenparametern ersetzt; Binärdateien bleiben unverändert.", VisibleWhen: new(FormatParameter, Cab)),
                 new("Host", "Druckername / IP-Adresse", ParameterKind.Text, Required: true, VisibleWhen: new("Druckart", Tcp)),
                 new("Port", "TCP-Port", ParameterKind.Number, "9100", VisibleWhen: new("Druckart", Tcp)),
                 new("Zeitlimit", "TCP-Zeitlimit [ms]", ParameterKind.Number, "5000", VisibleWhen: new("Druckart", Tcp)),
@@ -34,7 +35,7 @@ public static class LabelPrintingBlocks
     private static IStepAction Create(BlockParameters parameters)
     {
         var format = parameters.Choice(FormatParameter);
-        var render = format == Cab ? CabRenderer(parameters.Text(CabDataParameter), parameters.Raw.GetValueOrDefault(CabTextOffsetParameter)) : ZplRenderer(parameters.Text("ZplVorlage"), parameters.Raw.ContainsKey("ZplLayout"));
+        var render = format == Cab ? CabRenderer(parameters) : ZplRenderer(parameters.Text("ZplVorlage"), parameters.Raw.ContainsKey("ZplLayout"));
         return parameters.Choice("Druckart") switch
         {
             Tcp => CreateTcp(parameters, render, format),
@@ -63,51 +64,17 @@ public static class LabelPrintingBlocks
         return (Encoding.UTF8.GetBytes(zpl), zpl);
     };
 
-    private static RenderLabel CabRenderer(string data, string? textOffset)
+    private static RenderLabel CabRenderer(BlockParameters parameters)
     {
-
-        byte[] bytes;
-        try { bytes = Convert.FromBase64String(data); }
-        catch (FormatException) { throw new BlockConfigurationException("Die eingebettete cab-LBL-Druckdatei enthält ungültige Base64-Daten."); }
-        if (bytes.Length == 0)
-            throw new BlockConfigurationException("Die eingebettete cab-LBL-Druckdatei ist leer.");
-        if (textOffset is null) return _ => (bytes, (long)bytes.Length);
-        if (!int.TryParse(textOffset, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var offset)
-            || offset >= bytes.Length || !bytes.AsSpan(offset).StartsWith("J\r"u8))
-            throw new BlockConfigurationException("Ungültiger Textabschnitt in der cab-Druckvorlage.");
-        return CabTemplateRenderer(bytes, offset);
-    }
-
-    private static RenderLabel CabTemplateRenderer(byte[] bytes, int offset)
-    {
-        string[] commands;
-        try { commands = new UTF8Encoding(false, true).GetString(bytes, offset, bytes.Length - offset).Split('\r'); }
-        catch (DecoderFallbackException) { throw new BlockConfigurationException("Textabschnitt der cab-Druckvorlage ist kein gültiges UTF-8."); }
+        _ = parameters.Text(CabDataParameter);
+        CabSyntaxTemplate template;
+        try { template = new(CabStoredLabel.Read(parameters.Raw)); }
+        catch (InvalidDataException error) { throw new BlockConfigurationException(error.Message); }
         return context =>
         {
-            var text = string.Join('\r', commands.Select(command => RenderCabCommand(command, context)));
-            var suffix = Encoding.UTF8.GetBytes(text);
-            var rendered = new byte[offset + suffix.Length];
-            bytes.AsSpan(0, offset).CopyTo(rendered);
-            suffix.CopyTo(rendered.AsSpan(offset));
+            var rendered = template.Render(context);
             return (rendered, (long)rendered.Length);
         };
-    }
-
-    private static string RenderCabCommand(string command, IStepContext context)
-    {
-        if (!command.StartsWith("T ", StringComparison.Ordinal) && !command.StartsWith("B ", StringComparison.Ordinal))
-            return command;
-        var separator = command.IndexOf(';');
-        if (separator < 0) return command;
-        var header = command[..separator];
-        var content = CommunicationBlocks.Interpolate(command[(separator + 1)..], context);
-        if (content.Any(c => char.IsControl(c) || c is '[' or ']'))
-            throw new FormatException("cab-Etikettvariable enthält ein Steuerzeichen oder eine eckige Klammer.");
-        if (header.Contains(",CODE128,", StringComparison.Ordinal) && (content.Length == 0 || content.Any(c => !char.IsAscii(c))))
-            throw new FormatException("cab Code 128 benötigt druckbare ASCII-Zeichen.");
-        if (header.Contains(",GS1", StringComparison.Ordinal)) content = Gs1LabelData.Cab(content);
-        return header + ";" + content;
     }
 
     private sealed class PrintLabelAction(RenderLabel render, string format, LabelPrinterKind? kind, string destination, int port, TimeSpan timeout) : IStepAction

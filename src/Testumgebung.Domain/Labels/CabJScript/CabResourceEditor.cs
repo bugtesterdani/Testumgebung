@@ -17,8 +17,17 @@ public static class CabResourceEditor
         if (!Types.Any(t => t.Value == type)) throw new ArgumentException("Unbekannter Downloadtyp.", nameof(type));
         if (name.Length == 0 || name.Any(c => char.IsControl(c) || c is ';' or '[' or ']'))
             throw new ArgumentException("Dateiname enthält reservierte Zeichen oder ist leer.", nameof(name));
-        var header = CabEncoding.Get(editor.SetupCodePage).GetBytes("d " + type + ";" + name + editor.Document.LineEnding);
+        var header = CabEncoding.Get(InsertionCodePage(editor, target)).GetBytes("d " + type + ";" + name + editor.Document.LineEnding);
         return CabJobEditor.Insert(editor, header.Concat(Frame(file)).ToArray(), target);
+    }
+
+    private static string InsertionCodePage(CabSourceEditor editor, CabJobItem? target)
+    {
+        if (target is not null) return target.Syntax.CodePage;
+        var prefix = editor.Document.Write();
+        var ending = prefix.Length > 0 && prefix[^1] is not (10 or 13) ? editor.Document.LineEnding : "";
+        var probe = CabParser.Parse(prefix.Concat(Encoding.ASCII.GetBytes(ending + "T 0,0,0,5,3;probe\r")).ToArray(), new(editor.SetupCodePage));
+        return CabSourceEditor.Physical(probe.Root).Last(n => n.Range.Offset >= prefix.Length && n.Command == "T").CodePage;
     }
 
     public static IReadOnlyList<CabResource> Resources(CabSourceEditor editor)

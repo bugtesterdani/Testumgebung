@@ -74,12 +74,19 @@ Schriften und Klarschriftmetriken sind erklärte Windows-Näherungen. Die Spalte
 behauptet keine druckergleiche Pixelwiedergabe oder Hardwareauswertung.
 Die 50 Grafik-Ausnahmen sind entfernt.
 
-## Verbleibende Integration
+## Dateien und Projektintegration (AP 7)
 
-Nur die abschließende Projekt-/Release-/ZPL-Integration (1, AP 7) ist noch
-zurückgestellt. Der Build erlaubt ausschließlich diese konkrete Ausnahme in
-`tests/Fixtures/cab/coverage-deferrals.json`; keine Wildcards oder Duplikate.
-AP 7 muss seinen tatsächlichen Nachweis ergänzen und die letzte Ausnahme entfernen.
+Der Bericht führt zusätzlich den tatsächlichen Integrationsvertrag aus:
+syntaxgebundene Druck-Platzhalter in Text/Barcode/Rich Text und R-Ersetzungen,
+bytegleiche Downloads in allen drei Rahmungen einschließlich lesbarer Klammern,
+unveränderte Codepagegrenzen und ältere Druck-/Layoutprojekte. Migration erzeugt
+eine private Quellkopie; neue gespeicherte Vorlagen benötigen keinen Text-Offset.
+Projekt- und CLI-Diagnosen erhalten ihre Schwere; Fehler verhindern eine neue
+Freigabe, Warnungen werden angezeigt und lassen sie zu. Separate echte WPF-Tests
+prüfen Dateiablage, bytegleiches Speichern, Abbrechen und Übernehmen. Die bisherigen
+ZPL-Tests bleiben Teil des vollständigen Testsatzes.
+Die Ausnahmeliste `tests/Fixtures/cab/coverage-deferrals.json` ist leer; der Test
+erlaubt keine weiteren Rückstellungen.
 
 ## Korpus und lokales Handbuch
 

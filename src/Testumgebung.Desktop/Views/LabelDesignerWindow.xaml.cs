@@ -25,6 +25,7 @@ public partial class LabelDesignerWindow : Window
         _layout = layout;
         _cab = cab;
         InitializeComponent();
+        InitializeCabFiles();
         GapFields.Visibility = VisibleIf(cab);
         OpenCabButton.Visibility = VisibleIf(cab);
         SaveCabButton.Visibility = VisibleIf(cab);
@@ -81,12 +82,13 @@ public partial class LabelDesignerWindow : Window
     {
         var parameter = cab ? CabLabelLayout.Parameter : LabelLayout.Parameter;
         if (!row.Owner.Step.Parameters.TryGetValue(parameter, out var json))
-            return cab && row.Value.Length > 0 ? CabLabelImport.Read(Convert.FromBase64String(row.Value)) : new();
+            return cab ? InitialCabLayout(row.Value) : new();
+        if (cab && (string.IsNullOrWhiteSpace(json) || json.Trim() == "null")) return InitialCabLayout(row.Value);
         try
         {
             var layout = LabelLayout.Load(json);
             _ = RenderValue(layout, cab);
-            return layout;
+            return cab ? CabEditingSource.Ensure(layout) : layout;
         }
         catch (Exception error) when (error is JsonException or InvalidDataException)
         {
@@ -94,6 +96,9 @@ public partial class LabelDesignerWindow : Window
             return new();
         }
     }
+
+    private static LabelLayout InitialCabLayout(string data)
+        => data.Length > 0 ? CabLabelImport.Read(Convert.FromBase64String(data)) : CabEditingSource.Ensure(new());
 
     private void OnOpenCab(object sender, RoutedEventArgs e)
     {

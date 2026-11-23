@@ -40,53 +40,76 @@ PNG, JPEG, BMP, GIF oder TIFF als Schwarzweißgrafik in die Vorlage ein.
 
 ### cab-Drucker mit LBL-Datei
 
-Unter **Vorlagenformat** den Wert **cab LBL** wählen und die Druckdatei über **LBL-Datei einbetten …** auswählen. Benötigt wird ein druckfertiger cab-JScript-Export. In cablabel S3 Pro kann er über **Drucken in Datei** erstellt werden. Beim Ziel **Datei** enthält der Export auch eingebettete Bilder und Schriften in binärer Form. Ein bearbeitbares Layout zunächst in eine solche Druckdatei exportieren. [cablabel-S3-Handbuch](https://www.cab.de/media/pushfile.cfm?file=2238)
+Der cab-Editor erschließt den JScript-Befehlskatalog **vollständig nach Handbuch
+Ausgabe 07/2026**, Firmware 5.48: 237 geprüfte Einträge, 1.416 Parameter und
+1.801 Tabellenwerte. Der [Abdeckungsbericht](../cab/abdeckung.md) beschreibt die
+ausführbaren Nachweise und Grenzen. Antwortfelder bleiben lesbare Druckerausgaben;
+allgemeine Kontextregeln erzeugen keine erfundenen zusätzlichen Befehle.
 
-Die Anwendung speichert die Datei im Prüfprojekt und sendet sie bytegenau über TCP oder als RAW-Auftrag an eine Windows-Druckwarteschlange. Die Simulation zeigt die Byteanzahl. Eingebettete Bilder bleiben damit unverändert.
+Unter **Vorlagenformat** den Wert **cab LBL** wählen. Über **LBL-Datei einbetten …**
+lässt sich eine JScript-Druckdatei ins Prüfprojekt übernehmen. Ein bearbeitbares
+cablabel-Layout vorher als Druckdatei exportieren; beim Ziel **Datei** enthält es
+auch eingebettete Bilder und Schriften. [cablabel-S3-Handbuch](https://www.cab.de/media/pushfile.cfm?file=2238)
 
-Über **cab-Etikett gestalten …** lassen sich Text, Code 128, QR-Code, Linien und Schwarzweißbilder auf dem Etikett platzieren.
+**cab-Etikett gestalten …** öffnet eine Arbeitskopie. **LBL öffnen …** und das
+Ablegen einer einzelnen `.lbl`-Datei laden denselben verlustfreien Dokumentpfad;
+**LBL speichern …** exportiert ihn. Unverändertes Öffnen und Speichern erhält die
+Bytes einschließlich Zeilenenden, ESC-Befehlen, Codepagewechseln, mehreren
+Aufträgen, Binärdownloads und unbekannten Inhalten. Vor dem Dateiimport die
+Druckauflösung und die anfängliche Codepage einstellen (Vorgaben: 203 dpi, UTF-8).
+`ESCo` kann die aktive Kodierung innerhalb der Datei ändern; nicht dekodierbare
+Bytes bleiben erhalten. Abbrechen verändert das Projekt nicht. Erst
+**Vorlage übernehmen** speichert Quelle, Einstellungen und eingebettete Druckdatei.
+Ein älteres Designer-Layout wird dafür einmalig in eine private JScript-Quelle
+überführt; vorhandene Projekte und bereits freigegebene Pakete werden nicht umgeschrieben.
 
-Eine bereits eingebettete LBL wird beim Öffnen des Designers vollständig als Originaldatei eingelesen.
-Im Designer kann über **LBL öffnen …** außerdem eine vorhandene Druckdatei ausgewählt werden.
-**LBL speichern …** exportiert das bearbeitete Etikett als eigenständige Druckdatei.
-**Vorlage übernehmen** speichert es im Projekt. Abbrechen lässt die eingebettete Druckdatei unverändert.
-Die Druckauflösung vor dem Dateiimport auf den Zielwert einstellen. Bei einer erstmals aus dem Projekt
-eingelesenen LBL verwendet der Designer 203 dpi als Ausgangswert.
+Die drei ergänzenden Ansichten erschließen den gesamten Umfang:
 
-Der Import erhält mehrere Aufträge, ESC-Befehle, Binärdownloads, unbekannte oder fehlerhafte Inhalte
-und die ursprünglichen Zeilenenden. Vor **LBL öffnen …** kann die Drucker-Codepage eingestellt werden
-(Standard UTF-8); sie gilt bis zu einem `ESCo`-Befehl. Nicht dekodierbare Bytes bleiben unverändert.
-Die Zeichenfläche zeigt zunächst darstellbare Objekte des ersten Millimeterauftrags:
-Textfelder mit Schrift 5 ohne Drehung, Code 128 mit zwei Punkten Modulbreite, QR, DataMatrix,
-GS1 DataMatrix, GS1 QR, horizontalen Linien und eingebetteten unkomprimierten monochromen Windows-BMP-Bildern.
-Die Matrix-Modulgröße darf bis zu zehn Punkte betragen. Etikettenbreite und -höhe sind ganzzahlige Millimeter.
-Weitere Befehle, Schriftarten, Drehungen und Bildformate bleiben in der Datei erhalten, auch wenn
-sie auf der Zeichenfläche noch nicht dargestellt werden. Änderungen ersetzen gezielt die bearbeiteten
-Werte; unverändertes Öffnen und Speichern ergibt dieselben Bytes. Die vollständigen Eigenschaften,
-Quelltextansicht und grafischen Darstellungen folgen in weiteren Arbeitspaketen.
-[Parser und aktueller Umfang](../cab/parser.md) · [cab-JScript-Programmierhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
+- **Quelltext …** bearbeitet den vollständigen Quelltext mit Kataloghilfe,
+  Vervollständigung und Diagnosen. Geschützte Binärbereiche bleiben unverändert.
+- **JScript-Eigenschaften …** zeigt typisierte Parameter, Einheiten,
+  Generationshinweise und Wahlwerte; hier lassen sich Aufträge, Kommentare,
+  Ressourcen und Inhaltsfelder bearbeiten. Abhängige Varianten benötigen die
+  zugehörige Schrift, Barcodeart oder übergeordnete Option.
+- **Vollständige cab-Grafik …** zeigt den gewählten Auftrag mit Etikettgröße,
+  Abstand, Spalten, Versatz, Spiegelung und Drehung. Alle 50 grafischen Definitionen
+  einschließlich aller 43 Barcodeprofile sind einfügbar und bearbeitbar.
+  Schriften, Klarschrift und SC-Standardmaße sind erklärte Näherungen. Unterstützte
+  Barcodevarianten werden mit ZXing.Net 0.16.11 erzeugt, sonst erscheinen
+  beschriftete Flächen berechneter Näherungsgröße. Es werden keine Ersatzbalken
+  als echte Symbologie ausgegeben. [Grafik und Grenzen](../cab/grafik.md)
 
-Über **Generation und Prüfung …** lässt sich die Druckergeneration (Ax, X2, X3,
-X4; Vorgabe X4) für jeden Etikettenauftrag auswählen. Die Auswahl bleibt im
-Prüfprojekt gespeichert und verändert die Druckbytes nicht. Die statischen
-Diagnosen nennen Zeile, Spalte, Katalog-ID und Handbuchseite. Nicht verfügbare
-Befehle oder Werte und Positionen außerhalb der Etikettenmaße erscheinen als
-Warnungen. Die Prüfung sendet keine Befehle an einen Drucker.
-[Definitionen und Validierung](../cab/validierung.md)
+Die ursprüngliche einfache Zeichenfläche bleibt als ergänzende Ansicht erhalten.
+Für weitere Schriften, Rich Text, Formen, gedrehte Objekte und native Bildformate
+die vollständige Grafikansicht verwenden. Änderungen betreffen gebundene
+Quellbereiche; fremde Befehle werden nicht pauschal neu formatiert.
 
-**Inhaltsfeld-Vorschau …** zeigt die 107 Inhaltsfelder mit hervorgehobener Quelle,
-Offlinewert und Handbuchhinweisen. Beispielzeit und regionale Regeln werden im
-Projekt gespeichert. Druckerabhängige Werte bleiben gekennzeichnete Platzhalter.
-Bei widersprüchlichen Handbuchangaben nennt die Vorschau ihre Annahme.
-[Inhaltsfelder und Vorschau](../cab/inhaltsfelder.md)
+**Generation und Prüfung …** wählt Ax, X2, X3 oder X4 je Auftrag (Vorgabe X4).
+Die Auswahl bleibt im Projekt und verändert keine Druckbytes. Diagnosen nennen
+Zeile, Spalte, Katalog-ID und Handbuchseite. Sie erscheinen auch in den
+Projektprüfungen der Kommandozeile und in der Entwicklungsprüfung einer Freigabe.
+Fehler verhindern eine neue Freigabe; Warnungen bleiben sichtbar und verhindern
+sie nicht. Prüfungen führen keine Drucker-, Datei-, RFID- oder Gerätebefehle aus.
 
-Der strukturierte [JScript-Katalog](../cab/README.md) enthält 237 anhand der
-Handbuchausgabe 07/2026 geprüfte Einträge, einschließlich dokumentierter
-Widersprüche und unklarer Angaben. Schema- und Konsistenztests sichern die
-Datenstruktur ab; die vollständige Befehlsunterstützung im Editor folgt in
-weiteren Arbeitspaketen. Der oben beschriebene Umfang der Zeichenfläche gilt weiterhin.
+Platzhalter wie `{Kennung}` werden beim Drucken nur in tatsächlichen Text- und
+Datenparametern eingesetzt, auch in Barcode, Rich Text und Feldersetzungen.
+Binärdaten und ihre Klammern bleiben unverändert. Neue Vorlagen benötigen keinen
+`CabLblTextOffset`; ältere Projekte mit diesem Feld bleiben lesbar. Die Datei
+bleibt in `CabLblDaten`, Quelle und Einstellungen in `CabLblLayout`. TCP und
+Windows-RAW senden die resultierenden Bytes; die Simulation zeigt deren Anzahl.
+
+Neben Platzhaltern stehen alle 107 Inhaltsfelder zur Verfügung.
+**Inhaltsfeld-Vorschau …** zeigt Quelle, Offlinewert und Handbuchhinweise;
+Beispielzeit und regionale Regeln werden gespeichert. Das vorhandene Feld
+**Beispielwerte für Platzhalter** bleibt nutzbar. Hardwareabhängige Werte sind
+gekennzeichnete Beispiele. Die Vorschau emuliert keine Druckerhardware und
+behauptet keine druckergleiche Pixelwiedergabe. Widersprüche und unklare
+Herstellerangaben stehen ausdrücklich als Hinweise im geprüften Katalog.
+[Validierung](../cab/validierung.md) · [Inhaltsfelder](../cab/inhaltsfelder.md) ·
+[Datei- und Projektintegration](../cab/integration.md) ·
+[Herstellerhandbuch](https://www.cab.de/media/pushfile.cfm?file=3047)
 Für cab zusätzlich den Abstand zwischen den Etiketten eingeben. Ein Abstand von 0 mm steht für Endlosmaterial.
-DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der Druckbaustein setzt die erforderlichen Trennzeichen für GS1 ein. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
+DataMatrix, GS1 DataMatrix und GS1 QR sind für ZPL und cab LBL verfügbar. Bei GS1 zeigt die Kennungsauswahl Bedeutung und Länge der häufigsten Application Identifiers. Über **Kennung einfügen** eine Kennung vor dem jeweiligen Wert oder Platzhalter einsetzen, z. B. `(01){GTIN}(10){Charge}(21){Kennung}`. Der ZPL-Druckpfad setzt die erforderlichen GS1-Steuerzeichen ein; bei cab bleiben die nativen JScript-Befehle und Datenstrukturen erhalten. GS1 QR benötigt einen Drucker mit entsprechender Firmware. [Zebra-Anleitung zu GS1](https://support.zebra.com/article/000015447) · [GS1-Kennungsverzeichnis](https://ref.gs1.org/ai/)
 
 Der Designer erzeugt eine druckfertige JScript-Datei mit eingebetteten Bilddaten und speichert das bearbeitbare Layout im Prüfprojekt.
 In Text- und Barcodefeldern kannst du Platzhalter wie `{Kennung}` einsetzen. Unter **Beispielwerte für Platzhalter**

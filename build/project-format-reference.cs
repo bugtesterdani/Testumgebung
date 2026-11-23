@@ -3,6 +3,7 @@ using System.Text.Json;
 using Testumgebung.Persistence;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Labels.CabJScript;
 
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 if (args.Length != 2 || args[0] is not ("export" or "check"))
@@ -27,6 +28,9 @@ else
     var errors = project.Definition.Validate().ToList();
     foreach (var step in project.Definition.AllNodes().OfType<StepDefinition>())
         errors.AddRange(BlockCatalog.Default.Rebuild(step).Select(error => step.Id + ": " + error));
+    foreach (var issue in CabProjectDiagnostics.Check(project.Definition))
+        if (issue.IsError) errors.Add(issue.ToString());
+        else Console.WriteLine(issue.ToString());
     if (errors.Count != 0)
     {
         foreach (var error in errors) Console.Error.WriteLine(error);

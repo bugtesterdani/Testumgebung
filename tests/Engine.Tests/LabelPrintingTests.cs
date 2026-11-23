@@ -11,7 +11,7 @@ using static Testumgebung.Engine.Tests.Kit;
 
 namespace Testumgebung.Engine.Tests;
 
-public sealed class LabelPrintingTests
+public sealed partial class LabelPrintingTests
 {
     private const string Template = "^XA\n^CI28\n^FD{Kennung} {{Los}}^FS\n^XZ";
     private const string Expected = "^XA\n^CI28\n^FDPrüfling-42 {Los}^FS\n^XZ";

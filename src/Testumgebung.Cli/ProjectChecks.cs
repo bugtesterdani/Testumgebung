@@ -5,6 +5,7 @@
 
 using Testumgebung.Domain.Code;
 using Testumgebung.Domain.Definitions;
+using Testumgebung.Domain.Labels.CabJScript;
 using Testumgebung.Engine.Blocks;
 using Testumgebung.Persistence;
 
@@ -30,6 +31,7 @@ public static class ProjectChecks
             return (null, false);
         }
         report.Pass(suite, "Projekt laden", $"{project.Definition.Name} v{project.Definition.Version}");
+        var cabValid = CheckCabLabels(project, report, suite);
 
         var structure = project.Definition.Validate().ToList();
         if (structure.Count > 0) report.Fail(suite, "Ablaufstruktur", string.Join(Environment.NewLine, structure));
@@ -67,7 +69,22 @@ public static class ProjectChecks
             roundtripValid = false;
             report.Fail(suite, "Speichern und erneut laden", ex.Message);
         }
-        return (project, structure.Count == 0 && blockErrors.Count == 0 && roundtripValid);
+        return (project, structure.Count == 0 && blockErrors.Count == 0 && roundtripValid && cabValid);
+    }
+
+    private static bool CheckCabLabels(TestProject project, Report report, string suite)
+    {
+        var labels = project.Definition.EnabledNodes().OfType<StepDefinition>().Where(CabStoredLabel.IsCab).ToArray();
+        var valid = true;
+        foreach (var step in labels)
+        {
+            var issues = CabProjectDiagnostics.ForStep(step);
+            var detail = string.Join(Environment.NewLine, issues);
+            var name = "cab JScript · " + step.Id;
+            if (issues.Any(i => i.IsError)) { valid = false; report.Fail(suite, name, detail); }
+            else report.Pass(suite, name, issues.Count == 0 ? "Keine Befunde." : detail);
+        }
+        return valid;
     }
 
     /// <summary>Wie „Build prüfen“ bzw. die Entwicklungsprüfung: Bibliotheksbausteine und CodeBlocks im Ablauf übersetzen.</summary>

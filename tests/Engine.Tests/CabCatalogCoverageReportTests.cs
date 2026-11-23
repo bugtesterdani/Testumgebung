@@ -10,12 +10,13 @@ public sealed class CabCatalogCoverageReportTests
         || new[] { "JS-4.7", "JS-4.9", "JS-4.16", "JS-4.17" }.Contains(e.Id));
 
     [Fact]
-    public void Coverage_report_is_current_and_deferrals_are_exact()
+    public async Task Coverage_report_is_current_and_deferrals_are_exact()
     {
         // Generate only after actually running the evidence, not from catalog counts alone.
+        await CabProjectIntegrationTests.VerifyContractAsync();
         RunEvidence();
         var deferrals = ReadDeferrals();
-        string[] expected = ["integration/7/project"];
+        string[] expected = [];
         Assert.Equal(expected, deferrals.Order());
         Assert.Equal(deferrals.Length, deferrals.Distinct().Count());
         var report = BuildReport();
@@ -95,7 +96,7 @@ public sealed class CabCatalogCoverageReportTests
         text.Append("## Quelltextansicht (AP 4)\n\nAlle 237 Korpusdateien öffnen und speichern bytegleich in der Quelltextansicht.\nAlle 237 Einträge, 1.416 Parameter und 1.801 Werte sind für alle vier Generationen\nin der Katalogvervollständigung erreichbar. Gezielte Text-, Codepage-, Binärschutz-\nund Oberflächentests prüfen Bearbeitung, Navigation und unveränderte Objekte.\nDie 237 Source-Ausnahmen wurden entfernt.\n\n");
         text.Append("## Eigenschaften und Aufträge (AP 5)\n\nAlle 237 Definitionen und ihre 1.416 Parameterschemata sind erreichbar, mit Typ,\nEinheit, Generation, Beschreibung und Wahlwerten. Alle Protokollvorlagen prüfen\ndie tatsächlichen Parameterbindungen über vier Generationen und unverändertes\nSchreiben vorhandener gültiger Eingaben. Alle 107 Inhaltsfeldformulare besitzen\nechte Argumentbindungen und Offline-Vorschau. Änderungen, optionale Ergänzungen,\nAuftragsreihenfolge, Dateiaustausch und echte WPF-Bedienung haben zusätzliche Tests.\nAntwortfelder bleiben lesbare Druckerausgaben; allgemeine Kontextregeln erzeugen\nkeine zusätzlichen Befehle. Variantenparameter setzen die passende Schrift,\nBarcodeart oder übergeordnete Option voraus. Ressourcen werden als Dateien ersetzt.\nDie Spalte bedeutet vollständige Erschließung der Definitionen, keine Schreibbarkeit\nvon Druckerantworten oder beliebiger widersprüchlicher Optionskombinationen.\nDie 237 Properties-Ausnahmen wurden entfernt.\n\n");
         text.Append("## Grafik (AP 6)\n\nAlle 50 grafischen Definitionen einschließlich der 43 Barcodeprofile besitzen\nausführbare Nachweise für Einfügen, Verschieben, Drehen, Entfernen und bytegenaue\nErhaltung der Nachbarbereiche. Separate Erwartungswerte prüfen Grundlinie,\nKreiszentrum, Einheiten und Drehung. WPF-Tests rendern alle Vorlagen und prüfen\nBedienung, Bildformate, Schrift-/HTML-Effekte und Füllmuster. Echte unterstützte\nBarcodes stammen aus ZXing.Net 0.16.11; nicht erzeugte Symbologien/Optionen bleiben\nbeschriftete Flächen berechneter Näherungsgröße. Code128 und QR werden rückgelesen.\nSchriften und Klarschriftmetriken sind erklärte Windows-Näherungen. Die Spalte\nbehauptet keine druckergleiche Pixelwiedergabe oder Hardwareauswertung.\nDie 50 Grafik-Ausnahmen sind entfernt.\n\n");
-        text.Append("## Verbleibende Integration\n\nNur die abschließende Projekt-/Release-/ZPL-Integration (1, AP 7) ist noch\nzurückgestellt. Der Build erlaubt ausschließlich diese konkrete Ausnahme in\n`tests/Fixtures/cab/coverage-deferrals.json`; keine Wildcards oder Duplikate.\nAP 7 muss seinen tatsächlichen Nachweis ergänzen und die letzte Ausnahme entfernen.\n\n");
+        text.Append("## Dateien und Projektintegration (AP 7)\n\nDer Bericht führt zusätzlich den tatsächlichen Integrationsvertrag aus:\nsyntaxgebundene Druck-Platzhalter in Text/Barcode/Rich Text und R-Ersetzungen,\nbytegleiche Downloads in allen drei Rahmungen einschließlich lesbarer Klammern,\nunveränderte Codepagegrenzen und ältere Druck-/Layoutprojekte. Migration erzeugt\neine private Quellkopie; neue gespeicherte Vorlagen benötigen keinen Text-Offset.\nProjekt- und CLI-Diagnosen erhalten ihre Schwere; Fehler verhindern eine neue\nFreigabe, Warnungen werden angezeigt und lassen sie zu. Separate echte WPF-Tests\nprüfen Dateiablage, bytegleiches Speichern, Abbrechen und Übernehmen. Die bisherigen\nZPL-Tests bleiben Teil des vollständigen Testsatzes.\nDie Ausnahmeliste `tests/Fixtures/cab/coverage-deferrals.json` ist leer; der Test\nerlaubt keine weiteren Rückstellungen.\n\n");
         text.Append("## Korpus und lokales Handbuch\n\n`tests/Fixtures/cab/` enthält eigene Dateien je Eintrag, eine ungültige Datei\nje Barcodeprofil sowie Protokollgrenzen und die beiden bestehenden verlustfreien\nFixtures. Es werden keine zusätzlichen Herstellerexporte erfunden. Hersteller-PDF\nund daraus lokal extrahierte Beispiele werden nicht eingecheckt. Der optionale\nHandbuchtest und sein lokales Ergebnis werden getrennt vom synthetischen Nachweis\ndokumentiert. Ein übersprungener Handbuchtest ist kein erfolgreicher Handbuchlauf.\n");
         return text.ToString();
     }
