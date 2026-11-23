@@ -181,6 +181,8 @@ public sealed class CabProjectIntegrationTests
         await print.Stored_interface_codepage_is_used_without_changing_the_saved_document();
         await print.Undecodable_text_is_preserved_but_cannot_silently_hide_a_placeholder(false);
         await print.Undecodable_text_is_preserved_but_cannot_silently_hide_a_placeholder(true);
+        await print.Rendered_gs1_application_identifier_values_are_checked_before_transport("01", "12", false);
+        await print.Rendered_gs1_application_identifier_values_are_checked_before_transport("01", "09506000134376", true);
     }
 
     [Fact]

@@ -59,13 +59,28 @@ internal sealed class CabSyntaxTemplate(CabStoredLabel stored)
 
     private void CheckResult(byte[] output)
     {
-        var result = CabValidator.Validate(CabParser.Parse(output, new(stored.SetupCodePage)), stored.Settings);
+        var document = CabParser.Parse(output, new(stored.SetupCodePage));
+        var result = CabValidator.Validate(document, stored.Settings);
         if (!result.Commands.Select(Signature).SequenceEqual(stored.Validation.Commands.Select(Signature)))
             throw new FormatException("Ein cab-Platzhalter verändert die Befehlsstruktur.");
         var existing = stored.Validation.Diagnostics.Where(d => d.Severity == CabDiagnosticSeverity.Error).GroupBy(d => d.Code).ToDictionary(g => g.Key, g => g.Count());
         var error = result.Diagnostics.Where(d => d.Severity == CabDiagnosticSeverity.Error).GroupBy(d => d.Code)
             .FirstOrDefault(g => g.Count() > existing.GetValueOrDefault(g.Key));
         if (error is not null) throw new FormatException("cab-Etikettvariable: " + error.First().Message);
+        CheckGs1(document, result);
+    }
+
+    private static void CheckGs1(CabDocument document, CabValidationResult result)
+    {
+        foreach (var content in CabContentValidation.Bind(document, result.Commands))
+        {
+            if (content.Command.Definition.Catalog.Kind != "barcode" || content.Syntax.Fields.Count != 0) continue;
+            var type = content.Command.Parameter("type")?.Value ?? "";
+            // Parenthesized AI data is the existing designer contract. Raw printer data and
+            // native dynamic fields remain governed by JScript rather than the designer's AI subset.
+            if (type.StartsWith("GS1", StringComparison.OrdinalIgnoreCase) && content.Source.Text.StartsWith('('))
+                _ = Gs1LabelData.Cab(content.Source.Text);
+        }
     }
 
     private static string Signature(CabBoundCommand command) => command.Syntax.Command + "/" + command.Definition.Catalog.Id;

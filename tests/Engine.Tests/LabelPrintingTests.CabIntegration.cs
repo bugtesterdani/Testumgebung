@@ -97,6 +97,26 @@ public sealed partial class LabelPrintingTests
     }
 
     [Theory]
+    [InlineData("01", "12", false)]
+    [InlineData("01", "0950600013437X", false)]
+    [InlineData("21", "123456789012345678901", false)]
+    [InlineData("01", "09506000134376", true)]
+    [InlineData("21", "SN-123", true)]
+    public async Task Rendered_gs1_application_identifier_values_are_checked_before_transport(string ai, string value, bool valid)
+    {
+        foreach (var type in new[] { "GS1-DATAMATRIX", "GS1QRCODE" })
+        {
+            var job = $"J\rB 1,2,0,{type},0.5;({ai}){{Kennung}}\rA 1\r";
+            var definition = WithCab(Program("Windows", value), Convert.ToBase64String(Encoding.UTF8.GetBytes(job)));
+            var printer = new RecordingPrinter();
+            var result = await new TestRun(definition, new() { LabelPrinter = printer }).RunAsync().Within();
+            Assert.Equal(valid ? ResultRating.NResult : ResultRating.Error, result.Rating);
+            if (valid) Assert.Equal(job.Replace("{Kennung}", value, StringComparison.Ordinal), Encoding.UTF8.GetString(Assert.Single(printer.Requests).Data));
+            else Assert.Empty(printer.Requests);
+        }
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Undecodable_text_is_preserved_but_cannot_silently_hide_a_placeholder(bool placeholder)
@@ -110,6 +130,16 @@ public sealed partial class LabelPrintingTests
         Assert.Equal(placeholder ? ResultRating.Error : ResultRating.NResult, result.Rating);
         if (placeholder) Assert.Empty(printer.Requests);
         else Assert.Equal(bytes, Assert.Single(printer.Requests).Data);
+    }
+
+    [Theory]
+    [InlineData("(01)[ISODATE]{Kennung}")]
+    [InlineData("0109506000134376{Kennung}")]
+    public async Task Gs1_runtime_check_keeps_native_fields_and_raw_printer_data(string content)
+    {
+        var job = $"J\rB 1,2,0,GS1-DATAMATRIX,0.5;{content}\rA 1\r";
+        Assert.Equal(job.Replace("{Kennung}", "42", StringComparison.Ordinal),
+            Encoding.UTF8.GetString(await PrintCab(Encoding.UTF8.GetBytes(job), "42")));
     }
 
     [Theory]

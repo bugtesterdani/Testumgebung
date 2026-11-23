@@ -63,6 +63,9 @@ Opake Nutzdaten werden weder als Inhaltsfelder geprüft noch interpoliert.
 Nicht dekodierbarer Text mit möglichen Platzhaltern sperrt Druck und Freigabe,
 damit kein Ablaufwert unbemerkt fehlt. Ohne Platzhalter bleiben solche
 Literalbytes unverändert; die Codepage-Warnung bleibt sichtbar.
+Nach der Ersetzung werden auch die GS1-AI-Längen und Zeichenvorräte des
+bisherigen Designervertrags geprüft. Native dynamische Inhaltsfelder werden
+dabei nicht ausgeführt; unveränderte rohe Druckerdaten bleiben erhalten.
 
 CLI-Projektprüfung, Formatprüfwerkzeug und Freigabeprüfung verwenden dieselben
 JScript-Diagnosen. Fehler sperren auch die Freigabe eines früher bereits geprüften
