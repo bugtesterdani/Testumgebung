@@ -65,3 +65,11 @@ bytegleich geschrieben. Vervollständigung wird für alle 237 Einträge, 1.416
 Parameter und 1.801 Werte unter allen vier Generationen nachgewiesen. Die
 237 Source-Rückstellungen aus AP 8 entfallen; 288 konkrete Rückstellungen
 für AP 5–7 bleiben bestehen.
+# Darstellungsregression #273
+
+Quelltextzeilen müssen auch im tatsächlich angeordneten WPF-Fenster als Zeilen
+lesbar bleiben. Lange Zeilen werden horizontal gescrollt; ein Zeichenumbruch
+darf die Zeilennummern nicht von den sichtbaren Befehlszeilen trennen.
+Die Korrektur wird über Zeichenpositionen nach dem Layout geprüft und darf
+weder Quelltext noch Originalbytes beim Öffnen oder Ändern der Fenstergröße verändern.
+
