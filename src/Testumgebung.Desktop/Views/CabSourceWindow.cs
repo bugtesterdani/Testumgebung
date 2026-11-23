@@ -1,4 +1,5 @@
 using System.IO;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -122,9 +123,16 @@ internal sealed partial class CabSourceWindow : Window
         var marker = Gutter(index);
         DockPanel.SetDock(marker, Dock.Left); row.Children.Add(marker);
         var box = new RichTextBox { FontFamily = new("Consolas"), FontSize = 14, AcceptsTab = true,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, BorderThickness = new(0), Padding = new(3) };
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            BorderThickness = new(0), Padding = new(3) };
         System.Windows.Automation.AutomationProperties.SetName(box, "JScript-Quelltext, Abschnitt " + (index + 1));
         box.Document = new FlowDocument(new Paragraph(new Run(section.Editable!.Text)) { Margin = new(0), LineHeight = 18 }) { PagePadding = new(0) };
+        // The outer horizontal ScrollViewer measures with infinite width. Give the
+        // document a finite line width instead of letting FlowDocument wrap at zero.
+        box.Document.PageWidth = new FormattedText(section.Editable.Text, CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight, new Typeface(box.FontFamily, box.FontStyle, box.FontWeight, box.FontStretch),
+            box.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(box).PixelsPerDip).WidthIncludingTrailingWhitespace + 24;
+        box.Width = box.Document.PageWidth + box.Padding.Left + box.Padding.Right;
         box.GotKeyboardFocus += (_, _) => _active = box;
         box.TextChanged += (_, _) => Changed(index, box);
         _editors[index] = box; row.Children.Add(box); _source.Children.Add(row);
