@@ -56,19 +56,33 @@ public sealed class NumberedCodeEditor : Grid
         protected override void OnRender(DrawingContext drawing)
         {
             drawing.PushClip(new RectangleGeometry(new Rect(RenderSize)));
-            drawing.DrawRectangle(SystemColors.ControlBrush, null, new Rect(RenderSize));
-            int first = editor.GetFirstVisibleLineIndex();
-            int last = editor.GetLastVisibleLineIndex();
-            for (int line = Math.Max(0, first); line <= last; line++)
+            try
             {
-                int index = editor.GetCharacterIndexFromLineIndex(line);
-                if (index < 0) continue;
-                var position = editor.GetRectFromCharacterIndex(index);
-                if (position.IsEmpty) continue;
-                var label = Label(line + 1);
-                drawing.DrawText(label, new Point(ActualWidth - label.Width - 8, position.Top));
+                drawing.DrawRectangle(SystemColors.ControlBrush, null, new Rect(RenderSize));
+                // Beim Laden/Binding ist das Textlayout unter Umständen noch nicht verfügbar.
+                int lineCount = editor.LineCount;
+                if (lineCount <= 0) return;
+
+                int first = Math.Max(0, editor.GetFirstVisibleLineIndex());
+                int last = Math.Min(editor.GetLastVisibleLineIndex(), lineCount - 1);
+                if (last < first) return;
+
+                for (int line = first; line <= last; line++)
+                {
+                    // Die TextBox kann das Layout bei einer Abfrage aktualisieren.
+                    if (line >= editor.LineCount) break;
+                    int index = editor.GetCharacterIndexFromLineIndex(line);
+                    if (index < 0 || index > editor.Text.Length) continue;
+                    var position = editor.GetRectFromCharacterIndex(index);
+                    if (position.IsEmpty) continue;
+                    var label = Label(line + 1);
+                    drawing.DrawText(label, new Point(ActualWidth - label.Width - 8, position.Top));
+                }
             }
-            drawing.Pop();
+            finally
+            {
+                drawing.Pop();
+            }
         }
     }
 }
