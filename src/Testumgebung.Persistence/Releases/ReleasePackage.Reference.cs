@@ -34,13 +34,20 @@ public static partial class ReleasePackage
 
     public static ReleaseManifest? ReadReference(byte[] bytes)
     {
-        using var zip = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
-        var manifest = JsonSerializer.Deserialize<ReleaseManifest>(Read(zip, "manifest.json"), Json)
-            ?? throw new ReleasePackageException("Manifest fehlt.");
-        if (manifest.Format != ReferenceFormat) return null;
-        if (manifest.Source is null || manifest.Entries is null)
-            throw new ReleasePackageException("Quellreferenz ist unvollständig.");
-        return manifest;
+        try
+        {
+            using var zip = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
+            var manifest = JsonSerializer.Deserialize<ReleaseManifest>(Read(zip, "manifest.json"), Json)
+                ?? throw new ReleasePackageException("Manifest fehlt.");
+            if (manifest.Format != ReferenceFormat) return null;
+            if (manifest.Source is null || manifest.Entries is null)
+                throw new ReleasePackageException("Quellreferenz ist unvollständig.");
+            return manifest;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or JsonException)
+        {
+            throw new ReleasePackageException("Release-Manifest ist nicht lesbar.", ex);
+        }
     }
 
     public static RuntimeSnapshot? ReferenceEnvironment(byte[] bytes)

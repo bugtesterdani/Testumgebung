@@ -116,6 +116,8 @@ public static partial class ReleasePackage
             throw new ReleasePackageException("Paket ist kein gültiges Archiv: " + ex.Message, ex);
         }
         var manifest = JsonSerializer.Deserialize<ReleaseManifest>(manifestJson, Json) ?? throw new ReleasePackageException("Manifest leer.");
+        if (manifest.Entries is null || manifest.Entries.Any(entry => entry is null))
+            throw new ReleasePackageException("Manifest enthält keine gültige Prüfsummenliste.");
         if (manifest.Format != Format) throw new ReleasePackageException($"Unbekanntes Paketformat '{manifest.Format}'.");
         TestProject project;
         try
