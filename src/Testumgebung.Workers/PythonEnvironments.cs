@@ -14,7 +14,7 @@ namespace Testumgebung.Workers;
 public sealed class PythonEnvironments(string? workerDirectory = null, string? environmentRoot = null, string? selectionFile = null, string? registryKey = null)
 {
     private readonly string _source = Path.Combine(workerDirectory ?? Path.Combine(AppContext.BaseDirectory, "workers"), "python", "runtime");
-    private readonly string _root = environmentRoot ?? Path.Combine(Path.GetTempPath(), "Testumgebung", "PythonEnvironments");
+    private readonly string _root = environmentRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "PythonEnvironments");
     private readonly string _importRoot = environmentRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "PythonEnvironments");
     private static readonly string[] RuntimeFiles = ["python.exe", "python315.dll", "python315.zip", "LICENSE.txt", "pip-bootstrap/pip.whl"];
     private readonly string _selectionFile = selectionFile ?? DefaultSelectionFile;
@@ -22,6 +22,48 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
     public static string DefaultSelectionFile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "python-environment.json");
     public const string RegistryKey = @"Software\Testumgebung";
     public const string RegistryValue = "PythonVenv";
+
+    public const string BundledId = "bundled";
+    public const string ManifestFile = "testumgebung-python.json";
+    public sealed record EnvironmentInfo(string Id, string Executable)
+    {
+        public string Selection => "id:" + Id;
+        public override string ToString() => Id;
+    }
+
+    public IReadOnlyList<EnvironmentInfo> List()
+    {
+        if (!Directory.Exists(_importRoot)) return [];
+        return Directory.EnumerateDirectories(_importRoot).Select(directory =>
+        {
+            var manifest = Path.Combine(directory, ManifestFile);
+            return File.Exists(manifest) ? new EnvironmentInfo(ReadId(manifest), Path.Combine(directory, "python.exe")) : null;
+        }).OfType<EnvironmentInfo>().OrderBy(item => item.Id, StringComparer.Ordinal).ToArray();
+    }
+
+    private static string ReadId(string manifest)
+    {
+        var id = JsonSerializer.Deserialize<string>(File.ReadAllText(manifest));
+        if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Ungültige Python-Umgebungs-ID.");
+        return id!;
+    }
+
+    public string EnsureId(string executable)
+    {
+        var manifest = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(executable))!, ManifestFile);
+        if (File.Exists(manifest)) return ReadId(manifest);
+        var id = Guid.NewGuid().ToString("N");
+        File.WriteAllText(manifest, JsonSerializer.Serialize(id));
+        return id;
+    }
+
+    public string ResolveId(string id)
+    {
+        var matches = List().Where(item => item.Id == id).ToArray();
+        if (matches.Length != 1 || !File.Exists(matches[0].Executable))
+            throw new FileNotFoundException($"Python-Umgebung '{id}' fehlt oder ist nicht eindeutig. Bitte die passende Umgebung importieren.");
+        return matches[0].Executable;
+    }
 
     public const string Commands = "python --version\npython -m pip --version\npython -m pip list\npython -m pip install PAKETNAME\npython -m pip install -r requirements.txt\npython -m pip freeze > requirements.txt\npython -m pip check";
 
@@ -41,6 +83,7 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         Directory.CreateDirectory(Path.Combine(destination, "Lib", "site-packages"));
         File.WriteAllLines(Path.Combine(destination, "python315._pth"), ["python315.zip", ".", "Lib/site-packages", "pip-bootstrap/pip.whl", "import site"]);
         WriteConsoleFiles(destination);
+        EnsureId(Path.Combine(destination, "python.exe"));
         return Path.Combine(destination, "python.exe");
     }
 
@@ -71,6 +114,7 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         var staging = Path.Combine(Path.GetDirectoryName(destination)!, $".python-{Guid.NewGuid():N}.tmp");
         try
         {
+            EnsureId(executable);
             WriteArchive(source, staging);
             File.Move(staging, destination, overwrite: true);
         }
@@ -105,6 +149,10 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
             if (!IsPortableRuntime(destination))
                 throw new InvalidDataException("Das ZIP enthält keine vollständige portable Python-Umgebung der Testumgebung.");
             Directory.CreateDirectory(Path.Combine(destination, "Lib", "site-packages"));
+            var executable = Path.Combine(destination, "python.exe");
+            var id = EnsureId(executable);
+            if (List().Any(item => item.Id == id && item.Executable != executable))
+                throw new InvalidDataException($"Python-Umgebung '{id}' ist bereits vorhanden. Bestehende Umgebungen werden nicht überschrieben.");
             WriteConsoleFiles(destination);
             return Path.Combine(destination, "python.exe");
         }

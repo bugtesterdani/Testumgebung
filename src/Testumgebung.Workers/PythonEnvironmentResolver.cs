@@ -16,9 +16,23 @@ public static class PythonEnvironmentResolver
     /// <returns>Pfad des zuerst auffindbaren Interpreters beziehungsweise der Standardauswahl.</returns>
     // Nicht nur eine gesetzte Zeichenkette, sondern ein auffindbarer Interpreter zählt.
     // Ein fehlender Ordner lässt die Auswahl zur nächsten Prioritätsstufe weiterfallen.
-    public static string Resolve(string workerDirectory, string? programVenv, string? variableVenv, string? savedVenv)
-        => Interpreter(programVenv) ?? Interpreter(variableVenv) ?? Interpreter(savedVenv)
-            ?? CodeRuntimeOptions.ResolvePython(workerDirectory);
+    public static string Resolve(string workerDirectory, string? programVenv, string? variableVenv, string? savedVenv,
+        PythonEnvironments? environments = null)
+    {
+        foreach (var selection in new[] { programVenv, variableVenv, savedVenv })
+        {
+            if (selection == PythonEnvironments.BundledId)
+            {
+                var bundled = Path.Combine(workerDirectory, "python", "runtime", "python.exe");
+                if (!File.Exists(bundled)) throw new FileNotFoundException("Mitgelieferte Python-Laufzeit fehlt.");
+                return Path.GetFullPath(bundled);
+            }
+            if (selection?.StartsWith("id:", StringComparison.Ordinal) == true)
+                return (environments ?? new PythonEnvironments(workerDirectory)).ResolveId(selection[3..]);
+            if (Interpreter(selection) is { } legacy) return legacy;
+        }
+        return CodeRuntimeOptions.ResolvePython(workerDirectory);
+    }
 
     public static string? Interpreter(string? path)
     {
