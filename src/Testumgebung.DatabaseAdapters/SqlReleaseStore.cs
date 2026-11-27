@@ -21,6 +21,7 @@ public sealed class SqlReleaseStore(SqlRunDatabase database) : IReleaseStore
                                    "reviewed_by, reviewed_utc, released_by, released_utc, archived_utc, review_report";
 
     public string Name => database.Name;
+    public bool StoreSourceReferences => true;
 
     public async Task<IReadOnlyList<ReleaseInfo>> ListAsync(CancellationToken cancellationToken = default)
     {

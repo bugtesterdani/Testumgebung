@@ -120,6 +120,8 @@ public static class AuditChain
 public interface IReleaseStore
 {
     string Name { get; }
+    /// <summary>Neue versionierte Releases enthalten nur Referenzen, keine Quelltexte.</summary>
+    bool StoreSourceReferences => false;
 
     Task<IReadOnlyList<ReleaseInfo>> ListAsync(CancellationToken cancellationToken = default);
 

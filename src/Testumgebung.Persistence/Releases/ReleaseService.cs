@@ -67,7 +67,11 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
     public async Task<OpenedPackage> OpenAsync(ReleaseInfo info, CancellationToken ct = default)
     {
         var bytes = await PackageBytesAsync(info, ct).ConfigureAwait(false);
-        var opened = ReleasePackage.Open(bytes, _serializer);
+        var reference = ReleasePackage.ReadReference(bytes);
+        if (reference is not null && ReleasePackage.Sha256(bytes) != info.PackageSha256)
+            throw new ReleasePackageException("Quellreferenz wurde verändert (Paket-Hash stimmt nicht).");
+        var opened = reference is null ? ReleasePackage.Open(bytes, _serializer)
+            : await OpenReferenceAsync(bytes, info, ct).ConfigureAwait(false);
         if (ReleasePackage.Sha256(bytes) != info.PackageSha256)
             return opened with { Problems = [.. opened.Problems, "Paket-Hash stimmt nicht mit dem Release überein – Paket verändert."] };
         if (opened.IsIntact) _verifiedPackages[Store.Name + "\n" + info.PackageSha256] = bytes;
@@ -103,6 +107,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
         var now = _clock.Now;
         var environment = RequireRuntimeSnapshot ? await RuntimeSnapshot.CaptureAsync(copy, CodeRuntime, ct).ConfigureAwait(false) : null;
         var (bytes, manifest) = ReleasePackage.Build(copy, actor.User, now, _serializer, environment, source, archive);
+        if (source is not null && Store.StoreSourceReferences) bytes = ReleasePackage.ToReference(bytes);
         var info = new ReleaseInfo(Guid.NewGuid().ToString("N"), copy.Definition.Name, version, ReleaseState.Draft,
             ReleasePackage.Sha256(bytes), bytes.Length, actor.User, now, Source: source);
         await Store.CreateAsync(info, bytes, new AuditDraft(now, actor.User, "Entwurf erstellt",

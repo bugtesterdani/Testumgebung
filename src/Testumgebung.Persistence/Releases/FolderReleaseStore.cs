@@ -144,6 +144,7 @@ public sealed class SwitchableReleaseStore(IReleaseStore initial) : IReleaseStor
     }
 
     public string Name => _inner.Name;
+    public bool StoreSourceReferences => _inner.StoreSourceReferences;
     public Task<IReadOnlyList<ReleaseInfo>> ListAsync(CancellationToken ct = default) => _inner.ListAsync(ct);
     public Task<byte[]> GetPackageAsync(string releaseId, CancellationToken ct = default) => _inner.GetPackageAsync(releaseId, ct);
     public Task CreateAsync(ReleaseInfo info, byte[] package, AuditDraft audit, CancellationToken ct = default) => _inner.CreateAsync(info, package, audit, ct);

@@ -41,7 +41,7 @@ public sealed class ReleasePackageException(string message, Exception? inner = n
 /// Kurven, Definitionen), <c>projekt.tproj.json</c> und die Quelltexte unter <c>code/</c> zur Einsicht.
 /// Der SHA-256 der Paketbytes identifiziert das Paket; die Bereichshashes werden beim Öffnen neu berechnet.
 /// </summary>
-public static class ReleasePackage
+public static partial class ReleasePackage
 {
     public const string Format = "testumgebung.release/1";
     public const string Areas = "Ablauf, Bausteine, Codeartefakte, Kurven, Definitionen";
