@@ -195,6 +195,7 @@ public interface IStepContext
 
     /// <summary>Python-Umgebung aus dem Auswahlprogramm dieses Laufs.</summary>
     string? ProgramPythonVenv => null;
+    string? ExpectedPythonFingerprint => null;
     PairedStationContext? PairedStation => null;
     bool IsReferenceRun => false;
 

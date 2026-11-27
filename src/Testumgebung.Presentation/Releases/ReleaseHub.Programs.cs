@@ -1,4 +1,4 @@
-﻿using Testumgebung.Persistence;
+using Testumgebung.Persistence;
 using Testumgebung.Persistence.Programs;
 using Testumgebung.Persistence.Releases;
 
@@ -44,11 +44,11 @@ public sealed partial class ReleaseHub
         }
         return available;
     }
-    public async Task<(ReleaseInfo Info, TestProject Project)> OpenResolvedAsync(ReleaseInfo info, CancellationToken ct = default)
+    public async Task<(ReleaseInfo Info, TestProject Project)> OpenResolvedAsync(ReleaseInfo info, CancellationToken ct = default, string? programPython = null)
     {
         var opened = await Service.OpenAsync(info, ct).ConfigureAwait(false);
         if (!opened.IsIntact) throw new ReleasePackageException("Freigabepaket ist beschädigt: " + string.Join("; ", opened.Problems));
-        var differences = await Service.VerifyEnvironmentAsync(info, ct).ConfigureAwait(false);
+        var differences = await Service.VerifyEnvironmentAsync(info, ct, programPython).ConfigureAwait(false);
         if (differences.Count > 0) throw new ReleasePackageException(string.Join("; ", differences));
         return (info, opened.Project);
     }

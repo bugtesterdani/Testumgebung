@@ -318,6 +318,7 @@ public static class DefinitionCompatibility
     {
         (string Key, string Reason)[] properties =
         [
+            ("pythonEnvironmentId", "Python-Umgebung geändert; neue Prüfsitzung erforderlich"),
             ("variables", "Hauptablauf-Variablen geändert"),
             ("limitSets", "Grenzwertsätze geändert"),
             ("assemblies", ".NET-DLLs geändert; neue Prüfsitzung erforderlich"),

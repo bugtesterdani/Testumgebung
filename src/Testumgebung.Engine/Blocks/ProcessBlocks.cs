@@ -185,7 +185,18 @@ public static class ProcessBlocks
                 Type is null ? null : Expand(Type, ctx), Python is null ? null : Expand(Python, ctx), Expand(Encoding, ctx));
             var options = (ctx.CodeRuntime as CodeRuntime)?.Options ?? new CodeRuntimeOptions();
             var variable = ctx.VisibleVariables().Any(variable2 => variable2.Name == "PythonVenv" && variable2.Type == VarType.String) ? ctx.Get("PythonVenv") as string : null;
-            var python = PythonEnvironmentResolver.Resolve(options.WorkerDirectory, ctx.ProgramPythonVenv, variable, options.PythonExecutable ?? new PythonEnvironments().LoadSelection());
+            string? python = null;
+            if (Kind == ExternalProcessKind.Python)
+            {
+                var explicitPython = request.PythonExecutable;
+                python = !string.IsNullOrWhiteSpace(explicitPython) && explicitPython != PythonEnvironments.BundledId
+                    && !explicitPython.StartsWith("id:", StringComparison.Ordinal)
+                    ? explicitPython
+                    : PythonEnvironmentResolver.Resolve(options.WorkerDirectory, explicitPython ?? ctx.ProgramPythonVenv, variable,
+                        options.PythonSelection ?? options.PythonExecutable ?? new PythonEnvironments().LoadSelection(preserveReference: true), options.EnvironmentCatalog);
+                request = request with { PythonExecutable = python };
+
+            }
             var result = ctx.Processes.Start(request, ctx.ProcessOwner, options.WorkerDirectory, python, ctx.CancellationToken);
             if (HandleTarget is not null) ctx.Set(HandleTarget, result.Handle);
             if (PidTarget is not null) ctx.Set(PidTarget, (long)result.ProcessId);

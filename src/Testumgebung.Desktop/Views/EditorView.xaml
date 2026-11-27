@@ -200,6 +200,9 @@
                     <TextBlock Grid.Row="2" Style="{StaticResource Label}" Text="Beschreibung" VerticalAlignment="Top" Margin="0,8,12,0" />
                     <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Description}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="60" Margin="0,4" />
                 </Grid>
+                <TextBlock Style="{StaticResource Label}" Text="Python-Umgebung" />
+                <ComboBox ItemsSource="{Binding PythonEnvironments}" IsEditable="True" Text="{Binding PythonEnvironmentId, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,6" />
+                <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Text="Leer: bisherige Auswahl. bundled: mitgeliefert. id:…: feste portable Umgebung; fehlende IDs verhindern den Start." Margin="0,0,0,10" />
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Variablen des Hauptablaufs" />
                 <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,8"
                            Text="Gemeinsame Auftragsdaten: Init ermittelt sie, der Test Loop liest sie." />

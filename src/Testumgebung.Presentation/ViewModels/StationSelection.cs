@@ -59,7 +59,10 @@ public sealed partial class StationViewModel
     }
 
     /// <summary>Projekt des ausgewählten Tests laden (Release-Paket geprüft bzw. Kopie des Editorstands).</summary>
-    internal async Task<(TestProject Project, ReleaseInfo? Release)> LoadTestAsync(AvailableTest test)
+    internal Task<(TestProject Project, ReleaseInfo? Release)> LoadTestAsync(AvailableTest test)
+        => LoadTestWithPythonAsync(test, null);
+
+    internal async Task<(TestProject Project, ReleaseInfo? Release)> LoadTestWithPythonAsync(AvailableTest test, string? pythonVenv)
     {
         if (_coordinator?.Setup.ExampleProjects is { Count: > 0 } examples)
         {
@@ -69,7 +72,7 @@ public sealed partial class StationViewModel
         if (_releases is not null && !UseDraft)
         {
             await _releases.RefreshAsync().ConfigureAwait(true);
-            if (_releases.Catalog is not null) return await LoadCatalogTestAsync(test).ConfigureAwait(true);
+            if (_releases.Catalog is not null) return await LoadCatalogTestAsync(test, pythonVenv).ConfigureAwait(true);
             if (test.IsCurrent && _releases.GetReleased(test.Name) is { } current && current.Info.Version == test.Version)
                 return (current.Project, current.Info);
             var info = _releases.All.FirstOrDefault(release => release.ProjectName == test.Name && release.Version == test.Version
@@ -425,7 +428,7 @@ public sealed class StationSelectionViewModel : ObservableObject
         RaiseRunning();
         try
         {
-            loaded = await _station.LoadTestAsync(test).ConfigureAwait(true);
+            loaded = await _station.LoadTestWithPythonAsync(test, selectedOutcome.PythonVenv).ConfigureAwait(true);
         }
         catch (Exception ex) when (ex is InvalidOperationException or ProjectFormatException or ReleasePackageException)
         {

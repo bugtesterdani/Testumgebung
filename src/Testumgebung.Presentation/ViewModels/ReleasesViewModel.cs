@@ -325,7 +325,11 @@ public sealed partial class ReleasesViewModel : ObservableObject
         {
             try
             {
-                var compileResult = await runtime.CompileAsync(request, ct).ConfigureAwait(false);
+                var selectedRuntime = request.Language == CodeLanguage.Python
+                    ? runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                        definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string)
+                    : runtime;
+                var compileResult = await selectedRuntime.CompileAsync(request, ct).ConfigureAwait(false);
                 checks.Add(new ReviewCheck(name, compileResult.Success, compileResult.Success ? $"Build OK ({compileResult.RuntimeInfo})" : string.Join("; ", compileResult.Diagnostics.Where(diagnostic => diagnostic.IsError).Take(3))));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

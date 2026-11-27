@@ -84,6 +84,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
             FormatVersion = FormatVersion,
             Name = def.Name,
             Version = def.Version,
+            PythonEnvironmentId = def.PythonEnvironmentId,
             Description = project.Description,
             LimitSets = project.LimitSets.Count == 0 ? null : project.LimitSets,
             Assemblies = def.Assemblies.Count == 0 ? null : def.Assemblies.OrderBy(managedAssembly => managedAssembly.Name, StringComparer.Ordinal).ToList(),
@@ -173,6 +174,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
         if (dto.Init is null || dto.Loop is null || dto.Finalization is null) throw new ProjectFormatException("Init, Loop oder Finalization fehlt.");
 
         var def = new TestDefinition(nameOverride ?? dto.Name ?? "Unbenannt", dto.Version ?? "0.1", FromDto(dto.Init), FromDto(dto.Loop), FromDto(dto.Finalization));
+        def.PythonEnvironmentId = dto.PythonEnvironmentId;
         foreach (var variableDto in dto.Variables ?? []) def.Root.Variables.Add(FromDto(variableDto, "Hauptablauf"));
         ReadLibraries(dto, def);
         var project = new TestProject(def) { Description = dto.Description };
@@ -584,6 +586,7 @@ public sealed class ProjectSerializer(BlockCatalog catalog)
     {
         public string? Format { get; set; }
         public int FormatVersion { get; set; }
+        public string? PythonEnvironmentId { get; set; }
         public string? Name { get; set; }
         public string? Version { get; set; }
         public string? Description { get; set; }

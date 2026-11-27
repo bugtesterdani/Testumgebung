@@ -189,6 +189,15 @@ public sealed class TestDefinition
 
     /// <summary>Ablaufversion; wird beim Anlegen eines Release-Entwurfs gesetzt.</summary>
     public string Version { get; set; }
+    /// <summary>Portable Python-Auswahl: bundled oder id:&lt;ID&gt;; null erhält das bisherige Verhalten.</summary>
+    private string? _pythonEnvironmentId;
+    public string? PythonEnvironmentId
+    {
+        get => _pythonEnvironmentId;
+        set => _pythonEnvironmentId = string.IsNullOrWhiteSpace(value) ? null
+            : value.Trim() == "bundled" || value.Trim().StartsWith("id:", StringComparison.Ordinal)
+                ? value.Trim() : "id:" + value.Trim();
+    }
     public GroupDefinition Init { get; }
     public GroupDefinition Loop { get; }
     public GroupDefinition Finalization { get; }

@@ -27,6 +27,19 @@ public sealed class ProjectPropertiesViewModel : PropertiesViewModel
     public string Name => _editor.Project.Definition.Name;
     public string Version => _editor.Project.Definition.Version;
 
+    public IReadOnlyList<string> PythonEnvironments => ["", Testumgebung.Workers.PythonEnvironments.BundledId,
+        .. new Testumgebung.Workers.PythonEnvironments().List().Select(item => item.Selection)];
+    public string PythonEnvironmentId
+    {
+        get => _editor.Project.Definition.PythonEnvironmentId ?? "";
+        set
+        {
+            _editor.Project.Definition.PythonEnvironmentId = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            _editor.MarkChanged();
+            OnPropertyChanged();
+        }
+    }
+
     public string Description
     {
         get => _editor.Project.Description ?? "";

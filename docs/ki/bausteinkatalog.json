@@ -277,7 +277,7 @@
           "default": "",
           "required": false,
           "choices": null,
-          "hint": "Absoluter Ordnerpfad als String oder Variable; fehlende Umgebung f\u00E4llt auf die n\u00E4chste Stufe zur\u00FCck."
+          "hint": "bundled oder id:\u2026 als String/Variable; fehlende IDs verhindern den Start. Bestehende absolute Ordnerpfade bleiben unterst\u00FCtzt."
         },
         {
           "name": "BeiFehlerZurExitGruppe",

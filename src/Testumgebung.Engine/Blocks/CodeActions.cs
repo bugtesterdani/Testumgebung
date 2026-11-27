@@ -56,11 +56,15 @@ internal static class CodeInvocation
 
     public static string NextId(IStepContext ctx) => $"{ctx.RunId}/{ctx.StepId}/{Interlocked.Increment(ref _counter)}";
 
-    public static ICodeRuntime Runtime(IStepContext ctx)
+    public static async Task<ICodeRuntime> RuntimeAsync(IStepContext ctx, CodeLanguage language)
     {
         var runtime = ctx.CodeRuntime ?? throw new CodeExecutionException("Keine Code-Ausführungsumgebung konfiguriert (Worker).");
         var hasVariable = ctx.VisibleVariables().Any(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String);
-        return runtime.WithPythonEnvironment(ctx.ProgramPythonVenv, hasVariable ? ctx.Get("PythonVenv") as string : null);
+        var selected = runtime.WithPythonEnvironment(ctx.ProgramPythonVenv, hasVariable ? ctx.Get("PythonVenv") as string : null);
+        if (language == CodeLanguage.Python && ctx.ExpectedPythonFingerprint is { } expected
+            && await selected.GetRuntimeInfoAsync(language, ctx.CancellationToken).ConfigureAwait(false) != expected)
+            throw new CodeExecutionException("CodeRuntime/Python: Tatsächlich gewählte Umgebung weicht vom Freigabepaket ab.");
+        return selected;
     }
 
     public static StepOutcome ToOutcome(CodeResult result, IStepContext ctx)
@@ -86,7 +90,7 @@ public sealed class CodeBlockAction(CodeLanguage language, string source, TimeSp
 
     public async Task<StepOutcome> ExecuteAsync(IStepContext context)
     {
-        var runtime = CodeInvocation.Runtime(context);
+        var runtime = await CodeInvocation.RuntimeAsync(context, Language).ConfigureAwait(false);
         var visible = context.VisibleVariables();
         var ports = visible.Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
         var before = visible.ToDictionary(variable => variable.Name, variable => (object?)context.Get(variable.Name), StringComparer.Ordinal);
@@ -125,7 +129,7 @@ public sealed class LibraryBlockAction(
     {
         var block = context.FindLibraryBlock(BlockId)
                     ?? throw new CodeExecutionException($"Baustein '{BlockId}' ist nicht in der Bibliothek.");
-        var runtime = CodeInvocation.Runtime(context);
+        var runtime = await CodeInvocation.RuntimeAsync(context, block.Language).ConfigureAwait(false);
         var resolver = new ContextResolver(context);
 
         var values = new Dictionary<string, object?>(StringComparer.Ordinal);

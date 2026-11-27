@@ -19,7 +19,7 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
     private readonly Action<ProcessStartInfo> _openConsole;
     private bool _busy;
     private string? _createdExecutable;
-    private string _status = "Eine temporäre Kopie erstellen, Pakete in der Konsole installieren und danach die Umgebung aktivieren.";
+    private string _status = "Eine dauerhafte Kopie erstellen, Pakete in der Konsole installieren und danach die Umgebung aktivieren.";
 
     public PythonEnvironmentViewModel(CodeRuntime? runtime, Func<bool> anyRunning, PythonEnvironments? environments = null,
         Action<ProcessStartInfo>? openConsole = null, IFileDialogService? dialogs = null)
@@ -28,8 +28,10 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
         _dialogs = dialogs;
         _anyRunning = anyRunning;
         _environments = environments ?? new PythonEnvironments(runtime?.Options.WorkerDirectory);
+        if (runtime is not null) runtime.Options.EnvironmentCatalog = _environments;
         _openConsole = openConsole ?? (start => Process.Start(start)?.Dispose());
-        _createdExecutable = _environments.LoadSelection();
+        var saved = _environments.LoadSelection();
+        _createdExecutable = PythonEnvironmentResolver.Interpreter(saved);
         ExportCommand = new RelayCommand(ExportFromDialog, CanExport);
         ImportCommand = new RelayCommand(ImportFromDialog, CanImport);
         CreateCommand = new RelayCommand(() => _ = CreateAsync(), () => !_busy);
@@ -44,6 +46,18 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
     public RelayCommand OpenConsoleCommand { get; }
     public RelayCommand UseEnvironmentCommand { get; }
     public RelayCommand UseBundledCommand { get; }
+    public IReadOnlyList<PythonEnvironments.EnvironmentInfo> Environments => _environments.List();
+    public PythonEnvironments.EnvironmentInfo? SelectedEnvironment
+    {
+        get => Environments.FirstOrDefault(item => item.Executable == _createdExecutable);
+        set
+        {
+            if (value is null || value.Executable == _createdExecutable) return;
+            _createdExecutable = value.Executable;
+            Refresh();
+        }
+    }
+    public string EnvironmentId => Environments.FirstOrDefault(item => item.Executable == _createdExecutable)?.Selection ?? "";
     public string Commands => PythonEnvironments.Commands;
     public string EnvironmentPath => _createdExecutable is null ? "Noch keine externe Kopie erstellt." : Path.GetDirectoryName(_createdExecutable)!;
     public string ActiveInterpreter => _runtime is null ? "Keine Code-Laufzeit angebunden." : CodeRuntimeOptions.ResolvePython(_runtime.Options.WorkerDirectory, _runtime.Options.PythonExecutable);
@@ -54,11 +68,11 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
         if (_busy) return;
         _busy = true;
         Refresh();
-        Status = "Python-Laufzeit wird in einen neuen temporären Ordner kopiert …";
+        Status = "Python-Laufzeit wird in einen neuen dauerhaften Ordner kopiert …";
         try
         {
             _createdExecutable = await Task.Run(_environments.Create);
-            Status = "Umgebung erstellt. Nach der Paketinstallation „Diese Umgebung verwenden“ wählen. Temporäre Ordner können durch die Windows-Bereinigung entfernt werden.";
+            Status = "Umgebung erstellt. Nach der Paketinstallation „Diese Umgebung verwenden“ wählen.";
             OpenConsole();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
@@ -128,9 +142,10 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
         {
             if (executable is not null && !File.Exists(executable)) throw new FileNotFoundException("Python-Umgebung wurde entfernt. Bitte neu erstellen.");
             var previous = _runtime.Options.PythonExecutable;
-            _runtime.SelectPython(executable);
+            var previousSelection = _runtime.Options.PythonSelection;
+            _runtime.SelectPython(executable, Environments.FirstOrDefault(item => item.Executable == executable)?.Selection);
             try { _environments.SaveSelection(executable); }
-            catch { _runtime.SelectPython(previous); throw; }
+            catch { _runtime.SelectPython(previous, previousSelection); throw; }
             Status = executable is null ? "Die mitgelieferte Python-Laufzeit ist aktiv." : "Die externe Python-Kopie ist aktiv. Neue Python-Bausteine verwenden ihre installierten Pakete.";
             OnPropertyChanged(nameof(ActiveInterpreter));
         }
@@ -141,6 +156,9 @@ public sealed class PythonEnvironmentViewModel : ObservableObject
     private void Refresh()
     {
         OnPropertyChanged(nameof(EnvironmentPath));
+        OnPropertyChanged(nameof(Environments));
+        OnPropertyChanged(nameof(SelectedEnvironment));
+        OnPropertyChanged(nameof(EnvironmentId));
         ExportCommand.RaiseCanExecuteChanged();
         ImportCommand.RaiseCanExecuteChanged();
         CreateCommand.RaiseCanExecuteChanged();

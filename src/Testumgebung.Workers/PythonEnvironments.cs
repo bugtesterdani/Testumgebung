@@ -23,6 +23,8 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
     public const string RegistryKey = @"Software\Testumgebung";
     public const string RegistryValue = "PythonVenv";
 
+    private static readonly object CatalogGate = new();
+
     public const string BundledId = "bundled";
     public const string ManifestFile = "testumgebung-python.json";
     public sealed record EnvironmentInfo(string Id, string Executable)
@@ -37,18 +39,26 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         return Directory.EnumerateDirectories(_importRoot).Select(directory =>
         {
             var manifest = Path.Combine(directory, ManifestFile);
-            return File.Exists(manifest) ? new EnvironmentInfo(ReadId(manifest), Path.Combine(directory, "python.exe")) : null;
+            try { return File.Exists(manifest) ? new EnvironmentInfo(ReadId(manifest), Path.Combine(directory, "python.exe")) : null; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return null; }
         }).OfType<EnvironmentInfo>().OrderBy(item => item.Id, StringComparer.Ordinal).ToArray();
     }
 
     private static string ReadId(string manifest)
     {
-        var id = JsonSerializer.Deserialize<string>(File.ReadAllText(manifest));
+        string? id;
+        try { id = JsonSerializer.Deserialize<string>(File.ReadAllText(manifest)); }
+        catch (JsonException ex) { throw new InvalidDataException("Ungültige Python-Umgebungsdatei.", ex); }
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Ungültige Python-Umgebungs-ID.");
         return id!;
     }
 
     public string EnsureId(string executable)
+    {
+        lock (CatalogGate) return EnsureIdCore(executable);
+    }
+
+    private static string EnsureIdCore(string executable)
     {
         var manifest = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(executable))!, ManifestFile);
         if (File.Exists(manifest)) return ReadId(manifest);
@@ -142,6 +152,11 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
     /// <summary>Restores a ZIP into a new per-user folder. Selection remains unchanged until explicitly activated.</summary>
     public string Import(string archivePath)
     {
+        lock (CatalogGate) return ImportCore(archivePath);
+    }
+
+    private string ImportCore(string archivePath)
+    {
         var destination = NewEnvironmentPath(_importRoot);
         try
         {
@@ -184,13 +199,20 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         return start;
     }
 
-    public string? LoadSelection()
+    public string? LoadSelection(bool preserveReference = false)
     {
         try
         {
             if (File.Exists(_selectionFile))
             {
                 var path = JsonSerializer.Deserialize<string>(File.ReadAllText(_selectionFile));
+                if (path == BundledId || path?.StartsWith("id:", StringComparison.Ordinal) == true)
+                {
+                    if (preserveReference) return path;
+                    // Preserve a missing explicit selection so callers cannot silently use another runtime.
+                    try { return PythonEnvironmentResolver.Resolve(Path.GetDirectoryName(Path.GetDirectoryName(_source))!, path, null, null, this); }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return path; }
+                }
                 return PythonEnvironmentResolver.Interpreter(path);
             }
             if (_registryKey is not null && OperatingSystem.IsWindows())
@@ -208,7 +230,8 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         if (executable is not null && (!Path.IsPathFullyQualified(executable) || !File.Exists(executable)))
             throw new FileNotFoundException("Python-Interpreter fehlt oder der Pfad ist nicht absolut.");
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_selectionFile))!);
-        File.WriteAllText(_selectionFile, JsonSerializer.Serialize(executable));
+        var selection = List().FirstOrDefault(item => item.Executable == executable)?.Selection ?? executable;
+        File.WriteAllText(_selectionFile, JsonSerializer.Serialize(selection));
         if (_registryKey is not null && OperatingSystem.IsWindows())
         {
             using var key = Registry.CurrentUser.CreateSubKey(_registryKey);
