@@ -506,6 +506,8 @@ public sealed class BlockCatalog
                 new("Text", "Anweisungstext", ParameterKind.Text, "Bitte bestätigen", Required: true,
                     Hint: "Aktuelle Werte mit {Variable} oder {Ausdruck} einsetzen. Literale Klammern: {{ und }}."),
                 new("Bild", "Bild (optional)", ParameterKind.Image),
+                new("Audio", "Audiodatei (optional)", ParameterKind.Text,
+                    Hint: "MP3/WAV über absoluten Laufwerks-/UNC-Pfad oder HTTP/HTTPS-Adresse. Wiederholung nur während des Wartens; {Variable} möglich. Nur die Adresse wird gespeichert."),
                 new("Datentyp", "Datentyp", ParameterKind.Choice, "Zahl", Choices: InputTypes),
                 new("Pflicht", "Pflichtfeld", ParameterKind.Bool, "true"),
                 new("Standardwert", "Standardwert", ParameterKind.Text),
@@ -598,7 +600,8 @@ public sealed class BlockCatalog
             max,
             parameters.Optional("Einheit"),
             parameters.Optional("Bild"),
-            parameters.Choice("Anzeige") == DisplayModes[1] ? OperatorDisplayMode.UntilGroupEnd : OperatorDisplayMode.ReplacePrevious);
+            parameters.Choice("Anzeige") == DisplayModes[1] ? OperatorDisplayMode.UntilGroupEnd : OperatorDisplayMode.ReplacePrevious,
+            parameters.Optional("Audio"));
         var target = parameters.Optional("Ziel");
 
         return new DelegateAction(async ctx =>
@@ -615,7 +618,11 @@ public sealed class BlockCatalog
                 }
             }
             // Pro Ausführung eine neue Anzeige erzeugen: Vorlage und frühere Anzeigen bleiben unverändert.
-            var displayPrompt = prompt with { Text = CommunicationBlocks.Interpolate(prompt.Text, ctx) };
+            var displayPrompt = prompt with
+            {
+                Text = CommunicationBlocks.Interpolate(prompt.Text, ctx),
+                AudioPath = prompt.AudioPath is null ? null : CommunicationBlocks.Interpolate(prompt.AudioPath, ctx),
+            };
             var answer = await ctx.AskOperatorAsync(displayPrompt).ConfigureAwait(false);
             if (target is not null && answer is not null && prompt.ExpectsValue) ctx.Set(target, answer);
             return new StepOutcome(ResultRating.NResult, answer, prompt.Unit);

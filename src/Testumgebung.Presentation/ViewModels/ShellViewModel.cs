@@ -65,7 +65,8 @@ public sealed class ShellViewModel : ObservableObject
         Testumgebung.Domain.Code.ICodeRuntime? codeRuntime = null, Testumgebung.Persistence.Results.ResultPipeline? results = null,
         Settings.ResultServices? services = null, Settings.SettingsStore? settingsStore = null,
         IdentityServices? identity = null, ReleaseHub? releases = null,
-        StationCoordinator? stations = null, StationSetupStore? stationStore = null)
+        StationCoordinator? stations = null, StationSetupStore? stationStore = null,
+        IOperatorAudioPlayer? operatorAudio = null)
     {
         var dependencies = ResolveDependencies(ui, identity, results, services, stations, clock);
         results = dependencies.Results;
@@ -80,6 +81,7 @@ public sealed class ShellViewModel : ObservableObject
         IResourceManager resources = dependencies.Resources;
         Resources = resources;
 
+        _operatorAudio = operatorAudio;
         _clockForStations = clock;
         _codeRuntime = codeRuntime;
         _results = results;
@@ -287,6 +289,7 @@ public sealed class ShellViewModel : ObservableObject
     private readonly Testumgebung.Domain.Code.ICodeRuntime? _codeRuntime;
     private readonly Testumgebung.Persistence.Results.ResultPipeline? _results;
     private readonly ProjectSerializer _serializer;
+    private readonly IOperatorAudioPlayer? _operatorAudio;
 
     /// <summary>Gemeinsamer Zustand aller Prüfplätze (Etappe 9).</summary>
     public StationCoordinator Coordinator { get; }
@@ -300,7 +303,7 @@ public sealed class ShellViewModel : ObservableObject
     private StationViewModel AddStation(string name)
     {
         var station = new StationViewModel(name, () => Editor.Project, Resources, _ui, _serializer, _clockForStations,
-            () => Session.User?.Upn ?? "Werker", _codeRuntime, _results, Releases, Coordinator);
+            () => Session.User?.Upn ?? "Werker", _codeRuntime, _results, Releases, Coordinator, _operatorAudio);
         station.DevelopmentRecorded += developmentEvent => Audit(developmentEvent.User, "Entwicklungseingriff: " + developmentEvent.Kind, $"{station.Name} · {developmentEvent.Details}");
         station.Debug.MarkNode = (id, marker) =>
         {

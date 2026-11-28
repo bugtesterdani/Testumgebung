@@ -22,6 +22,8 @@ Start, eigenen Werkerabbruch und eine eigene Anzeige. Geprüft wird nur mit **fr
    * Nach dem Prüfling erscheint die Erfassung wieder für den nächsten Prüfling.
 3. Anweisungen in der Mitte befolgen: bestätigen, Auswahl treffen (z. B. „i. O.“/„n. i. O.“) oder Wert eingeben.
    Pflichtfelder sind markiert; Werte außerhalb des erlaubten Bereichs werden abgelehnt.
+   Falls im Prüfprogramm Wartemusik hinterlegt ist, endet sie mit einer gültigen Antwort oder einem Abbruch.
+   Ein Audiohinweis wegen einer fehlenden Datei verhindert die Eingabe nicht.
 4. Ergebnis: **PASS** (grün), **FAIL** (rot), **ERROR** (Fehler im Ablauf/Gerät). **WERROR** bedeutet: Werkerabbruch
    während des Prüflings.
 

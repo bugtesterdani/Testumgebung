@@ -7649,6 +7649,15 @@
           "hint": null
         },
         {
+          "name": "Audio",
+          "label": "Audiodatei (optional)",
+          "kind": "Text",
+          "default": "",
+          "required": false,
+          "choices": null,
+          "hint": "MP3/WAV \u00FCber absoluten Laufwerks-/UNC-Pfad oder HTTP/HTTPS-Adresse. Wiederholung nur w\u00E4hrend des Wartens; {Variable} m\u00F6glich. Nur die Adresse wird gespeichert."
+        },
+        {
           "name": "Datentyp",
           "label": "Datentyp",
           "kind": "Choice",

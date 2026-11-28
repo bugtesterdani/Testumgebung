@@ -17,10 +17,14 @@ public sealed class OperatorContentViewModel : ObservableObject
     private string? _selectedChoice;
     private string? _error;
     private bool _isAnswered;
+    private readonly IOperatorAudioPlayer? _audioPlayer;
+    private IDisposable? _audio;
+    private string? _audioError;
 
-    public OperatorContentViewModel(OperatorPrompt prompt)
+    public OperatorContentViewModel(OperatorPrompt prompt, IOperatorAudioPlayer? audioPlayer = null)
     {
         Prompt = prompt;
+        _audioPlayer = audioPlayer;
         _input = prompt.DefaultValue switch
         {
             null => "",
@@ -39,6 +43,7 @@ public sealed class OperatorContentViewModel : ObservableObject
     public string DisplayId => Prompt.DisplayId;
     public string Title => Prompt.StepName;
     public string Text => Prompt.Text;
+    public string? AudioError { get => _audioError; private set => SetProperty(ref _audioError, value); }
     public string? ImagePath => Prompt.ImagePath;
     public bool HasImage => !string.IsNullOrWhiteSpace(Prompt.ImagePath);
     public bool IsInput => Prompt.Kind == OperatorPromptKind.Input;
@@ -101,6 +106,12 @@ public sealed class OperatorContentViewModel : ObservableObject
     internal void Await(TaskCompletionSource<object?> answer)
     {
         _answer = answer;
+        if (answer.Task.IsCompleted) { EndWait(); return; }
+        if (Prompt.WaitForAnswer && !string.IsNullOrWhiteSpace(Prompt.AudioPath) && _audioPlayer is not null)
+        {
+            try { _audio = _audioPlayer.PlayLoop(Prompt.AudioPath, message => AudioError = "Audio: " + message); }
+            catch (Exception ex) { AudioError = "Audio konnte nicht gestartet werden: " + ex.Message; }
+        }
         OnPropertyChanged(nameof(IsAwaiting));
         ConfirmCommand.RaiseCanExecuteChanged();
         ChooseCommand.RaiseCanExecuteChanged();
@@ -109,6 +120,15 @@ public sealed class OperatorContentViewModel : ObservableObject
     internal void Cancel()
     {
         _answer?.TrySetCanceled();
+        EndWait();
+    }
+
+    internal void EndWait()
+    {
+        var audio = _audio;
+        _audio = null;
+        try { audio?.Dispose(); }
+        catch (Exception ex) { AudioError = "Audio konnte nicht beendet werden: " + ex.Message; }
         IsAnswered = true;
     }
 
@@ -131,7 +151,7 @@ public sealed class OperatorContentViewModel : ObservableObject
             var value2 => TypedValue.Format(value2).Trim('"'),
         };
         OnPropertyChanged(nameof(AnswerText));
-        IsAnswered = true;
+        EndWait();
         _answer!.TrySetResult(IsConfirmation ? true : value);
     }
 }

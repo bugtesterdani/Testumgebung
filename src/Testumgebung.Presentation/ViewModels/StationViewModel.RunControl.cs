@@ -442,6 +442,7 @@ public sealed partial class StationViewModel
         _overviewByNode.Clear();
         ExitSequence.Clear();
         ClearMeasurements();
+        foreach (var content in Contents) content.Cancel();
         Contents.Clear();
         _contentById.Clear();
         Protocol.Clear();

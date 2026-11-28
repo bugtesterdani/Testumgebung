@@ -210,6 +210,7 @@ public sealed partial class StationViewModel
     {
         foreach (var operatorContentViewModel in Contents.Where(operatorContentViewModel2 => operatorContentViewModel2.Prompt.GroupScopeId == cl.GroupScopeId).ToList())
         {
+            operatorContentViewModel.Cancel();
             Contents.Remove(operatorContentViewModel);
             _contentById.Remove(operatorContentViewModel.DisplayId);
         }

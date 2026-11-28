@@ -69,7 +69,8 @@ public sealed record OperatorPrompt(
     double? Max = null,
     string? Unit = null,
     string? ImagePath = null,
-    OperatorDisplayMode DisplayMode = OperatorDisplayMode.ReplacePrevious)
+    OperatorDisplayMode DisplayMode = OperatorDisplayMode.ReplacePrevious,
+    string? AudioPath = null)
 {
     /// <summary>Wird von der Engine gesetzt: Anzeige-ID und Scope der umgebenden Gruppe (für gezieltes Aufräumen).</summary>
     public string DisplayId { get; init; } = "";

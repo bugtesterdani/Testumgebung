@@ -49,6 +49,7 @@
                                 </StackPanel>
                                 <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}" IsEnabled="{Binding IsAwaiting}"
                                     Visibility="{Binding IsChoice, Converter={StaticResource BoolVis}}"/>
+                                <TextBlock Text="{Binding AudioError}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}" TextWrapping="Wrap"/>
                                 <Button Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" Style="{StaticResource PrimaryButton}"
                                     Margin="0,8,0,0" HorizontalAlignment="Left" Visibility="{Binding IsAwaiting, Converter={StaticResource BoolVis}}"/>
