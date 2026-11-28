@@ -59,9 +59,10 @@ internal static class CodeInvocation
     public static async Task<ICodeRuntime> RuntimeAsync(IStepContext ctx, CodeLanguage language)
     {
         var runtime = ctx.CodeRuntime ?? throw new CodeExecutionException("Keine Code-Ausführungsumgebung konfiguriert (Worker).");
+        if (language != CodeLanguage.Python) return runtime;
         var hasVariable = ctx.VisibleVariables().Any(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String);
         var selected = runtime.WithPythonEnvironment(ctx.ProgramPythonVenv, hasVariable ? ctx.Get("PythonVenv") as string : null);
-        if (language == CodeLanguage.Python && ctx.ExpectedPythonFingerprint is { } expected
+        if (ctx.ExpectedPythonFingerprint is { } expected
             && await selected.GetRuntimeInfoAsync(language, ctx.CancellationToken).ConfigureAwait(false) != expected)
             throw new CodeExecutionException("CodeRuntime/Python: Tatsächlich gewählte Umgebung weicht vom Freigabepaket ab.");
         return selected;

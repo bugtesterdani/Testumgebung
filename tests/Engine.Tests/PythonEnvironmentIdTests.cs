@@ -271,6 +271,31 @@ public sealed class PythonEnvironmentIdTests
         Assert.Equal("id:missing", PythonEnvironmentResolver.ProgramSelection("id:missing", "bundled"));
     }
 
+    [Theory]
+    [InlineData("not json")]
+    [InlineData("\"invalid-uuid\"")]
+    [InlineData("{}")]
+    public void Damaged_catalog_entry_does_not_hide_or_block_valid_environments(string manifestContents)
+    {
+        var root = Temp();
+        try
+        {
+            var service = Catalog(root);
+            var valid = Fixture(root, service);
+            var damaged = Fixture(root, service);
+            var validId = service.EnsureId(valid);
+            var damagedId = service.EnsureId(damaged);
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(damaged)!, PythonEnvironments.ManifestFile), manifestContents);
+            Assert.Equal(validId, Assert.Single(service.List()).Id);
+            Assert.Equal(valid, service.ResolveId(validId));
+            Assert.Throws<FileNotFoundException>(() => service.ResolveId(damagedId));
+            var vm = new PythonEnvironmentViewModel(null, () => false, service);
+            vm.SelectedEnvironment = Assert.Single(vm.Environments);
+            Assert.Equal("id:" + validId, vm.EnvironmentId);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
     private sealed class SelectionRuntime(string selection = "default", SelectionRuntime? owner = null) : ICodeRuntime
     {
         public int Invocations { get; private set; }

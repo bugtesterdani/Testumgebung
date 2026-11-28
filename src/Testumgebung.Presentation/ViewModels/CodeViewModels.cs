@@ -124,8 +124,9 @@ public sealed class CodeToolsViewModel : ObservableObject
         {
             var ports = Visible.Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
             var definition = _editor.Project.Definition;
-            runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
-                definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
+            if (Language == CodeLanguage.Python)
+                runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                    definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
             var result = await runtime.CompileAsync(new CodeRequest(Language, Step.Parameters.GetValueOrDefault("Quelltext") ?? "", ports) { Assemblies = _editor.Project.Definition.Assemblies }, CancellationToken.None);
             Diagnostics.Clear();
             foreach (var diagnostic in result.Diagnostics) Diagnostics.Add(diagnostic);
@@ -495,8 +496,9 @@ public sealed class LibraryBlockViewModel : ObservableObject
                 return;
             }
             var definition = _editor.Project.Definition;
-            runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
-                definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
+            if (Block.Language == CodeLanguage.Python)
+                runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                    definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
             var result = await runtime.CompileAsync(new CodeRequest(Block.Language, Block.Source, Block.Ports) { Assemblies = _editor.Project.Definition.Assemblies }, CancellationToken.None);
             Diagnostics.Clear();
             foreach (var diagnostic in result.Diagnostics) Diagnostics.Add(diagnostic);
@@ -538,8 +540,9 @@ public sealed class LibraryBlockViewModel : ObservableObject
             var values = Block.Ports.Where(port => port.IsInput)
                 .ToDictionary(port => port.Name, port => (object?)(port.TestValue ?? TypedValue.Default(port.Type)));
             var definition = _editor.Project.Definition;
-            runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
-                definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
+            if (Block.Language == CodeLanguage.Python)
+                runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                    definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
             var result = await runtime.InvokeAsync(new CodeRequest(Block.Language, Block.Source, Block.Ports, InvocationId) { Assemblies = _editor.Project.Definition.Assemblies }, values,
                 new LibraryTestHost(_editor.Project, log), TimeSpan.FromSeconds(5), CancellationToken.None);
             var outputs = Block.Ports.Where(port => port.IsOutput && result.Values.ContainsKey(port.Name))
