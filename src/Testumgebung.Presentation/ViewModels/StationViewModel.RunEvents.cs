@@ -72,6 +72,7 @@ public sealed partial class StationViewModel
 
     private void Handle(EngineEvent engineEvent)
     {
+        _liveResults.Apply(engineEvent);
         switch (engineEvent)
         {
             case TraceUpdated trace:
@@ -100,6 +101,10 @@ public sealed partial class StationViewModel
 
             case GroupNotEntered gn:
                 HandleGroupNotEntered(gn);
+                break;
+
+            case GroupIterationStarted { ResultReset: true } iteration:
+                HandleGroupResultReset(iteration);
                 break;
 
             case GroupCompleted gc:
@@ -174,6 +179,35 @@ public sealed partial class StationViewModel
     {
         if (_overviewByNode.TryGetValue(gn.NodeId, out var ni) && ni.NodeId == gn.NodeId) ni.State = ItemState.Skipped;
         SetExitState(gn.NodeId, ItemState.Skipped, null);
+    }
+
+    private void HandleGroupResultReset(GroupIterationStarted iteration)
+    {
+        if (_run?.Definition.Find(iteration.NodeId) is not GroupDefinition group) return;
+        var resetNodes = group.Descendants().Select(node => node.Id).Append(group.Id).ToHashSet(StringComparer.Ordinal);
+        ResetOverviewRatings(resetNodes, group.Id);
+        foreach (var row in ExitSequence.Where(row => resetNodes.Contains(row.NodeId)))
+        {
+            row.Rating = ResultRating.NResult;
+            row.State = ItemState.Pending;
+        }
+        if (_liveResults.CurrentRating is { } current) DutRating = current;
+        OnPropertiesChanged(nameof(ProgressText), nameof(DutProgress));
+    }
+
+    private void ResetOverviewRatings(IReadOnlySet<string> resetNodes, string groupId)
+    {
+        foreach (var row in Overview)
+        {
+            RefreshOverviewRating(row, resetNodes);
+            if (resetNodes.Contains(row.NodeId)) row.State = row.NodeId == groupId ? ItemState.Running : ItemState.Pending;
+        }
+    }
+
+    private void RefreshOverviewRating(OverviewItemViewModel row, IReadOnlySet<string> resetNodes)
+    {
+        if (_liveResults.ForNode(row.NodeId) is { } rating) row.Rating = rating;
+        else if (resetNodes.Contains(row.NodeId)) row.Rating = ResultRating.NResult;
     }
 
     private void HandleGroupCompleted(GroupCompleted gc)
@@ -277,7 +311,8 @@ public sealed partial class StationViewModel
         UpdateLiveWaveform(sc);
         if (_overviewByNode.TryGetValue(sc.NodeId, out var item))
         {
-            item.Rating = item.Rating.Merge(sc.Rating);
+            var current = sc.GroupScopeId.Length > 0 ? _liveResults.ForNode(item.NodeId) : null;
+            item.Rating = current ?? item.Rating.Merge(sc.Rating);
             if (item.NodeId == sc.NodeId) item.State = sc.Cancelled ? ItemState.Aborted : ItemState.Done;
         }
         DutRating = DutRating.Merge(sc.Rating);

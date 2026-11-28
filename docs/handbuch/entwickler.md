@@ -425,3 +425,5 @@ Bei Aufnahme, Messpunkt und abschließender Auswertung ersetzt „Nach Aufnahmee
 Format 2 verwendet vorhandene WAVE-/SQL-Felder: `SyncGroup=TraceRaw:1:<event>`, Zeitdaten nur am ersten Rohkanal, Snapshot/gespeicherte Bewertungen nur in dessen erstem Chunk. Fremde und ältere Kurven durchlaufen Collapse/Expand unverändert. Einzelheiten und eine numerische SQL-Abfrage: [Messwertverläufe](../messwertverlaeufe.md#rohdatenformat-und-anzeige-ergebnisformat-2).
 
 `WaveformPlotViewModel` bildet je Einheit einen Unterbereich mit synchronisiertem Zeitbereich/Cursor. Nur die Anzeige interpoliert auf ein gemeinsames Raster; diese Werte werden nie zurückgeschrieben. Ergebnisse und Prüfplatzansichten verwenden dieselbe WPF-Komponente und Inhaltsfilter.
+
+Bei **Ergebnis vor Wiederholung → NRESULT** setzt die Werkeranzeige vor der nächsten Runde auch eine vorherige FAIL-/ERROR-Bewertung aus Code-Bausteinen zurück. Variablen, das Protokoll und Fehler außerhalb der wiederholten Gruppe bleiben erhalten. Mit **Beibehalten** bleibt ein vorheriges FAIL wirksam.

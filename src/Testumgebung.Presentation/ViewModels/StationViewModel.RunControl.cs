@@ -435,6 +435,7 @@ public sealed partial class StationViewModel
 
     private void ResetDisplay(TestDefinition definition)
     {
+        _liveResults.Clear();
         LiveOutputs.Clear();
         LiveWaveform.Clear();
         LiveWaveformTitle = null;

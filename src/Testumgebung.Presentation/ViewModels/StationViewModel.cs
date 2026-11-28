@@ -146,6 +146,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
     private readonly IResourceManager _resources;
     private readonly IClock _clock;
     private readonly Dictionary<string, OverviewItemViewModel> _overviewByNode = new(StringComparer.Ordinal);
+    private readonly LiveGroupResults _liveResults = new();
     private readonly HashSet<string> _dutIdWriters = new(StringComparer.Ordinal);
     private readonly HashSet<string> _orderWriters = new(StringComparer.Ordinal);
     private readonly Dictionary<string, OperatorContentViewModel> _contentById = new(StringComparer.Ordinal);
