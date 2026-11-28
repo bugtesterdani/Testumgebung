@@ -14,7 +14,7 @@ namespace Testumgebung.Workers;
 public sealed class PythonEnvironments(string? workerDirectory = null, string? environmentRoot = null, string? selectionFile = null, string? registryKey = null)
 {
     private readonly string _source = Path.Combine(workerDirectory ?? Path.Combine(AppContext.BaseDirectory, "workers"), "python", "runtime");
-    private readonly string _root = environmentRoot ?? Path.Combine(Path.GetTempPath(), "Testumgebung", "PythonEnvironments");
+    private readonly string _root = environmentRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "PythonEnvironments");
     private readonly string _importRoot = environmentRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "PythonEnvironments");
     private static readonly string[] RuntimeFiles = ["python.exe", "python315.dll", "python315.zip", "LICENSE.txt", "pip-bootstrap/pip.whl"];
     private readonly string _selectionFile = selectionFile ?? DefaultSelectionFile;
@@ -22,6 +22,58 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
     public static string DefaultSelectionFile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Testumgebung", "python-environment.json");
     public const string RegistryKey = @"Software\Testumgebung";
     public const string RegistryValue = "PythonVenv";
+
+    private static readonly object CatalogGate = new();
+
+    public const string BundledId = "bundled";
+    public const string ManifestFile = "testumgebung-python.json";
+    public sealed record EnvironmentInfo(string Id, string Executable)
+    {
+        public string Selection => "id:" + Id;
+        public override string ToString() => Id;
+    }
+
+    public IReadOnlyList<EnvironmentInfo> List()
+    {
+        if (!Directory.Exists(_importRoot)) return [];
+        return Directory.EnumerateDirectories(_importRoot).Select(directory =>
+        {
+            var manifest = Path.Combine(directory, ManifestFile);
+            try { return File.Exists(manifest) ? new EnvironmentInfo(ReadId(manifest), Path.Combine(directory, "python.exe")) : null; }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException) { return null; }
+        }).OfType<EnvironmentInfo>().OrderBy(item => item.Id, StringComparer.Ordinal).ToArray();
+    }
+
+    private static string ReadId(string manifest)
+    {
+        string? id;
+        try { id = JsonSerializer.Deserialize<string>(File.ReadAllText(manifest)); }
+        catch (JsonException ex) { throw new InvalidDataException("Ungültige Python-Umgebungsdatei.", ex); }
+        if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Ungültige Python-Umgebungs-ID.");
+        return id!;
+    }
+
+    public string EnsureId(string executable)
+    {
+        lock (CatalogGate) return EnsureIdCore(executable);
+    }
+
+    private static string EnsureIdCore(string executable)
+    {
+        var manifest = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(executable))!, ManifestFile);
+        if (File.Exists(manifest)) return ReadId(manifest);
+        var id = Guid.NewGuid().ToString("N");
+        File.WriteAllText(manifest, JsonSerializer.Serialize(id));
+        return id;
+    }
+
+    public string ResolveId(string id)
+    {
+        var matches = List().Where(item => item.Id == id).ToArray();
+        if (matches.Length != 1 || !File.Exists(matches[0].Executable))
+            throw new FileNotFoundException($"Python-Umgebung '{id}' fehlt oder ist nicht eindeutig. Bitte die passende Umgebung importieren.");
+        return matches[0].Executable;
+    }
 
     public const string Commands = "python --version\npython -m pip --version\npython -m pip list\npython -m pip install PAKETNAME\npython -m pip install -r requirements.txt\npython -m pip freeze > requirements.txt\npython -m pip check";
 
@@ -41,6 +93,7 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         Directory.CreateDirectory(Path.Combine(destination, "Lib", "site-packages"));
         File.WriteAllLines(Path.Combine(destination, "python315._pth"), ["python315.zip", ".", "Lib/site-packages", "pip-bootstrap/pip.whl", "import site"]);
         WriteConsoleFiles(destination);
+        EnsureId(Path.Combine(destination, "python.exe"));
         return Path.Combine(destination, "python.exe");
     }
 
@@ -71,6 +124,7 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         var staging = Path.Combine(Path.GetDirectoryName(destination)!, $".python-{Guid.NewGuid():N}.tmp");
         try
         {
+            EnsureId(executable);
             WriteArchive(source, staging);
             File.Move(staging, destination, overwrite: true);
         }
@@ -98,6 +152,11 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
     /// <summary>Restores a ZIP into a new per-user folder. Selection remains unchanged until explicitly activated.</summary>
     public string Import(string archivePath)
     {
+        lock (CatalogGate) return ImportCore(archivePath);
+    }
+
+    private string ImportCore(string archivePath)
+    {
         var destination = NewEnvironmentPath(_importRoot);
         try
         {
@@ -105,6 +164,10 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
             if (!IsPortableRuntime(destination))
                 throw new InvalidDataException("Das ZIP enthält keine vollständige portable Python-Umgebung der Testumgebung.");
             Directory.CreateDirectory(Path.Combine(destination, "Lib", "site-packages"));
+            var executable = Path.Combine(destination, "python.exe");
+            var id = EnsureId(executable);
+            if (List().Any(item => item.Id == id && item.Executable != executable))
+                throw new InvalidDataException($"Python-Umgebung '{id}' ist bereits vorhanden. Bestehende Umgebungen werden nicht überschrieben.");
             WriteConsoleFiles(destination);
             return Path.Combine(destination, "python.exe");
         }
@@ -136,13 +199,20 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         return start;
     }
 
-    public string? LoadSelection()
+    public string? LoadSelection(bool preserveReference = false)
     {
         try
         {
             if (File.Exists(_selectionFile))
             {
                 var path = JsonSerializer.Deserialize<string>(File.ReadAllText(_selectionFile));
+                if (path == BundledId || path?.StartsWith("id:", StringComparison.Ordinal) == true)
+                {
+                    if (preserveReference) return path;
+                    // Preserve a missing explicit selection so callers cannot silently use another runtime.
+                    try { return PythonEnvironmentResolver.Resolve(Path.GetDirectoryName(Path.GetDirectoryName(_source))!, path, null, null, this); }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return path; }
+                }
                 return PythonEnvironmentResolver.Interpreter(path);
             }
             if (_registryKey is not null && OperatingSystem.IsWindows())
@@ -160,7 +230,8 @@ public sealed class PythonEnvironments(string? workerDirectory = null, string? e
         if (executable is not null && (!Path.IsPathFullyQualified(executable) || !File.Exists(executable)))
             throw new FileNotFoundException("Python-Interpreter fehlt oder der Pfad ist nicht absolut.");
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_selectionFile))!);
-        File.WriteAllText(_selectionFile, JsonSerializer.Serialize(executable));
+        var selection = List().FirstOrDefault(item => item.Executable == executable)?.Selection ?? executable;
+        File.WriteAllText(_selectionFile, JsonSerializer.Serialize(selection));
         if (_registryKey is not null && OperatingSystem.IsWindows())
         {
             using var key = Registry.CurrentUser.CreateSubKey(_registryKey);

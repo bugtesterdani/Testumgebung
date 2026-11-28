@@ -63,8 +63,8 @@ public sealed class PairedStationsViewModel : ObservableObject
             if (!second.AvailableTests().Any(program => program.Name == test.Name && program.Version == test.Version))
             { Status = "Das ausgewählte Testprogramm ist für die zweite Seite nicht verfügbar."; return; }
             // Beide Projekte vor dem ersten Start prüfen; keine einseitig gestartete falsche Zuordnung.
-            var loadedFirst = await first.LoadTestAsync(test).ConfigureAwait(true);
-            var loadedSecond = await second.LoadTestAsync(test).ConfigureAwait(true);
+            var loadedFirst = await first.LoadTestWithPythonAsync(test, outcome.PythonVenv).ConfigureAwait(true);
+            var loadedSecond = await second.LoadTestWithPythonAsync(test, outcome.PythonVenv).ConfigureAwait(true);
             ValidateProgram(loadedFirst.Project.Definition);
             ValidateProgram(loadedSecond.Project.Definition);
             if (_stopRequested) return;

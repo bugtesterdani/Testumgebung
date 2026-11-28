@@ -184,9 +184,8 @@ public static class ProcessBlocks
             var request = new ProcessLaunch(Kind, file, Arguments(Args, ctx), directory, Environment(Variables, ctx), Bound, Show, Capture, Limit,
                 Type is null ? null : Expand(Type, ctx), Python is null ? null : Expand(Python, ctx), Expand(Encoding, ctx));
             var options = (ctx.CodeRuntime as CodeRuntime)?.Options ?? new CodeRuntimeOptions();
-            var variable = ctx.VisibleVariables().Any(variable2 => variable2.Name == "PythonVenv" && variable2.Type == VarType.String) ? ctx.Get("PythonVenv") as string : null;
-            var python = PythonEnvironmentResolver.Resolve(options.WorkerDirectory, ctx.ProgramPythonVenv, variable, options.PythonExecutable ?? new PythonEnvironments().LoadSelection());
-            var result = ctx.Processes.Start(request, ctx.ProcessOwner, options.WorkerDirectory, python, ctx.CancellationToken);
+            request = WithPythonEnvironment(request, ctx, options);
+            var result = ctx.Processes.Start(request, ctx.ProcessOwner, options.WorkerDirectory, request.PythonExecutable, ctx.CancellationToken);
             if (HandleTarget is not null) ctx.Set(HandleTarget, result.Handle);
             if (PidTarget is not null) ctx.Set(PidTarget, (long)result.ProcessId);
             if (!Wait)
@@ -198,6 +197,20 @@ public static class ProcessBlocks
             return Targets.Apply(result, ctx);
         }
     }
+    private static ProcessLaunch WithPythonEnvironment(ProcessLaunch request, IStepContext ctx, CodeRuntimeOptions options)
+    {
+        if (request.Kind != ExternalProcessKind.Python) return request;
+        var variable = ctx.VisibleVariables().Any(item => item.Name == "PythonVenv" && item.Type == VarType.String)
+            ? ctx.Get("PythonVenv") as string : null;
+        var explicitPython = request.PythonExecutable;
+        var python = !string.IsNullOrWhiteSpace(explicitPython) && explicitPython != PythonEnvironments.BundledId
+            && !explicitPython.StartsWith("id:", StringComparison.Ordinal)
+            ? explicitPython
+            : PythonEnvironmentResolver.Resolve(options.WorkerDirectory, explicitPython ?? ctx.ProgramPythonVenv, variable,
+                options.PythonSelection ?? options.PythonExecutable ?? new PythonEnvironments().LoadSelection(preserveReference: true), options.EnvironmentCatalog);
+        return request with { PythonExecutable = python };
+    }
+
     private sealed record WaitAction(string Handle, TimeSpan Timeout, ResultTargets Targets) : IStepAction
     {
         public async Task<StepOutcome> ExecuteAsync(IStepContext ctx)

@@ -123,6 +123,10 @@ public sealed class CodeToolsViewModel : ObservableObject
         try
         {
             var ports = Visible.Select(variable => new CodePort(variable.Name, variable.Type, PortDirection.InOut)).ToList();
+            var definition = _editor.Project.Definition;
+            if (Language == CodeLanguage.Python)
+                runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                    definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
             var result = await runtime.CompileAsync(new CodeRequest(Language, Step.Parameters.GetValueOrDefault("Quelltext") ?? "", ports) { Assemblies = _editor.Project.Definition.Assemblies }, CancellationToken.None);
             Diagnostics.Clear();
             foreach (var diagnostic in result.Diagnostics) Diagnostics.Add(diagnostic);
@@ -130,7 +134,7 @@ public sealed class CodeToolsViewModel : ObservableObject
             BuildStatus = CodeHelp.BuildText(result);
             RuntimeInfo = result.RuntimeInfo;
         }
-        catch (Exception ex) when (ex is CodeExecutionException or TimeoutException or InvalidOperationException)
+        catch (Exception ex) when (ex is CodeExecutionException or TimeoutException or InvalidOperationException or IOException or UnauthorizedAccessException)
         {
             BuildOk = false;
             BuildStatus = ex.Message;
@@ -491,6 +495,10 @@ public sealed class LibraryBlockViewModel : ObservableObject
                 BuildStatus = "Schnittstelle ungültig: Portnamen, doppelte Namen und Testwerte prüfen.";
                 return;
             }
+            var definition = _editor.Project.Definition;
+            if (Block.Language == CodeLanguage.Python)
+                runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                    definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
             var result = await runtime.CompileAsync(new CodeRequest(Block.Language, Block.Source, Block.Ports) { Assemblies = _editor.Project.Definition.Assemblies }, CancellationToken.None);
             Diagnostics.Clear();
             foreach (var diagnostic in result.Diagnostics) Diagnostics.Add(diagnostic);
@@ -498,7 +506,7 @@ public sealed class LibraryBlockViewModel : ObservableObject
             BuildStatus = CodeHelp.BuildText(result);
             RuntimeInfo = result.RuntimeInfo;
         }
-        catch (Exception ex) when (ex is CodeExecutionException or TimeoutException or InvalidOperationException)
+        catch (Exception ex) when (ex is CodeExecutionException or TimeoutException or InvalidOperationException or IOException or UnauthorizedAccessException)
         {
             BuildOk = false;
             BuildStatus = ex.Message;
@@ -531,6 +539,10 @@ public sealed class LibraryBlockViewModel : ObservableObject
             }
             var values = Block.Ports.Where(port => port.IsInput)
                 .ToDictionary(port => port.Name, port => (object?)(port.TestValue ?? TypedValue.Default(port.Type)));
+            var definition = _editor.Project.Definition;
+            if (Block.Language == CodeLanguage.Python)
+                runtime = runtime.WithPythonEnvironment(definition.PythonEnvironmentId,
+                    definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == VarType.String)?.Initial as string);
             var result = await runtime.InvokeAsync(new CodeRequest(Block.Language, Block.Source, Block.Ports, InvocationId) { Assemblies = _editor.Project.Definition.Assemblies }, values,
                 new LibraryTestHost(_editor.Project, log), TimeSpan.FromSeconds(5), CancellationToken.None);
             var outputs = Block.Ports.Where(port => port.IsOutput && result.Values.ContainsKey(port.Name))
@@ -540,7 +552,7 @@ public sealed class LibraryBlockViewModel : ObservableObject
                          + (result.Message is null ? "" : $" · {result.Message}")
                          + (outputs.Any() ? " · " + string.Join(", ", outputs) : "");
         }
-        catch (Exception ex) when (ex is CodeExecutionException or TimeoutException or InvalidOperationException or KeyNotFoundException)
+        catch (Exception ex) when (ex is CodeExecutionException or TimeoutException or InvalidOperationException or IOException or UnauthorizedAccessException or KeyNotFoundException)
         {
             TestResult = "ERROR · " + ex.Message;
         }

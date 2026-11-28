@@ -39,6 +39,7 @@ public sealed class TestRunOptions
 
     /// <summary>Python-Umgebung aus dem Auswahlprogramm (höchste Priorität).</summary>
     public string? PythonVenv { get; init; }
+    public string? ExpectedPythonFingerprint { get; init; }
     public PairedStationContext? PairedStation { get; init; }
 
     /// <summary>

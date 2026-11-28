@@ -137,6 +137,8 @@ public sealed class PythonEnvironmentTests
             var vm = new PythonEnvironmentViewModel(runtime, () => false, service);
             await vm.ExportAsync(archive);
             Assert.True(File.Exists(archive), vm.Status);
+            vm = new PythonEnvironmentViewModel(runtime, () => false,
+                new PythonEnvironments(environmentRoot: Path.Combine(root, "restored"), selectionFile: Path.Combine(root, "selection.json")));
             await vm.ImportAsync(archive);
             Assert.Contains("importiert", vm.Status);
             Assert.NotEqual(directory, vm.EnvironmentPath);
@@ -148,7 +150,7 @@ public sealed class PythonEnvironmentTests
             await runtime.GetRuntimeInfoAsync(CodeLanguage.Python, CancellationToken.None);
             vm.UseEnvironmentCommand.Execute(null);
             Assert.Equal(imported, runtime.Options.PythonExecutable);
-            Assert.Equal(imported, service.LoadSelection());
+            Assert.Equal(imported, new PythonEnvironments(environmentRoot: Path.Combine(root, "restored"), selectionFile: Path.Combine(root, "selection.json")).LoadSelection());
             var step = BlockCatalog.Default.Create(BlockCatalog.Code, "probe", "Probe", new Dictionary<string, string>
             { ["Sprache"] = "Python", ["Quelltext"] = "import tu_console_probe\nreturn Pass(tu_console_probe.VALUE)" });
             var run = new TestRun(Test(Group("loop").Add(step)), new TestRunOptions { CodeRuntime = runtime, Clock = new VirtualClock() });

@@ -47,6 +47,8 @@ public static class ProjectDiff
         if (before.Definition.Name != after.Definition.Name)
             list.Add(new(DiffKind.Changed, "Projekt", "Name", $"{before.Definition.Name} → {after.Definition.Name}"));
         if (before.Description != after.Description) list.Add(new(DiffKind.Changed, "Projekt", "Beschreibung", Short(after.Description)));
+        if (before.Definition.PythonEnvironmentId != after.Definition.PythonEnvironmentId)
+            list.Add(new(DiffKind.Changed, "Projekt", "Python-Umgebung", $"{before.Definition.PythonEnvironmentId} → {after.Definition.PythonEnvironmentId}"));
         CompareVariables(list, "Hauptablauf", before.Definition.Root, after.Definition.Root);
         foreach (var (name, values) in after.LimitSets)
         {

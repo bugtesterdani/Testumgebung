@@ -44,7 +44,7 @@ public partial class MainWindow : Window
         _showMessage = startup?.ShowMessage ?? ((text, buttons, icon) => MessageBox.Show(text, "Testumgebung", buttons, icon));
         var (store, services) = LoadResultServices(startup);
         _services = services;
-        _codeRuntime = new CodeRuntime(ApplicationOverrides.Runtime(services.Current, new PythonEnvironments().LoadSelection()));
+        _codeRuntime = new CodeRuntime(ApplicationOverrides.Runtime(services.Current, new PythonEnvironments().LoadSelection(preserveReference: true)));
 
         var arguments = startup?.Arguments ?? Environment.GetCommandLineArgs();
         var developmentMode = arguments.Contains("--development", StringComparer.OrdinalIgnoreCase);

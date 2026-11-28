@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file
  * @brief Prüft Akteur, Rechte und Zustandsübergänge vor Erstellung und Freigabe von Releases.
  */
@@ -35,7 +35,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
     /// <summary>Produktiv aktivieren: alte Pakete ohne Laufzeitnachweis werden nicht gestartet.</summary>
     public bool RequireRuntimeSnapshot { get; set; }
 
-    public async Task<IReadOnlyList<string>> VerifyEnvironmentAsync(ReleaseInfo info, CancellationToken ct = default)
+    public async Task<IReadOnlyList<string>> VerifyEnvironmentAsync(ReleaseInfo info, CancellationToken ct = default, string? programPython = null)
     {
         var opened = await OpenAsync(info, ct).ConfigureAwait(false);
         if (!opened.IsIntact) return opened.Problems;
@@ -43,7 +43,7 @@ public sealed partial class ReleaseService(IReleaseStore store, IClock? clock = 
             return RequireRuntimeSnapshot ? ["Paket enthält keinen Laufzeitnachweis. Neue Version erstellen, prüfen und freigeben."] : [];
         try
         {
-            var current = await RuntimeSnapshot.CaptureAsync(opened.Project, CodeRuntime, ct).ConfigureAwait(false);
+            var current = await RuntimeSnapshot.CaptureAsync(opened.Project, CodeRuntime, ct, programPython).ConfigureAwait(false);
             return opened.Environment.Compare(current);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

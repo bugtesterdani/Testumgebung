@@ -170,11 +170,16 @@ public sealed partial class StationViewModel
         return registry;
     }
 
-    private async Task<bool> ValidateRunProjectAsync(TestProject project, ReleaseInfo? release)
+    private string? _runPythonFingerprint;
+
+    private async Task<bool> ValidateRunProjectAsync(TestProject project, ReleaseInfo? release, string? pythonVenv)
     {
+        _runPythonFingerprint = null;
         if (release is not null && _releases is not null)
         {
-            var differences = await _releases.Service.VerifyEnvironmentAsync(release).ConfigureAwait(true);
+            var package = await _releases.Service.OpenAsync(release).ConfigureAwait(true);
+            _runPythonFingerprint = package.Environment?.Components.FirstOrDefault(component => component.Name == "CodeRuntime/Python")?.Version;
+            var differences = await _releases.Service.VerifyEnvironmentAsync(release, programPython: pythonVenv).ConfigureAwait(true);
             if (differences.Count > 0)
             {
                 Error = "Freigabe passt nicht zur Ausführungsumgebung: " + string.Join(" ", differences);
@@ -205,6 +210,7 @@ public sealed partial class StationViewModel
             StationName = Name,
             CodeRuntime = _codeRuntime,
             PythonVenv = pythonVenv,
+            ExpectedPythonFingerprint = _runPythonFingerprint,
             PairedStation = PairContext,
             // Beide Seiten behalten bis zum nächsten gemeinsamen Auftrag dieselbe Version.
             VersionSource = _referenceRun is null && PairContext is null ? this : null,
@@ -231,7 +237,7 @@ public sealed partial class StationViewModel
         PendingVersionText = null;
         ActiveRelease = release;
         if (!TryPreparePresets(project, ref presets, orderSession, out var rootPresets)) return;
-        if (!await ValidateRunProjectAsync(project, release).ConfigureAwait(true)) return;
+        if (!await ValidateRunProjectAsync(project, release, pythonVenv).ConfigureAwait(true)) return;
 
         var devices = CalibrationDevices();
         var today = DateOnly.FromDateTime(_clock.Now.LocalDateTime);

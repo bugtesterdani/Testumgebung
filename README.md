@@ -269,4 +269,6 @@ Prüfprogramme mit KI übertragen: [Anleitung, Konvertierungsauftrag, Bausteinka
 
 Ohne Oberfläche prüfen, bauen und mit Szenarien simulieren (CI, KI-Agenten in einer Offline-VM): [Kommandozeile `testumgebung-cli`](docs/kommandozeile.md).
 
+Mehrere Python-Umgebungen pro Prüfplatz mit portablen IDs und Auswahl je Programm: [Python-Umgebungen verwalten und übertragen](docs/portable-python.md).
+
 Externe EXE-, Python- und .NET-DLL-Aufrufe im Prüfprogramm: [Prozesse, Lebensdauer und Exitcode-Auswertung](docs/externe-prozesse.md).

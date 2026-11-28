@@ -18,6 +18,12 @@ public sealed class CodeRuntimeOptions
     /// <summary>Optionaler eigener Python-Interpreter. Standard: mitgelieferte portable Laufzeit.</summary>
     public string? PythonExecutable { get; set; }
 
+    /// <summary>Optionaler lokaler Umgebungskatalog, standardmäßig im Benutzerprofil.</summary>
+    public PythonEnvironments? EnvironmentCatalog { get; set; }
+
+    /// <summary>Explizite ID der allgemeinen Auswahl; bleibt auch nach Entfernen der lokalen Kopie verbindlich.</summary>
+    public string? PythonSelection { get; set; }
+
     /// <summary>Verzeichnis mit workers/csharp und workers/python (Standard: neben der Anwendung).</summary>
     public string WorkerDirectory { get; set; } = Path.Combine(AppContext.BaseDirectory, "workers");
 
@@ -66,12 +72,13 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
         lock (_poolGate)
         {
             ObjectDisposedException.ThrowIf(_disposed == 1, this);
-            var executable = PythonEnvironmentResolver.Resolve(_options.WorkerDirectory, programVenv, variableVenv, _options.PythonExecutable);
+            var executable = PythonEnvironmentResolver.Resolve(_options.WorkerDirectory, programVenv, variableVenv, _options.PythonSelection ?? _options.PythonExecutable, _options.EnvironmentCatalog);
             if (!_pythonEnvironments.TryGetValue(executable, out var python))
             {
                 python = new CodeRuntime(new CodeRuntimeOptions
                 {
                     PythonExecutable = executable,
+                    EnvironmentCatalog = _options.EnvironmentCatalog,
                     WorkerDirectory = _options.WorkerDirectory,
                     MaxIdleWorkers = _options.MaxIdleWorkers,
                 });
@@ -89,7 +96,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
     }
 
     /// <summary>Wechselt Python bei ruhendem Ablauf und verwirft gepoolte Prozesse mit alten Paketständen.</summary>
-    public void SelectPython(string? executable)
+    public void SelectPython(string? executable, string? selection = null)
     {
         lock (_poolGate)
         {
@@ -105,6 +112,7 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
                     worker.Dispose();
                 }
             _options.PythonExecutable = executable;
+            _options.PythonSelection = selection;
         }
     }
 
@@ -156,7 +164,10 @@ public sealed class CodeRuntime(CodeRuntimeOptions? options = null) : ICodeRunti
                 {
                     var script = Path.Combine(_options.WorkerDirectory, "python", "worker.py");
                     if (!File.Exists(script)) throw new CodeExecutionException($"Python-Worker nicht gefunden: {script}");
-                    var python = CodeRuntimeOptions.ResolvePython(_options.WorkerDirectory, _options.PythonExecutable);
+                    var selection = _options.PythonSelection ?? _options.PythonExecutable;
+                    var python = selection == PythonEnvironments.BundledId || selection?.StartsWith("id:", StringComparison.Ordinal) == true
+                        ? PythonEnvironmentResolver.Resolve(_options.WorkerDirectory, selection, null, null, _options.EnvironmentCatalog)
+                        : CodeRuntimeOptions.ResolvePython(_options.WorkerDirectory, selection);
                     try
                     {
                         return WorkerProcess.Start(python, ["-u", script]);

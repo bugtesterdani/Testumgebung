@@ -446,7 +446,7 @@ public sealed class BlockCatalog
                 new("Version", "Version (leer = aktuell freigegebene)", ParameterKind.Expression),
                 new("Auftrag", "Auftrag", ParameterKind.Expression),
                 new("Pruefparameter", "Prüfparameter", ParameterKind.Expression, Hint: "Text „Variante=Standard“ oder „GrenzwertMin=220;GrenzwertMax=240“"),
-                new("PythonVenv", "Python-Umgebung (optional)", ParameterKind.Expression, Hint: "Absoluter Ordnerpfad als String oder Variable; fehlende Umgebung fällt auf die nächste Stufe zurück."),
+                new("PythonVenv", "Python-Umgebung (optional)", ParameterKind.Expression, Hint: "bundled oder id:… als String/Variable; fehlende IDs verhindern den Start. Bestehende absolute Ordnerpfade bleiben unterstützt."),
             ],
             parameters2 =>
             {

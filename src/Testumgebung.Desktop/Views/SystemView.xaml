@@ -80,8 +80,11 @@
                         Visibility="{Binding DataContext.Page, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource PageVis}, ConverterParameter=Python}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource SectionTitle}" Text="Python-Umgebung und Konsole" />
-                        <TextBlock Text="Mitgeliefertes Python in einen beschreibbaren temporären Ordner kopieren und dort Pakete mit pip installieren." TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <TextBlock Text="Mitgeliefertes Python in einen dauerhaften lokalen Ordner kopieren und dort Pakete mit pip installieren." TextWrapping="Wrap" Margin="0,0,0,8" />
                         <Button Style="{StaticResource PrimaryButton}" Command="{Binding CreateCommand}" Content="Python-Kopie erstellen und Konsole öffnen" Margin="0,0,0,8" />
+                        <TextBlock Text="Verwaltete Umgebungen" Style="{StaticResource Label}" />
+                        <ComboBox ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}" Margin="0,0,0,8" />
+                        <TextBox Text="{Binding EnvironmentId, Mode=OneWay}" IsReadOnly="True" Margin="0,0,0,8" ToolTip="Diese ID in den Projekteigenschaften oder als PythonVenv verwenden." />
                         <TextBlock Text="{Binding EnvironmentPath}" TextWrapping="Wrap" Style="{StaticResource Caption}" Margin="0,0,0,8" />
                         <WrapPanel>
                             <Button Style="{StaticResource OutlineButton}" Command="{Binding OpenConsoleCommand}" Content="Konsole öffnen" Margin="0,0,8,8" />

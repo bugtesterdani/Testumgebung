@@ -187,7 +187,8 @@ internal sealed class StepContext(
     public IReadOnlyList<(string Name, VarType Type)> VisibleVariables()
         => scope.VisibleVariables().Select(variable => (variable.Name, variable.Type)).ToList();
 
-    public string? ProgramPythonVenv => run.Options.PythonVenv;
+    public string? ExpectedPythonFingerprint => run.Options.ExpectedPythonFingerprint;
+    public string? ProgramPythonVenv => Testumgebung.Workers.PythonEnvironmentResolver.ProgramSelection(run.Options.PythonVenv, run.Definition.PythonEnvironmentId);
     public PairedStationContext? PairedStation => run.Options.PairedStation;
     public bool IsReferenceRun => run.Options.ReferenceRun;
 

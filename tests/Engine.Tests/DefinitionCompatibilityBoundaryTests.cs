@@ -21,6 +21,7 @@ public sealed class DefinitionCompatibilityBoundaryTests
     [InlineData("dut-id", "Prüflingsgruppe")]
     [InlineData("missing-dut", "Prüflingsgruppe")]
     [InlineData("variables", "Variablen")]
+    [InlineData("python", "Python-Umgebung")]
     [InlineData("init", "Init")]
     [InlineData("finalization", "Finalization")]
     [InlineData("loop", "Loop außerhalb")]
@@ -32,6 +33,7 @@ public sealed class DefinitionCompatibilityBoundaryTests
             case "name": b = new TestProject(new TestDefinition("Anderer Ablauf", "1", b.Definition.Init, b.Definition.Loop, b.Definition.Finalization)); break;
             case "dut-id": b.Definition.Loop.Children.Clear(); b.Definition.Loop.Children.Add(new GroupDefinition("new-dut", "Prüfling") { IsDutRun = true }); break;
             case "missing-dut": ((GroupDefinition)b.Definition.Find("dut")!).IsDutRun = false; break;
+            case "python": b.Definition.PythonEnvironmentId = "id:other"; break;
             case "variables": b.Definition.Root.Variables.Add(new VariableDefinition("X", VarType.Bool, true)); break;
             case "init": b.Definition.Init.Children.Add(BlockCatalog.Default.Create("warten", "init-added")); break;
             case "finalization": b.Definition.Finalization.Children.Add(BlockCatalog.Default.Create("warten", "end-added")); break;

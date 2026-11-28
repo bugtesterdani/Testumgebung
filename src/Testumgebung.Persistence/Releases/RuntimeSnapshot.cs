@@ -14,7 +14,7 @@ public sealed record RuntimeComponent(string Name, string Version, string? Sha25
 /// <summary>Im Paket festgehaltene Ausführungsumgebung; Abweichungen erfordern eine erneute Entwicklungsprüfung.</summary>
 public sealed record RuntimeSnapshot(IReadOnlyList<RuntimeComponent> Components)
 {
-    public static async Task<RuntimeSnapshot> CaptureAsync(TestProject project, ICodeRuntime? runtime, CancellationToken ct)
+    public static async Task<RuntimeSnapshot> CaptureAsync(TestProject project, ICodeRuntime? runtime, CancellationToken ct, string? programPython = null)
     {
         var components = new List<RuntimeComponent>
         {
@@ -50,7 +50,11 @@ public sealed record RuntimeSnapshot(IReadOnlyList<RuntimeComponent> Components)
         foreach (var language in languages)
         {
             if (runtime is null) throw new ReleaseRuleException($"Ausführungsumgebung für {language} fehlt.");
-            components.Add(new("CodeRuntime/" + language, await runtime.GetRuntimeInfoAsync(language, ct)));
+            var selected = language == CodeLanguage.Python
+                ? runtime.WithPythonEnvironment(Testumgebung.Workers.PythonEnvironmentResolver.ProgramSelection(programPython, project.Definition.PythonEnvironmentId),
+                    project.Definition.Root.Variables.FirstOrDefault(variable => variable.Name == "PythonVenv" && variable.Type == Testumgebung.Contracts.VarType.String)?.Initial as string)
+                : runtime;
+            components.Add(new("CodeRuntime/" + language, await selected.GetRuntimeInfoAsync(language, ct)));
         }
         return new(components.OrderBy(runtimeComponent => runtimeComponent.Name, StringComparer.Ordinal).ToList());
     }
