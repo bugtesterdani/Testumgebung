@@ -152,6 +152,7 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
 
     private readonly Testumgebung.Domain.Code.ICodeRuntime? _codeRuntime;
     private readonly ResultPipeline? _results;
+    private readonly IOperatorAudioPlayer? _operatorAudio;
     private readonly ReleaseHub? _releases;
     private bool _useDraft;
     private ReleaseInfo? _activeRelease;
@@ -197,9 +198,11 @@ public sealed partial class StationViewModel : ObservableObject, IOperatorInterf
         Testumgebung.Domain.Code.ICodeRuntime? codeRuntime = null,
         ResultPipeline? results = null,
         ReleaseHub? releases = null,
-        StationCoordinator? coordinator = null)
+        StationCoordinator? coordinator = null,
+        IOperatorAudioPlayer? operatorAudio = null)
     {
         _coordinator = coordinator;
+        _operatorAudio = operatorAudio;
         _codeRuntime = codeRuntime;
         _results = results;
         _releases = releases;

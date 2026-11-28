@@ -272,3 +272,5 @@ Ohne Oberfläche prüfen, bauen und mit Szenarien simulieren (CI, KI-Agenten in 
 Mehrere Python-Umgebungen pro Prüfplatz mit portablen IDs und Auswahl je Programm: [Python-Umgebungen verwalten und übertragen](docs/portable-python.md).
 
 Externe EXE-, Python- und .NET-DLL-Aufrufe im Prüfprogramm: [Prozesse, Lebensdauer und Exitcode-Auswertung](docs/externe-prozesse.md).
+
+Optionale externe MP3-/WAV-Wartemusik bei Bestätigungen und Eingaben: [Werker-Wartemusik](docs/werker-wartemusik.md).

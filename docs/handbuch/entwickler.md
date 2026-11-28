@@ -13,6 +13,8 @@ Anmelden (oben rechts) mit dem Recht **Entwickeln**. Die Entwickleransicht öffn
   Auftragsdaten stehen im Hauptablauf (Projekt-Eigenschaften).
 * **Werkerinteraktion**: Anweisung, Bild mit Bestätigung, Eingabe oder Auswahl; Datentyp, Pflicht, Standardwert, erlaubte
   Werte/Bereich, auf Antwort warten oder fortsetzen, Inhalt ersetzt vorherigen oder bleibt bis Gruppenende.
+  Optional spielt **Audiodatei** eine externe MP3-/WAV-Datei vom Laufwerk oder über HTTP/HTTPS während des Wartens wiederholt ab.
+  Nur die Referenz wird gespeichert; Details: [Wartemusik](../werker-wartemusik.md).
 * **Anzeige und Speicherung** je Schritt/Gruppe (erben oder setzen): Anzeigen am Prüfplatz, Ergebnisdatei (+Kurven),
   Datenbank (+Kurven). „Anzeigen“ aus blendet Schritt und Messwerte in der Werkeransicht aus.
 

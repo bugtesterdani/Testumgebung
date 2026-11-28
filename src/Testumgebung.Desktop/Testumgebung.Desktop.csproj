@@ -43,6 +43,7 @@
   <Import Project="..\..\build\CodeWorkers.targets" />
   <ItemGroup>
     <Content Include="../../docs/handbuch/*.md" Link="docs/handbuch/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../docs/werker-wartemusik.md" Link="docs/werker-wartemusik.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../docs/ki-testprogramme.md" Link="docs/ki-testprogramme.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../docs/ki/**/*" Link="docs/ki/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../docs/beispiele/prozess-demo.py" Link="docs/beispiele/prozess-demo.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

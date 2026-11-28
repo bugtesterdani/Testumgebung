@@ -29,7 +29,7 @@ public sealed partial class StationViewModel
                 _contentById.Remove(old.DisplayId);
             }
         }
-        var vm = new OperatorContentViewModel(prompt);
+        var vm = new OperatorContentViewModel(prompt, _operatorAudio);
         Contents.Add(vm);
         _contentById[prompt.DisplayId] = vm;
         Hint = prompt.Text;
@@ -43,13 +43,18 @@ public sealed partial class StationViewModel
         tcs.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
         _ui.Post(() =>
         {
+            if (tcs.Task.IsCompleted) return;
             if (!_contentById.TryGetValue(prompt.DisplayId, out var vm))
             {
                 ShowContent(prompt);
                 vm = _contentById[prompt.DisplayId];
             }
             vm.Await(tcs);
-            tcs.Task.ContinueWith(_ => _ui.Post(() => OnPropertyChanged(nameof(ActiveContent))), TaskScheduler.Default);
+            tcs.Task.ContinueWith(_ => _ui.Post(() =>
+            {
+                vm.EndWait();
+                OnPropertyChanged(nameof(ActiveContent));
+            }), TaskScheduler.Default);
             OnPropertyChanged(nameof(ActiveContent));
         });
         return tcs.Task;

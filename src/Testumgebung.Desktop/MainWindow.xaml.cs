@@ -68,7 +68,8 @@ public partial class MainWindow : Window
 
         Shell = new ShellViewModel(SynchronizationContextDispatcher.FromCurrent(), CreateFileDialogService(startup), project: exampleProject, codeRuntime: _codeRuntime,
             services: _services, settingsStore: store, identity: identity, releases: _releases,
-            stations: coordinator, stationStore: exampleMode ? null : stationStore);
+            stations: coordinator, stationStore: exampleMode ? null : stationStore,
+            operatorAudio: new Audio.OperatorAudioPlayer());
         _remoteStationId = startup is null && !developmentMode ? RemoteSettingsClient.StationIdFromEnvironment() : null;
         Shell.ReleasesPage?.Sources.ConfigureAuthentication(new SourceCredentialStore(SourceCredentialStore.DefaultFile, new RepositorySecretProtector()));
         ConfigureExampleMode(exampleMode);
