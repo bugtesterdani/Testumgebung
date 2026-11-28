@@ -327,6 +327,7 @@ public sealed class TestRun
     }
 
     private readonly AsyncLocal<DutFlow?> _dutFlow = new();
+    private readonly AsyncLocal<string?> _resultScope = new();
 
     private bool DutExitPending(ExecutionPhase phase) => !phase.IsExit && _dutFlow.Value?.ExitRequested == true;
 
@@ -454,6 +455,7 @@ public sealed class TestRun
             NodeId = step.Id,
             Path = path,
             Iteration = iteration,
+            GroupScopeId = scope.Id,
         });
         if (!phase.IsExit && _dutFlow.Value is { } flow &&
             (outcome.ExitDut || (Options.Catalog ?? BlockCatalog.Default).RequestsErrorExit(step, outcome.Rating)))
@@ -616,7 +618,7 @@ public sealed class TestRun
         ApplyDutPresets(group, scope, isExit);
 
         PushFrame(new ExecutionFrame(group.Id, group.Name, path, parentIteration, isExit, true, scope.Id));
-        Emit(new GroupEntered(scope.Id, isExit) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
+        Emit(new GroupEntered(scope.Id, isExit) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration, ParentScopeId = _resultScope.Value });
 
         // Engine und lesbare Systemvariable verwenden denselben Live-Akkumulator.
         var accumulator = scope.GroupResult;
@@ -624,7 +626,7 @@ public sealed class TestRun
         var dutStarted = Clock.Now;
         var abortsAtEntry = _abort.AbortCount;
         if (dutRunId is not null)
-            Emit(new DutRunStarted(dutRunId) { Order = OrderOf(scope), Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
+            Emit(new DutRunStarted(dutRunId) { ScopeId = scope.Id, Order = OrderOf(scope), Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
 
         IResourceLease? lease = null;
         var iterations = 0;
@@ -665,6 +667,8 @@ public sealed class TestRun
         }
 
         var previousDutFlow = _dutFlow.Value;
+        var previousResultScope = _resultScope.Value;
+        _resultScope.Value = scope.Id;
         if (dutRunId is not null) _dutFlow.Value = new DutFlow();
         try
         {
@@ -678,6 +682,7 @@ public sealed class TestRun
         finally
         {
             _dutFlow.Value = previousDutFlow;
+            _resultScope.Value = previousResultScope;
             FinishRecordings(group, scope.Id, path, parentIteration, accumulator);
             if (group.IsDutRun) Processes.CloseOwner(scope.Id);
             // 6. Sperren freigeben (nach Exit), Prüflingstest abschließen, Scope verwerfen
@@ -739,7 +744,7 @@ public sealed class TestRun
         var snapshot = scope.Snapshot();
         scope.Discard();
         PopFrame(group.Id);
-        Emit(new GroupCompleted(accumulator.Rating, iterations, isExit) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration });
+        Emit(new GroupCompleted(accumulator.Rating, iterations, isExit) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = parentIteration, ScopeId = scope.Id });
         return new NodeResult(accumulator.Rating, snapshot);
     }
 
@@ -819,7 +824,8 @@ public sealed class TestRun
 
             iteration++;
             UpdateFrameIteration(group.Id, iteration);
-            Emit(new GroupIterationStarted(iteration) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = iteration });
+            Emit(new GroupIterationStarted(iteration) { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = iteration,
+                ScopeId = scope.Id, ResultReset = iteration > 1 && group.ResultBeforeRepeat == RepeatResultPolicy.ResetToNResult });
 
             await ExecuteIterationChildrenAsync();
 
@@ -858,7 +864,7 @@ public sealed class TestRun
         {
             accumulator.Merge(ResultRating.Error);
             Emit(new StepCompleted(ResultRating.Error, unfinished.Data, null, null, null, "Aufzeichnung ohne abschließende Bewertung beendet; unvollständig.", OperatorAborted)
-                { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = iteration });
+                { Time = Clock.Now, RunId = RunId, NodeId = group.Id, Path = path, Iteration = iteration, GroupScopeId = scopeId });
         }
     }
     internal void Emit(EngineEvent e)

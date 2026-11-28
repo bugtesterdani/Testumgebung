@@ -37,6 +37,13 @@ Teilstand sichtbar. Bei Gruppenwiederholung folgt der Wert der Einstellung
 `Ergebnis vor Wiederholung` (`Keep` bzw. `ResetToNResult`). Das Gruppenergebnis
 wird beim Verlassen der Gruppe final und als `GroupCompleted` gemeldet.
 
+Die Werkeranzeige folgt diesem Reset ebenfalls: Vor der nächsten Iteration werden die Bewertung und
+der Fortschritt der betroffenen Gruppe beziehungsweise ihrer Schritte zurückgesetzt. Das gilt auch
+für FAIL-/ERROR-Ergebnisse aus C#-, Python- und C++-CodeBlocks sowie Bibliotheksbausteinen.
+Fehler anderer Gruppen und bereits abgeschlossene Prüflingsergebnisse bleiben erhalten.
+Mit `Keep` bleibt ein früheres FAIL erwartungsgemäß Teil der Bewertung. Variablen und das historische
+Protokoll mit den vorherigen Versuchen werden durch den Bewertungsreset nicht gelöscht.
+
 In CodeBlocks werden benannte Ordnervariablen beim Aufruf als Anfangswerte an
 den isolierten Worker übergeben. Zum erneuten Lesen **innerhalb desselben
 langen CodeBlock-Aufrufs** `Var<string>("GruppenErgebnis")` (C#) bzw.

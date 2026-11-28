@@ -39,15 +39,28 @@ public sealed record StepCompleted(
     double? LowLimit,
     double? HighLimit,
     string? Message,
-    bool Cancelled) : NodeEvent;
+    bool Cancelled) : NodeEvent
+{
+    public string GroupScopeId { get; init; } = "";
+}
 
-public sealed record GroupEntered(string ScopeId, bool IsExit) : NodeEvent;
+public sealed record GroupEntered(string ScopeId, bool IsExit) : NodeEvent
+{
+    public string? ParentScopeId { get; init; }
+}
 
 public sealed record GroupNotEntered(string Reason) : NodeEvent;
 
-public sealed record GroupIterationStarted(int GroupIteration) : NodeEvent;
+public sealed record GroupIterationStarted(int GroupIteration) : NodeEvent
+{
+    public string ScopeId { get; init; } = "";
+    public bool ResultReset { get; init; }
+}
 
-public sealed record GroupCompleted(ResultRating Rating, int Iterations, bool IsExit) : NodeEvent;
+public sealed record GroupCompleted(ResultRating Rating, int Iterations, bool IsExit) : NodeEvent
+{
+    public string ScopeId { get; init; } = "";
+}
 
 public sealed record ResourceWaitStarted(IReadOnlyList<string> Resources) : NodeEvent;
 
@@ -70,7 +83,11 @@ public sealed record Resumed(DebugCommand Command) : EngineEvent;
 public sealed record Diagnostic(string? NodeId, string Message) : EngineEvent;
 
 /// <summary>Beginn eines Prüflingstests (eigener Run innerhalb des Loops).</summary>
-public sealed record DutRunStarted(string DutRunId) : NodeEvent { public string? Order { get; init; } }
+public sealed record DutRunStarted(string DutRunId) : NodeEvent
+{
+    public string? Order { get; init; }
+    public string ScopeId { get; init; } = "";
+}
 
 /// <summary>Ende eines Prüflingstests – Grundlage zum Speichern (auch bei WERROR).</summary>
 public sealed record DutRunCompleted(
